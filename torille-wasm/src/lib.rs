@@ -110,7 +110,8 @@ pub fn suggest_words(word: &str, max_n: usize) -> js_sys::Array {
 /// penalty }` objects. The default Finnish policy is used (two-character
 /// minimum fragments, no inter-vowel breaks except compound boundaries
 /// or explicit exceptions); `compound_breaks = false` gives the
-/// pattern-only fallback.
+/// pattern-only fallback. Existing soft hyphens are preserved and
+/// returned with `source = "soft-hyphen"`.
 ///
 /// This is a presentation helper. It deliberately does not run the full
 /// reverse index, so a rare compound may fall back to its component
@@ -256,6 +257,21 @@ pub mod wasm_demo {
     /// Drop the slot -- e.g. on textarea close/replace.
     pub fn clear(state: &mut TextAreaState) {
         state.clear();
+    }
+
+    /// Render `word` with a visible hyphen at every permitted break.
+    ///
+    /// This is the display half of [`crate::hyphenate`]; callers that
+    /// need offsets use the exported binding instead. Existing soft
+    /// hyphens are shown as ordinary hyphens and removed from the
+    /// display, because the UI string is not the source.
+    pub fn hyphenate(word: &str) -> String {
+        let points = torille::hyphenation::positions(word);
+        torille::hyphenation::split(word, &points)
+            .into_iter()
+            .map(|part| part.replace('\u{00AD}', ""))
+            .collect::<Vec<_>>()
+            .join("-")
     }
 }
 
@@ -536,6 +552,16 @@ mod tests {
         // confirm the underlying decision is correct.
         assert!(check("taloa"));
         assert!(!check("xyzzy"));
+    }
+
+    #[test]
+    fn the_demo_hyphenation_display_uses_the_engine_policy() {
+        assert_eq!(
+            wasm_demo::hyphenate("tietokoneohjelmointi"),
+            "tie-to-ko-ne-oh-jel-moin-ti"
+        );
+        assert_eq!(wasm_demo::hyphenate("kissa\u{00AD}koira"), "kis-sa-koi-ra");
+        assert_eq!(wasm_demo::hyphenate("asia"), "asia");
     }
 }
 

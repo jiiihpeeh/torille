@@ -1,8 +1,9 @@
 # Hyphenation plan
 
-Status: milestone 1–3 implemented in `src/hyphenation/`, with CLI, wasm
-export and golden tests. The Python binding and demo UI are still open;
-see “Implementation status” below.
+Status: milestones 1–5 implemented in `src/hyphenation/`, with CLI,
+wasm export, Python binding, Leptos demo and golden tests. The remaining
+work is corpus triage and the optional full `FormBuilder` adapter; see
+“Implementation status” below.
 
 Goal: add Finnish line-break hyphenation to `torille` as a separate
 typographic layer that reuses the morphology engine for compound
@@ -31,18 +32,19 @@ Implemented:
   `verop-rosentti`;
 - minimum fragments, vowel policy, penalties and `Exceptions`;
 - `tools/src/bin/hyphenate.rs` with `--json`;
-- wasm `hyphenate` export;
+- wasm `hyphenate` export and browser glue typings;
+- Python `Engine.hyphenate`;
+- soft-hyphen (`U+00AD`) handling as an explicit, preserved break;
+- Leptos demo hyphenation probe;
 - unit tests and `tests/hyphenation_fi.rs`;
 - docs in `docs/hyphenation.md`.
 
 Still open:
 
-- Python binding exposure;
-- browser demo/extension presentation;
 - full Voikko diagnostic triage (the comparison script exists; the
   curated corpus is still the gate) and the full `FormBuilder` adapter;
-- soft-hyphen handling;
-- performance review for whole-paragraph use.
+- further performance work for whole-paragraph use (per-range caches or
+  a prefix index for candidate splits).
 
 ## 1. Pattern source
 
@@ -327,16 +329,17 @@ after the engine change even if no UI consumes it yet.
 
 ### Python binding
 
-Optional in milestone 5: add `Engine.hyphenate(word, ...)` returning the
-same point fields. The binding is for the harness, so this is useful for
-corpus checks but not required for the first usable release.
+Implemented as `Engine.hyphenate(word, ...)`, returning the same point
+fields as the Rust, CLI and wasm surfaces. The binding is for the
+harness, so this is useful for corpus checks.
 
 ### Browser extension / demo UI
 
-Not part of the first milestone. If added later, hyphenation is a
-presentation concern: the extension overlay can use native CSS
-`hyphens` or render soft hyphens from the same points. Do not make the
-spell-check overlay depend on hyphenation.
+The wasm export and glue typings expose the points, and the Leptos demo
+has a live hyphenation probe. The browser extension still uses native CSS
+`hyphens`: inserting soft hyphens into arbitrary page text is a
+presentation concern and must not make the spell-check overlay depend on
+hyphenation.
 
 ## 8. Tests
 
@@ -421,9 +424,9 @@ how much the morphology adapter adds.
    path).
 
 5. **Polish**
-   Python binding if wanted; `docs/hyphenation.md`; README/AGENTS
-   pointers; regenerate wasm and demo; add `PLAN_HYPHENATION.md` to the
-   docs map if the plan is kept.
+   Python binding; `docs/hyphenation.md`; README/AGENTS pointers;
+   regenerate wasm and demo; soft-hyphen handling; add
+   `PLAN_HYPHENATION.md` to the docs map if the plan is kept.
 
 ## 11. Risks and decisions to settle
 
@@ -442,10 +445,10 @@ how much the morphology adapter adds.
   is a phrase, not a single word. The first version handles single
   orthographic words and existing hyphens; phrase-level line breaking
   is out of scope.
-- **Soft hyphens**: decide whether an existing U+00AD is preserved as
-  an explicit break and whether the returned offsets refer to the
-  original string including it. Recommended: treat it as an explicit
-  break and keep the input untouched.
+- **Soft hyphens** (settled): an existing U+00AD is kept in the source
+  and returned as an explicit `soft-hyphen` point *after* the invisible
+  character, so the marker belongs to the preceding fragment and
+  `split` reassembles the input exactly.
 
 ## 12. Non-goals for the first release
 

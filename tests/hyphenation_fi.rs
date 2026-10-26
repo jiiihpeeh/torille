@@ -142,6 +142,31 @@ fn a_sampled_lexicon_word_never_loses_or_duplicates_a_character() {
 }
 
 #[test]
+fn a_soft_hyphen_is_an_explicit_break_and_stays_in_the_source() {
+    let word = "kissa\u{00AD}koira";
+    let points = positions(word);
+    let soft = *points
+        .iter()
+        .find(|point| point.source == BreakSource::SoftHyphen)
+        .expect("supplied soft hyphen");
+    assert_eq!(soft.char_offset, 6);
+    assert_eq!(split(word, &[soft]), vec!["kissa\u{00AD}", "koira"]);
+    assert_eq!(split(word, &points).concat(), word);
+}
+
+#[test]
+fn a_soft_hyphen_does_not_bypass_the_fragment_minimum() {
+    for word in ["k\u{00AD}issa", "kissa\u{00AD}k"] {
+        assert!(
+            !positions(word)
+                .iter()
+                .any(|point| point.source == BreakSource::SoftHyphen),
+            "{word:?}"
+        );
+    }
+}
+
+#[test]
 fn vowel_breaks_never_returns_a_vowel_boundary() {
     let word = "kofeiini";
     let points = positions_with(

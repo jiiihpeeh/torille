@@ -61,9 +61,15 @@ derivation into a compound.
 - Existing hyphens in the input (`linja-auto`) are preserved and each
   side is hyphenated separately. An existing hyphen is not returned as a
   generated point.
-- `U+00AD` (soft hyphen) is not treated as a pattern break in this
-  version; callers that already have soft hyphens should strip or honour
-  them before calling. This is a known follow-up.
+- A soft hyphen (`U+00AD`) is an explicit break already supplied by the
+  caller. It is preserved in the source and returned as a
+  `soft-hyphen` point; the point sits after the invisible character, so
+  `split` keeps it on the preceding fragment. The usual minimum-fragment
+  rule still applies, but the vowel filter does not: the author already
+  asked for that break.
+- A soft-hyphen break does not by itself make a word a compound. The
+  segments on each side are still hyphenated normally, so the result can
+  contain both supplied and pattern breaks.
 
 ## Offsets
 
@@ -122,7 +128,16 @@ not in a growing suffix table.
 - wasm: `hyphenate(word, left_min, right_min, compound_breaks)` returns
   objects with `byteOffset`, `charOffset`, `compound`, `source` and
   `penalty`.
-- The Python binding and browser overlay do not yet expose it.
+- Python: `Engine.hyphenate(word, left_min=2, right_min=2,
+  compound_breaks=True, vowel_breaks="compound-only")` returns objects
+  with the same five fields.
+- Leptos demo: a live hyphenation probe calls the engine directly and
+  renders the permitted breaks.
+
+The browser extension currently uses native CSS hyphenation. The wasm
+binding is available for a future overlay, but inserting soft hyphens
+into arbitrary page text is deliberately not part of the spell-check
+overlay.
 
 ## Tests
 

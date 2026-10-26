@@ -102,7 +102,7 @@ torille/
     *.py                the Omorfi/Voikko harness (see docs/harness.md)
 
   bindings/             the `torille-py` crate: a PyO3 extension module
-    src/lib.rs          Engine: inflect, lookup, words
+    src/lib.rs          Engine: inflect, lookup, words, hyphenate
     pyproject.toml      maturin config; module-name = "torille"
 
   tests/catalogue.rs    the 26 integration tests
@@ -716,8 +716,11 @@ au-to-nos-ta-ja
 
 `--json` returns byte/character offsets, source and ranking penalty. The
 public Rust API is `torille::hyphenation::{positions, positions_with, split}`;
-the wasm export is `hyphenate`. See [docs/hyphenation.md](docs/hyphenation.md)
-for policy, offsets, exceptions and the current limitations.
+the wasm export is `hyphenate`, and `Engine.hyphenate` exposes the same points
+to Python. Existing soft hyphens (`U+00AD`) are preserved and returned as
+explicit `soft-hyphen` breaks. See
+[docs/hyphenation.md](docs/hyphenation.md) for policy, offsets, exceptions and
+the current limitations.
 
 ## The Python binding
 
@@ -731,6 +734,7 @@ e.inflect("kissa")                    # every form, with named fields
 e.inflect("kissa", klass="9", pos="substantiivi")
 e.lookup("kauppa")                    # [('9*B', 'substantiivi')]
 e.words("substantiivi")              # every lemma of that POS with its class
+e.hyphenate("tietokoneohjelmointi")  # points with byte/char offsets + source
 ```
 
 The class argument is `klass` rather than `class` because Python will not take

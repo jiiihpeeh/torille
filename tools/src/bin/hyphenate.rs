@@ -131,7 +131,14 @@ fn main() -> ExitCode {
         if arguments.json {
             print_json(word, &points);
         } else {
-            println!("{}", split(word, &points).join("-"));
+            // Soft hyphens are markers, not visible characters. Show the
+            // supplied breaks as ordinary hyphens and keep the JSON path
+            // faithful to the original offsets.
+            let display: Vec<String> = split(word, &points)
+                .into_iter()
+                .map(|part| part.replace('\u{00AD}', ""))
+                .collect();
+            println!("{}", display.join("-"));
             if std::env::var_os("TORILLE_HYPHEN_DEBUG").is_some() {
                 for point in &points {
                     eprintln!(

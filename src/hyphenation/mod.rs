@@ -29,6 +29,10 @@ pub use exceptions::Exceptions;
 use offsets::{byte_to_char, char_to_byte};
 use patterns::finnish as finnish_patterns;
 
+/// Invisible discretionary hyphen. It is a break the author already
+/// supplied, not a letter the pattern matcher should see.
+const SOFT_HYPHEN: char = '\u{00AD}';
+
 /// What to do with a break that falls between two vowels.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum VowelBreaks {
@@ -77,6 +81,8 @@ pub enum BreakSource {
     CompoundBoundary,
     /// An explicit allow entry.
     ExplicitException,
+    /// A soft hyphen (`U+00AD`) already present in the input.
+    SoftHyphen,
 }
 
 impl BreakSource {
@@ -86,6 +92,7 @@ impl BreakSource {
             Self::Pattern => "pattern",
             Self::CompoundBoundary => "compound",
             Self::ExplicitException => "exception",
+            Self::SoftHyphen => "soft-hyphen",
         }
     }
 }
@@ -128,22 +135,40 @@ pub fn positions_with(
         return Vec::new();
     }
     let mut points = Vec::new();
-    if word.contains('-') {
+    if word.contains('-') || word.contains(SOFT_HYPHEN) {
         let mut start = 0usize;
         for (at, ch) in word.char_indices() {
-            if ch == '-' {
-                if at > start {
-                    collect_segment(
-                        &word[start..at],
-                        start,
-                        options,
-                        analyzer,
-                        exceptions,
-                        &mut points,
-                    );
-                }
-                start = at + ch.len_utf8();
+            let separator = ch == '-' || ch == SOFT_HYPHEN;
+            if !separator {
+                continue;
             }
+            if at > start {
+                collect_segment(
+                    &word[start..at],
+                    start,
+                    options,
+                    analyzer,
+                    exceptions,
+                    &mut points,
+                );
+            }
+            let after = at + ch.len_utf8();
+            if ch == SOFT_HYPHEN && valid_visible_fragment(word, after, options) {
+                // The soft hyphen belongs to the preceding fragment, so
+                // the next fragment starts after it. That keeps `split`
+                // reassembling the original and puts the offset where a
+                // renderer would insert the visible hyphen.
+                push_point(
+                    word,
+                    0,
+                    after,
+                    BreakSource::SoftHyphen,
+                    false,
+                    0,
+                    &mut points,
+                );
+            }
+            start = after;
         }
         if start < word.len() {
             collect_segment(
@@ -335,6 +360,17 @@ fn valid_fragment(word: &str, byte: usize, options: &HyphenationOptions) -> bool
     }
 }
 
+/// Fragment lengths for a soft-hyphen break, ignoring the soft hyphen
+/// itself. A soft hyphen must not make a one-character fragment look
+/// long enough to pass the minimum.
+fn valid_visible_fragment(word: &str, byte: usize, options: &HyphenationOptions) -> bool {
+    if byte > word.len() || !word.is_char_boundary(byte) {
+        return false;
+    }
+    let count = |text: &str| text.chars().filter(|ch| *ch != SOFT_HYPHEN).count();
+    count(&word[..byte]) >= options.left_min && count(&word[byte..]) >= options.right_min
+}
+
 fn push_point(
     word: &str,
     base: usize,
@@ -480,5 +516,46 @@ mod tests {
                 .all(|point| point.byte_offset != 5)
         );
         assert_eq!(sources("linja-auto"), vec![BreakSource::Pattern; 2]);
+    }
+
+    #[test]
+    fn a_soft_hyphen_is_an_explicit_break_and_is_preserved() {
+        let word = "kissa\u{00AD}koira";
+        let points = positions(word);
+        let soft = *points
+            .iter()
+            .find(|point| point.source == BreakSource::SoftHyphen)
+            .expect("the supplied soft hyphen");
+        assert_eq!(soft.char_offset, 6);
+        assert!(!soft.compound_boundary);
+        assert_eq!(split(word, &points).concat(), word);
+        assert_eq!(
+            split(word, &[soft]),
+            vec!["kissa\u{00AD}", "koira"],
+            "the soft hyphen belongs to the preceding fragment"
+        );
+    }
+
+    #[test]
+    fn a_soft_hyphen_that_leaves_a_single_character_is_ignored() {
+        for word in ["k\u{00AD}issa", "kissa\u{00AD}k"] {
+            assert!(
+                !positions(word)
+                    .iter()
+                    .any(|point| point.source == BreakSource::SoftHyphen),
+                "{word:?} should not produce a one-character fragment"
+            );
+        }
+    }
+
+    #[test]
+    fn a_soft_hyphen_can_break_between_vowels() {
+        let word = "radio\u{00AD}aalto";
+        let points = positions(word);
+        assert!(
+            points
+                .iter()
+                .any(|point| { point.source == BreakSource::SoftHyphen && point.char_offset == 6 })
+        );
     }
 }

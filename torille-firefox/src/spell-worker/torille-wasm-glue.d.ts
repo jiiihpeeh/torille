@@ -22,7 +22,7 @@ declare module '*/torille_wasm_bg.js' {
     byteOffset: number;
     charOffset: number;
     compound: boolean;
-    source: 'pattern' | 'compound' | 'exception';
+    source: 'pattern' | 'compound' | 'exception' | 'soft-hyphen';
     penalty: number;
   }[];
 

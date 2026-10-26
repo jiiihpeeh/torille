@@ -38,6 +38,10 @@ pub fn App() -> impl IntoView {
 
     let (text, set_text) = signal(DEFAULT_TEXT.to_string());
     let (misspellings, set_misspellings) = signal(Vec::new());
+    // A small live probe for the hyphenation layer. It is separate from
+    // the spell-check text on purpose: hyphenation is a typographic
+    // presentation concern and must not change `check`/`suggest`.
+    let (hyphen_word, set_hyphen_word) = signal("tietokoneohjelmointi".to_string());
 
     // Reactive: whenever `text` changes, run the analyse
     // pipeline and write the result into `misspellings`. No
@@ -50,11 +54,8 @@ pub fn App() -> impl IntoView {
         state_for_update.update(|s| {
             torille_wasm::wasm_demo::update(s, &t);
         });
-        let hits = state_for_analyze
-            .get_untracked()
-            .analyze(&t, 8);
-        let misspell_words: Vec<String> =
-            hits.iter().map(|h| h.word.clone()).collect();
+        let hits = state_for_analyze.get_untracked().analyze(&t, 8);
+        let misspell_words: Vec<String> = hits.iter().map(|h| h.word.clone()).collect();
         set_misspellings.set(misspell_words);
     });
 
@@ -86,6 +87,23 @@ pub fn App() -> impl IntoView {
             set_text=set_text
             misspellings=misspellings
         />
+        <section class="hyphenation">
+            <h2>"Hyphenation"</h2>
+            <label for="hyphen-word">"Word"</label>
+            <input
+                id="hyphen-word"
+                type="text"
+                spellcheck="false"
+                prop:value=hyphen_word
+                on:input=move |e| set_hyphen_word.set(event_target_value(&e))
+            />
+            <p class="hyphenated">
+                {move || torille_wasm::wasm_demo::hyphenate(&hyphen_word.get())}
+            </p>
+            <p class="hint">
+                "Permitted line breaks under the default Finnish policy."
+            </p>
+        </section>
         <details>
             <summary>"How it works"</summary>
             <pre>{unindent("
@@ -133,13 +151,7 @@ fn unindent(s: &str) -> String {
         .min()
         .unwrap_or(0);
     s.lines()
-        .map(|l| {
-            if l.len() >= leading {
-                &l[leading..]
-            } else {
-                l
-            }
-        })
+        .map(|l| if l.len() >= leading { &l[leading..] } else { l })
         .collect::<Vec<_>>()
         .join("\n")
 }

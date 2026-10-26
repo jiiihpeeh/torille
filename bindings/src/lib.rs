@@ -13,16 +13,22 @@
 //!     engine = Engine()
 //!     for form in engine.inflect("kala"):
 //!         form.word, form.confidence, form.tags
+//!     for point in engine.hyphenate("tietokoneohjelmointi"):
+//!         point.byte_offset, point.char_offset, point.source
 //!
 //! `tags` is the same list of words the `inflect` binary prints after the
 //! confidence, so anything written against that output keeps working.
 
-use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 
+use torille::hyphenation::{
+    BreakSource, CompoundAnalyzer, Exceptions, HyphenationOptions, LexicalCompoundAnalyzer,
+    NoCompoundAnalyzer, VowelBreaks, positions_with,
+};
 use torille::kotus::{Inflection, Lemma};
 use torille::spec::Catalogues;
 use torille::tags::{Confidence, PartOfSpeech};
@@ -105,6 +111,22 @@ struct PyForm {
     negative: bool,
     /// The reading as the `inflect` binary prints it, for display.
     tags: Vec<String>,
+}
+
+/// One permitted Finnish line break, as the harness sees it.
+#[pyclass(frozen, get_all)]
+struct PyHyphenationPoint {
+    /// Byte offset of the start of the next fragment, in the original
+    /// word. Always a UTF-8 character boundary.
+    byte_offset: usize,
+    /// The same position as a character offset.
+    char_offset: usize,
+    /// Whether the morphology layer recognised a compound boundary.
+    compound: bool,
+    /// `pattern`, `compound`, `exception`, or `soft-hyphen`.
+    source: &'static str,
+    /// Lower is preferred; this is a ranking hint, not a confidence.
+    penalty: u16,
 }
 
 fn confidence_name(c: Confidence) -> &'static str {
@@ -235,6 +257,21 @@ fn parse_pos(s: &str) -> Option<PartOfSpeech> {
         return None;
     }
     PartOfSpeech::parse_all(&s).into_iter().next()
+}
+
+fn parse_vowel_breaks(s: &str) -> Result<VowelBreaks, String> {
+    match s.trim().to_lowercase().as_str() {
+        "compound-only" | "compound" => Ok(VowelBreaks::CompoundOnly),
+        "never" => Ok(VowelBreaks::Never),
+        "always" => Ok(VowelBreaks::Always),
+        other => Err(format!(
+            "{other:?}: expected `compound-only`, `never`, or `always`"
+        )),
+    }
+}
+
+fn source_name(source: BreakSource) -> &'static str {
+    source.as_str()
 }
 
 /// What [`Engine::inflect`] decided to do, worked out before any work happens.
@@ -406,6 +443,60 @@ impl Engine {
             })
             .collect()
     }
+
+    /// Permitted Finnish line breaks in `word`.
+    ///
+    /// Returns the same points the CLI's `--json` mode and the wasm
+    /// `hyphenate` export use. `vowel_breaks` is `compound-only`
+    /// (default), `never`, or `always`. `compound_breaks=False` gives
+    /// the pattern-only fallback, useful for diagnostics.
+    ///
+    /// Existing soft hyphens (`U+00AD`) are kept in the source and
+    /// returned as `soft-hyphen` points; the point sits after the
+    /// invisible character, so it belongs to the preceding fragment.
+    #[pyo3(signature = (word, left_min=2, right_min=2, compound_breaks=true, vowel_breaks="compound-only"))]
+    fn hyphenate(
+        &self,
+        py: Python<'_>,
+        word: &str,
+        left_min: usize,
+        right_min: usize,
+        compound_breaks: bool,
+        vowel_breaks: &str,
+    ) -> PyResult<Py<PyList>> {
+        let vowel_breaks = parse_vowel_breaks(vowel_breaks).map_err(PyValueError::new_err)?;
+        let options = HyphenationOptions {
+            left_min,
+            right_min,
+            compound_breaks,
+            vowel_breaks,
+        };
+        let points = py.allow_threads(|| {
+            let compound = LexicalCompoundAnalyzer;
+            let no_compound = NoCompoundAnalyzer;
+            let analyzer: &dyn CompoundAnalyzer = if compound_breaks {
+                &compound
+            } else {
+                &no_compound
+            };
+            positions_with(word, &options, analyzer, Exceptions::finnish())
+        });
+
+        let list = PyList::empty_bound(py);
+        for point in points {
+            list.append(Py::new(
+                py,
+                PyHyphenationPoint {
+                    byte_offset: point.byte_offset,
+                    char_offset: point.char_offset,
+                    compound: point.compound_boundary,
+                    source: source_name(point.source),
+                    penalty: point.penalty,
+                },
+            )?)?;
+        }
+        Ok(list.unbind())
+    }
 }
 /// The decision half of [`Engine::inflect`], kept out of `#[pymethods]`
 /// so it stays ordinary Rust that a test can call.
@@ -560,6 +651,7 @@ impl Engine {
 fn torille_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Engine>()?;
     m.add_class::<PyForm>()?;
+    m.add_class::<PyHyphenationPoint>()?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }
@@ -898,6 +990,40 @@ mod tests {
                         .unwrap()
                 )
             )
+        );
+    }
+
+    #[test]
+    fn vowel_break_names_are_the_cli_spellings() {
+        assert_eq!(
+            parse_vowel_breaks("compound-only"),
+            Ok(VowelBreaks::CompoundOnly)
+        );
+        assert_eq!(
+            parse_vowel_breaks("compound"),
+            Ok(VowelBreaks::CompoundOnly)
+        );
+        assert_eq!(parse_vowel_breaks("never"), Ok(VowelBreaks::Never));
+        assert_eq!(parse_vowel_breaks("always"), Ok(VowelBreaks::Always));
+        assert!(parse_vowel_breaks("sometimes").is_err());
+    }
+
+    /// The Python surface exposes the same point names as the CLI and
+    /// wasm surfaces, including the soft-hyphen source.
+    #[test]
+    fn hyphenation_points_have_one_name_for_each_source() {
+        let word = "kissa\u{00AD}koira";
+        let points = torille::hyphenation::positions(word);
+        let soft = points
+            .iter()
+            .find(|point| point.source == BreakSource::SoftHyphen)
+            .expect("the supplied soft hyphen");
+        assert_eq!(soft.char_offset, 6);
+        assert_eq!(source_name(soft.source), "soft-hyphen");
+        assert_eq!(
+            torille::hyphenation::split(word, &points).concat(),
+            word,
+            "the binding never modifies the source"
         );
     }
 }
