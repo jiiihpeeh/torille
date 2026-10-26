@@ -1,0 +1,1023 @@
+{
+ "class": "9*G",
+ "model_word": "hanka",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "hanka",
+ "cells": {
+  "translative|singular|third person": {
+   "drop": 2,
+   "add": "gakseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngaksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngakseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngaksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngaksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngaksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngalla"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 2,
+   "add": "gallaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngallamme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngallani"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngallanne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngallasi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngalle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 2,
+   "add": "galleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngallemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngalleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngallenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngallesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngalta"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 2,
+   "add": "galtaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngaltamme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngaltani"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngaltanne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngaltasi"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngan"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngassa"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 2,
+   "add": "gassaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngassamme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngassani"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngassanne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngassasi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngasta"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 2,
+   "add": "gastaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngastamme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngastani"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngastanne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngastasi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngat"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngatta"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 2,
+   "add": "gattaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngattamme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngattani"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngattanne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngattasi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 2,
+   "add": "goikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoiksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoiksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoiksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoiksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoilla"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 2,
+   "add": "goillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoillamme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoillani"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoillanne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoillasi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 2,
+   "add": "goilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoilleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoillesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoilta"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 2,
+   "add": "goiltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoiltamme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoiltani"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoiltanne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoiltasi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoin"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoissa"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 2,
+   "add": "goissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoissamme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoissani"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoissanne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoissasi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoista"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 2,
+   "add": "goistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoistamme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoistani"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoistanne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoistasi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoitta"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 2,
+   "add": "goittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoittamme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoittani"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoittanne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ngoittasi"
+   ]
+  },
+  "nominative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nka"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkaa"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkaamme"
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkaamme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkaan"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkaani"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkaani"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkaanne"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkaanne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkaansa"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkaansa"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkaasi"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkaasi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkamme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkamme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkamme"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkana"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 0,
+   "add": "naan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkanamme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkanani"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkananne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkanasi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkani"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkani"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkani"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkanne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkanne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkanne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkansa"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkansa"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkansa"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkasi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkasi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkasi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkoihimme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkoihin"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkoihini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkoihinne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkoihinsa"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkoihisi"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkoina"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 1,
+   "add": "oinaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkoinamme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkoinani"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkoinanne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkoinasi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkoja"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 1,
+   "add": "ojaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkojamme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkojani"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkojanne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkojasi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkojemme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkojen"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkojeni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkojenne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkojensa"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nkojesi"
+   ]
+  }
+ }
+}

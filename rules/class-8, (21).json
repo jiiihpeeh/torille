@@ -1,0 +1,120 @@
+{
+ "class": "8, (21)",
+ "model_word": "smoothie",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "smoothie",
+ "cells": {
+  "translative|plural|third person": {
+   "drop": 0,
+   "add": "ikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 0,
+   "add": "illaan",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 0,
+   "add": "illeen",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 0,
+   "add": "iltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 0,
+   "add": "inaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 0,
+   "add": "issaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 0,
+   "add": "istaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 0,
+   "add": "ittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 0,
+   "add": "kseen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 0,
+   "add": "llaan",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 0,
+   "add": "lleen",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 0,
+   "add": "ltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 0,
+   "add": "naan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 0,
+   "add": "ssaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 0,
+   "add": "staan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 0,
+   "add": "ttaan",
+   "suf": [
+    ""
+   ]
+  }
+ }
+}

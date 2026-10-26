@@ -1,0 +1,811 @@
+class	slot	form	optional
+1	0	äly	0
+1	1	älyn	0
+1	2	älyä	0
+1	3	älyyn	0
+1	4	älyt	0
+1	5	älyjen	0
+1	6	älyjä	0
+1	7	älyihin	0
+2	0	ajelu	0
+2	1	ajelun	0
+2	2	ajelua	0
+2	3	ajeluun	0
+2	4	ajelut	0
+2	5	ajeluiden	0
+2	5	ajeluitten	0
+2	5	ajelujen	0
+2	6	ajeluita	0
+2	6	ajeluja	0
+2	7	ajeluihin	0
+3	0	avio	0
+3	1	avion	0
+3	2	aviota	0
+3	3	avioon	0
+3	4	aviot	0
+3	5	avioiden	0
+3	5	avioitten	0
+3	6	avioita	0
+3	7	avioihin	0
+4	0	elikko	0
+4	1	elikon	0
+4	2	elikkoa	0
+4	3	elikkoon	0
+4	4	elikot	0
+4	5	elikkojen	0
+4	5	elikoiden	0
+4	5	elikoitten	0
+4	6	elikkoja	0
+4	6	elikoita	0
+4	7	elikkoihin	0
+4	7	elikoihin	0
+5	0	aari	0
+5	1	aarin	0
+5	2	aaria	0
+5	3	aariin	0
+5	4	aarit	0
+5	5	aarien	0
+5	6	aareja	0
+5	7	aareihin	0
+6	0	edam	0
+6	1	edamin	0
+6	2	edamia	0
+6	3	edamiin	0
+6	4	edamit	0
+6	5	edameiden	0
+6	5	edameitten	0
+6	5	edamien	0
+6	6	edameita	0
+6	6	edameja	0
+6	7	edameihin	0
+7	0	kivi	0
+7	1	kiven	0
+7	2	kiveä	0
+7	3	kiveen	0
+7	4	kivet	0
+7	5	kivien	0
+7	6	kiviä	0
+7	7	kiviin	0
+8	0	akne	0
+8	1	aknen	0
+8	2	aknea	0
+8	3	akneen	0
+8	4	aknet	0
+8	5	aknejen	0
+8	6	akneja	0
+8	7	akneihin	0
+9	0	aava	0
+9	1	aavan	0
+9	2	aavaa	0
+9	3	aavaan	0
+9	4	aavat	0
+9	5	aavojen	0
+9	6	aavoja	0
+9	7	aavoihin	0
+10	0	oma	0
+10	1	oman	0
+10	2	omaa	0
+10	3	omaan	0
+10	4	omat	0
+10	5	omien	0
+10	6	omia	0
+10	7	omiin	0
+11	0	ahava	0
+11	1	ahavan	0
+11	2	ahavaa	0
+11	3	ahavaan	0
+11	4	ahavat	0
+11	5	ahavien	0
+11	5	ahavoiden	0
+11	5	ahavoitten	0
+11	6	ahavia	0
+11	6	ahavoita	0
+11	7	ahaviin	0
+11	7	ahavoihin	0
+12	0	asia	0
+12	1	asian	0
+12	2	asiaa	0
+12	3	asiaan	0
+12	4	asiat	0
+12	5	asioiden	0
+12	5	asioitten	0
+12	6	asioita	0
+12	7	asioihin	0
+13	0	aluna	0
+13	1	alunan	0
+13	2	alunaa	0
+13	3	alunaan	0
+13	4	alunat	0
+13	5	alunoiden	0
+13	5	alunoitten	0
+13	5	alunojen	0
+13	6	alunoita	0
+13	6	alunoja	0
+13	7	alunoihin	0
+14	0	elukka	0
+14	1	elukan	0
+14	2	elukkaa	0
+14	3	elukkaan	0
+14	4	elukat	0
+14	5	elukkojen	0
+14	5	elukoiden	0
+14	5	elukoitten	0
+14	6	elukkoja	0
+14	6	elukoita	0
+14	7	elukkoihin	0
+14	7	elukoihin	0
+15	0	apea	0
+15	1	apean	0
+15	2	apeaa	0
+15	2	apeata	0
+15	3	apeaan	0
+15	4	apeat	0
+15	5	apeiden	0
+15	5	apeitten	0
+15	6	apeita	0
+15	7	apeihin	0
+15	7	apeisiin	0
+16	0	alempi	0
+16	1	alemman	0
+16	2	alempaa	0
+16	3	alempaan	0
+16	4	alemmat	0
+16	5	alempien	0
+16	6	alempia	0
+16	7	alempiin	0
+17	0	ehtoo	0
+17	1	ehtoon	0
+17	2	ehtoota	0
+17	3	ehtooseen	0
+17	4	ehtoot	0
+17	5	ehtoiden	0
+17	5	ehtoitten	0
+17	6	ehtoita	0
+17	7	ehtoihin	0
+17	7	ehtoisiin	0
+18	0	EU	0
+18	1	EU:n	0
+18	2	EU:ta	0
+18	3	EU:hun	0
+18	4	EU:t	0
+18	5	EU:iden	0
+18	6	EU:ita	0
+18	7	EU:ihin	0
+19	0	suo	0
+19	1	suon	0
+19	2	suota	0
+19	3	suohon	0
+19	4	suot	0
+19	5	soiden	0
+19	5	soitten	0
+19	6	soita	0
+19	7	soihin	0
+20	0	bidee	0
+20	1	bideen	0
+20	2	bideetä	0
+20	3	bideehen	0
+20	3	bideeseen	0
+20	4	bideet	0
+20	5	bideiden	0
+20	5	bideitten	0
+20	6	bideitä	0
+20	7	bideihin	0
+20	7	bideisiin	0
+21	0	brie	0
+21	1	brien	0
+21	2	brietä	0
+21	2	brieä	0
+21	3	briehen	0
+21	3	briehin	0
+21	3	briehyn	0
+21	4	briet	0
+21	5	brieiden	0
+21	5	brieitten	0
+21	5	briejen	0
+21	6	brieitä	0
+21	7	brieihin	0
+22	0	show	0
+22	1	showin	0
+22	2	showia	0
+22	3	showhan	0
+22	3	showhen	0
+22	3	showiin	0
+22	4	showit	0
+22	5	showien	0
+22	6	showeja	0
+22	7	showeihin	0
+23	0	lohi	0
+23	1	lohen	0
+23	2	lohta	0
+23	3	loheen	0
+23	4	lohet	0
+23	5	lohien	0
+23	6	lohia	0
+23	7	lohiin	0
+24	0	kusi	0
+24	1	kusen	0
+24	2	kusta	0
+24	3	kuseen	0
+24	4	kuset	0
+24	5	kusien	0
+24	5	kusten	0
+24	6	kusia	0
+24	7	kusiin	0
+25	0	lumi	0
+25	1	lumen	0
+25	2	lumea	0
+25	2	lunta	0
+25	3	lumeen	0
+25	4	lumet	0
+25	5	lumien	0
+25	5	lunten	0
+25	6	lumia	0
+25	7	lumiin	0
+26	0	ääni	0
+26	1	äänen	0
+26	2	ääntä	0
+26	3	ääneen	0
+26	4	äänet	0
+26	5	äänien	0
+26	5	äänten	0
+26	6	ääniä	0
+26	7	ääniin	0
+27	0	käsi	0
+27	1	käden	0
+27	2	kättä	0
+27	3	käteen	0
+27	4	kädet	0
+27	5	käsien	0
+27	5	kätten	0
+27	6	käsiä	0
+27	7	käsiin	0
+28	0	kansi	0
+28	1	kannen	0
+28	2	kantta	0
+28	3	kanteen	0
+28	4	kannet	0
+28	5	kansien	0
+28	5	kantten	0
+28	6	kansia	0
+28	7	kansiin	0
+29	0	lapsi	0
+29	1	lapsen	0
+29	2	lasta	0
+29	3	lapseen	0
+29	4	lapset	0
+29	5	lapsien	0
+29	5	lasten	0
+29	6	lapsia	0
+29	7	lapsiin	0
+30	0	veitsi	0
+30	1	veitsen	0
+30	2	veistä	0
+30	3	veitseen	0
+30	4	veitset	0
+30	5	veisten	0
+30	5	veitsien	0
+30	6	veitsiä	0
+30	7	veitsiin	0
+31	0	haaksi	0
+31	1	haahden	0
+31	2	haahta	0
+31	3	haahteen	0
+31	4	haahdet	0
+31	5	haaksien	0
+31	6	haaksia	0
+31	7	haaksiin	0
+32	0	aamen	0
+32	1	aamenen	0
+32	2	aamenta	0
+32	3	aameneen	0
+32	4	aamenet	0
+32	5	aamenien	0
+32	5	aamenten	0
+32	6	aamenia	0
+32	7	aameniin	0
+33	0	elin	0
+33	1	elimen	0
+33	2	elintä	0
+33	3	elimeen	0
+33	4	elimet	0
+33	5	elimien	0
+33	5	elinten	0
+33	6	elimiä	0
+33	7	elimiin	0
+34	0	alaston	0
+34	1	alastoman	0
+34	2	alastonta	0
+34	3	alastomaan	0
+34	4	alastomat	0
+34	5	alastomien	0
+34	5	alastonten	0
+34	6	alastomia	0
+34	7	alastomiin	0
+35	0	lämmin	0
+35	1	lämpimän	0
+35	2	lämmintä	0
+35	3	lämpimään	0
+35	4	lämpimät	0
+35	5	lämminten	0
+35	5	lämpimien	0
+35	6	lämpimiä	0
+35	7	lämpimiin	0
+36	0	sisin	0
+36	1	sisimmän	0
+36	2	sisintä	0
+36	3	sisimpään	0
+36	4	sisimmät	0
+36	5	sisimpien	0
+36	5	sisinten	0
+36	6	sisimpiä	0
+36	7	sisimpiin	0
+37	0	vasen	0
+37	1	vasemman	0
+37	2	vasempaa	0
+37	2	vasenta	0
+37	3	vasempaan	0
+37	4	vasemmat	0
+37	5	vasempien	0
+37	5	vasenten	0
+37	6	vasempia	0
+37	7	vasempiin	0
+38	0	alinen	0
+38	1	alisen	0
+38	2	alista	0
+38	3	aliseen	0
+38	4	aliset	0
+38	5	alisien	0
+38	5	alisten	0
+38	6	alisia	0
+38	7	alisiin	0
+39	0	ajos	0
+39	1	ajoksen	0
+39	2	ajosta	0
+39	3	ajokseen	0
+39	4	ajokset	0
+39	5	ajoksien	0
+39	5	ajosten	0
+39	6	ajoksia	0
+39	7	ajoksiin	0
+40	0	apeus	0
+40	1	apeuden	0
+40	2	apeutta	0
+40	3	apeuteen	0
+40	4	apeudet	0
+40	5	apeuksien	0
+40	6	apeuksia	0
+40	7	apeuksiin	0
+41	0	eväs	0
+41	1	evään	0
+41	2	evästä	0
+41	3	evääseen	0
+41	4	eväät	0
+41	5	eväiden	0
+41	5	eväitten	0
+41	5	evästen	0
+41	6	eväitä	0
+41	7	eväihin	0
+41	7	eväisiin	0
+42	0	mies	0
+42	1	miehen	0
+42	2	miestä	0
+42	3	mieheen	0
+42	4	miehet	0
+42	5	miehien	0
+42	5	miesten	0
+42	6	miehiä	0
+42	7	miehiin	0
+43	0	olut	0
+43	1	oluen	0
+43	2	olutta	0
+43	3	olueen	0
+43	4	oluet	0
+43	5	oluiden	0
+43	5	oluitten	0
+43	6	oluita	0
+43	7	oluihin	0
+43	7	oluisiin	0
+44	0	kevät	0
+44	1	kevään	0
+44	2	kevättä	0
+44	3	kevääseen	0
+44	4	keväät	0
+44	5	keväiden	0
+44	5	keväitten	0
+44	6	keväitä	0
+44	7	keväihin	0
+44	7	keväisiin	0
+45	0	tuhannes	0
+45	1	tuhanneksen	0
+45	2	tuhannesta	0
+45	3	tuhannekseen	0
+45	4	tuhannekset	0
+45	5	tuhanneksien	0
+45	5	tuhannesten	0
+45	6	tuhanneksia	0
+45	7	tuhanneksiin	0
+46	0	tuhat	0
+46	1	tuhannen	0
+46	2	tuhatta	0
+46	3	tuhanteen	0
+46	4	tuhannet	0
+46	5	tuhansien	0
+46	6	tuhansia	0
+46	7	tuhansiin	0
+47	0	mennyt	0
+47	1	menneen	0
+47	2	mennyttä	0
+47	3	menneeseen	0
+47	4	menneet	0
+47	5	menneiden	0
+47	5	menneitten	0
+47	6	menneitä	0
+47	7	menneihin	0
+47	7	menneisiin	0
+48	0	aave	0
+48	1	aaveen	0
+48	2	aavetta	0
+48	3	aaveeseen	0
+48	4	aaveet	0
+48	5	aaveiden	0
+48	5	aaveitten	0
+48	6	aaveita	0
+48	7	aaveihin	0
+48	7	aaveisiin	0
+49	0	auer	0
+49	1	auereen	0
+49	1	aueren	0
+49	2	aueretta	0
+49	2	auerta	0
+49	3	auereeseen	0
+49	4	auereet	0
+49	4	aueret	0
+49	5	auereiden	0
+49	5	auereitten	0
+49	5	auerien	0
+49	5	auerten	0
+49	6	auereita	0
+49	6	aueria	0
+49	7	auereihin	0
+49	7	auereisiin	0
+49	7	aueriin	0
+50	0	isotäti	0
+50	1	isotädin	0
+50	2	isotätiä	0
+50	3	isotätiin	0
+50	4	isotädit	0
+50	5	isotätien	0
+50	6	isotätejä	0
+50	7	isotäteihin	0
+51	0	uusikuu	0
+51	1	uudenkuun	0
+51	2	uuttakuuta	0
+51	3	uuteenkuuseen	0
+51	4	uudetkuut	0
+51	5	uusienkuiden	0
+51	5	uuttenkuiden	0
+51	5	uusienkuitten	0
+51	5	uuttenkuitten	0
+51	6	uusiakuita	0
+51	7	uusiinkuihin	0
+51	7	uusiinkuisiin	0
+52	0	aavikoitua	0
+52	1	aavikoidun	0
+52	1	en aavikoidu	0
+52	2	aavikoitui	0
+52	2	ei aavikoitunut	0
+52	3	aavikoituisi	0
+52	3	ei aavikoituisi	0
+52	4	aavikoitunee	0
+52	4	ei aavikoitune	0
+52	5	aavikoitukoon	0
+52	5	älköön aavikoituko	0
+52	6	aavikoitunut	0
+52	7	aavikoiduttiin	0
+53	0	aakkostaa	0
+53	1	aakkostan	0
+53	1	en aakkosta	0
+53	2	aakkosti	0
+53	2	ei aakkostanut	0
+53	3	aakkostaisi	0
+53	3	ei aakkostaisi	0
+53	4	aakkostanee	0
+53	4	ei aakkostane	0
+53	5	aakkostakoon	0
+53	5	älköön aakkostako	0
+53	6	aakkostanut	0
+53	7	aakkostettiin	0
+54	0	lypsää	0
+54	1	en lypsä	0
+54	1	lypsän	0
+54	2	ei lypsänyt	0
+54	2	lypsi	0
+54	3	ei lypsäisi	0
+54	3	lypsäisi	0
+54	4	ei lypsäne	0
+54	4	lypsänee	0
+54	5	lypsäköön	0
+54	5	älköön lypsäkö	0
+54	6	lypsänyt	0
+54	7	lypsettiin	0
+55	0	entää	0
+55	1	en ennä	0
+55	1	ennän	0
+55	2	ei entänyt	0
+55	2	ensi	0
+55	2	enti	0
+55	3	ei entäisi	0
+55	3	entäisi	0
+55	4	ei entäne	0
+55	4	entänee	0
+55	5	entäköön	0
+55	5	älköön entäkö	0
+55	6	entänyt	0
+55	7	ennettiin	0
+56	0	ajaa	0
+56	1	ajan	0
+56	1	en aja	0
+56	2	ajoi	0
+56	2	ei ajanut	0
+56	3	ajaisi	0
+56	3	ei ajaisi	0
+56	4	ajanee	0
+56	4	ei ajane	0
+56	5	ajakoon	0
+56	5	älköön ajako	0
+56	6	ajanut	0
+56	7	ajettiin	0
+57	0	kaartaa	0
+57	1	en kaarra	0
+57	1	kaarran	0
+57	2	ei kaartanut	0
+57	2	kaarsi	0
+57	2	kaartoi	0
+57	3	ei kaartaisi	0
+57	3	kaartaisi	0
+57	4	ei kaartane	0
+57	4	kaartanee	0
+57	5	kaartakoon	0
+57	5	älköön kaartako	0
+57	6	kaartanut	0
+57	7	kaarrettiin	0
+58	0	imeä	0
+58	1	en ime	0
+58	1	imen	0
+58	2	ei imenyt	0
+58	2	imi	0
+58	3	ei imisi	0
+58	3	imisi	0
+58	4	ei imene	0
+58	4	imenee	0
+58	5	imeköön	0
+58	5	älköön imekö	0
+58	6	imenyt	0
+58	7	imettiin	0
+59	0	tuntea	0
+59	1	en tunne	0
+59	1	tunnen	0
+59	2	ei tuntenut	0
+59	2	tunsi	0
+59	3	ei tuntisi	0
+59	3	tuntisi	0
+59	4	ei tuntene	0
+59	4	tuntenee	0
+59	5	tuntekoon	0
+59	5	älköön tunteko	0
+59	6	tuntenut	0
+59	7	tunnettiin	0
+60	0	lähteä	0
+60	1	en lähde	0
+60	1	lähden	0
+60	2	ei lähtenyt	0
+60	2	lähti	0
+60	2	läksi	0
+60	3	ei lähtisi	0
+60	3	lähtisi	0
+60	4	ei lähtene	0
+60	4	lähtenee	0
+60	5	lähteköön	0
+60	5	älköön lähtekö	0
+60	6	lähtenyt	0
+60	7	lähdettiin	0
+61	0	ahmia	0
+61	1	ahmin	0
+61	1	en ahmi	0
+61	2	ahmi	0
+61	2	ei ahminut	0
+61	3	ahmisi	0
+61	3	ei ahmisi	0
+61	4	ahminee	0
+61	4	ei ahmine	0
+61	5	ahmikoon	0
+61	5	älköön ahmiko	0
+61	6	ahminut	0
+61	7	ahmittiin	0
+62	0	aateloida	0
+62	1	aateloin	0
+62	1	en aateloi	0
+62	2	aateloi	0
+62	2	ei aateloinut	0
+62	3	aateloisi	0
+62	3	ei aateloisi	0
+62	4	aateloinee	0
+62	4	ei aateloine	0
+62	5	aateloikoon	0
+62	5	älköön aateloiko	0
+62	6	aateloinut	0
+62	7	aateloitiin	0
+63	0	jäädä	0
+63	1	en jää	0
+63	1	jään	0
+63	2	ei jäänyt	0
+63	2	jäi	0
+63	3	ei jäisi	0
+63	3	jäisi	0
+63	4	ei jääne	0
+63	4	jäänee	0
+63	5	jääköön	0
+63	5	älköön jääkö	0
+63	6	jäänyt	0
+63	7	jäätiin	0
+64	0	juoda	0
+64	1	en juo	0
+64	1	juon	0
+64	2	ei juonut	0
+64	2	joi	0
+64	3	ei joisi	0
+64	3	joisi	0
+64	4	ei juone	0
+64	4	juonee	0
+64	5	juokoon	0
+64	5	älköön juoko	0
+64	6	juonut	0
+64	7	juotiin	0
+65	0	käydä	0
+65	1	en käy	0
+65	1	käyn	0
+65	2	ei käynyt	0
+65	2	kävi	0
+65	3	ei kävisi	0
+65	3	kävisi	0
+65	4	ei käyne	0
+65	4	käynee	0
+65	5	käyköön	0
+65	5	älköön käykö	0
+65	6	käynyt	0
+65	7	käytiin	0
+66	0	ahmaista	0
+66	1	ahmaisen	0
+66	1	en ahmaise	0
+66	2	ahmaisi	0
+66	2	ei ahmaissut	0
+66	3	ahmaisisi	0
+66	3	ei ahmaisisi	0
+66	4	ahmaissee	0
+66	4	ei ahmaisse	0
+66	5	ahmaiskoon	0
+66	5	älköön ahmaisko	0
+66	6	ahmaissut	0
+66	7	ahmaistiin	0
+67	0	aaltoilla	0
+67	1	aaltoilen	0
+67	1	en aaltoile	0
+67	2	aaltoili	0
+67	2	ei aaltoillut	0
+67	3	aaltoilisi	0
+67	3	ei aaltoilisi	0
+67	4	aaltoillee	0
+67	4	ei aaltoille	0
+67	5	aaltoilkoon	0
+67	5	älköön aaltoilko	0
+67	6	aaltoillut	0
+67	7	aaltoiltiin	0
+68	0	ahkeroida	0
+68	1	ahkeroin	0
+68	1	ahkeroitsen	0
+68	1	en ahkeroi	0
+68	2	ahkeroi	0
+68	2	ahkeroitsi	0
+68	2	ei ahkeroinut	0
+68	3	ahkeroisi	0
+68	3	ahkeroitsisi	0
+68	3	ei ahkeroisi	0
+68	4	ahkeroinee	0
+68	4	ei ahkeroine	0
+68	5	ahkeroikoon	0
+68	5	älköön ahkeroiko	0
+68	6	ahkeroinut	0
+68	7	ahkeroitiin	0
+69	0	ansaita	0
+69	1	ansaitsen	0
+69	1	en ansaitse	0
+69	2	ansaitsi	0
+69	2	ei ansainnut	0
+69	3	ansaitsisi	0
+69	3	ei ansaitsisi	0
+69	4	ansainnee	0
+69	4	ei ansainne	0
+69	5	ansaitkoon	0
+69	5	älköön ansaitko	0
+69	6	ansainnut	0
+69	7	ansaittiin	0
+70	0	juosta	0
+70	1	en juokse	0
+70	1	juoksen	0
+70	2	ei juossut	0
+70	2	juoksi	0
+70	3	ei juoksisi	0
+70	3	juoksisi	0
+70	4	ei juosse	0
+70	4	juossee	0
+70	5	juoskoon	0
+70	5	älköön juosko	0
+70	6	juossut	0
+70	7	juostiin	0
+71	0	nähdä	0
+71	1	en näe	0
+71	1	näen	0
+71	2	ei nähnyt	0
+71	2	näki	0
+71	3	ei näkisi	0
+71	3	näkisi	0
+71	4	ei nähne	0
+71	4	nähnee	0
+71	5	nähköön	0
+71	5	älköön nähkö	0
+71	6	nähnyt	0
+71	7	nähtiin	0
+72	0	aleta	0
+72	1	alenen	0
+72	1	en alene	0
+72	2	aleni	0
+72	2	ei alennut	0
+72	3	alenisi	0
+72	3	ei alenisi	0
+72	4	alennee	0
+72	4	ei alenne	0
+72	5	aletkoon	0
+72	5	älköön aletko	0
+72	6	alennut	0
+72	7	alettiin	0
+73	0	aisata	0
+73	1	aisaan	0
+73	1	en aisaa	0
+73	2	aisasi	0
+73	2	ei aisannut	0
+73	3	aisaisi	0
+73	3	ei aisaisi	0
+73	4	aisannee	0
+73	4	ei aisanne	0
+73	5	aisatkoon	0
+73	5	älköön aisatko	0
+73	6	aisannut	0
+73	7	aisattiin	0
+74	0	haljeta	0
+74	1	en halkea	0
+74	1	halkean	0
+74	2	ei haljennut	0
+74	2	halkesi	0
+74	3	ei halkeaisi	0
+74	3	ei halkeisi	0
+74	3	halkeaisi	0
+74	3	halkeisi	0
+74	4	ei haljenne	0
+74	4	haljennee	0
+74	5	haljetkoon	0
+74	5	älköön haljetko	0
+74	6	haljennut	0
+74	7	haljettiin	0
+75	0	bingota	0
+75	1	bingoan	0
+75	1	en bingoa	0
+75	2	bingosi	0
+75	2	ei bingonnut	0
+75	3	bingoaisi	0
+75	3	ei bingoaisi	0
+75	4	bingonnee	0
+75	4	ei bingonne	0
+75	5	bingotkoon	0
+75	5	älköön bingotko	0
+75	6	bingonnut	0
+75	7	bingottiin	0

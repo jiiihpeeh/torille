@@ -1,0 +1,40 @@
+torille licensing
+=================
+
+torille is multi-licensed by component. The license is chosen per directory,
+not per file, unless a file says otherwise.
+
+Engine, bindings, browser code and examples
+-------------------------------------------
+
+Everything outside `tools/` and `data/` is available under either of:
+
+  * the MIT License, in `LICENSE-MIT`; or
+  * the Apache License, Version 2.0, in `LICENSE-APACHE`;
+
+at your option. This covers `src/`, `tests/`, `benches/`, `bindings/`,
+`wrapper/`, `torille-wasm/`, `torille-wasm-leptos/`, `demo-server/`,
+`torille-firefox/`, `torille-chromium/`, `docs/`, `rules/`, and the repository
+documentation.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+
+Tools
+-----
+
+The development and verification tooling in `tools/` is licensed like the
+engine, except for the files tied to Omorfi or Voikko. Those oracle bridge and
+harness files are licensed under the GNU General Public License, version 3 or
+later (GPL-3.0-or-later), because Omorfi is GPLv3 and libvoikko is
+GPLv2-or-later. The full text is in `tools/LICENSE-GPL-3.0`, and
+`tools/README.md` lists the exact files. Each GPL file carries an SPDX header.
+
+SPDX-License-Identifier: GPL-3.0-or-later (Omorfi/Voikko harness files only)
+
+Data
+----
+
+Files under `data/` are not part of the source code and are not licensed by
+this file. They are Kotus data publications with their own terms; see
+`data/LICENSE` and `NOTICE`. Nothing in `LICENSE-MIT`, `LICENSE-APACHE`, or
+`tools/LICENSE-GPL-3.0` changes those terms.

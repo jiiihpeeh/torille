@@ -1,0 +1,1099 @@
+{
+ "class": "5*B",
+ "model_word": "oppi",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "oppi",
+ "cells": {
+  "translative|plural|third person": {
+   "drop": 2,
+   "add": "eikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peiksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peiksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peiksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peiksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peilla",
+    "peillä"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 2,
+   "add": "eillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peillamme",
+    "peillämme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peillani",
+    "peilläni"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peillanne",
+    "peillänne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peillasi",
+    "peilläsi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 2,
+   "add": "eilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peilleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peillesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peilta",
+    "peiltä"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 2,
+   "add": "eiltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peiltamme",
+    "peiltämme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peiltani",
+    "peiltäni"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peiltanne",
+    "peiltänne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peiltasi",
+    "peiltäsi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pein"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peissa",
+    "peissä"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 2,
+   "add": "eissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peissamme",
+    "peissämme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peissani",
+    "peissäni"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peissanne",
+    "peissänne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peissasi",
+    "peissäsi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peista",
+    "peistä"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 2,
+   "add": "eistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peistamme",
+    "peistämme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peistani",
+    "peistäni"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peistanne",
+    "peistänne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peistasi",
+    "peistäsi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peitta",
+    "peittä"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 2,
+   "add": "eittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peittamme",
+    "peittämme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peittani",
+    "peittäni"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peittanne",
+    "peittänne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "peittasi",
+    "peittäsi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 2,
+   "add": "ikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "piksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pikseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "piksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "piksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "piksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pilla",
+    "pillä"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 2,
+   "add": "illaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pillamme",
+    "pillämme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pillani",
+    "pilläni"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pillanne",
+    "pillänne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pillasi",
+    "pilläsi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pille"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 2,
+   "add": "illeen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pillemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pilleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pillenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pillesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pilta",
+    "piltä"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 2,
+   "add": "iltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "piltamme",
+    "piltämme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "piltani",
+    "piltäni"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "piltanne",
+    "piltänne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "piltasi",
+    "piltäsi"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pin"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pissa",
+    "pissä"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 2,
+   "add": "issaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pissamme",
+    "pissämme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pissani",
+    "pissäni"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pissanne",
+    "pissänne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pissasi",
+    "pissäsi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pista",
+    "pistä"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 2,
+   "add": "istaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pistamme",
+    "pistämme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pistani",
+    "pistäni"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pistanne",
+    "pistänne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pistasi",
+    "pistäsi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pit"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pitta",
+    "pittä"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 2,
+   "add": "ittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pittamme",
+    "pittämme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pittani",
+    "pittäni"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pittanne",
+    "pittänne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "pittasi",
+    "pittäsi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppeihimme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppeihin"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppeihini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppeihinne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppeihinsa",
+    "ppeihinsä"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppeihisi"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppeina",
+    "ppeinä"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 1,
+   "add": "einaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppeinamme",
+    "ppeinämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppeinani",
+    "ppeinäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppeinanne",
+    "ppeinänne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppeinasi",
+    "ppeinäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppeja",
+    "ppejä"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 1,
+   "add": "ejaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppejamme",
+    "ppejämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppejani",
+    "ppejäni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppejanne",
+    "ppejänne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppejasi",
+    "ppejäsi"
+   ]
+  },
+  "nominative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppi"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppia",
+    "ppiä"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "aan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppiamme",
+    "ppiämme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppiani",
+    "ppiäni"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppianne",
+    "ppiänne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppiasi",
+    "ppiäsi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppiemme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppien"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppieni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppienne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppiensa",
+    "ppiensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppiesi"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppiimme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppiin"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppiini"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppiinne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppiinsa",
+    "ppiinsä"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppiisi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppimme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppimme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppimme"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppina",
+    "ppinä"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 0,
+   "add": "naan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppinamme",
+    "ppinämme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppinani",
+    "ppinäni"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppinanne",
+    "ppinänne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppinasi",
+    "ppinäsi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppini"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppini"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppini"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppinne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppinne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppinne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppinsa",
+    "ppinsä"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppinsa",
+    "ppinsä"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppinsa",
+    "ppinsä"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppisi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppisi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ppisi"
+   ]
+  }
+ }
+}

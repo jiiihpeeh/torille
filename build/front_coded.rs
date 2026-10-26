@@ -1,0 +1,374 @@
+//! Front-coded set and map emitters.
+//!
+//! Split out of `build.rs`; `main` calls the three public entry points.
+//! `write_varint` and `human_bytes` stay in the crate root because the
+//! Huffman writer shares them.
+
+use std::collections::BTreeMap;
+use std::fs;
+use std::path::Path;
+
+use crate::huffman::emit_huffman_set;
+use crate::{human_bytes, write_varint};
+
+/// Emit the compile-time form subset as a front-coded set blob.
+///
+/// The filter keeps only the cases users type most often -- the bare lemma
+/// (nominative singular, no possessive) and the genitive singular (no
+/// possessive). The heuristic picks coverage of the words the typing path
+/// actually sees; missing forms fall through to the slow check. We don't
+/// have corpus frequency, so this is a "common spelling" proxy, not a
+/// true top-N.
+///
+/// The keys are sorted and front-coded exactly like the stem maps (see
+/// `src/expand/static_table.rs`), so the compiler only sees `include_bytes!`
+/// and the strings are not duplicated in a `phf` table.
+///
+/// **Reuse path**: if `blob_path` already exists and the CSV is *missing*,
+/// skip the read-and-emit entirely -- a fresh build on a clone without the
+/// CSV reuses the committed precomputed blob.
+pub(super) fn emit_front_coded_set(csv_path: &Path, blob_path: &Path) {
+    if !csv_path.exists() && blob_path.exists() {
+        eprintln!(
+            "build.rs: {} missing but {} present -- reusing",
+            csv_path.display(),
+            blob_path.display(),
+        );
+        return;
+    }
+    use std::collections::BTreeSet;
+    let csv = match fs::read_to_string(csv_path) {
+        Ok(s) => s,
+        Err(e) => panic!(
+            "build.rs: could not read {}: {e}; \
+             run `python3 tools/build_all_forms_csv.py` first",
+            csv_path.display(),
+        ),
+    };
+    let mut seen: BTreeSet<String> = BTreeSet::new();
+    for line in csv.lines() {
+        if line.is_empty() {
+            continue;
+        }
+        // CSV columns: form \t lemma \t case \t number \t possessive
+        let mut cols = line.split('\t');
+        let form = cols.next().unwrap_or(""); // 1: form
+        let lemma = cols.next().unwrap_or(""); // 2: lemma
+        let case = cols.next().unwrap_or(""); // 3: case
+        let number = cols.next().unwrap_or(""); // 4: number
+        let possessive = cols.next().unwrap_or(""); // 5: possessive
+        if form.is_empty() || form.contains('\0') {
+            continue;
+        }
+        // The oracle's class-1 plural-only lemmas (`housut`, `aivot`) carry
+        // a bogus genitive singular `housutn`/`aivotn` beside the real
+        // `housuja`/`aivoja`. The engine now declines these from the dropped
+        // stem; keep the bad oracle row out of the fast form set too.
+        if case == "genitive"
+            && number == "singular"
+            && lemma.ends_with('t')
+            && form == format!("{lemma}n")
+        {
+            continue;
+        }
+        // Lemmas (nominative singular, no possessive) and
+        // genitive singular forms (no possessive). The "no
+        // possessive" filter trims 2.86 M possessive variants
+        // that the typing path rarely sees.
+        if !possessive.is_empty() {
+            continue;
+        }
+        let include = (case == "nominative" && number == "singular")
+            || (case == "genitive" && number == "singular");
+        if !include {
+            continue;
+        }
+        seen.insert(form.to_string());
+    }
+    let keys: Vec<String> = seen.into_iter().collect();
+    eprintln!(
+        "build.rs: {}: {} lemma + genitive-singular forms",
+        csv_path.display(),
+        keys.len(),
+    );
+    emit_front_coded_keys(blob_path, &keys);
+}
+
+/// Emit `data/proper_name_forms.csv` (`form<TAB>name`) as a Huffman-coded
+/// set of forms.
+///
+/// Wikidata supplies the names, Omorfi the singular cases; the typing path
+/// only needs to know that a surface form is a name, so a set (no values) is
+/// enough. Keys are lowercased because the fast path lowercases before
+/// probing. The set is front-coded and entropy-coded (`HST1`); see
+/// [`emit_huffman_set`].
+pub(super) fn emit_proper_names(csv_path: &Path, blob_path: &Path) {
+    if !csv_path.exists() && blob_path.exists() {
+        eprintln!(
+            "build.rs: {} missing but {} present -- reusing",
+            csv_path.display(),
+            blob_path.display(),
+        );
+        return;
+    }
+    use std::collections::BTreeSet;
+    let csv = fs::read_to_string(csv_path).unwrap_or_else(|e| {
+        panic!(
+            "build.rs: could not read {}: {e}; \
+             run `python3 tools/build_proper_name_forms.py` first",
+            csv_path.display(),
+        )
+    });
+    let mut seen: BTreeSet<String> = BTreeSet::new();
+    for line in csv.lines() {
+        let Some((form, _name)) = line.split_once('\t') else {
+            continue;
+        };
+        let form = form.trim();
+        if form.is_empty() || form.contains('\0') {
+            continue;
+        }
+        seen.insert(form.to_lowercase());
+    }
+    let keys: Vec<String> = seen.into_iter().collect();
+    eprintln!(
+        "build.rs: {}: {} proper-name forms",
+        csv_path.display(),
+        keys.len(),
+    );
+    emit_huffman_set(blob_path, &keys);
+}
+
+/// Write a sorted key list as a front-coded `SST2` set blob.
+fn emit_front_coded_keys(blob_path: &Path, keys: &[String]) {
+    // Front-code: one full key per `RESTART`-record block, then
+    // `(shared_prefix, suffix)` records relative to the previous key. Same
+    // layout as the maps; `static_table::StaticSet` reads it.
+    const RESTART: usize = 16;
+    let mut encoded: Vec<u8> = Vec::new();
+    let mut restarts: Vec<u32> = Vec::new();
+    let mut prev = String::new();
+    for (i, key) in keys.iter().enumerate() {
+        if i % RESTART == 0 {
+            restarts.push(encoded.len() as u32);
+            write_varint(0, &mut encoded);
+            write_varint(key.len() as u32, &mut encoded);
+            encoded.extend_from_slice(key.as_bytes());
+        } else {
+            let common = prev
+                .bytes()
+                .zip(key.bytes())
+                .take_while(|(a, b)| a == b)
+                .count();
+            write_varint(common as u32, &mut encoded);
+            write_varint((key.len() - common) as u32, &mut encoded);
+            encoded.extend_from_slice(&key.as_bytes()[common..]);
+        }
+        prev.clear();
+        prev.push_str(key);
+    }
+
+    // Header (40 B), restart table, keys. The value fields are zero: a set
+    // has no payload.
+    const HEADER: usize = 40;
+    const SET_MAGIC: u32 = 0x3254_5353; // "SST2"
+    let restarts_off = HEADER;
+    let keys_off = restarts_off + restarts.len() * 4;
+
+    let mut blob: Vec<u8> = Vec::with_capacity(keys_off + encoded.len());
+    blob.extend_from_slice(&SET_MAGIC.to_le_bytes());
+    blob.extend_from_slice(&(keys.len() as u32).to_le_bytes());
+    blob.extend_from_slice(&(restarts.len() as u32).to_le_bytes());
+    blob.extend_from_slice(&(restarts_off as u32).to_le_bytes());
+    blob.extend_from_slice(&(keys_off as u32).to_le_bytes());
+    for _ in 0..5 {
+        blob.extend_from_slice(&0u32.to_le_bytes());
+    }
+    for r in &restarts {
+        blob.extend_from_slice(&r.to_le_bytes());
+    }
+    blob.extend_from_slice(&encoded);
+
+    eprintln!(
+        "build.rs: {}: {} keys -> {} blob",
+        blob_path.file_name().unwrap().to_string_lossy(),
+        keys.len(),
+        human_bytes(blob.len()),
+    );
+    fs::write(blob_path, &blob).unwrap_or_else(|e| panic!("{}: {e}", blob_path.display()));
+}
+
+// ---------------------------------------------------------------------------
+// Front-coded map emission. Each key has one or more string values.
+//
+// Everything is one binary blob (see `src/expand/static_table.rs`): a
+// front-coded, sorted key region with restart points, a `(start, count)`
+// value table, and a NUL-separated value region. `include_bytes!` pulls the
+// blob in as a `&'static [u8]`; the runtime binary-searches it. No key is
+// ever a Rust literal, which is what keeps the compiler and the binary
+// small (the old phf literals duplicated every key on top of the blob).
+// ---------------------------------------------------------------------------
+
+/// Read a stem-to-base CSV (`stem\tbase` per line, dedup by stem),
+/// bucket the bases, and emit the front-coded stem-map blob.
+///
+/// **Reuse path**: if the CSV is missing but the blob is present, skip.
+pub(super) fn emit_stem_map(csv_path: &Path, blob_path: &Path) {
+    if !csv_path.exists() && blob_path.exists() {
+        eprintln!(
+            "build.rs: {} missing but precomputed present -- reusing",
+            csv_path.display(),
+        );
+        return;
+    }
+    let csv = fs::read_to_string(csv_path).unwrap_or_else(|e| {
+        panic!(
+            "build.rs: could not read {}: {e}; \
+             run `python3 tools/{}` first",
+            csv_path.display(),
+            if csv_path.ends_with("verb_stem_to_base_map.csv") {
+                "build_verb_stem_to_base_map.py"
+            } else {
+                "build_stem_to_base_map.py"
+            }
+        )
+    });
+    let mut buckets: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let mut line_count = 0usize;
+    for line in csv.lines() {
+        if line.is_empty() {
+            continue;
+        }
+        let Some((stem, base)) = line.split_once('\t') else {
+            continue;
+        };
+        buckets
+            .entry(stem.to_string())
+            .or_default()
+            .push(base.to_string());
+        line_count += 1;
+    }
+    // BTreeMap sorts by stem, so `entries` is already the sorted key
+    // order the front-coded region needs.
+    let entries: Vec<(String, Vec<String>)> = buckets.into_iter().collect();
+    eprintln!(
+        "build.rs: {}: {} stems from {} CSV rows",
+        csv_path.file_name().unwrap().to_string_lossy(),
+        entries.len(),
+        line_count,
+    );
+    write_front_coded_map(blob_path, &entries);
+}
+
+/// Write a front-coded `key -> [values]` map blob.
+///
+/// Layout (mirrors `src/expand/static_table.rs`): 40-byte header, restart
+/// table, front-coded keys, one u32 id per key (or an overflow pointer for
+/// multi-value keys), a deduplicated string pool, and an offset table. Used
+/// for the stem maps and the small form -> lemma/degree maps.
+pub(super) fn write_front_coded_map(blob_path: &Path, entries: &[(String, Vec<String>)]) {
+    // Keys: front-coded, one full key per `RESTART`-record block.
+    const RESTART: usize = 16;
+    let mut keys: Vec<u8> = Vec::new();
+    let mut restarts: Vec<u32> = Vec::new();
+    let mut prev = String::new();
+    for (i, (key, _)) in entries.iter().enumerate() {
+        if i % RESTART == 0 {
+            restarts.push(keys.len() as u32);
+            write_varint(0, &mut keys);
+            write_varint(key.len() as u32, &mut keys);
+            keys.extend_from_slice(key.as_bytes());
+        } else {
+            let common = prev
+                .bytes()
+                .zip(key.bytes())
+                .take_while(|(a, b)| a == b)
+                .count();
+            write_varint(common as u32, &mut keys);
+            write_varint((key.len() - common) as u32, &mut keys);
+            keys.extend_from_slice(&key.as_bytes()[common..]);
+        }
+        prev.clear();
+        prev.push_str(key);
+    }
+
+    // Deduplicate the values into one sorted pool. The noun stem map has
+    // 687 k entries but only 83 k unique base strings.
+    let mut pool: Vec<&str> = entries
+        .iter()
+        .flat_map(|(_, vs)| vs.iter().map(String::as_str))
+        .collect();
+    pool.sort_unstable();
+    pool.dedup();
+    let id_of = |v: &str| pool.binary_search(&v).unwrap() as u32;
+
+    // One u32 per key. A direct id covers the 99.5 % single-value keys; a
+    // key with several values points into `overflow` (count byte + u32 ids).
+    const MULTI: u32 = 0x8000_0000;
+    let mut ids: Vec<u32> = Vec::with_capacity(entries.len());
+    let mut overflow: Vec<u8> = Vec::new();
+    for (_, vs) in entries {
+        if vs.len() == 1 {
+            ids.push(id_of(&vs[0]));
+        } else {
+            let off = overflow.len() as u32;
+            debug_assert!(vs.len() < u8::MAX as usize);
+            overflow.push(vs.len() as u8);
+            for v in vs {
+                overflow.extend_from_slice(&id_of(v).to_le_bytes());
+            }
+            ids.push(MULTI | off);
+        }
+    }
+
+    // Offsets into the concatenated string pool, with a sentinel at the end.
+    let mut string_offsets: Vec<u8> = Vec::with_capacity((pool.len() + 1) * 4);
+    let mut strings: Vec<u8> = Vec::new();
+    for s in &pool {
+        string_offsets.extend_from_slice(&(strings.len() as u32).to_le_bytes());
+        strings.extend_from_slice(s.as_bytes());
+    }
+    string_offsets.extend_from_slice(&(strings.len() as u32).to_le_bytes());
+
+    // Assemble: header (40 B), restart table, keys, ids, overflow, string
+    // offsets, strings.
+    const HEADER: usize = 40;
+    const MAGIC: u32 = 0x3254_534D; // "MST2"
+    let restarts_off = HEADER;
+    let keys_off = restarts_off + restarts.len() * 4;
+    let ids_off = keys_off + keys.len();
+    let overflow_off = ids_off + ids.len() * 4;
+    let string_offsets_off = overflow_off + overflow.len();
+    let strings_off = string_offsets_off + string_offsets.len();
+
+    let mut blob: Vec<u8> = Vec::with_capacity(strings_off + strings.len());
+    blob.extend_from_slice(&MAGIC.to_le_bytes());
+    blob.extend_from_slice(&(entries.len() as u32).to_le_bytes());
+    blob.extend_from_slice(&(restarts.len() as u32).to_le_bytes());
+    blob.extend_from_slice(&(restarts_off as u32).to_le_bytes());
+    blob.extend_from_slice(&(keys_off as u32).to_le_bytes());
+    blob.extend_from_slice(&(ids_off as u32).to_le_bytes());
+    blob.extend_from_slice(&(overflow_off as u32).to_le_bytes());
+    blob.extend_from_slice(&(string_offsets_off as u32).to_le_bytes());
+    blob.extend_from_slice(&(pool.len() as u32).to_le_bytes());
+    blob.extend_from_slice(&(strings_off as u32).to_le_bytes());
+    for r in &restarts {
+        blob.extend_from_slice(&r.to_le_bytes());
+    }
+    blob.extend_from_slice(&keys);
+    for id in &ids {
+        blob.extend_from_slice(&id.to_le_bytes());
+    }
+    blob.extend_from_slice(&overflow);
+    blob.extend_from_slice(&string_offsets);
+    blob.extend_from_slice(&strings);
+
+    eprintln!(
+        "build.rs: {}: {} keys, {} unique values -> {} blob",
+        blob_path.file_name().unwrap().to_string_lossy(),
+        entries.len(),
+        pool.len(),
+        human_bytes(blob.len()),
+    );
+    fs::write(blob_path, &blob).unwrap_or_else(|e| panic!("{}: {e}", blob_path.display()));
+}

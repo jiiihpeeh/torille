@@ -1,0 +1,1099 @@
+{
+ "class": "33*J",
+ "model_word": "kannin",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "kannin",
+ "cells": {
+  "nominative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "nnin"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "nninta",
+    "nnintä"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "taan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "nnintamme",
+    "nnintämme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "nnintani",
+    "nnintäni"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "nnintanne",
+    "nnintänne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "nnintasi",
+    "nnintäsi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "ensa",
+    "ensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "esi"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimeemme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimeen"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimeeni"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimeenne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimeensa",
+    "ntimeensä"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimeesi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 3,
+   "add": "timekseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimeksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimekseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimeksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimeksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimeksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimella",
+    "ntimellä"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 3,
+   "add": "timellaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimellamme",
+    "ntimellämme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimellani",
+    "ntimelläni"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimellanne",
+    "ntimellänne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimellasi",
+    "ntimelläsi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimelle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 3,
+   "add": "timelleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimellemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimelleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimellenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimellesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimelta",
+    "ntimeltä"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 3,
+   "add": "timeltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimeltamme",
+    "ntimeltämme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimeltani",
+    "ntimeltäni"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimeltanne",
+    "ntimeltänne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimeltasi",
+    "ntimeltäsi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimemme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimemme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimemme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimen"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimena",
+    "ntimenä"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 3,
+   "add": "timenaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimenamme",
+    "ntimenämme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimenani",
+    "ntimenäni"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimenanne",
+    "ntimenänne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimenasi",
+    "ntimenäsi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimeni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimeni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimeni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimenne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimenne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimenne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimensa",
+    "ntimensä"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimensa",
+    "ntimensä"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimensa",
+    "ntimensä"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimesi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimesi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimesi"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimessa",
+    "ntimessä"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 3,
+   "add": "timessaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimessamme",
+    "ntimessämme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimessani",
+    "ntimessäni"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimessanne",
+    "ntimessänne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimessasi",
+    "ntimessäsi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimesta",
+    "ntimestä"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 3,
+   "add": "timestaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimestamme",
+    "ntimestämme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimestani",
+    "ntimestäni"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimestanne",
+    "ntimestänne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimestasi",
+    "ntimestäsi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimet"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimetta",
+    "ntimettä"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 3,
+   "add": "timettaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimettamme",
+    "ntimettämme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimettani",
+    "ntimettäni"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimettanne",
+    "ntimettänne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimettasi",
+    "ntimettäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimia",
+    "ntimiä"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 3,
+   "add": "timiaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimiamme",
+    "ntimiämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimiani",
+    "ntimiäni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimianne",
+    "ntimiänne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimiasi",
+    "ntimiäsi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimiimme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimiin"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimiini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimiinne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimiinsa",
+    "ntimiinsä"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimiisi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 3,
+   "add": "timikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimiksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimiksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimiksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimiksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimilla",
+    "ntimillä"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 3,
+   "add": "timillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimillamme",
+    "ntimillämme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimillani",
+    "ntimilläni"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimillanne",
+    "ntimillänne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimillasi",
+    "ntimilläsi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 3,
+   "add": "timilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimilleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimillesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimilta",
+    "ntimiltä"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 3,
+   "add": "timiltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimiltamme",
+    "ntimiltämme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimiltani",
+    "ntimiltäni"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimiltanne",
+    "ntimiltänne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimiltasi",
+    "ntimiltäsi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimin"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimina",
+    "ntiminä"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 3,
+   "add": "timinaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntiminamme",
+    "ntiminämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntiminani",
+    "ntiminäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntiminanne",
+    "ntiminänne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntiminasi",
+    "ntiminäsi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimissa",
+    "ntimissä"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 3,
+   "add": "timissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimissamme",
+    "ntimissämme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimissani",
+    "ntimissäni"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimissanne",
+    "ntimissänne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimissasi",
+    "ntimissäsi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimista",
+    "ntimistä"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 3,
+   "add": "timistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimistamme",
+    "ntimistämme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimistani",
+    "ntimistäni"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimistanne",
+    "ntimistänne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimistasi",
+    "ntimistäsi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimitta",
+    "ntimittä"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 3,
+   "add": "timittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimittamme",
+    "ntimittämme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimittani",
+    "ntimittäni"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimittanne",
+    "ntimittänne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntimittasi",
+    "ntimittäsi"
+   ]
+  }
+ }
+}

@@ -1,0 +1,1225 @@
+{
+ "class": "25",
+ "model_word": "lumi",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "lumi",
+ "cells": {
+  "illative|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "meemme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "meen"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "meeni"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "meenne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "meensa",
+    "meensä"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "meesi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 1,
+   "add": "ekseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "meksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mekseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "meksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "meksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "meksi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "melle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 1,
+   "add": "elleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mellemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "melleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mellenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mellesi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mella",
+    "mellä"
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mellamme",
+    "mellämme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mellani",
+    "melläni"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mellanne",
+    "mellänne"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 1,
+   "add": "ellaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "emi": {
+     "drop": 1,
+     "add": "ellään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "adessive|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mellasi",
+    "melläsi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "melta",
+    "meltä"
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "meltamme",
+    "meltämme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "meltani",
+    "meltäni"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "meltanne",
+    "meltänne"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 1,
+   "add": "eltaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "emi": {
+     "drop": 1,
+     "add": "eltään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "ablative|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "meltasi",
+    "meltäsi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "memme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "memme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "memme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "men"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "meni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "meni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "meni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "menne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "menne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "menne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mensa",
+    "mensä"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mensa",
+    "mensä"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mensa",
+    "mensä"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mena",
+    "menä"
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "menamme",
+    "menämme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "menani",
+    "menäni"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "menanne",
+    "menänne"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 1,
+   "add": "enaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "emi": {
+     "drop": 1,
+     "add": "enään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "essive|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "menasi",
+    "menäsi"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mesi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mesi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mesi"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "messa",
+    "messä"
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "messamme",
+    "messämme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "messani",
+    "messäni"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "messanne",
+    "messänne"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 1,
+   "add": "essaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "emi": {
+     "drop": 1,
+     "add": "essään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "inessive|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "messasi",
+    "messäsi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mesta",
+    "mestä"
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mestamme",
+    "mestämme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mestani",
+    "mestäni"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mestanne",
+    "mestänne"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 1,
+   "add": "estaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "emi": {
+     "drop": 1,
+     "add": "estään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "elative|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mestasi",
+    "mestäsi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "met"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "metta",
+    "mettä"
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mettamme",
+    "mettämme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mettani",
+    "mettäni"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mettanne",
+    "mettänne"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 1,
+   "add": "ettaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "emi": {
+     "drop": 1,
+     "add": "ettään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "abessive|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mettasi",
+    "mettäsi"
+   ]
+  },
+  "nominative|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ensa",
+    "ensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "esi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "miimme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "miin"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "miini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "miinne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "miinsa",
+    "miinsä"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "miisi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 0,
+   "add": "kseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "miksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "miksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "miksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "miksi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 0,
+   "add": "lleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "millemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "milleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "millenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "millesi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "milla",
+    "millä"
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "millamme",
+    "millämme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "millani",
+    "milläni"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "millanne",
+    "millänne"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 0,
+   "add": "llaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "emi": {
+     "drop": 0,
+     "add": "llään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "adessive|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "millasi",
+    "milläsi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "milta",
+    "miltä"
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "miltamme",
+    "miltämme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "miltani",
+    "miltäni"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "miltanne",
+    "miltänne"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 0,
+   "add": "ltaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "emi": {
+     "drop": 0,
+     "add": "ltään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "ablative|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "miltasi",
+    "miltäsi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "min"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mina",
+    "minä"
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "minamme",
+    "minämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "minani",
+    "minäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "minanne",
+    "minänne"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 0,
+   "add": "naan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "emi": {
+     "drop": 0,
+     "add": "nään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "essive|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "minasi",
+    "minäsi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "missa",
+    "missä"
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "missamme",
+    "missämme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "missani",
+    "missäni"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "missanne",
+    "missänne"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 0,
+   "add": "ssaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "emi": {
+     "drop": 0,
+     "add": "ssään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "inessive|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "missasi",
+    "missäsi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mista",
+    "mistä"
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mistamme",
+    "mistämme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mistani",
+    "mistäni"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mistanne",
+    "mistänne"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 0,
+   "add": "staan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "emi": {
+     "drop": 0,
+     "add": "stään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "elative|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mistasi",
+    "mistäsi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mitta",
+    "mittä"
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mittamme",
+    "mittämme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mittani",
+    "mittäni"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mittanne",
+    "mittänne"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 0,
+   "add": "ttaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "emi": {
+     "drop": 0,
+     "add": "ttään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "abessive|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mittasi",
+    "mittäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mia",
+    "miä"
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "miamme",
+    "miämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "miani",
+    "miäni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "mianne",
+    "miänne"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 0,
+   "add": "aan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "emi": {
+     "drop": 0,
+     "add": "ään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "partitive|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "miasi",
+    "miäsi"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 2,
+   "add": "nt",
+   "suf": [
+    "a",
+    "ä"
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 2,
+   "add": "nt",
+   "suf": [
+    "amme",
+    "ämme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 2,
+   "add": "nt",
+   "suf": [
+    "ani",
+    "äni"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 2,
+   "add": "nt",
+   "suf": [
+    "anne",
+    "änne"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 2,
+   "add": "ntaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "emi": {
+     "drop": 2,
+     "add": "ntään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "partitive|singular|second person singular": {
+   "drop": 2,
+   "add": "nt",
+   "suf": [
+    "asi",
+    "äsi"
+   ]
+  }
+ }
+}

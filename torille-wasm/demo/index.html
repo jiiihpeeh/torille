@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<title>torille-wasm demo</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --fg: #172033;
+    --muted: #667085;
+    --miss: #b42318;
+    --miss-bg: #fff1f0;
+    --accent: #2563eb;
+    --accent-soft: #eef4ff;
+    --border: #d9deea;
+    --surface: #ffffff;
+    --shadow: 0 10px 30px rgba(23, 32, 51, 0.07);
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    max-width: 900px;
+    margin: 2.5em auto;
+    padding: 0 1.1em 3em;
+    color: var(--fg);
+    background: var(--bg);
+    line-height: 1.45;
+  }
+  h1 { font-weight: 400; font-size: 1.4em; }
+  h1 small { color: #888; font-size: 0.7em; }
+  h2 { font-weight: 500; font-size: 1.05em; margin: 1.4em 0 0.4em 0; }
+  h2 small { color: #888; font-weight: 400; font-size: 0.8em; }
+
+  /* Header spell-check ON/OFF toggle. Lives next to the
+     page title so every panel's state is one click away.
+     The OFF state dims the button so the user gets a
+     visible cue that the underlines are paused. */
+  .spell-check-toggle {
+    margin-left: 1em;
+    font-size: 0.65em;
+    font-weight: 400;
+    padding: 0.25em 0.7em;
+    border: 1px solid var(--border);
+    border-radius: 0.3em;
+    background: white;
+    color: var(--fg);
+    cursor: pointer;
+    vertical-align: middle;
+  }
+  .spell-check-toggle:hover {
+    background: var(--miss-bg);
+  }
+  .spell-check-toggle[aria-pressed="false"] {
+    color: #888;
+    background: #f0f0f0;
+  }
+  .spell-check-toggle strong {
+    font-weight: 600;
+  }
+  p.subheading { color: #666; font-size: 0.85em; margin: 0 0 0.4em 0; }
+
+  /* The spell-check surface: a fake underlay (rendered HTML behind the
+     textarea) shows misspellings; the textarea on top has its text
+     transparent so only the caret is visible. Both elements share the
+     same font/padding/line-height so the underlay's word wrap matches
+     the textarea's. */
+  .editor {
+    position: relative;
+    margin: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: white;
+  }
+  .editor .underlay,
+  .editor textarea {
+    margin: 0;
+    padding: 12px;
+    border: 0;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 14px;
+    line-height: 21px;
+    letter-spacing: 0;
+    word-spacing: 0;
+    tab-size: 4;
+    text-indent: 0;
+    font-variant-ligatures: none;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 9em;
+  }
+  .editor .underlay {
+    position: relative;
+    z-index: 2;
+    color: var(--fg);
+    pointer-events: none;
+  }
+  .editor textarea {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    color: transparent;
+    /* Chrome's WebKit paints the caret via -webkit-text-fill-color;
+       leaving `color: transparent` alone leaves a faint ghost of the
+       text in some fonts. Force the fill to transparent. */
+    -webkit-text-fill-color: transparent;
+    caret-color: var(--fg);
+    /* `bar` -> 1-px-wide vertical line whose height matches the
+       line-box exactly. The default `block` caret can render
+       slightly taller than the line-box for monospace fonts
+       whose ascent/descent differ from the line-box. */
+    caret-shape: bar;
+    background: transparent;
+    resize: none;
+    outline: none;
+  }
+  .editor .underlay .misspell {
+    background: var(--miss-bg);
+    text-decoration: underline wavy var(--miss);
+    border-radius: 3px;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  .editor .underlay .misspell.focused {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  .suggestions {
+    position: absolute;
+    z-index: 10;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 4px 0;
+    min-width: 8em;
+    max-height: 12em;
+    overflow-y: auto;
+  }
+  .suggestions button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: 0;
+    padding: 6px 12px;
+    font: inherit;
+    cursor: pointer;
+  }
+  .suggestions button:hover,
+  .suggestions button.focused {
+    background: var(--accent);
+    color: white;
+  }
+  .suggestions .empty {
+    padding: 6px 12px;
+    color: #888;
+    font-style: italic;
+  }
+
+  .status {
+    display: flex;
+    gap: 1em;
+    margin: 0 0 0.5em 0;
+    color: #555;
+    font-size: 0.9em;
+  }
+  .status .ok { color: #067647; font-weight: 600; }
+  .status .bad { color: var(--miss); font-weight: 600; }
+  .status .muted { color: var(--muted); }
+  .status .checking {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    color: var(--accent);
+    font-weight: 550;
+  }
+  .status .status-dot {
+    width: 0.52em;
+    height: 0.52em;
+    border-radius: 50%;
+    background: currentColor;
+    animation: status-pulse 1s ease-in-out infinite;
+  }
+  @keyframes status-pulse {
+    0%, 100% { opacity: 0.35; transform: scale(0.85); }
+    50% { opacity: 1; transform: scale(1); }
+  }
+
+  details { margin-top: 1em; }
+  summary { cursor: pointer; color: var(--accent); }
+  pre { background: #f4f4f4; padding: 0.5em; border-radius: 4px; overflow-x: auto; }
+
+  /* Gutenberg reader: a modern library picker + reading surface. */
+  .gutenberg-reader {
+    margin-top: 2.2em;
+  }
+  .gutenberg-reader > h2 {
+    font-size: 1.25em;
+    letter-spacing: -0.015em;
+    margin-bottom: 0.15em;
+  }
+  .gutenberg-reader > h2 small {
+    color: var(--muted);
+  }
+
+  .book-picker {
+    margin: 0.8em 0 1.1em;
+    padding: 1.05em;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+  }
+  .picker-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1em;
+  }
+  .picker-head h3 {
+    margin: 0;
+    font-size: 1.02em;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  .picker-hint {
+    margin: 0.2em 0 0;
+    color: var(--muted);
+    font-size: 0.8em;
+  }
+  .picker-random,
+  .picker-clear {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--fg);
+    font: inherit;
+    font-size: 0.78em;
+    font-weight: 550;
+    padding: 0.5em 0.8em;
+    cursor: pointer;
+    transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+  }
+  .picker-random:hover:not(:disabled),
+  .picker-clear:hover {
+    background: var(--accent-soft);
+    border-color: #b9c7e8;
+    transform: translateY(-1px);
+  }
+  .picker-random:disabled {
+    color: #98a2b3;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  .picker-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55em;
+    margin: 0.9em 0 0.55em;
+  }
+  .search-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1 1 17em;
+  }
+  .search-field input[type="search"] {
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.9em;
+    padding: 0.62em 2.2em 0.62em 2.15em;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: #fbfcff;
+    color: var(--fg);
+    outline: none;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+  }
+  .search-field input[type="search"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .search-field input[type="search"]::-webkit-search-cancel-button {
+    display: none;
+  }
+  .search-field .search-icon {
+    position: absolute;
+    left: 0.7em;
+    color: var(--muted);
+    font-size: 1.1em;
+    pointer-events: none;
+  }
+  .search-field .search-clear {
+    position: absolute;
+    right: 0.36em;
+    display: grid;
+    place-items: center;
+    width: 1.6em;
+    height: 1.6em;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--muted);
+    font-size: 1.1em;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .search-field .search-clear:hover {
+    background: var(--miss-bg);
+    color: var(--miss);
+  }
+  .sort-field {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    color: var(--muted);
+    font-size: 0.76em;
+    white-space: nowrap;
+  }
+  .sort-field select {
+    font: inherit;
+    font-size: 1.05em;
+    color: var(--fg);
+    padding: 0.5em 0.65em;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface);
+    cursor: pointer;
+  }
+  .sort-field select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .catalog-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.6em;
+    margin: 0.35em 0 0.65em;
+    color: var(--muted);
+    font-size: 0.76em;
+  }
+  .catalog-meta strong {
+    color: var(--fg);
+    font-weight: 650;
+  }
+  .catalog-page-label {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .catalog-results {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14.5em, 1fr));
+    gap: 0.55em;
+    margin: 0;
+    padding: 0;
+  }
+  .catalog-results li {
+    display: flex;
+  }
+  .catalog-result {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35em;
+    width: 100%;
+    min-height: 6.4em;
+    padding: 0.78em 0.85em;
+    text-align: left;
+    font: inherit;
+    color: var(--fg);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+  }
+  .catalog-result:hover {
+    border-color: #b9c7e8;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.08);
+    transform: translateY(-1px);
+  }
+  .catalog-result.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+  .catalog-result .r-title {
+    font-weight: 600;
+    font-size: 0.9em;
+    line-height: 1.32;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .catalog-result .r-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5em;
+    width: 100%;
+    margin-top: auto;
+    color: var(--muted);
+    font-size: 0.74em;
+  }
+  .catalog-result .r-author {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .catalog-result .r-id {
+    color: #98a2b3;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .catalog-result.active .r-title {
+    padding-right: 4.4em;
+  }
+  .catalog-result .r-status {
+    position: absolute;
+    top: 0.55em;
+    right: 0.55em;
+    padding: 0.12em 0.45em;
+    border-radius: 999px;
+    background: var(--accent);
+    color: white;
+    font-size: 0.62em;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    pointer-events: none;
+  }
+
+  .catalog-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    margin-top: 0.95em;
+  }
+  .catalog-pagination button {
+    font: inherit;
+    font-size: 0.78em;
+    font-weight: 550;
+    padding: 0.42em 0.7em;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface);
+    color: var(--fg);
+    cursor: pointer;
+  }
+  .catalog-pagination button:hover:not(:disabled) {
+    background: var(--accent-soft);
+    border-color: #b9c7e8;
+  }
+  .catalog-pagination button:disabled {
+    color: #b6becd;
+    cursor: not-allowed;
+  }
+  .catalog-pagination .page-indicator {
+    padding: 0 0.35em;
+    color: var(--muted);
+    font-size: 0.78em;
+  }
+  .catalog-pagination .page-indicator strong {
+    color: var(--fg);
+  }
+
+  .catalog-empty {
+    padding: 1.2em 0.8em;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.84em;
+  }
+  .catalog-empty p {
+    margin: 0 0 0.7em;
+  }
+  .catalog-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.55em;
+    padding: 0.6em 0.2em;
+    color: var(--muted);
+    font-size: 0.82em;
+  }
+  .spinner {
+    width: 0.95em;
+    height: 0.95em;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 650ms linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .gutenberg-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.55em 0;
+  }
+  .gutenberg-nav button {
+    font: inherit;
+    font-size: 0.8em;
+    padding: 0.42em 0.75em;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface);
+    color: var(--fg);
+    cursor: pointer;
+  }
+  .gutenberg-nav button:hover:not(:disabled) {
+    background: var(--accent-soft);
+    border-color: #b9c7e8;
+  }
+  .gutenberg-nav button:disabled {
+    color: #b6becd;
+    cursor: not-allowed;
+  }
+  .chapter-pick {
+    display: flex;
+    align-items: center;
+    gap: 0.35em;
+    color: var(--muted);
+    font-size: 0.8em;
+  }
+  .chapter-pick select {
+    max-width: 18em;
+    font: inherit;
+    font-size: 1.02em;
+    color: var(--fg);
+    padding: 0.4em 0.55em;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+
+  .gutenberg-reader .loading {
+    color: var(--muted);
+    font-style: italic;
+    font-size: 0.85em;
+  }
+  .gutenberg-reader .error {
+    color: var(--miss);
+    font-size: 0.85em;
+  }
+
+  @media (max-width: 560px) {
+    body { margin-top: 1.4em; }
+    .book-picker { padding: 0.85em; border-radius: 14px; }
+    .picker-head { flex-direction: column; }
+    .picker-random { align-self: flex-start; }
+    .catalog-results { grid-template-columns: 1fr; }
+    .catalog-result { min-height: 0; }
+    .catalog-result .r-title { -webkit-line-clamp: 2; }
+  }
+</style>
+</head>
+<body>
+<div id="app">loading torille…</div>
+<!-- esbuild bundles Solid + the wasm-bindgen shim into one file. The
+     wasm itself is fetched at runtime via the shim's
+     `new URL("torille_wasm_bg.wasm", import.meta.url)`, which after
+     bundling resolves to `./dist/torille_wasm_bg.wasm` -- `build.mjs`
+     copies the wasm there so the path is valid. -->
+<script type="module" src="./dist/main.js?v=4"></script>
+</body>
+</html>

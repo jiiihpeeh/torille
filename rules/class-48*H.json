@@ -1,0 +1,218 @@
+{
+ "class": "48*H",
+ "model_word": "lumme",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "lumme",
+ "cells": {
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "ttaan",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 2,
+   "add": "peekseen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 2,
+   "add": "peellaan",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 2,
+   "add": "peelleen",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 2,
+   "add": "peeltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 2,
+   "add": "peenaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 2,
+   "add": "peessaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 2,
+   "add": "peestaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 2,
+   "add": "peettaan",
+   "suf": [
+    ""
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 2,
+   "add": "peid",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 2,
+   "add": "peid",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 2,
+   "add": "peid",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 2,
+   "add": "peid",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 2,
+   "add": "peid",
+   "suf": [
+    "ensa"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 2,
+   "add": "peid",
+   "suf": [
+    "esi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 2,
+   "add": "peih",
+   "suf": [
+    "imme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 2,
+   "add": "peih",
+   "suf": [
+    "in"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 2,
+   "add": "peih",
+   "suf": [
+    "ini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 2,
+   "add": "peih",
+   "suf": [
+    "inne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 2,
+   "add": "peih",
+   "suf": [
+    "insa"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 2,
+   "add": "peih",
+   "suf": [
+    "isi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 2,
+   "add": "peikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 2,
+   "add": "peillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 2,
+   "add": "peilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 2,
+   "add": "peiltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 2,
+   "add": "peinaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 2,
+   "add": "peissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 2,
+   "add": "peistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 2,
+   "add": "peitaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 2,
+   "add": "peittaan",
+   "suf": [
+    ""
+   ]
+  }
+ }
+}

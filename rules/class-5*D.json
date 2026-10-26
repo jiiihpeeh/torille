@@ -1,0 +1,1023 @@
+{
+ "class": "5*D",
+ "model_word": "maanlaki",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "maanlaki",
+ "cells": {
+  "translative|plural|third person": {
+   "drop": 2,
+   "add": "eikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeiksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeiksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeiksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeiksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeilla"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 2,
+   "add": "eillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeillamme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeillani"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeillanne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeillasi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 2,
+   "add": "eilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeilleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeillesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeilta"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 2,
+   "add": "eiltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeiltamme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeiltani"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeiltanne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeiltasi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "ein"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeissa"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 2,
+   "add": "eissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeissamme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeissani"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeissanne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeissasi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeista"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 2,
+   "add": "eistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeistamme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeistani"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeistanne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeistasi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeitta"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 2,
+   "add": "eittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeittamme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeittani"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeittanne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laeittasi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 2,
+   "add": "ikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laiksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laikseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laiksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laiksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laiksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lailla"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 2,
+   "add": "illaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laillamme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laillani"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laillanne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laillasi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laille"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 2,
+   "add": "illeen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laillemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lailleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laillenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laillesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lailta"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 2,
+   "add": "iltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lailtamme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lailtani"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lailtanne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lailtasi"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lain"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laissa"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 2,
+   "add": "issaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laissamme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laissani"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laissanne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laissasi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laista"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 2,
+   "add": "istaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laistamme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laistani"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laistanne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laistasi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lait"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laitta"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 2,
+   "add": "ittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laittamme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laittani"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laittanne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laittasi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakeihimme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakeihin"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakeihini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakeihinne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakeihinsa"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakeihisi"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakeina"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 1,
+   "add": "einaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakeinamme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakeinani"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakeinanne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakeinasi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakeja"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 1,
+   "add": "ejaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakejamme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakejani"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakejanne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakejasi"
+   ]
+  },
+  "nominative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "laki"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakia"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "aan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakiamme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakiani"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakianne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakiasi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakiemme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakien"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakieni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakienne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakiensa"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakiesi"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakiimme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakiin"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakiini"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakiinne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakiinsa"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakiisi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakimme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakimme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakimme"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakina"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 0,
+   "add": "naan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakinamme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakinani"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakinanne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakinasi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakini"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakini"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakini"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakinne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakinne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakinne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakinsa"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakinsa"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakinsa"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakisi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakisi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "lakisi"
+   ]
+  }
+ }
+}

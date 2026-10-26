@@ -1,0 +1,1225 @@
+{
+ "class": "7*F",
+ "model_word": "lehti",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "lehti",
+ "cells": {
+  "translative|singular|third person": {
+   "drop": 2,
+   "add": "dekseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdeksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdekseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdeksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdeksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdeksi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdelle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 2,
+   "add": "delleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdellemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdelleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdellenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdellesi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdella",
+    "hdellä"
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdellamme",
+    "hdellämme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdellani",
+    "hdelläni"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdellanne",
+    "hdellänne"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 2,
+   "add": "dellänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ahti": {
+     "drop": 2,
+     "add": "dellansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "adessive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdellasi",
+    "hdelläsi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdelta",
+    "hdeltä"
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdeltamme",
+    "hdeltämme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdeltani",
+    "hdeltäni"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdeltanne",
+    "hdeltänne"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 2,
+   "add": "deltänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ahti": {
+     "drop": 2,
+     "add": "deltansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "ablative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdeltasi",
+    "hdeltäsi"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hden"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdessa",
+    "hdessä"
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdessamme",
+    "hdessämme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdessani",
+    "hdessäni"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdessanne",
+    "hdessänne"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 2,
+   "add": "dessänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ahti": {
+     "drop": 2,
+     "add": "dessansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "inessive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdessasi",
+    "hdessäsi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdesta",
+    "hdestä"
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdestamme",
+    "hdestämme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdestani",
+    "hdestäni"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdestanne",
+    "hdestänne"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 2,
+   "add": "destänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ahti": {
+     "drop": 2,
+     "add": "destansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "elative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdestasi",
+    "hdestäsi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdet"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdetta",
+    "hdettä"
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdettamme",
+    "hdettämme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdettani",
+    "hdettäni"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdettanne",
+    "hdettänne"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 2,
+   "add": "dettänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ahti": {
+     "drop": 2,
+     "add": "dettansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "abessive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdettasi",
+    "hdettäsi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 2,
+   "add": "dikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdiksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdiksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdiksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdiksi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 2,
+   "add": "dilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdilleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdillesi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdilla",
+    "hdillä"
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdillamme",
+    "hdillämme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdillani",
+    "hdilläni"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdillanne",
+    "hdillänne"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 2,
+   "add": "dillänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ahti": {
+     "drop": 2,
+     "add": "dillansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "adessive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdillasi",
+    "hdilläsi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdilta",
+    "hdiltä"
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdiltamme",
+    "hdiltämme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdiltani",
+    "hdiltäni"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdiltanne",
+    "hdiltänne"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 2,
+   "add": "diltänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ahti": {
+     "drop": 2,
+     "add": "diltansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "ablative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdiltasi",
+    "hdiltäsi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdin"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdissa",
+    "hdissä"
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdissamme",
+    "hdissämme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdissani",
+    "hdissäni"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdissanne",
+    "hdissänne"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 2,
+   "add": "dissänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ahti": {
+     "drop": 2,
+     "add": "dissansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "inessive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdissasi",
+    "hdissäsi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdista",
+    "hdistä"
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdistamme",
+    "hdistämme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdistani",
+    "hdistäni"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdistanne",
+    "hdistänne"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 2,
+   "add": "distänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ahti": {
+     "drop": 2,
+     "add": "distansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "elative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdistasi",
+    "hdistäsi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hditta",
+    "hdittä"
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdittamme",
+    "hdittämme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdittani",
+    "hdittäni"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdittanne",
+    "hdittänne"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 2,
+   "add": "dittänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ahti": {
+     "drop": 2,
+     "add": "dittansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "abessive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hdittasi",
+    "hdittäsi"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hteemme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hteen"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hteeni"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hteenne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hteensa",
+    "hteensä"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hteesi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htemme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htemme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htemme"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hteni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hteni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hteni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htenne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htenne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htenne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htensa",
+    "htensä"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htensa",
+    "htensä"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htensa",
+    "htensä"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htena",
+    "htenä"
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htenamme",
+    "htenämme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htenani",
+    "htenäni"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htenanne",
+    "htenänne"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 1,
+   "add": "enänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ahti": {
+     "drop": 1,
+     "add": "enansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "essive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htenasi",
+    "htenäsi"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htesi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htesi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htesi"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htea",
+    "hteä"
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hteamme",
+    "hteämme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hteani",
+    "hteäni"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hteanne",
+    "hteänne"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 1,
+   "add": "eänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ahti": {
+     "drop": 1,
+     "add": "eansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "partitive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hteasi",
+    "hteäsi"
+   ]
+  },
+  "nominative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "hti"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htiemme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htien"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htieni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htienne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htiensa",
+    "htiensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htiesi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htiimme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htiin"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htiini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htiinne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htiinsa",
+    "htiinsä"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htiisi"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htina",
+    "htinä"
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htinamme",
+    "htinämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htinani",
+    "htinäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htinanne",
+    "htinänne"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 0,
+   "add": "nänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ahti": {
+     "drop": 0,
+     "add": "nansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "essive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htinasi",
+    "htinäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htia",
+    "htiä"
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htiamme",
+    "htiämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htiani",
+    "htiäni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htianne",
+    "htiänne"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 0,
+   "add": "änsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ahti": {
+     "drop": 0,
+     "add": "ansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "partitive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "htiasi",
+    "htiäsi"
+   ]
+  }
+ }
+}

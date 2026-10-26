@@ -1,0 +1,1023 @@
+{
+ "class": "5, 26",
+ "model_word": "irtovuori",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "irtovuori",
+ "cells": {
+  "illative|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreihimme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreihin"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreihini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreihinne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreihinsa"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreihisi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 1,
+   "add": "eikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreiksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreiksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreiksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreiksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreilla"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 1,
+   "add": "eillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreillamme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreillani"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreillanne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreillasi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 1,
+   "add": "eilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreilleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreillesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreilta"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 1,
+   "add": "eiltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreiltamme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreiltani"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreiltanne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreiltasi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorein"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreina"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 1,
+   "add": "einaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreinamme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreinani"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreinanne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreinasi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreissa"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 1,
+   "add": "eissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreissamme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreissani"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreissanne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreissasi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreista"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 1,
+   "add": "eistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreistamme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreistani"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreistanne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreistasi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreitta"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 1,
+   "add": "eittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreittamme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreittani"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreittanne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreittasi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoreja"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 1,
+   "add": "ejaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorejamme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorejani"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorejanne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorejasi"
+   ]
+  },
+  "nominative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuori"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoria"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "aan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriamme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriani"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorianne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriasi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriemme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorien"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorieni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorienne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriensa"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriesi"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriimme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriin"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriini"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriinne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriinsa"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriisi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 0,
+   "add": "kseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorikseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorilla"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 0,
+   "add": "llaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorillamme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorillani"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorillanne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorillasi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorille"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 0,
+   "add": "lleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorillemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorilleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorillenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorillesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorilta"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 0,
+   "add": "ltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriltamme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriltani"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriltanne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoriltasi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorimme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorimme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorimme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorin"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorina"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 0,
+   "add": "naan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorinamme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorinani"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorinanne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorinasi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorini"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorini"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorini"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorinne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorinne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorinne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorinsa"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorinsa"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorinsa"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorisi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorisi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorisi"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorissa"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 0,
+   "add": "ssaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorissamme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorissani"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorissanne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorissasi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorista"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 0,
+   "add": "staan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoristamme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoristani"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoristanne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoristasi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorit"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuoritta"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 0,
+   "add": "ttaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorittamme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorittani"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorittanne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "vuorittasi"
+   ]
+  }
+ }
+}

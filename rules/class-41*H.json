@@ -1,0 +1,1023 @@
+{
+ "class": "41*H",
+ "model_word": "hammas",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "hammas",
+ "cells": {
+  "nominative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ammas"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ammasta"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "taan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ammastamme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ammastani"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ammastanne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ammastasi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 3,
+   "add": "paakseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaaksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaakseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaaksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaaksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaaksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaalla"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 3,
+   "add": "paallaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaallamme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaallani"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaallanne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaallasi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaalle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 3,
+   "add": "paalleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaallemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaalleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaallenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaallesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaalta"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 3,
+   "add": "paaltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaaltamme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaaltani"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaaltanne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaaltasi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaamme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaamme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaamme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaan"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaana"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 3,
+   "add": "paanaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaanamme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaanani"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaananne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaanasi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaani"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaani"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaani"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaanne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaanne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaanne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaansa"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaansa"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaansa"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaaseemme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaaseen"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaaseeni"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaaseenne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaaseensa"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaaseesi"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaasi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaasi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaasi"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaassa"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 3,
+   "add": "paassaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaassamme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaassani"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaassanne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaassasi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaasta"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 3,
+   "add": "paastaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaastamme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaastani"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaastanne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaastasi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaat"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaatta"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 3,
+   "add": "paattaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaattamme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaattani"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaattanne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaattasi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 3,
+   "add": "paid",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 3,
+   "add": "paid",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 3,
+   "add": "paid",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 3,
+   "add": "paid",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 3,
+   "add": "paid",
+   "suf": [
+    "ensa"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 3,
+   "add": "paid",
+   "suf": [
+    "esi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 3,
+   "add": "paih",
+   "suf": [
+    "imme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 3,
+   "add": "paih",
+   "suf": [
+    "in"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 3,
+   "add": "paih",
+   "suf": [
+    "ini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 3,
+   "add": "paih",
+   "suf": [
+    "inne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 3,
+   "add": "paih",
+   "suf": [
+    "insa"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 3,
+   "add": "paih",
+   "suf": [
+    "isi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 3,
+   "add": "paikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaiksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaiksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaiksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaiksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampailla"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 3,
+   "add": "paillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaillamme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaillani"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaillanne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaillasi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 3,
+   "add": "pailleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampailleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaillesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampailta"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 3,
+   "add": "pailtaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampailtamme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampailtani"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampailtanne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampailtasi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampain"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaina"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 3,
+   "add": "painaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampainamme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampainani"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampainanne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampainasi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaissa"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 3,
+   "add": "paissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaissamme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaissani"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaissanne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaissasi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaista"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 3,
+   "add": "paistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaistamme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaistani"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaistanne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaistasi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaita"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 3,
+   "add": "paitaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaitamme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaitani"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaitanne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaitasi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaitta"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 3,
+   "add": "paittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaittamme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaittani"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaittanne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "ampaittasi"
+   ]
+  }
+ }
+}

@@ -1,0 +1,368 @@
+{
+ "class": "34*C",
+ "model_word": "laiton",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "laiton",
+ "cells": {
+  "nominative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ton",
+    "tön"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "tonta",
+    "töntä"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "en"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomaan",
+    "ttömään"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomaksi",
+    "ttömäksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomalla",
+    "ttömällä"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomalle",
+    "ttömälle"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomalta",
+    "ttömältä"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttoman",
+    "ttömän"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomana",
+    "ttömänä"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomassa",
+    "ttömässä"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomasta",
+    "ttömästä"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomat",
+    "ttömät"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomatta",
+    "ttömättä"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomia",
+    "ttömiä"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomiin",
+    "ttömiin"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomiksi",
+    "ttömiksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomilla",
+    "ttömillä"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomille",
+    "ttömille"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomilta",
+    "ttömiltä"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomin",
+    "ttömin"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomina",
+    "ttöminä"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomissa",
+    "ttömissä"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomista",
+    "ttömistä"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttomitta",
+    "ttömittä"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 2,
+   "add": "tömi",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 2,
+   "add": "tömi",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 2,
+   "add": "tömi",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 2,
+   "add": "tömi",
+   "suf": [
+    "ensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 2,
+   "add": "tömi",
+   "suf": [
+    "esi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 2,
+   "add": "tömikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 2,
+   "add": "tömilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 2,
+   "add": "tömillänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 2,
+   "add": "tömiltänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 2,
+   "add": "töminänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 2,
+   "add": "tömissänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 2,
+   "add": "tömistänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 2,
+   "add": "tömittänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 2,
+   "add": "tömiänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 2,
+   "add": "tömäkseen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 2,
+   "add": "tömälleen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 2,
+   "add": "tömällänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 2,
+   "add": "tömältänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 2,
+   "add": "tömänänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 2,
+   "add": "tömässänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 2,
+   "add": "tömästänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 2,
+   "add": "tömättänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "tänsä",
+   "suf": [
+    ""
+   ]
+  }
+ }
+}

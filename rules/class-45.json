@@ -1,0 +1,176 @@
+{
+ "class": "45",
+ "model_word": "tuhannes",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "tuhannes",
+ "cells": {
+  "translative|singular|third person": {
+   "drop": 1,
+   "add": "ksekseen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 1,
+   "add": "ksellaan",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 1,
+   "add": "kselleen",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 1,
+   "add": "kseltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 1,
+   "add": "ksenaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 1,
+   "add": "ksessaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 1,
+   "add": "ksestaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 1,
+   "add": "ksettaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 1,
+   "add": "ksiaan",
+   "suf": [
+    ""
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 1,
+   "add": "ksi",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 1,
+   "add": "ksi",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 1,
+   "add": "ksi",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 1,
+   "add": "ksi",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 1,
+   "add": "ksi",
+   "suf": [
+    "ensa"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 1,
+   "add": "ksi",
+   "suf": [
+    "esi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 1,
+   "add": "ksikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 1,
+   "add": "ksillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 1,
+   "add": "ksilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 1,
+   "add": "ksiltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 1,
+   "add": "ksinaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 1,
+   "add": "ksissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 1,
+   "add": "ksistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 1,
+   "add": "ksittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "taan",
+   "suf": [
+    ""
+   ]
+  }
+ }
+}

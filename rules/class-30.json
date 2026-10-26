@@ -1,0 +1,176 @@
+{
+ "class": "30",
+ "model_word": "veitsi",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "veitsi",
+ "cells": {
+  "genitive|plural|first person plural": {
+   "drop": 3,
+   "add": "st",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 3,
+   "add": "st",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 3,
+   "add": "st",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 3,
+   "add": "st",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 3,
+   "add": "st",
+   "suf": [
+    "ensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 3,
+   "add": "st",
+   "suf": [
+    "esi"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 3,
+   "add": "stänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 1,
+   "add": "ekseen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 1,
+   "add": "elleen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 1,
+   "add": "ellänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 1,
+   "add": "eltänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 1,
+   "add": "enänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 1,
+   "add": "essänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 1,
+   "add": "estänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 1,
+   "add": "ettänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 0,
+   "add": "kseen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 0,
+   "add": "lleen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 0,
+   "add": "llänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 0,
+   "add": "ltänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 0,
+   "add": "nänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 0,
+   "add": "ssänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 0,
+   "add": "stänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 0,
+   "add": "ttänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 0,
+   "add": "änsä",
+   "suf": [
+    ""
+   ]
+  }
+ }
+}

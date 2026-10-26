@@ -1,0 +1,988 @@
+{
+ "class": "49*G",
+ "model_word": "penger",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "penger",
+ "cells": {
+  "nominative|singular|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    ""
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "ensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "esi"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "tänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 3,
+   "add": "kereekseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "eksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ekseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "eksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "eksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "eksi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "elle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 3,
+   "add": "kereelleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ellemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "elleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ellenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ellesi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ellä"
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ellämme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "elläni"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ellänne"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 3,
+   "add": "kereellänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "elläsi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "eltä"
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "eltämme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "eltäni"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "eltänne"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 3,
+   "add": "kereeltänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "eltäsi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "emme"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 3,
+   "add": "ker",
+   "suf": [
+    "eemme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "emme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "en"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 3,
+   "add": "ker",
+   "suf": [
+    "een"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "eni"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 3,
+   "add": "ker",
+   "suf": [
+    "eeni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "eni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "enne"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 3,
+   "add": "ker",
+   "suf": [
+    "eenne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "enne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ensä"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 3,
+   "add": "ker",
+   "suf": [
+    "eensä"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ensä"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ensä"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "enä"
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "enämme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "enäni"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "enänne"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 3,
+   "add": "kereenänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "enäsi"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 3,
+   "add": "kerees",
+   "suf": [
+    "eesi"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "esi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "esi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "esi"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "essä"
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "essämme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "essäni"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "essänne"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 3,
+   "add": "kereessänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "essäsi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "estä"
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "estämme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "estäni"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "estänne"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 3,
+   "add": "kereestänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "estäsi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "et"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "että"
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ettämme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ettäni"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ettänne"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 3,
+   "add": "kereettänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ettäsi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 3,
+   "add": "kereih",
+   "suf": [
+    "imme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 3,
+   "add": "kereih",
+   "suf": [
+    "in"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 3,
+   "add": "kereih",
+   "suf": [
+    "ini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 3,
+   "add": "kereih",
+   "suf": [
+    "inne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 3,
+   "add": "kereih",
+   "suf": [
+    "insä"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 3,
+   "add": "kereih",
+   "suf": [
+    "isi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 3,
+   "add": "kereikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "iksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "iksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "iksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "iksi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 3,
+   "add": "kereilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "illemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "illeni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "illenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "illesi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "illä"
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "illämme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "illäni"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "illänne"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 3,
+   "add": "kereillänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "illäsi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "iltä"
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "iltämme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "iltäni"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "iltänne"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 3,
+   "add": "kereiltänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "iltäsi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "in"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "inä"
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "inämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "inäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "inänne"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 3,
+   "add": "kereinänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "inäsi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "issä"
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "issämme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "issäni"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "issänne"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 3,
+   "add": "kereissänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "issäsi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "istä"
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "istämme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "istäni"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "istänne"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 3,
+   "add": "kereistänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "istäsi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ittä"
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ittämme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ittäni"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ittänne"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 3,
+   "add": "kereittänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 3,
+   "add": "kere",
+   "suf": [
+    "ittäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 3,
+   "add": "kereit",
+   "suf": [
+    "ä"
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 3,
+   "add": "kereit",
+   "suf": [
+    "ämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 3,
+   "add": "kereit",
+   "suf": [
+    "äni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 3,
+   "add": "kereit",
+   "suf": [
+    "änne"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 3,
+   "add": "kereitänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 3,
+   "add": "kereit",
+   "suf": [
+    "äsi"
+   ]
+  }
+ }
+}

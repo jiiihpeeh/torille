@@ -1,0 +1,988 @@
+{
+ "class": "49*E",
+ "model_word": "taival",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "taipale",
+ "cells": {
+  "nominative|singular|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 3,
+   "add": "paleekseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "eksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ekseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "eksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "eksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "eksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ella"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 3,
+   "add": "paleellaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ellamme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ellani"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ellanne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ellasi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "elle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 3,
+   "add": "paleelleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ellemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "elleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ellenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ellesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "elta"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 3,
+   "add": "paleeltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "eltamme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "eltani"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "eltanne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "eltasi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "emme"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 3,
+   "add": "pal",
+   "suf": [
+    "eemme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "emme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "en"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 3,
+   "add": "pal",
+   "suf": [
+    "een"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ena"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 3,
+   "add": "paleenaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "enamme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "enani"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "enanne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "enasi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "eni"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 3,
+   "add": "pal",
+   "suf": [
+    "eeni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "eni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "enne"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 3,
+   "add": "pal",
+   "suf": [
+    "eenne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "enne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ensa"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 3,
+   "add": "pal",
+   "suf": [
+    "eensa"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ensa"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ensa"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 3,
+   "add": "palees",
+   "suf": [
+    "eesi"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "esi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "esi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "esi"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "essa"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 3,
+   "add": "paleessaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "essamme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "essani"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "essanne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "essasi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "esta"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 3,
+   "add": "paleestaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "estamme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "estani"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "estanne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "estasi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "et"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "etta"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 3,
+   "add": "paleettaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ettamme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ettani"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ettanne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ettasi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 3,
+   "add": "paleid",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 3,
+   "add": "paleid",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 3,
+   "add": "paleid",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 3,
+   "add": "paleid",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 3,
+   "add": "paleid",
+   "suf": [
+    "ensa"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 3,
+   "add": "paleid",
+   "suf": [
+    "esi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 3,
+   "add": "paleih",
+   "suf": [
+    "imme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 3,
+   "add": "paleih",
+   "suf": [
+    "in"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 3,
+   "add": "paleih",
+   "suf": [
+    "ini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 3,
+   "add": "paleih",
+   "suf": [
+    "inne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 3,
+   "add": "paleih",
+   "suf": [
+    "insa"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 3,
+   "add": "paleih",
+   "suf": [
+    "isi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 3,
+   "add": "paleikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "iksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "iksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "iksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "iksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "illa"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 3,
+   "add": "paleillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "illamme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "illani"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "illanne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "illasi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 3,
+   "add": "paleilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "illemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "illeni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "illenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "illesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ilta"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 3,
+   "add": "paleiltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "iltamme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "iltani"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "iltanne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "iltasi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "in"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ina"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 3,
+   "add": "paleinaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "inamme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "inani"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "inanne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "inasi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "issa"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 3,
+   "add": "paleissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "issamme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "issani"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "issanne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "issasi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ista"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 3,
+   "add": "paleistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "istamme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "istani"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "istanne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "istasi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 3,
+   "add": "paleit",
+   "suf": [
+    "a"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 3,
+   "add": "paleitaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 3,
+   "add": "paleit",
+   "suf": [
+    "amme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 3,
+   "add": "paleit",
+   "suf": [
+    "ani"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 3,
+   "add": "paleit",
+   "suf": [
+    "anne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 3,
+   "add": "paleit",
+   "suf": [
+    "asi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "itta"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 3,
+   "add": "paleittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ittamme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ittani"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ittanne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 3,
+   "add": "pale",
+   "suf": [
+    "ittasi"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "taan",
+   "suf": [
+    ""
+   ]
+  }
+ }
+}

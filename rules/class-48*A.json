@@ -1,0 +1,1099 @@
+{
+ "class": "48*A",
+ "model_word": "hake",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "hake",
+ "cells": {
+  "nominative|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "ke"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "ketta",
+    "kettä"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "ttaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kettamme",
+    "kettämme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kettani",
+    "kettäni"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kettanne",
+    "kettänne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kettasi",
+    "kettäsi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 1,
+   "add": "keekseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeeksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeekseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeeksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeeksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeeksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeella",
+    "kkeellä"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 1,
+   "add": "keellaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeellamme",
+    "kkeellämme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeellani",
+    "kkeelläni"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeellanne",
+    "kkeellänne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeellasi",
+    "kkeelläsi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeelle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 1,
+   "add": "keelleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeellemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeelleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeellenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeellesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeelta",
+    "kkeeltä"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 1,
+   "add": "keeltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeeltamme",
+    "kkeeltämme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeeltani",
+    "kkeeltäni"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeeltanne",
+    "kkeeltänne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeeltasi",
+    "kkeeltäsi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeemme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeemme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeemme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeen"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeena",
+    "kkeenä"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 1,
+   "add": "keenaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeenamme",
+    "kkeenämme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeenani",
+    "kkeenäni"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeenanne",
+    "kkeenänne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeenasi",
+    "kkeenäsi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeeni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeeni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeeni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeenne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeenne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeenne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeensa",
+    "kkeensä"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeensa",
+    "kkeensä"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeensa",
+    "kkeensä"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeeseemme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeeseen"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeeseeni"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeeseenne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeeseensa",
+    "kkeeseensä"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeeseesi"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeesi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeesi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeesi"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeessa",
+    "kkeessä"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 1,
+   "add": "keessaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeessamme",
+    "kkeessämme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeessani",
+    "kkeessäni"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeessanne",
+    "kkeessänne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeessasi",
+    "kkeessäsi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeesta",
+    "kkeestä"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 1,
+   "add": "keestaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeestamme",
+    "kkeestämme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeestani",
+    "kkeestäni"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeestanne",
+    "kkeestänne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeestasi",
+    "kkeestäsi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeet"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeetta",
+    "kkeettä"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 1,
+   "add": "keettaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeettamme",
+    "kkeettämme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeettani",
+    "kkeettäni"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeettanne",
+    "kkeettänne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeettasi",
+    "kkeettäsi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 1,
+   "add": "keid",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 1,
+   "add": "keid",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 1,
+   "add": "keid",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 1,
+   "add": "keid",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 1,
+   "add": "keid",
+   "suf": [
+    "ensa",
+    "ensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 1,
+   "add": "keid",
+   "suf": [
+    "esi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 1,
+   "add": "keih",
+   "suf": [
+    "imme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 1,
+   "add": "keih",
+   "suf": [
+    "in"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 1,
+   "add": "keih",
+   "suf": [
+    "ini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 1,
+   "add": "keih",
+   "suf": [
+    "inne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 1,
+   "add": "keih",
+   "suf": [
+    "insa",
+    "insä"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 1,
+   "add": "keih",
+   "suf": [
+    "isi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 1,
+   "add": "keikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeiksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeiksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeiksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeiksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeilla",
+    "kkeillä"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 1,
+   "add": "keillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeillamme",
+    "kkeillämme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeillani",
+    "kkeilläni"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeillanne",
+    "kkeillänne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeillasi",
+    "kkeilläsi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 1,
+   "add": "keilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeilleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeillesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeilta",
+    "kkeiltä"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 1,
+   "add": "keiltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeiltamme",
+    "kkeiltämme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeiltani",
+    "kkeiltäni"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeiltanne",
+    "kkeiltänne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeiltasi",
+    "kkeiltäsi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkein"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeina",
+    "kkeinä"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 1,
+   "add": "keinaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeinamme",
+    "kkeinämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeinani",
+    "kkeinäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeinanne",
+    "kkeinänne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeinasi",
+    "kkeinäsi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeissa",
+    "kkeissä"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 1,
+   "add": "keissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeissamme",
+    "kkeissämme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeissani",
+    "kkeissäni"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeissanne",
+    "kkeissänne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeissasi",
+    "kkeissäsi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeista",
+    "kkeistä"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 1,
+   "add": "keistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeistamme",
+    "kkeistämme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeistani",
+    "kkeistäni"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeistanne",
+    "kkeistänne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeistasi",
+    "kkeistäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeita",
+    "kkeitä"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 1,
+   "add": "keitaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeitamme",
+    "kkeitämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeitani",
+    "kkeitäni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeitanne",
+    "kkeitänne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeitasi",
+    "kkeitäsi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeitta",
+    "kkeittä"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 1,
+   "add": "keittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeittamme",
+    "kkeittämme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeittani",
+    "kkeittäni"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeittanne",
+    "kkeittänne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "kkeittasi",
+    "kkeittäsi"
+   ]
+  }
+ }
+}

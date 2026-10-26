@@ -1,0 +1,1099 @@
+{
+ "class": "5, 50",
+ "model_word": "halpahalli",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "halpahalli",
+ "cells": {
+  "illative|plural|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eihimme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eihin"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eihini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eihinne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eihinsa",
+    "eihinsä"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eihisi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 1,
+   "add": "eikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eiksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eiksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eiksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eiksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eilla",
+    "eillä"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 1,
+   "add": "eillänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eillamme",
+    "eillämme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eillani",
+    "eilläni"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eillanne",
+    "eillänne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eillasi",
+    "eilläsi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 1,
+   "add": "eilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eilleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eillesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eilta",
+    "eiltä"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 1,
+   "add": "eiltänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eiltamme",
+    "eiltämme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eiltani",
+    "eiltäni"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eiltanne",
+    "eiltänne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eiltasi",
+    "eiltäsi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ein"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eina",
+    "einä"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 1,
+   "add": "einänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "einamme",
+    "einämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "einani",
+    "einäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "einanne",
+    "einänne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "einasi",
+    "einäsi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eissa",
+    "eissä"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 1,
+   "add": "eissänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eissamme",
+    "eissämme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eissani",
+    "eissäni"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eissanne",
+    "eissänne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eissasi",
+    "eissäsi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eista",
+    "eistä"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 1,
+   "add": "eistänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eistamme",
+    "eistämme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eistani",
+    "eistäni"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eistanne",
+    "eistänne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eistasi",
+    "eistäsi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eitta",
+    "eittä"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 1,
+   "add": "eittänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eittamme",
+    "eittämme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eittani",
+    "eittäni"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eittanne",
+    "eittänne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eittasi",
+    "eittäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "eja",
+    "ejä"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 1,
+   "add": "ejänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ejamme",
+    "ejämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ejani",
+    "ejäni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ejanne",
+    "ejänne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ejasi",
+    "ejäsi"
+   ]
+  },
+  "nominative|singular|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "i"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ia",
+    "iä"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "änsä",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iamme",
+    "iämme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iani",
+    "iäni"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ianne",
+    "iänne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iasi",
+    "iäsi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iemme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ien"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ieni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ienne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iensa",
+    "iensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iesi"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iimme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iin"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iini"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iinne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iinsa",
+    "iinsä"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iisi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 0,
+   "add": "kseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ikseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "illa",
+    "illä"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 0,
+   "add": "llänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "illamme",
+    "illämme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "illani",
+    "illäni"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "illanne",
+    "illänne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "illasi",
+    "illäsi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ille"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 0,
+   "add": "lleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "illemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "illeni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "illenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "illesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ilta",
+    "iltä"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 0,
+   "add": "ltänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iltamme",
+    "iltämme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iltani",
+    "iltäni"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iltanne",
+    "iltänne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "iltasi",
+    "iltäsi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "imme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "imme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "imme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "in"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ina",
+    "inä"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 0,
+   "add": "nänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "inamme",
+    "inämme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "inani",
+    "inäni"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "inanne",
+    "inänne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "inasi",
+    "inäsi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ini"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ini"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ini"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "inne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "inne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "inne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "insa",
+    "insä"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "insa",
+    "insä"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "insa",
+    "insä"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "isi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "isi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "isi"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "issa",
+    "issä"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 0,
+   "add": "ssänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "issamme",
+    "issämme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "issani",
+    "issäni"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "issanne",
+    "issänne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "issasi",
+    "issäsi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ista",
+    "istä"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 0,
+   "add": "stänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "istamme",
+    "istämme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "istani",
+    "istäni"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "istanne",
+    "istänne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "istasi",
+    "istäsi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "it"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "itta",
+    "ittä"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 0,
+   "add": "ttänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ittamme",
+    "ittämme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ittani",
+    "ittäni"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ittanne",
+    "ittänne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "ittasi",
+    "ittäsi"
+   ]
+  }
+ }
+}

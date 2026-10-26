@@ -1,0 +1,2287 @@
+{
+ "class": "33*K",
+ "model_word": "avarrin",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "avarrin",
+ "cells": {
+  "nominative|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "in"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "inta",
+    "intä"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "taan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "intamme",
+    "intämme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "intani",
+    "intäni"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "intanne",
+    "intänne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 2,
+   "add": "",
+   "suf": [
+    "intasi",
+    "intäsi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "ensa",
+    "ensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "esi"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imeemme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imeemme"
+     ]
+    }
+   }
+  },
+  "illative|singular|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imeen"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imeen"
+     ]
+    }
+   }
+  },
+  "illative|singular|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imeeni"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imeeni"
+     ]
+    }
+   }
+  },
+  "illative|singular|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imeenne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imeenne"
+     ]
+    }
+   }
+  },
+  "illative|singular|third person": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imeensa"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imeensa",
+      "imeensä"
+     ]
+    }
+   }
+  },
+  "illative|singular|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imeesi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imeesi"
+     ]
+    }
+   }
+  },
+  "translative|singular|third person": {
+   "drop": 4,
+   "add": "toimekseen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "timeksensä",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "translative|singular|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imeksemme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imeksemme"
+     ]
+    }
+   }
+  },
+  "translative|singular|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imekseni"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imekseni"
+     ]
+    }
+   }
+  },
+  "translative|singular|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imeksenne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imeksenne"
+     ]
+    }
+   }
+  },
+  "translative|singular|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imeksesi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imeksesi"
+     ]
+    }
+   }
+  },
+  "translative|singular|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imeksi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imeksi"
+     ]
+    }
+   }
+  },
+  "adessive|singular|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imella"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imella",
+      "imellä"
+     ]
+    }
+   }
+  },
+  "adessive|singular|third person": {
+   "drop": 4,
+   "add": "toimellaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "timellään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "adessive|singular|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imellamme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imellamme",
+      "imellämme"
+     ]
+    }
+   }
+  },
+  "adessive|singular|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imellani"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imellani",
+      "imelläni"
+     ]
+    }
+   }
+  },
+  "adessive|singular|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imellanne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imellanne",
+      "imellänne"
+     ]
+    }
+   }
+  },
+  "adessive|singular|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imellasi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imellasi",
+      "imelläsi"
+     ]
+    }
+   }
+  },
+  "allative|singular|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imelle"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imelle"
+     ]
+    }
+   }
+  },
+  "allative|singular|third person": {
+   "drop": 4,
+   "add": "toimelleen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "timellensä",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "allative|singular|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imellemme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imellemme"
+     ]
+    }
+   }
+  },
+  "allative|singular|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imelleni"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imelleni"
+     ]
+    }
+   }
+  },
+  "allative|singular|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imellenne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imellenne"
+     ]
+    }
+   }
+  },
+  "allative|singular|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imellesi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imellesi"
+     ]
+    }
+   }
+  },
+  "ablative|singular|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imelta"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imelta",
+      "imeltä"
+     ]
+    }
+   }
+  },
+  "ablative|singular|third person": {
+   "drop": 4,
+   "add": "toimeltaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "timeltään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "ablative|singular|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imeltamme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imeltamme",
+      "imeltämme"
+     ]
+    }
+   }
+  },
+  "ablative|singular|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imeltani"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imeltani",
+      "imeltäni"
+     ]
+    }
+   }
+  },
+  "ablative|singular|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imeltanne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imeltanne",
+      "imeltänne"
+     ]
+    }
+   }
+  },
+  "ablative|singular|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imeltasi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imeltasi",
+      "imeltäsi"
+     ]
+    }
+   }
+  },
+  "genitive|singular|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imemme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imemme"
+     ]
+    }
+   }
+  },
+  "nominative|plural|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imemme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imemme"
+     ]
+    }
+   }
+  },
+  "nominative|singular|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imemme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imemme"
+     ]
+    }
+   }
+  },
+  "genitive|singular|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imen"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imen"
+     ]
+    }
+   }
+  },
+  "essive|singular|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imena"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imena",
+      "imenä"
+     ]
+    }
+   }
+  },
+  "essive|singular|third person": {
+   "drop": 4,
+   "add": "toimenaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "timenään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "essive|singular|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imenamme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imenamme",
+      "imenämme"
+     ]
+    }
+   }
+  },
+  "essive|singular|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imenani"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imenani",
+      "imenäni"
+     ]
+    }
+   }
+  },
+  "essive|singular|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imenanne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imenanne",
+      "imenänne"
+     ]
+    }
+   }
+  },
+  "essive|singular|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imenasi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imenasi",
+      "imenäsi"
+     ]
+    }
+   }
+  },
+  "genitive|singular|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imeni"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imeni"
+     ]
+    }
+   }
+  },
+  "nominative|plural|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imeni"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imeni"
+     ]
+    }
+   }
+  },
+  "nominative|singular|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imeni"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imeni"
+     ]
+    }
+   }
+  },
+  "genitive|singular|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imenne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imenne"
+     ]
+    }
+   }
+  },
+  "nominative|plural|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imenne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imenne"
+     ]
+    }
+   }
+  },
+  "nominative|singular|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imenne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imenne"
+     ]
+    }
+   }
+  },
+  "genitive|singular|third person": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imensa"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imensa",
+      "imensä"
+     ]
+    }
+   }
+  },
+  "nominative|plural|third person": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imensa"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imensa",
+      "imensä"
+     ]
+    }
+   }
+  },
+  "nominative|singular|third person": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imensa"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imensa",
+      "imensä"
+     ]
+    }
+   }
+  },
+  "genitive|singular|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imesi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imesi"
+     ]
+    }
+   }
+  },
+  "nominative|plural|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imesi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imesi"
+     ]
+    }
+   }
+  },
+  "nominative|singular|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imesi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imesi"
+     ]
+    }
+   }
+  },
+  "inessive|singular|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imessa"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imessa",
+      "imessä"
+     ]
+    }
+   }
+  },
+  "inessive|singular|third person": {
+   "drop": 4,
+   "add": "toimessaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "timessään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "inessive|singular|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imessamme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imessamme",
+      "imessämme"
+     ]
+    }
+   }
+  },
+  "inessive|singular|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imessani"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imessani",
+      "imessäni"
+     ]
+    }
+   }
+  },
+  "inessive|singular|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imessanne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imessanne",
+      "imessänne"
+     ]
+    }
+   }
+  },
+  "inessive|singular|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imessasi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imessasi",
+      "imessäsi"
+     ]
+    }
+   }
+  },
+  "elative|singular|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imesta"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imesta",
+      "imestä"
+     ]
+    }
+   }
+  },
+  "elative|singular|third person": {
+   "drop": 4,
+   "add": "toimestaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "timestään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "elative|singular|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imestamme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imestamme",
+      "imestämme"
+     ]
+    }
+   }
+  },
+  "elative|singular|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imestani"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imestani",
+      "imestäni"
+     ]
+    }
+   }
+  },
+  "elative|singular|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imestanne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imestanne",
+      "imestänne"
+     ]
+    }
+   }
+  },
+  "elative|singular|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imestasi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imestasi",
+      "imestäsi"
+     ]
+    }
+   }
+  },
+  "nominative|plural|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imet"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imet"
+     ]
+    }
+   }
+  },
+  "abessive|singular|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imetta"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imetta",
+      "imettä"
+     ]
+    }
+   }
+  },
+  "abessive|singular|third person": {
+   "drop": 4,
+   "add": "toimettaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "timettään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "abessive|singular|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imettamme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imettamme",
+      "imettämme"
+     ]
+    }
+   }
+  },
+  "abessive|singular|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imettani"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imettani",
+      "imettäni"
+     ]
+    }
+   }
+  },
+  "abessive|singular|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imettanne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imettanne",
+      "imettänne"
+     ]
+    }
+   }
+  },
+  "abessive|singular|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imettasi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imettasi",
+      "imettäsi"
+     ]
+    }
+   }
+  },
+  "partitive|plural|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imia"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imia",
+      "imiä"
+     ]
+    }
+   }
+  },
+  "partitive|plural|third person": {
+   "drop": 4,
+   "add": "toimiaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "timiään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "partitive|plural|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imiamme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imiamme",
+      "imiämme"
+     ]
+    }
+   }
+  },
+  "partitive|plural|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imiani"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imiani",
+      "imiäni"
+     ]
+    }
+   }
+  },
+  "partitive|plural|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imianne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imianne",
+      "imiänne"
+     ]
+    }
+   }
+  },
+  "partitive|plural|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imiasi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imiasi",
+      "imiäsi"
+     ]
+    }
+   }
+  },
+  "illative|plural|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imiimme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imiimme"
+     ]
+    }
+   }
+  },
+  "illative|plural|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imiin"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imiin"
+     ]
+    }
+   }
+  },
+  "illative|plural|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imiini"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imiini"
+     ]
+    }
+   }
+  },
+  "illative|plural|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imiinne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imiinne"
+     ]
+    }
+   }
+  },
+  "illative|plural|third person": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imiinsa"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imiinsa",
+      "imiinsä"
+     ]
+    }
+   }
+  },
+  "illative|plural|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imiisi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imiisi"
+     ]
+    }
+   }
+  },
+  "translative|plural|third person": {
+   "drop": 4,
+   "add": "toimikseen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "timiksensä",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "translative|plural|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imiksemme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imiksemme"
+     ]
+    }
+   }
+  },
+  "translative|plural|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imikseni"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imikseni"
+     ]
+    }
+   }
+  },
+  "translative|plural|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imiksenne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imiksenne"
+     ]
+    }
+   }
+  },
+  "translative|plural|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imiksesi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imiksesi"
+     ]
+    }
+   }
+  },
+  "translative|plural|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imiksi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imiksi"
+     ]
+    }
+   }
+  },
+  "adessive|plural|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imilla"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imilla",
+      "imillä"
+     ]
+    }
+   }
+  },
+  "adessive|plural|third person": {
+   "drop": 4,
+   "add": "toimillaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "timillään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "adessive|plural|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imillamme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imillamme",
+      "imillämme"
+     ]
+    }
+   }
+  },
+  "adessive|plural|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imillani"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imillani",
+      "imilläni"
+     ]
+    }
+   }
+  },
+  "adessive|plural|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imillanne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imillanne",
+      "imillänne"
+     ]
+    }
+   }
+  },
+  "adessive|plural|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imillasi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imillasi",
+      "imilläsi"
+     ]
+    }
+   }
+  },
+  "allative|plural|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imille"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imille"
+     ]
+    }
+   }
+  },
+  "allative|plural|third person": {
+   "drop": 4,
+   "add": "toimilleen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "timillensä",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "allative|plural|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imillemme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imillemme"
+     ]
+    }
+   }
+  },
+  "allative|plural|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imilleni"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imilleni"
+     ]
+    }
+   }
+  },
+  "allative|plural|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imillenne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imillenne"
+     ]
+    }
+   }
+  },
+  "allative|plural|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imillesi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imillesi"
+     ]
+    }
+   }
+  },
+  "ablative|plural|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imilta"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imilta",
+      "imiltä"
+     ]
+    }
+   }
+  },
+  "ablative|plural|third person": {
+   "drop": 4,
+   "add": "toimiltaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "timiltään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "ablative|plural|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imiltamme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imiltamme",
+      "imiltämme"
+     ]
+    }
+   }
+  },
+  "ablative|plural|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imiltani"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imiltani",
+      "imiltäni"
+     ]
+    }
+   }
+  },
+  "ablative|plural|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imiltanne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imiltanne",
+      "imiltänne"
+     ]
+    }
+   }
+  },
+  "ablative|plural|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imiltasi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imiltasi",
+      "imiltäsi"
+     ]
+    }
+   }
+  },
+  "instructive|plural|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imin"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imin"
+     ]
+    }
+   }
+  },
+  "essive|plural|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imina"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imina",
+      "iminä"
+     ]
+    }
+   }
+  },
+  "essive|plural|third person": {
+   "drop": 4,
+   "add": "toiminaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "timinään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "essive|plural|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "iminamme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "iminamme",
+      "iminämme"
+     ]
+    }
+   }
+  },
+  "essive|plural|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "iminani"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "iminani",
+      "iminäni"
+     ]
+    }
+   }
+  },
+  "essive|plural|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "iminanne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "iminanne",
+      "iminänne"
+     ]
+    }
+   }
+  },
+  "essive|plural|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "iminasi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "iminasi",
+      "iminäsi"
+     ]
+    }
+   }
+  },
+  "inessive|plural|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imissa"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imissa",
+      "imissä"
+     ]
+    }
+   }
+  },
+  "inessive|plural|third person": {
+   "drop": 4,
+   "add": "toimissaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "timissään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "inessive|plural|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imissamme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imissamme",
+      "imissämme"
+     ]
+    }
+   }
+  },
+  "inessive|plural|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imissani"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imissani",
+      "imissäni"
+     ]
+    }
+   }
+  },
+  "inessive|plural|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imissanne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imissanne",
+      "imissänne"
+     ]
+    }
+   }
+  },
+  "inessive|plural|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imissasi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imissasi",
+      "imissäsi"
+     ]
+    }
+   }
+  },
+  "elative|plural|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imista"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imista",
+      "imistä"
+     ]
+    }
+   }
+  },
+  "elative|plural|third person": {
+   "drop": 4,
+   "add": "toimistaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "timistään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "elative|plural|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imistamme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imistamme",
+      "imistämme"
+     ]
+    }
+   }
+  },
+  "elative|plural|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imistani"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imistani",
+      "imistäni"
+     ]
+    }
+   }
+  },
+  "elative|plural|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imistanne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imistanne",
+      "imistänne"
+     ]
+    }
+   }
+  },
+  "elative|plural|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imistasi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imistasi",
+      "imistäsi"
+     ]
+    }
+   }
+  },
+  "abessive|plural|": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imitta"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imitta",
+      "imittä"
+     ]
+    }
+   }
+  },
+  "abessive|plural|third person": {
+   "drop": 4,
+   "add": "toimittaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "timittään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "abessive|plural|first person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imittamme"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imittamme",
+      "imittämme"
+     ]
+    }
+   }
+  },
+  "abessive|plural|first person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imittani"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imittani",
+      "imittäni"
+     ]
+    }
+   }
+  },
+  "abessive|plural|second person plural": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imittanne"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imittanne",
+      "imittänne"
+     ]
+    }
+   }
+  },
+  "abessive|plural|second person singular": {
+   "drop": 4,
+   "add": "to",
+   "suf": [
+    "imittasi"
+   ],
+   "alt": {
+    "rin": {
+     "drop": 3,
+     "add": "t",
+     "suf": [
+      "imittasi",
+      "imittäsi"
+     ]
+    }
+   }
+  }
+ }
+}

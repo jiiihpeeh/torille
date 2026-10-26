@@ -1,0 +1,1265 @@
+{
+ "class": "10*J",
+ "model_word": "häntä",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "häntä",
+ "cells": {
+  "translative|plural|third person": {
+   "drop": 2,
+   "add": "nikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nniksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nniksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nniksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nniksi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 2,
+   "add": "nilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnilleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnillesi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnilla",
+    "nnillä"
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnillamme",
+    "nnillämme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnillani",
+    "nnilläni"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnillanne",
+    "nnillänne"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 2,
+   "add": "nillänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ta": {
+     "drop": 2,
+     "add": "nillansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "adessive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnillasi",
+    "nnilläsi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnilta",
+    "nniltä"
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nniltamme",
+    "nniltämme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nniltani",
+    "nniltäni"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nniltanne",
+    "nniltänne"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 2,
+   "add": "niltänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ta": {
+     "drop": 2,
+     "add": "niltansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "ablative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nniltasi",
+    "nniltäsi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnin"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnissa",
+    "nnissä"
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnissamme",
+    "nnissämme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnissani",
+    "nnissäni"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnissanne",
+    "nnissänne"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 2,
+   "add": "nissänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ta": {
+     "drop": 2,
+     "add": "nissansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "inessive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnissasi",
+    "nnissäsi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnista",
+    "nnistä"
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnistamme",
+    "nnistämme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnistani",
+    "nnistäni"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnistanne",
+    "nnistänne"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 2,
+   "add": "nistänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ta": {
+     "drop": 2,
+     "add": "nistansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "elative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnistasi",
+    "nnistäsi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnitta",
+    "nnittä"
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnittamme",
+    "nnittämme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnittani",
+    "nnittäni"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnittanne",
+    "nnittänne"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 2,
+   "add": "nittänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ta": {
+     "drop": 2,
+     "add": "nittansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "abessive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnittasi",
+    "nnittäsi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 2,
+   "add": "näkseen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ta": {
+     "drop": 2,
+     "add": "naksensa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "translative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnaksemme",
+    "nnäksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnakseni",
+    "nnäkseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnaksenne",
+    "nnäksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnaksesi",
+    "nnäksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnaksi",
+    "nnäksi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnalle",
+    "nnälle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 2,
+   "add": "nälleen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ta": {
+     "drop": 2,
+     "add": "nallensa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "allative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnallemme",
+    "nnällemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnalleni",
+    "nnälleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnallenne",
+    "nnällenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnallesi",
+    "nnällesi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnalla",
+    "nnällä"
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnallamme",
+    "nnällämme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnallani",
+    "nnälläni"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnallanne",
+    "nnällänne"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 2,
+   "add": "nällänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ta": {
+     "drop": 2,
+     "add": "nallansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "adessive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnallasi",
+    "nnälläsi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnalta",
+    "nnältä"
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnaltamme",
+    "nnältämme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnaltani",
+    "nnältäni"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnaltanne",
+    "nnältänne"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 2,
+   "add": "nältänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ta": {
+     "drop": 2,
+     "add": "naltansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "ablative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnaltasi",
+    "nnältäsi"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnan",
+    "nnän"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnassa",
+    "nnässä"
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnassamme",
+    "nnässämme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnassani",
+    "nnässäni"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnassanne",
+    "nnässänne"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 2,
+   "add": "nässänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ta": {
+     "drop": 2,
+     "add": "nassansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "inessive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnassasi",
+    "nnässäsi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnasta",
+    "nnästä"
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnastamme",
+    "nnästämme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnastani",
+    "nnästäni"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnastanne",
+    "nnästänne"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 2,
+   "add": "nästänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ta": {
+     "drop": 2,
+     "add": "nastansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "elative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnastasi",
+    "nnästäsi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnat",
+    "nnät"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnatta",
+    "nnättä"
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnattamme",
+    "nnättämme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnattani",
+    "nnättäni"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnattanne",
+    "nnättänne"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 2,
+   "add": "nättänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ta": {
+     "drop": 2,
+     "add": "nattansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "abessive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nnattasi",
+    "nnättäsi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntiemme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntien"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntieni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntienne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntiensa",
+    "ntiensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntiesi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntiimme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntiin"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntiini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntiinne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntiinsa",
+    "ntiinsä"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntiisi"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntina",
+    "ntinä"
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntinamme",
+    "ntinämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntinani",
+    "ntinäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntinanne",
+    "ntinänne"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 1,
+   "add": "inänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ta": {
+     "drop": 1,
+     "add": "inansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "essive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntinasi",
+    "ntinäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntia",
+    "ntiä"
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntiamme",
+    "ntiämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntiani",
+    "ntiäni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntianne",
+    "ntiänne"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 1,
+   "add": "iänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ta": {
+     "drop": 1,
+     "add": "iansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "partitive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntiasi",
+    "ntiäsi"
+   ]
+  },
+  "nominative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "nta",
+    "ntä"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntamme",
+    "ntämme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntamme",
+    "ntämme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntamme",
+    "ntämme"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntani",
+    "ntäni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntani",
+    "ntäni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntani",
+    "ntäni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntanne",
+    "ntänne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntanne",
+    "ntänne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntanne",
+    "ntänne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntansa",
+    "ntänsä"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntansa",
+    "ntänsä"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntansa",
+    "ntänsä"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntana",
+    "ntänä"
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntanamme",
+    "ntänämme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntanani",
+    "ntänäni"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntananne",
+    "ntänänne"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 0,
+   "add": "nänsä",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ta": {
+     "drop": 0,
+     "add": "nansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "essive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntanasi",
+    "ntänäsi"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntasi",
+    "ntäsi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntasi",
+    "ntäsi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntasi",
+    "ntäsi"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntaa",
+    "ntää"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntaamme",
+    "ntäämme"
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntaamme",
+    "ntäämme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntaan",
+    "ntään"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntaani",
+    "ntääni"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntaani",
+    "ntääni"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntaanne",
+    "ntäänne"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntaanne",
+    "ntäänne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntaansa",
+    "ntäänsä"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntaansa",
+    "ntäänsä"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntaasi",
+    "ntääsi"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ntaasi",
+    "ntääsi"
+   ]
+  }
+ }
+}

@@ -1,0 +1,26 @@
+[package]
+name = "torille-py"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+
+[lib]
+# Deliberately not `torille`: that name belongs to the library this binds, and
+# having both in one crate is ambiguous. The Python module is still called
+# `torille`, set by `module-name` in pyproject.toml.
+name = "torille_py"
+# `rlib` as well as `cdylib` so `cargo test` has something to link the test
+# harness against; `cdylib` alone leaves it with no rlib to build from.
+crate-type = ["cdylib", "rlib"]
+
+[features]
+# `extension-module` tells pyo3 not to link libpython, which is right for the
+# cdylib that Python imports and wrong for a test binary, which has to link it
+# and otherwise fails with `undefined symbol: PyExc_ValueError`. So it is not
+# on by default: maturin asks for it (see `features` in pyproject.toml) and
+# `cargo test` does not, which is what lets the tests in this crate run at all.
+extension-module = ["pyo3/extension-module"]
+
+[dependencies]
+torille = { path = ".." }
+pyo3 = "0.22"

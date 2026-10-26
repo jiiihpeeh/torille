@@ -1,0 +1,617 @@
+{
+ "class": "33*B",
+ "model_word": "hapan",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "hapan",
+ "cells": {
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "taan",
+   "suf": [
+    ""
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "ensa"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "esi"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 2,
+   "add": "pamaa",
+   "suf": [
+    "mme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 2,
+   "add": "pamaa",
+   "suf": [
+    "n"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 2,
+   "add": "pamaa",
+   "suf": [
+    "ni"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 2,
+   "add": "pamaa",
+   "suf": [
+    "nne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 2,
+   "add": "pamaa",
+   "suf": [
+    "nsa"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 2,
+   "add": "pamaa",
+   "suf": [
+    "si"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 2,
+   "add": "pamakseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "kseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "lla"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 2,
+   "add": "pamallaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "llamme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "llani"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "llanne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "llasi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "lle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 2,
+   "add": "pamalleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "llemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "lleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "llenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "llesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "lta"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 2,
+   "add": "pamaltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ltamme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ltani"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ltanne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ltasi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "mme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "mme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "mme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "n"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "na"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 2,
+   "add": "pamanaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "namme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "nani"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "nanne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "nasi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "nne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "nne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "nne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "nsa"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "nsa"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "nsa"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "si"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "si"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "si"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ssa"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 2,
+   "add": "pamassaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ssamme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ssani"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ssanne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ssasi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "sta"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 2,
+   "add": "pamastaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "stamme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "stani"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "stanne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "stasi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "t"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "tta"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 2,
+   "add": "pamattaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ttamme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ttani"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ttanne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 2,
+   "add": "pama",
+   "suf": [
+    "ttasi"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 2,
+   "add": "pamiaan",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 2,
+   "add": "pamikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 2,
+   "add": "pamillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 2,
+   "add": "pamilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 2,
+   "add": "pamiltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 2,
+   "add": "paminaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 2,
+   "add": "pamissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 2,
+   "add": "pamistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 2,
+   "add": "pamittaan",
+   "suf": [
+    ""
+   ]
+  }
+ }
+}

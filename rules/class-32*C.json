@@ -1,0 +1,1307 @@
+{
+ "class": "32*C",
+ "model_word": "tatar",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "tatar",
+ "cells": {
+  "nominative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "tar",
+    "tär"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "tarta",
+    "tärtä"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "taan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 0,
+     "add": "tään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "partitive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "tartamme",
+    "tärtämme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "tartani",
+    "tärtäni"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "tartanne",
+    "tärtänne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "tartasi",
+    "tärtäsi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "ensa",
+    "ensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "esi"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttareemme",
+    "ttäreemme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttareen",
+    "ttäreen"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttareeni",
+    "ttäreeni"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttareenne",
+    "ttäreenne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttareensa",
+    "ttäreensä"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttareesi",
+    "ttäreesi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 2,
+   "add": "tarekseen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 2,
+     "add": "täreksensä",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "translative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttareksemme",
+    "ttäreksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarekseni",
+    "ttärekseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttareksenne",
+    "ttäreksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttareksesi",
+    "ttäreksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttareksi",
+    "ttäreksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarella",
+    "ttärellä"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 2,
+   "add": "tarellaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 2,
+     "add": "tärellään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "adessive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarellamme",
+    "ttärellämme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarellani",
+    "ttärelläni"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarellanne",
+    "ttärellänne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarellasi",
+    "ttärelläsi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarelle",
+    "ttärelle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 2,
+   "add": "tarelleen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 2,
+     "add": "tärellensä",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "allative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarellemme",
+    "ttärellemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarelleni",
+    "ttärelleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarellenne",
+    "ttärellenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarellesi",
+    "ttärellesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarelta",
+    "ttäreltä"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 2,
+   "add": "tareltaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 2,
+     "add": "täreltään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "ablative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttareltamme",
+    "ttäreltämme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttareltani",
+    "ttäreltäni"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttareltanne",
+    "ttäreltänne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttareltasi",
+    "ttäreltäsi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaremme",
+    "ttäremme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaremme",
+    "ttäremme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaremme",
+    "ttäremme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaren",
+    "ttären"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarena",
+    "ttärenä"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 2,
+   "add": "tarenaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 2,
+     "add": "tärenään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "essive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarenamme",
+    "ttärenämme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarenani",
+    "ttärenäni"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarenanne",
+    "ttärenänne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarenasi",
+    "ttärenäsi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttareni",
+    "ttäreni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttareni",
+    "ttäreni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttareni",
+    "ttäreni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarenne",
+    "ttärenne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarenne",
+    "ttärenne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarenne",
+    "ttärenne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarensa",
+    "ttärensä"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarensa",
+    "ttärensä"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarensa",
+    "ttärensä"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaresi",
+    "ttäresi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaresi",
+    "ttäresi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaresi",
+    "ttäresi"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaressa",
+    "ttäressä"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 2,
+   "add": "taressaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 2,
+     "add": "täressään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "inessive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaressamme",
+    "ttäressämme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaressani",
+    "ttäressäni"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaressanne",
+    "ttäressänne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaressasi",
+    "ttäressäsi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaresta",
+    "ttärestä"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 2,
+   "add": "tarestaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 2,
+     "add": "tärestään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "elative|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarestamme",
+    "ttärestämme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarestani",
+    "ttärestäni"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarestanne",
+    "ttärestänne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarestasi",
+    "ttärestäsi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaret",
+    "ttäret"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaretta",
+    "ttärettä"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 2,
+   "add": "tarettaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 2,
+     "add": "tärettään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "abessive|singular|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarettamme",
+    "ttärettämme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarettani",
+    "ttärettäni"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarettanne",
+    "ttärettänne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarettasi",
+    "ttärettäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaria",
+    "ttäriä"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 2,
+   "add": "tariaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 2,
+     "add": "täriään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "partitive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttariamme",
+    "ttäriämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttariani",
+    "ttäriäni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarianne",
+    "ttäriänne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttariasi",
+    "ttäriäsi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttariimme",
+    "ttäriimme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttariin",
+    "ttäriin"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttariini",
+    "ttäriini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttariinne",
+    "ttäriinne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttariinsa",
+    "ttäriinsä"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttariisi",
+    "ttäriisi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 2,
+   "add": "tarikseen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 2,
+     "add": "täriksensä",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "translative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttariksemme",
+    "ttäriksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarikseni",
+    "ttärikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttariksenne",
+    "ttäriksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttariksesi",
+    "ttäriksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttariksi",
+    "ttäriksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarilla",
+    "ttärillä"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 2,
+   "add": "tarillaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 2,
+     "add": "tärillään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "adessive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarillamme",
+    "ttärillämme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarillani",
+    "ttärilläni"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarillanne",
+    "ttärillänne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarillasi",
+    "ttärilläsi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarille",
+    "ttärille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 2,
+   "add": "tarilleen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 2,
+     "add": "tärillensä",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "allative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarillemme",
+    "ttärillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarilleni",
+    "ttärilleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarillenne",
+    "ttärillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarillesi",
+    "ttärillesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarilta",
+    "ttäriltä"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 2,
+   "add": "tariltaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 2,
+     "add": "täriltään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "ablative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttariltamme",
+    "ttäriltämme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttariltani",
+    "ttäriltäni"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttariltanne",
+    "ttäriltänne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttariltasi",
+    "ttäriltäsi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarin",
+    "ttärin"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarina",
+    "ttärinä"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 2,
+   "add": "tarinaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 2,
+     "add": "tärinään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "essive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarinamme",
+    "ttärinämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarinani",
+    "ttärinäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarinanne",
+    "ttärinänne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarinasi",
+    "ttärinäsi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarissa",
+    "ttärissä"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 2,
+   "add": "tarissaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 2,
+     "add": "tärissään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "inessive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarissamme",
+    "ttärissämme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarissani",
+    "ttärissäni"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarissanne",
+    "ttärissänne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarissasi",
+    "ttärissäsi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarista",
+    "ttäristä"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 2,
+   "add": "taristaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 2,
+     "add": "täristään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "elative|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaristamme",
+    "ttäristämme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaristani",
+    "ttäristäni"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaristanne",
+    "ttäristänne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaristasi",
+    "ttäristäsi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttaritta",
+    "ttärittä"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 2,
+   "add": "tarittaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "är": {
+     "drop": 2,
+     "add": "tärittään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "abessive|plural|first person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarittamme",
+    "ttärittämme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarittani",
+    "ttärittäni"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarittanne",
+    "ttärittänne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 3,
+   "add": "",
+   "suf": [
+    "ttarittasi",
+    "ttärittäsi"
+   ]
+  }
+ }
+}

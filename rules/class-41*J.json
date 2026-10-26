@@ -1,0 +1,1138 @@
+{
+ "class": "41*J",
+ "model_word": "kinnas",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "kinnas",
+ "cells": {
+  "nominative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "nnas",
+    "nnäs"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "nnasta",
+    "nnästä"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "taan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "nnastamme",
+    "nnästämme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "nnastani",
+    "nnästäni"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "nnastanne",
+    "nnästänne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "nnastasi",
+    "nnästäsi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 3,
+   "add": "taakseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaaksemme",
+    "ntääksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaakseni",
+    "ntääkseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaaksenne",
+    "ntääksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaaksesi",
+    "ntääksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaaksi",
+    "ntääksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaalla",
+    "ntäällä"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 3,
+   "add": "taallaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaallamme",
+    "ntäällämme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaallani",
+    "ntäälläni"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaallanne",
+    "ntäällänne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaallasi",
+    "ntäälläsi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaalle",
+    "ntäälle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 3,
+   "add": "taalleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaallemme",
+    "ntäällemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaalleni",
+    "ntäälleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaallenne",
+    "ntäällenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaallesi",
+    "ntäällesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaalta",
+    "ntäältä"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 3,
+   "add": "taaltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaaltamme",
+    "ntäältämme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaaltani",
+    "ntäältäni"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaaltanne",
+    "ntäältänne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaaltasi",
+    "ntäältäsi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaamme",
+    "ntäämme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaamme",
+    "ntäämme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaamme",
+    "ntäämme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaan",
+    "ntään"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaana",
+    "ntäänä"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 3,
+   "add": "taanaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaanamme",
+    "ntäänämme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaanani",
+    "ntäänäni"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaananne",
+    "ntäänänne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaanasi",
+    "ntäänäsi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaani",
+    "ntääni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaani",
+    "ntääni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaani",
+    "ntääni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaanne",
+    "ntäänne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaanne",
+    "ntäänne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaanne",
+    "ntäänne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaansa",
+    "ntäänsä"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaansa",
+    "ntäänsä"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaansa",
+    "ntäänsä"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaaseemme",
+    "ntääseemme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaaseen",
+    "ntääseen"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaaseeni",
+    "ntääseeni"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaaseenne",
+    "ntääseenne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaaseensa",
+    "ntääseensä"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaaseesi",
+    "ntääseesi"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaasi",
+    "ntääsi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaasi",
+    "ntääsi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaasi",
+    "ntääsi"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaassa",
+    "ntäässä"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 3,
+   "add": "taassaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaassamme",
+    "ntäässämme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaassani",
+    "ntäässäni"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaassanne",
+    "ntäässänne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaassasi",
+    "ntäässäsi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaasta",
+    "ntäästä"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 3,
+   "add": "taastaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaastamme",
+    "ntäästämme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaastani",
+    "ntäästäni"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaastanne",
+    "ntäästänne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaastasi",
+    "ntäästäsi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaat",
+    "ntäät"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaatta",
+    "ntäättä"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 3,
+   "add": "taattaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaattamme",
+    "ntäättämme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaattani",
+    "ntäättäni"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaattanne",
+    "ntäättänne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaattasi",
+    "ntäättäsi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "ensa"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "esi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "imme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "in"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "ini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "inne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "insa"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "isi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 3,
+   "add": "taikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaiksemme",
+    "ntäiksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaikseni",
+    "ntäikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaiksenne",
+    "ntäiksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaiksesi",
+    "ntäiksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaiksi",
+    "ntäiksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntailla",
+    "ntäillä"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 3,
+   "add": "taillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaillamme",
+    "ntäillämme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaillani",
+    "ntäilläni"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaillanne",
+    "ntäillänne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaillasi",
+    "ntäilläsi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaille",
+    "ntäille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 3,
+   "add": "tailleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaillemme",
+    "ntäillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntailleni",
+    "ntäilleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaillenne",
+    "ntäillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaillesi",
+    "ntäillesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntailta",
+    "ntäiltä"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 3,
+   "add": "tailtaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntailtamme",
+    "ntäiltämme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntailtani",
+    "ntäiltäni"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntailtanne",
+    "ntäiltänne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntailtasi",
+    "ntäiltäsi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntain",
+    "ntäin"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaina",
+    "ntäinä"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 3,
+   "add": "tainaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntainamme",
+    "ntäinämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntainani",
+    "ntäinäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntainanne",
+    "ntäinänne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntainasi",
+    "ntäinäsi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaissa",
+    "ntäissä"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 3,
+   "add": "taissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaissamme",
+    "ntäissämme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaissani",
+    "ntäissäni"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaissanne",
+    "ntäissänne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaissasi",
+    "ntäissäsi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaista",
+    "ntäistä"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 3,
+   "add": "taistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaistamme",
+    "ntäistämme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaistani",
+    "ntäistäni"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaistanne",
+    "ntäistänne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaistasi",
+    "ntäistäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaita",
+    "ntäitä"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 3,
+   "add": "taitaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaitamme",
+    "ntäitämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaitani",
+    "ntäitäni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaitanne",
+    "ntäitänne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaitasi",
+    "ntäitäsi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaitta",
+    "ntäittä"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 3,
+   "add": "taittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaittamme",
+    "ntäittämme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaittani",
+    "ntäittäni"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaittanne",
+    "ntäittänne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "ntaittasi",
+    "ntäittäsi"
+   ]
+  }
+ }
+}

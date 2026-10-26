@@ -1,0 +1,134 @@
+{
+ "class": "5*I",
+ "model_word": "pelti",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "pelti",
+ "cells": {
+  "translative|plural|third person": {
+   "drop": 2,
+   "add": "leikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 2,
+   "add": "leilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 2,
+   "add": "leillänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 2,
+   "add": "leiltänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 2,
+   "add": "leissänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 2,
+   "add": "leistänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 2,
+   "add": "leittänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 2,
+   "add": "likseen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 2,
+   "add": "lilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 2,
+   "add": "lillänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 2,
+   "add": "liltänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 2,
+   "add": "lissänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 2,
+   "add": "listänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 2,
+   "add": "littänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 1,
+   "add": "einänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 1,
+   "add": "ejänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 0,
+   "add": "nänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "änsä",
+   "suf": [
+    ""
+   ]
+  }
+ }
+}

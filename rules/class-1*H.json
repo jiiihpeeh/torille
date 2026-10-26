@@ -1,0 +1,1826 @@
+{
+ "class": "1*H",
+ "model_word": "kumpu",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "kumpu",
+ "cells": {
+  "translative|plural|third person": {
+   "drop": 2,
+   "add": "muikseen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "moiksensa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "translative|plural|first person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "iksemme"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "iksemme"
+     ]
+    }
+   }
+  },
+  "translative|plural|first person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ikseni"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ikseni"
+     ]
+    }
+   }
+  },
+  "translative|plural|second person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "iksenne"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "iksenne"
+     ]
+    }
+   }
+  },
+  "translative|plural|second person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "iksesi"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "iksesi"
+     ]
+    }
+   }
+  },
+  "translative|plural|": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "iksi"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "iksi"
+     ]
+    }
+   }
+  },
+  "adessive|plural|": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "illa"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "illa"
+     ]
+    }
+   }
+  },
+  "adessive|plural|third person": {
+   "drop": 2,
+   "add": "muillaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "moillansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "adessive|plural|first person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "illamme"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "illamme"
+     ]
+    }
+   }
+  },
+  "adessive|plural|first person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "illani"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "illani"
+     ]
+    }
+   }
+  },
+  "adessive|plural|second person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "illanne"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "illanne"
+     ]
+    }
+   }
+  },
+  "adessive|plural|second person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "illasi"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "illasi"
+     ]
+    }
+   }
+  },
+  "allative|plural|": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ille"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ille"
+     ]
+    }
+   }
+  },
+  "allative|plural|third person": {
+   "drop": 2,
+   "add": "muilleen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "moillensa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "allative|plural|first person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "illemme"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "illemme"
+     ]
+    }
+   }
+  },
+  "allative|plural|first person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "illeni"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "illeni"
+     ]
+    }
+   }
+  },
+  "allative|plural|second person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "illenne"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "illenne"
+     ]
+    }
+   }
+  },
+  "allative|plural|second person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "illesi"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "illesi"
+     ]
+    }
+   }
+  },
+  "ablative|plural|": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ilta"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ilta"
+     ]
+    }
+   }
+  },
+  "ablative|plural|third person": {
+   "drop": 2,
+   "add": "muiltaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "moiltansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "ablative|plural|first person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "iltamme"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "iltamme"
+     ]
+    }
+   }
+  },
+  "ablative|plural|first person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "iltani"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "iltani"
+     ]
+    }
+   }
+  },
+  "ablative|plural|second person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "iltanne"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "iltanne"
+     ]
+    }
+   }
+  },
+  "ablative|plural|second person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "iltasi"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "iltasi"
+     ]
+    }
+   }
+  },
+  "instructive|plural|": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "in"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "in"
+     ]
+    }
+   }
+  },
+  "inessive|plural|": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "issa"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "issa"
+     ]
+    }
+   }
+  },
+  "inessive|plural|third person": {
+   "drop": 2,
+   "add": "muissaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "moissansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "inessive|plural|first person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "issamme"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "issamme"
+     ]
+    }
+   }
+  },
+  "inessive|plural|first person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "issani"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "issani"
+     ]
+    }
+   }
+  },
+  "inessive|plural|second person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "issanne"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "issanne"
+     ]
+    }
+   }
+  },
+  "inessive|plural|second person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "issasi"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "issasi"
+     ]
+    }
+   }
+  },
+  "elative|plural|": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ista"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ista"
+     ]
+    }
+   }
+  },
+  "elative|plural|third person": {
+   "drop": 2,
+   "add": "muistaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "moistansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "elative|plural|first person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "istamme"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "istamme"
+     ]
+    }
+   }
+  },
+  "elative|plural|first person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "istani"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "istani"
+     ]
+    }
+   }
+  },
+  "elative|plural|second person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "istanne"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "istanne"
+     ]
+    }
+   }
+  },
+  "elative|plural|second person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "istasi"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "istasi"
+     ]
+    }
+   }
+  },
+  "abessive|plural|": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "itta"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "itta"
+     ]
+    }
+   }
+  },
+  "abessive|plural|third person": {
+   "drop": 2,
+   "add": "muittaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "moittansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "abessive|plural|first person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ittamme"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ittamme"
+     ]
+    }
+   }
+  },
+  "abessive|plural|first person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ittani"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ittani"
+     ]
+    }
+   }
+  },
+  "abessive|plural|second person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ittanne"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ittanne"
+     ]
+    }
+   }
+  },
+  "abessive|plural|second person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ittasi"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ittasi"
+     ]
+    }
+   }
+  },
+  "translative|singular|third person": {
+   "drop": 2,
+   "add": "mukseen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "moksensa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "translative|singular|first person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ksemme"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ksemme"
+     ]
+    }
+   }
+  },
+  "translative|singular|first person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "kseni"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "kseni"
+     ]
+    }
+   }
+  },
+  "translative|singular|second person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ksenne"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ksenne"
+     ]
+    }
+   }
+  },
+  "translative|singular|second person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ksesi"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ksesi"
+     ]
+    }
+   }
+  },
+  "translative|singular|": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ksi"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ksi"
+     ]
+    }
+   }
+  },
+  "adessive|singular|": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "lla"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "lla"
+     ]
+    }
+   }
+  },
+  "adessive|singular|third person": {
+   "drop": 2,
+   "add": "mullaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mollansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "adessive|singular|first person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "llamme"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "llamme"
+     ]
+    }
+   }
+  },
+  "adessive|singular|first person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "llani"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "llani"
+     ]
+    }
+   }
+  },
+  "adessive|singular|second person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "llanne"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "llanne"
+     ]
+    }
+   }
+  },
+  "adessive|singular|second person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "llasi"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "llasi"
+     ]
+    }
+   }
+  },
+  "allative|singular|": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "lle"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "lle"
+     ]
+    }
+   }
+  },
+  "allative|singular|third person": {
+   "drop": 2,
+   "add": "mulleen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mollensa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "allative|singular|first person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "llemme"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "llemme"
+     ]
+    }
+   }
+  },
+  "allative|singular|first person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "lleni"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "lleni"
+     ]
+    }
+   }
+  },
+  "allative|singular|second person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "llenne"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "llenne"
+     ]
+    }
+   }
+  },
+  "allative|singular|second person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "llesi"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "llesi"
+     ]
+    }
+   }
+  },
+  "ablative|singular|": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "lta"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "lta"
+     ]
+    }
+   }
+  },
+  "ablative|singular|third person": {
+   "drop": 2,
+   "add": "multaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "moltansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "ablative|singular|first person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ltamme"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ltamme"
+     ]
+    }
+   }
+  },
+  "ablative|singular|first person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ltani"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ltani"
+     ]
+    }
+   }
+  },
+  "ablative|singular|second person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ltanne"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ltanne"
+     ]
+    }
+   }
+  },
+  "ablative|singular|second person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ltasi"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ltasi"
+     ]
+    }
+   }
+  },
+  "genitive|singular|": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "n"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "n"
+     ]
+    }
+   }
+  },
+  "inessive|singular|": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ssa"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ssa"
+     ]
+    }
+   }
+  },
+  "inessive|singular|third person": {
+   "drop": 2,
+   "add": "mussaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mossansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "inessive|singular|first person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ssamme"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ssamme"
+     ]
+    }
+   }
+  },
+  "inessive|singular|first person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ssani"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ssani"
+     ]
+    }
+   }
+  },
+  "inessive|singular|second person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ssanne"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ssanne"
+     ]
+    }
+   }
+  },
+  "inessive|singular|second person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ssasi"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ssasi"
+     ]
+    }
+   }
+  },
+  "elative|singular|": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "sta"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "sta"
+     ]
+    }
+   }
+  },
+  "elative|singular|third person": {
+   "drop": 2,
+   "add": "mustaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mostansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "elative|singular|first person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "stamme"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "stamme"
+     ]
+    }
+   }
+  },
+  "elative|singular|first person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "stani"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "stani"
+     ]
+    }
+   }
+  },
+  "elative|singular|second person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "stanne"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "stanne"
+     ]
+    }
+   }
+  },
+  "elative|singular|second person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "stasi"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "stasi"
+     ]
+    }
+   }
+  },
+  "nominative|plural|": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "t"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "t"
+     ]
+    }
+   }
+  },
+  "abessive|singular|": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "tta"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "tta"
+     ]
+    }
+   }
+  },
+  "abessive|singular|third person": {
+   "drop": 2,
+   "add": "muttaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mottansa",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "abessive|singular|first person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ttamme"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ttamme"
+     ]
+    }
+   }
+  },
+  "abessive|singular|first person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ttani"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ttani"
+     ]
+    }
+   }
+  },
+  "abessive|singular|second person plural": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ttanne"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ttanne"
+     ]
+    }
+   }
+  },
+  "abessive|singular|second person singular": {
+   "drop": 2,
+   "add": "mu",
+   "suf": [
+    "ttasi"
+   ],
+   "alt": {
+    "po": {
+     "drop": 2,
+     "add": "mo",
+     "suf": [
+      "ttasi"
+     ]
+    }
+   }
+  },
+  "nominative|singular|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "a",
+    "ä"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "aan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "amme",
+    "ämme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ani",
+    "äni"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "anne",
+    "änne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "asi",
+    "äsi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ihimme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ihin"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ihini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ihinne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ihinsa",
+    "ihinsä"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ihisi"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ina",
+    "inä"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 0,
+   "add": "inaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "inamme",
+    "inämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "inani",
+    "inäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "inanne",
+    "inänne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "inasi",
+    "inäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ja",
+    "jä"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 0,
+   "add": "jaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jamme",
+    "jämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jani",
+    "jäni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "janne",
+    "jänne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jasi",
+    "jäsi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jemme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jen"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jeni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jenne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jensa",
+    "jensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jesi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "mme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "mme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "mme"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "na",
+    "nä"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 0,
+   "add": "naan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "namme",
+    "nämme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nani",
+    "näni"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nanne",
+    "nänne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nasi",
+    "näsi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nsa",
+    "nsä"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nsa",
+    "nsä"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nsa",
+    "nsä"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "si"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "si"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "si"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "double": true,
+   "suf": [
+    "mme"
+   ]
+  },
+  "illative|singular|": {
+   "double": true,
+   "suf": [
+    "n"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "double": true,
+   "suf": [
+    "ni"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "double": true,
+   "suf": [
+    "nne"
+   ]
+  },
+  "illative|singular|third person": {
+   "double": true,
+   "suf": [
+    "nsa",
+    "nsä"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "double": true,
+   "suf": [
+    "si"
+   ]
+  }
+ }
+}

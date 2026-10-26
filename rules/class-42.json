@@ -1,0 +1,176 @@
+{
+ "class": "42",
+ "model_word": "mies",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "mies",
+ "cells": {
+  "translative|singular|third person": {
+   "drop": 1,
+   "add": "hekseen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 1,
+   "add": "helleen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 1,
+   "add": "hellänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 1,
+   "add": "heltänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 1,
+   "add": "henänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 1,
+   "add": "hessänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 1,
+   "add": "hestänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 1,
+   "add": "hettänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 1,
+   "add": "hi",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 1,
+   "add": "hi",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 1,
+   "add": "hi",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 1,
+   "add": "hi",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 1,
+   "add": "hi",
+   "suf": [
+    "ensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 1,
+   "add": "hi",
+   "suf": [
+    "esi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 1,
+   "add": "hikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 1,
+   "add": "hilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 1,
+   "add": "hillänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 1,
+   "add": "hiltänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 1,
+   "add": "hinänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 1,
+   "add": "hissänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 1,
+   "add": "histänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 1,
+   "add": "hittänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 1,
+   "add": "hiänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "tänsä",
+   "suf": [
+    ""
+   ]
+  }
+ }
+}

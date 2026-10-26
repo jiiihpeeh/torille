@@ -1,0 +1,841 @@
+{
+ "class": "51, 50",
+ "model_word": "isojako",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "isojako",
+ "cells": {
+  "partitive|singular|": {
+   "drop": 6,
+   "add": "asokeri",
+   "suf": [
+    "a"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 6,
+   "add": "asokeriaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 6,
+   "add": "asokeri",
+   "suf": [
+    "amme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 6,
+   "add": "asokeri",
+   "suf": [
+    "ani"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 6,
+   "add": "asokeri",
+   "suf": [
+    "anne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 6,
+   "add": "asokeri",
+   "suf": [
+    "asi"
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 6,
+   "add": "iksisokere",
+   "suf": [
+    "iksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 6,
+   "add": "iksisokere",
+   "suf": [
+    "ikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 6,
+   "add": "iksisokere",
+   "suf": [
+    "iksenne"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 6,
+   "add": "iksisokereiksensa",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 6,
+   "add": "iksisokere",
+   "suf": [
+    "iksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 6,
+   "add": "iksisokere",
+   "suf": [
+    "iksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 6,
+   "add": "illasokere",
+   "suf": [
+    "illa"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 6,
+   "add": "illasokereillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 6,
+   "add": "illasokere",
+   "suf": [
+    "illamme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 6,
+   "add": "illasokere",
+   "suf": [
+    "illani"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 6,
+   "add": "illasokere",
+   "suf": [
+    "illanne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 6,
+   "add": "illasokere",
+   "suf": [
+    "illasi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 6,
+   "add": "illesokere",
+   "suf": [
+    "ille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 6,
+   "add": "illesokereilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 6,
+   "add": "illesokere",
+   "suf": [
+    "illemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 6,
+   "add": "illesokere",
+   "suf": [
+    "illeni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 6,
+   "add": "illesokere",
+   "suf": [
+    "illenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 6,
+   "add": "illesokere",
+   "suf": [
+    "illesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 6,
+   "add": "iltasokere",
+   "suf": [
+    "ilta"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 6,
+   "add": "iltasokereiltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 6,
+   "add": "iltasokere",
+   "suf": [
+    "iltamme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 6,
+   "add": "iltasokere",
+   "suf": [
+    "iltani"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 6,
+   "add": "iltasokere",
+   "suf": [
+    "iltanne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 6,
+   "add": "iltasokere",
+   "suf": [
+    "iltasi"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 6,
+   "add": "inasokere",
+   "suf": [
+    "ina"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 6,
+   "add": "inasokereinaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 6,
+   "add": "inasokere",
+   "suf": [
+    "inamme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 6,
+   "add": "inasokere",
+   "suf": [
+    "inani"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 6,
+   "add": "inasokere",
+   "suf": [
+    "inanne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 6,
+   "add": "inasokere",
+   "suf": [
+    "inasi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 6,
+   "add": "issasokere",
+   "suf": [
+    "issa"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 6,
+   "add": "issasokereissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 6,
+   "add": "issasokere",
+   "suf": [
+    "issamme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 6,
+   "add": "issasokere",
+   "suf": [
+    "issani"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 6,
+   "add": "issasokere",
+   "suf": [
+    "issanne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 6,
+   "add": "issasokere",
+   "suf": [
+    "issasi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 6,
+   "add": "istasokere",
+   "suf": [
+    "ista"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 6,
+   "add": "istasokereistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 6,
+   "add": "istasokere",
+   "suf": [
+    "istamme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 6,
+   "add": "istasokere",
+   "suf": [
+    "istani"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 6,
+   "add": "istasokere",
+   "suf": [
+    "istanne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 6,
+   "add": "istasokere",
+   "suf": [
+    "istasi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 6,
+   "add": "ittasokere",
+   "suf": [
+    "itta"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 6,
+   "add": "ittasokereittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 6,
+   "add": "ittasokere",
+   "suf": [
+    "ittamme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 6,
+   "add": "ittasokere",
+   "suf": [
+    "ittani"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 6,
+   "add": "ittasokere",
+   "suf": [
+    "ittanne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 6,
+   "add": "ittasokere",
+   "suf": [
+    "ittasi"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 6,
+   "add": "jensokereitt",
+   "suf": [
+    "en"
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 6,
+   "add": "ksisokeri",
+   "suf": [
+    "ksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 6,
+   "add": "ksisokeri",
+   "suf": [
+    "kseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 6,
+   "add": "ksisokeri",
+   "suf": [
+    "ksenne"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 6,
+   "add": "ksisokeriksensa",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 6,
+   "add": "ksisokeri",
+   "suf": [
+    "ksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 6,
+   "add": "ksisokeri",
+   "suf": [
+    "ksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 6,
+   "add": "llasokeri",
+   "suf": [
+    "lla"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 6,
+   "add": "llasokerillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 6,
+   "add": "llasokeri",
+   "suf": [
+    "llamme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 6,
+   "add": "llasokeri",
+   "suf": [
+    "llani"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 6,
+   "add": "llasokeri",
+   "suf": [
+    "llanne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 6,
+   "add": "llasokeri",
+   "suf": [
+    "llasi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 6,
+   "add": "llesokeri",
+   "suf": [
+    "lle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 6,
+   "add": "llesokerilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 6,
+   "add": "llesokeri",
+   "suf": [
+    "llemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 6,
+   "add": "llesokeri",
+   "suf": [
+    "lleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 6,
+   "add": "llesokeri",
+   "suf": [
+    "llenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 6,
+   "add": "llesokeri",
+   "suf": [
+    "llesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 6,
+   "add": "ltasokeri",
+   "suf": [
+    "lta"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 6,
+   "add": "ltasokeriltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 6,
+   "add": "ltasokeri",
+   "suf": [
+    "ltamme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 6,
+   "add": "ltasokeri",
+   "suf": [
+    "ltani"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 6,
+   "add": "ltasokeri",
+   "suf": [
+    "ltanne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 6,
+   "add": "ltasokeri",
+   "suf": [
+    "ltasi"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 6,
+   "add": "nasokeri",
+   "suf": [
+    "na"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 6,
+   "add": "nasokerinaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 6,
+   "add": "nasokeri",
+   "suf": [
+    "namme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 6,
+   "add": "nasokeri",
+   "suf": [
+    "nani"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 6,
+   "add": "nasokeri",
+   "suf": [
+    "nanne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 6,
+   "add": "nasokeri",
+   "suf": [
+    "nasi"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 6,
+   "add": "nsokeri",
+   "suf": [
+    "n"
+   ]
+  },
+  "nominative|singular|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 5,
+   "add": "sasokeri",
+   "suf": [
+    "ssa"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 5,
+   "add": "sasokerissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 5,
+   "add": "sasokeri",
+   "suf": [
+    "ssamme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 5,
+   "add": "sasokeri",
+   "suf": [
+    "ssani"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 5,
+   "add": "sasokeri",
+   "suf": [
+    "ssanne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 5,
+   "add": "sasokeri",
+   "suf": [
+    "ssasi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 6,
+   "add": "tsokeri",
+   "suf": [
+    "t"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 6,
+   "add": "ttasokeri",
+   "suf": [
+    "tta"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 6,
+   "add": "ttasokerittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 6,
+   "add": "ttasokeri",
+   "suf": [
+    "ttamme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 6,
+   "add": "ttasokeri",
+   "suf": [
+    "ttani"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 6,
+   "add": "ttasokeri",
+   "suf": [
+    "ttanne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 6,
+   "add": "ttasokeri",
+   "suf": [
+    "ttasi"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 4,
+   "add": "ihinjakoih",
+   "suf": [
+    "in"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 2,
+   "add": "jakoj",
+   "suf": [
+    "a"
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 2,
+   "add": "jakoj",
+   "suf": [
+    "amme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 2,
+   "add": "jakoj",
+   "suf": [
+    "ani"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 2,
+   "add": "jakoj",
+   "suf": [
+    "anne"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 2,
+   "add": "jakojansa",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 2,
+   "add": "jakoj",
+   "suf": [
+    "asi"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 4,
+   "add": "onjakoo",
+   "suf": [
+    "n"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 4,
+   "add": "stajao",
+   "suf": [
+    "sta"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 4,
+   "add": "stajaostaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 4,
+   "add": "stajao",
+   "suf": [
+    "stamme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 4,
+   "add": "stajao",
+   "suf": [
+    "stani"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 4,
+   "add": "stajao",
+   "suf": [
+    "stanne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 4,
+   "add": "stajao",
+   "suf": [
+    "stasi"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "mme"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ni"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nne"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nsa"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "si"
+   ]
+  }
+ }
+}

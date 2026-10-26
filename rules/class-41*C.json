@@ -1,0 +1,1137 @@
+{
+ "class": "41*C",
+ "model_word": "altis",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "altis",
+ "cells": {
+  "nominative|singular|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "s"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "sta",
+    "stä"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "taan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "stamme",
+    "stämme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "stani",
+    "stäni"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "stanne",
+    "stänne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 1,
+   "add": "",
+   "suf": [
+    "stasi",
+    "stäsi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 2,
+   "add": "täid",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 2,
+   "add": "täid",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 2,
+   "add": "täid",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 2,
+   "add": "täid",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 2,
+   "add": "täid",
+   "suf": [
+    "ensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 2,
+   "add": "täid",
+   "suf": [
+    "esi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 2,
+   "add": "täih",
+   "suf": [
+    "imme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 2,
+   "add": "täih",
+   "suf": [
+    "in"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 2,
+   "add": "täih",
+   "suf": [
+    "ini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 2,
+   "add": "täih",
+   "suf": [
+    "inne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 2,
+   "add": "täih",
+   "suf": [
+    "insä"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 2,
+   "add": "täih",
+   "suf": [
+    "isi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 2,
+   "add": "täikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaiksemme",
+    "ättäiksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaikseni",
+    "ättäikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaiksenne",
+    "ättäiksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaiksesi",
+    "ättäiksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaiksi",
+    "ättäiksi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaille",
+    "ättäille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 2,
+   "add": "täilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaillemme",
+    "ättäillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attailleni",
+    "ättäilleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaillenne",
+    "ättäillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaillesi",
+    "ättäillesi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attailla",
+    "ättäillä"
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaillamme",
+    "ättäillämme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaillani",
+    "ättäilläni"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaillanne",
+    "ättäillänne"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 2,
+   "add": "täillänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaillasi",
+    "ättäilläsi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attailta",
+    "ättäiltä"
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attailtamme",
+    "ättäiltämme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attailtani",
+    "ättäiltäni"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attailtanne",
+    "ättäiltänne"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 2,
+   "add": "täiltänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attailtasi",
+    "ättäiltäsi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attain",
+    "ättäin"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaina",
+    "ättäinä"
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attainamme",
+    "ättäinämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attainani",
+    "ättäinäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attainanne",
+    "ättäinänne"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 2,
+   "add": "täinänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attainasi",
+    "ättäinäsi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaissa",
+    "ättäissä"
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaissamme",
+    "ättäissämme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaissani",
+    "ättäissäni"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaissanne",
+    "ättäissänne"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 2,
+   "add": "täissänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaissasi",
+    "ättäissäsi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaista",
+    "ättäistä"
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaistamme",
+    "ättäistämme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaistani",
+    "ättäistäni"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaistanne",
+    "ättäistänne"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 2,
+   "add": "täistänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaistasi",
+    "ättäistäsi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaitta",
+    "ättäittä"
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaittamme",
+    "ättäittämme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaittani",
+    "ättäittäni"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaittanne",
+    "ättäittänne"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 2,
+   "add": "täittänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaittasi",
+    "ättäittäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaita",
+    "ättäitä"
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaitamme",
+    "ättäitämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaitani",
+    "ättäitäni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaitanne",
+    "ättäitänne"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 2,
+   "add": "täitänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaitasi",
+    "ättäitäsi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 2,
+   "add": "tääkseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaaksemme",
+    "ättääksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaakseni",
+    "ättääkseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaaksenne",
+    "ättääksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaaksesi",
+    "ättääksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaaksi",
+    "ättääksi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaalle",
+    "ättäälle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 2,
+   "add": "täälleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaallemme",
+    "ättäällemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaalleni",
+    "ättäälleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaallenne",
+    "ättäällenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaallesi",
+    "ättäällesi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaalla",
+    "ättäällä"
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaallamme",
+    "ättäällämme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaallani",
+    "ättäälläni"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaallanne",
+    "ättäällänne"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 2,
+   "add": "täällänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaallasi",
+    "ättäälläsi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaalta",
+    "ättäältä"
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaaltamme",
+    "ättäältämme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaaltani",
+    "ättäältäni"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaaltanne",
+    "ättäältänne"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 2,
+   "add": "täältänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaaltasi",
+    "ättäältäsi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaamme",
+    "ättäämme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaamme",
+    "ättäämme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaamme",
+    "ättäämme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaan",
+    "ättään"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaani",
+    "ättääni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaani",
+    "ättääni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaani",
+    "ättääni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaanne",
+    "ättäänne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaanne",
+    "ättäänne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaanne",
+    "ättäänne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaansa",
+    "ättäänsä"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaansa",
+    "ättäänsä"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaansa",
+    "ättäänsä"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaana",
+    "ättäänä"
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaanamme",
+    "ättäänämme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaanani",
+    "ättäänäni"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaananne",
+    "ättäänänne"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 2,
+   "add": "täänänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaanasi",
+    "ättäänäsi"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaaseemme",
+    "ättääseemme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaaseen",
+    "ättääseen"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaaseeni",
+    "ättääseeni"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaaseenne",
+    "ättääseenne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaaseensa",
+    "ättääseensä"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaaseesi",
+    "ättääseesi"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaasi",
+    "ättääsi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaasi",
+    "ättääsi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaasi",
+    "ättääsi"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaassa",
+    "ättäässä"
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaassamme",
+    "ättäässämme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaassani",
+    "ättäässäni"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaassanne",
+    "ättäässänne"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 2,
+   "add": "täässänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaassasi",
+    "ättäässäsi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaasta",
+    "ättäästä"
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaastamme",
+    "ättäästämme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaastani",
+    "ättäästäni"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaastanne",
+    "ättäästänne"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 2,
+   "add": "täästänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaastasi",
+    "ättäästäsi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaat",
+    "ättäät"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaatta",
+    "ättäättä"
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaattamme",
+    "ättäättämme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaattani",
+    "ättäättäni"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaattanne",
+    "ättäättänne"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 2,
+   "add": "täättänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "attaattasi",
+    "ättäättäsi"
+   ]
+  }
+ }
+}

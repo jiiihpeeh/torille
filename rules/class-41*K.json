@@ -1,0 +1,1023 @@
+{
+ "class": "41*K",
+ "model_word": "harras",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "harras",
+ "cells": {
+  "nominative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rras"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rrasta"
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rrastamme"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "taan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rrastani"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rrastanne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rrastasi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 3,
+   "add": "taakseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaaksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaakseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaaksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaaksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaaksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaalla"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 3,
+   "add": "taallaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaallamme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaallani"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaallanne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaallasi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaalle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 3,
+   "add": "taalleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaallemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaalleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaallenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaallesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaalta"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 3,
+   "add": "taaltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaaltamme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaaltani"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaaltanne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaaltasi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaamme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaamme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaamme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaan"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaana"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 3,
+   "add": "taanaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaanamme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaanani"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaananne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaanasi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaani"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaani"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaani"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaanne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaanne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaanne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaansa"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaansa"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaansa"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaaseemme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaaseen"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaaseeni"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaaseenne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaaseensa"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaaseesi"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaasi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaasi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaasi"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaassa"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 3,
+   "add": "taassaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaassamme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaassani"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaassanne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaassasi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaasta"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 3,
+   "add": "taastaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaastamme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaastani"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaastanne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaastasi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaat"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaatta"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 3,
+   "add": "taattaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaattamme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaattani"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaattanne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaattasi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "ensa"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "esi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "imme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "in"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "ini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "inne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "insa"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "isi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 3,
+   "add": "taikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaiksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaiksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaiksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaiksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtailla"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 3,
+   "add": "taillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaillamme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaillani"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaillanne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaillasi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 3,
+   "add": "tailleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtailleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaillesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtailta"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 3,
+   "add": "tailtaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtailtamme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtailtani"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtailtanne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtailtasi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtain"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaina"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 3,
+   "add": "tainaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtainamme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtainani"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtainanne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtainasi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaissa"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 3,
+   "add": "taissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaissamme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaissani"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaissanne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaissasi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaista"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 3,
+   "add": "taistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaistamme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaistani"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaistanne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaistasi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaita"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 3,
+   "add": "taitaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaitamme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaitani"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaitanne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaitasi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaitta"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 3,
+   "add": "taittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaittamme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaittani"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaittanne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "rtaittasi"
+   ]
+  }
+ }
+}

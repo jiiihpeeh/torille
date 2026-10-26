@@ -1,0 +1,21 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "torille"
+version = "0.1.0"
+description = "torille morphology, as a Python extension"
+license = { text = "MIT OR Apache-2.0" }
+requires-python = ">=3.9"
+
+[tool.maturin]
+# The crate is `torille_py` so it can also depend on `torille`; the import is
+# `torille` either way.
+module-name = "torille"
+bindings = "pyo3"
+# The wheel needs `extension-module` so pyo3 leaves libpython to the
+# interpreter that loads it. It is a feature rather than a default precisely so
+# that `cargo test -p torille-py` can build a test binary, which has to link
+# libpython itself.
+features = ["extension-module"]

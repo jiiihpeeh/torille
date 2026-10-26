@@ -1,0 +1,35 @@
+name: ci
+
+# Engine-only CI. The Python harness needs Omorfi/Voikko/maturin and the
+# materialised SQLite oracles, so it runs separately; this job is the gate that
+# catches the failures a pure Rust checkout can see.
+#
+# The Python harness is the only gate that cannot run here; everything the
+# Rust workspace can check is run below.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust 1.99.0
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.0
+          components: clippy, rustfmt
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Check (workspace)
+        run: cargo check --workspace --all-targets
+
+      - name: Clippy (engine, warnings are errors)
+        run: cargo clippy -p torille --all-targets -- -D warnings
+
+      - name: Workspace tests
+        run: cargo test --release --workspace

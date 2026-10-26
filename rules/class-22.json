@@ -1,0 +1,99 @@
+{
+ "class": "22",
+ "model_word": "show",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "show",
+ "cells": {
+  "nominative|singular|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 0,
+   "add": "ikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 0,
+   "add": "illaan",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 0,
+   "add": "illeen",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ilta"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 0,
+   "add": "iltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "iltamme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "iltani"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "iltanne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "iltasi"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 0,
+   "add": "issaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 0,
+   "add": "istaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 0,
+   "add": "ittaan",
+   "suf": [
+    ""
+   ]
+  }
+ }
+}

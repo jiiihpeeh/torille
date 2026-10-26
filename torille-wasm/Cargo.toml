@@ -1,0 +1,43 @@
+[package]
+name = "torille-wasm"
+version = "0.1.0"
+edition = "2024"
+license.workspace = true
+description = "WASM bindings for the torille Finnish spell-checker"
+
+[lib]
+# `cdylib` for wasm-pack output (`name.wasm`); `rlib` so the test harness
+# can link against it without going through wasm-pack.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+torille = { path = ".." }
+
+# wasm-bindgen is what `wasm-pack` uses to bridge Rust types and JavaScript
+# values; pinning to 0.2 because that's the stable line and what the
+# toolchain on this box supports.
+wasm-bindgen = "0.2"
+
+# `js-sys` is the type-level bridge for `Array`, `Object`, and the other
+# JavaScript values we hand back to the caller.
+js-sys = "0.3"
+
+# Smaller allocator for the wasm target, behind the opt-in `wee-alloc`
+# feature. `wee_alloc` shaves a few hundred KB off the produced .wasm,
+# but it is unmaintained and does not reuse freed memory: the long-lived
+# worker pool's linear memory then grows on every heavy `check`, which
+# OOMs the tab. The default is Rust's standard wasm allocator.
+# `console_error_panic_hook` makes `unwrap` panics land in the browser
+# dev console instead of dying silently.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wee_alloc = { version = "0.4", optional = true }
+console_error_panic_hook = "0.1"
+
+[features]
+default = []
+# Opt back into `wee_alloc` for a smaller .wasm (size-first builds).
+wee-alloc = ["dep:wee_alloc"]
+# When wasm-pack is invoked without `--release`, this turns off
+# lto and codegen-units tweaks that the binary crate sets
+# in `.cargo/config.toml`.
+test-in-wasm = []

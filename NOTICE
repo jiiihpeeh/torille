@@ -1,0 +1,38 @@
+torille
+Copyright (c) 2026 Jussi-Pekka Jalonen
+
+This repository is multi-licensed by component:
+
+  * The engine, bindings, browser code and examples are licensed under the
+    MIT License OR the Apache License, Version 2.0, at your option. See
+    LICENSE, LICENSE-MIT and LICENSE-APACHE.
+
+  * The development and verification tooling under tools/ is MIT OR
+    Apache-2.0, except for the files tied to Omorfi or Voikko. Those harness
+    and oracle-bridge files are GPL-3.0-or-later. See
+    tools/LICENSE-GPL-3.0 and tools/README.md; each GPL file also carries an
+    SPDX header. The GPL applies to the oracle bridge, not to the engine, the
+    bindings, the browser code, or generated engine source.
+
+  * The files under data/ are not ours and are not covered by either source
+    license. They are published by Kotimaisten kielten keskus (the Institute
+    for the Languages of Finland). See data/LICENSE for each file's terms and
+    provenance:
+
+      - nykysuomensanalista.txt is published under Creative Commons
+        Attribution 4.0 International (CC BY 4.0).
+      - kotus-tyypit.txt is used for the linguistic facts it states (the
+        inflectional paradigms and gradation pairs). Facts are not protected
+        by copyright, so the paradigm content is not treated as a licensed
+        work; the file also carries a Kotus LGPL notice, which is reproduced
+        in data/LICENSE and is complied with if you prefer to rely on it.
+
+The two are separate works from the code. What we wrote is the morphology:
+the rules that take a lemma and a word class and produce the forms the
+class licenses. The word list and the paradigm models are a data
+publication made by Kotus.
+
+Attribution, nykysuomen sanalista (CC BY 4.0):
+
+    Nykysuomen sanalista. Kotimaisten kielten keskus. Saatavissa
+    https://kaino.kotus.fi/lataa/nykysuomensanalista2024.txt

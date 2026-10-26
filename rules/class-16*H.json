@@ -1,0 +1,531 @@
+{
+ "class": "16*H",
+ "model_word": "alempi",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "alempi",
+ "cells": {
+  "translative|plural|third person": {
+   "drop": 2,
+   "add": "mikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmiksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmiksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmiksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmiksi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 2,
+   "add": "milleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmilleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmillesi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmin"
+   ]
+  },
+  "nominative|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empiemme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empien"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empieni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empienne"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empiesi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empiimme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empiin"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empiini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empiinne"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empiisi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmilla",
+    "emmillä"
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmillamme",
+    "emmillämme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmillani",
+    "emmilläni"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmillanne",
+    "emmillänne"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 2,
+   "add": "millänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmillasi",
+    "emmilläsi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmilta",
+    "emmiltä"
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmiltamme",
+    "emmiltämme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmiltani",
+    "emmiltäni"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmiltanne",
+    "emmiltänne"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 2,
+   "add": "miltänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmiltasi",
+    "emmiltäsi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmissa",
+    "emmissä"
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmissamme",
+    "emmissämme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmissani",
+    "emmissäni"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmissanne",
+    "emmissänne"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 2,
+   "add": "missänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmissasi",
+    "emmissäsi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmista",
+    "emmistä"
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmistamme",
+    "emmistämme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmistani",
+    "emmistäni"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmistanne",
+    "emmistänne"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 2,
+   "add": "mistänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmistasi",
+    "emmistäsi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "emmitta",
+    "emmittä"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empiensa",
+    "empiensä"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empiinsa",
+    "empiinsä"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empina",
+    "empinä"
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empinamme",
+    "empinämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empinani",
+    "empinäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empinanne",
+    "empinänne"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 0,
+   "add": "nänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empinasi",
+    "empinäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empia",
+    "empiä"
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empiamme",
+    "empiämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empiani",
+    "empiäni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empianne",
+    "empiänne"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 0,
+   "add": "änsä",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "empiasi",
+    "empiäsi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 2,
+   "add": "makseen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 2,
+   "add": "mallaan",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 2,
+   "add": "malleen",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 2,
+   "add": "maltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 2,
+   "add": "massaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 2,
+   "add": "mastaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 1,
+   "add": "anaan",
+   "suf": [
+    ""
+   ]
+  }
+ }
+}

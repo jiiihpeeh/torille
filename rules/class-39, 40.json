@@ -1,0 +1,1023 @@
+{
+ "class": "39, 40",
+ "model_word": "rosvous",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "rosvous",
+ "cells": {
+  "illative|singular|first person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "eemme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "een"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "eeni"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "eenne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "eensa"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "eesi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 1,
+   "add": "ksekseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "eksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "ekseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "eksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "eksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "eksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "ella"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 1,
+   "add": "ksellaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "ellamme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "ellani"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "ellanne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "ellasi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "elle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 1,
+   "add": "kselleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "ellemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "elleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "ellenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "ellesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "elta"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 1,
+   "add": "kseltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "eltamme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "eltani"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "eltanne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "eltasi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "emme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "emme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "en"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "ena"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 1,
+   "add": "ksenaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "enamme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "enani"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "enanne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "enasi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "eni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "eni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "enne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "enne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "ensa"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "ensa"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "ensa"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "esi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "esi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "esi"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "essa"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 1,
+   "add": "ksessaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "essamme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "essani"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "essanne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "essasi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "esta"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 1,
+   "add": "ksestaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "estamme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "estani"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "estanne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "estasi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "et"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "etta"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 1,
+   "add": "ksettaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "ettamme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "ettani"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "ettanne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 1,
+   "add": "ks",
+   "suf": [
+    "ettasi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksia"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 1,
+   "add": "ksiaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksiamme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksiani"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksianne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksiasi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 1,
+   "add": "ksi",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 1,
+   "add": "ksi",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 1,
+   "add": "ksi",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 1,
+   "add": "ksi",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 1,
+   "add": "ksi",
+   "suf": [
+    "ensa"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 1,
+   "add": "ksi",
+   "suf": [
+    "esi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksiimme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksiin"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksiini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksiinne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksiinsa"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksiisi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 1,
+   "add": "ksikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksiksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksiksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksiksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksiksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksilla"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 1,
+   "add": "ksillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksillamme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksillani"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksillanne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksillasi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 1,
+   "add": "ksilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksilleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksillesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksilta"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 1,
+   "add": "ksiltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksiltamme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksiltani"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksiltanne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksiltasi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksin"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksina"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 1,
+   "add": "ksinaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksinamme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksinani"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksinanne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksinasi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksissa"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 1,
+   "add": "ksissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksissamme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksissani"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksissanne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksissasi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksista"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 1,
+   "add": "ksistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksistamme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksistani"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksistanne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksistasi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksitta"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 1,
+   "add": "ksittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksittamme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksittani"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksittanne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvouksittasi"
+   ]
+  },
+  "nominative|singular|": {
+   "drop": 7,
+   "add": "",
+   "suf": [
+    "rosvous"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ta"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "taan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "tamme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "tani"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "tanne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "tasi"
+   ]
+  }
+ }
+}

@@ -1,0 +1,139 @@
+[package]
+name = "torille-tools"
+version = "0.1.0"
+edition = "2024"
+description = "Development and verification tools for the torille engine"
+license.workspace = true
+readme = "README.md"
+
+[[bin]]
+name = "inflect"
+path = "src/bin/inflect.rs"
+
+[[bin]]
+name = "look_base"
+path = "src/bin/look_base.rs"
+
+[[bin]]
+# Read `(form, lemma)` pairs on stdin and report how often the reverse lookup
+# finds the expected base. The gate is `tools/test_reverse_lookup_recall.py`.
+name = "lookup_recall"
+path = "src/bin/lookup_recall.rs"
+
+[[bin]]
+name = "suggest_correct"
+path = "src/bin/suggest_correct.rs"
+
+[[bin]]
+name = "lookup"
+path = "src/bin/lookup.rs"
+
+[[bin]]
+name = "check"
+path = "src/bin/check.rs"
+
+[[bin]]
+# Refine `data/catalogue.csv` from the engine's own output, so the embedded
+# paradigm templates are self-consistent. Seed with
+# `python3 tools/build_catalogue_csv.py`, then run this and `cargo build` in
+# a loop until the CSV stops changing.
+name = "build_catalogue"
+path = "src/bin/build_catalogue.rs"
+
+[[bin]]
+# `check_normal` — the per-keystroke "is this a known Finnish word?"
+# gate the web demo uses. Runs the same pipeline as the wasm's
+# first-pass + slow demote, so the answer is what the demo's
+# underlines reflect: lemma + productive noun-case stripper, then
+# the head/tail/prefix walks plus the clitic phase. No full
+# reverse index, so each invocation is sub-second.
+name = "check_normal"
+path = "src/bin/check_normal.rs"
+
+[[bin]]
+name = "derive"
+path = "src/bin/derive.rs"
+
+[[bin]]
+# Build the training-data corpus for the optional neural reranker /
+# morphology hypothesiser. Reads the Kotus-inflected SQLite databases in
+# `data/`, applies realistic Finnish typo corruptions, validates that the
+# corrupted form is not itself a known Finnish word, and writes JSONL
+# splits under `data/train/`.
+name = "train_data"
+path = "src/bin/train_data.rs"
+
+[[bin]]
+# Read the Slice-2 JSONL splits and produce a contrastive reranker
+# training corpus: for each row, run `suggest_detailed(misspelled)`,
+# pick the candidate whose word equals the correct surface form as the
+# positive, and sample the closest-to-surface candidates as
+# negatives. Writes JSONL under `data/rerank/`. The output now carries
+# the Levenshtein edit script per candidate (sub/ins/del/trans/match
+# × position) via `levenshtein_with_ops`.
+name = "rerank_data"
+path = "src/bin/rerank_data.rs"
+
+[[bin]]
+# Emit the engine's Tags enum layout as JSON, so the trainer's
+# morphology one-hot block has the engine's enums as its single
+# source of truth (no parallel Python mappings to drift). Writes
+# data/tags_layout.json.
+name = "tags_dump"
+path = "src/bin/tags_dump.rs"
+
+[[bin]]
+# One-off probe: print the deterministic engine's candidate list for
+# ambiguous inputs (`koirissa`, `korissa`, etc.). Used during the
+# Slice-3 evaluation to confirm that the engine surfaces -- or fails
+# to surface -- the right candidates before any reranker adds
+# anything. Confirmed that `koirissa → korissa` is NOT in the
+# candidate list even at edit-distance 1, because the engine's
+# `find_bases_with` prunes by prefix and `kori` shares no prefix with
+# `koirissa`.
+name = "probe_koirissa"
+path = "src/bin/probe_koirissa.rs"
+
+[[bin]]
+# Component-level latency of the Model-A reranking path: candidate
+# generation, feature extraction, MLP inference and total, swept over
+# candidate-list widths. Split into stages on purpose -- `score_batch`
+# fuses the last two, so timing only that would make "is the MLP
+# actually the bottleneck?" unanswerable.
+name = "rerank_bench"
+path = "src/bin/rerank_bench.rs"
+
+[[bin]]
+# The production Model-A path end to end, in Rust and with no Python
+# anywhere on it: engine candidates -> query features (once) -> one
+# batched matrix -> two matmuls -> ranking. Emits TSV so its output can
+# be diffed against the Python side without a JSON dependency here.
+name = "rerank"
+path = "src/bin/rerank.rs"
+
+[[bin]]
+# Phase-by-phase timing for the per-keystroke path. A small local
+# alternative to `perf`/`cargo flamegraph`, which are not available on
+# every development box.
+name = "profile_hot"
+path = "src/bin/profile_hot.rs"
+
+[dependencies]
+torille = { path = ".." }
+# `phf` runtime: the lib embeds phf literals (form set, stem maps, sanalista)
+# via `include!` from `OUT_DIR`. The tools crate re-exports the lib's API
+# surface, so the same runtime types are needed here. phf_codegen is *not*
+# needed -- all emission lives in the lib's `build.rs`.
+phf = "0.14"
+# `rusqlite` reads the Kotus-inflected SQLite files under `data/`. The
+# `bundled` feature compiles SQLite from source so the binary works on
+# machines that do not have libsqlite3 installed -- the dev/training box
+# is the only place this binary runs, and shipping an extra build-time
+# dependency is cheaper than requiring system packages.
+rusqlite = { version = "0.31", features = ["bundled"] }
+# `rayon` parallelises the per-row corruption work across the available
+# cores. Each batch of rows is processed via `par_iter`; workers receive
+# a deterministic per-row RNG derived from the master seed and the row's
+# global index. The JSONL writers stay single-threaded on the main thread
+# to avoid fsync contention.
+rayon = "1.10"

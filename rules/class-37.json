@@ -1,0 +1,162 @@
+{
+ "class": "37",
+ "model_word": "vasen",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "vasen",
+ "cells": {
+  "translative|singular|third person": {
+   "drop": 1,
+   "add": "mmakseen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 1,
+   "add": "mmallaan",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 1,
+   "add": "mmalleen",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 1,
+   "add": "mmaltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 1,
+   "add": "mmassaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 1,
+   "add": "mmastaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 1,
+   "add": "mmattaan",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 1,
+   "add": "mmikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 1,
+   "add": "mmillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 1,
+   "add": "mmilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 1,
+   "add": "mmiltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 1,
+   "add": "mmissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 1,
+   "add": "mmistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 1,
+   "add": "mmittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 1,
+   "add": "mpa",
+   "suf": [
+    "a"
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 1,
+   "add": "mpa",
+   "suf": [
+    "amme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 1,
+   "add": "mpa",
+   "suf": [
+    "ani"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 1,
+   "add": "mpa",
+   "suf": [
+    "anne"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 1,
+   "add": "mpaansa",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 1,
+   "add": "mpa",
+   "suf": [
+    "asi"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 1,
+   "add": "mpanaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 1,
+   "add": "mpiaan",
+   "suf": [
+    ""
+   ]
+  }
+ }
+}

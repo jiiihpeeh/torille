@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="fi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>torille-wasm-leptos demo</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, sans-serif; }
+    body { margin: 2em; max-width: 720px; }
+    h1 small { font-weight: 400; color: #666; font-size: 0.6em; }
+    .status { margin: 1em 0; display: flex; gap: 1em; }
+    .ok { color: #0a0; }
+    .bad { color: #c33; }
+    .editor { position: relative; }
+    textarea {
+      width: 100%;
+      height: 14em;
+      font-family: monospace;
+      font-size: 14px;
+      padding: 1em;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+    }
+    .misspell-list { margin-top: 1em; }
+    .misspell-list ul { padding-left: 1.5em; }
+    .misspell-list li { margin: 0.3em 0; }
+    .misspell-list button {
+      background: #fee;
+      color: #c33;
+      border: 1px solid #c33;
+      border-radius: 4px;
+      padding: 0.2em 0.5em;
+      cursor: pointer;
+      font: inherit;
+    }
+    .popup {
+      margin-top: 1em;
+      padding: 0.6em;
+      border: 1px solid #ccc;
+      background: #f8f8f8;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    details { margin-top: 2em; }
+    pre { background: #f4f4f4; padding: 1em; border-radius: 4px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <noscript>This demo needs JavaScript and WebAssembly.</noscript>
+  <div id="app"></div>
+  <script type="module">
+    // Load the wasm-pack output. wasm-pack writes a JS shim plus
+    // a sibling .wasm file next to the bundle. The shim's
+    // `default()` resolves once the wasm is instantiated, after
+    // which the `start` export runs and mounts the Leptos app.
+    //
+    // ESM-wasm imports would-be simpler but browsers reject the
+    // MIME types they use; the shim provides a `default()`
+    // function that takes the bytes we pass in.
+    import init, { start } from './pkg/torille_wasm_leptos.js';
+    const resp = await fetch(new URL('./pkg/torille_wasm_leptos_bg.wasm', import.meta.url));
+    const bytes = await resp.arrayBuffer();
+    await init(bytes);
+    start();
+  </script>
+</body>
+</html>

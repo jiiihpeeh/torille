@@ -1,0 +1,19 @@
+[package]
+name = "wrapper"
+version = "0.1.0"
+edition = "2024"
+license.workspace = true
+
+# Staticlib so other C/C++ projects can link directly into their build;
+# cdylib so a separately-loaded dynamic library is also possible. cxx-build
+# picks one of these depending on how the C++ side is consumed.
+[lib]
+name = "torille_wrapper"
+crate-type = ["staticlib", "cdylib"]
+
+[dependencies]
+cxx = "1.0"
+torille = { path = ".." }
+
+[build-dependencies]
+cxx-build = "1.0"

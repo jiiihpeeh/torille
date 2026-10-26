@@ -1,0 +1,14 @@
+{
+  "dimensions": [
+    {"name":"POS","size":15,"values":["unknown","unknown","noun","adjective","pronoun","numeral","ordinal","verb","negative_verb","adverb","conjunction","interjection","preposition","postposition","other"]},
+    {"name":"Case","size":17,"values":["unknown","nominative","accusative","genitive","partitive","inessive","elative","illative","adessive","ablative","allative","essive","translative","abessive","comitative","prolative","instructive"]},
+    {"name":"Number","size":4,"values":["unknown","singular","plural","collective"]},
+    {"name":"Person","size":4,"values":["unknown","first_person","second_person","third_person"]},
+    {"name":"Tense","size":5,"values":["unknown","present","past","perfect","pluperfect"]},
+    {"name":"Mood","size":7,"values":["unknown","indicative","conditional","potential","imperative","instructive","infinitive"]},
+    {"name":"Voice","size":4,"values":["unknown","active","passive","middle"]},
+    {"name":"Polarity","size":3,"values":["unknown","affirmative","negative"]},
+    {"name":"HasReadings","size":3,"values":["unknown","false","true"]}
+  ],
+  "morph_dim": 62
+}

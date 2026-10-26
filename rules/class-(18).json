@@ -1,0 +1,7 @@
+{
+ "class": "(18)",
+ "model_word": "tenkkapoo",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "tenkkapoo",
+ "cells": {}
+}

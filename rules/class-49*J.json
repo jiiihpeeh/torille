@@ -1,0 +1,1099 @@
+{
+ "class": "49*J",
+ "model_word": "kannel",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "kannel",
+ "cells": {
+  "nominative|singular|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ta",
+    "tä"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "taan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "tamme",
+    "tämme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "tani",
+    "täni"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "tanne",
+    "tänne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "tasi",
+    "täsi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "ensa",
+    "ensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "esi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 3,
+   "add": "tereekseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "eksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ekseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "eksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "eksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "eksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ella",
+    "ellä"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 3,
+   "add": "tereellaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ellamme",
+    "ellämme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ellani",
+    "elläni"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ellanne",
+    "ellänne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ellasi",
+    "elläsi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "elle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 3,
+   "add": "tereelleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ellemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "elleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ellenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ellesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "elta",
+    "eltä"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 3,
+   "add": "tereeltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "eltamme",
+    "eltämme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "eltani",
+    "eltäni"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "eltanne",
+    "eltänne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "eltasi",
+    "eltäsi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "emme"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 3,
+   "add": "ter",
+   "suf": [
+    "eemme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "emme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "en"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 3,
+   "add": "ter",
+   "suf": [
+    "een"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ena",
+    "enä"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 3,
+   "add": "tereenaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "enamme",
+    "enämme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "enani",
+    "enäni"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "enanne",
+    "enänne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "enasi",
+    "enäsi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "eni"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 3,
+   "add": "ter",
+   "suf": [
+    "eeni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "eni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "enne"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 3,
+   "add": "ter",
+   "suf": [
+    "eenne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "enne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ensa",
+    "ensä"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 3,
+   "add": "ter",
+   "suf": [
+    "eensa",
+    "eensä"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ensa",
+    "ensä"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ensa",
+    "ensä"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 3,
+   "add": "terees",
+   "suf": [
+    "eesi"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "esi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "esi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "esi"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "essa",
+    "essä"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 3,
+   "add": "tereessaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "essamme",
+    "essämme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "essani",
+    "essäni"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "essanne",
+    "essänne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "essasi",
+    "essäsi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "esta",
+    "estä"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 3,
+   "add": "tereestaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "estamme",
+    "estämme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "estani",
+    "estäni"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "estanne",
+    "estänne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "estasi",
+    "estäsi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "et"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "etta",
+    "että"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 3,
+   "add": "tereettaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ettamme",
+    "ettämme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ettani",
+    "ettäni"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ettanne",
+    "ettänne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ettasi",
+    "ettäsi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 3,
+   "add": "tereih",
+   "suf": [
+    "imme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 3,
+   "add": "tereih",
+   "suf": [
+    "in"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 3,
+   "add": "tereih",
+   "suf": [
+    "ini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 3,
+   "add": "tereih",
+   "suf": [
+    "inne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 3,
+   "add": "tereih",
+   "suf": [
+    "insa",
+    "insä"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 3,
+   "add": "tereih",
+   "suf": [
+    "isi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 3,
+   "add": "tereikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "iksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "iksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "iksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "iksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "illa",
+    "illä"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 3,
+   "add": "tereillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "illamme",
+    "illämme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "illani",
+    "illäni"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "illanne",
+    "illänne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "illasi",
+    "illäsi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 3,
+   "add": "tereilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "illemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "illeni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "illenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "illesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ilta",
+    "iltä"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 3,
+   "add": "tereiltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "iltamme",
+    "iltämme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "iltani",
+    "iltäni"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "iltanne",
+    "iltänne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "iltasi",
+    "iltäsi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "in"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ina",
+    "inä"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 3,
+   "add": "tereinaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "inamme",
+    "inämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "inani",
+    "inäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "inanne",
+    "inänne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "inasi",
+    "inäsi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "issa",
+    "issä"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 3,
+   "add": "tereissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "issamme",
+    "issämme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "issani",
+    "issäni"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "issanne",
+    "issänne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "issasi",
+    "issäsi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ista",
+    "istä"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 3,
+   "add": "tereistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "istamme",
+    "istämme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "istani",
+    "istäni"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "istanne",
+    "istänne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "istasi",
+    "istäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 3,
+   "add": "tereit",
+   "suf": [
+    "a",
+    "ä"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 3,
+   "add": "tereitaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 3,
+   "add": "tereit",
+   "suf": [
+    "amme",
+    "ämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 3,
+   "add": "tereit",
+   "suf": [
+    "ani",
+    "äni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 3,
+   "add": "tereit",
+   "suf": [
+    "anne",
+    "änne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 3,
+   "add": "tereit",
+   "suf": [
+    "asi",
+    "äsi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "itta",
+    "ittä"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 3,
+   "add": "tereittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ittamme",
+    "ittämme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ittani",
+    "ittäni"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ittanne",
+    "ittänne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 3,
+   "add": "tere",
+   "suf": [
+    "ittasi",
+    "ittäsi"
+   ]
+  }
+ }
+}

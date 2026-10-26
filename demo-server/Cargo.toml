@@ -1,0 +1,16 @@
+[package]
+name = "torille-demo-server"
+version = "0.1.0"
+edition = "2024"
+license.workspace = true
+
+# A tiny static file server for the wasm demo: serves `torille-wasm/demo/`
+# (index.html, dist/, and the local `books/` corpus) with a permissive CORS
+# header. The book corpus is downloaded once by
+# `tools/fetch_finnish_books.py`.
+[[bin]]
+name = "serve-demo"
+path = "src/main.rs"
+
+[dependencies]
+tiny_http = "0.12"

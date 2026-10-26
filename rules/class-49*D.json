@@ -1,0 +1,988 @@
+{
+ "class": "49*D",
+ "model_word": "säen",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "säen",
+ "cells": {
+  "nominative|singular|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    ""
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "ensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "esi"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "tänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 2,
+   "add": "keneekseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "eksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ekseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "eksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "eksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "eksi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "elle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 2,
+   "add": "keneelleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ellemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "elleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ellenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ellesi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ellä"
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ellämme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "elläni"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ellänne"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 2,
+   "add": "keneellänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "elläsi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "eltä"
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "eltämme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "eltäni"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "eltänne"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 2,
+   "add": "keneeltänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "eltäsi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "emme"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 2,
+   "add": "ken",
+   "suf": [
+    "eemme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "emme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "en"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 2,
+   "add": "ken",
+   "suf": [
+    "een"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "eni"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 2,
+   "add": "ken",
+   "suf": [
+    "eeni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "eni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "enne"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 2,
+   "add": "ken",
+   "suf": [
+    "eenne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "enne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ensä"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 2,
+   "add": "ken",
+   "suf": [
+    "eensä"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ensä"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ensä"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "enä"
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "enämme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "enäni"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "enänne"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 2,
+   "add": "keneenänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "enäsi"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 2,
+   "add": "kenees",
+   "suf": [
+    "eesi"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "esi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "esi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "esi"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "essä"
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "essämme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "essäni"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "essänne"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 2,
+   "add": "keneessänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "essäsi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "estä"
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "estämme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "estäni"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "estänne"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 2,
+   "add": "keneestänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "estäsi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "et"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "että"
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ettämme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ettäni"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ettänne"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 2,
+   "add": "keneettänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ettäsi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 2,
+   "add": "keneih",
+   "suf": [
+    "imme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 2,
+   "add": "keneih",
+   "suf": [
+    "in"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 2,
+   "add": "keneih",
+   "suf": [
+    "ini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 2,
+   "add": "keneih",
+   "suf": [
+    "inne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 2,
+   "add": "keneih",
+   "suf": [
+    "insä"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 2,
+   "add": "keneih",
+   "suf": [
+    "isi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 2,
+   "add": "keneikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "iksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "iksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "iksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "iksi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 2,
+   "add": "keneilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "illemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "illeni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "illenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "illesi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "illä"
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "illämme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "illäni"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "illänne"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 2,
+   "add": "keneillänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "illäsi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "iltä"
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "iltämme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "iltäni"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "iltänne"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 2,
+   "add": "keneiltänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "iltäsi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "in"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "inä"
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "inämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "inäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "inänne"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 2,
+   "add": "keneinänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "inäsi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "issä"
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "issämme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "issäni"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "issänne"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 2,
+   "add": "keneissänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "issäsi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "istä"
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "istämme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "istäni"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "istänne"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 2,
+   "add": "keneistänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "istäsi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ittä"
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ittämme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ittäni"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ittänne"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 2,
+   "add": "keneittänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 2,
+   "add": "kene",
+   "suf": [
+    "ittäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 2,
+   "add": "keneit",
+   "suf": [
+    "ä"
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 2,
+   "add": "keneit",
+   "suf": [
+    "ämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 2,
+   "add": "keneit",
+   "suf": [
+    "äni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 2,
+   "add": "keneit",
+   "suf": [
+    "änne"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 2,
+   "add": "keneitänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 2,
+   "add": "keneit",
+   "suf": [
+    "äsi"
+   ]
+  }
+ }
+}

@@ -1,0 +1,494 @@
+# The torille Finnish morphology, as one declarative specification.
+#
+# This file is the human source of truth for the engine's rule tables. It is
+# not parsed at runtime: the rules below are mirrored as Rust data in
+# `src/grammar/stem.rs`, `src/grammar/noun.rs` and `src/grammar/verb.rs`, and
+# the tests in `tests/catalogue.rs` are the executable check that the two stay
+# in step. A rule here that has no Rust table behind it is a rule the engine
+# has not learned yet — the `GRADES` and candidates it still guesses are the
+# gap between this spec and the engine.
+
+language: fi
+
+# ---------------------------------------------------------------------------
+# 1. Consonant gradation.
+#
+# A graded consonant pair, written strong -> weak. The lexeme carries the
+# strong grade in the infinitive of a verb and the nominative singular of a
+# noun, and the weak grade in the parts the class fixes as weak.
+# ---------------------------------------------------------------------------
+
+gradation:
+  patterns:
+    - {name: kk_k,  strong: kk, weak: k }
+    - {name: pp_p,  strong: pp, weak: p }
+    - {name: tt_t,  strong: tt, weak: t }
+    - {name: k_zero, strong: k,  weak: ""}
+    - {name: p_v,   strong: p,  weak: v }
+    - {name: t_d,   strong: t,  weak: d }
+    - {name: nk_ng, strong: nk, weak: ng}
+    - {name: mp_mm, strong: mp, weak: mm}
+    - {name: nt_nn, strong: nt, weak: nn}
+    - {name: lt_ll, strong: lt, weak: ll}
+    - {name: rt_rr, strong: rt, weak: rr}
+    - {name: kk_k_zero, strong: kk, weak: ""}   # the `kk` that vanishes
+    - {name: kv_v,  strong: kV, weak: v }       # `v` for a `k` after `a/o/u`
+
+  # An environment is strong or weak; the finite verbs mark which persons each
+  # grade serves:
+  environments:
+    strong: [infinitive, 3sg_present, 3sg_past, 3pl_present, participle]
+    weak:   [1sg, 2sg, 1pl, 2pl, 2sg_imperative]
+
+# ---------------------------------------------------------------------------
+# 2. Vowel harmony.
+# ---------------------------------------------------------------------------
+
+harmony:
+  back:    [a, o, u]
+  front:   [ä, ö, y]
+  neutral: [e, i]
+  # An ending pairs its back and front spellings and takes the one the stem's
+  # last non-neutral vowel picks; a stem with no vowel of either set and only
+  # neutral vowels takes the back spelling. The allative `-lle` carries no
+  # vowel of its own and is spelled the same for every word.
+
+# ---------------------------------------------------------------------------
+# 3. The nominal system.
+# ---------------------------------------------------------------------------
+
+noun:
+  # The thirteen cases. `stem` names the stem group the ending attaches to:
+  #
+  #   genitive      the class's genitive (-lla/-lta/-lle/-na) stem
+  #   stems         the class's inessive stem
+  #   essive        the class's essive stem, else the genitive stem, strong
+  #   plural_weak   the plural stem in its weak grade (read out of the plural
+  #                 partitive; the class reaches it or the form is a guess)
+  #   plural_strong the plural stem in its strong grade (class's own)
+  #
+  # `grade` says whether the ending sees the weak or the strong grade of the
+  # stem; `licence` is the allomorphy this spec allows the ending, and is
+  # the acceptance predicate the engine holds a derived form to.
+  cases:
+    # Cases the catalogue tabulates per lexeme (nominative, genitive,
+    # partitive, illative) are given lexically and the rule table only serves
+    # the ones regular:
+    - {case: partitive,   ending: {back: a,  front: ä},  stem: genitive, grade: strong, licence: none}
+    - {case: essive,      ending: {back: na, front: nä}, stem: essive,   grade: strong, licence: essive}
+    - case: translative
+      ending: {back: ksi, front: ksi}
+      stem: genitive
+      grade: weak
+      licence: bare
+      after_s_n:
+        ending: {back: eksi, front: eksi}
+        licence: e
+    - case: instructive
+      ending: {back: in,  front: in}
+      stem: plural_weak
+      grade: weak
+      licence: plural
+    - case: abessive
+      ending: {back: tta, front: ttä}
+      stem: genitive
+      grade: weak
+      licence: bare
+      after_s_n:
+        ending: {back: etta, front: että}
+        licence: e
+
+    # The local cases.
+    - case: inessive
+      ending: {back: ssa, front: ssä}
+      stem: stems
+      grade: weak
+      licence: ssa
+      after_s_n:
+        ending: {back: essa, front: essä}   # `nais`, `tuhann`
+        licence: essa
+    - case: elative
+      ending: {back: sta, front: stä}
+      stem: stems
+      grade: weak
+      licence: ssa
+      after_s_n:
+        ending: {back: esta, front: estä}
+        licence: essa
+    - case: inessive_plural
+      ending: {back: issa, front: issä}
+      stem: plural_weak
+      grade: weak
+      licence: plural
+    - case: elative_plural
+      ending: {back: ista, front: istä}
+      stem: plural_weak
+      grade: weak
+      licence: plural
+    - case: adessive
+      ending: {back: lla, front: llä}
+      stem: genitive
+      grade: weak
+      licence: bare
+      after_s_n:
+        ending: {back: ella, front: ellä}
+        licence: e
+    - case: ablative
+      ending: {back: lta, front: ltä}
+      stem: genitive
+      grade: weak
+      licence: bare
+      after_s_n:
+        ending: {back: elta, front: eltä}
+        licence: e
+    - case: allative
+      ending: lle                          # invariant: `-lle` for every word
+      stem: genitive
+      grade: weak
+      licence: bare
+      after_s_n:
+        ending: elle
+        licence: e
+    - case: adessive_plural
+      ending: {back: lla, front: llä}
+      stem: plural_weak
+      grade: weak
+      licence: plural
+    - case: ablative_plural
+      ending: {back: lta, front: ltä}
+      stem: plural_weak
+      grade: weak
+      licence: plural
+    - case: allative_plural
+      ending: lle
+      stem: plural_weak
+      grade: weak
+      licence: plural
+    - case: essive_plural
+      ending: {back: na, front: nä}
+      stem: plural_strong
+      grade: strong
+      licence: plural
+    - case: translative_plural
+      ending: {back: ksi, front: ksi}
+      stem: plural_weak
+      grade: weak
+      licence: plural
+    - case: abessive_plural
+      ending: {back: tta, front: ttä}
+      stem: plural_weak
+      grade: weak
+      licence: plural
+    - case: comitative_plural
+      ending: {back: neen, front: neen}
+      stem: plural_strong
+      grade: strong
+      licence: plural
+
+  # The possessive suffixes, in the `s`-person series (third person is the same
+  # for both singular and plural and is listed once):
+  possessive:
+    - {person: 1sg, suffix: ni}
+    - {person: 2sg, suffix: si}
+    - {person: 3,   suffix: {back: nsa, front: nsä}}
+    - {person: 1pl, suffix: {back: mme, front: mme}}
+    - {person: 2pl, suffix: {back: nne, front: nne}}
+
+  # The clitics, appended after the possessive:
+  clitics:
+    - {clitic: kin,  harmony: none}
+    - {clitic: kaan, harmony: front}        # `-kaan/-kään`
+    - {clitic: pa,   harmony: strong}       # `-pa/-pä` etc.
+
+  # The stem readings of the nominal classes. A class whose stem is the lemma
+  # takes `keep`. A `fixed` stem is a spelling the class names; a `rule` is an
+  # edit of the lemma. The three stem groups of a class (inessive, genitive,
+  # essive) are the ones the case table above refers to by name. `gene_prose`
+  # records the class's model; the catalogue holds it.
+  classes:
+    # - plain keep classes.
+    - {class: 1,  model: valo,     stems: [keep]}        # valossa, valolla
+    - {class: 2,  model: palvelu,  stems: [keep]}        # palvelussa
+    - {class: 3,  model: valtio,   stems: [keep]}        # valtiossa
+    - {class: 4,  model: laatikko, stems: [keep]}        # laatikossa
+    - {class: 5,  model: risti,    stems: [keep]}        # ristissä
+    - {class: 6,  model: paperi,   stems: [keep]}
+    - {class: 8,  model: nalle,    stems: [keep]}
+    - {class: 9,  model: kala,     stems: [keep]}
+    - {class: 10, model: koira,    stems: [keep]}
+    - {class: 11, model: omena,    stems: [keep]}
+    - {class: 12, model: kulkija,  stems: [keep]}
+    - {class: 13, model: katiska,  stems: [keep]}
+    - {class: 14, model: solakka,  stems: [keep]}
+    - {class: 15, model: korkea,   stems: [keep]}
+    - {class: 17, model: vapaa,    stems: [keep]}
+    - {class: 18, model: maa,      stems: [keep]}
+    - {class: 19, model: suo,      stems: [keep]}
+    - {class: 20, model: filee,    stems: [keep]}
+    - {class: 21, model: rose,     stems: [keep]}
+    - {class: 23, model: tiili,    stems: [keep]}
+    - {class: 26, model: pieni,    stems: [keep]}
+    - {class: 32, model: sisar,    stems: [keep]}
+    - {class: 34, model: onneton,  stems: [keep]}
+
+    # - The theme nouns: drop the theme vowel, take the stem with `e`.
+    - {class: 16, model: vanhempi, stems: [{drop: 1}, keep]}            # vanhemp
+    - {class: 24, model: uni,      stems: [{drop: 1, add: e}, keep]}    # une
+    - {class: 25, model: toimi,    stems: [{drop: 1, add: e}, keep]}    # toime
+    - {class: 29, model: lapsi,    stems: [{drop: 1, add: e}, keep]}    # lapse
+    - {class: 30, model: veitsi,   stems: [{drop: 1, add: e}, keep]}    # veitse
+    - {class: 31, model: kaksi,    stems: [{drop: 1, add: e}, keep]}    # kakse
+    - {class: 33, model: kytkin,   stems: [{drop: 1, add: me}, {drop: 2}, keep]}
+    - {class: 38, model: nainen,   stems: [{drop: 2, sub: [n, s]}, keep]} # naise
+    - {class: 43, model: ohut,     stems: [{drop: 1, add: e}, keep]}    # ohue
+    - {class: 47, model: kuollut,  stems: [{drop: 1}, keep]}            # kuollue
+    - {class: 48, model: hame,     stems: [{drop: 1}, keep]}            # hame
+    - {class: 49, model: askel,    stems: [{drop: 1, add: le}, keep]}   # askele
+
+    # - The classes that name a stem as a spelling.
+    - {class: 35, model: lämmin, stems: [fixed: lämpimä, keep]}
+    - {class: 36, model: sisin,  stems: [fixed: sisimmä, keep]}
+    - {class: 37, model: vasen,  stems: [fixed: vasemma, keep]}
+    - {class: 41, model: vieras, stems: [{drop: 1, add: a}, keep]}      # vieraa
+    - {class: 42, model: mies,   stems: [{sub: [s, h], add: e}, keep]}  # miehe
+    - {class: 44, model: kevät,  stems: [fixed: kevää, keep]}
+    - {class: 45, model: kahdeksas, stems: [{drop: 2}, keep]}           # kahdeksa
+    - {class: 46, model: tuhat,  stems: [fixed: tuhann, keep]}
+
+    # - The classes whose genitive and essive take a different stem.
+    #   class 7: the lemma is a stem too (the plural `ovet`, so `ovissa`).
+    - class: 7
+      model: ovi
+      stems: [{drop: 1, add: e},     # ove  (ovi)
+              {drop: 2},             # jo   (joki)
+              keep]
+      genitive: [{drop: 1, add: e},  # ove
+                 {drop: 2, add: e}]  # joe
+      essive: [{drop: 1, add: e}]    # ove/joke
+      lemma_is_stem: true
+    - class: 27
+      model: käsi
+      stems: [fixed: käs, keep]
+      genitive: [{drop: 1, sub: [s, d], add: e}]   # käde
+      essive:   [{drop: 1, sub: [s, t], add: e}]   # käte
+    - class: 28
+      model: kynsi
+      stems: [{drop: 1, sub: [s, n], add: e}, keep]  # kynne
+      essive: [{drop: 1, sub: [s, t], add: e}]       # kynte
+    - class: 39
+      model: vastaus
+      stems:
+        - {drop: 1, add: kse, suffix: us}
+        - {drop: 1, add: kse, suffix: ys}
+        - {drop: 3, add: nakse, suffix: nas}
+        - {drop: 3, add: näkse, suffix: näs}
+        - keep                                        # aidas, kymmenes
+    - class: 40
+      model: kalleus
+      stems: [keep]   # three stems at once; not yet written down
+    - class: 50
+      model: isoäiti
+      stems: [{drop: 1, sub: [t, d], add: i}, keep]   # isoäid
+
+  # The tail substitutions the stem rules alone cannot state, applied in the
+  # partitive of the class named (a whole tail, because long vowels and
+  # gradation interact): `lapsi` -> `lasta` and `veitsi` -> `veistä`.
+  alternations:
+    - {class: 29, tail: ps, with: st}
+    - {class: 30, tail: ts, with: st}
+
+  # The strong/weak split of the plural stem is one rule: the plural stem is
+  # read out of the plural partitive, the local cases and the instructive take
+  # its weak grade, the essive and the comitative its strong grade. A class
+  # whose own stem is the strong grade (laatikko -> laatikkoina) is certain of
+  # those; a weak grade it does not reach is read out of the word and the forms
+  # on it stay guesses.
+  plural:
+    weak_grade: [adessive, ablative, allative, translative, abessive, inessive, elative, instructive]
+    strong_grade: [essive, comitative]
+
+# ---------------------------------------------------------------------------
+# 4. The verbal system.
+# ---------------------------------------------------------------------------
+
+verb:
+  # The six traditional classes, keyed by the infinitive's final vowel shape.
+  # Each says how the present stem is cut out of the infinitive and which
+  # personal endings take it. The finite endings the classes share are in the
+  # section below; the per-class 3rd persons are the exception they carry.
+  types:
+    1:
+      # puhua, ottaa, muistaa, laskea, sanoa, soutaa, kumajaa.
+      # The infinitive drops its final `-a/-ä`; the present stem is what stays.
+      infinitive: {drop_vowel: true}
+      present: base
+      gradation_site: weak_before_final_vowel
+      endings_3sg_only: [stem_vowel]      # stem + its last vowel: puhuu, ottaa
+    # but `muistaa` keeps its `aa`: the doubled vowel of a two-vowel stem is
+    # part of the stem and not a 3sg ending.
+
+    2:
+      # syödä, juoda, saada, voida, käydä. The `-da/-dä` is not a stem; the
+      # present stem is the infinitive without it. `nähdä`/`tehdä` are the one
+      # pair that then needs a `k` put back (see `irregular_stems`).
+      infinitive: {drop: "da/dä"}
+      present: base
+      endings_3sg_only: [none]            # syö, juo, saa
+
+    3:
+      # tulla, mennä, panna, purra, nousta, rohkaista, juosta. The infinitive
+      # ends in `-la/-na/-ra/-sta`; the stem takes the class `-e-` in the
+      # present. For the `-sta` verbs the stem keeps the `s`: `juos` + `e`.
+      infinitive: {drop: "la/lä/na/nä/ra/rä/sta/stä"}
+      present: add_e
+      gradation_site: consonant_pair
+      endings_3sg_only: [ee, e]           # tulee, juoksee
+
+    4:
+      # tavata, salata, katketa, selvitä. The `-ta/-tä` drops and the stem is
+      # the vowel stem that stays; the consonant gradates (t -> d) before it.
+      # `katketa` and `selvitä` keep their own subtype vowel (`-ea`, `-iä`).
+      infinitive: {drop: "ta/tä"}
+      present: base_vowel_stem            # tapa, sala, katkea, selviä
+      gradation_site: weak_before_final_vowel
+      endings_3sg_only: [stem_vowel]      # tapaa, salaa
+
+    5:
+      # tarvita, valita, häiritä. The `-ita/-itä` becomes `-itse` in the
+      # present stem.
+      infinitive: {drop: "ta/tä"}
+      present: {replace: ["ita/itä"], with: ["itse/itse"]}
+      endings_3sg_only: [stem_vowel]      # tarvitsee
+
+    6:
+      # vanheta, paheta, rohjeta. The `-eta/-etä` becomes `-ene` in the
+      # present stem.
+      infinitive: {drop: "ta/tä"}
+      present: {replace: ["eta/etä"], with: ["ene/ene"]}
+      endings_3sg_only: [stem_vowel]      # vanhenee
+
+  # The Kotus verb classes and the type each follows. The catalogue's odd
+  # members are typed by the shape of their model's infinitive, and the
+  # exceptions (nähdä/tehdä, tupakoida, the `-eä`/`-iä` subtypes) carry the
+  # extra stem they need:
+  kotus:
+    52:  {type: 1}     # sanoa
+    53:  {type: 1}     # muistaa
+    54:  {type: 1}     # huutaa
+    55:  {type: 1}     # soutaa (sousi)
+    56:  {type: 1}     # kaivaa (kaivoi)
+    57:  {type: 1}     # saartaa (saarsi)
+    58:  {type: 1}     # laskea
+    59:  {type: 1}     # tuntea
+    60:  {type: 1}     # lähteä
+    61:  {type: 1}     # sallia
+    62:  {type: 2}     # voida
+    63:  {type: 2}     # saada
+    64:  {type: 2}     # juoda
+    65:  {type: 2}     # käydä
+    66:  {type: 3}     # rohkaista
+    67:  {type: 3}     # tulla
+    68:  {type: 2, subtype: oida, alternative_stem: its}   # tupakoida / tupakoitsen
+    69:  {type: 5}     # valita
+    70:  {type: 3}     # juosta
+    71:  {type: 2, subtype: hda, irregular: true}          # nähdä, tehdä
+    72:  {type: 6}     # vanheta
+    73:  {type: 4}     # salata
+    74:  {type: 4, subtype: katkea}                        # katketa
+    75:  {type: 4, subtype: selviä}                        # selvitä
+    76:  {type: 1}     # taitaa
+    77:  {defective: true}                                # kumajaa (3rd person only)
+    78:  {defective: true}                                # kaikaa (3rd person only)
+
+  # The irregular strong stems, where the third person's consonant is not a
+  # graded form of anything in the first:
+  irregular_stems:
+    - {lemma: nähdä, weak: näe, strong: näke}
+    - {lemma: tehdä, weak: tee, strong: teke}
+
+  # The finite endings. `stem` names the stem the ending takes. 3sg and 3pl
+  # have their own entry because they take a different grade of the stem:
+  # `ottaa` is `otan` in the 1sg but `ottavat` in the 3pl, back on strong.
+  present_indicative:
+    1sg: {ending: n,  grade: weak}
+    2sg: {ending: t,  grade: weak}
+    3sg: {ending: stem_vowel_or_e, grade: strong}
+    1pl: {ending: mme, grade: weak}
+    2pl: {ending: tte, grade: weak}
+    3pl: {ending: {back: vat, front: vät}, grade: strong}
+
+  imperfect:
+    marker: i
+    # On the present stem, except the `i` of a stem-final diphthong merges,
+    # and the type-4/-5/-6 stems drop their consonant before it: `tavata` is
+    # `tapasin` not `tapansin`, `tarvita` is `tarvitsin`, `vanheta` is
+    # `vanhenin`, and `syödä` is `söin`.
+    endings: [same_as_present]
+
+  conditional:
+    marker: isi
+    endings: [same_as_present]
+
+  potential:
+    marker: ne
+    endings: [same_as_present]
+    # substantial stem alternation; the catalogue's 46/47 models win where the
+    # rule and the model disagree.
+
+  imperative:
+    # The imperative is built on the strong grade of the stem for every person
+    # but the 2sg, which takes the weak one: `ota!` against `ottakoon`.
+    2sg: {ending: "",  grade: weak}
+    3sg: {ending: {back: koon, front: köön}, grade: strong}
+    1pl: {ending: {back: kaamme, front: käämme}, grade: strong}
+    2pl: {ending: {back: kaa, front: kää}, grade: strong}
+    3pl: {ending: {back: koot, front: kööt}, grade: strong}
+
+  negative:
+    # The auxiliary `ei` negates in the person, and the verb carries the weak
+    # grade of its bare stem: `en puhu`, `et puhu`, `ei puhu`, `emme puhu`,
+    # `ette puhu`, `eivät puhu`. The imperfect negative is built the same way
+    # on the imperfect stem; the negative perfect and pluperfect negate the
+    # auxiliary and keep the participle.
+    verb_form: {stem: strong_bare, grade: weak, ending: ""}
+    auxiliary: ei
+
+  perfect:
+    auxiliary: olla             # present
+    participle: past_active     # -nut/-neet
+
+  pluperfect:
+    auxiliary: olla             # imperfect
+    participle: past_active
+
+  # The non-finite forms, on the stems the earlier sections name.
+  infinitives:
+    first:  {form: infinitive}                              # puhua
+    second:
+      inessive:   {stem: infinitive, ending: {back: essa, front: essä}}
+      instructive: {stem: infinitive, ending: {back: en, front: en}}
+    third:
+      illative:   {stem: strong, ending: {back: maan, front: mään}}
+      inessive:   {stem: strong, ending: {back: massa, front: mässä}}
+      elative:    {stem: strong, ending: {back: masta, front: mästä}}
+      abessive:   {stem: strong, ending: {back: matta, front: mättä}}
+      adessive:   {stem: strong, ending: {back: malla, front: mällä}}
+    fourth: {form: {back: minen, front: minen}}             # puhuminen
+    fifth:  {form: {back: maisillaan, front: maisillään}}  # puhumaisillaan
+
+  participles:
+    present_active:   {stem: present, ending: {back: va,   front: vä}}
+    present_passive:  {stem: passive, ending: {back: tava, front: tävä}}
+    past_active:      {singular: {back: nut,  front: nyt}, plural: {back: neet, front: neet}}
+    past_passive:     {stem: passive, ending: {back: ttu,  front: tty}}
+    agent:            {stem: strong, ending: {back: ma,    front: mä}}
+
+# ---------------------------------------------------------------------------
+# 5. The pipeline.
+#
+# A lexeme is `lemma + class + gradation + harmony`, and the class is a lookup
+# into the tables above: the stem groups, the gradation sites, the endings and
+# the licence each takes. Deriving a form is a lookup, not a search — there is
+# exactly one stem and one ending the licence allows, and the engine should not
+# emit a spelling the class does not licence as a candidate.
+# ---------------------------------------------------------------------------

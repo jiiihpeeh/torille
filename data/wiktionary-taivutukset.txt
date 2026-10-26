@@ -1,0 +1,106 @@
+# Wiktionary declensions of the model nouns of the Kotus taivutustyypit,
+# fetched from https://fi.wiktionary.org. One block per class:
+#   ### <class> <word>
+#   <form 1>|<form 2>|...|<form 27>
+# Twenty-seven fields: the thirteen cases (nominative through instructive) in
+# the singular, the same in the plural, and the comitative plural as the bare
+# stem awaiting a possessive. A `-` means the table had no primary form.
+
+### 1 valo
+valo|valon|valoa|valossa|valosta|valoon|valolla|valolta|valolle|valona|valoksi|valotta|-|valot|valojen|valoja|valoissa|valoista|valoihin|valoilla|valoilta|valoille|valoina|valoiksi|valoitta|valoin|valoine-
+### 2 palvelu
+palvelu|palvelun|palvelua|palvelussa|palvelusta|palveluun|palvelulla|palvelulta|palvelulle|palveluna|palveluksi|palvelutta|-|palvelut|palvelujen|palveluita|palveluissa|palveluista|palveluihin|palveluilla|palveluilta|palveluille|palveluina|palveluiksi|palveluitta|palveluin|palveluine-
+### 3 valtio
+valtio|valtion|valtiota|valtiossa|valtiosta|valtioon|valtiolla|valtiolta|valtiolle|valtiona|valtioksi|valtiotta|-|valtiot|valtioiden|valtioita|valtioissa|valtioista|valtioihin|valtioilla|valtioilta|valtioille|valtioina|valtioiksi|valtioitta|valtioin|valtioine-
+### 4 laatikko
+laatikko|laatikon|laatikkoa|laatikossa|laatikosta|laatikkoon|laatikolla|laatikolta|laatikolle|laatikkona|laatikoksi|laatikotta|-|laatikot|laatikoiden|laatikkoja|laatikoissa|laatikoista|laatikkoihin|laatikoilla|laatikoilta|laatikoille|laatikkoina|laatikoiksi|laatikoitta|laatikoin|laatikkoine-
+### 5 risti
+risti|ristin|ristiä|ristissä|rististä|ristiin|ristillä|ristiltä|ristille|ristinä|ristiksi|ristittä|-|ristit|ristien|ristejä|risteissä|risteistä|risteihin|risteillä|risteiltä|risteille|risteinä|risteiksi|risteittä|ristein|risteine-
+### 6 paperi
+paperi|paperin|paperia|paperissa|paperista|paperiin|paperilla|paperilta|paperille|paperina|paperiksi|paperitta|-|paperit|paperien|papereita|papereissa|papereista|papereihin|papereilla|papereilta|papereille|papereina|papereiksi|papereitta|paperein|papereine-
+### 7 ovi
+ovi|oven|ovea|ovessa|ovesta|oveen|ovella|ovelta|ovelle|ovena|oveksi|ovetta|-|ovet|ovien|ovia|ovissa|ovista|oviin|ovilla|ovilta|oville|ovina|oviksi|ovitta|ovin|ovine-
+### 8 nalle
+nalle|nallen|nallea|nallessa|nallesta|nalleen|nallella|nallelta|nallelle|nallena|nalleksi|nalletta|-|nallet|nallejen|nalleja|nalleissa|nalleista|nalleihin|nalleilla|nalleilta|nalleille|nalleina|nalleiksi|nalleitta|nallein|nalleine-
+### 9 kala
+kala|kalan|kalaa|kalassa|kalasta|kalaan|kalalla|kalalta|kalalle|kalana|kalaksi|kalatta|-|kalat|kalojen|kaloja|kaloissa|kaloista|kaloihin|kaloilla|kaloilta|kaloille|kaloina|kaloiksi|kaloitta|kaloin|kaloine-
+### 10 koira
+koira|koiran|koiraa|koirassa|koirasta|koiraan|koiralla|koiralta|koiralle|koirana|koiraksi|koiratta|-|koirat|koirien|koiria|koirissa|koirista|koiriin|koirilla|koirilta|koirille|koirina|koiriksi|koiritta|koirin|koirine-
+### 11 omena
+omena|omenan|omenaa|omenassa|omenasta|omenaan|omenalla|omenalta|omenalle|omenana|omenaksi|omenatta|-|omenat|omenien|omenia|omenoissa|omenoista|omenoihin|omenoilla|omenoilta|omenoille|omenoina|omenoiksi|omenoitta|omenoin|omenine-
+### 12 kulkija
+kulkija|kulkijan|kulkijaa|kulkijassa|kulkijasta|kulkijaan|kulkijalla|kulkijalta|kulkijalle|kulkijana|kulkijaksi|kulkijatta|-|kulkijat|kulkijoiden|kulkijoita|kulkijoissa|kulkijoista|kulkijoihin|kulkijoilla|kulkijoilta|kulkijoille|kulkijoina|kulkijoiksi|kulkijoitta|kulkijoin|kulkijoine-
+### 13 katiska
+katiska|katiskan|katiskaa|katiskassa|katiskasta|katiskaan|katiskalla|katiskalta|katiskalle|katiskana|katiskaksi|katiskatta|-|katiskat|katiskoiden|katiskoita|katiskoissa|katiskoista|katiskoihin|katiskoilla|katiskoilta|katiskoille|katiskoina|katiskoiksi|katiskoitta|katiskoin|katiskoine-
+### 14 solakka
+solakka|solakan|solakkaa|solakassa|solakasta|solakkaan|solakalla|solakalta|solakalle|solakkana|solakaksi|solakatta|-|solakat|solakoiden|solakoita|solakoissa|solakoista|solakkoihin|solakoilla|solakoilta|solakoille|solakkoina|solakoiksi|solakoitta|solakoin|solakkoine
+### 15 korkea
+korkea|korkean|korkeaa|korkeassa|korkeasta|korkeaan|korkealla|korkealta|korkealle|korkeana|korkeaksi|korkeatta|-|korkeat|korkeiden|korkeita|korkeissa|korkeista|korkeisiin|korkeilla|korkeilta|korkeille|korkeina|korkeiksi|korkeitta|korkein|korkeine-
+### 16 vanhempi
+vanhempi|vanhemman|vanhempaa|vanhemmassa|vanhemmasta|vanhempaan|vanhemmalla|vanhemmalta|vanhemmalle|vanhempana|vanhemmaksi|vanhemmatta|-|vanhemmat|vanhempien|vanhempia|vanhemmissa|vanhemmista|vanhempiin|vanhemmilla|vanhemmilta|vanhemmille|vanhempina|vanhemmiksi|vanhemmitta|vanhemmin|vanhempine-
+### 17 vapaa
+vapaa|vapaan|vapaata|vapaassa|vapaasta|vapaaseen|vapaalla|vapaalta|vapaalle|vapaana|vapaaksi|vapaatta|-|vapaat|vapaiden|vapaita|vapaissa|vapaista|vapaisiin|vapailla|vapailta|vapaille|vapaina|vapaiksi|vapaitta|vapain|vapaine-
+### 18 maa
+maa|maan|maata|maassa|maasta|maahan|maalla|maalta|maalle|maana|maaksi|maatta|-|maat|maiden|maita|maissa|maista|maihin|mailla|mailta|maille|maina|maiksi|maitta|main|maine-
+### 19 suo
+suo|suon|suota|suossa|suosta|suohon|suolla|suolta|suolle|suona|suoksi|suotta|-|suot|soiden|soita|soissa|soista|soihin|soilla|soilta|soille|soina|soiksi|soitta|soin|soine-
+### 20 filee
+filee|fileen|fileetä|fileessä|fileestä|fileeseen|fileellä|fileeltä|fileelle|fileenä|fileeksi|fileettä|-|fileet|fileiden|fileitä|fileissä|fileistä|fileisiin|fileillä|fileiltä|fileille|fileinä|fileiksi|fileittä|filein|fileine-
+### 21 rosé
+rosé|rosén|roséta|roséssa|rosésta|roséhen|rosélla|rosélta|rosélle|roséna|roséksi|rosétta|-|rosét|roséiden|roséita|roséissa|roséista|roséihin|roséilla|roséilta|roséille|roséina|roséiksi|roséitta|roséin|roséine-
+### 22 parfait
+parfait|parfait’n|parfait’ta|parfait’ssa|parfait’sta|parfait'hen|parfait’lla|parfait’lta|parfait’lle|parfait’na|parfait’ksi|parfait’tta|-|parfait’t|parfait’iden|parfait’ita|parfait’issa|parfait’ista|parfait’ihin|parfait’illa|parfait’ilta|parfait’ille|parfait’ina|parfait’iksi|parfait’itta|parfait’in|parfait’ine-
+### 23 tiili
+tiili|tiilen|tiiltä|tiilessä|tiilestä|tiileen|tiilellä|tiileltä|tiilelle|tiilenä|tiileksi|tiilettä|-|tiilet|tiilien|tiiliä|tiilissä|tiilistä|tiiliin|tiilillä|tiililtä|tiilille|tiilinä|tiiliksi|tiilittä|tiilin|tiiline-
+### 24 uni
+uni|unen|unta|unessa|unesta|uneen|unella|unelta|unelle|unena|uneksi|unetta|-|unet|unien|unia|unissa|unista|uniin|unilla|unilta|unille|unina|uniksi|unitta|unin|unine-
+### 25 toimi
+toimi|toimen|tointa|toimessa|toimesta|toimeen|toimella|toimelta|toimelle|toimena|toimeksi|toimetta|-|toimet|tointen|toimia|toimissa|toimista|toimiin|toimilla|toimilta|toimille|toimina|toimiksi|toimitta|toimin|toimine-
+### 26 pieni
+pieni|pienen|pientä|pienessä|pienestä|pieneen|pienellä|pieneltä|pienelle|pienenä|pieneksi|pienettä|-|pienet|pienten|pieniä|pienissä|pienistä|pieniin|pienillä|pieniltä|pienille|pieninä|pieniksi|pienittä|pienin|pienine
+### 27 käsi
+käsi|käden|kättä|kädessä|kädestä|käteen|kädellä|kädeltä|kädelle|kätenä|kädeksi|kädettä|-|kädet|käsien|käsiä|käsissä|käsistä|käsiin|käsillä|käsiltä|käsille|käsinä|käsiksi|käsittä|käsin|käsine-
+### 28 kynsi
+kynsi|kynnen|kynttä|kynnessä|kynnestä|kynteen|kynnellä|kynneltä|kynnelle|kyntenä|kynneksi|kynnettä|-|kynnet|kynsien|kynsiä|kynsissä|kynsistä|kynsiin|kynsillä|kynsiltä|kynsille|kynsinä|kynsiksi|kynsittä|kynsin|kynsine-
+### 29 lapsi
+lapsi|lapsen|lasta|lapsessa|lapsesta|lapseen|lapsella|lapselta|lapselle|lapsena|lapseksi|lapsetta|-|lapset|lasten|lapsia|lapsissa|lapsista|lapsiin|lapsilla|lapsilta|lapsille|lapsina|lapsiksi|lapsitta|lapsin|lapsine-
+### 30 veitsi
+veitsi|veitsen|veistä|veitsessä|veitsestä|veitseen|veitsellä|veitseltä|veitselle|veitsenä|veitseksi|veitsettä|-|veitset|veitsien|veitsiä|veitsissä|veitsistä|veitsiin|veitsillä|veitsiltä|veitsille|veitsinä|veitsiksi|veitsittä|veitsin|veitsine-
+### 31 kaksi
+kaksi|kahden|kahta|kahdessa|kahdesta|kahteen|kahdella|kahdelta|kahdelle|kahtena|kahdeksi|kahdetta|-|kahdet|kaksien|kaksia|kaksissa|kaksista|kaksiin|kaksilla|kaksilta|kaksille|kaksina|kaksiksi|kaksitta|kaksin|kaksine-
+### 32 sisar
+sisar|sisaren|sisarta|sisaressa|sisaresta|sisareen|sisarella|sisarelta|sisarelle|sisarena|sisareksi|sisaretta|-|sisaret|sisarten|sisaria|sisarissa|sisarista|sisariin|sisarilla|sisarilta|sisarille|sisarina|sisariksi|sisaritta|sisarin|sisarine-
+### 33 kytkin
+kytkin|kytkimen|kytkintä|kytkimessä|kytkimestä|kytkimeen|kytkimellä|kytkimeltä|kytkimelle|kytkimenä|kytkimeksi|kytkimettä|-|kytkimet|kytkimien|kytkimiä|kytkimissä|kytkimistä|kytkimiin|kytkimillä|kytkimiltä|kytkimille|kytkiminä|kytkimiksi|kytkimittä|kytkimin|kytkimine-
+### 34 onneton
+onneton|onnettoman|onnetonta|onnettomassa|onnettomasta|onnettomaan|onnettomalla|onnettomalta|onnettomalle|onnettomana|onnettomaksi|onnettomatta|-|onnettomat|onnettomien|onnettomia|onnettomissa|onnettomista|onnettomiin|onnettomilla|onnettomilta|onnettomille|onnettomina|onnettomiksi|onnettomitta|onnettomin|onnettomine
+### 35 lämmin
+lämmin|lämpimän|lämmintä|lämpimässä|lämpimästä|lämpimään|lämpimällä|lämpimältä|lämpimälle|lämpimänä|lämpimäksi|lämpimättä|-|lämpimät|lämpimien|lämpimiä|lämpimissä|lämpimistä|lämpimiin|lämpimillä|lämpimiltä|lämpimille|lämpiminä|lämpimiksi|lämpimittä|lämpimin|lämpimine-
+### 36 sisin
+sisin|sisimmän|sisintä|sisimmässä|sisimmästä|sisimpään|sisimmällä|sisimmältä|sisimmälle|sisimpänä|sisimmäksi|sisimmättä|-|sisimmät|sisimpien|sisimpiä|sisimmissä|sisimmistä|sisimpiin|sisimmillä|sisimmiltä|sisimmille|sisimpinä|sisimmiksi|sisimmittä|sisimmin|sisimpine
+### 37 vasen
+vasen|vasemman|vasenta|vasemmassa|vasemmasta|vasempaan|vasemmalla|vasemmalta|vasemmalle|vasempana|vasemmaksi|vasemmatta|-|vasemmat|vasempien|vasempia|vasemmissa|vasemmista|vasempiin|vasemmilla|vasemmilta|vasemmille|vasempina|vasemmiksi|vasemmitta|vasemmin|vasempine-
+### 38 nainen
+nainen|naisen|naista|naisessa|naisesta|naiseen|naisella|naiselta|naiselle|naisena|naiseksi|naisetta|-|naiset|naisten|naisia|naisissa|naisista|naisiin|naisilla|naisilta|naisille|naisina|naisiksi|naisitta|naisin|naisine-
+### 39 vastaus
+vastaus|vastauksen|vastausta|vastauksessa|vastauksesta|vastaukseen|vastauksella|vastaukselta|vastaukselle|vastauksena|vastaukseksi|vastauksetta|-|vastaukset|vastausten|vastauksia|vastauksissa|vastauksista|vastauksiin|vastauksilla|vastauksilta|vastauksille|vastauksina|vastauksiksi|vastauksitta|vastauksin|vastauksine-
+### 40 kalleus
+kalleus|kalleuden|kalleutta|kalleudessa|kalleudesta|kalleuteen|kalleudella|kalleudelta|kalleudelle|kalleutena|kalleudeksi|kalleudetta|-|kalleudet|kalleuksien|kalleuksia|kalleuksissa|kalleuksista|kalleuksiin|kalleuksilla|kalleuksilta|kalleuksille|kalleuksina|kalleuksiksi|kalleuksitta|kalleuksin|kalleuksine-
+### 41 vieras
+vieras|vieraan|vierasta|vieraassa|vieraasta|vieraaseen|vieraalla|vieraalta|vieraalle|vieraana|vieraaksi|vieraatta|-|vieraat|vieraiden|vieraita|vieraissa|vieraista|vieraisiin|vierailla|vierailta|vieraille|vieraina|vieraiksi|vieraitta|vierain|vieraine-
+### 42 mies
+mies|miehen|miestä|miehessä|miehestä|mieheen|miehellä|mieheltä|miehelle|miehenä|mieheksi|miehettä|-|miehet|miesten|miehiä|miehissä|miehistä|miehiin|miehillä|miehiltä|miehille|miehinä|miehiksi|miehittä|miehin|miehine-
+### 43 ohut
+ohut|ohuen|ohutta|ohuessa|ohuesta|ohueen|ohuella|ohuelta|ohuelle|ohuena|ohueksi|ohuetta|-|ohuet|ohuiden|ohuita|ohuissa|ohuista|ohuisiin|ohuilla|ohuilta|ohuille|ohuina|ohuiksi|ohuitta|ohuin|ohuine
+### 44 kevät
+kevät|kevään|kevättä|keväässä|keväästä|kevääseen|keväällä|keväältä|keväälle|keväänä|kevääksi|keväättä|-|keväät|keväiden|keväitä|keväissä|keväistä|keväisiin|keväillä|keväiltä|keväille|keväinä|keväiksi|keväittä|keväin|keväine-
+### 45 kahdeksas
+kahdeksas|kahdeksannen|kahdeksatta|kahdeksannessa|kahdeksannesta|kahdeksanteen|kahdeksannella|kahdeksannelta|kahdeksannelle|kahdeksantena|kahdeksanneksi|kahdeksannetta|-|kahdeksannet|kahdeksansien|kahdeksansia|kahdeksansissa|kahdeksansista|kahdeksansiin|kahdeksansilla|kahdeksansilta|kahdeksansille|kahdeksansina|kahdeksansiksi|kahdeksansitta|kahdeksansin|kahdeksansine-
+### 46 tuhat
+tuhat|tuhannen|tuhatta|tuhannessa|tuhannesta|tuhanteen|tuhannella|tuhannelta|tuhannelle|tuhantena|tuhanneksi|tuhannetta|-|tuhannet|tuhansien|tuhansia|tuhansissa|tuhansista|tuhansiin|tuhansilla|tuhansilta|tuhansille|tuhansina|tuhansiksi|tuhansitta|tuhansin|tuhansine-
+### 47 kuollut
+kuollut|kuolleen|kuollutta|kuolleessa|kuolleesta|kuolleeseen|kuolleella|kuolleelta|kuolleelle|kuolleena|kuolleeksi|kuolleetta|-|kuolleet|kuolleiden|kuolleita|kuolleissa|kuolleista|kuolleisiin|kuolleilla|kuolleilta|kuolleille|kuolleina|kuolleiksi|kuolleitta|kuollein|kuolleine-
+### 48 hame
+hame|hameen|hametta|hameessa|hameesta|hameeseen|hameella|hameelta|hameelle|hameena|hameeksi|hameetta|-|hameet|hameiden|hameita|hameissa|hameista|hameisiin|hameilla|hameilta|hameille|hameina|hameiksi|hameitta|hamein|hameine-
+### 49 askel
+askel|askelen|askelta|askelessa|askelesta|askeleen|askelella|askelelta|askelelle|askelena|askeleksi|askeletta|-|askelet|askelten|askelia|askelissa|askelista|askeliin|askelilla|askelilta|askelille|askelina|askeliksi|askelitta|askelin|askeleine-

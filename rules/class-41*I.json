@@ -1,0 +1,1023 @@
+{
+ "class": "41*I",
+ "model_word": "allas",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "allas",
+ "cells": {
+  "nominative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "allas"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "allasta"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "taan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "allastamme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "allastani"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "allastanne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "allastasi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 3,
+   "add": "taakseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaaksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaakseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaaksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaaksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaaksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaalla"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 3,
+   "add": "taallaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaallamme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaallani"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaallanne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaallasi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaalle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 3,
+   "add": "taalleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaallemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaalleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaallenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaallesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaalta"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 3,
+   "add": "taaltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaaltamme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaaltani"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaaltanne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaaltasi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaamme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaamme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaamme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaan"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaana"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 3,
+   "add": "taanaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaanamme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaanani"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaananne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaanasi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaani"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaani"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaani"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaanne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaanne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaanne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaansa"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaansa"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaansa"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaaseemme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaaseen"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaaseeni"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaaseenne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaaseensa"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaaseesi"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaasi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaasi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaasi"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaassa"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 3,
+   "add": "taassaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaassamme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaassani"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaassanne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaassasi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaasta"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 3,
+   "add": "taastaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaastamme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaastani"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaastanne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaastasi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaat"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaatta"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 3,
+   "add": "taattaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaattamme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaattani"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaattanne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaattasi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "ensa"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 3,
+   "add": "taid",
+   "suf": [
+    "esi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "imme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "in"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "ini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "inne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "insa"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 3,
+   "add": "taih",
+   "suf": [
+    "isi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 3,
+   "add": "taikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaiksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaiksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaiksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaiksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altailla"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 3,
+   "add": "taillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaillamme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaillani"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaillanne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaillasi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 3,
+   "add": "tailleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altailleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaillesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altailta"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 3,
+   "add": "tailtaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altailtamme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altailtani"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altailtanne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altailtasi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altain"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaina"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 3,
+   "add": "tainaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altainamme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altainani"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altainanne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altainasi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaissa"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 3,
+   "add": "taissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaissamme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaissani"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaissanne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaissasi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaista"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 3,
+   "add": "taistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaistamme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaistani"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaistanne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaistasi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaita"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 3,
+   "add": "taitaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaitamme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaitani"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaitanne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaitasi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaitta"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 3,
+   "add": "taittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaittamme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaittani"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaittanne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 5,
+   "add": "",
+   "suf": [
+    "altaittasi"
+   ]
+  }
+ }
+}

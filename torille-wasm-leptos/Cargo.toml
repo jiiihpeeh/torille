@@ -1,0 +1,37 @@
+[package]
+name = "torille-wasm-leptos"
+version = "0.1.0"
+edition = "2024"
+license.workspace = true
+description = "Browser-side, single-wasm Leptos demo of the torille Finnish spell-checker"
+
+[lib]
+# `cdylib` for wasm-pack output (`name.wasm`); `rlib` so the test
+# harness can link against it without going through wasm-pack.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+torille = { path = ".." }
+torille-wasm = { path = "../torille-wasm" }
+
+# Leptos 0.8 stable. Client-side rendering (CSR) only; no
+# hydration, no server. The demo's reactivity needs are small
+# enough that this is the simplest build path. A future iteration
+# can add `hydrate = ["leptos/hydrate"]` behind a Cargo feature
+# if SSR-on-the-server becomes worth it.
+leptos = { version = "0.8", default-features = false, features = ["csr"] }
+
+# wasm-bindgen is what `wasm-pack` uses to bridge Rust types and
+# JavaScript values; pinning to 0.2 because that's the stable
+# line and what the toolchain on this box supports.
+wasm-bindgen = "0.2"
+
+# `console_error_panic_hook` makes `unwrap` panics land in the
+# browser dev console instead of dying silently.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+console_error_panic_hook = "0.1"
+
+[features]
+default = []
+hydrate = ["leptos/hydrate"]
+ssr = ["leptos/ssr"]

@@ -1,0 +1,21 @@
+{
+  "name": "torille-wasm-demo",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "license": "MIT OR Apache-2.0",
+  "scripts": {
+    "build": "esbuild src/main.ts --bundle --outfile=dist/main.js --format=esm --target=es2022 --loader:.wasm=binary --jsx-factory=createComponent --jsx-fragment=Fragment --jsx-import-source=solid-js/h --jsx=automatic",
+    "typecheck": "tsc --noEmit",
+    "test": "node test-pagination.mjs"
+  },
+  "dependencies": {
+    "solid-js": "^1.8.0"
+  },
+  "devDependencies": {
+    "babel-preset-solid": "^1.9.15",
+    "esbuild": "^0.27.0",
+    "esbuild-plugin-solid": "^0.6.0",
+    "typescript": "^5.5.0"
+  }
+}

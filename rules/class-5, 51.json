@@ -1,0 +1,113 @@
+{
+ "class": "5, 51",
+ "model_word": "nuoripari",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "nuoripari",
+ "cells": {
+  "adessive|singular|third person": {
+   "drop": 5,
+   "add": "ellaparillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 5,
+   "add": "elleparilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 5,
+   "add": "eltapariltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 5,
+   "add": "enaparinaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 5,
+   "add": "essaparissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 5,
+   "add": "estaparistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 5,
+   "add": "ettaparittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "enparien"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 4,
+   "add": "llapareillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 4,
+   "add": "llepareilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 4,
+   "add": "ltapareiltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 4,
+   "add": "napareinaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 4,
+   "add": "ssapareissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 4,
+   "add": "stapareistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 4,
+   "add": "ttapareittaan",
+   "suf": [
+    ""
+   ]
+  }
+ }
+}

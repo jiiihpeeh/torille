@@ -1,0 +1,1023 @@
+{
+ "class": "1*J, 50",
+ "model_word": "halpalento",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "halpalento",
+ "cells": {
+  "translative|plural|third person": {
+   "drop": 2,
+   "add": "noikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoiksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoiksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoiksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoiksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoilla"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 2,
+   "add": "noillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoillamme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoillani"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoillanne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoillasi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 2,
+   "add": "noilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoillemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoilleni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoillenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoillesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoilta"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 2,
+   "add": "noiltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoiltamme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoiltani"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoiltanne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoiltasi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoin"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoissa"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 2,
+   "add": "noissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoissamme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoissani"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoissanne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoissasi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoista"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 2,
+   "add": "noistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoistamme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoistani"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoistanne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoistasi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoitta"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 2,
+   "add": "noittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoittamme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoittani"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoittanne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoittasi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 2,
+   "add": "nokseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennokseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennolla"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 2,
+   "add": "nollaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennollamme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennollani"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennollanne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennollasi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennolle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 2,
+   "add": "nolleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennollemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennolleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennollenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennollesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennolta"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 2,
+   "add": "noltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoltamme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoltani"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoltanne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennoltasi"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennon"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennossa"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 2,
+   "add": "nossaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennossamme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennossani"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennossanne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennossasi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennosta"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 2,
+   "add": "nostaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennostamme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennostani"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennostanne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennostasi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennot"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennotta"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 2,
+   "add": "nottaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennottamme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennottani"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennottanne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alennottasi"
+   ]
+  },
+  "nominative|singular|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alento"
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoa"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "aan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoamme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoani"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoanne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoasi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoihimme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoihin"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoihini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoihinne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoihinsa"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoihisi"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoina"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 0,
+   "add": "inaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoinamme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoinani"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoinanne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoinasi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoja"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 0,
+   "add": "jaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentojamme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentojani"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentojanne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentojasi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentojemme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentojen"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentojeni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentojenne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentojensa"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentojesi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentomme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentomme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentomme"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentona"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 0,
+   "add": "naan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentonamme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentonani"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentonanne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentonasi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentonne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentonne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentonne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentonsa"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentonsa"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentonsa"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoomme"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoon"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentooni"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoonne"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoonsa"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentoosi"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentosi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentosi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 6,
+   "add": "",
+   "suf": [
+    "alentosi"
+   ]
+  }
+ }
+}

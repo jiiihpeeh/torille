@@ -1,0 +1,949 @@
+{
+ "class": "51",
+ "model_word": "uusikuu",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "uusikuu",
+ "cells": {
+  "partitive|singular|": {
+   "drop": 4,
+   "add": "amert",
+   "suf": [
+    "a"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 4,
+   "add": "amertansa",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 4,
+   "add": "amert",
+   "suf": [
+    "amme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 4,
+   "add": "amert",
+   "suf": [
+    "ani"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 4,
+   "add": "amert",
+   "suf": [
+    "anne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 4,
+   "add": "amert",
+   "suf": [
+    "asi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 4,
+   "add": "ksimerekseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 4,
+   "add": "ksimere",
+   "suf": [
+    "ksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 4,
+   "add": "ksimere",
+   "suf": [
+    "kseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 4,
+   "add": "ksimere",
+   "suf": [
+    "ksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 4,
+   "add": "ksimere",
+   "suf": [
+    "ksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 4,
+   "add": "ksimere",
+   "suf": [
+    "ksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 4,
+   "add": "llamere",
+   "suf": [
+    "llä"
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 4,
+   "add": "llamere",
+   "suf": [
+    "llämme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 4,
+   "add": "llamere",
+   "suf": [
+    "lläni"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 4,
+   "add": "llamere",
+   "suf": [
+    "llänne"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 4,
+   "add": "llamerellänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 4,
+   "add": "llamere",
+   "suf": [
+    "lläsi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 4,
+   "add": "llemere",
+   "suf": [
+    "lle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 4,
+   "add": "llemerelleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 4,
+   "add": "llemere",
+   "suf": [
+    "llemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 4,
+   "add": "llemere",
+   "suf": [
+    "lleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 4,
+   "add": "llemere",
+   "suf": [
+    "llenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 4,
+   "add": "llemere",
+   "suf": [
+    "llesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 4,
+   "add": "ltamere",
+   "suf": [
+    "ltä"
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 4,
+   "add": "ltamere",
+   "suf": [
+    "ltämme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 4,
+   "add": "ltamere",
+   "suf": [
+    "ltäni"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 4,
+   "add": "ltamere",
+   "suf": [
+    "ltänne"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 4,
+   "add": "ltamereltänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 4,
+   "add": "ltamere",
+   "suf": [
+    "ltäsi"
+   ]
+  },
+  "nominative|singular|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|": {
+   "drop": 4,
+   "add": "namere",
+   "suf": [
+    "nä"
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 4,
+   "add": "namere",
+   "suf": [
+    "nämme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 4,
+   "add": "namere",
+   "suf": [
+    "näni"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 4,
+   "add": "namere",
+   "suf": [
+    "nänne"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 4,
+   "add": "namerenänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 4,
+   "add": "namere",
+   "suf": [
+    "näsi"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 4,
+   "add": "nmere",
+   "suf": [
+    "n"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 4,
+   "add": "ssamere",
+   "suf": [
+    "ssä"
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 4,
+   "add": "ssamere",
+   "suf": [
+    "ssämme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 4,
+   "add": "ssamere",
+   "suf": [
+    "ssäni"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 4,
+   "add": "ssamere",
+   "suf": [
+    "ssänne"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 4,
+   "add": "ssameressänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 4,
+   "add": "ssamere",
+   "suf": [
+    "ssäsi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 4,
+   "add": "stamere",
+   "suf": [
+    "stä"
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 4,
+   "add": "stamere",
+   "suf": [
+    "stämme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 4,
+   "add": "stamere",
+   "suf": [
+    "stäni"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 4,
+   "add": "stamere",
+   "suf": [
+    "stänne"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 4,
+   "add": "stamerestänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 4,
+   "add": "stamere",
+   "suf": [
+    "stäsi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 4,
+   "add": "tmere",
+   "suf": [
+    "t"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 4,
+   "add": "ttamere",
+   "suf": [
+    "ttä"
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 4,
+   "add": "ttamere",
+   "suf": [
+    "ttämme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 4,
+   "add": "ttamere",
+   "suf": [
+    "ttäni"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 4,
+   "add": "ttamere",
+   "suf": [
+    "ttänne"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 4,
+   "add": "ttamerettänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 4,
+   "add": "ttamere",
+   "suf": [
+    "ttäsi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 6,
+   "add": "iksisarjoiksensa",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 6,
+   "add": "iksisarjo",
+   "suf": [
+    "iksemme"
+   ],
+   "alt": {
+    "ri": {
+     "drop": 5,
+     "add": "iksimer",
+     "suf": [
+      "iksemme"
+     ]
+    }
+   }
+  },
+  "translative|plural|first person singular": {
+   "drop": 6,
+   "add": "iksisarjo",
+   "suf": [
+    "ikseni"
+   ],
+   "alt": {
+    "ri": {
+     "drop": 5,
+     "add": "iksimer",
+     "suf": [
+      "ikseni"
+     ]
+    }
+   }
+  },
+  "translative|plural|second person plural": {
+   "drop": 6,
+   "add": "iksisarjo",
+   "suf": [
+    "iksenne"
+   ],
+   "alt": {
+    "ri": {
+     "drop": 5,
+     "add": "iksimer",
+     "suf": [
+      "iksenne"
+     ]
+    }
+   }
+  },
+  "translative|plural|second person singular": {
+   "drop": 6,
+   "add": "iksisarjo",
+   "suf": [
+    "iksesi"
+   ],
+   "alt": {
+    "ri": {
+     "drop": 5,
+     "add": "iksimer",
+     "suf": [
+      "iksesi"
+     ]
+    }
+   }
+  },
+  "translative|plural|": {
+   "drop": 6,
+   "add": "iksisarjo",
+   "suf": [
+    "iksi"
+   ],
+   "alt": {
+    "ri": {
+     "drop": 5,
+     "add": "iksimer",
+     "suf": [
+      "iksi"
+     ]
+    }
+   }
+  },
+  "adessive|plural|": {
+   "drop": 5,
+   "add": "oillamer",
+   "suf": [
+    "illä"
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 5,
+   "add": "oillamer",
+   "suf": [
+    "illämme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 5,
+   "add": "oillamer",
+   "suf": [
+    "illäni"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 5,
+   "add": "oillamer",
+   "suf": [
+    "illänne"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 5,
+   "add": "oillamerillänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 5,
+   "add": "oillamer",
+   "suf": [
+    "illäsi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 6,
+   "add": "illesarjo",
+   "suf": [
+    "ille"
+   ],
+   "alt": {
+    "ri": {
+     "drop": 5,
+     "add": "illemer",
+     "suf": [
+      "ille"
+     ]
+    }
+   }
+  },
+  "allative|plural|third person": {
+   "drop": 6,
+   "add": "illesarjoilleen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "ri": {
+     "drop": 5,
+     "add": "illemerilleen",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "allative|plural|first person plural": {
+   "drop": 6,
+   "add": "illesarjo",
+   "suf": [
+    "illemme"
+   ],
+   "alt": {
+    "ri": {
+     "drop": 5,
+     "add": "illemer",
+     "suf": [
+      "illemme"
+     ]
+    }
+   }
+  },
+  "allative|plural|first person singular": {
+   "drop": 6,
+   "add": "illesarjo",
+   "suf": [
+    "illeni"
+   ],
+   "alt": {
+    "ri": {
+     "drop": 5,
+     "add": "illemer",
+     "suf": [
+      "illeni"
+     ]
+    }
+   }
+  },
+  "allative|plural|second person plural": {
+   "drop": 6,
+   "add": "illesarjo",
+   "suf": [
+    "illenne"
+   ],
+   "alt": {
+    "ri": {
+     "drop": 5,
+     "add": "illemer",
+     "suf": [
+      "illenne"
+     ]
+    }
+   }
+  },
+  "allative|plural|second person singular": {
+   "drop": 6,
+   "add": "illesarjo",
+   "suf": [
+    "illesi"
+   ],
+   "alt": {
+    "ri": {
+     "drop": 5,
+     "add": "illemer",
+     "suf": [
+      "illesi"
+     ]
+    }
+   }
+  },
+  "ablative|plural|": {
+   "drop": 5,
+   "add": "oiltamer",
+   "suf": [
+    "iltä"
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 5,
+   "add": "oiltamer",
+   "suf": [
+    "iltämme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 5,
+   "add": "oiltamer",
+   "suf": [
+    "iltäni"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 5,
+   "add": "oiltamer",
+   "suf": [
+    "iltänne"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 5,
+   "add": "oiltameriltänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 5,
+   "add": "oiltamer",
+   "suf": [
+    "iltäsi"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 5,
+   "add": "oinamer",
+   "suf": [
+    "inä"
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 5,
+   "add": "oinamer",
+   "suf": [
+    "inämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 5,
+   "add": "oinamer",
+   "suf": [
+    "inäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 5,
+   "add": "oinamer",
+   "suf": [
+    "inänne"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 5,
+   "add": "oinamerinänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 5,
+   "add": "oinamer",
+   "suf": [
+    "inäsi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 5,
+   "add": "oissameriss",
+   "suf": [
+    "ä"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 5,
+   "add": "oissamer",
+   "suf": [
+    "issä"
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 5,
+   "add": "oissameriss",
+   "suf": [
+    "ämme"
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 5,
+   "add": "oissamer",
+   "suf": [
+    "issämme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 5,
+   "add": "oissameriss",
+   "suf": [
+    "äni"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 5,
+   "add": "oissamer",
+   "suf": [
+    "issäni"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 5,
+   "add": "oissameriss",
+   "suf": [
+    "änne"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 5,
+   "add": "oissamer",
+   "suf": [
+    "issänne"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 5,
+   "add": "oissamerissänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 5,
+   "add": "oissamerissänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 5,
+   "add": "oissameriss",
+   "suf": [
+    "äsi"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 5,
+   "add": "oissamer",
+   "suf": [
+    "issäsi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 5,
+   "add": "oittamer",
+   "suf": [
+    "ittä"
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 5,
+   "add": "oittamer",
+   "suf": [
+    "ittämme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 5,
+   "add": "oittamer",
+   "suf": [
+    "ittäni"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 5,
+   "add": "oittamer",
+   "suf": [
+    "ittänne"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 5,
+   "add": "oittamerittänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 5,
+   "add": "oittamer",
+   "suf": [
+    "ittäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 5,
+   "add": "ojameri",
+   "suf": [
+    "ä"
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 5,
+   "add": "ojameri",
+   "suf": [
+    "ämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 5,
+   "add": "ojameri",
+   "suf": [
+    "äni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 5,
+   "add": "ojameri",
+   "suf": [
+    "änne"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 5,
+   "add": "ojameriänsä",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 5,
+   "add": "ojameri",
+   "suf": [
+    "äsi"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 6,
+   "add": "idensarjoj",
+   "suf": [
+    "en"
+   ],
+   "alt": {
+    "ri": {
+     "drop": 5,
+     "add": "ienmert",
+     "suf": [
+      "en"
+     ]
+    }
+   }
+  },
+  "illative|singular|": {
+   "drop": 10,
+   "add": "seennoutajaa",
+   "suf": [
+    "n"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 5,
+   "add": "iinmeri",
+   "suf": [
+    "in"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "mme"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ni"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nne"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nsa"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "si"
+   ]
+  }
+ }
+}

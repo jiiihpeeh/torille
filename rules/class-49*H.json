@@ -1,0 +1,1099 @@
+{
+ "class": "49*H",
+ "model_word": "ommel",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "ommel",
+ "cells": {
+  "nominative|singular|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "mmelta",
+    "mmeltä"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "taan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "mmeltamme",
+    "mmeltämme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "mmeltani",
+    "mmeltäni"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "mmeltanne",
+    "mmeltänne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 4,
+   "add": "",
+   "suf": [
+    "mmeltasi",
+    "mmeltäsi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "en"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "ensa",
+    "ensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 0,
+   "add": "t",
+   "suf": [
+    "esi"
+   ]
+  },
+  "translative|singular|third person": {
+   "drop": 3,
+   "add": "peleekseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|singular|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "eksemme"
+   ]
+  },
+  "translative|singular|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ekseni"
+   ]
+  },
+  "translative|singular|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "eksenne"
+   ]
+  },
+  "translative|singular|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "eksesi"
+   ]
+  },
+  "translative|singular|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "eksi"
+   ]
+  },
+  "adessive|singular|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ella",
+    "ellä"
+   ]
+  },
+  "adessive|singular|third person": {
+   "drop": 3,
+   "add": "peleellaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|singular|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ellamme",
+    "ellämme"
+   ]
+  },
+  "adessive|singular|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ellani",
+    "elläni"
+   ]
+  },
+  "adessive|singular|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ellanne",
+    "ellänne"
+   ]
+  },
+  "adessive|singular|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ellasi",
+    "elläsi"
+   ]
+  },
+  "allative|singular|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "elle"
+   ]
+  },
+  "allative|singular|third person": {
+   "drop": 3,
+   "add": "peleelleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|singular|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ellemme"
+   ]
+  },
+  "allative|singular|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "elleni"
+   ]
+  },
+  "allative|singular|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ellenne"
+   ]
+  },
+  "allative|singular|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ellesi"
+   ]
+  },
+  "ablative|singular|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "elta",
+    "eltä"
+   ]
+  },
+  "ablative|singular|third person": {
+   "drop": 3,
+   "add": "peleeltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|singular|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "eltamme",
+    "eltämme"
+   ]
+  },
+  "ablative|singular|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "eltani",
+    "eltäni"
+   ]
+  },
+  "ablative|singular|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "eltanne",
+    "eltänne"
+   ]
+  },
+  "ablative|singular|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "eltasi",
+    "eltäsi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "emme"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "drop": 3,
+   "add": "pel",
+   "suf": [
+    "eemme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "emme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "emme"
+   ]
+  },
+  "genitive|singular|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "en"
+   ]
+  },
+  "illative|singular|": {
+   "drop": 3,
+   "add": "pel",
+   "suf": [
+    "een"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ena",
+    "enä"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 3,
+   "add": "peleenaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "enamme",
+    "enämme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "enani",
+    "enäni"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "enanne",
+    "enänne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "enasi",
+    "enäsi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "eni"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "drop": 3,
+   "add": "pel",
+   "suf": [
+    "eeni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "eni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "eni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "enne"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "drop": 3,
+   "add": "pel",
+   "suf": [
+    "eenne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "enne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "enne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ensa",
+    "ensä"
+   ]
+  },
+  "illative|singular|third person": {
+   "drop": 3,
+   "add": "pel",
+   "suf": [
+    "eensa",
+    "eensä"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ensa",
+    "ensä"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ensa",
+    "ensä"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "drop": 3,
+   "add": "pelees",
+   "suf": [
+    "eesi"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "esi"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "esi"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "esi"
+   ]
+  },
+  "inessive|singular|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "essa",
+    "essä"
+   ]
+  },
+  "inessive|singular|third person": {
+   "drop": 3,
+   "add": "peleessaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|singular|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "essamme",
+    "essämme"
+   ]
+  },
+  "inessive|singular|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "essani",
+    "essäni"
+   ]
+  },
+  "inessive|singular|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "essanne",
+    "essänne"
+   ]
+  },
+  "inessive|singular|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "essasi",
+    "essäsi"
+   ]
+  },
+  "elative|singular|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "esta",
+    "estä"
+   ]
+  },
+  "elative|singular|third person": {
+   "drop": 3,
+   "add": "peleestaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|singular|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "estamme",
+    "estämme"
+   ]
+  },
+  "elative|singular|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "estani",
+    "estäni"
+   ]
+  },
+  "elative|singular|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "estanne",
+    "estänne"
+   ]
+  },
+  "elative|singular|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "estasi",
+    "estäsi"
+   ]
+  },
+  "nominative|plural|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "et"
+   ]
+  },
+  "abessive|singular|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "etta",
+    "että"
+   ]
+  },
+  "abessive|singular|third person": {
+   "drop": 3,
+   "add": "peleettaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|singular|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ettamme",
+    "ettämme"
+   ]
+  },
+  "abessive|singular|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ettani",
+    "ettäni"
+   ]
+  },
+  "abessive|singular|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ettanne",
+    "ettänne"
+   ]
+  },
+  "abessive|singular|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ettasi",
+    "ettäsi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 3,
+   "add": "peleih",
+   "suf": [
+    "imme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 3,
+   "add": "peleih",
+   "suf": [
+    "in"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 3,
+   "add": "peleih",
+   "suf": [
+    "ini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 3,
+   "add": "peleih",
+   "suf": [
+    "inne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 3,
+   "add": "peleih",
+   "suf": [
+    "insa",
+    "insä"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 3,
+   "add": "peleih",
+   "suf": [
+    "isi"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 3,
+   "add": "peleikseen",
+   "suf": [
+    ""
+   ]
+  },
+  "translative|plural|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "iksemme"
+   ]
+  },
+  "translative|plural|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ikseni"
+   ]
+  },
+  "translative|plural|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "iksenne"
+   ]
+  },
+  "translative|plural|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "iksesi"
+   ]
+  },
+  "translative|plural|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "iksi"
+   ]
+  },
+  "adessive|plural|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "illa",
+    "illä"
+   ]
+  },
+  "adessive|plural|third person": {
+   "drop": 3,
+   "add": "peleillaan",
+   "suf": [
+    ""
+   ]
+  },
+  "adessive|plural|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "illamme",
+    "illämme"
+   ]
+  },
+  "adessive|plural|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "illani",
+    "illäni"
+   ]
+  },
+  "adessive|plural|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "illanne",
+    "illänne"
+   ]
+  },
+  "adessive|plural|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "illasi",
+    "illäsi"
+   ]
+  },
+  "allative|plural|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ille"
+   ]
+  },
+  "allative|plural|third person": {
+   "drop": 3,
+   "add": "peleilleen",
+   "suf": [
+    ""
+   ]
+  },
+  "allative|plural|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "illemme"
+   ]
+  },
+  "allative|plural|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "illeni"
+   ]
+  },
+  "allative|plural|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "illenne"
+   ]
+  },
+  "allative|plural|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "illesi"
+   ]
+  },
+  "ablative|plural|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ilta",
+    "iltä"
+   ]
+  },
+  "ablative|plural|third person": {
+   "drop": 3,
+   "add": "peleiltaan",
+   "suf": [
+    ""
+   ]
+  },
+  "ablative|plural|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "iltamme",
+    "iltämme"
+   ]
+  },
+  "ablative|plural|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "iltani",
+    "iltäni"
+   ]
+  },
+  "ablative|plural|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "iltanne",
+    "iltänne"
+   ]
+  },
+  "ablative|plural|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "iltasi",
+    "iltäsi"
+   ]
+  },
+  "instructive|plural|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "in"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ina",
+    "inä"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 3,
+   "add": "peleinaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "inamme",
+    "inämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "inani",
+    "inäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "inanne",
+    "inänne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "inasi",
+    "inäsi"
+   ]
+  },
+  "inessive|plural|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "issa",
+    "issä"
+   ]
+  },
+  "inessive|plural|third person": {
+   "drop": 3,
+   "add": "peleissaan",
+   "suf": [
+    ""
+   ]
+  },
+  "inessive|plural|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "issamme",
+    "issämme"
+   ]
+  },
+  "inessive|plural|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "issani",
+    "issäni"
+   ]
+  },
+  "inessive|plural|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "issanne",
+    "issänne"
+   ]
+  },
+  "inessive|plural|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "issasi",
+    "issäsi"
+   ]
+  },
+  "elative|plural|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ista",
+    "istä"
+   ]
+  },
+  "elative|plural|third person": {
+   "drop": 3,
+   "add": "peleistaan",
+   "suf": [
+    ""
+   ]
+  },
+  "elative|plural|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "istamme",
+    "istämme"
+   ]
+  },
+  "elative|plural|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "istani",
+    "istäni"
+   ]
+  },
+  "elative|plural|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "istanne",
+    "istänne"
+   ]
+  },
+  "elative|plural|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "istasi",
+    "istäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 3,
+   "add": "peleit",
+   "suf": [
+    "a",
+    "ä"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 3,
+   "add": "peleitaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 3,
+   "add": "peleit",
+   "suf": [
+    "amme",
+    "ämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 3,
+   "add": "peleit",
+   "suf": [
+    "ani",
+    "äni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 3,
+   "add": "peleit",
+   "suf": [
+    "anne",
+    "änne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 3,
+   "add": "peleit",
+   "suf": [
+    "asi",
+    "äsi"
+   ]
+  },
+  "abessive|plural|": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "itta",
+    "ittä"
+   ]
+  },
+  "abessive|plural|third person": {
+   "drop": 3,
+   "add": "peleittaan",
+   "suf": [
+    ""
+   ]
+  },
+  "abessive|plural|first person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ittamme",
+    "ittämme"
+   ]
+  },
+  "abessive|plural|first person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ittani",
+    "ittäni"
+   ]
+  },
+  "abessive|plural|second person plural": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ittanne",
+    "ittänne"
+   ]
+  },
+  "abessive|plural|second person singular": {
+   "drop": 3,
+   "add": "pele",
+   "suf": [
+    "ittasi",
+    "ittäsi"
+   ]
+  }
+ }
+}

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<title>torille — asetukset</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #222;
+    --accent: #07c;
+    --border: #ccc;
+    --miss: #c33;
+  }
+  html, body {
+    margin: 0; padding: 0;
+    color: var(--fg); background: var(--bg);
+    font: 14px/1.5 -apple-system, system-ui, sans-serif;
+    max-width: 720px;
+  }
+  header {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid var(--border);
+    background: white;
+  }
+  header h1 {
+    margin: 0; font-size: 1.1em; font-weight: 600;
+  }
+  header h1 small {
+    font-weight: 400; color: #888; font-size: 0.85em; margin-left: 0.5em;
+  }
+  main {
+    padding: 1em 1.2em;
+  }
+  main p { color: #555; }
+  form {
+    display: flex; gap: 0.5em; margin-bottom: 1em;
+  }
+  form input[type=text] {
+    flex: 1; font: inherit;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.4em 0.6em;
+  }
+  form button {
+    font: inherit;
+    background: var(--accent); color: white;
+    border: 0; border-radius: 4px;
+    padding: 0.4em 0.9em;
+    cursor: pointer;
+  }
+  ul { list-style: none; padding: 0; margin: 0; }
+  li {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.4em 0;
+    border-bottom: 1px solid #eee;
+  }
+  li span {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  li button {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.2em 0.7em;
+    cursor: pointer;
+  }
+  li button:hover {
+    background: var(--miss);
+    color: white;
+    border-color: var(--miss);
+  }
+  .empty {
+    color: #888;
+    font-style: italic;
+    padding: 0.5em 0;
+  }
+  .settings {
+    margin: 0.8em 0 1.4em;
+    padding: 0.7em 0.9em;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: white;
+  }
+  .settings label {
+    display: flex; align-items: center; gap: 0.6em;
+    cursor: pointer;
+  }
+  .settings label small {
+    color: #777;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>torille<small>blacklist</small></h1>
+</header>
+<main>
+  <p>
+    Sivut, joilla torille ei tarkasta tekstiä oletuksena.
+    Yksittäisellä sivulla voit ottaa tarkastuksen käyttöön tai pois
+    hiiren oikean napin valikon kautta.
+  </p>
+  <div class="settings">
+    <label>
+      <input type="checkbox" id="debug">
+      <span>Debug-loki päälle
+        <small>— kirjoittaa konsoliin tiedot aktivoitavista kentistä, tarkastuspyynnöistä ja kontekstivalikon toiminnoista</small>
+      </span>
+    </label>
+  </div>
+  <form id="add">
+    <input type="text" id="host" placeholder="esimerkki.fi" autocomplete="off" required>
+    <button type="submit">Lisää</button>
+  </form>
+  <ul id="list"></ul>
+  <div id="empty" class="empty" hidden>Blacklist on tyhjä.</div>
+</main>
+<script src="./options.js"></script>
+</body>
+</html>

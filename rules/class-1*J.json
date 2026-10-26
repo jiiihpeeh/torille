@@ -1,0 +1,3044 @@
+{
+ "class": "1*J",
+ "model_word": "anto",
+ "help": "cells are (case|number|possessive); each maps to the bare suffix the model word's stem takes, or 'multi' for a cell with two equal answers, or absent when unseen",
+ "stem": "anto",
+ "cells": {
+  "nominative|singular|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "a",
+    "ä"
+   ]
+  },
+  "partitive|singular|third person": {
+   "drop": 0,
+   "add": "aan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|singular|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "amme",
+    "ämme"
+   ]
+  },
+  "partitive|singular|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ani",
+    "äni"
+   ]
+  },
+  "partitive|singular|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "anne",
+    "änne"
+   ]
+  },
+  "partitive|singular|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "asi",
+    "äsi"
+   ]
+  },
+  "illative|plural|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ihimme"
+   ]
+  },
+  "illative|plural|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ihin"
+   ]
+  },
+  "illative|plural|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ihini"
+   ]
+  },
+  "illative|plural|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ihinne"
+   ]
+  },
+  "illative|plural|third person": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ihinsa",
+    "ihinsä"
+   ]
+  },
+  "illative|plural|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ihisi"
+   ]
+  },
+  "essive|plural|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ina",
+    "inä"
+   ]
+  },
+  "essive|plural|third person": {
+   "drop": 0,
+   "add": "inaan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|plural|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "inamme",
+    "inämme"
+   ]
+  },
+  "essive|plural|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "inani",
+    "inäni"
+   ]
+  },
+  "essive|plural|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "inanne",
+    "inänne"
+   ]
+  },
+  "essive|plural|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "inasi",
+    "inäsi"
+   ]
+  },
+  "partitive|plural|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ja",
+    "jä"
+   ]
+  },
+  "partitive|plural|third person": {
+   "drop": 0,
+   "add": "jaan",
+   "suf": [
+    ""
+   ]
+  },
+  "partitive|plural|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jamme",
+    "jämme"
+   ]
+  },
+  "partitive|plural|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jani",
+    "jäni"
+   ]
+  },
+  "partitive|plural|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "janne",
+    "jänne"
+   ]
+  },
+  "partitive|plural|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jasi",
+    "jäsi"
+   ]
+  },
+  "genitive|plural|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jemme"
+   ]
+  },
+  "genitive|plural|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jen"
+   ]
+  },
+  "genitive|plural|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jeni"
+   ]
+  },
+  "genitive|plural|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jenne"
+   ]
+  },
+  "genitive|plural|third person": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jensa",
+    "jensä"
+   ]
+  },
+  "genitive|plural|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "jesi"
+   ]
+  },
+  "genitive|singular|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "mme"
+   ]
+  },
+  "nominative|plural|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "mme"
+   ]
+  },
+  "nominative|singular|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "mme"
+   ]
+  },
+  "essive|singular|": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "na",
+    "nä"
+   ]
+  },
+  "essive|singular|third person": {
+   "drop": 0,
+   "add": "naan",
+   "suf": [
+    ""
+   ]
+  },
+  "essive|singular|first person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "namme",
+    "nämme"
+   ]
+  },
+  "essive|singular|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nani",
+    "näni"
+   ]
+  },
+  "essive|singular|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nanne",
+    "nänne"
+   ]
+  },
+  "essive|singular|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nasi",
+    "näsi"
+   ]
+  },
+  "genitive|singular|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ni"
+   ]
+  },
+  "nominative|plural|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ni"
+   ]
+  },
+  "nominative|singular|first person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "ni"
+   ]
+  },
+  "genitive|singular|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nne"
+   ]
+  },
+  "nominative|plural|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nne"
+   ]
+  },
+  "nominative|singular|second person plural": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nne"
+   ]
+  },
+  "genitive|singular|third person": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nsa",
+    "nsä"
+   ]
+  },
+  "nominative|plural|third person": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nsa",
+    "nsä"
+   ]
+  },
+  "nominative|singular|third person": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "nsa",
+    "nsä"
+   ]
+  },
+  "illative|singular|first person plural": {
+   "double": true,
+   "suf": [
+    "mme"
+   ]
+  },
+  "illative|singular|": {
+   "double": true,
+   "suf": [
+    "n"
+   ]
+  },
+  "illative|singular|first person singular": {
+   "double": true,
+   "suf": [
+    "ni"
+   ]
+  },
+  "illative|singular|second person plural": {
+   "double": true,
+   "suf": [
+    "nne"
+   ]
+  },
+  "illative|singular|third person": {
+   "double": true,
+   "suf": [
+    "nsa",
+    "nsä"
+   ]
+  },
+  "illative|singular|second person singular": {
+   "double": true,
+   "suf": [
+    "si"
+   ]
+  },
+  "genitive|singular|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "si"
+   ]
+  },
+  "nominative|plural|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "si"
+   ]
+  },
+  "nominative|singular|second person singular": {
+   "drop": 0,
+   "add": "",
+   "suf": [
+    "si"
+   ]
+  },
+  "translative|plural|third person": {
+   "drop": 2,
+   "add": "noikseen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nuiksensa",
+     "suf": [
+      ""
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nöiksensä",
+     "suf": [
+      ""
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "nyiksensä",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "translative|plural|first person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "iksemme"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "iksemme"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "iksemme"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "iksemme"
+     ]
+    }
+   }
+  },
+  "translative|plural|first person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ikseni"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ikseni"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ikseni"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ikseni"
+     ]
+    }
+   }
+  },
+  "translative|plural|second person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "iksenne"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "iksenne"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "iksenne"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "iksenne"
+     ]
+    }
+   }
+  },
+  "translative|plural|second person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "iksesi"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "iksesi"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "iksesi"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "iksesi"
+     ]
+    }
+   }
+  },
+  "translative|plural|": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "iksi"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "iksi"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "iksi"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "iksi"
+     ]
+    }
+   }
+  },
+  "adessive|plural|": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "illa"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "illa"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "illä"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "illä"
+     ]
+    }
+   }
+  },
+  "adessive|plural|third person": {
+   "drop": 2,
+   "add": "noillaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nuillansa",
+     "suf": [
+      ""
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nöillään",
+     "suf": [
+      ""
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "nyillään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "adessive|plural|first person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "illamme"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "illamme"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "illämme"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "illämme"
+     ]
+    }
+   }
+  },
+  "adessive|plural|first person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "illani"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "illani"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "illäni"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "illäni"
+     ]
+    }
+   }
+  },
+  "adessive|plural|second person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "illanne"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "illanne"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "illänne"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "illänne"
+     ]
+    }
+   }
+  },
+  "adessive|plural|second person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "illasi"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "illasi"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "illäsi"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "illäsi"
+     ]
+    }
+   }
+  },
+  "allative|plural|": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ille"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ille"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ille"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ille"
+     ]
+    }
+   }
+  },
+  "allative|plural|third person": {
+   "drop": 2,
+   "add": "noilleen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nuillensa",
+     "suf": [
+      ""
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nöillensä",
+     "suf": [
+      ""
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "nyillensä",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "allative|plural|first person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "illemme"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "illemme"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "illemme"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "illemme"
+     ]
+    }
+   }
+  },
+  "allative|plural|first person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "illeni"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "illeni"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "illeni"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "illeni"
+     ]
+    }
+   }
+  },
+  "allative|plural|second person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "illenne"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "illenne"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "illenne"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "illenne"
+     ]
+    }
+   }
+  },
+  "allative|plural|second person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "illesi"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "illesi"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "illesi"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "illesi"
+     ]
+    }
+   }
+  },
+  "ablative|plural|": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ilta"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ilta"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "iltä"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "iltä"
+     ]
+    }
+   }
+  },
+  "ablative|plural|third person": {
+   "drop": 2,
+   "add": "noiltaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nuiltansa",
+     "suf": [
+      ""
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nöiltään",
+     "suf": [
+      ""
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "nyiltään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "ablative|plural|first person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "iltamme"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "iltamme"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "iltämme"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "iltämme"
+     ]
+    }
+   }
+  },
+  "ablative|plural|first person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "iltani"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "iltani"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "iltäni"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "iltäni"
+     ]
+    }
+   }
+  },
+  "ablative|plural|second person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "iltanne"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "iltanne"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "iltänne"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "iltänne"
+     ]
+    }
+   }
+  },
+  "ablative|plural|second person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "iltasi"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "iltasi"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "iltäsi"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "iltäsi"
+     ]
+    }
+   }
+  },
+  "instructive|plural|": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "in"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "in"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "in"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "in"
+     ]
+    }
+   }
+  },
+  "inessive|plural|": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "issa"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "issa"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "issä"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "issä"
+     ]
+    }
+   }
+  },
+  "inessive|plural|third person": {
+   "drop": 2,
+   "add": "noissaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nuissansa",
+     "suf": [
+      ""
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nöissään",
+     "suf": [
+      ""
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "nyissään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "inessive|plural|first person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "issamme"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "issamme"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "issämme"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "issämme"
+     ]
+    }
+   }
+  },
+  "inessive|plural|first person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "issani"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "issani"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "issäni"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "issäni"
+     ]
+    }
+   }
+  },
+  "inessive|plural|second person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "issanne"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "issanne"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "issänne"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "issänne"
+     ]
+    }
+   }
+  },
+  "inessive|plural|second person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "issasi"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "issasi"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "issäsi"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "issäsi"
+     ]
+    }
+   }
+  },
+  "elative|plural|": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ista"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ista"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "istä"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "istä"
+     ]
+    }
+   }
+  },
+  "elative|plural|third person": {
+   "drop": 2,
+   "add": "noistaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nuistansa",
+     "suf": [
+      ""
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nöistään",
+     "suf": [
+      ""
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "nyistään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "elative|plural|first person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "istamme"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "istamme"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "istämme"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "istämme"
+     ]
+    }
+   }
+  },
+  "elative|plural|first person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "istani"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "istani"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "istäni"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "istäni"
+     ]
+    }
+   }
+  },
+  "elative|plural|second person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "istanne"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "istanne"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "istänne"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "istänne"
+     ]
+    }
+   }
+  },
+  "elative|plural|second person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "istasi"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "istasi"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "istäsi"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "istäsi"
+     ]
+    }
+   }
+  },
+  "abessive|plural|": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "itta"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "itta"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ittä"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ittä"
+     ]
+    }
+   }
+  },
+  "abessive|plural|third person": {
+   "drop": 2,
+   "add": "noittaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nuittansa",
+     "suf": [
+      ""
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nöittään",
+     "suf": [
+      ""
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "nyittään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "abessive|plural|first person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ittamme"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ittamme"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ittämme"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ittämme"
+     ]
+    }
+   }
+  },
+  "abessive|plural|first person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ittani"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ittani"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ittäni"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ittäni"
+     ]
+    }
+   }
+  },
+  "abessive|plural|second person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ittanne"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ittanne"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ittänne"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ittänne"
+     ]
+    }
+   }
+  },
+  "abessive|plural|second person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ittasi"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ittasi"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ittäsi"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ittäsi"
+     ]
+    }
+   }
+  },
+  "translative|singular|third person": {
+   "drop": 2,
+   "add": "nokseen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nuksensa",
+     "suf": [
+      ""
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nöksensä",
+     "suf": [
+      ""
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "nyksensä",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "translative|singular|first person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ksemme"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ksemme"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ksemme"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ksemme"
+     ]
+    }
+   }
+  },
+  "translative|singular|first person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "kseni"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "kseni"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "kseni"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "kseni"
+     ]
+    }
+   }
+  },
+  "translative|singular|second person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ksenne"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ksenne"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ksenne"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ksenne"
+     ]
+    }
+   }
+  },
+  "translative|singular|second person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ksesi"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ksesi"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ksesi"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ksesi"
+     ]
+    }
+   }
+  },
+  "translative|singular|": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ksi"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ksi"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ksi"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ksi"
+     ]
+    }
+   }
+  },
+  "adessive|singular|": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "lla"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "lla"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "llä"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "llä"
+     ]
+    }
+   }
+  },
+  "adessive|singular|third person": {
+   "drop": 2,
+   "add": "nollaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nullansa",
+     "suf": [
+      ""
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nöllään",
+     "suf": [
+      ""
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "nyllään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "adessive|singular|first person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "llamme"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "llamme"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "llämme"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "llämme"
+     ]
+    }
+   }
+  },
+  "adessive|singular|first person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "llani"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "llani"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "lläni"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "lläni"
+     ]
+    }
+   }
+  },
+  "adessive|singular|second person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "llanne"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "llanne"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "llänne"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "llänne"
+     ]
+    }
+   }
+  },
+  "adessive|singular|second person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "llasi"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "llasi"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "lläsi"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "lläsi"
+     ]
+    }
+   }
+  },
+  "allative|singular|": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "lle"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "lle"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "lle"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "lle"
+     ]
+    }
+   }
+  },
+  "allative|singular|third person": {
+   "drop": 2,
+   "add": "nolleen",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nullensa",
+     "suf": [
+      ""
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nöllensä",
+     "suf": [
+      ""
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "nyllensä",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "allative|singular|first person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "llemme"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "llemme"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "llemme"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "llemme"
+     ]
+    }
+   }
+  },
+  "allative|singular|first person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "lleni"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "lleni"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "lleni"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "lleni"
+     ]
+    }
+   }
+  },
+  "allative|singular|second person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "llenne"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "llenne"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "llenne"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "llenne"
+     ]
+    }
+   }
+  },
+  "allative|singular|second person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "llesi"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "llesi"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "llesi"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "llesi"
+     ]
+    }
+   }
+  },
+  "ablative|singular|": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "lta"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "lta"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ltä"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ltä"
+     ]
+    }
+   }
+  },
+  "ablative|singular|third person": {
+   "drop": 2,
+   "add": "noltaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nultansa",
+     "suf": [
+      ""
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nöltään",
+     "suf": [
+      ""
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "nyltään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "ablative|singular|first person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ltamme"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ltamme"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ltämme"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ltämme"
+     ]
+    }
+   }
+  },
+  "ablative|singular|first person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ltani"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ltani"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ltäni"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ltäni"
+     ]
+    }
+   }
+  },
+  "ablative|singular|second person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ltanne"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ltanne"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ltänne"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ltänne"
+     ]
+    }
+   }
+  },
+  "ablative|singular|second person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ltasi"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ltasi"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ltäsi"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ltäsi"
+     ]
+    }
+   }
+  },
+  "genitive|singular|": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "n"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "n"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "n"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "n"
+     ]
+    }
+   }
+  },
+  "inessive|singular|": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ssa"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ssa"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ssä"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ssä"
+     ]
+    }
+   }
+  },
+  "inessive|singular|third person": {
+   "drop": 2,
+   "add": "nossaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nussansa",
+     "suf": [
+      ""
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nössään",
+     "suf": [
+      ""
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "nyssään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "inessive|singular|first person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ssamme"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ssamme"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ssämme"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ssämme"
+     ]
+    }
+   }
+  },
+  "inessive|singular|first person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ssani"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ssani"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ssäni"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ssäni"
+     ]
+    }
+   }
+  },
+  "inessive|singular|second person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ssanne"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ssanne"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ssänne"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ssänne"
+     ]
+    }
+   }
+  },
+  "inessive|singular|second person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ssasi"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ssasi"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ssäsi"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ssäsi"
+     ]
+    }
+   }
+  },
+  "elative|singular|": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "sta"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "sta"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "stä"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "stä"
+     ]
+    }
+   }
+  },
+  "elative|singular|third person": {
+   "drop": 2,
+   "add": "nostaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nustansa",
+     "suf": [
+      ""
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nöstään",
+     "suf": [
+      ""
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "nystään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "elative|singular|first person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "stamme"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "stamme"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "stämme"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "stämme"
+     ]
+    }
+   }
+  },
+  "elative|singular|first person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "stani"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "stani"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "stäni"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "stäni"
+     ]
+    }
+   }
+  },
+  "elative|singular|second person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "stanne"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "stanne"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "stänne"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "stänne"
+     ]
+    }
+   }
+  },
+  "elative|singular|second person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "stasi"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "stasi"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "stäsi"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "stäsi"
+     ]
+    }
+   }
+  },
+  "nominative|plural|": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "t"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "t"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "t"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "t"
+     ]
+    }
+   }
+  },
+  "abessive|singular|": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "tta"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "tta"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ttä"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ttä"
+     ]
+    }
+   }
+  },
+  "abessive|singular|third person": {
+   "drop": 2,
+   "add": "nottaan",
+   "suf": [
+    ""
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nuttansa",
+     "suf": [
+      ""
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nöttään",
+     "suf": [
+      ""
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "nyttään",
+     "suf": [
+      ""
+     ]
+    }
+   }
+  },
+  "abessive|singular|first person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ttamme"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ttamme"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ttämme"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ttämme"
+     ]
+    }
+   }
+  },
+  "abessive|singular|first person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ttani"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ttani"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ttäni"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ttäni"
+     ]
+    }
+   }
+  },
+  "abessive|singular|second person plural": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ttanne"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ttanne"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ttänne"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ttänne"
+     ]
+    }
+   }
+  },
+  "abessive|singular|second person singular": {
+   "drop": 2,
+   "add": "no",
+   "suf": [
+    "ttasi"
+   ],
+   "alt": {
+    "tu": {
+     "drop": 2,
+     "add": "nu",
+     "suf": [
+      "ttasi"
+     ]
+    },
+    "tö": {
+     "drop": 2,
+     "add": "nö",
+     "suf": [
+      "ttäsi"
+     ]
+    },
+    "ty": {
+     "drop": 2,
+     "add": "ny",
+     "suf": [
+      "ttäsi"
+     ]
+    }
+   }
+  }
+ }
+}

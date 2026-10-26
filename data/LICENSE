@@ -1,0 +1,98 @@
+Kotimaisten kielten keskus (Institute for the Languages of Finland, "Kotus")
+
+The files in this directory are data published by Kotus. They are not
+covered by the MIT or Apache-2.0 licenses that cover the source of torille,
+nor by the GPL that covers the Omorfi/Voikko harness files in tools/. They are
+separate works, each published under its own terms, stated below.
+
+The two files in this directory have different terms because they come from
+different Kotus publications. They are described separately.
+
+
+nykysuomensanalista.txt
+=======================
+
+Nykysuomen sanalista, the current Finnish word list: over 100,000 word
+entries, each a lemma with its homonyms, word class and inflection
+information. Tab separated, UTF-8.
+
+This is the Nykysuomen sanalista 2024 published by Kotus. Its official
+terms are stated on Kotus's own page for the list:
+
+    Kotimaisten kielten keskus. Nykysuomen sanalista [online].
+    Available at
+    https://kotus.fi/sanakirjat/kielitoimiston-sanakirja/nykysuomen-sana-aineistot/nykysuomen-sanalista
+
+which states:
+
+    "Sanalista julkaistaan lisenssillä Creative Commons Nimeä 4.0
+    Kansainvälinen (CC BY 4.0)."
+    (The word list is published under Creative Commons Attribution 4.0
+    International, CC BY 4.0.)
+
+License: CC BY 4.0
+    Deed (Finnish): https://creativecommons.org/licenses/by/4.0/deed.fi
+    Legal code:     https://creativecommons.org/licenses/by/4.0/legalcode
+
+Source: https://kaino.kotus.fi/lataa/nykysuomensanalista2024.txt
+
+This copy is byte-identical to the 2024 download (md5
+27bbd4f3119cb94fcb04a12f11fa799d). No modifications have been made.
+
+Suggested citation (per Kotus's own citation note on the page above):
+
+    Nykysuomen sanalista. Kotimaisten kielten keskus. Saatavissa
+    https://kaino.kotus.fi/lataa/nykysuomensanalista2024.txt
+
+
+kotus-tyypit.txt
+================
+
+The Kotus inflectional paradigm table: for each word class, the model word
+and the forms each paradigm slot takes, plus the consonant-gradation table.
+The file is `include_str!`'d and compiled in; torille reads the paradigm
+tables from it at compile time.
+
+What torille actually consumes is only the factual paradigm content. The
+code parses the numeric class blocks (classes 1-76, each a set of model
+word forms) into `Paradigm`/`Slot` structures; the prose and the gradation
+table in the file are skipped by the parser, and the gradation pairs torille
+applies at runtime come from a table in `src/kotus.rs`, not from this file.
+
+Copyright does not protect facts. The useful content of this file is a
+statement of linguistic facts - that `valo` inflects as `valon, valoa,
+valoon`, that class 1 takes the endings it does, and which consonant
+alternates with which under gradation. Those facts are true of the Finnish
+language and are not original creative expression; stating them, or using
+them in code, does not copy any protected expression. It is on that basis,
+and only that basis, that the paradigm content is treated as unprotected
+facts. The one element that is expression rather than fact is the file's own
+introductory prose, and torille does not copy or redistribute that prose; it
+is skipped at parse time and the file is reproduced verbatim.
+
+The file carries a Kotus LGPL notice in its header, reproduced here for
+completeness; it is not relied on for the use described above.
+
+    Sanalista julkaistaan GNU LGPL -lisenssillä (Lesser General Public
+    License). Lisenssiteksti on luettavissa osoitteessa
+    http://www.gnu.org/licenses/lgpl.html.
+
+    Kotimaisten kielten tutkimuskeskus julkaisee taivutustiedoin täydennetyn
+    nykysuomen sanalistan. Sanalista ei ole tyhjentävä tai auktoritatiivinen
+    luettelo suomen kielen sanoista, vaan sen on tarkoitus mm. toimia
+    apuvälineenä suomen kieltä käsittelevien tietokoneohjelmien ja
+    suomenkielisten käyttöliittymien kehitystyössä.
+
+If you prefer to rely on a license rather than on the uncopyrightability of
+facts, the file's own terms are GNU LGPL; under those terms the file is
+redistributed here unmodified with its notice intact, which is compliant.
+Either way, torille's own source remains MIT and is not covered by LGPL.
+
+Source: a mirror of the Kotus "sanalistan-kuvaus.txt" file:
+    https://raw.githubusercontent.com/hugovk/everyfinnishword/master/kotus-sanalista_v1/sanalistan-kuvaus.txt
+
+Note on this copy: that mirror is distributed in ISO-8859-1; the copy here
+is the same document in UTF-8, which is the encoding its own header says
+the list is in. The local file is byte-identical to that mirror once the
+mirror is re-encoded from Latin-1 to UTF-8 and CRLF line endings are
+normalised. No content was changed.
