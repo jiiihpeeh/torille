@@ -11,6 +11,7 @@ pub mod expand;
 pub(crate) mod gradation;
 pub mod grammar;
 pub(crate) mod harmony;
+pub mod hyphenation;
 pub mod kotus;
 mod map_reader;
 pub mod pronoun;

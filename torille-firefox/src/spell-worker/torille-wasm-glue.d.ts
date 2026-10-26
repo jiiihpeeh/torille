@@ -12,6 +12,19 @@
 declare module '*/torille_wasm_bg.js' {
   export function check(word: string): boolean;
   export function suggest_words(word: string, max: number): string[];
+  /** Permitted Finnish line breaks; see docs/hyphenation.md. */
+  export function hyphenate(
+    word: string,
+    left_min: number,
+    right_min: number,
+    compound_breaks: boolean,
+  ): {
+    byteOffset: number;
+    charOffset: number;
+    compound: boolean;
+    source: 'pattern' | 'compound' | 'exception';
+    penalty: number;
+  }[];
 
   export function create_text_area_state(): number;
   export function destroy_text_area_state(idx: number): void;

@@ -1,12 +1,11 @@
 Kotimaisten kielten keskus (Institute for the Languages of Finland, "Kotus")
 
-The files in this directory are data published by Kotus. They are not
-covered by the MIT or Apache-2.0 licenses that cover the source of torille,
-nor by the GPL that covers the Omorfi/Voikko harness files in tools/. They are
-separate works, each published under its own terms, stated below.
-
-The two files in this directory have different terms because they come from
-different Kotus publications. They are described separately.
+The Kotus files in this directory are data published by Kotus. They are
+not covered by the MIT or Apache-2.0 licenses that cover the source of
+torille, nor by the GPL that covers the Omorfi/Voikko harness files in
+tools/. They are separate works, each published under its own terms, stated
+below. The `hyphenation/` subdirectory is not Kotus data; its pattern file
+has its own MIT notice, described at the end of this file.
 
 
 nykysuomensanalista.txt
@@ -96,3 +95,20 @@ is the same document in UTF-8, which is the encoding its own header says
 the list is in. The local file is byte-identical to that mirror once the
 mirror is re-encoded from Latin-1 to UTF-8 and CRLF line endings are
 normalised. No content was changed.
+
+hyphenation/
+=============
+
+`data/hyphenation/hyph-fi-x-school.tex` is the Finnish school
+hyphenation pattern set from the `hyph-utf8` project. It is not Kotus
+data and is not covered by the terms above.
+
+    title: Hyphenation patterns for Finnish according to the method
+           taught in schools
+    language: Finnish, school hyphenation (fi-x-school)
+    version: 1.0, 2021-03-21
+    authors: Teemu Likonen, Arthur Rosendahl
+    licence: MIT
+
+The full MIT text is in `data/hyphenation/LICENSE`, and the provenance
+is in `data/hyphenation/README.md`. The file is reproduced unmodified.

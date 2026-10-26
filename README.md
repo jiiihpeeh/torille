@@ -698,6 +698,27 @@ derivations of talo:
   talinen                      [ADJ_INEN] Adjective
 ```
 
+## Hyphenation
+
+Finnish line-break hyphenation lives in `src/hyphenation/`. It combines the
+MIT-licensed school pattern set with the morphology engine's compound
+structure, then applies Finnish typographic policy (minimum fragments, no
+inter-vowel breaks except at a compound boundary or an explicit exception).
+It is a separate layer: `check` and `suggest` do not call it.
+
+```
+$ cargo run --release -q -p torille-tools --bin hyphenate -- \
+    veroprosentti tietokoneohjelmointi autonostaja
+ve-ro-pro-sent-ti
+tie-to-ko-ne-oh-jel-moin-ti
+au-to-nos-ta-ja
+```
+
+`--json` returns byte/character offsets, source and ranking penalty. The
+public Rust API is `torille::hyphenation::{positions, positions_with, split}`;
+the wasm export is `hyphenate`. See [docs/hyphenation.md](docs/hyphenation.md)
+for policy, offsets, exceptions and the current limitations.
+
 ## The Python binding
 
 `bindings/` builds a PyO3 module called `torille` with one class, `Engine`:
@@ -933,6 +954,9 @@ currently pass — the known defects are in
   checks, the two directions, the six finding kinds, the grid, the scope split,
   the report tools, the two silent failures that cost the most time to find, and
   the table of known defects with where each one lives.
+- [docs/hyphenation.md](docs/hyphenation.md) — Finnish line-break hyphenation:
+  pattern provenance, the compound adapter, typographic policy, offsets and
+  exceptions.
 - [PLAN.md](PLAN.md) — the genitive-anchored class stem refactor, and what
   actually happened when it ran.
 - [TODO.md](TODO.md) — known gaps, ordered by user-facing impact.

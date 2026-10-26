@@ -27,7 +27,12 @@ This repository is multi-licensed by component:
         work; the file also carries a Kotus LGPL notice, which is reproduced
         in data/LICENSE and is complied with if you prefer to rely on it.
 
-The two are separate works from the code. What we wrote is the morphology:
+  * data/hyphenation/hyph-fi-x-school.tex is the MIT-licensed Finnish
+    school hyphenation pattern set from the hyph-utf8 project, by Teemu
+    Likonen and Arthur Rosendahl. It is data with its own MIT notice, not
+    engine source and not Kotus data. See data/hyphenation/LICENSE.
+
+The data files are separate works from the code. What we wrote is the morphology:
 the rules that take a lemma and a word class and produce the forms the
 class licenses. The word list and the paradigm models are a data
 publication made by Kotus.

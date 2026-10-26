@@ -21,6 +21,8 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
 - `docs/harness.md` — the Omorfi + Voikko verification harness, finding kinds,
   and the current known defects (A/B/C/D).
 - `docs/lexicon.md` — the materialised noun lexicon used as the harness oracle.
+- `docs/hyphenation.md` — line-break hyphenation: patterns, compound adapter,
+  policy, offsets and exceptions. The plan is `PLAN_HYPHENATION.md`.
 - `TODO.md` — known gaps ordered by user-facing impact.
 - `PLAN.md` / `PLAN_REFACTOR.md` — the stem refactor and its outcome.
 
@@ -50,6 +52,7 @@ src/
   wordset.rs          compact concatenated word set (u32 offsets)
   pronoun.rs          personal pronouns (a closed paradigm)
   tokenise.rs         word/separator tokeniser for the wasm API
+  hyphenation/        Finnish line-break hyphenation (patterns + policy)
   gradation.rs        consonant gradation ("*X" code) strong<->weak
   harmony.rs          vowel-harmony primitives for the hand-written engines
   suggest/            check / suggest / find-bases wrappers
@@ -81,9 +84,10 @@ src/
     nominals/         generated per-class NOUN engines (class_1..101)
 build.rs              compile-time codegen driver; `build/` holds the writers
 data/                 committed Kotus sources + generated SQLite oracles
+data/hyphenation/     vendored MIT school patterns + exception table
 rules/                extracted per-class rule JSON (input to codegen)
 tools/*.py            the verification harness
-docs/                 harness.md, lexicon.md, morfologia.yaml
+docs/                 harness.md, lexicon.md, morfologia.yaml, hyphenation.md
 ```
 
 ## How it works
@@ -368,6 +372,7 @@ is gitignored and generated.
 | compile-time blob writers | `build.rs`, `build/*.rs` |
 | a new verb/noun class engine | `src/expand/verbs/`, `src/expand/nominals*/`, then `dispatch` + `AUTHORITATIVE_CLASSES` |
 | the grammar reading model | `src/tags.rs` |
+| hyphenation patterns/policy | `src/hyphenation/`, `data/hyphenation/` |
 | the wasm/browser surface | `torille-wasm/src/`, `torille-firefox/`, `torille-chromium/` |
 | verification | `tools/*.py`, `tests/catalogue.rs`, `docs/harness.md` |
 

@@ -1434,7 +1434,7 @@ fn derived_superlative_base(word: &str) -> Option<String> {
 /// and `harvainvaltain` at `...|in` the adverb `in`. The check only looks at
 /// the sanalista lemma; an inflected form is not a lemma and is left to the
 /// ordinary resolution.
-fn is_content_head(word: &str) -> bool {
+pub(crate) fn is_content_head(word: &str) -> bool {
     crate::compound::is_content_head(word)
 }
 

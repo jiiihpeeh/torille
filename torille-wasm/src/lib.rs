@@ -104,6 +104,70 @@ pub fn suggest_words(word: &str, max_n: usize) -> js_sys::Array {
     arr
 }
 
+/// Finnish hyphenation points for `word`.
+///
+/// Returns an `Array` of `{ byteOffset, charOffset, compound, source,
+/// penalty }` objects. The default Finnish policy is used (two-character
+/// minimum fragments, no inter-vowel breaks except compound boundaries
+/// or explicit exceptions); `compound_breaks = false` gives the
+/// pattern-only fallback.
+///
+/// This is a presentation helper. It deliberately does not run the full
+/// reverse index, so a rare compound may fall back to its component
+/// patterns rather than a morphology-recognised boundary.
+#[wasm_bindgen]
+pub fn hyphenate(
+    word: &str,
+    left_min: u32,
+    right_min: u32,
+    compound_breaks: bool,
+) -> js_sys::Array {
+    use torille::hyphenation::{
+        Exceptions, HyphenationOptions, LexicalCompoundAnalyzer, NoCompoundAnalyzer, positions_with,
+    };
+
+    let options = HyphenationOptions {
+        left_min: left_min as usize,
+        right_min: right_min as usize,
+        compound_breaks,
+        ..HyphenationOptions::default()
+    };
+    let compound = LexicalCompoundAnalyzer;
+    let no_compound = NoCompoundAnalyzer;
+    let analyzer: &dyn torille::hyphenation::CompoundAnalyzer = if compound_breaks {
+        &compound
+    } else {
+        &no_compound
+    };
+    let arr = js_sys::Array::new();
+    for point in positions_with(word, &options, analyzer, Exceptions::finnish()) {
+        let obj = js_sys::Object::new();
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"byteOffset".into(),
+            &JsValue::from(point.byte_offset as u32),
+        );
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"charOffset".into(),
+            &JsValue::from(point.char_offset as u32),
+        );
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"compound".into(),
+            &JsValue::from(point.compound_boundary),
+        );
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"source".into(),
+            &JsValue::from(point.source.as_str()),
+        );
+        let _ = js_sys::Reflect::set(&obj, &"penalty".into(), &JsValue::from(point.penalty));
+        arr.push(&obj);
+    }
+    arr
+}
+
 /// One-shot: returns a JavaScript object that bundles a full spell-check
 /// report for the caller. Useful when the caller wants everything in
 /// one round-trip rather than two wasm boundary crossings.

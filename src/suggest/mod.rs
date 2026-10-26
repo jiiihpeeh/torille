@@ -52,7 +52,7 @@ mod levenshtein;
 mod state;
 
 pub use candidates::{suggest, suggest_detailed, suggest_with_pipeline};
-pub(crate) use known::is_known_compound_fast;
+pub(crate) use known::{is_content_head, is_known_compound_fast};
 pub use known::{
     is_known_word, is_known_word_fast, is_known_word_no_compound, is_lemma, suggest_over_lemmas,
     warm_caches,

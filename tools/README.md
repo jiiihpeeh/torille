@@ -14,6 +14,7 @@ The GPL bridge and everything that imports it:
 ```
 check_nouns_with_omorfi.py    check_nouns_with_voikko.py
 check_verbs_with_voikko.py    check_word_against_omorfi.py
+check_hyphenation_against_voikko.py
 build_adj_degrees.py          build_adverbi_forms.py
 build_nomine_lexicon.py       build_proper_name_forms.py
 build_verb_lexicon.py         check_all_derivations.py
@@ -52,6 +53,7 @@ Everyday probes:
 | `lookup` | build the reverse index and answer "what is this word a form of?" |
 | `check` | check a word, with the full compound-aware path |
 | `check_normal` | the per-keystroke gate the wasm demo uses |
+| `hyphenate` | show permitted Finnish line breaks, with `--json` offsets |
 | `look_base` | show the bases and generated forms for one word |
 | `derive` | derivational forms of a base word |
 | `lookup_recall` | score lookup against `(form, lemma)` pairs on stdin |
@@ -100,7 +102,7 @@ The remaining scripts fall into four groups:
 - **Audits and reports** — `audit_*`, `walk_check.py`, `fingerprint_nouns.py`,
   `compound_recall.py`, `classify_lemma.py`, `report_by_class.py`.
 - **Diagnostics** — `diag_*.py`, `csvtool.py`, `run_wordlist.py`,
-  `make_*.py`, `omorfi_harness.py`.
+  `make_*.py`, `omorfi_harness.py`, `check_hyphenation_against_voikko.py`.
 - **Corpus fetches** — `fetch_wiktionary.py`, `fetch_finnish_books.py`,
   `rebuild_book_catalog.py`.
 

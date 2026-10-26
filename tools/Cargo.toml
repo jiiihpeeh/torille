@@ -11,6 +11,13 @@ name = "inflect"
 path = "src/bin/inflect.rs"
 
 [[bin]]
+# Show permitted Finnish line breaks. Default output inserts hyphens;
+# `--json` exposes byte/character offsets, source and penalty for the
+# hyphenation corpus checks.
+name = "hyphenate"
+path = "src/bin/hyphenate.rs"
+
+[[bin]]
 name = "look_base"
 path = "src/bin/look_base.rs"
 
