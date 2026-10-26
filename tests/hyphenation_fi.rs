@@ -30,6 +30,8 @@ fn the_reference_examples_have_the_expected_breaks() {
         offsets("tietokoneohjelmointi"),
         vec![3, 5, 7, 9, 11, 14, 18]
     );
+    assert_eq!(offsets("varaosat"), vec![2, 4]);
+    assert_eq!(offsets("äidinkieli"), vec![2, 5, 8]);
 }
 
 #[test]

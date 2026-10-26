@@ -84,7 +84,7 @@ impl CompoundAnalyzer for LexicalCompoundAnalyzer {
         if lower.chars().count() != word.chars().count() || lower.chars().count() < 4 {
             return None;
         }
-        if listed_as_inflecting(&lower) {
+        if listed_as_inflecting(&lower) || looks_like_inflected_form(&lower) {
             return None;
         }
         let mut segmenter = Segmenter {
@@ -231,6 +231,67 @@ fn is_listed(word: &str) -> bool {
     sanalista().by_word(word).next().is_some()
 }
 
+/// A cheap negative test for ordinary noun forms.
+///
+/// A random inflected form is usually not in the sanalista, so the
+/// classless-row guard above cannot see it and the segmenter would try
+/// every split. Stripping a case ending and looking the stem up in the
+/// noun stem map is a few hash probes, and when the base has a real
+/// paradigm the word is a normal inflected form, not a compound.
+///
+/// The base is deliberately checked for a real class: a classless
+/// compound (`tietokoneen` -> `tietokone`) must still go on to the
+/// segmenter so its `tieto|kone` boundary is available.
+fn looks_like_inflected_form(word: &str) -> bool {
+    // A possessive suffix sits outside the case ending:
+    // `alavartalolihavuuksiltamme` is the ablative plural + `-mme`.
+    // Strip it first, then let the ordinary case/verb tests run on the
+    // host.
+    for possessive in ["nsa", "nsä", "nne", "mme", "si", "ni", "an", "än", "en"] {
+        if let Some(host) = word.strip_suffix(possessive)
+            && !host.is_empty()
+            && looks_like_inflected_host(host)
+        {
+            return true;
+        }
+    }
+    looks_like_inflected_host(word)
+}
+
+fn looks_like_inflected_host(word: &str) -> bool {
+    use crate::expand::check_normal::{
+        ENDINGS, STEM_BUCKETS_NOUN, STEM_BUCKETS_VERB, VERB_ENDINGS,
+    };
+
+    for ending in ENDINGS {
+        if ending.is_empty() {
+            continue;
+        }
+        let Some(stem) = word.strip_suffix(ending) else {
+            continue;
+        };
+        for base in STEM_BUCKETS_NOUN.bases(stem) {
+            if listed_as_inflecting(base) {
+                return true;
+            }
+        }
+    }
+    for ending in VERB_ENDINGS {
+        if ending.is_empty() {
+            continue;
+        }
+        let Some(stem) = word.strip_suffix(ending) else {
+            continue;
+        };
+        for base in STEM_BUCKETS_VERB.bases(stem) {
+            if listed_as_inflecting(base) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 fn is_lemma(word: &str) -> bool {
     sanalista().by_word(word).next().is_some()
 }
@@ -240,6 +301,13 @@ fn is_modifier(word: &str) -> bool {
 }
 
 fn is_head(word: &str) -> bool {
+    // A two-letter fragment is a head only when it is actually a lemma
+    // (`puoli` + `yö`). Accepting every two-letter form gate lets a
+    // stem fragment such as `varaos` + `at` become a confident compound
+    // boundary in `varaosat`.
+    if word.chars().count() < 3 && !is_lemma(word) {
+        return false;
+    }
     // This is the hyphenation hot path: `is_known_word_no_compound`
     // reaches the derivation and stem gates and is far too slow to run
     // for every candidate split of every word. The cheap gates cover the
@@ -251,7 +319,8 @@ fn is_head(word: &str) -> bool {
             || crate::expand::check_normal::STEM_BUCKETS_NOUN.contains(word)
             || crate::expand::fast_path::base(word).is_some()
             || crate::expand::derived::base(word).is_some()
-            || crate::expand::derived::is_nominal(word))
+            || crate::expand::derived::is_nominal(word)
+            || looks_like_inflected_host(word))
 }
 
 #[cfg(test)]
