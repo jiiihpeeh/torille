@@ -56,6 +56,7 @@ Usage:
     python3 tools/report_by_class.py -n 20              # 20 lemmas per class
     python3 tools/report_by_class.py -c 9,9B,27         # just these
     python3 tools/report_by_class.py --bare             # bare case/number cells
+    python3 tools/report_by_class.py --live             # live Omorfi+Voikko
     python3 tools/report_by_class.py -o report.json
     python3 tools/report_by_class.py --split reports/   # one file per class
 
@@ -102,10 +103,13 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                    help="check only the bare case/number cells, not the "
                         "possessive paradigm")
     p.add_argument("--lexicon", metavar="SQLITE",
-                   help="use a prebuilt noun lexicon (data/kotus_nomines.sqlite) "
-                        "as the reference instead of live Omorfi+Voikko. The "
-                        "reference is the database's ok='both' forms; see "
-                        "docs/lexicon.md")
+                   default="data/kotus_nomines.sqlite",
+                   help="noun reference to use (default: "
+                        "data/kotus_nomines.sqlite). The reference is the "
+                        "database's ok='both' forms; see docs/lexicon.md")
+    p.add_argument("--live", action="store_true",
+                   help="use live Omorfi+Voikko instead of the materialised "
+                        "lexicon")
     p.add_argument("--only-failures", action="store_true",
                    help="omit the confirmed findings from the report")
     p.add_argument("-o", "--output", help="write the JSON here instead of stdout")
@@ -195,6 +199,13 @@ def check_class(
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
+    if args.live:
+        args.lexicon = None
+    elif args.lexicon and not Path(args.lexicon).exists():
+        # A checkout without the materialised oracle still runs; the live
+        # reference is slower and can be unavailable, but it is the only one.
+        eprint(f"{args.lexicon}: no such lexicon; using live Omorfi+Voikko")
+        args.lexicon = None
     # A lexicon reference holds the whole grid; asking it for the bare grid
     # would let in_scope/acceptable filter possessed readings whose reference
     # set still includes them, so `--bare` is ignored under `--lexicon`.
