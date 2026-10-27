@@ -29,7 +29,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-SANALISTA = REPO / "data" / "nykysuomensanalista.txt"
+SANALISTA = REPO / "data" / "nykysuomensanalista.csv"
 OUT = REPO / "data" / "adverbit.csv"
 
 #: The possessive suffixes. The third person has both spellings.

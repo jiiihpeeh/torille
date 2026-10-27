@@ -77,3 +77,10 @@ torille-wasm/demo/db_*.mjs
 torille-wasm/demo/profile.html
 torille-wasm/demo/smoke-two-panels.mjs
 torille-wasm/protocol.js
+
+# Local Finnish Wiktionary dump and the index/database derived from it.
+# The dump is hundreds of MB and is not part of the shipped library; the
+# scripts under tools/ regenerate the small extracts they need.
+data/fiwiktionary-*.xml
+data/fiwiktionary_*.db
+data/fiwiktionary_index.json

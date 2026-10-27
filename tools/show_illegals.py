@@ -190,7 +190,7 @@ def input_files(root: Path) -> list[Path]:
         root / "build.rs",
         root / "bindings" / "Cargo.toml",
         root / "tools" / "Cargo.toml",
-        root / "data" / "nykysuomensanalista.txt",
+        root / "data" / "nykysuomensanalista.csv",
         root / "data" / "kotus-tyypit.txt",
         root / "data" / "catalogue.csv",
         root / "data" / "kotus_nomines.sqlite",

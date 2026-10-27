@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT OR Apache-2.0
-"""Add one lemma to the Kotus sanalista, in both the `.txt` and `.csv` copies.
+"""Add one lemma to the Kotus sanalista, updating both the `.csv` and `.txt` copies.
 
-The build reads `data/nykysuomensanalista.txt` (embedded with `include_str!`)
-and the `.csv` is the companion copy with a header row, so a word has to be
-added to both. Both are tab-separated:
+The build reads `data/nykysuomensanalista.csv` (embedded with `include_str!`);
+the `.txt` is the legacy companion with only the four Kotus columns. A word has
+to be added to both so they stay in step. Both are tab-separated:
 
     txt:  lemma <TAB> homonym <TAB> pos <TAB> class
     csv:  Hakusana <TAB> Homonymia <TAB> Sanaluokka <TAB> Taivutustiedot
-          (then the same rows)
+          (then the same rows, plus an empty `Johdokset` column)
 
 The sanalista's sort order is a Finnish collation the files do not spell out
 (leading hyphens are ignored and `ä`/`ö` sort after `z`), so this does **not**

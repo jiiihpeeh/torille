@@ -206,10 +206,10 @@ def main(argv: list[str]) -> int:
         # reference is slower and can be unavailable, but it is the only one.
         eprint(f"{args.lexicon}: no such lexicon; using live Omorfi+Voikko")
         args.lexicon = None
-    # A lexicon reference holds the whole grid; asking it for the bare grid
-    # would let in_scope/acceptable filter possessed readings whose reference
-    # set still includes them, so `--bare` is ignored under `--lexicon`.
-    possessives = [""] if (args.bare and not args.lexicon) else None
+    # `--bare` asks only the case/number cells. This works for both the live
+    # harness and the materialised lexicon: the latter stores the whole grid,
+    # but a cell is still filtered by the cell list the harness is asked for.
+    possessives = [""] if args.bare else None
     cells = noun_cells(ALL_CASES, ["SG", "PL"], possessives)
 
     harness = Harness(pos="noun", lexicon=args.lexicon)

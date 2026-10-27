@@ -194,6 +194,15 @@ fn try_compound_marker(
         dedup(out);
         return true;
     }
+    // Class 51 asserts that the *initial* part inflects, so the whole word is
+    // not its head's paradigm. With no split there is nothing correct to
+    // build; falling through to the catalogue model aligns the compound
+    // against the model word and fabricates forms (`nuori-idenkuun`,
+    // `mudtaraaakuita`). Treat the class as handled with no output instead.
+    if inflection.class == 51 {
+        dedup(out);
+        return true;
+    }
     false
 }
 
@@ -210,7 +219,14 @@ pub fn inflect(
     pos: PartOfSpeech,
     possessives: bool,
 ) -> Vec<Generated> {
-    inflect_in(lemma, inflection, cat, None, pos, possessives)
+    // A class-50/51 compound can only be split when the lexicon is in hand,
+    // and class 51 has no whole-word fallback. Constructing this index is
+    // free (it is two precomputed orders over the embedded lexicon), so the
+    // public wrapper supplies it rather than letting a compound fall through
+    // to the catalogue model and fabricate forms such as `nuori-idenkuun`.
+    let lexicon = crate::kotus::lemmas();
+    let index = LexiconIndex::new(lexicon);
+    inflect_in(lemma, inflection, cat, Some(&index), pos, possessives)
 }
 
 /// Generates every form of `lemma`, with the lexicon to hand for compound
@@ -225,6 +241,12 @@ pub fn inflect_in(
     possessives: bool,
 ) -> Vec<Generated> {
     let mut out: Vec<Generated> = Vec::with_capacity(64);
+    // An empty lemma has no paradigm. Some class engines build `lemma + ending`
+    // and would otherwise emit bare endings; a couple assumed a non-empty stem
+    // outright. The public API must treat this as a no-op, not a panic.
+    if lemma.is_empty() {
+        return out;
+    }
     if try_irregular(lemma, &mut out) {
         return out;
     }
@@ -1853,5 +1875,80 @@ mod tests {
             derived_inen_base("henkiruumiisen", &cat, None).as_deref(),
             Some("henkiruumiinen")
         );
+    }
+
+    /// Class 51 has no whole-word fallback: its contract is that the *initial*
+    /// part inflects, so the catalogue model cannot stand in for a split.
+    /// Before the guard this returned a full paradigm of invented forms
+    /// (`mudtaraaakuita`, `nuori-idenkuun`).
+    #[test]
+    fn a_class_51_compound_without_a_lexicon_fabricates_nothing() {
+        let cat = cat();
+        let got = inflect_in(
+            "mustaraamattu",
+            Inflection {
+                class: 51,
+                gradation: None,
+            },
+            &cat,
+            None,
+            PartOfSpeech::Noun,
+            false,
+        );
+        assert!(
+            got.is_empty(),
+            "class 51 without a lexicon must produce no forms, got {:?}",
+            got.iter().map(|g| &g.word).collect::<Vec<_>>()
+        );
+    }
+
+    /// The public wrapper supplies the embedded lexicon, so the same word gets
+    /// the real split instead of the catalogue model's invented forms.
+    #[test]
+    fn class_51_inflect_uses_the_embedded_lexicon() {
+        let ws = forms("nuori-isäntä", 51, None);
+        for want in [
+            "nuori-isäntä",
+            "nuoren-isännän",
+            "nuorta-isäntää",
+            "nuoret-isännät",
+        ] {
+            assert!(ws.iter().any(|w| w == want), "missing {want}");
+        }
+        assert!(
+            !ws.iter().any(|w| w == "nuori-idenkuun"),
+            "invented nuori-idenkuun"
+        );
+        let ws = forms("mustaraamattu", 51, None);
+        assert!(
+            !ws.iter().any(|w| w.starts_with("mudta")),
+            "invented a gradation inside the first part: {ws:?}"
+        );
+    }
+
+    /// Every class is reachable from the public API; an empty lemma must be a
+    /// no-op rather than a panic (class 77's stem subtraction and the verb
+    /// builder's `pres3sg_of` both used to assume a non-empty stem).
+    #[test]
+    fn an_empty_lemma_does_not_panic_in_any_class() {
+        let cat = cat();
+        for class in 1..=101u16 {
+            for possessives in [false, true] {
+                let got = inflect(
+                    "",
+                    Inflection {
+                        class,
+                        gradation: None,
+                    },
+                    &cat,
+                    PartOfSpeech::Noun,
+                    possessives,
+                );
+                assert!(
+                    got.iter().all(|g| !g.word.is_empty()),
+                    "class {class} emitted an empty form"
+                );
+            }
+        }
     }
 }

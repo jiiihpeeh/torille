@@ -63,7 +63,7 @@ from voikko import libvoikko
 # down with it. See `_load_engine` for how the two paths are chosen.
 
 REPO = Path(__file__).resolve().parent.parent
-SANALISTA = REPO / "data" / "nykysuomensanalista.txt"
+SANALISTA = REPO / "data" / "nykysuomensanalista.csv"
 
 CONFIDENCES = ("plain", "repaired", "guessed")
 

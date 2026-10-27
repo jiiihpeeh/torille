@@ -97,7 +97,7 @@ def sanalista_words(pos: str, limit: int | None = None) -> list[tuple[str, str]]
         pairs = engine_cls().words(wanted)
         return pairs[:limit] if limit else pairs
     out: list[tuple[str, str]] = []
-    with open("data/nykysuomensanalista.txt", encoding="utf-8") as fh:
+    with open("data/nykysuomensanalista.csv", encoding="utf-8") as fh:
         next(fh, None)
         for line in fh:
             parts = line.rstrip("\n").split("\t")

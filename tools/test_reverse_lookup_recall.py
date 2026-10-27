@@ -140,6 +140,19 @@ def main() -> int:
         raise SystemExit(f"{DB} is not present; this gate needs the reference")
     pairs = reference_pairs()
     print(f"reference (lemma, form) pairs: {len(pairs)}")
+    # The documented clean build has 626 201 non-empty-possessive pairs. A
+    # database built with the old `--engine` default wrote engine rows as
+    # `ok='both'`, which inflates the reference and makes this gate measure the
+    # engine against an older copy of itself. Refuse that reference instead of
+    # reporting a meaningless recall number.
+    if len(pairs) > 1_000_000:
+        raise SystemExit(
+            f"the reference has {len(pairs)} pairs, far above the clean "
+            "baseline (626 201). This database was probably built with the old "
+            "`--engine` default, which marked engine rows as `ok='both'`. "
+            "Rebuild it with `--no-engine` (or a current `--engine`, which "
+            "writes `ok='engine'`) before running this gate."
+        )
     binary = build_binary()
     totals = measure(binary, pairs, sys.argv[1] if len(sys.argv) > 1 else None)
 

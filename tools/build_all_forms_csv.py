@@ -1,108 +1,127 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT OR Apache-2.0
-"""Build a CSV of every form in the kotus_nomines oracle.
+"""Build `data/all_forms.csv`, the compile-time form subset.
 
-The lib's `build.rs` reads this CSV at compile time and emits a
-`phf::Set<String>` of every form the engine recognises (the
-typing-path form set) and a `phf::Map<&str, &[u32]>` from stem
-to lemma-index (the slow-check stem index). The form set is the
-hash of the wordlist -- O(1) lookup at the typing-path first
-pass; the stem index lets the slow check resolve a form the
-form set missed by stripping known Finnish case endings and
-probing the engine's own output.
+The lib's `build.rs` reads this CSV and emits `data/precomputed/all_forms.bin`
+-- a front-coded set of bare lemmas and genitive-singular forms, the forms the
+typing path checks first. The set must contain only forms the engine actually
+recognises as *its own* current output.
 
-Inputs:
-  data/kotus_nomines.sqlite   -- Omorfi/Voikko materialised noun
-                                  forms (3.5 M unique forms, 3.5 M
-                                  unique (form, lemma) pairs, 30 k
-                                  base lemmas)
+`--source engine` (the default) asks the `torille` Python binding for the
+nominal paradigms, so a fixed inflection bug cannot leave its old invented
+forms in a checked-in blob.
 
-Outputs:
-  data/all_forms.csv          -- one row per unique (form, lemma,
-                                  case, number, possessive),
-                                  tab-separated. The form set the
-                                  first pass consults; the case +
-                                  number + possessive columns drive
-                                  the stem hashmap (a future slice
-                                  can derive the canonical
-                                  stem-ending split from those).
-
-The CSV is build-time data: run this script whenever the SQLite
-oracle is regenerated, commit the CSV, and the lib picks it up
-on the next `cargo build`. No runtime walk, no parallel
-HashSet::new, no 8 s cold start; the compile-time phf emission
-takes the place of all of that.
-
-The verb partition is out of scope for this script -- the
-sanalista carries verbs (`@sanasto ~104 k lemmas`) and the engine
-emits their forms via `inflect_all`, but Omorfi's materialised
-form database is noun-only. A future `kotus_verb` oracle would
-extend this script in the obvious way.
+`--source oracle` is the historical path: it reads `ok='both'` rows from
+`data/kotus_nomines.sqlite`. A database built before the `ok='engine'`
+separation marks engine-enriched rows as `both`, so that source can bake a
+stale engine bug into the fast set; use it only with a clean oracle.
 
 Usage:
   python3 tools/build_all_forms_csv.py
+  python3 tools/build_all_forms_csv.py --source oracle
 """
+import argparse
 import sqlite3
 import sys
+from pathlib import Path
 
-DB = "data/kotus_nomines.sqlite"
-OUT = "data/all_forms.csv"
+REPO = Path(__file__).resolve().parent.parent
+DB = REPO / "data" / "kotus_nomines.sqlite"
+OUT = REPO / "data" / "all_forms.csv"
+SANALISTA = REPO / "data" / "nykysuomensanalista.csv"
 
-# We only want forms that both Omorfi AND Voikko accept. The
-# oracle's `ok` column is the AND of the two: `both` means
-# "this form is real Finnish", `omorfi` alone means "Omorfi says
-# yes, Voikko says no" (less reliable for the spell-check first
-# pass). Restricting to `both` keeps the form set close to the
-# ground truth.
+# Only rows both Omorfi and Voikko accepted are authoritative.
 OK_FILTER = "both"
 
+NOMINAL_POS = ("substantiivi", "adjektiivi", "numeraali", "pronomini")
 
-def main() -> int:
-    con = sqlite3.connect(DB)
+
+def nominal_lemmas() -> list[str]:
+    lemmas: list[str] = []
+    seen: set[str] = set()
+    with open(SANALISTA, encoding="utf-8") as fh:
+        next(fh, None)  # header
+        for line in fh:
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) < 3 or not parts[0]:
+                continue
+            if not any(pos in parts[2] for pos in NOMINAL_POS):
+                continue
+            # A classless compound is declined through its head. Its own
+            # surface must not enter the form set as a base, or the compound
+            # gate that names the head (`kristinuskon` -> `usko`) never runs.
+            if len(parts) < 4 or not parts[3].strip():
+                continue
+            if parts[0] not in seen:
+                seen.add(parts[0])
+                lemmas.append(parts[0])
+    return lemmas
+
+
+def from_engine():
+    """Yield `(form, lemma, case, number, possessive)` from the engine."""
+    from torille import Engine
+
+    engine = Engine()
+    for lemma in nominal_lemmas():
+        try:
+            forms = engine.inflect(lemma)
+        except (ValueError, RuntimeError):
+            continue
+        for form in forms:
+            if form.negative or form.clitic is not None:
+                continue
+            if form.confidence == "guessed":
+                continue
+            yield (
+                form.word,
+                lemma,
+                form.case or "",
+                form.number or "",
+                form.possessive or "",
+            )
+
+
+def from_oracle():
+    con = sqlite3.connect(f"file:{DB}?mode=ro", uri=True)
     cur = con.cursor()
     cur.execute(
-        "SELECT COUNT(DISTINCT form) FROM forms WHERE ok = ?",
-        (OK_FILTER,),
-    )
-    unique_forms = cur.fetchone()[0]
-    cur.execute(
-        "SELECT COUNT(*) FROM ("
-        "  SELECT form, lemma FROM forms WHERE ok = ? "
-        "  GROUP BY form, lemma"
-        ")",
-        (OK_FILTER,),
-    )
-    pair_count = cur.fetchone()[0]
-    print(
-        f"oracle: {unique_forms} unique forms, "
-        f"{pair_count} unique (form, lemma) pairs",
-        file=sys.stderr,
-    )
-
-    cur.execute(
-        "SELECT form, lemma, \"case\", number, possessive "
+        'SELECT form, lemma, "case", number, possessive '
         "FROM forms WHERE ok = ? "
-        "GROUP BY form, lemma, \"case\", number, possessive "
+        'GROUP BY form, lemma, "case", number, possessive '
         "ORDER BY form, lemma",
         (OK_FILTER,),
     )
+    yield from cur
+
+
+def main(argv: list[str]) -> int:
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument(
+        "--source",
+        choices=("engine", "oracle"),
+        default="engine",
+        help="read the forms from the current engine (default) or the "
+             "materialised Kotus oracle",
+    )
+    p.add_argument("--out", type=Path, default=OUT, help=f"output (default: {OUT})")
+    args = p.parse_args(argv)
+
+    rows = from_engine() if args.source == "engine" else from_oracle()
     written = 0
-    with open(OUT, "w", encoding="utf-8") as f:
-        for form, lemma, case_, number, possessive in cur:
-            # The oracle's forms are lowercased; the sanalista
-            # is lowercased; the lib's first pass lowercases.
-            # No case-folding needed at the CSV layer. The
-            # `case` + `number` + `possessive` columns are
-            # carried for the stem hashmap the build.rs also
-            # emits; the form set just needs the form.
-            f.write(
-                f"{form}\t{lemma}\t{case_}\t{number}\t{possessive}\n"
-            )
+    seen: set[tuple[str, str, str, str, str]] = set()
+    with open(args.out, "w", encoding="utf-8") as f:
+        for form, lemma, case_, number, possessive in rows:
+            key = (form, lemma, case_, number, possessive)
+            if key in seen:
+                continue
+            seen.add(key)
+            f.write(f"{form}\t{lemma}\t{case_}\t{number}\t{possessive}\n")
             written += 1
 
-    print(f"wrote {OUT} ({written} rows)", file=sys.stderr)
+    print(f"wrote {args.out} ({written} rows) from {args.source}", file=sys.stderr)
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

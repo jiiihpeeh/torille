@@ -44,7 +44,11 @@ fn reported_correction(word: &str) -> Option<(&'static str, &'static str)> {
 /// Edit-distance suggestions for `word`, ranked by ascending distance.
 ///
 /// Up to `max_n` candidates are returned, each within `max_distance`
-/// Levenshtein units of `word`. The candidate set is `find_bases`'s
+/// Levenshtein units of `word`, with one exception: a human-curated
+/// correction from [`REPORTED_CORRECTIONS`] is returned even when it is
+/// farther away, because the table is the licence. Its
+/// [`Suggestion::edit_distance`] still reports the true distance. The
+/// candidate set is `find_bases`'s
 /// `neighbours` -- the lemmas that share a head, tail, or short prefix
 /// with `word` -- augmented with the lemma of any direct hit, since a
 /// typo on a known lemma is the common case.
@@ -96,9 +100,15 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     // head/tail/prefix walks: `silmäränpäyksen` has a two-edit transposition
     // but the bounded walk spent seconds reaching its neighbours.
     if let Some((right, lemma)) = reported_correction(&word) {
+        // This candidate is licensed by the table rather than by the caller's
+        // distance budget, so it is returned even when `max_distance` is small.
+        // Its distance is still the true one: a consumer reading
+        // `Suggestion::edit_distance` must not be told that a four-edit repair
+        // is an exact match.
+        let edit_distance = levenshtein(&word, right, usize::MAX);
         return vec![Suggestion {
             word: right.to_string(),
-            edit_distance: 0,
+            edit_distance,
             lemma: Some(lemma.to_string()),
             source: SuggestionSource::GeneratedForm {
                 lemma: lemma.to_string(),
@@ -106,7 +116,7 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
             readings: Vec::new(),
             confidence: Confidence::Plain,
             original_rank: 0,
-            existing_score: 0.0,
+            existing_score: 1.0 / (1.0 + edit_distance as f32) + 0.5,
         }];
     }
     // A correctly written compound needs no correction. Short-circuit before
@@ -304,16 +314,16 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     push_hyphen_candidates(original, &word, max_distance, &mut candidates);
 
     // A reported wrong inflection the edit-distance pool can reach only at
-    // distance 3 (`ahertelin` -> `ahersin`). Add it explicitly; the normal
-    // distance filter still applies, so a caller asking for distance < 3 does
-    // not see it.
+    // distance 3 (`ahertelin` -> `ahersin`). Add it explicitly; it is licensed
+    // by the table rather than the caller's distance budget, so it survives the
+    // `retain` below even when that budget is smaller than its true distance.
     let correction = reported_correction(&word).map(|(right, _)| right);
     if let Some((right, lemma)) = reported_correction(&word)
         && !candidates.iter().any(|c| c.word == right)
     {
         candidates.push(Suggestion {
             word: right.to_string(),
-            edit_distance: 0,
+            edit_distance: levenshtein(&word, right, usize::MAX),
             lemma: Some(lemma.to_string()),
             source: SuggestionSource::GeneratedForm {
                 lemma: lemma.to_string(),
@@ -335,10 +345,11 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
         // A curated correction is not a spelling edit: `liektisevä` is four
         // edits from `liekehtivä` but the intended reading is the
         // participle. Keep it in the pool regardless of the caller's
-        // distance budget; the explicit table is the license.
+        // distance budget; the explicit table is the license. Its
+        // `edit_distance` is still the real distance.
         let curated = correction == Some(c.word.as_str());
         let d = if curated {
-            0
+            levenshtein(&word, &c.word, usize::MAX)
         } else {
             levenshtein(&word, &c.word, max_distance)
         };
@@ -359,7 +370,7 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
         }
         c.existing_score = score;
     }
-    candidates.retain(|c| c.edit_distance <= max_distance);
+    candidates.retain(|c| c.edit_distance <= max_distance || correction == Some(c.word.as_str()));
 
     // Last resort: a compound typo (`todistelukykynnsä`) has no lemma
     // neighbourhood close enough to surface its correction, because the

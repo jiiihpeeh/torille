@@ -124,6 +124,7 @@ from omorfi_harness import (  # noqa: E402
 #: morphology database and no lexicon has been asked about it.
 BOTH = "both"
 OMORFI_ONLY = "omorfi"
+ENGINE = "engine"
 
 #: Parts of speech whose forms belong in the noun lexicon. The engine also
 #: has classless compounds and numerals, handled by the enrichment pass below.
@@ -531,7 +532,7 @@ CREATE TABLE forms (
     "case"     TEXT NOT NULL,
     number     TEXT NOT NULL,
     possessive TEXT NOT NULL DEFAULT '',
-    ok         TEXT NOT NULL CHECK (ok IN ('both', 'omorfi')),
+    ok         TEXT NOT NULL CHECK (ok IN ('both', 'omorfi', 'engine')),
     PRIMARY KEY (lemma, homonym, form, "case", number, possessive)
 ) WITHOUT ROWID;
 
@@ -654,7 +655,7 @@ def class_numbers(class_str: str) -> set[int]:
 def enrich_with_engine(
     db_path: str,
     *,
-    ok: str = BOTH,
+    ok: str = ENGINE,
     upgrade: bool = False,
     wanted_classes: set[int] | None = None,
     limit: int = 0,
@@ -670,6 +671,16 @@ def enrich_with_engine(
     from torille import Engine
 
     con = sqlite3.connect(db_path)
+    if ok == ENGINE:
+        schema = con.execute(
+            "SELECT sql FROM sqlite_master WHERE name='forms'"
+        ).fetchone()
+        if schema is None or "'engine'" not in (schema[0] or ""):
+            raise SystemExit(
+                f"{db_path}: this database predates the `ok='engine'` value. "
+                "Rebuild it (or use --engine-ok omorfi/both) so engine rows "
+                "cannot be mistaken for the ok='both' reference."
+            )
     cur = con.cursor()
     rows = list(cur.execute(
         "SELECT lemma, homonym, part_of_speech, class FROM base"
@@ -827,8 +838,9 @@ def main(argv: list[str] | None = None) -> int:
                    help="leave the output as the Omorfi + Voikko grid only")
     p.add_argument("--engine-only", action="store_true",
                    help="enrich an existing sqlite file without rebuilding it")
-    p.add_argument("--engine-ok", choices=(BOTH, OMORFI_ONLY), default=BOTH,
-                   help="the `ok` value written for engine-only rows")
+    p.add_argument("--engine-ok", choices=(BOTH, OMORFI_ONLY, ENGINE), default=ENGINE,
+                   help="the `ok` value written for engine-only rows (default: "
+                        "engine, which keeps them out of the ok='both' reference)")
     p.add_argument("--engine-upgrade", action="store_true",
                    help="promote an existing omorfi-only row the engine agrees with")
     p.add_argument("--engine-limit", type=int, default=0,
@@ -920,7 +932,7 @@ def main(argv: list[str] | None = None) -> int:
                        "grammatical classification",
         "generated_by": "tools/build_nomine_lexicon.py",
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        "source": "data/nykysuomensanalista.txt",
+        "source": "data/nykysuomensanalista.csv",
         "oracles": {
             "omorfi": "decides which forms exist",
             "voikko": "decides which of those are real",

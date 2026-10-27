@@ -108,6 +108,13 @@ The remaining scripts fall into four groups:
   `build_verb_lexicon.py` now include the engine enrichment, the comitative and
   negative-mood verb cells, and the connectives/connegatives tables that used
   to be separate update/fill scripts.
+- **Generated tables** — `build_stem_to_base_map.py --source
+  engine|hybrid|oracle` and `build_all_forms_csv.py --source engine|oracle`.
+  `engine` (the default for both) asks the current binding, so a fixed
+  inflection bug cannot leave its old invented forms in a checked-in blob.
+  `hybrid` keeps oracle rows only where the current engine still produces
+  them, plus the combining forms of numerals/pronouns and classless compound
+  heads.
 - **Audits and reports** — `audit_*`, `walk_check.py`, `fingerprint_nouns.py`,
   `compound_recall.py`, `classify_lemma.py`, `report_by_class.py`,
   `show_illegals.py`.

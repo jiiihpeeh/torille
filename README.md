@@ -901,7 +901,10 @@ forms each lemma makes — so an index that attaches a form to the wrong base is
 byte-identical to a correct one, and the two tree gates never ask the question at
 all. It compares against the Kotus reference over 626 201 `(lemma, form)` pairs
 and asserts a 99.8% floor, plus that ranking the bases does not make the *first*
-base worse than leaving them in the sanalista's own order. Recall rather than
+base worse than leaving them in the sanalista's own order. A reference built
+with the old `--engine` default (which wrote engine rows as `ok='both'`) is
+rejected rather than measured: rebuild it with `--no-engine`, or with a current
+`--engine` that writes `ok='engine'`. Recall rather than
 precision, because the reference does not list a form as wrong: absence is
 unconfirmed, not incorrect. See [FIX_ME.md](FIX_ME.md) for the measured numbers
 and what the remaining 0.15 points are.

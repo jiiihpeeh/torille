@@ -126,7 +126,7 @@ pub fn check(word: &str) -> CheckOutcome {
     classify(report)
 }
 
-fn classify<'a>(report: BasesReport<'a>) -> CheckOutcome {
+fn classify(report: BasesReport<'static>) -> CheckOutcome {
     if !report.direct.is_empty() {
         return CheckOutcome::Lemma;
     }
@@ -135,9 +135,10 @@ fn classify<'a>(report: BasesReport<'a>) -> CheckOutcome {
             .bases
             .into_iter()
             .map(|l| -> &'static str {
-                // The lexicon lives in a Box::leak'd Vec, so every entry's
-                // `word` field is `&'static str` already.
-                unsafe { std::mem::transmute(l.word) }
+                // The lexicon lives in a `OnceLock` over leaked rows, so every
+                // entry's `word` is already `&'static str`. The signature says
+                // so, which is why no `transmute` is needed here.
+                l.word
             })
             .collect();
         return CheckOutcome::Inflected(lemmas);
@@ -1470,5 +1471,53 @@ mod tests {
         let a = suggest_with_state("taloo", 5, 2, &empty);
         let b = suggest("taloo", 5, 2);
         assert_eq!(a, b);
+    }
+
+    /// A curated correction is licensed by the table, not by the caller's
+    /// distance budget, but it must not claim to be an exact match. `0` used
+    /// to be stamped on a four-edit repair, which made `edit_distance`
+    /// meaningless for every consumer.
+    #[test]
+    fn a_curated_correction_reports_its_real_distance() {
+        let got = suggest_detailed("liektisevä", 5, 0);
+        let hit = got
+            .iter()
+            .find(|s| s.word == "liekehtivä")
+            .expect("the curated correction is returned even at distance 0");
+        assert_eq!(hit.edit_distance, 4);
+        assert!(hit.existing_score > 0.5);
+    }
+
+    /// The ordinary pool still obeys the budget: only the curated row may be
+    /// farther than `max_distance`.
+    #[test]
+    fn only_a_curated_correction_exceeds_the_distance_budget() {
+        for s in suggest_detailed("liektisevä", 5, 1) {
+            if s.word == "liekehtivä" {
+                continue;
+            }
+            assert!(
+                s.edit_distance <= 1,
+                "{} at {} edits exceeds the budget",
+                s.word,
+                s.edit_distance
+            );
+        }
+    }
+
+    /// The old oracle was built with `--engine`, so an engine bug could write
+    /// invented surfaces into the checked-in stem map as if they were real.
+    /// `mustaraamattu` used to be recognized through 757 `mudtaraa*` stems
+    /// (`mudtaraaakuita`); the map is now rebuilt from the current engine and
+    /// filtered against it.
+    #[test]
+    fn invented_compound_surfaces_are_not_known_words() {
+        for word in ["mudtaraaakuita", "hulpmeaaa", "taipae"] {
+            assert_eq!(
+                is_known_word(word),
+                None,
+                "{word} came from the stale engine-enriched oracle"
+            );
+        }
     }
 }

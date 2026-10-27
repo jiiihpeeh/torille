@@ -66,7 +66,7 @@ use super::utility::{
 /// which are the same rule -- both types are `-aa`/`-ää`.
 pub fn stem_of(lemma: &str) -> String {
     let n = lemma.chars().count();
-    lemma.chars().take(n - 1).collect()
+    lemma.chars().take(n.saturating_sub(1)).collect()
 }
 
 /// The third person's two cells in one mood: the singular, which takes the

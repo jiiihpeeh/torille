@@ -1085,8 +1085,8 @@ impl Stems {
     pub fn pres3sg_of(stem: &str) -> String {
         stem.chars()
             .last()
-            .expect("a present stem is never empty")
-            .to_string()
+            .map(|c| c.to_string())
+            .unwrap_or_else(|| "a".to_string())
     }
 
     /// The weak grade of a stem: the same stem with `gradation` applied, or

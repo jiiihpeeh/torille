@@ -94,7 +94,7 @@ docs/                 harness.md, lexicon.md, morfologia.yaml, hyphenation.md
 
 ### The two data files (embedded, no runtime files)
 
-- `data/nykysuomensanalista.txt` — 104k lemmas, tab-separated:
+- `data/nykysuomensanalista.csv` — 104k lemmas, tab-separated:
   `lemma  homonymy  part_of_speech  inflection_info`. The class column carries
   `9`, `9*B` (class + gradation), `9, 50` (two classes), `(21)` (parenthesised).
 - `data/kotus-tyypit.txt` — the paradigm catalogue. Each class is a number and

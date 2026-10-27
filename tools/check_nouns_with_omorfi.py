@@ -43,7 +43,7 @@ DEFAULT_NOUNS = [
 # compounds.
 _KNOWN_WORDS: set[str] = set()
 _KNOWN_NOUNS: set[str] = set()
-for _line in open("data/nykysuomensanalista.txt"):
+for _line in open("data/nykysuomensanalista.csv"):
     _p = _line.rstrip("\n").split("\t")
     if len(_p) >= 4:
         _KNOWN_WORDS.add(_p[0])

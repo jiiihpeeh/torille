@@ -28,7 +28,7 @@ import sqlite3
 
 from torille import Engine
 
-SANALISTA = "data/nykysuomensanalista.txt"
+SANALISTA = "data/nykysuomensanalista.csv"
 DB = "file:data/kotus_nomines.sqlite?mode=ro"
 
 

@@ -48,7 +48,8 @@ forms:  lemma │ homonym │ form │ case │ number │ possessive │ ok
   `(case, number, possessive)` and the three are already columns spelled out —
   `nominative`, `singular`, `first person singular` — so there is no code table
   and no third table for the grammar. `ok` says whether both oracles agreed the
-  word is real (`both`) or only Omorfi asserted it (`omorfi`). A form answering
+  word is real (`both`), only Omorfi asserted it (`omorfi`), or the row was
+  added by the engine enrichment pass (`engine`). A form answering
   two cells — `kissani` is both nominative and genitive — is one row per cell,
   because it is one word and two cells, and the primary key is
   `(lemma, homonym, form, case, number, possessive)`.
@@ -77,6 +78,11 @@ Defaults to sqlite, over the nominal parts of speech
   missing bases (including classless compounds). This is the default and needs
   the `torille` Python binding; `--no-engine` leaves an oracle-only file.
   `--engine-only` runs just that pass against an existing sqlite file.
+  Engine rows are written as `ok='engine'` by default. **They are not part of
+  the reference**: every reference query reads `ok='both'`, so an engine bug
+  cannot turn into an oracle fact. `--engine-ok both` restores the old,
+  self-referential behaviour and should only be used for a deliberately
+  engine-enriched development corpus.
 * `-j N` — worker processes over classes. The complete build takes ~40 minutes
   at `-j 4` and ~4 GB of RAM; see [Cost](#cost) below for why that is.
 
@@ -140,7 +146,8 @@ own facts.
 1. **The oracle reaches only as far as Omorfi's dictionary.** A word the
    sanalista classes but Omorfi has no morphology for produces no oracle forms.
    The default `--engine` pass fills those from the engine and adds a `base`
-   row; `--no-engine` leaves the gap. `kahdeksan` is a numeral in class 10 with
+   row, marking the rows `ok='engine'`; the reference (`ok='both'`) therefore
+   still sees no form for such a word. `--no-engine` leaves the gap. `kahdeksan` is a numeral in class 10 with
    a perfectly regular paradigm, but it is not in Omorfi's dictionary, so only
    the engine pass can put it in the lexicon. That is the harness's existing
    `no confirmed form` skip (`iso` in Omorfi's case) — a word with no oracle to
@@ -153,11 +160,18 @@ own facts.
    possessive in the file is `omorfi` and never `both`, which is the lexicon
    agreeing with the harness's "instructive takes no possessive" rule from the
    other direction.
-3. **The grid is the one the harness checks**: 13 cases × 2 numbers × 6
+3. **A pre-separation database is not a reference.** Builds made before the
+   engine rows were marked `ok='engine'` wrote them as `both`, so a file whose
+   `forms` table is much larger than the documented 4.26 M rows is an
+   engine-enriched development corpus, not an independent oracle. Rebuild it
+   with `--no-engine`, or with a current `--engine` that writes
+   `ok='engine'`, before using it for the reverse-lookup gate or class reports.
+
+4. **The grid is the one the harness checks**: 13 cases × 2 numbers × 6
    possessives, which is exactly `noun_cells(ALL_CASES, ["SG","PL"],
    ALL_POSSESSIVES)`. Build with `--possessives ''` if the bare case/number
    grid is the question.
-4. **Scope is nominal.** Verbs and their finite forms — and infinitives — are a
+5. **Scope is nominal.** Verbs and their finite forms — and infinitives — are a
    different grid (mood/tense/person) and live in the live harness, not here.
 
 ## Cost
