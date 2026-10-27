@@ -73,7 +73,10 @@ pub fn superl_inflect(lemma: &str, possessives: bool, part_on_strong: bool) -> V
     ];
     entries.extend(part_sg);
     entries.extend(vec![
-        cell(Case::Genitive, sg, &weak, ["n", "n"], false).on_stem(),
+        // The bare genitive is weak (`vanhimman`) but its possessives sit on
+        // the strong stem (`vanhimpansa`), the strong-genitive rule. Leaving
+        // them on the weak stem invented `vanhimmansa`, which is not a word.
+        cell(Case::Genitive, sg, &weak, ["n", "n"], false).base_on(strong.clone(), ["", ""]),
         cell(Case::Essive, sg, &strong, ["na", "nä"], true),
         // The translative is spelled on the weak (lähimmäkseen) and, doubly,
         // on the weak-i stem (lähimmikseen).
@@ -95,7 +98,9 @@ pub fn superl_inflect(lemma: &str, possessives: bool, part_on_strong: bool) -> V
         cell(Case::Allative, sg, &weak, ["lle", "lle"], true),
         cell(Case::Abessive, sg, &weak, ["tta", "ttä"], true),
         // ---- the plural ----
-        cell(Case::Nominative, pl, &weak, ["t", "t"], false).on_stem(),
+        // The plural nominative is weak (`sisimmät`), but its possessives use
+        // the strong stem (`sisimpänsä`), not `sisimmänsä`.
+        cell(Case::Nominative, pl, &weak, ["t", "t"], false).base_on(strong.clone(), ["", ""]),
         cell(Case::Genitive, pl, &c, ["ien", "ien"], false).on_ending(["ie", "ie"]),
         cell(Case::Genitive, pl, lemma, ["ten", "ten"], false).on_ending(["te", "te"]),
         // A rare bare `-in` genitive plural, with no possessive column.
@@ -146,6 +151,24 @@ mod tests {
         assert!(w.contains(&"lähimpiä".to_string()));
         assert!(w.contains(&"lähimmiksi".to_string()));
         assert!(w.contains(&"lähimmissä".to_string()));
+    }
+
+    /// The genitive's possessives use the strong stem even though the bare
+    /// genitive is weak: `vanhimpansa`, not `vanhimmansa`.
+    #[test]
+    fn the_genitive_possessives_use_the_strong_stem() {
+        let w = words("vanhin");
+        assert!(w.contains(&"vanhimpansa".to_string()));
+        assert!(!w.contains(&"vanhimmansa".to_string()));
+    }
+
+    /// The plural nominative is weak but its possessives are strong:
+    /// `sisimpänsä`, not `sisimmänsä`.
+    #[test]
+    fn the_plural_nominative_possessives_use_the_strong_stem() {
+        let w = words("sisin");
+        assert!(w.contains(&"sisimpänsä".to_string()));
+        assert!(!w.contains(&"sisimmänsä".to_string()));
     }
 
     /// The translative has two possessive columns, one on the weak stem and one
