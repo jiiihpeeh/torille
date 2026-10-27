@@ -18,6 +18,7 @@
 
 #![allow(dead_code)]
 
+use crate::kotus::Gradation;
 use crate::tags::{Case, Form, Number, PartOfSpeech};
 
 use super::class_41::a_stem_inflect;
@@ -25,9 +26,75 @@ use super::utility::{Builder, Decl, cell, nominal_tags, plain};
 
 pub const CLASS: &str = "49";
 
+/// The `49*D` oblique base: the weak grade deletes the `k` (`säen`), so the
+/// strong grade has to put it back before the final vowel (`säken`). The other
+/// gradation types are reconstructible from their weak pair and use
+/// [`Gradation::strongen`].
+fn strong_d(lemma: &str) -> String {
+    if lemma.contains('k') {
+        return lemma.to_string();
+    }
+    let Some((at, _)) = lemma
+        .char_indices()
+        .rev()
+        .find(|(_, c)| "aeiouyäö".contains(*c))
+    else {
+        return lemma.to_string();
+    };
+    format!("{}k{}", &lemma[..at], &lemma[at..])
+}
+
+/// Inflect one of the class's `*X` gradation variants on its strong stem.
+///
+/// The class's `*D`-`*J` subclasses are the same paradigm with a different
+/// consonant alternation (`säen/säken`, `taival/taipal`, `udar/utar`,
+/// `penger/penker`, `ommel/ompel`, `kannel/kantel`). The generated per-class
+/// files each carried one guess per cell; this runs the one class-49 engine
+/// instead, so every member gets the same two `e`-stem spellings
+/// (`ompelen`/`ompeleen`) rather than one.
+pub fn inflect_graded(lemma: &str, possessives: bool, grade: Gradation) -> Vec<Form> {
+    let strong = if grade.0 == 4 {
+        strong_d(lemma)
+    } else {
+        grade.strongen(lemma)
+    };
+    inflect_with(lemma, &strong, possessives)
+}
+
+/// A class 49*D noun (`säen`): `k`-deletion gradation.
+pub fn inflect_d(lemma: &str, possessives: bool) -> Vec<Form> {
+    inflect_graded(lemma, possessives, Gradation(4))
+}
+
+/// A class 49*E noun (`taival`): `p`/`v`.
+pub fn inflect_e(lemma: &str, possessives: bool) -> Vec<Form> {
+    inflect_graded(lemma, possessives, Gradation(5))
+}
+
+/// A class 49*F noun (`udar`): `t`/`d`.
+pub fn inflect_f(lemma: &str, possessives: bool) -> Vec<Form> {
+    inflect_graded(lemma, possessives, Gradation(6))
+}
+
+/// A class 49*G noun (`penger`): `nk`/`ng`.
+pub fn inflect_g(lemma: &str, possessives: bool) -> Vec<Form> {
+    inflect_graded(lemma, possessives, Gradation(7))
+}
+
+/// The class members whose oblique base is not the nominative plus an `e`.
+/// `auer` is the one: its paradigm is the e-final `autere` with the `t` in
+/// every oblique (`auteren`, `auteressa`), and only the nominative and
+/// partitive keep the short `auer`/`auerta`. The old `inflect(lemma, lemma)`
+/// invented `auere` and `aueren`, which live Voikko rejects.
+const BASES: &[(&str, &str)] = &[("auer", "auter")];
+
 /// Inflect a class-49 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
-    inflect_with(lemma, lemma, possessives)
+    let base = BASES
+        .iter()
+        .find_map(|(word, base)| (*word == lemma).then_some(*base))
+        .unwrap_or(lemma);
+    inflect_with(lemma, base, possessives)
 }
 
 /// The class-49 paradigm with an explicit oblique base. For class 49 the base
@@ -117,6 +184,22 @@ mod tests {
         assert!(w.contains(&"askareen".to_string()));
         assert!(w.contains(&"askarta".to_string()));
         assert!(w.contains(&"askareiden".to_string()));
+    }
+
+    /// `auer` is the one member whose oblique base is `auter`, not `auer`:
+    /// live Voikko accepts `auteren`/`auteressa` and rejects `aueren`/`auere`.
+    #[test]
+    fn auer_takes_the_t_stem() {
+        let w = words("auer");
+        for word in ["auer", "auerta", "auteren", "autere", "autereen"] {
+            assert!(w.contains(&word.to_string()), "auer is missing {word}");
+        }
+        for wrong in ["aueren", "auere", "auereen"] {
+            assert!(
+                !w.contains(&wrong.to_string()),
+                "auer must not offer *{wrong}"
+            );
+        }
     }
 
     #[test]
