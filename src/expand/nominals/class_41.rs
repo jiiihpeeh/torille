@@ -36,6 +36,10 @@ pub fn a_stem_inflect(
     // cells; the callers' stems are built for a singular `-as` lemma.
     let plural_only = sten_plural && lemma.ends_with('t');
     let long_owned = plural_only.then(|| lemma.strip_suffix('t').unwrap_or(lemma).to_string());
+    // The citation form carries a long vowel, but the plural obliques shorten
+    // it: `valjaat` -> `valjaiden`, `valjaitta`, `valjaissa`; `tikkaat` ->
+    // `tikkaiden`, `tikkaitta`, `tikkaissa`. This is the Wiktionary and
+    // Kielitoimisto paradigm for the 41 pluratives.
     let short_owned = long_owned.as_ref().map(|long| match long.chars().last() {
         Some(c) if "aäeiouyö".contains(c) => long[..long.len() - c.len_utf8()].to_string(),
         _ => long.clone(),
@@ -80,13 +84,16 @@ pub fn a_stem_inflect(
         plain(Case::Instructive, pl, short, ["in", "in"]),
     ];
     if sten_plural {
-        // The third confirmed genitive plural of the `-as` family:
-        // `patsas` -> `patsasten`, `ahdas` -> `ahdasten`, `vieras` ->
-        // `vierasten`. Without it a compound such as `savupatsasten` cannot
-        // find its head. The classes that merely reuse this grid (`kevät`,
-        // `mennyt`, `askar`) do not have it.
+        // The catalogue blob still carries `evästen` as a class-41 slot, so
+        // the form has to be generated for `every_catalogue_form_is_reproduced`.
+        // It is not confirmed by the reference -- `koirasten`, `taivasten`,
+        // `vanttusten` and their possessive columns are all non-words -- so it
+        // is repaired, never offered as a plain correction. Keep the parameter
+        // for the plural-only branch above as well.
         cells.push(
-            cell(Case::Genitive, pl, short, ["sten", "sten"], false).on_ending(["ste", "ste"]),
+            cell(Case::Genitive, pl, short, ["sten", "sten"], false)
+                .on_ending(["ste", "ste"])
+                .as_rare(),
         );
     }
     b.decline(&Decl::new(cells), |case, number, poss| {
@@ -218,12 +225,22 @@ mod tests {
         }
     }
 
-    /// The `-sten` genitive plural is a confirmed alternant of the `-as`
-    /// family: `patsas` -> `patsasten`.
+    /// `-sten` is not a confirmed genitive plural of the `-as` family. The
+    /// catalogue carries `evästen`, so the form stays generated for template
+    /// reproduction, but it is repaired and never offered as a correction.
     #[test]
-    fn the_as_family_has_a_sten_genitive_plural() {
-        assert!(words("patsas").contains(&"patsasten".to_string()));
-        assert!(words("ahdas").contains(&"ahdasten".to_string()));
+    fn the_as_family_has_no_plain_sten_genitive_plural() {
+        let forms = inflect("koiras", true);
+        let at = |word: &str| {
+            forms
+                .iter()
+                .find(|form| form.word == word)
+                .unwrap_or_else(|| panic!("{word} missing"))
+                .confidence
+        };
+        assert_eq!(at("koiraiden"), crate::tags::Confidence::Plain);
+        assert_eq!(at("koiraitten"), crate::tags::Confidence::Plain);
+        assert_ne!(at("koirasten"), crate::tags::Confidence::Plain);
     }
 
     #[test]

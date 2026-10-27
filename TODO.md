@@ -10,7 +10,16 @@ offers a non-word has a user-visible bug, and an engine that is merely silent
 does not. The first open item is therefore the precision one.
 
 - [ ] **Stop offering whole classes built on the wrong stem**
-  **15431 `illegal` forms across 118 classes, every one of them `Plain`** — the
+  **Known oracle caveat:** the lexicon report's plural-only rows are not always
+  right. Wiktionary, Kielitoimisto and live Voikko confirm `antimet` ->
+  `antimissa`/`antimitta`/`antimien` and `valjaat` ->
+  `valjaissa`/`valjaitta`/`valjaiden`, while `data/kotus_nomines.sqlite` marks
+  the longer `antimemissa`/`valjaaissa` spellings `both` and the correct short
+  ones `omorfi`. Do not "fix" the `33*D`/`33*J` or 41-plurative paradigms
+  against those rows; verify them against Wiktionary first.
+
+  The original sweep: **15431 `illegal` forms across 118 classes, every one of
+  them `Plain`** — the
   worst of it by rate is class `50` at 441 illegal against 45 confirmed, then
   `33*C` (352/52), `33*F` (274/84), `33*K` (464/164) and `9*D` (367/133). 391
   lemmas carry the lot, so this is a stem defect per class repeated over every

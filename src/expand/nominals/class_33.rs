@@ -73,6 +73,11 @@ pub fn inflect_graded_nom_base(
     if let Some(pl_stem) = lemma.strip_suffix("et")
         && !pl_stem.is_empty()
     {
+        // The plural-only `-imet` nouns decline from the stem without `-et`:
+        // `antimet` -> `antim`, giving `antimien`, `antimia`, `antimissa` and
+        // `antimitta`. That is the Wiktionary/Kielitoimisto paradigm, and it is
+        // the one the old pre-oracle stem already produced. The extra `m` some
+        // oracle rows carry (`antimemissa`) is not part of the word.
         return plural_only(lemma, possessives, pl_stem);
     }
     let mut b = Builder::new(lemma, possessives);
@@ -258,7 +263,7 @@ mod tests {
         for want in ["antimet", "antimien", "antimia", "antimiin", "antimissa"] {
             assert!(w.contains(&want.to_string()), "missing {want}");
         }
-        for bad in ["antimetta", "antimetten", "antimettaan"] {
+        for bad in ["antimetta", "antimetten", "antimettaan", "antimemissa"] {
             assert!(!w.contains(&bad.to_string()), "invented {bad}");
         }
     }
