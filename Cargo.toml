@@ -60,3 +60,10 @@ harness = false
 [profile.release]
 opt-level = 3
 lto = true
+[workspace.lints.rust]
+# The engine is safe Rust. Keep it that way: this is a compile-time gate in
+# both rustc and clippy, not a convention.
+unsafe_code = "deny"
+
+[lints]
+workspace = true

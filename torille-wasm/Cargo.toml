@@ -41,3 +41,5 @@ wee-alloc = ["dep:wee_alloc"]
 # lto and codegen-units tweaks that the binary crate sets
 # in `.cargo/config.toml`.
 test-in-wasm = []
+[lints]
+workspace = true

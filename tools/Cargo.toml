@@ -144,3 +144,5 @@ rusqlite = { version = "0.31", features = ["bundled"] }
 # global index. The JSONL writers stay single-threaded on the main thread
 # to avoid fsync contention.
 rayon = "1.10"
+[lints]
+workspace = true

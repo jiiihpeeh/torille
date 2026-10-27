@@ -4,6 +4,8 @@
 //! Kotus paradigm catalogue turns each lemma into its inflected forms, and
 //! anything still unknown is checked by compound analysis.
 
+#![forbid(unsafe_code)]
+
 pub(crate) mod case;
 pub mod compound;
 pub mod derivation;

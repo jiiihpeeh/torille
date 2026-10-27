@@ -90,12 +90,12 @@ pub fn levenshtein(a: &str, b: &str, max_distance: usize) -> usize {
 /// is still sound -- it may bail one row later than the standard case,
 /// never earlier.
 #[inline]
-fn levenshtein_dp(
+fn levenshtein_dp<'a>(
     a: &[u32],
     b: &[u32],
-    prev_prev_row: &mut [usize],
-    prev_row: &mut [usize],
-    curr_row: &mut [usize],
+    mut prev_prev_row: &'a mut [usize],
+    mut prev_row: &'a mut [usize],
+    mut curr_row: &'a mut [usize],
     max_distance: usize,
     cap: usize,
 ) -> usize {
@@ -146,14 +146,10 @@ fn levenshtein_dp(
         if row_min > max_distance {
             return cap;
         }
-        // Rotate: prev_prev_row <- prev_row, then swap prev_row and curr_row.
-        // `std::mem::swap` requires `T: Sized` and `[usize]` is not; the
-        // raw-pointer swap is sound because the two slices are disjoint.
-        let len = m + 1;
-        unsafe {
-            std::ptr::copy_nonoverlapping(prev_row.as_ptr(), prev_prev_row.as_mut_ptr(), len);
-            std::ptr::swap_nonoverlapping(prev_row.as_mut_ptr(), curr_row.as_mut_ptr(), len);
-        }
+        // Rotate: prev_prev_row <- prev_row, then prev_row <- curr_row.
+        // Swapping the slice references is safe and avoids a copy.
+        std::mem::swap(&mut prev_prev_row, &mut prev_row);
+        std::mem::swap(&mut prev_row, &mut curr_row);
     }
     prev_row[m].min(cap)
 }

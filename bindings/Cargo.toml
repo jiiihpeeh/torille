@@ -24,3 +24,6 @@ extension-module = ["pyo3/extension-module"]
 [dependencies]
 torille = { path = ".." }
 pyo3 = "0.22"
+
+[lints]
+workspace = true

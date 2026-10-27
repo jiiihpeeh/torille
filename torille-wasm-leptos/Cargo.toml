@@ -35,3 +35,6 @@ console_error_panic_hook = "0.1"
 default = []
 hydrate = ["leptos/hydrate"]
 ssr = ["leptos/ssr"]
+
+[lints]
+workspace = true

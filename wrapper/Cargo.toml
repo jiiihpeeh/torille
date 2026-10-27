@@ -17,3 +17,8 @@ torille = { path = ".." }
 
 [build-dependencies]
 cxx-build = "1.0"
+# The cxx bridge macro expands to `unsafe` trait impls and FFI entry points;
+# that is the one crate where unsafe is unavoidable. Every other crate denies
+# it, and the engine forbids it at the crate root.
+[lints.rust]
+unsafe_code = "allow"
