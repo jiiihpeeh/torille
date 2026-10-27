@@ -87,7 +87,8 @@ entry points are:
 python3 tools/check_word_against_omorfi.py kissa
 python3 tools/report_by_class.py --split reports/classes
 python3 tools/summarize_class_report.py reports/noun-classes.json
-python3 tools/show_illegals.py reports/noun-classes.json --summary
+python3 tools/show_illegals.py --summary
+python3 tools/show_illegals.py --no-refresh reports/noun-classes.json
 python3 tools/test_binding_agrees_with_binary.py
 python3 tools/test_reverse_lookup_recall.py
 python3 tools/test_experimental_features.py
