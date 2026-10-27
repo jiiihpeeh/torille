@@ -1,0 +1,248 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT OR Apache-2.0
+"""Show the illegal forms in a `report_by_class.py` report.
+
+`report_by_class.py` answers "what does each class get wrong?" and writes the
+whole report, confirmed rows included. This answers the narrower question a
+fix starts from: *which non-words does the engine offer?* It reads a report
+JSON (or a split directory of `class-*.json` files) and prints every finding
+with the requested status, grouped by class.
+
+The default status is `illegal`: a `plain` form the oracle (Omorfi/Voikko or
+the materialised lexicon) does not recognise. `--status` accepts any of the
+report's statuses, comma-separated, so the same tool can show `missing`,
+`not_plain`, `mistagged`, or `unsupported` rows without a second script.
+
+Usage:
+
+    python3 tools/show_illegals.py reports/noun-classes.json
+    python3 tools/show_illegals.py reports/noun-classes.json --summary
+    python3 tools/show_illegals.py reports/noun-classes.json -c 51,21
+    python3 tools/show_illegals.py reports/noun-classes.json --lemma bébé
+    python3 tools/show_illegals.py reports/noun-classes.json --status missing
+    python3 tools/show_illegals.py reports/noun-classes.json --status illegal,not_plain
+    python3 tools/show_illegals.py reports/classes/          # split output
+    python3 tools/show_illegals.py report.json --json > bad.json
+
+A finding prints as:
+
+    51  särkynytsydän  särkyneensydämen  GEN SG  expected särkyneensydämen
+
+`expected` is only shown when it differs from the form, because for an
+`illegal` row the form itself is the interesting half. `--json` writes the
+filtered findings with the class added, which is what a follow-up script
+wants instead of parsing the human-readable lines.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from collections import Counter, defaultdict
+from pathlib import Path
+
+STATUSES = ("confirmed", "missing", "not_plain", "mistagged", "illegal",
+            "unsupported")
+
+
+def parse_args(argv: list[str]) -> argparse.Namespace:
+    p = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    p.add_argument("path", nargs="?",
+                   help="report JSON file or a directory of class-*.json files "
+                        "(default: reports/noun-classes.json if it exists)")
+    p.add_argument("-s", "--status", default="illegal",
+                   help="comma-separated statuses to show (default: illegal). "
+                        f"known: {', '.join(STATUSES)}")
+    p.add_argument("-c", "--class", dest="classes", metavar="LIST",
+                   help="only these classes; accepts 51 or 51,21 or 9*B")
+    p.add_argument("--lemma", metavar="TEXT",
+                   help="only lemmas containing TEXT (case-sensitive)")
+    p.add_argument("-l", "--limit", type=int, default=0, metavar="N",
+                   help="at most N findings per class (0 = all)")
+    p.add_argument("--summary", action="store_true",
+                   help="print per-class counts only, not every finding")
+    p.add_argument("--json", action="store_true",
+                   help="write the filtered findings as JSON")
+    p.add_argument("--fail-if-any", action="store_true",
+                   help="exit 1 when at least one finding matches, else 0")
+    return p.parse_args(argv)
+
+
+def class_key(name: str) -> tuple[int, str]:
+    """Sort `9` before `9*B` before `10`, not lexicographically."""
+    try:
+        return (int(name.split("*")[0]), name)
+    except ValueError:
+        return (1 << 30, name)
+
+
+def expand_path(path: Path) -> list[Path]:
+    if path.is_dir():
+        files = sorted(path.glob("class-*.json"))
+        if not files:
+            raise SystemExit(f"{path}: no class-*.json files")
+        return files
+    if path.is_file():
+        return [path]
+    raise SystemExit(f"{path}: no such file or directory")
+
+
+def read_reports(paths: list[Path]) -> list[dict]:
+    reports: list[dict] = []
+    for path in paths:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            raise SystemExit(f"{path}: {exc}") from exc
+        # A split file and the combined file are both arrays; a bare object is
+        # accepted so a hand-written one-class report works too.
+        if isinstance(data, dict):
+            data = [data]
+        if not isinstance(data, list):
+            raise SystemExit(f"{path}: expected a JSON array of class reports")
+        for report in data:
+            if not isinstance(report, dict) or "class" not in report:
+                raise SystemExit(f"{path}: a report without a class")
+            reports.append(report)
+    return reports
+
+
+def parse_statuses(raw: str) -> list[str]:
+    wanted = [s.strip() for s in raw.split(",") if s.strip()]
+    unknown = [s for s in wanted if s not in STATUSES]
+    if unknown:
+        raise SystemExit(
+            f"unknown status: {', '.join(unknown)}\n"
+            f"known: {', '.join(STATUSES)}")
+    return wanted
+
+
+def parse_classes(raw: str | None) -> set[str] | None:
+    if not raw:
+        return None
+    return {c.strip() for c in raw.split(",") if c.strip()}
+
+
+def matches_class(class_name: str, wanted: set[str] | None) -> bool:
+    if wanted is None:
+        return True
+    # `9B` and `9*B` name the same class; accept either spelling.
+    plain = {c.replace("*", "").upper() for c in wanted}
+    return class_name in wanted or class_name.replace("*", "").upper() in plain
+
+
+def format_cell(cell: dict) -> str:
+    bits = [cell.get("case", ""), cell.get("number", "")]
+    if cell.get("possessive"):
+        bits.append(f"poss={cell['possessive']}")
+    if cell.get("tense"):
+        bits.append(cell["tense"])
+    if cell.get("mood"):
+        bits.append(cell["mood"])
+    if cell.get("person"):
+        bits.append(cell["person"])
+    return " ".join(b for b in bits if b)
+
+
+def collect(reports: list[dict], args: argparse.Namespace,
+            statuses: list[str]) -> dict[str, list[dict]]:
+    wanted = parse_classes(args.classes)
+    by_class: dict[str, list[dict]] = defaultdict(list)
+    for report in reports:
+        cls = report["class"]
+        if not matches_class(cls, wanted):
+            continue
+        for finding in report.get("findings", []):
+            if finding.get("status") not in statuses:
+                continue
+            lemma = finding.get("lemma", "")
+            if args.lemma and args.lemma not in lemma:
+                continue
+            row = dict(finding)
+            row["class"] = cls
+            by_class[cls].append(row)
+    for cls in by_class:
+        by_class[cls].sort(
+            key=lambda f: (f.get("lemma", ""), f.get("form", ""),
+                           format_cell(f.get("cell", {}))))
+    return by_class
+
+
+def human_line(cls: str, finding: dict) -> str:
+    cell = format_cell(finding.get("cell", {}))
+    line = (
+        f"{cls:6}  {finding.get('lemma', ''):20}  "
+        f"{finding.get('form', ''):28}  {cell}"
+    )
+    expected = finding.get("expected", "")
+    if expected and expected != finding.get("form"):
+        line += f"  expected {expected}"
+    got = finding.get("got", "")
+    if got and got != finding.get("form"):
+        line += f"  (engine read {got})"
+    if finding.get("status") != "illegal":
+        line += f"  [{finding['status']}]"
+    return line.rstrip()
+
+
+def main(argv: list[str]) -> int:
+    args = parse_args(argv)
+    statuses = parse_statuses(args.status)
+
+    if args.path:
+        path = Path(args.path)
+    else:
+        path = Path("reports/noun-classes.json")
+        if not path.exists():
+            raise SystemExit(
+                "no report path given and reports/noun-classes.json does not "
+                "exist\nrun: python3 tools/report_by_class.py -o "
+                "reports/noun-classes.json")
+
+    reports = read_reports(expand_path(path))
+    by_class = collect(reports, args, statuses)
+
+    total = sum(len(rows) for rows in by_class.values())
+    shown = 0
+    if args.json:
+        out = [row for cls in sorted(by_class, key=class_key)
+               for row in by_class[cls]]
+        print(json.dumps(out, ensure_ascii=False, indent=2))
+        shown = len(out)
+    elif args.summary:
+        for cls in sorted(by_class, key=class_key):
+            rows = by_class[cls]
+            lemmas = len({r.get("lemma", "") for r in rows})
+            forms = len({r.get("form", "") for r in rows})
+            print(f"class {cls:6}  {len(rows):5} findings  "
+                  f"{lemmas:4} lemmas  {forms:5} distinct forms")
+        print(f"total {total} finding(s) across {len(by_class)} class(es)")
+    else:
+        for cls in sorted(by_class, key=class_key):
+            rows = by_class[cls]
+            if args.limit > 0:
+                rows = rows[: args.limit]
+            if not rows:
+                continue
+            lemmas = len({r.get("lemma", "") for r in by_class[cls]})
+            print(f"class {cls}  ({len(by_class[cls])} findings, "
+                  f"{lemmas} lemma(s))")
+            for finding in rows:
+                print("  " + human_line(cls, finding))
+            if args.limit and len(by_class[cls]) > args.limit:
+                print(f"  ... {len(by_class[cls]) - args.limit} more")
+            print()
+        print(f"{total} {','.join(statuses)} finding(s) across "
+              f"{len(by_class)} class(es)")
+        shown = total
+
+    if args.fail_if_any and shown:
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

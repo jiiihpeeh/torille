@@ -87,6 +87,7 @@ entry points are:
 python3 tools/check_word_against_omorfi.py kissa
 python3 tools/report_by_class.py --split reports/classes
 python3 tools/summarize_class_report.py reports/noun-classes.json
+python3 tools/show_illegals.py reports/noun-classes.json --summary
 python3 tools/test_binding_agrees_with_binary.py
 python3 tools/test_reverse_lookup_recall.py
 python3 tools/test_experimental_features.py
@@ -100,7 +101,8 @@ The remaining scripts fall into four groups:
   negative-mood verb cells, and the connectives/connegatives tables that used
   to be separate update/fill scripts.
 - **Audits and reports** — `audit_*`, `walk_check.py`, `fingerprint_nouns.py`,
-  `compound_recall.py`, `classify_lemma.py`, `report_by_class.py`.
+  `compound_recall.py`, `classify_lemma.py`, `report_by_class.py`,
+  `show_illegals.py`.
 - **Diagnostics** — `diag_*.py`, `csvtool.py`, `run_wordlist.py`,
   `make_*.py`, `omorfi_harness.py`, `check_hyphenation_against_voikko.py`.
 - **Corpus fetches** — `fetch_wiktionary.py`, `fetch_finnish_books.py`,
