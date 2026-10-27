@@ -370,7 +370,10 @@ mod tests {
     /// `peitsittä`.
     #[test]
     fn peitsi_uses_the_class_30_paradigm() {
-        let ws: Vec<String> = inflect("peitsi", true).into_iter().map(|f| f.word).collect();
+        let ws: Vec<String> = inflect("peitsi", true)
+            .into_iter()
+            .map(|f| f.word)
+            .collect();
         assert!(ws.contains(&"peitsittä".to_string()));
         assert!(!ws.contains(&"peitseittä".to_string()));
     }
@@ -395,6 +398,28 @@ mod tests {
             .collect();
         assert!(ws.contains(&"apit".to_string()));
         assert!(ws.contains(&"appia".to_string()));
+    }
+
+    /// The 5*B "app" homonym has the loanword i-stem paradigm: `apin`,
+    /// `apeissa`, `apeilla`, `appeja`, `apein`. It must not borrow the 7*B
+    /// father-in-law forms (`apen`, `apissa`, `appia`, `apin`).
+    #[test]
+    fn appi_has_the_5b_app_paradigm() {
+        let ws: Vec<String> = inflect_graded("appi", false, crate::kotus::Gradation(2))
+            .into_iter()
+            .map(|f| f.word)
+            .collect();
+        for want in [
+            "appi", "apin", "appia", "appiin", "apissa", "apista", "apilla", "apilta", "apille",
+            "appina", "apiksi", "apitta", "apit", "appien", "appein", "appeja", "appeihin",
+            "apeissa", "apeista", "apeilla", "apeilta", "apeille", "appeina", "apeiksi", "apeitta",
+            "apein",
+        ] {
+            assert!(ws.contains(&want.to_string()), "missing {want}");
+        }
+        for wrong in ["apen", "appea", "appeen", "apessa", "apesta", "apet"] {
+            assert!(!ws.contains(&wrong.to_string()), "invented {wrong}");
+        }
     }
 
     /// The graded grid's one place where both grades appear for the same case:

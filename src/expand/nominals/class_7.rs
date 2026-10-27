@@ -25,7 +25,7 @@ use crate::kotus::{Gradation, Grade};
 use crate::tags::{Case, Form, Number, PartOfSpeech};
 
 use super::harmony::loanword_harmony;
-use super::utility::{Builder, Decl, Ending, cell, e_stem, nominal_tags, plain};
+use super::utility::{Builder, Decl, Ending, cell, e_stem, nominal_tags, plain, rare};
 
 pub const CLASS: &str = "7";
 
@@ -110,8 +110,11 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
             // possessives sit on the e-stem too (oveni, not ovini) -- the
             // strong-genitive rule.
             cell(Case::Nominative, pl, &estem, ["t", "t"], false).on_stem(),
-            // Genitive plural keeps the i: kivi -> kivien.
+            // Genitive plural keeps the i: kivi -> kivien, with the
+            // e-stem alternative kivein the Wiktionary class-7 template lists
+            // in parentheses.
             cell(Case::Genitive, pl, &istem, ["en", "en"], false).on_ending(["e", "e"]),
+            rare(Case::Genitive, pl, &estem, ["in", "in"]),
             cell(Case::Partitive, pl, &istem, ["a", "ä"], true),
             cell(Case::Essive, pl, &istem, ["na", "nä"], true),
             cell(Case::Translative, pl, &istem, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
@@ -198,6 +201,8 @@ pub fn inflect_graded(lemma: &str, possessives: bool, grad: Gradation) -> Vec<Fo
                 .base_on(e_strong.clone(), ["", ""]),
             // Strong i-stem for genitive/partitive/essive/illative: appi -> appien.
             cell(Case::Genitive, pl, &i_strong, ["en", "en"], false).on_ending(["e", "e"]),
+            // The e-stem alternative: appi -> appein.
+            rare(Case::Genitive, pl, &e_strong, ["in", "in"]),
             cell(Case::Partitive, pl, &i_strong, ["a", "ä"], true),
             cell(Case::Essive, pl, &i_strong, ["na", "nä"], true),
             // Weak i-stem for translative and the locals (the i stays, so the
@@ -261,6 +266,7 @@ mod tests {
         let w = words("kivi");
         assert!(w.contains(&"kivet".to_string())); // nom pl, e-stem
         assert!(w.contains(&"kivien".to_string())); // gen pl, i-stem
+        assert!(w.contains(&"kivein".to_string())); // gen pl, e-stem alternative
         assert!(w.contains(&"kiviä".to_string())); // part pl
         assert!(w.contains(&"kiviin".to_string())); // illat pl
         assert!(w.contains(&"kivissä".to_string())); // inessive pl
@@ -292,6 +298,7 @@ mod tests {
         assert!(ws.contains(&"appeen")); // illative, strong e
         assert!(ws.contains(&"apet")); // nom plural, weak e
         assert!(ws.contains(&"appien")); // gen plural, strong i
+        assert!(ws.contains(&"appein")); // gen plural, e-stem alternative
         assert!(ws.contains(&"appia")); // part plural, strong i
         assert!(ws.contains(&"apissa")); // inessive plural, weak i
     }
@@ -301,13 +308,27 @@ mod tests {
     /// `e`-stem (`apen`) while its possessives are the strong (`appeni`), and the
     /// nominative plural does the same (`apet` beside `appeni`).
     #[test]
-    fn the_graded_grid_crosses_over_twice() {
-        let w: Vec<String> = inflect_graded("appi", true, Gradation(2))
+    /// The father-in-law paradigm is class 7, not the loanword i-stem.
+    ///
+    /// Wiktionary's `appi` (7*B, `fi-subs-ovi|a|pp|p`) gives `apen`,
+    /// `appea`, `appeen`, `apessa`, `apet`, `appien`, `appia`, `apissa`; the
+    /// 5*B "app" homonym is the one with `apin`, `apeissa`, `apeilla`,
+    /// `appeja`. The class-7 engine must not borrow those.
+    #[test]
+    fn appi_has_the_father_in_law_paradigm() {
+        let ws: Vec<String> = inflect_graded("appi", false, Gradation(2))
             .into_iter()
             .map(|f| f.word)
             .collect();
-        assert!(w.contains(&"apen".to_string())); // gen sg bare: weak e
-        assert!(w.contains(&"appeni".to_string())); // gen sg 1sg: strong e
-        assert!(w.contains(&"apet".to_string())); // nom pl bare: weak e
+        for want in [
+            "appi", "apen", "appea", "appeen", "apessa", "apesta", "apella", "apelta", "apelle",
+            "appena", "apeksi", "apetta", "apet", "appien", "appein", "appia", "appiin", "apissa",
+            "apista", "apilla", "apilta", "apille", "appina", "apiksi", "apitta", "apin",
+        ] {
+            assert!(ws.contains(&want.to_string()), "missing {want}");
+        }
+        for wrong in ["apit", "apeissa", "apeilla", "appeja", "apein"] {
+            assert!(!ws.contains(&wrong.to_string()), "invented {wrong}");
+        }
     }
 }

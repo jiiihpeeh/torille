@@ -17,7 +17,10 @@ never runs one. The refresh is class-parallel: `-j` sets how many classes are
 checked at once (default: the CPU count).
 
 The default status is `illegal`: a `plain` form the oracle (Omorfi/Voikko or
-the materialised lexicon) does not recognise. `--status` accepts any of the
+the materialised lexicon) does not recognise. The refresh uses
+`data/kotus_nomines.sqlite` by default, because that is the noun oracle the
+class reports are baselined against; `--live` switches to live Omorfi+Voikko,
+and `--lexicon PATH` names another database. `--status` accepts any of the
 report's statuses, comma-separated, so the same tool can show `missing`,
 `not_plain`, `mistagged`, or `unsupported` rows without a second script.
 
@@ -84,6 +87,13 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                         "(default: CPU count)")
     p.add_argument("--bare", action="store_true",
                    help="refresh only the bare case/number cells")
+    p.add_argument("--lexicon", default="data/kotus_nomines.sqlite",
+                   metavar="SQLITE",
+                   help="noun oracle for the refresh (default: "
+                        "data/kotus_nomines.sqlite)")
+    p.add_argument("--live", action="store_true",
+                   help="refresh against live Omorfi+Voikko instead of the "
+                        "materialised lexicon")
     p.add_argument("-s", "--status", default="illegal",
                    help="comma-separated statuses to show (default: illegal). "
                         f"known: {', '.join(STATUSES)}")
@@ -226,6 +236,7 @@ def report_params(args: argparse.Namespace) -> dict:
         "classes": args.classes or "all",
         "per_class": args.per_class,
         "bare": bool(args.bare),
+        "lexicon": None if args.live else args.lexicon,
     }
 
 
@@ -284,6 +295,15 @@ def refresh_report(path: Path, args: argparse.Namespace,
         base += ["-c", args.classes]
     if args.bare:
         base.append("--bare")
+    if not args.live:
+        lexicon = Path(args.lexicon)
+        if not lexicon.is_absolute():
+            lexicon = repo_root() / lexicon
+        if lexicon.exists():
+            base += ["--lexicon", str(lexicon)]
+        else:
+            print(f"{lexicon}: no such lexicon; using live Omorfi+Voikko",
+                  file=sys.stderr)
 
     print(f"refreshing {path} ...", file=sys.stderr)
     if not split:

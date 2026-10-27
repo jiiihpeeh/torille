@@ -97,7 +97,9 @@ python3 tools/test_experimental_features.py
 
 `show_illegals.py` fingerprints the engine, data, harness and installed binding
 and refreshes the class report only when that fingerprint or the report's
-parameters changed; `--refresh` / `--no-refresh` override the decision.
+parameters changed; `--refresh` / `--no-refresh` override the decision. Its
+refresh uses `data/kotus_nomines.sqlite` as the noun oracle by default; `--live`
+uses live Omorfi+Voikko.
 
 The remaining scripts fall into four groups:
 

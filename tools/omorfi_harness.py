@@ -707,7 +707,8 @@ class Harness:
         return False
 
     # -- torille -----------------------------------------------------------
-    def torille_forms(self, lemma: str) -> list[TorilleForm]:
+    def torille_forms(self, lemma: str,
+                      klass: str | None = None) -> list[TorilleForm]:
         if self.engine is not None:
             return [
                 TorilleForm(
@@ -724,11 +725,12 @@ class Harness:
                     negative=f.negative,
                     tags=list(f.tags),
                 )
-                for f in self.engine.inflect(lemma)
+                for f in self.engine.inflect(lemma, klass=klass)
             ]
-        return self._torille_forms_via_binary(lemma)
+        return self._torille_forms_via_binary(lemma, klass)
 
-    def _torille_forms_via_binary(self, lemma: str) -> list[TorilleForm]:
+    def _torille_forms_via_binary(self, lemma: str,
+                                  klass: str | None = None) -> list[TorilleForm]:
         """The same reading, recovered from the `inflect` binary's text output.
 
         Used only when the extension module is not built. The tags arrive as
@@ -737,8 +739,11 @@ class Harness:
         here by position within a known shape. The binding exists to avoid
         needing this.
         """
+        command = [self.binary, lemma]
+        if klass:
+            command.append(klass)
         out = subprocess.run(
-            [self.binary, lemma], capture_output=True, text=True, check=True,
+            command, capture_output=True, text=True, check=True,
         ).stdout
         forms: list[TorilleForm] = []
         for line in out.splitlines():
@@ -969,7 +974,8 @@ class Harness:
         scored.sort(key=lambda t: (t[0], t[1]))
         return [c for _, _, c in scored]
 
-    def audit(self, lemma: str, cells: list[Cell]) -> list[Finding]:
+    def audit(self, lemma: str, cells: list[Cell],
+              klass: str | None = None) -> list[Finding]:
         """Every form of this lemma's paradigm, with the reading that explains it.
 
         One `Finding` per confirmed form, carrying every cell that expects it.
@@ -990,11 +996,11 @@ class Harness:
         with `expected: kissaksemme` rather than as an unexplained word.
         """
         if self.lexicon is not None:
-            return self._audit_lexicon(lemma, cells)
+            return self._audit_lexicon(lemma, cells, klass)
         if not self.has_class(lemma):
             return []
         try:
-            forms = self.torille_forms(lemma)
+            forms = self.torille_forms(lemma, klass)
         except (ValueError, subprocess.CalledProcessError):
             return []
         by_word: dict[str, list[TorilleForm]] = {}
@@ -1163,7 +1169,8 @@ class Harness:
         findings.sort(key=lambda f: (f.cell.case, f.cell.number, f.cell.possessive, f.form))
         return findings
 
-    def _audit_lexicon(self, lemma: str, cells: list[Cell]) -> list[Finding]:
+    def _audit_lexicon(self, lemma: str, cells: list[Cell],
+                       klass: str | None = None) -> list[Finding]:
         """The per-form findings, read from a lexicon reference instead of live
         Omorfi + Voikko (see docs/lexicon.md).
 
@@ -1182,7 +1189,7 @@ class Harness:
         a form is `unsupported` rather than `confirmed`.
         """
         try:
-            forms = self.torille_forms(lemma)
+            forms = self.torille_forms(lemma, klass)
         except (ValueError, subprocess.CalledProcessError):
             return []
         by_word: dict[str, list[TorilleForm]] = {}
