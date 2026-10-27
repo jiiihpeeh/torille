@@ -33,7 +33,32 @@ pub fn inflect_with_estem(lemma: &str, possessives: bool, estem: &str) -> Vec<Fo
 /// The consonant-word engine with explicit `istem` (the bare consonant stem;
 /// `ahven`, `aakkos`) and `estem` (`ahvene`, `aakkose`).
 pub fn inflect_with_stems(lemma: &str, possessives: bool, istem: &str, estem: &str) -> Vec<Form> {
-    consonant_word(lemma, istem, estem, Builder::new(lemma, possessives))
+    inflect_with_stems_extra(lemma, possessives, istem, estem, istem, istem)
+}
+
+/// The consonant-word engine for a word whose singular partitive or `-ten`
+/// genitive plural sits on a different stem from the rest of the plural.
+///
+/// `ien` (32*D) is the case: the strong consonant stem is `iken` (`ikenen`,
+/// `ikenissä`), but the partitive singular and the `-ten` genitive plural keep
+/// the weak `ien` (`ientä`, `ienten`). Giving those two cells their own stem is
+/// what lets the shared class-32 grid serve it without guessing `ikenta`.
+pub fn inflect_with_stems_extra(
+    lemma: &str,
+    possessives: bool,
+    istem: &str,
+    estem: &str,
+    part_sg_stem: &str,
+    ten_stem: &str,
+) -> Vec<Form> {
+    consonant_word(
+        lemma,
+        istem,
+        estem,
+        part_sg_stem,
+        ten_stem,
+        Builder::new(lemma, possessives),
+    )
 }
 
 /// As [`inflect_with_stems`], for a class that knows the word's front/back
@@ -50,6 +75,8 @@ pub fn inflect_with_stems_harmony(
         lemma,
         istem,
         estem,
+        istem,
+        istem,
         Builder::new_harmony(lemma, possessives, front),
     )
 }
@@ -57,7 +84,14 @@ pub fn inflect_with_stems_harmony(
 /// The consonant-word grid, for a caller that has already decided the word's
 /// harmony. Split out so the two entry points differ in nothing else, which is
 /// what keeps a harmony exception from being able to change a stem.
-fn consonant_word(lemma: &str, istem: &str, estem: &str, mut b: Builder) -> Vec<Form> {
+fn consonant_word(
+    lemma: &str,
+    istem: &str,
+    estem: &str,
+    part_sg_stem: &str,
+    ten_stem: &str,
+    mut b: Builder,
+) -> Vec<Form> {
     let (sg, pl) = (Number::Singular, Number::Plural);
 
     b.decline(
@@ -68,7 +102,7 @@ fn consonant_word(lemma: &str, istem: &str, estem: &str, mut b: Builder) -> Vec<
             cell(Case::Nominative, sg, lemma, ["", ""], false).base_on(estem.to_string(), ["", ""]),
             cell(Case::Genitive, sg, estem, ["n", "n"], false).on_stem(),
             // The partitive stays on the bare consonant stem: ahven + ta.
-            cell(Case::Partitive, sg, istem, ["ta", "tä"], true),
+            cell(Case::Partitive, sg, part_sg_stem, ["ta", "tä"], true),
             cell(Case::Essive, sg, estem, ["na", "nä"], true),
             cell(Case::Translative, sg, estem, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
             cell(Case::Illative, sg, estem, ["en", "en"], false).on_ending(["e", "e"]),
@@ -82,7 +116,7 @@ fn consonant_word(lemma: &str, istem: &str, estem: &str, mut b: Builder) -> Vec<
             // The nominative's possessives ride the e-stem, as in the singular.
             cell(Case::Nominative, pl, estem, ["t", "t"], false).on_stem(),
             cell(Case::Genitive, pl, istem, ["ien", "ien"], false).on_ending(["ie", "ie"]),
-            cell(Case::Genitive, pl, istem, ["ten", "ten"], false).on_ending(["te", "te"]),
+            cell(Case::Genitive, pl, ten_stem, ["ten", "ten"], false).on_ending(["te", "te"]),
             cell(Case::Partitive, pl, istem, ["ia", "iä"], true),
             cell(Case::Essive, pl, istem, ["ina", "inä"], true),
             cell(Case::Translative, pl, istem, ["iksi", "iksi"], true).on_ending(["ikse", "ikse"]),

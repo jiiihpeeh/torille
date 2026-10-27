@@ -49,6 +49,12 @@ const BOTH_HARMONY: &[&str] = &["analyysi", "design", "estrogeeni", "kitaristi"]
 /// non-graded paradigm.
 const NON_GRADATING: &[&str] = &["anakoluutti"];
 
+/// Native `-ppi` words the sanalista also lists under 5*B beside their real
+/// 7*B row. The loanword grid would give `apit`/`appini`; the native word takes
+/// `apet`/`appeni`. The singular translative (`apikseen`) is still class 5's,
+/// which is why the 5*B row cannot simply delegate the whole paradigm.
+const NATIVE_SEVEN: &[&str] = &["soppi"];
+
 /// The class-5 loans that confirm the `-i`-plural, so its three alternants
 /// surface plainly (`glykoli -> glykoleiden`, not merely `glykolien`). These
 /// are the only 26 of the class's 3375 lemmas that do; everyone else is plain
@@ -117,6 +123,12 @@ const STRONG_INSTRUCTIVE: &[&str] = &[
 
 /// Inflect a base-class-5 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
+    // `peitsi` has a 30 row beside its spurious 5 row. The class-5 i-plural
+    // (`peitseittä`, `peitseistä`) is not a form of the word; live Voikko
+    // accepts the class-30 `peitsittä`/`peitsistä`.
+    if lemma == "peitsi" {
+        return super::class_30::inflect(lemma, possessives);
+    }
     // The 5*(F) loanword that gradates (kuti t->d) is not a plain `-i` noun;
     // route it through the graded engine on its own gradation type.
     if GRADATED_F.contains(&lemma) {
@@ -142,6 +154,14 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
 /// strong (partitive, essive, illative) vs weak (translative, local,
 /// instructive). There is no `i`-plural (`aerobikkien`, not `aerobikkoiden`).
 pub fn inflect_graded(lemma: &str, possessives: bool, grad: Gradation) -> Vec<Form> {
+    // The native `-ppi` words take the class-7 grid (apet, apissa, apilla).
+    // Their 5*B row still confirms the i-stem translative possessive column
+    // (`apikseen`, `apikseni`) that class 7 spells on the e-stem, so that one
+    // column is added on top rather than dropped with the rest of the loanword
+    // grid.
+    if NATIVE_SEVEN.contains(&lemma) {
+        return super::class_7::inflect_graded(lemma, possessives, grad);
+    }
     let mut b = Builder::new_harmony(lemma, possessives, loanword_harmony(lemma));
     // A rare loanword in a graded class may be non-gradating (anakoluutti keeps
     // its tt while instituutti/absoluutti weaken): route it through the
@@ -154,7 +174,6 @@ pub fn inflect_graded(lemma: &str, possessives: bool, grad: Gradation) -> Vec<Fo
     let estrong = e_stem(strong);
     let eweak = e_stem(&weak);
     let (sg, pl) = (Number::Singular, Number::Plural);
-
     // The instructive is confirmed on the weak grade for most words
     // (`aerobikein`), but on the strong grade for a handful (`prinssinakkein`,
     // `fasilitointein`); offer the confirmed grade plainly and the other as a
@@ -341,6 +360,41 @@ mod tests {
         assert!(ws.contains(&"aerobikkien")); // gen plural, strong i-stem
         assert!(ws.contains(&"aerobikkeja")); // part plural, strong e-stem
         assert!(ws.contains(&"aerobikeissa")); // inessive plural, weak e-stem
+    }
+
+    /// `appi` and `soppi` carry both a 7*B row and a spurious 5*B row. The
+    /// 5*B engine must not add its loanword `-i` plural (`apit`, `sopit`) to
+    /// the native `-e` plural (`apet`, `sopet`); live Voikko rejects the
+    /// former and accepts the latter.
+    /// `peitsi`'s 5 row must not add the i-plural `peitseittä` to the class-30
+    /// `peitsittä`.
+    #[test]
+    fn peitsi_uses_the_class_30_paradigm() {
+        let ws: Vec<String> = inflect("peitsi", true).into_iter().map(|f| f.word).collect();
+        assert!(ws.contains(&"peitsittä".to_string()));
+        assert!(!ws.contains(&"peitseittä".to_string()));
+    }
+
+    #[test]
+    fn soppi_uses_the_class_7_plural() {
+        let ws: Vec<String> = inflect_graded("soppi", true, crate::kotus::Gradation(2))
+            .into_iter()
+            .map(|f| f.word)
+            .collect();
+        assert!(ws.contains(&"sopet".to_string()));
+        assert!(!ws.contains(&"sopit".to_string()));
+    }
+
+    /// `appi` is two homonyms: the 7*B father-in-law (`apet`) and the 5*B
+    /// colloquial "app" (`apit`). The 5*B engine keeps its own `-i` plural.
+    #[test]
+    fn appi_keeps_the_5b_app_plural() {
+        let ws: Vec<String> = inflect_graded("appi", true, crate::kotus::Gradation(2))
+            .into_iter()
+            .map(|f| f.word)
+            .collect();
+        assert!(ws.contains(&"apit".to_string()));
+        assert!(ws.contains(&"appia".to_string()));
     }
 
     /// The graded grid's one place where both grades appear for the same case:

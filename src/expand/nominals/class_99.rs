@@ -175,6 +175,34 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
         );
         return out;
     }
+    // Two class-99 rows are not indeclinable and not i-loans either. `seesam`
+    // is the consonant-final `seesami` (class 5's shape), and `tenä` is a
+    // regular `-ä` singular noun (class 10's shape). The shared i-loan grid
+    // invented `seesamnsa` and `tenäeiden`.
+    if lemma == "seesam" {
+        return super::class_5::inflect(lemma, possessives);
+    }
+    if lemma == "tenä" {
+        // Wiktionary: "Sana taipuu vain harvoissa sijoissa" -- only the
+        // nominative and a few oblique/plural forms. Live Voikko confirms
+        // exactly these five and rejects the rest of the a-stem paradigm.
+        return [
+            (Case::Nominative, sg, "tenä"),
+            (Case::Genitive, sg, "tenän"),
+            (Case::Partitive, sg, "tenää"),
+            (Case::Inessive, sg, "tenässä"),
+            (Case::Nominative, Number::Plural, "tenät"),
+        ]
+        .into_iter()
+        .map(|(case, number, word)| {
+            Form::new(
+                word.to_string(),
+                nominal_tags(PartOfSpeech::Noun, case, number, None),
+            )
+            .with(Confidence::Plain)
+        })
+        .collect();
+    }
     let mut b = Builder::new(lemma, possessives);
     b.decline(
         &Decl::new(vec![
@@ -205,6 +233,27 @@ mod tests {
             .map(|f| f.word)
             .collect::<Vec<_>>();
         assert!(w.contains(&"kyse".to_string()));
+    }
+
+    /// `tenä` is defective: Wiktionary gives only a few forms, and live
+    /// Voikko confirms exactly these five. The i-loan grid invented
+    /// `tenäeiden`/`tenäin`.
+    #[test]
+    fn tena_is_defective() {
+        let w: Vec<String> = inflect("tenä", true).into_iter().map(|f| f.word).collect();
+        for good in ["tenä", "tenän", "tenää", "tenässä", "tenät"] {
+            assert!(w.contains(&good.to_string()), "tenä is missing {good}");
+        }
+        assert_eq!(w.len(), 5, "tenä should have only its five confirmed forms");
+    }
+
+    /// `seesam` inflects as `seesami`, not with a bare-stem possessive
+    /// (`*seesamnsa`).
+    #[test]
+    fn seesam_uses_the_i_stem() {
+        let w: Vec<String> = inflect("seesam", true).into_iter().map(|f| f.word).collect();
+        assert!(w.contains(&"seesamin".to_string()));
+        assert!(!w.contains(&"seesamnsa".to_string()));
     }
 
     #[test]

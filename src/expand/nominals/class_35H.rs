@@ -7,8 +7,9 @@
 //! the final `n` read `m` and the preceding geminate reduced
 //! (`lämmin -> lämpimä`).
 //!
-//! The shape is the 27-cell one: the plural carries `-ien`/`-ten` and a rare
-//! bare `-in` genitive.
+//! The shape is the 27-cell one: the plural carries `-ien` and a rare bare
+//! `-in` genitive. The `-ten` genitive the oracle also listed (`lämminten`) is
+//! not a word; live Voikko accepts only `lämpimien`.
 
 #![allow(dead_code)]
 
@@ -42,7 +43,8 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
         &Decl::new(vec![
             // ---- the singular, on the oblique stem ----
             // The bare nominative and its possessives ride the lemma.
-            cell(Case::Nominative, sg, lemma, ["", ""], false).on_stem(),
+            cell(Case::Nominative, sg, lemma, ["", ""], false)
+                .base_on(weak.clone(), ["", ""]),
             cell(Case::Genitive, sg, &weak, ["n", "n"], false).on_stem(),
             // The partitive stays on the lemma: lämmin -> lämmintä.
             cell(Case::Partitive, sg, lemma, ["ta", "tä"], true),
@@ -56,10 +58,9 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
             cell(Case::Allative, sg, &weak, ["lle", "lle"], true),
             cell(Case::Abessive, sg, &weak, ["tta", "ttä"], true),
             // ---- the plural, on the oblique stem ----
-            cell(Case::Nominative, pl, &weak, ["t", "t"], false).base_on(graded.clone(), ["", ""]),
+            cell(Case::Nominative, pl, &weak, ["t", "t"], false)
+                .base_on(weak.clone(), ["", ""]),
             cell(Case::Genitive, pl, &graded, ["ien", "ien"], false).on_ending(["ie", "ie"]),
-            // The `-ten` genitive plural goes back to the lemma.
-            cell(Case::Genitive, pl, lemma, ["ten", "ten"], false).on_ending(["te", "te"]),
             // A rare bare `-in` genitive plural, with no possessive column.
             rare(Case::Genitive, pl, &weak, ["in", "in"]),
             cell(Case::Partitive, pl, &graded, ["ia", "iä"], true),
@@ -104,7 +105,11 @@ mod tests {
     #[test]
     fn the_plural_stems_and_the_rare_in() {
         let w = words("lämmin");
-        assert!(w.contains(&"lämminten".to_string()));
+        assert!(w.contains(&"lämpimien".to_string()));
+        assert!(!w.contains(&"lämminten".to_string()));
+        for good in ["lämpimäni", "lämpimänsä", "lämpimämme"] {
+            assert!(w.contains(&good.to_string()), "lämmin is missing {good}");
+        }
         let forms = inflect("lämmin", true);
         let rare: Vec<&str> = forms
             .iter()

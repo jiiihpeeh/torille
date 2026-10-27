@@ -22,7 +22,7 @@ use crate::kotus::Gradation;
 use crate::tags::{Case, Form, Number, PartOfSpeech};
 
 use super::class_41::a_stem_inflect;
-use super::utility::{Builder, Decl, cell, nominal_tags, plain};
+use super::utility::{Builder, Decl, Entry, cell, nominal_tags, plain};
 
 pub const CLASS: &str = "49";
 
@@ -122,8 +122,7 @@ pub fn inflect_with(lemma: &str, base: &str, possessives: bool) -> Vec<Form> {
     let (sg, pl) = (Number::Singular, Number::Plural);
     let mut b = Builder::new(lemma, possessives);
 
-    b.decline(
-        &Decl::new(vec![
+    let mut decl = Decl::new(vec![
             cell(Case::Nominative, sg, &short, ["", ""], false).on_stem(),
             cell(Case::Genitive, sg, base, ["en", "en"], false).base_on(short.clone(), ["", ""]),
             cell(Case::Nominative, pl, base, ["et", "et"], false).base_on(short.clone(), ["", ""]),
@@ -161,7 +160,21 @@ pub fn inflect_with(lemma: &str, base: &str, possessives: bool) -> Vec<Form> {
             // once here as well, and the dedup keeps the first spelling.
             cell(Case::Genitive, pl, lemma, ["ten", "ten"], false).on_ending(["te", "te"]),
             plain(Case::Instructive, pl, &short, ["in", "in"]),
-        ]),
+        ]);
+    // A vowel-final base (`hepene`, `autere`) takes the i-plural genitive
+    // (`hepeneiden`/`hepeneitten`); `lemma + ten` would build `hepeneten`.
+    // The consonant-final `askel`/`kannel`/`auer` keep their `-ten` spelling
+    // (`askelten`, `kannelten`, `auerten`).
+    if "aeiouyäö".contains(last) {
+        decl.entries.retain(|entry| {
+            !matches!(entry, Entry::Cell(c)
+                if (c.case == Case::Genitive && c.number == pl && c.stem == lemma)
+                    || (c.case == Case::Partitive && c.number == pl && c.stem == base)
+                    || (c.case == Case::Illative && c.number == pl && c.stem == base))
+        });
+    }
+    b.decline(
+        &decl,
         |case, number, poss| nominal_tags(PartOfSpeech::Noun, case, number, poss),
     );
     out.extend(b.into_forms());
@@ -199,6 +212,25 @@ mod tests {
                 !w.contains(&wrong.to_string()),
                 "auer must not offer *{wrong}"
             );
+        }
+    }
+
+    /// An e-final class-49 word takes the i-plural genitive, not `lemma + ten`.
+    #[test]
+    fn vowel_final_base_has_no_ten_genitive() {
+        let w = words("hepene");
+        for good in ["hepeneiden", "hepeneitten", "hepenien"] {
+            assert!(w.contains(&good.to_string()), "hepene is missing {good}");
+        }
+        assert!(
+            !w.contains(&"hepeneten".to_string()),
+            "hepene must not offer *hepeneten"
+        );
+        for good in ["hepeneisiin", "hepeneihin", "hepeneitä"] {
+            assert!(w.contains(&good.to_string()), "hepene is missing {good}");
+        }
+        for bad in ["hepeneiin", "hepeneiä"] {
+            assert!(!w.contains(&bad.to_string()), "hepene must not offer *{bad}");
         }
     }
 

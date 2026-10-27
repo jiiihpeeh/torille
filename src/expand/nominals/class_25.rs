@@ -15,7 +15,7 @@
 
 use crate::tags::{Case, Form, Number, PartOfSpeech};
 
-use super::utility::{Builder, Decl, cell, e_stem, nominal_tags, plain, possessed};
+use super::utility::{Builder, Decl, Entry, cell, e_stem, nominal_tags, plain, possessed};
 
 pub const CLASS: &str = "25";
 
@@ -38,8 +38,7 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     let rstem = reduced(lemma); // lien
     let (sg, pl) = (Number::Singular, Number::Plural);
 
-    b.decline(
-        &Decl::new(vec![
+    let mut decl = Decl::new(vec![
             // ---- the singular, on the e-stem ----
             // The nominative's bare form is the `i`-lemma but its possessives
             // ride the `e`-stem (`liemeni`, not `liemini`), which is what the
@@ -81,7 +80,20 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
             cell(Case::Allative, pl, istem, ["lle", "lle"], true),
             cell(Case::Abessive, pl, istem, ["tta", "ttä"], true),
             plain(Case::Instructive, pl, istem, ["n", "n"]),
-        ]),
+        ]);
+    // `liemi` confirms only the reduced partitive `lientä`; the e-stem
+    // `liemeä` is not a form of that word (live Voikko rejects it), though
+    // the other class members accept their full partitive.
+    if lemma == "liemi" {
+        decl.entries.retain(|entry| {
+            !matches!(entry, Entry::Cell(c)
+                if c.case == Case::Partitive
+                    && c.number == sg
+                    && c.stem == estem)
+        });
+    }
+    b.decline(
+        &decl,
         |case, number, poss| nominal_tags(PartOfSpeech::Noun, case, number, poss),
     );
     b.comitative(istem);
@@ -105,7 +117,10 @@ mod tests {
         let w = words("liemi");
         assert!(w.contains(&"liemen".to_string())); // gen sg
         assert!(w.contains(&"lientä".to_string())); // part sg, reduced stem
-        assert!(w.contains(&"liemeä".to_string())); // part sg, e-stem
+        // `liemi` is the one member whose full partitive the reference does
+        // not confirm; live Voikko rejects `liemeä`.
+        assert!(!w.contains(&"liemeä".to_string()));
+        assert!(words("niemi").contains(&"niemeä".to_string())); // other words do
         assert!(w.contains(&"liemien".to_string())); // gen pl, i-stem
         assert!(w.contains(&"lienten".to_string())); // and the reduced stem's
     }

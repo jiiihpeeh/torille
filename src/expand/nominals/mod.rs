@@ -63,6 +63,7 @@ pub mod class_30;
 pub mod class_31;
 pub mod class_32;
 pub mod class_32C;
+pub mod class_32D;
 pub mod class_33;
 pub mod class_33B;
 pub mod class_33C;
@@ -218,6 +219,7 @@ const DISPATCH: &[(&str, fn(&str, bool) -> Vec<Form>)] = &[
     ("31", class_31::inflect),
     ("32", class_32::inflect),
     ("32*C", class_32C::inflect),
+    ("32*D", class_32D::inflect),
     ("33", class_33::inflect),
     ("33*B", class_33B::inflect),
     ("33*C", class_33C::inflect),
@@ -351,7 +353,7 @@ const AUTHORITATIVE_CLASSES: &[&str] = &[
     "21", "22", "23", "24", "25", "26", "27",
     "28*I", "28*J", "28*K",
     "29", "30",
-    "31", "32", "32*C",
+    "31", "32", "32*C", "32*D",
     "33", "33*B", "33*C", "33*D", "33*E", "33*F", "33*I", "33*J", "33*K", "33*L",
     "34", "34*C", "35*H",
     "36", "37",

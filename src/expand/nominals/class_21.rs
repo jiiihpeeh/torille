@@ -8,8 +8,10 @@
 //!
 //! [`paradigm`] builds one harmony's worth of the grid; `inflect` runs it
 //! twice. The singular partitive and the three singular illatives (`-hen`,
-//! `-hyn`, `-hin`) and the three plural genitives (`-iden`, `-itten`, `-jen`)
-//! are the extra cells beyond the base grid.
+//! `-hyn`, `-hin`) and the two plural genitives (`-iden`, `-itten`) are the
+//! extra cells beyond the base grid. The `-jen` genitive the reference once
+//! listed is not a form of any class-21 word: live Voikko rejects `briejen`,
+//! `bébéjen` and every other lemma's, while accepting `-iden`/`-itten`.
 
 #![allow(dead_code)]
 
@@ -33,10 +35,31 @@ const BACK_HARMONY: &[&str] = &[
     "speedway",
 ];
 
+/// The illative spellings live Voikko confirms for a class-21 word when the
+/// oracle lists all three. A word outside these lists keeps the oracle's three
+/// plain spellings, because the reference has no better answer for it.
+const HEN_ONLY: &[&str] = &[
+    "brie",
+    "bébé",
+    "fondue",
+    "handsfree",
+    "reggae",
+    "rosé",
+    "selfie",
+];
+const Y_ALL_THREE: &[&str] = &["cowboy", "playboy", "spray"];
+const Y_HYN_ONLY: &[&str] = &["jersey", "jockey", "maahockey"];
+const HIN_ONLY: &[&str] = &["pistou"];
+
 fn paradigm(lemma: &str, possessives: bool, front: bool) -> Vec<Form> {
     let mut b = Builder::new_harmony(lemma, possessives, front);
     let s = lemma;
     let (sg, pl) = (Number::Singular, Number::Plural);
+    let hen_plain = !Y_ALL_THREE.contains(&lemma)
+        && !Y_HYN_ONLY.contains(&lemma)
+        && !HIN_ONLY.contains(&lemma);
+    let hyn_plain = !HEN_ONLY.contains(&lemma) && !HIN_ONLY.contains(&lemma);
+    let hin_plain = !HEN_ONLY.contains(&lemma) && !Y_HYN_ONLY.contains(&lemma);
 
     b.decline(
         &Decl::new(vec![
@@ -47,10 +70,21 @@ fn paradigm(lemma: &str, possessives: bool, front: bool) -> Vec<Form> {
             cell(Case::Partitive, sg, s, ["a", "ä"], true),
             cell(Case::Essive, sg, s, ["na", "nä"], true),
             cell(Case::Translative, sg, s, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
-            // The three foreign illatives, in the reference's order.
-            cell(Case::Illative, sg, s, ["hen", "hen"], false).on_ending(["he", "he"]),
-            cell(Case::Illative, sg, s, ["hyn", "hyn"], false).on_ending(["hy", "hy"]),
-            cell(Case::Illative, sg, s, ["hin", "hin"], false).on_ending(["hi", "hi"]),
+            // The three foreign illatives, in the reference's order. Only the
+            // one live Voikko confirms for this word is plain; the others stay
+            // as repaired alternants so they are never offered as corrections.
+            {
+                let hen = cell(Case::Illative, sg, s, ["hen", "hen"], false).on_ending(["he", "he"]);
+                if hen_plain { hen } else { hen.as_rare() }
+            },
+            {
+                let hyn = cell(Case::Illative, sg, s, ["hyn", "hyn"], false).on_ending(["hy", "hy"]);
+                if hyn_plain { hyn } else { hyn.as_rare() }
+            },
+            {
+                let hin = cell(Case::Illative, sg, s, ["hin", "hin"], false).on_ending(["hi", "hi"]);
+                if hin_plain { hin } else { hin.as_rare() }
+            },
             cell(Case::Inessive, sg, s, ["ssa", "ssä"], true),
             cell(Case::Elative, sg, s, ["sta", "stä"], true),
             cell(Case::Adessive, sg, s, ["lla", "llä"], true),
@@ -61,8 +95,6 @@ fn paradigm(lemma: &str, possessives: bool, front: bool) -> Vec<Form> {
             cell(Case::Nominative, pl, s, ["t", "t"], false).on_stem(),
             cell(Case::Genitive, pl, s, ["iden", "iden"], false).on_ending(["ide", "ide"]),
             cell(Case::Genitive, pl, s, ["itten", "itten"], false).on_ending(["itte", "itte"]),
-            // The `-jen` genitive plural of the foreign words: cowboyjeni.
-            cell(Case::Genitive, pl, s, ["jen", "jen"], false).on_ending(["je", "je"]),
             cell(Case::Partitive, pl, s, ["ita", "itä"], true),
             cell(Case::Essive, pl, s, ["ina", "inä"], true),
             cell(Case::Translative, pl, s, ["iksi", "iksi"], true).on_ending(["ikse", "ikse"]),
@@ -117,6 +149,23 @@ mod tests {
         assert!(w.contains(&"brietä".to_string()));
         assert!(w.contains(&"briehen".to_string()));
         assert!(w.contains(&"brieiden".to_string()));
+        assert!(w.contains(&"brieitten".to_string()));
+        assert!(!w.contains(&"briejen".to_string()));
+    }
+
+    /// `bébé` confirms only `bébéhen`; the oracle's other two illatives are
+    /// repaired, never plain.
+    #[test]
+    fn the_unconfirmed_illatives_are_repaired() {
+        let forms = inflect("bébé", true);
+        let plain: Vec<&str> = forms
+            .iter()
+            .filter(|f| f.confidence == Confidence::Plain)
+            .map(|f| f.word.as_str())
+            .collect();
+        assert!(plain.contains(&"bébéhen"));
+        assert!(!plain.contains(&"bébéhyn"));
+        assert!(!plain.contains(&"bébéhin"));
     }
 
     #[test]

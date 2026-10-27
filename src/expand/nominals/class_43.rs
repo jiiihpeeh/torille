@@ -42,8 +42,11 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
             cell(Case::Allative, sg, &estem, ["lle", "lle"], true),
             cell(Case::Abessive, sg, &estem, ["tta", "ttä"], true),
             // ---- the plural, on the bare consonant stem with the i-plural ----
+            // The plural nominative's possessives ride the e-stem
+            // (`neitsyeni`, `neitsyensä`), not the bare consonant stem
+            // (`*neitsyni`, `*neitsynsä`).
             cell(Case::Nominative, pl, &estem, ["t", "t"], false)
-                .base_on(base.to_string(), ["", ""]),
+                .base_on(estem.clone(), ["", ""]),
             cell(Case::Genitive, pl, base, ["iden", "iden"], false).on_ending(["ide", "ide"]),
             cell(Case::Genitive, pl, base, ["itten", "itten"], false).on_ending(["itte", "itte"]),
             cell(Case::Partitive, pl, base, ["ita", "itä"], true),
@@ -90,5 +93,18 @@ mod tests {
         assert!(w.contains(&"airuessa".to_string()));
         assert!(w.contains(&"airuissa".to_string()));
         assert!(w.contains(&"airuitten".to_string()));
+    }
+
+    /// The plural nominative's possessive column is on the e-stem:
+    /// `neitsyeni`, not `*neitsyni`.
+    #[test]
+    fn the_plural_nominative_possessives_use_the_e_stem() {
+        let w = words("neitsyt");
+        for good in ["neitsyeni", "neitsyesi", "neitsyensä"] {
+            assert!(w.contains(&good.to_string()), "neitsyt is missing {good}");
+        }
+        for bad in ["neitsyni", "neitsysi", "neitsynsä"] {
+            assert!(!w.contains(&bad.to_string()), "neitsyt must not offer {bad}");
+        }
     }
 }

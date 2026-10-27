@@ -393,10 +393,11 @@ pub const IRREGULAR_WORDS: &[(&str, &[WordForm])] = &[
             },
         ],
     ),
-    // ien ienen ientä ... ikenet ikenien ikeniä ikeniin. The gum word keeps
-    // its singular stem `ien-` but builds the plural on `iken-`, which no
-    // class-32 ending predicts. The plural is the shape that shows up in
-    // reading (`ikeniinsä`, `ikenissä`).
+    // ien ikenen ientä ... ikenet ikenien ikeniä ikeniin. The gum word builds
+    // its obliques on `iken-` and keeps `ien-` only for the nominative and
+    // partitive singular. The Wiktionary template `fi-subs-sisar|i|en|ken|ä`
+    // gives exactly these forms (and both `ienten` and `ikenien` in the plural
+    // genitive); no class-32 ending predicts the `k`.
     (
         "ien",
         &[
@@ -408,7 +409,7 @@ pub const IRREGULAR_WORDS: &[(&str, &[WordForm])] = &[
             WordForm {
                 case: Case::Genitive,
                 number: Number::Singular,
-                word: "ienen",
+                word: "ikenen",
             },
             WordForm {
                 case: Case::Partitive,
@@ -418,47 +419,47 @@ pub const IRREGULAR_WORDS: &[(&str, &[WordForm])] = &[
             WordForm {
                 case: Case::Essive,
                 number: Number::Singular,
-                word: "ienenä",
+                word: "ikeninä",
             },
             WordForm {
                 case: Case::Translative,
                 number: Number::Singular,
-                word: "ieneksi",
+                word: "ikeneksi",
             },
             WordForm {
                 case: Case::Inessive,
                 number: Number::Singular,
-                word: "ienessä",
+                word: "ikenessä",
             },
             WordForm {
                 case: Case::Elative,
                 number: Number::Singular,
-                word: "ienestä",
+                word: "ikenestä",
             },
             WordForm {
                 case: Case::Illative,
                 number: Number::Singular,
-                word: "ieneen",
+                word: "ikeneen",
             },
             WordForm {
                 case: Case::Adessive,
                 number: Number::Singular,
-                word: "ienellä",
+                word: "ikenellä",
             },
             WordForm {
                 case: Case::Ablative,
                 number: Number::Singular,
-                word: "ieneltä",
+                word: "ikeneltä",
             },
             WordForm {
                 case: Case::Allative,
                 number: Number::Singular,
-                word: "ienelle",
+                word: "ikenelle",
             },
             WordForm {
                 case: Case::Abessive,
                 number: Number::Singular,
-                word: "ienettä",
+                word: "ikenettä",
             },
             WordForm {
                 case: Case::Nominative,

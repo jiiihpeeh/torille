@@ -58,7 +58,6 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
             // possessives are on the lemma: `haaksini`, not `haahdeni`.
             cell(Case::Nominative, pl, &w, ["t", "t"], false).base_on(s.clone(), ["", ""]),
             cell(Case::Genitive, pl, &s, ["en", "en"], false).on_ending(["e", "e"]),
-            cell(Case::Genitive, pl, &p, ["ten", "ten"], false).on_ending(["te", "te"]),
             cell(Case::Partitive, pl, &s, ["a", "ä"], true),
             cell(Case::Essive, pl, &s, ["na", "nä"], true),
             cell(Case::Translative, pl, &s, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
@@ -91,5 +90,6 @@ mod tests {
         assert!(w.contains(&"haahta".to_string()));
         assert!(w.contains(&"haaksien".to_string()));
         assert!(w.contains(&"haaksia".to_string()));
+        assert!(!w.contains(&"haahtten".to_string()));
     }
 }

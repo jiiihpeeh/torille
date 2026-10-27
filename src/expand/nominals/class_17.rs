@@ -37,10 +37,17 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     // here). The other spellings are real for other classes but the reference
     // confirms one per word here, so they are offered repaired, never plain.
     let last_v = stem.chars().last().unwrap();
-    let (ill_v, ill_base) = if last_v == 'i' {
-        ("hin", "hi")
+    // The class-18 short words that reach this engine (`kyy`, `pelakuu`) take
+    // the `-hVn` illative (`kyyhyn`, `pelakuuhun`), not the long-vowel
+    // `-seen` that `ehtoo`/`harmaa` want. The `-i` words (`pii`, `torstai`)
+    // take `-hin` as before.
+    const SHORT_H: &[&str] = &["kyy", "pelakuu"];
+    let (ill_v, ill_base): (String, String) = if last_v == 'i' {
+        ("hin".to_string(), "hi".to_string())
+    } else if SHORT_H.contains(&lemma) {
+        (format!("h{last_v}n"), format!("h{last_v}"))
     } else {
-        ("seen", "see")
+        ("seen".to_string(), "see".to_string())
     };
 
     // A plural-only word (häät) is already plural; the nominative is the lemma
@@ -55,7 +62,7 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     // words (`ehtoisiin`) but not for the `-i` words that reach here from class
     // 18 (`aamunkoi` has only `aamunkoihin`), so it is repaired there.
     let isiin = cell(Case::Illative, pl, &pstem, "isiin", false).on_ending("isii");
-    let isiin = if stem.ends_with('i') {
+    let isiin = if stem.ends_with('i') || lemma == "pelakuu" {
         isiin.as_rare()
     } else {
         isiin
@@ -131,5 +138,29 @@ mod tests {
         assert!(w.contains(&"ehtooseen".to_string()));
         assert!(w.contains(&"ehtoiden".to_string()));
         assert!(w.contains(&"ehtoita".to_string()));
+    }
+
+    /// `kyy` and `pelakuu` are class-18 short words delegated here; their
+    /// illative is `-hVn`, not the long-vowel `-seen`.
+    /// The short `-yy`/`-uu` words keep the ordinary plural: `kyyt`, `kyitä`,
+    /// `kyihin`, `kyiden`, `kyissä`; only the singular illative is special.
+    #[test]
+    fn kyy_keeps_the_ordinary_plural() {
+        let w = words("kyy");
+        for good in ["kyyt", "kyitä", "kyihin", "kyiden", "kyissä"] {
+            assert!(w.contains(&good.to_string()), "kyy is missing {good}");
+        }
+    }
+
+    #[test]
+    fn short_words_take_the_hvn_illative() {
+        for (lemma, good, bad) in [
+            ("kyy", "kyyhyn", "kyyseen"),
+            ("pelakuu", "pelakuuhun", "pelakuuseen"),
+        ] {
+            let w = words(lemma);
+            assert!(w.contains(&good.to_string()), "{lemma} is missing {good}");
+            assert!(!w.contains(&bad.to_string()), "{lemma} must not offer {bad}");
+        }
     }
 }
