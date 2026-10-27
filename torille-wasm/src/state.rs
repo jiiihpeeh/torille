@@ -103,12 +103,12 @@ impl TextAreaState {
                 if tok.is_word() {
                     let at_sentence_start = sentence_initial;
                     sentence_initial = false;
-                    if tok.is_capitalised() && !at_sentence_start {
-                        if let Some(lower) = tok.lower_word() {
-                            if lower.chars().count() >= 2 {
-                                mid_caps.insert(lower);
-                            }
-                        }
+                    if tok.is_capitalised()
+                        && !at_sentence_start
+                        && let Some(lower) = tok.lower_word()
+                        && lower.chars().count() >= 2
+                    {
+                        mid_caps.insert(lower);
                     }
                 } else if tok.ends_sentence() {
                     sentence_initial = true;
@@ -371,17 +371,6 @@ fn match_phrase_at(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use torille::tokenise::{Token, TokenKind};
-
-    fn w(text: &str) -> Token {
-        Token {
-            text: text.to_string(),
-            start: 0,
-            end: text.len(),
-            kind: TokenKind::Word,
-        }
-    }
-
     #[test]
     fn empty_state_analyze_returns_no_hits() {
         let st = TextAreaState::new();

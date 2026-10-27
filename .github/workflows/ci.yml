@@ -28,8 +28,8 @@ jobs:
       - name: Check (workspace)
         run: cargo check --workspace --all-targets
 
-      - name: Clippy (engine, warnings are errors)
-        run: cargo clippy -p torille --all-targets -- -D warnings
+      - name: Clippy (workspace, warnings are errors)
+        run: cargo clippy --workspace --all-targets -- -D warnings
 
       - name: Workspace tests
         run: cargo test --release --workspace

@@ -19,6 +19,10 @@
 //! `tags` is the same list of words the `inflect` binary prints after the
 //! confidence, so anything written against that output keeps working.
 
+// PyO3's `#[pymethods]` expands the return expression through a `PyResult`
+// conversion that clippy sees as a no-op on the already-converted type.
+#![allow(clippy::useless_conversion)]
+
 use std::sync::OnceLock;
 
 use pyo3::exceptions::PyValueError;
@@ -300,8 +304,6 @@ enum PlanError {
     UnknownLemma(String),
     /// A class was given that is not a class expression.
     BadClass(String),
-    /// In the sanalista, but with nothing usable to inflect it from.
-    NoClass(String),
 }
 
 impl PlanError {
@@ -313,7 +315,6 @@ impl PlanError {
             PlanError::BadClass(c) => {
                 format!("{c}: not a class expression (expected e.g. 73, 7*D)")
             }
-            PlanError::NoClass(w) => format!("{w}: no class to inflect with"),
         }
     }
 
@@ -533,11 +534,11 @@ impl Engine {
         // one reading beats withholding it because the first row was not it.
         // An explicit `pos` overrides the lexicon, since that is the caller
         // stating the reading directly.
-        let noun_capable = match pos.as_deref() {
+        let noun_capable = match pos {
             Some(name) => parse_pos(name) == Some(PartOfSpeech::Noun),
             None => found
                 .iter()
-                .any(|l| PartOfSpeech::is_substantival(&l.part_of_speech)),
+                .any(|l| PartOfSpeech::is_substantival(l.part_of_speech)),
         };
 
         // The reading, and it has to agree with `noun_capable`. These used to be
@@ -548,12 +549,12 @@ impl Engine {
         // carrying `-mme` and tagged `adjective` -- a possessive form asserting
         // it is not a noun, which is the same defect as `ehtooheni` being tagged
         // a bare singular illative. One rule now decides both, so they cannot.
-        let part_of_speech = match pos.as_deref() {
+        let part_of_speech = match pos {
             Some(name) => parse_pos(name).unwrap_or(PartOfSpeech::Unknown),
             None if noun_capable => PartOfSpeech::Noun,
             None => found
                 .first()
-                .map(|l| PartOfSpeech::inflecting_reading(&l.part_of_speech))
+                .map(|l| PartOfSpeech::inflecting_reading(l.part_of_speech))
                 .unwrap_or(PartOfSpeech::Unknown),
         };
 
