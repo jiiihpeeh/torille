@@ -1723,7 +1723,7 @@ pub(super) fn s_less_host(word: &str) -> Option<String> {
     if host.chars().count() < 2 {
         return None;
     }
-    is_known_word(host).map(|_| host.to_string())
+    is_known_word_fast(host).map(|_| host.to_string())
 }
 
 /// Spawn the lazy statics that the per-textbox render relies on,

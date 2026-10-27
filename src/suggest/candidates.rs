@@ -9,7 +9,8 @@ use crate::rerank::{Pipeline, Suggestion, SuggestionSource};
 use crate::tags::Confidence;
 
 use super::known::{
-    catalogue, gradation_plural_alternate, is_known_compound, is_known_word, lexicon, s_less_host,
+    catalogue, gradation_plural_alternate, is_known_compound_fast, is_known_word_fast, lexicon,
+    s_less_host,
 };
 use super::levenshtein::{keyboard_bonus, levenshtein};
 
@@ -120,11 +121,15 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
         }];
     }
     // A correctly written compound needs no correction. Short-circuit before
-    // the head-1 walk: `kahvikekkereitä` takes ~30 s there and ~90 ms here.
-    // `is_known_compound` deliberately rejects a closed spelling of a
-    // lexically hyphenated compound, so `linjaauto` still reaches the engine
-    // and gets its `linja-auto` suggestion.
-    if is_known_compound(&word).is_some() {
+    // the head-1 walk: `kahvikekkereitä` takes ~30 s there. Use the fast
+    // detector here: the full one sends the head through the engine, which
+    // costs seconds on an ordinary typo (`kiirempää` was ~3 s before this),
+    // while the engine-free pass answers the same question for compounds the
+    // form and stem maps can already name. `is_known_compound` deliberately
+    // rejects a closed spelling of a lexically hyphenated compound, so
+    // `linjaauto` still reaches the engine and gets its `linja-auto`
+    // suggestion.
+    if is_known_compound_fast(&word).is_some() {
         return Vec::new();
     }
     let cat = catalogue();
@@ -245,7 +250,7 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     if let Some(prefix) = word.strip_suffix("oo") {
         for ending in ["oaa", "oa"] {
             let candidate = format!("{prefix}{ending}");
-            let base = is_known_word(&candidate).or_else(|| {
+            let base = is_known_word_fast(&candidate).or_else(|| {
                 find_any_base_with(lexicon, cat, &candidate)
                     .first()
                     .map(|lemma| lemma.word.to_string())
@@ -270,7 +275,7 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     //    walks above will not always produce it; the checker flags the
     //    `-s` word and this is the correction the caller wants.
     if let Some(host) = s_less_host(&word) {
-        let base = is_known_word(&host);
+        let base = is_known_word_fast(&host);
         candidates.push(Suggestion {
             word: host,
             edit_distance: 0,
@@ -384,7 +389,7 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     // extra probes off ordinary unknown words.
     if candidates.is_empty() && max_distance > 0 && has_adjacent_repeat(&word) {
         for candidate in deletion_corrections(&word) {
-            if is_known_word(&candidate).is_none() {
+            if is_known_word_fast(&candidate).is_none() {
                 continue;
             }
             let d = levenshtein(&word, &candidate, max_distance);
@@ -454,7 +459,7 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
 /// (`linjaauto` -> `linja-auto`, `suomalaisruotsalainen` ->
 /// `suomalais-ruotsalainen`, `EUmaat` -> `EU-maat`).
 ///
-/// Every candidate is confirmed by `is_known_word`, so this cannot invent a
+/// Every candidate is confirmed by `is_known_word_fast`, so this cannot invent a
 /// spelling. The insertion search is gated by a cheap shape test: a doubled
 /// vowel, a `-lainen` pair, an acronym prefix or a number prefix. Without
 /// that gate the search would run for every ordinary misspelling.
@@ -466,8 +471,8 @@ fn push_hyphen_candidates(
 ) {
     if lower.contains('-') {
         let closed = lower.replace('-', "");
-        if is_known_word(lower).is_none()
-            && let Some(base) = is_known_word(&closed)
+        if is_known_word_fast(lower).is_none()
+            && let Some(base) = is_known_word_fast(&closed)
         {
             candidates.push(Suggestion {
                 word: closed,
@@ -487,7 +492,7 @@ fn push_hyphen_candidates(
     }
     for (i, _) in lower.char_indices().skip(1) {
         let candidate = format!("{}-{}", &lower[..i], &lower[i..]);
-        if let Some(base) = is_known_word(&candidate) {
+        if let Some(base) = is_known_word_fast(&candidate) {
             candidates.push(Suggestion {
                 word: candidate,
                 edit_distance: 0,
@@ -503,7 +508,7 @@ fn push_hyphen_candidates(
     if original != lower {
         for (i, _) in original.char_indices().skip(1) {
             let candidate = format!("{}-{}", &original[..i], &original[i..]);
-            if let Some(base) = is_known_word(&candidate) {
+            if let Some(base) = is_known_word_fast(&candidate) {
                 candidates.push(Suggestion {
                     word: candidate,
                     edit_distance: 0,
