@@ -67,7 +67,6 @@ fn paradigm(lemma: &str, possessives: bool, front: bool) -> Vec<Form> {
             cell(Case::Nominative, sg, s, ["", ""], false).on_stem(),
             cell(Case::Genitive, sg, s, ["n", "n"], false).on_stem(),
             cell(Case::Partitive, sg, s, ["ta", "tä"], true),
-            cell(Case::Partitive, sg, s, ["a", "ä"], true),
             cell(Case::Essive, sg, s, ["na", "nä"], true),
             cell(Case::Translative, sg, s, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
             // The three foreign illatives, in the reference's order. Only the
@@ -151,6 +150,7 @@ mod tests {
         assert!(w.contains(&"brieiden".to_string()));
         assert!(w.contains(&"brieitten".to_string()));
         assert!(!w.contains(&"briejen".to_string()));
+        assert!(!w.contains(&"brieä".to_string()));
     }
 
     /// `bébé` confirms only `bébéhen`; the oracle's other two illatives are
