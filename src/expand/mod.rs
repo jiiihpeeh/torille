@@ -1058,6 +1058,112 @@ mod tests {
         );
     }
 
+    /// A hyphenated class-51 compound keeps its hyphen in every cell.
+    ///
+    /// `nuori-isäntä` is the one class-51 lemma the sanalista writes with a
+    /// hyphen, and the hyphen is part of the established expression rather than
+    /// a nominative-only boundary marker: the table is `nuoren-isännän`,
+    /// `nuorta-isäntää`, `nuoret-isännät`. `find_parts` could not see it before
+    /// because it looks for `isäntä` after the head and the row spells the tail
+    /// `-isäntä`.
+    #[cfg(feature = "generated-nominals")]
+    #[test]
+    fn a_hyphenated_class_51_compound_keeps_its_hyphen() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let forms: Vec<String> = inflect_in(
+            "nuori-isäntä",
+            Inflection {
+                class: 51,
+                gradation: None,
+            },
+            &cat,
+            Some(&LexiconIndex::new(&lexicon)),
+            PartOfSpeech::Noun,
+            false,
+        )
+        .into_iter()
+        .map(|g| g.word)
+        .collect();
+        for expected in [
+            "nuori-isäntä",
+            "nuoren-isännän",
+            "nuorta-isäntää",
+            "nuoressa-isännässä",
+            "nuoresta-isännästä",
+            "nuoreen-isäntään",
+            "nuorella-isännällä",
+            "nuorelta-isännältä",
+            "nuorelle-isännälle",
+            "nuorena-isäntänä",
+            "nuoreksi-isännäksi",
+            "nuoretta-isännättä",
+            "nuoret-isännät",
+            "nuorten-isäntien",
+            "nuoria-isäntiä",
+            "nuorissa-isännissä",
+            "nuorista-isännistä",
+            "nuoriin-isäntiin",
+            "nuorilla-isännillä",
+            "nuorilta-isänniltä",
+            "nuorille-isännille",
+            "nuorina-isäntinä",
+            "nuoriksi-isänniksi",
+            "nuoritta-isännittä",
+            "nuorin-isännin",
+        ] {
+            assert!(
+                forms.iter().any(|f| f == expected),
+                "{expected} is missing from nuori-isäntä"
+            );
+        }
+    }
+
+    /// The adjective prefixes in class-50 compounds stay uninflected.
+    ///
+    /// `kevyt` is a prefix in `kevytsora`, not a word that agrees with `sora`,
+    /// so the genitive is `kevytsoran`, not `kevyensoran`; the same holds for
+    /// `iso`, `hapan`, `ruskea` and `laiska`.
+    #[cfg(feature = "generated-nominals")]
+    #[test]
+    fn an_adjective_prefix_in_a_class_50_compound_stays_fixed() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let forms = |word: &str| -> Vec<String> {
+            inflect_in(
+                word,
+                Inflection {
+                    class: 50,
+                    gradation: None,
+                },
+                &cat,
+                Some(&LexiconIndex::new(&lexicon)),
+                PartOfSpeech::Noun,
+                false,
+            )
+            .into_iter()
+            .map(|g| g.word)
+            .collect()
+        };
+        for (word, genitive, wrong) in [
+            ("kevytsora", "kevytsoran", "kevyensoran"),
+            ("isojalka", "isojalan", "isonjalan"),
+            ("hapannaama", "hapannaaman", "happamannaaman"),
+            ("ruskeakieli", "ruskeakielen", "ruskeankielen"),
+            ("laiskamato", "laiskamadon", "laiskanmadon"),
+        ] {
+            let rows = forms(word);
+            assert!(
+                rows.iter().any(|f| f == genitive),
+                "{word}: expected {genitive}"
+            );
+            assert!(
+                !rows.iter().any(|f| f == wrong),
+                "{word}: the prefix inflected to {wrong}"
+            );
+        }
+    }
+
     /// A compound whose tail is a two-letter word still splits.
     ///
     /// `find_parts` required *both* parts of a compound to be three letters or

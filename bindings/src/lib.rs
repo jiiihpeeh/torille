@@ -588,21 +588,18 @@ impl Engine {
                 drop_marker(&mut all);
                 // A compound's class list names its head's class beside the
                 // compound marker (`nuoripari` is `5, 51`) and can name a
-                // second compound type. Drop the head class; a leading `51`
-                // (`51, 50`) is the primary reading and the class-50 reading
-                // only adds words the reference rejects, while a leading `50`
-                // (`50, 51`) keeps both -- the reference confirms forms of each.
+                // second compound type. Drop the head class and keep both
+                // markers when the row names both: `isoviha` and `isopurje` are
+                // `51, 50`, and the 50 reading keeps the initial part fixed
+                // (`isovihalta`, `isovihalle`) beside the class-51 reading
+                // (`isonvihalta`).
                 let markers: Vec<Inflection> = all
                     .iter()
                     .filter(|i| i.class == 50 || i.class == 51)
                     .copied()
                     .collect();
                 if !markers.is_empty() {
-                    all = if markers[0].class == 51 || markers.iter().all(|i| i.class == 50) {
-                        vec![markers[0]]
-                    } else {
-                        markers
-                    };
+                    all = markers;
                 }
                 all
             }

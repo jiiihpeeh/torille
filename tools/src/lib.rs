@@ -141,13 +141,13 @@ pub fn resolve_inflections(lemma: &str) -> Vec<Inflection> {
     }
     let markers: Vec<Inflection> = all.iter().copied().filter(is_marker).collect();
     if !markers.is_empty() {
-        // A leading 51 is the primary reading; a leading 50 keeps both, since
-        // the reference confirms forms of each.
-        all = if markers[0].class == 51 || markers.iter().all(|i| i.class == 50) {
-            vec![markers[0]]
-        } else {
-            markers
-        };
+        // A compound's class list names its head's class beside the marker
+        // (`nuoripari` is `5, 51`), so the head class is dropped. Both markers
+        // are kept when the row names both: `isoviha` and `isopurje` are
+        // `51, 50`, and the 50 reading is the one that keeps the initial part
+        // fixed (`isovihalta`, `isovihalle`), which the user-facing paradigm
+        // needs beside the class-51 reading (`isonvihalta`).
+        all = markers;
     }
     all
 }
@@ -277,6 +277,11 @@ mod tests {
         // A compound marker replaces the head class beside it.
         assert_eq!(classes("nuoripari"), vec![51]);
         assert_eq!(classes("ahkeraliisa"), vec![50]);
+        // Both compound readings are kept when the row names both. `isoviha` is
+        // `51, 50`: 51 inflects the initial part (`isonvihan`), 50 keeps it
+        // fixed (`isovihan`, `isovihalta`, `isovihalle`).
+        assert_eq!(classes("isoviha"), vec![51, 50]);
+        assert_eq!(classes("isopurje"), vec![51, 50]);
         // And the ordinary case is untouched.
         assert_eq!(classes("talo"), vec![1]);
     }

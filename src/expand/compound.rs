@@ -113,8 +113,19 @@ pub(super) fn compound_paradigm(
                     continue;
                 }
                 for h in &heads {
+                    // A hyphenated class-51 lemma keeps its hyphen in every
+                    // cell: `nuori-isäntä` is an established expression, so the
+                    // table is `nuoren-isännän`, `nuorta-isäntää`,
+                    // `nuoret-isännät`, not the closed spelling a generic
+                    // compound would use. The separator is not part of either
+                    // part, so it is chosen here.
+                    let separator = if class == 51 && prefix == "-" {
+                        "-"
+                    } else {
+                        ""
+                    };
                     out.push(Form {
-                        word: format!("{h}{}", t.word),
+                        word: format!("{h}{separator}{}", t.word),
                         readings: t.readings.clone(),
                         confidence: t.confidence,
                     });
@@ -213,6 +224,22 @@ fn find_parts<'a>(
             }
             if let Some(tail) = index.tail_exactly(rest).find(|e| carries_a_case(e)) {
                 parts.push((String::new(), head, tail));
+            }
+        }
+        // `nuori-isäntä` is the one class-51 lemma the sanalista writes with a
+        // hyphen. The hyphen belongs to the established expression and is kept
+        // in every cell (`nuoren-isännän`, `nuorta-isäntää`), so the parts are
+        // joined with it. The ordinary head scan cannot see the word because
+        // the tail it looks for is `-isäntä`, hyphen included.
+        if parts.is_empty()
+            && let Some((head_word, tail_word)) = lemma.split_once('-')
+            && head_word.chars().count() >= SHORTEST_HEAD
+            && tail_word.chars().count() >= SHORTEST_TAIL
+        {
+            let head = index.tail_exactly(head_word).find(|e| carries_a_case(e));
+            let tail = index.tail_exactly(tail_word).find(|e| carries_a_case(e));
+            if let (Some(head), Some(tail)) = (head, tail) {
+                parts.push(("-".to_string(), head, tail));
             }
         }
     } else {
