@@ -1505,6 +1505,13 @@ mod tests {
         }
     }
 
+    /// A dropped doubled vowel is a specific typo, not a generic substitution:
+    /// `kiväriään` should lead with `kivääriään`, not `kiveriään`.
+    #[test]
+    fn a_missing_doubled_vowel_wins_the_tie() {
+        assert_eq!(suggest("kiväriään", 5, 2).first().map(String::as_str), Some("kivääriään"));
+    }
+
     /// The old oracle was built with `--engine`, so an engine bug could write
     /// invented surfaces into the checked-in stem map as if they were real.
     /// `mustaraamattu` used to be recognized through 757 `mudtaraa*` stems

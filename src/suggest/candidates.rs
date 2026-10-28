@@ -14,6 +14,10 @@ use super::known::{
 };
 use super::levenshtein::{keyboard_bonus, levenshtein};
 
+/// A missing doubled vowel (`kiväriään` for `kivääriään`) is a more
+/// specific typo than a same-distance substitution, so it wins the tie.
+const DOUBLED_LETTER_BONUS: f32 = 0.1;
+
 /// Human-approved morphological corrections that edit distance alone cannot
 /// surface: the wrong surface is not a typo in spelling but a different
 /// inflection of the same verb, so it is several edits away and alphabetically
@@ -367,6 +371,9 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
         let mut score = 1.0 / (1.0 + d as f32);
         if d > 0 {
             score += keyboard_bonus(&word, &c.word);
+            if is_doubling_repair(&word, &c.word) {
+                score += DOUBLED_LETTER_BONUS;
+            }
         }
         if correction == Some(c.word.as_str()) {
             // Rank the known repair ahead of unrelated candidates at the
@@ -543,6 +550,31 @@ fn hyphen_plausible(word: &str) -> bool {
 
 /// Whether `word` has two identical characters in a row, the shape the
 /// deletion fallback targets.
+/// `candidate` is `query` with one doubled letter restored.
+///
+/// `kiväriään` -> `kivääriään`: the extra character is the same as its
+/// neighbour, which is the shape of a dropped long vowel or consonant.
+fn is_doubling_repair(query: &str, candidate: &str) -> bool {
+    let q: Vec<char> = query.chars().collect();
+    let c: Vec<char> = candidate.chars().collect();
+    if c.len() != q.len() + 1 {
+        return false;
+    }
+    for at in 1..c.len() {
+        // Long vowels are the reported shape (`kiväriään` -> `kivääriään`).
+        // Doubled consonants are already handled by the ordinary ranking and
+        // would otherwise reorder unrelated words such as `talo`/`tallo`.
+        if c[at] == c[at - 1] && crate::is_vowel(c[at]) {
+            let mut without = c.clone();
+            without.remove(at);
+            if without == q {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 fn has_adjacent_repeat(word: &str) -> bool {
     let mut previous = None;
     for c in word.chars() {

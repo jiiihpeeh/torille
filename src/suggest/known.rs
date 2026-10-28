@@ -660,6 +660,12 @@ fn is_known_word_with_compound(word: &str, allow_compound: bool) -> Option<Strin
     if let Some(base) = crate::expand::derived_inen_base(&lower, catalogue(), None) {
         return Some(base);
     }
+
+    // 1e. Productive `-kas`/`-käs` adjectives and their degrees
+    //     (`äänne` -> `äännekäs` -> `äännekkäämmäksi`).
+    if let Some(base) = crate::expand::derived_kas_base(&lower, catalogue(), None) {
+        return Some(base);
+    }
     // The degree forms of a classless `-inen` adjective (`salaperäinen` ->
     // `salaperäisempi` / `salaperäisemmäksi` / `salaperäisin`). The engine
     // derives them in `degree_forms`, but the fast path only has the
@@ -1067,7 +1073,9 @@ fn detect_compound_pass(
                 right,
                 PartOfSpeech::Noun,
                 false,
-            ) else {
+            )
+            .or_else(|| crate::expand::check_normal::find_base_via_verb_stem_map(right, false))
+            else {
                 continue;
             };
             if !is_content_head(&base) {

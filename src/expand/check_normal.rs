@@ -1362,6 +1362,10 @@ mod tests {
             ("mairittelija", "mairittelija"),
             ("simasuu", "suu"),
             ("ruikuttelevaan", "ruikutella"),
+            ("ohimennessä", "mennä"),
+            ("morsiussuudelma", "suudelma"),
+            ("äännekkäämmäksi", "äännekäs"),
+            ("äännekäs", "äännekäs"),
         ] {
             match check_normal_fast(word, false) {
                 NormalizedOutcome::Inflected { base: got, .. } => {

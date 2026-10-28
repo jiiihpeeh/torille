@@ -195,6 +195,9 @@ fn is_bound_prefix(word: &str) -> bool {
             // (`länki` + `sääri`): bound first members. `hölynpöly` and
             // `suurkaani` use the bound `hölyn-` / `suur-` forms too.
             | "synnyin" | "länki" | "hölyn" | "suur"
+            // `morsiussuudelma` (`morsius` + `suudelma`): the wedding
+            // compounds in the sanalista all use this bound first member.
+            | "morsius"
     )
 }
 
@@ -332,6 +335,105 @@ pub fn derived_inen_base(
         }
     }
     None
+}
+
+/// The derived `-kas`/`-käs` adjective (and its degrees) a surface belongs to.
+///
+/// `-kas`/`-käs` is the productive NOUN -> ADJECTIVE rule (`voima` ->
+/// `voimakas`, `äänne` -> `äännekäs`), but the derived adjective is usually
+/// not a sanalista lemma, so it is in neither the stem maps nor
+/// `find_bases`. Reconstruct the positive from the degree/normal surface,
+/// require its stem to be a noun lemma, then inflect the whole class-41
+/// adjective and verify the surface. This also covers the productive
+/// comparative (`äännekkäämpi`) and superlative (`äännekkäin`).
+pub fn derived_kas_base(
+    word: &str,
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+) -> Option<String> {
+    for candidate in kas_candidates(word) {
+        let Some(stem) = candidate
+            .strip_suffix("käs")
+            .or_else(|| candidate.strip_suffix("kas"))
+        else {
+            continue;
+        };
+        if stem.is_empty() {
+            continue;
+        }
+        let stem_is_noun = crate::kotus::sanalista()
+            .by_word(stem)
+            .next()
+            .is_some_and(|row| {
+                crate::tags::PartOfSpeech::parse_all(row.part_of_speech())
+                    .contains(&PartOfSpeech::Noun)
+            });
+        if !stem_is_noun {
+            continue;
+        }
+        let forms = inflect_all(
+            &candidate,
+            &[Inflection {
+                class: 41,
+                gradation: Some(crate::kotus::Gradation(1)),
+            }],
+            cat,
+            lexicon,
+            PartOfSpeech::Adjective,
+            true,
+        );
+        if forms.iter().any(|f| f.word == word) {
+            return Some(candidate);
+        }
+    }
+    None
+}
+
+/// Candidate `-kas`/`-käs` positives for a surface.
+///
+/// A surface can be the adjective itself, a case form of it, or a degree
+/// (`-kkäämpi`/`-kkäin`). Strip the possible case ending, then undo the
+/// degree or the kk gradation and put the positive suffix back.
+fn kas_candidates(word: &str) -> Vec<String> {
+    fn add(s: &str, out: &mut Vec<String>) {
+        if s.ends_with("kas") || s.ends_with("käs") {
+            out.push(s.to_string());
+        }
+        // Comparative and superlative stems after a case ending has been
+        // stripped: `äännekkäämmä` -> `äännekäs`, `voimakkaimma` ->
+        // `voimakas`.
+        for (needle, replacement) in [
+            ("kkäämm", "käs"),
+            ("kkaamm", "kas"),
+            ("kkäimm", "käs"),
+            ("kkaimm", "kas"),
+        ] {
+            if let Some(at) = s.find(needle) {
+                out.push(format!("{}{replacement}", &s[..at]));
+            }
+        }
+        // A case form of the positive itself: `äännekkäässä` loses `ssä`
+        // first, leaving `äännekkää`, whose kk belongs to the suffix.
+        for (needle, replacement) in [("kkää", "käs"), ("kkaa", "kas")] {
+            if let Some(prefix) = s.strip_suffix(needle) {
+                out.push(format!("{prefix}{replacement}"));
+            }
+        }
+    }
+
+    let mut out = Vec::new();
+    add(word, &mut out);
+    for ending in crate::expand::check_normal::ENDINGS {
+        if ending.is_empty() {
+            continue;
+        }
+        if let Some(stem) = word.strip_suffix(ending) {
+            add(stem, &mut out);
+        }
+    }
+    out.sort();
+    out.dedup();
+    out
 }
 
 /// The derived `-llinen` adjective a surface form belongs to, when the base
@@ -710,6 +812,32 @@ pub(super) fn degree_forms(
         if is_adjective {
             comparative.get_or_insert_with(|| format!("{stem}sempi"));
             superlative.get_or_insert_with(|| format!("{stem}sin"));
+        }
+    }
+    // `-kas`/`-käs` is the other productive adjective suffix whose degrees
+    // Omorfi's table does not always carry (`äänne` -> `äännekäs` ->
+    // `äännekkäämpi`/`äännekkäin`). The suffix gradates kk, so the degree
+    // nominatives are built from the noun stem, not from the adjective.
+    if comparative.is_none() || superlative.is_none() {
+        for (suffix, comparative_tail, superlative_tail) in [
+            ("kas", "kkaampi", "kkain"),
+            ("käs", "kkäämpi", "kkäin"),
+        ] {
+            let Some(stem) = lemma.strip_suffix(suffix).filter(|stem| !stem.is_empty()) else {
+                continue;
+            };
+            let stem_is_noun = crate::kotus::sanalista()
+                .by_word(stem)
+                .next()
+                .is_some_and(|row| {
+                    crate::tags::PartOfSpeech::parse_all(row.part_of_speech())
+                        .contains(&PartOfSpeech::Noun)
+                });
+            if stem_is_noun {
+                comparative.get_or_insert_with(|| format!("{stem}{comparative_tail}"));
+                superlative.get_or_insert_with(|| format!("{stem}{superlative_tail}"));
+            }
+            break;
         }
     }
     let mut out: Vec<Generated> = Vec::new();
