@@ -33,8 +33,9 @@ const REPORTED_CORRECTIONS: &[(&str, &str, &str)] = &[
     ("silmäränpäyksen", "silmänräpäyksen", "silmänräpäys"),
     // `-aikainen` loses its `i`; the standard compound is `vanhanaikainen`.
     ("vanhanaikanen", "vanhanaikainen", "vanhanaikainen"),
-    // The partitive of `salamyhkäinen`; the base is not a noun on its own.
-    ("salamyhkää", "salamyhkäistä", "salamyhkäinen"),
+    // `salamyhkää` is not a standard form; the reported intended word is the
+    // adverb `salamyhkäisesti`, which is its own sanalista lemma.
+    ("salamyhkää", "salamyhkäisesti", "salamyhkäisesti"),
     // The frequentative of `maiskuttaa` loses the extra `a`.
     ("maiskauttelee", "maiskuttelee", "maiskutella"),
 ];

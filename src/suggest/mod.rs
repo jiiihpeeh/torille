@@ -1512,6 +1512,16 @@ mod tests {
         assert_eq!(suggest("kiväriään", 5, 2).first().map(String::as_str), Some("kivääriään"));
     }
 
+    /// `salamyhkää` is not a standard form; the curated answer is the adverb
+    /// `salamyhkäisesti`, not the adjective's partitive.
+    #[test]
+    fn salamyhkää_points_at_the_adverb() {
+        assert_eq!(
+            suggest("salamyhkää", 5, 2).first().map(String::as_str),
+            Some("salamyhkäisesti")
+        );
+    }
+
     /// The old oracle was built with `--engine`, so an engine bug could write
     /// invented surfaces into the checked-in stem map as if they were real.
     /// `mustaraamattu` used to be recognized through 757 `mudtaraa*` stems
