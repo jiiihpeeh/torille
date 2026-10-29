@@ -1,6 +1,6 @@
 //! Benchmarks for the torille spell-checker hot path.
 //!
-//! Run with `cargo bench --bench torille`. Three groups cover the per-keystroke
+//! Run with `cargo bench --bench torille`. Four groups cover the per-keystroke
 //! path the Firefox extension actually exercises:
 //!
 //!   * `levenshtein` — the edit-distance kernel inside `suggest`. Bounded
@@ -9,6 +9,9 @@
 //!     embedded sanalista.
 //!   * `form_of` — the new "ask for a specific shape" API: `form_of` over a
 //!     lemma filtered to a single Tags.
+//!   * `check` / `check_fast` / `check_normal_fast` / `is_known_word_fast` —
+//!     the recognition entry points, including the fast paths added for
+//!     `PERFORMANCE_TODO.md`.
 //!
 //! These exist so future optimisations have something to verify against and
 //! so the effect of the inlining / `lto = "fat"` / `panic = "abort"` settings
@@ -114,5 +117,62 @@ fn bench_form_of(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, bench_levenshtein, bench_suggest, bench_form_of);
+fn bench_check(c: &mut Criterion) {
+    use std::collections::HashSet;
+    use torille::expand::check_normal::check_normal_fast;
+    use torille::suggest::{check as check_fn, check_fast, is_known_word_fast};
+
+    let nouns: HashSet<String> = HashSet::new();
+    let mut group = c.benchmark_group("check");
+    group.sample_size(20);
+    for word in ["talo", "talossa", "puhtaan", "korrelle", "xyzzy"] {
+        group.bench_with_input(BenchmarkId::from_parameter(word), &word, |b, &w| {
+            b.iter(|| {
+                let _ = check_fn(w);
+            })
+        });
+    }
+    group.finish();
+
+    let mut group = c.benchmark_group("check_fast");
+    group.sample_size(20);
+    for word in ["talo", "talossa", "puhtaan", "äesteli"] {
+        group.bench_with_input(BenchmarkId::from_parameter(word), &word, |b, &w| {
+            b.iter(|| {
+                let _ = check_fast(w, &nouns);
+            })
+        });
+    }
+    group.finish();
+
+    let mut group = c.benchmark_group("check_normal_fast");
+    group.sample_size(20);
+    for word in ["talo", "talossa", "puhtaan", "äesteli", "esisana"] {
+        group.bench_with_input(BenchmarkId::from_parameter(word), &word, |b, &w| {
+            b.iter(|| {
+                let _ = check_normal_fast(w, false);
+            })
+        });
+    }
+    group.finish();
+
+    let mut group = c.benchmark_group("is_known_word_fast");
+    group.sample_size(20);
+    for word in ["talo", "talossa", "puhtaan", "esisana"] {
+        group.bench_with_input(BenchmarkId::from_parameter(word), &word, |b, &w| {
+            b.iter(|| {
+                let _ = is_known_word_fast(w);
+            })
+        });
+    }
+    group.finish();
+}
+
+criterion_group!(
+    benches,
+    bench_levenshtein,
+    bench_suggest,
+    bench_form_of,
+    bench_check
+);
 criterion_main!(benches);

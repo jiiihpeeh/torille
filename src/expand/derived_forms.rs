@@ -113,6 +113,8 @@ pub(super) fn compound_head_forms(
 ///   * a known inflected form -- the modifier of a compound is very often
 ///     the genitive singular (`luonnon-`, `kansan-`, `maan-`), which the
 ///     compile-time form set carries;
+///   * a `-minen` action noun's `-mis-` stem (`edistämis-` of
+///     `edistäminen`), which is neither a lemma nor an inflected form;
 ///   * a bound derivational prefix (`esi-`, `epä-`, `pika-`), see
 ///     [`PREFIXES`].
 ///
@@ -135,6 +137,19 @@ pub(crate) fn modifier_is_known(modifier: &str) -> bool {
         .by_word(&format!("{bare}t"))
         .next()
         .is_some()
+    {
+        return true;
+    }
+    // The modifier of a `-minen` action noun is its `-mis-` stem:
+    // `edistäminen` -> `edistämis-` (`edistämisvaroista`), `lukeminen` ->
+    // `lukemis-` (`lukemisharjoitus`). The genitive (`edistämisen`) is not
+    // the compound form, and the `-mis` stem is neither a lemma nor an
+    // inflected form, so every probe above misses it. `edistäminen` itself
+    // is often a productive derivation rather than a sanalista row, so ask
+    // the non-compound gates for the `-minen` word instead of the lemma set.
+    if let Some(stem) = bare.strip_suffix("mis")
+        && !stem.is_empty()
+        && crate::suggest::is_known_word_no_compound(&format!("{stem}minen")).is_some()
     {
         return true;
     }

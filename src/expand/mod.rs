@@ -479,7 +479,7 @@ pub fn forms_of(
 
 pub use build::{ClassPrior, FormBuilder, build};
 pub use clitic::{CLITICS, all_clitics, cliticize, cliticize_all, strip_clitic, strip_all_clitics};
-pub use find_bases::{BasesReport, find_any_base_with, find_bases_with};
+pub use find_bases::{BasesReport, find_any_base_with, find_bases_with, set_single_thread};
 pub(crate) use find_bases::{find_bases_for_check, find_bases_with_form_filter};
 pub use sound::is_phonotactic;
 

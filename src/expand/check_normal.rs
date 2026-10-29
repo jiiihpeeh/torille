@@ -693,7 +693,19 @@ fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> Normalized
         // page took ~38 s before any underline appeared. Heads the engine
         // fallback would recover (`kekkereitä`) are left to the suggestion
         // pool's full `bg.check`.
-        if let Some(base) = crate::suggest::is_known_compound_fast(word) {
+        // A compound of 6-7 characters (`esisana`) is below the general
+        // fast probe's length floor. Only consult it when the cheap gates
+        // found nothing at all: `äesteli` is a verb form gate 1 already
+        // knows, and splitting it as `äes` + `teli` would name the wrong
+        // base.
+        let short_compound = if direct_base.is_none() {
+            crate::suggest::is_known_short_compound(word)
+        } else {
+            None
+        };
+        if direct_base.is_none()
+            && let Some(base) = crate::suggest::is_known_compound_fast(word).or(short_compound)
+        {
             if verbose {
                 println!("    gate 4c: compound -> {base}");
             }
@@ -1407,6 +1419,41 @@ mod tests {
         assert!(matches!(
             check_normal_fast("länkisääreksi", false),
             NormalizedOutcome::Inflected { .. }
+        ));
+    }
+
+    /// The modifier of a `-minen` action noun is its `-mis-` stem. No lemma
+    /// or inflected form spells `edistämis`, so without that stem rule the
+    /// whole compound falls through to `Unknown`.
+    #[test]
+    fn fast_variant_accepts_minen_stem_compounds() {
+        for word in ["edistämisvaroista", "edistämisohjelma", "edistämiskampanja"] {
+            assert!(
+                matches!(
+                    check_normal_fast(word, false),
+                    NormalizedOutcome::Inflected { .. }
+                ),
+                "{word} not accepted by the fast path"
+            );
+        }
+    }
+
+    /// Six- and seven-letter compounds are below the general compound
+    /// probe's length floor; the cheap short probe has to accept them.
+    #[test]
+    fn fast_variant_accepts_short_compounds() {
+        for (word, base) in [("esisana", "sana"), ("esiosa", "osa"), ("autotie", "tie")] {
+            match check_normal_fast(word, false) {
+                NormalizedOutcome::Inflected { base: got, .. } => {
+                    assert_eq!(got, base, "{word}: wrong base");
+                }
+                other => panic!("{word}: expected Inflected, got {other:?}"),
+            }
+        }
+        // A function-word modifier is not a compound modifier.
+        assert!(matches!(
+            check_normal_fast("jatalo", false),
+            NormalizedOutcome::Unknown
         ));
     }
 

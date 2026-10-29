@@ -120,7 +120,9 @@ pub fn is_known_word_no_compound(word: &str) -> Option<String> {
 /// heads such as `kekkereitä`). Used by the wasm slow-check pass, where an
 /// unknown word must not pay the full engine walk.
 pub fn is_known_word_fast(word: &str) -> Option<String> {
-    is_known_word_no_compound(word).or_else(|| is_known_compound_fast(word))
+    is_known_word_no_compound(word)
+        .or_else(|| is_known_compound_fast(word))
+        .or_else(|| is_known_short_compound(word))
 }
 
 /// Recognise a compound without running the stem-map, derivation and verb
@@ -150,11 +152,63 @@ pub(crate) fn is_known_compound(word: &str) -> Option<String> {
 pub(crate) fn is_known_compound_fast(word: &str) -> Option<String> {
     // Short words are cheap to underline and let the full slow check
     // demote them. Skipping the split search here keeps a page of ordinary
-    // six/seven-letter misspellings from paying the compound probe.
+    // six/seven-letter misspellings from paying the compound probe. The
+    // cheap [`is_known_short_compound`] covers the short compounds that do
+    // occur (`esisana`, `autotie`).
     if word.chars().count() < 8 {
         return None;
     }
     is_known_compound_with(word, /* engine_fallback */ false)
+}
+
+/// The 6-7 character compounds the full probe leaves to the slow check.
+///
+/// [`is_known_compound_fast`] starts at eight characters: the general split
+/// search is several times more expensive on short words, because most
+/// splits have no head and the modifier side recurses into the rest. Short
+/// compounds are still ordinary words (`esisana`, `autotie`, `esiosa`), so
+/// this checks them with constant-time probes only: a known content-word
+/// modifier on the left and a content-word lemma on the right. No nesting,
+/// no possessive, no engine.
+///
+/// Callers must already have established that the whole word is not known;
+/// this deliberately skips the "a known form is not a compound" guard,
+/// which costs more than the split search at this length.
+pub(crate) fn is_known_short_compound(word: &str) -> Option<String> {
+    let count = word.chars().count();
+    if !(6..8).contains(&count) || word.contains('-') {
+        return None;
+    }
+    let lower = word.to_lowercase();
+    let mut splits: Vec<usize> = (1..count).collect();
+    splits.reverse();
+    for split in splits {
+        let byte_split = lower
+            .char_indices()
+            .nth(split)
+            .map(|(i, _)| i)
+            .unwrap_or(lower.len());
+        let (left, right) = lower.split_at(byte_split);
+        // The same head guard as the general probe: a function word or a
+        // bare connegative is not a compound head.
+        if crate::expand::negation::negation_base(right).is_some()
+            || crate::expand::connegative::base(right).is_some()
+        {
+            continue;
+        }
+        // A function-word modifier (`ja` + `talo`) is not a compound. Bound
+        // prefixes (`esi`) have no sanalista row, so they stay content.
+        if !crate::expand::modifier_is_known(left) || !crate::compound::is_content_head(left) {
+            continue;
+        }
+        if crate::kotus::sanalista().by_word(right).next().is_none()
+            || !crate::compound::is_content_head(right)
+        {
+            continue;
+        }
+        return Some(right.to_string());
+    }
+    None
 }
 
 fn is_known_compound_with(word: &str, engine_fallback: bool) -> Option<String> {

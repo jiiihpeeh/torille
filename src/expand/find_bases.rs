@@ -28,6 +28,8 @@
 //! crate and in [`crate::suggest`].
 
 use std::collections::BTreeSet;
+use std::sync::OnceLock;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::expand::clitic::strip_clitic;
 use crate::expand::{LexiconIndex, inflect_all};
@@ -135,7 +137,7 @@ pub fn find_bases_with<'a>(
 ) -> BasesReport<'a> {
     find_bases_with_inner(
         lexicon, cat, word, /* with_clitic_phase */ true, /* keep_form */ None,
-        /* collect_neighbours */ true,
+        /* collect_neighbours */ true, /* recognition_only */ false,
     )
 }
 
@@ -162,6 +164,7 @@ where
         /* with_clitic_phase */ true,
         Some(&keep_form),
         /* collect_neighbours */ true,
+        /* recognition_only */ false,
     )
 }
 
@@ -179,7 +182,39 @@ pub(crate) fn find_bases_for_check<'a>(
         /* with_clitic_phase */ true,
         Some(&|_| false),
         /* collect_neighbours */ false,
+        /* recognition_only */ true,
     )
+}
+
+/// Worker count for the parallel walks.
+///
+/// `TORILLE_SINGLE_THREAD=1` forces the sequential path. The wasm always
+/// takes it (one thread); the native performance probe uses the switch to
+/// measure the same shape as the extension instead of the host's core count.
+fn worker_count() -> usize {
+    static SINGLE: OnceLock<bool> = OnceLock::new();
+    if *SINGLE.get_or_init(|| std::env::var_os("TORILLE_SINGLE_THREAD").is_some())
+        || FORCE_SINGLE_THREAD.load(Ordering::Relaxed)
+    {
+        return 1;
+    }
+    std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(1)
+        .max(1)
+}
+
+/// Set by [`set_single_thread`] for callers that want the wasm's shape.
+static FORCE_SINGLE_THREAD: AtomicBool = AtomicBool::new(false);
+
+/// Force the engine's parallel walks onto one thread, or release them.
+///
+/// The wasm is single-threaded already. Native callers use this to measure
+/// the extension's shape (the performance probe) or to make a test
+/// deterministic. It changes only *how many workers* run; the answer is
+/// identical.
+pub fn set_single_thread(force: bool) {
+    FORCE_SINGLE_THREAD.store(force, Ordering::Relaxed);
 }
 
 /// Run `f` on every candidate in `candidates` in parallel across
@@ -197,10 +232,7 @@ where
     use std::sync::{Arc, Mutex};
     use std::thread;
 
-    let workers = thread::available_parallelism()
-        .map(|n| n.get())
-        .unwrap_or(1)
-        .max(1);
+    let workers = worker_count();
     // Single-threaded fast path: the parallel machinery's
     // overhead is larger than the work for tiny candidate sets,
     // and the wasm is single-threaded by design.
@@ -550,6 +582,7 @@ fn find_bases_with_inner<'a>(
     with_clitic_phase: bool,
     keep_form: Option<&(dyn Fn(&str) -> bool + Sync)>,
     collect_neighbours: bool,
+    recognition_only: bool,
 ) -> BasesReport<'a> {
     let index = LexiconIndex::new(lexicon);
     let pos = PartOfSpeech::Noun;
@@ -573,6 +606,18 @@ fn find_bases_with_inner<'a>(
     let mut bases: Vec<&'a Lemma<'a>> = Vec::new();
     let mut neighbours: Vec<&'a Lemma<'a>> = Vec::new();
 
+    // Recognition returns as soon as the direct lemma answers: the walk
+    // phases below exist to collect the suggestion pool's neighbours and
+    // forms, and `find_bases_for_check` does not need either.
+    if recognition_only && !direct.is_empty() {
+        return BasesReport {
+            direct,
+            bases,
+            neighbours,
+            forms: Vec::new(),
+        };
+    }
+
     // The negation auxiliary and the words it fuses with (`enkä`,
     // `ettet`, `ellette`): a closed table, not a paradigm. The word is
     // accepted outright and the base lemma is the table's. Inserting it
@@ -589,6 +634,15 @@ fn find_bases_with_inner<'a>(
         && let Some(idx) = lemma_index(lexicon, base)
     {
         bases.push(&lexicon[idx]);
+    }
+
+    if recognition_only && !bases.is_empty() {
+        return BasesReport {
+            direct,
+            bases,
+            neighbours,
+            forms: Vec::new(),
+        };
     }
 
     // Phase 1: heads + tails.
@@ -627,6 +681,18 @@ fn find_bases_with_inner<'a>(
         } else if collect_neighbours {
             neighbours.push(lemma);
         }
+    }
+
+    // Recognition can stop here: phase 1 found the base. Phases 1.5-4 exist
+    // to find bases the head/tail ranges missed and to fill the ranker's
+    // neighbour list, and the checker needs neither.
+    if recognition_only && !bases.is_empty() {
+        return BasesReport {
+            direct,
+            bases,
+            neighbours,
+            forms,
+        };
     }
 
     // Phase 1.5: head-1 walk -- lemmas starting with the same first
@@ -674,6 +740,15 @@ fn find_bases_with_inner<'a>(
         bases.extend(walked.bases);
         neighbours.extend(walked.neighbours);
         forms.extend(walked.forms);
+    }
+
+    if recognition_only && !bases.is_empty() {
+        return BasesReport {
+            direct,
+            bases,
+            neighbours,
+            forms,
+        };
     }
 
     // Phase 2: prefix-3 walk.
@@ -771,6 +846,7 @@ fn find_bases_with_inner<'a>(
             /* with_clitic_phase */ false,
             keep_form,
             collect_neighbours,
+            recognition_only,
         );
         if !inner.bases.is_empty() || !inner.direct.is_empty() {
             // The host is a known form. The original is too, with
@@ -874,9 +950,7 @@ fn walk_head1<'a>(
     possessives: bool,
 ) -> WalkChunk<'a> {
     const PARALLEL_MIN: usize = 64;
-    let workers = std::thread::available_parallelism()
-        .map(|n| n.get())
-        .unwrap_or(1);
+    let workers = worker_count();
     if workers <= 1 || head1.len() < PARALLEL_MIN {
         return walk_head1_chunk(
             head1,
@@ -1101,7 +1175,17 @@ mod tests {
             let filtered_bases: Vec<_> = filtered.bases.iter().map(|l| l.word).collect();
             let check_bases: Vec<_> = check.bases.iter().map(|l| l.word).collect();
             assert_eq!(filtered_bases, full_bases, "{word}: bases moved");
-            assert_eq!(check_bases, full_bases, "{word}: check bases moved");
+            // A direct lemma answers recognition on its own; the walk's
+            // base list is the suggestion pool's payload, not the check's.
+            if check.direct.is_empty() {
+                assert_eq!(check_bases, full_bases, "{word}: check bases moved");
+            } else {
+                assert_eq!(
+                    check.direct.len(),
+                    full.direct.len(),
+                    "{word}: check direct moved"
+                );
+            }
             assert!(
                 filtered
                     .forms

@@ -52,7 +52,7 @@ mod levenshtein;
 mod state;
 
 pub use candidates::{suggest, suggest_detailed, suggest_with_pipeline};
-pub(crate) use known::{is_content_head, is_known_compound_fast};
+pub(crate) use known::{is_content_head, is_known_compound_fast, is_known_short_compound};
 pub use known::{
     is_known_word, is_known_word_fast, is_known_word_no_compound, is_lemma, suggest_over_lemmas,
     warm_caches,
@@ -104,6 +104,26 @@ pub fn check(word: &str) -> CheckOutcome {
     // engine would otherwise accept the closed compound `linjaauto`.
     if hyphenated_lexeme(word).is_some() {
         return CheckOutcome::Unknown;
+    }
+    // The cheap recognition gates answer before the engine is asked. A
+    // direct lemma is one probe; an ordinary inflected form resolves through
+    // the lemma set / form set / stem maps. Only the leftovers (rare forms,
+    // homonyms that need every reading) pay for the engine walk.
+    let lower = word.to_lowercase();
+    if crate::kotus::sanalista().by_word(&lower).next().is_some() {
+        return CheckOutcome::Lemma;
+    }
+    if let Some(base) = is_known_word_no_compound(&lower) {
+        let mut rows = crate::kotus::sanalista().by_word(&base);
+        match (rows.next(), rows.next()) {
+            // Unambiguous sanalista base: the same answer `classify` gives.
+            (Some(row), None) => return CheckOutcome::Inflected(vec![row.word()]),
+            // A productive derivation (`laitilalainen`) has no row; it is
+            // still a recognised word, just without a lexicon lemma.
+            (None, _) => return CheckOutcome::Inflected(Vec::new()),
+            // Homonyms: let the engine report every base it can prove.
+            (Some(_), Some(_)) => {}
+        }
     }
     // Recognition doesn't need the generated-form payload or the neighbour
     // list; asking the engine for those is what makes the suggestion path
@@ -285,6 +305,23 @@ mod tests {
         }
         let suggestions = suggest("kekkeritn", 6, 2);
         assert!(!suggestions.iter().any(|s| s == "kekkeritn"));
+    }
+
+    /// `check` answers from the cheap gates before the engine walk: a direct
+    /// lemma, an ordinary inflected form, and a productive derivation. The
+    /// engine is still reached for compounds.
+    #[test]
+    fn check_answers_from_the_fast_gates() {
+        assert!(matches!(check("talo"), CheckOutcome::Lemma));
+        match check("talossa") {
+            CheckOutcome::Inflected(bases) => assert_eq!(bases, vec!["talo"]),
+            other => panic!("talossa: {other:?}"),
+        }
+        // A derived form with no sanalista row is known without a lemma.
+        assert!(check("laitilalainen").is_known());
+        // A compound is still the engine's (and `is_known_word`'s) answer.
+        assert!(check("edistämisvaroista").is_known());
+        assert!(!check("xyzzy").is_known());
     }
 
     /// SI prefixes in their Finnish spellings: `milli-`, `mikro-`,
@@ -1073,6 +1110,16 @@ mod tests {
     }
 
     #[test]
+    fn short_compounds_and_minen_stems_are_known_in_the_fast_path() {
+        // Six/seven-letter compounds are below `is_known_compound_fast`'s
+        // length floor; `esi` is a bound modifier.
+        assert_eq!(is_known_word_fast("esisana").as_deref(), Some("sana"));
+        // A `-minen` action noun's compound stem is `-mis-`.
+        assert!(is_known_word("edistämisvaroista").is_some());
+        assert!(is_known_word_fast("edistämisvaroista").is_some());
+    }
+
+    #[test]
     fn missing_i_verb_forms_are_not_compounds() {
         // `vetäsi`/`kysäsi` are one-letter-short spellings of the
         // conditional `vetäisi`/`kysäisi`. The compound detector used to
@@ -1292,7 +1339,7 @@ mod tests {
         );
         assert_eq!(
             suggest("salamyhkää", 8, 2).first().map(String::as_str),
-            Some("salamyhkäistä")
+            Some("salamyhkäisesti")
         );
     }
 

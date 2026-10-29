@@ -408,8 +408,8 @@ pub fn analyze_text(idx: u32, text: &str, max_suggestions: u32) -> js_sys::Array
 #[wasm_bindgen]
 pub fn analyze_misspells(idx: u32, text: &str) -> js_sys::Array {
     let out = js_sys::Array::new();
-    let s = states().lock().expect("states mutex poisoned");
-    let Some(Some(state)) = s.get(idx as usize) else {
+    let mut s = states().lock().expect("states mutex poisoned");
+    let Some(Some(state)) = s.get_mut(idx as usize) else {
         return out;
     };
     for hit in state.find_misspells(text) {

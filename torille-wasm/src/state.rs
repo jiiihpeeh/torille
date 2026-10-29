@@ -17,6 +17,10 @@
 //!   in user text, so it can't collide on whitespace inside words).
 //! - `generation` -- bumped by every `update` / `clear`. Reserved
 //!   for the generation-tagged cache slice; not consulted today.
+//! - `known` -- lexical check answers across renders. The dictionary is
+//!   static, so a surface's answer cannot change; this is what makes a
+//!   re-render of an unchanged page cost one hash probe per token instead
+//!   of the full gate stack.
 //!
 //! ## Efficiency
 //!
@@ -66,7 +70,17 @@ pub struct TextAreaState {
     /// Bumped by every `update` / `clear`. Reserved for the
     /// generation-tagged cache slice; not consulted today.
     pub generation: u64,
+    /// Lexical decisions across renders. The dictionary is static, so a
+    /// surface's `check_normal_fast` answer cannot change; only the
+    /// proper-noun half depends on the text, and `find_misspells` checks
+    /// that separately. Bounded by [`KNOWN_CACHE_LIMIT`].
+    known: HashMap<String, bool>,
 }
+
+/// Cap on the cross-render lexical cache. A paste can contain tens of
+/// thousands of distinct tokens; clearing keeps the wasm heap bounded and
+/// costs only one re-check of the words still on screen.
+const KNOWN_CACHE_LIMIT: usize = 8192;
 
 impl TextAreaState {
     pub fn new() -> Self {
@@ -74,6 +88,7 @@ impl TextAreaState {
             proper_nouns: HashSet::new(),
             phrases: HashSet::new(),
             generation: 0,
+            known: HashMap::new(),
         }
     }
 
@@ -178,15 +193,10 @@ impl TextAreaState {
     /// lemma they meant. For 99% of real-world demo inputs (typos
     /// of lemmas, English noise, made-up words) this is correct
     /// on the first pass.
-    pub fn find_misspells(&self, text: &str) -> Vec<MisspellRange> {
+    pub fn find_misspells(&mut self, text: &str) -> Vec<MisspellRange> {
         let mut out = Vec::new();
         let tokens = torille::tokenise::tokenise(text);
         let n = tokens.len();
-        // Reader pages repeat names and dialect forms (`sortavalan`,
-        // `sitte`) dozens of times. Once a surface is decided known or
-        // unknown in this pass, every later occurrence gets the same
-        // answer without another derivation/stem-map probe.
-        let mut decision: HashMap<String, bool> = HashMap::new();
         let mut i = 0;
         while i < n {
             if let Some(consumed) = match_phrase_at(&tokens[i..], &self.phrases) {
@@ -209,9 +219,21 @@ impl TextAreaState {
             // engine walk). The demo adds the one input the library
             // cannot know about: the proper nouns it has learned
             // from the text.
-            let known = *decision.entry(lower.clone()).or_insert_with(|| {
-                !matches!(check_normal_fast(&lower, false), NormalizedOutcome::Unknown)
-            });
+            //
+            // The answer is cached across renders: a page of 2000 tokens
+            // re-checks only the word that changed, not the whole page on
+            // every keystroke. The cache is lexical, so textarea updates
+            // and `clear` leave it in place.
+            let known = if let Some(&known) = self.known.get(&lower) {
+                known
+            } else {
+                let known = !matches!(check_normal_fast(&lower, false), NormalizedOutcome::Unknown);
+                if self.known.len() >= KNOWN_CACHE_LIMIT {
+                    self.known.clear();
+                }
+                self.known.insert(lower.clone(), known);
+                known
+            };
             if self.proper_nouns.contains(&lower)
                 || torille::expand::proper_names::contains_capitalised(&tok.text)
                 || known
@@ -459,6 +481,21 @@ mod tests {
         assert!(!st.knows_proper_noun("the"));
         let hits = st.find_misspells("this the");
         assert_eq!(hits.len(), 2, "expected both to be flagged, got {hits:?}");
+    }
+
+    #[test]
+    fn lexical_answers_survive_a_re_render() {
+        let mut st = TextAreaState::new();
+        let first = st.find_misspells("talo xyzzy");
+        assert_eq!(first.len(), 1, "only xyzzy is misspelled: {first:?}");
+        assert_eq!(st.known.get("talo"), Some(&true));
+        assert_eq!(st.known.get("xyzzy"), Some(&false));
+
+        // The second render sees the same cache; `talossa` is the only new
+        // surface and it is known.
+        let second = st.find_misspells("talo talossa xyzzy");
+        assert_eq!(second.len(), 1, "only xyzzy is misspelled: {second:?}");
+        assert_eq!(st.known.get("talossa"), Some(&true));
     }
 
     #[test]
