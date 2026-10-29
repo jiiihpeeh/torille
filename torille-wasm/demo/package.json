@@ -5,7 +5,7 @@
   "private": true,
   "license": "MIT OR Apache-2.0",
   "scripts": {
-    "build": "esbuild src/main.ts --bundle --outfile=dist/main.js --format=esm --target=es2022 --loader:.wasm=binary --jsx-factory=createComponent --jsx-fragment=Fragment --jsx-import-source=solid-js/h --jsx=automatic",
+    "build": "node build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node test-pagination.mjs"
   },

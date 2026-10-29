@@ -53,7 +53,9 @@
 
 import * as esbuild from 'esbuild';
 import { solidPlugin } from 'esbuild-plugin-solid';
-import { copyFile, mkdir, rm } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, readdir, rename, rm, stat, utimes, writeFile } from 'node:fs/promises';
+import { brotliCompress, constants as zlibConstants } from 'node:zlib';
+import { promisify } from 'node:util';
 import { dirname, join, resolve as pathResolveAbs } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -61,11 +63,22 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const isRelease = process.argv.includes('--release');
 const isWatch = process.argv.includes('--watch');
 
+const brotliCompressAsync = promisify(brotliCompress);
+
 // Wipe dist/ before each build so the loose `torille_wasm_bg.wasm`
-// from a previous build doesn't linger. In watch mode we only do
-// this once at start; subsequent rebuilds reuse the dist dir.
+// from a previous build doesn't linger. Keep `*.br`: the wasm sidecar
+// is keyed to `pkg/`'s mtime, and recompressing 17 MB on every
+// `node build.mjs` (two minutes after the last one) is pure latency.
+// In watch mode we only do this once at start; subsequent rebuilds
+// reuse the dist dir.
 if (!isWatch) {
-  await rm(join(__dirname, 'dist'), { recursive: true, force: true });
+  const dist = join(__dirname, 'dist');
+  const entries = await readdir(dist).catch(() => []);
+  await Promise.all(
+    entries
+      .filter((name) => !name.endsWith('.br'))
+      .map((name) => rm(join(dist, name), { recursive: true, force: true })),
+  );
 }
 await mkdir(join(__dirname, 'dist'), { recursive: true });
 
@@ -126,7 +139,54 @@ if (isWatch) {
 // of importing `torille_wasm.js` (which would drag the browser
 // into WebAssembly ES-module integration and its
 // `application/wasm` MIME requirement -- see wasm-loader.ts).
-await copyFile(
-  join(__dirname, '../pkg/torille_wasm_bg.wasm'),
-  join(__dirname, 'dist/torille_wasm_bg.wasm'),
-);
+//
+// Keep the copied file's mtime equal to pkg/'s. `serve-demo` only
+// trusts the `.br` sidecar when it is newer than the `.wasm`, and a
+// copy stamped "now" would look newer than a sidecar written seconds
+// earlier by the previous build.
+const wasmSrc = join(__dirname, '../pkg/torille_wasm_bg.wasm');
+const wasmDst = join(__dirname, 'dist/torille_wasm_bg.wasm');
+const wasmSrcStat = await stat(wasmSrc);
+await copyFile(wasmSrc, wasmDst);
+await utimes(wasmDst, wasmSrcStat.atime, wasmSrcStat.mtime);
+
+// Pre-compress the wasm. It is the largest asset by an order of
+// magnitude (17 MB), and brotli takes it to ~4.3 MB. `serve-demo`
+// serves this `.br` sidecar instead of compressing the same bytes on
+// every request or process start. Quality 9 costs ~11 s for the 17 MB
+// file; 11 would be ~38 s for ~0.6 MB more, which is not worth it for
+// a dev server. If the sidecar is already newer than `pkg/`'s wasm,
+// skip: repeated builds and `--watch` restarts stay fast.
+const WASM_BROTLI_QUALITY = 9;
+
+async function precompressWasm() {
+  const dst = `${wasmDst}.br`;
+  const [srcStat, dstStat] = await Promise.all([
+    stat(wasmSrc),
+    stat(dst).catch(() => null),
+  ]);
+  if (dstStat && dstStat.size > 0 && dstStat.mtimeMs >= srcStat.mtimeMs) {
+    console.log(`  dist/torille_wasm_bg.wasm.br  ${dstStat.size} bytes (up to date)`);
+    return;
+  }
+  const started = performance.now();
+  const raw = await readFile(wasmSrc);
+  const compressed = await brotliCompressAsync(raw, {
+    params: {
+      [zlibConstants.BROTLI_PARAM_QUALITY]: WASM_BROTLI_QUALITY,
+      [zlibConstants.BROTLI_PARAM_LGWIN]: 24,
+      [zlibConstants.BROTLI_PARAM_SIZE_HINT]: raw.length,
+    },
+  });
+  // Write then rename: a watcher (or serve-demo) must never observe a
+  // half-written sidecar.
+  await writeFile(`${dst}.tmp`, compressed);
+  await rename(`${dst}.tmp`, dst);
+  const seconds = ((performance.now() - started) / 1000).toFixed(1);
+  console.log(
+    `  dist/torille_wasm_bg.wasm.br  ${compressed.length} bytes ` +
+      `(${(compressed.length / raw.length * 100).toFixed(1)}% of ${raw.length}, ${seconds}s)`,
+  );
+}
+
+await precompressWasm();

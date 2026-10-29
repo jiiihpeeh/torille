@@ -13,6 +13,7 @@ name = "serve-demo"
 path = "src/main.rs"
 
 [dependencies]
+brotli = { version = "9.1.1", default-features = false, features = ["std"] }
 tiny_http = "0.12"
 
 [lints]
