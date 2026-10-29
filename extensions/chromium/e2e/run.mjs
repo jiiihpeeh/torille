@@ -1,11 +1,11 @@
-// End-to-end test for the torille Firefox content-script extension.
+// End-to-end test for the torille Chromium content-script extension.
 //
 // Loads a stub HTML page (e2e/test-page.html) that polyfills
 // `browser.runtime.getURL` to point at the real extension files
 // served by the http.server on :8766. The content script runs in
-// that page exactly as it would inside a Firefox tab, except the
+// that page exactly as it would inside a Chromium tab, except the
 // polyfilled API and the localhost wasm fetch instead of
-// moz-extension:// fetches.
+// chrome-extension:// fetches.
 //
 // We then drive the textarea via DOM events and read the shadow-
 // root overlay's misspell elements.
@@ -17,7 +17,7 @@ import puppeteer from 'puppeteer-core';
  * @typedef {import('puppeteer-core').Page} Page
  */
 
-/** URL served by `python3 -m http.server 8766` rooted at torille-firefox/. */
+/** URL served by `python3 -m http.server 8766` rooted at extensions/chromium/. */
 const PAGE_URL = 'http://localhost:8766/e2e/test-page.html';
 
 /**

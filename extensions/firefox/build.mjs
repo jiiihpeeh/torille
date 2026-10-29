@@ -1,7 +1,7 @@
 // Build script for the torille Firefox extension.
 //
 // Run from anywhere; paths are absolute:
-//   node /home/j-p/torille/torille-firefox/build.mjs
+//   node /home/j-p/torille/extensions/firefox/build.mjs
 //
 // Steps:
 //   1. Compile src/**/*.ts -> dist/** via tsc.
@@ -9,7 +9,7 @@
 //   3. Copy the wasm-pack artefacts from torille-wasm/pkg/ into
 //      dist/spell-worker/ (the worker resolves them relative to
 //      its own URL via `import.meta.url`).
-//   4. Zip dist/ into torille-firefox.xpi using the system `zip`.
+//   4. Zip dist/ into extensions/firefox/torille-firefox.xpi.
 
 import { copyFile, mkdir, readdir, rm } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
@@ -17,10 +17,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repo = path.resolve(__dirname, '..');
+const repo = path.resolve(__dirname, '..', '..');
 const pkgDir = path.join(repo, 'torille-wasm', 'pkg');
 const dist = path.join(__dirname, 'dist');
-const xpiOut = path.join(repo, 'torille-firefox.xpi');
+const xpiOut = path.join(__dirname, 'torille-firefox.xpi');
 const tsc = path.join(__dirname, 'node_modules', 'typescript', 'bin', 'tsc');
 const tsconfig = path.join(__dirname, 'tsconfig.json');
 

@@ -1,7 +1,7 @@
 // Build the torille Chromium MV3 extension.
 //
 // Run from anywhere; paths are absolute:
-//   node /home/j-p/torille/torille-chromium/build.mjs
+//   node /home/j-p/torille/extensions/chromium/build.mjs
 //
 // Steps:
 //   1. Validate the manifest JSON (manifest_version === 3, no Firefox
@@ -10,7 +10,7 @@
 //   3. Copy `options.html` and `icons/` and `manifest.json` into dist/.
 //   4. Copy wasm-pack artefacts from torille-wasm/pkg/ into
 //      dist/spell-worker/.
-//   5. Build a sibling `torille-chromium.zip` from dist/.
+//   5. Build `extensions/chromium/torille-chromium.zip` from dist/.
 
 import { copyFile, mkdir, readdir, readFile, rm } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
@@ -18,10 +18,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repo = path.resolve(__dirname, '..');
+const repo = path.resolve(__dirname, '..', '..');
 const pkgDir = path.join(repo, 'torille-wasm', 'pkg');
 const dist = path.join(__dirname, 'dist');
-const zipOut = path.join(repo, 'torille-chromium.zip');
+const zipOut = path.join(__dirname, 'torille-chromium.zip');
 const tsc = path.join(__dirname, 'node_modules', 'typescript', 'bin', 'tsc');
 const tsconfig = path.join(__dirname, 'tsconfig.json');
 

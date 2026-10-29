@@ -1,13 +1,13 @@
 # torille-chromium
 
 Manifest V3 WebExtension for Chromium-based browsers (Chrome, Brave, Edge,
-Opera, Vivaldi, Arc), sibling of [torille-firefox](../torille-firefox). Both
+Opera, Vivaldi, Arc), sibling of [torille-firefox](../firefox). Both
 extensions share the same code (`content.js`, `spell-worker.js`, `options.{html,js}`,
 `icons/`); only `manifest.json` and `background.js`'s hosting differ.
 
 ## What's different from Firefox
 
-| | Firefox (`torille-firefox/`) | Chromium (`torille-chromium/`) |
+| | Firefox (`extensions/firefox/`) | Chromium (`extensions/chromium/`) |
 |---|---|---|
 | manifest_version | 3 | 3 |
 | background.scripts | `background.js` | (not used) |
@@ -26,11 +26,11 @@ debug logging.
 The `.xpi` analogue for Chrome is a directory. Build it first:
 
 ```bash
-node /home/j-p/torille/torille-chromium/build.mjs
+node /home/j-p/torille/extensions/chromium/build.mjs
 ```
 
-That writes `/home/j-p/torille/torille-chromium/dist/` (the loadable extension)
-and `/home/j-p/torille/torille-chromium.zip` (a share-as-zip form).
+That writes `/home/j-p/torille/extensions/chromium/dist/` (the loadable extension)
+and `/home/j-p/torille/extensions/chromium/torille-chromium.zip` (a share-as-zip form).
 
 Then:
 
@@ -54,7 +54,7 @@ The `build.mjs` script checks for:
    (which Google's Chrome build disables for licensing reasons and
    Chromium's `headless=new` mode partially ignores) or a CDP domain
    that newer Chromium builds do not expose uniformly. The
-   `torille-chromium/smoke.mjs` script attempts both; if neither works,
+   `extensions/chromium/smoke.mjs` script attempts both; if neither works,
    install the extension in a regular Chromium session and verify
    manually.
 2. **Web Extension policy.** Brave and Vivaldi honour MV3 with no

@@ -1,6 +1,6 @@
 # Browser extension build, install, and test
 
-Both browser extensions (`torille-chromium/`, `torille-firefox/`) wrap the
+Both browser extensions (`extensions/chromium/`, `extensions/firefox/`) wrap the
 same Rust spell-checker that the CLI uses, exposed as a `wasm32-unknown-
 unknown` module via `wasm-pack`. The two extensions share content script,
 worker, options page, and icons; only the manifest and the background
@@ -17,12 +17,12 @@ The build order matters: the extensions copy the wasm-pack output from
 |---|---|
 | `torille-wasm/` | The Rust crate that becomes the wasm artefact. `lib.rs` re-exports the public API. |
 | `torille-wasm/pkg/` | `wasm-pack build` output. `torille_wasm.mjs` (JS shim) and `torille_wasm_bg.wasm` (the binary) are copied into each extension's `dist/spell-worker/`. |
-| `torille-chromium/` | MV3 extension for Chrome, Brave, Edge, Opera, Vivaldi, Arc. |
-| `torille-firefox/` | MV3 extension for Firefox (Gecko, `strict_min_version: 142`). |
-| `torille-chromium/dist/` | Build output. Loadable as "Load unpacked". |
-| `torille-firefox/dist/` | Build output. Zipped into the `.xpi`. |
-| `torille-chromium.zip` | Share-as-zip form of the Chromium extension. |
-| `torille-firefox.xpi` | Installable Firefox add-on. |
+| `extensions/chromium/` | MV3 extension for Chrome, Brave, Edge, Opera, Vivaldi, Arc. |
+| `extensions/firefox/` | MV3 extension for Firefox (Gecko, `strict_min_version: 142`). |
+| `extensions/chromium/dist/` | Build output. Loadable as "Load unpacked". |
+| `extensions/firefox/dist/` | Build output. Zipped into the `.xpi`. |
+| `extensions/chromium/torille-chromium.zip` | Share-as-zip form of the Chromium extension. |
+| `extensions/firefox/torille-firefox.xpi` | Installable Firefox add-on. |
 
 The two extension directories each own their own `node_modules/` (TypeScript
 compiler + `puppeteer-core` for the chromium E2E) and a `build.mjs` that
@@ -43,7 +43,7 @@ copy wasm artefacts, zip).
   package the share-as-zip / `.xpi` form).
 - **The repo's `node_modules`** are not pre-installed; each extension
   carries its own. `npm install` is not needed for the build itself,
-  but the e2e test runner in `torille-chromium/e2e/` reads
+  but the e2e test runner in `extensions/chromium/e2e/` reads
   `puppeteer-core` from there.
 
 ## Build
@@ -59,13 +59,13 @@ wasm-pack build --release
 # torille-wasm/pkg/torille_wasm_bg.wasm (about 10 MB; gzip ~3 MB).
 
 # 2. Chromium: tsc, copy artefacts, zip.
-node /home/j-p/torille/torille-chromium/build.mjs
-# Produces torille-chromium/dist/ and torille-chromium.zip (both
-# written at the repo root, see the script).
+node /home/j-p/torille/extensions/chromium/build.mjs
+# Produces extensions/chromium/dist/ and
+# extensions/chromium/torille-chromium.zip.
 
 # 3. Firefox: tsc, copy artefacts, zip into .xpi.
-node /home/j-p/torille/torille-firefox/build.mjs
-# Produces torille-firefox.xpi at the repo root.
+node /home/j-p/torille/extensions/firefox/build.mjs
+# Produces extensions/firefox/torille-firefox.xpi.
 ```
 
 `wasm-pack build --release` takes a couple of minutes the first time
@@ -82,10 +82,10 @@ or install the zip.
 
 1. Open `chrome://extensions`.
 2. Toggle **Developer mode** on (top right).
-3. Click **Load unpacked** and pick `/home/j-p/torille/torille-chromium/dist/`.
+3. Click **Load unpacked** and pick `/home/j-p/torille/extensions/chromium/dist/`.
 4. The extension appears in the toolbar; pin it from the puzzle-piece menu.
 
-To share a built artefact, hand the `torille-chromium.zip` file (about
+To share a built artefact, hand the `extensions/chromium/torille-chromium.zip` file (about
 2.4 MB) to another developer. They extract it and load the resulting
 directory the same way.
 
@@ -93,7 +93,7 @@ directory the same way.
 
 1. Open `about:debugging#/runtime/this-firefox`.
 2. Click **Load Temporary Add-on…**.
-3. Pick `/home/j-p/torille/torille-firefox.xpi`.
+3. Pick `/home/j-p/torille/extensions/firefox/torille-firefox.xpi`.
 4. The extension loads for the current session; it is dropped on restart
    unless signed for permanent install.
 
@@ -123,38 +123,38 @@ common cause. The console (background page, MV3) shows the error.
 
 ### Firefox smoke test
 
-`torille-firefox/smoke.mjs` exercises the wasm in isolation:
+`extensions/firefox/smoke.mjs` exercises the wasm in isolation:
 1. Loads the wasm directly via `init(wasmBytes)`.
 2. Re-implements the content-script's tokeniser regex and checks the
    wasm's `check` and `suggest_words` agree with the Rust unit tests.
 3. Round-trips a `check` message through the worker module.
 
 ```bash
-node /home/j-p/torille/torille-firefox/smoke.mjs
+node /home/j-p/torille/extensions/firefox/smoke.mjs
 ```
 
 ### Firefox end-to-end (puppeteer + polyfill)
 
-`torille-firefox/e2e/run.mjs` drives a stub HTML page (`e2e/test-page.html`)
+`extensions/firefox/e2e/run.mjs` drives a stub HTML page (`e2e/test-page.html`)
 that polyfills `browser.runtime.getURL` to point at the real extension
 files served by a local `http.server`. The content script runs in that
 page exactly as it would inside a Firefox tab.
 
 ```bash
 # In one shell, serve the extension:
-cd /home/j-p/torille/torille-firefox && python3 -m http.server 8766
+cd /home/j-p/torille/extensions/firefox && python3 -m http.server 8766
 
 # In another, drive the page:
-node /home/j-p/torille/torille-firefox/e2e/run.mjs
+node /home/j-p/torille/extensions/firefox/e2e/run.mjs
 ```
 
 ### Chromium end-to-end
 
-`torille-chromium/e2e/run.mjs` follows the same shape with
+`extensions/chromium/e2e/run.mjs` follows the same shape with
 `puppeteer-core`. Note: MV3 service-worker extensions are not
 reliably loadable under headless Chromium (Google's Chrome disables
 `--load-extension` and `headless=new` partially ignores it). The
-README in `torille-chromium/` calls this out; the practical answer
+README in `extensions/chromium/` calls this out; the practical answer
 is to load `dist/` in a regular Chromium session and verify manually.
 
 ## Manifest validation
@@ -215,6 +215,6 @@ persist, push through AMO signing or use the `web-ext run` workflow
 during development:
 
 ```bash
-cd /home/j-p/torille/torille-firefox
+cd /home/j-p/torille/extensions/firefox
 npx web-ext run --source-dir dist/  # if web-ext is available
 ```

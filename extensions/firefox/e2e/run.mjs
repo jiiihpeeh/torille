@@ -17,7 +17,7 @@ import puppeteer from 'puppeteer-core';
  * @typedef {import('puppeteer-core').Page} Page
  */
 
-/** URL served by `python3 -m http.server 8766` rooted at torille-firefox/. */
+/** URL served by `python3 -m http.server 8766` rooted at extensions/firefox/. */
 const PAGE_URL = 'http://localhost:8766/e2e/test-page.html';
 
 /**

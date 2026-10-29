@@ -27,10 +27,10 @@ data/kotus_verbit.sqlite.progress
 data/train/
 
 # Firefox extension: build artefacts, dependencies, the demo's wasm artifacts
-torille-firefox/node_modules/
-torille-firefox/dist/
-torille-chromium/node_modules/
-torille-chromium/dist/
+extensions/firefox/node_modules/
+extensions/firefox/dist/
+extensions/chromium/node_modules/
+extensions/chromium/dist/
 torille-wasm/demo/node_modules/
 torille-wasm/demo/dist/
 
@@ -53,9 +53,9 @@ data/nykysuomensanalista_derivates.csv
 
 # Large local artifacts removed from Git history. Keep them on disk if needed;
 # regenerate the extension bundles with the demo/build scripts.
-/torille-chromium.zip
-/torille-firefox.xpi
-torille-chromium/torille_wasm_bg.wasm
+/extensions/chromium/torille-chromium.zip
+/extensions/firefox/torille-firefox.xpi
+extensions/chromium/torille_wasm_bg.wasm
 
 # Large training data and work directories (local only)
 data/rerank_v2/

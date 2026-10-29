@@ -13,7 +13,7 @@
 //   2. The wasm worker is created.
 //   3. The spell-check pass produces the expected misspellings.
 //
-// The Firefox e2e (torille-firefox/e2e/run.mjs) runs the same content.js
+// The Firefox e2e (extensions/firefox/e2e/run.mjs) runs the same content.js
 // in Firefox; this script is the Chromium-side mirror.
 
 import puppeteer from 'puppeteer-core';
@@ -115,7 +115,8 @@ async function launchWithExtension() {
 async function runSmoke() {
   const { browser, extensionId, workerUrl, workerBaseUrl, userDataDir } =
     await launchWithExtension();
-  const URL = 'http://localhost:8767/torille-chromium/e2e/test-page.html';
+  // The dev server is rooted at extensions/chromium/ (see the polyfill).
+  const URL = 'http://localhost:8767/e2e/test-page.html';
   const TIMEOUT = 30_000;
 
   try {

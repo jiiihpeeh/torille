@@ -131,7 +131,7 @@ export function App() {
         >
           {extensionDetected()
             ? 'Built-in checker paused. Underlines and suggestions on this page come from the torille browser extension.'
-            : 'Built-in checker paused. No extension overlay detected yet — load torille-chromium/dist or torille-firefox.xpi to check this page.'}
+            : 'Built-in checker paused. No extension overlay detected yet — load extensions/chromium/dist or extensions/firefox/torille-firefox.xpi to check this page.'}
         </p>
       </Show>
       <Show when={extensionDetected() && !useExtension()}>

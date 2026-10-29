@@ -42,7 +42,7 @@
 //! - `check` and `suggest_words` are synchronous on the wasm side.
 //!   Firefox runs wasm on the main thread, so a long check blocks
 //!   the UI. The caller (the content script in
-//!   `torille-firefox/`) is responsible for debouncing.
+//!   `extensions/firefox/`) is responsible for debouncing.
 //! - Compound analysis is not wired in -- same as the Rust
 //!   `torille::suggest::check`. A `nuori-isäntä`-shaped word that has
 //!   no single-lemma source returns `false`. The Firefox extension's

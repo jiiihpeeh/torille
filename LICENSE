@@ -14,7 +14,7 @@ Everything outside `tools/` and `data/` is available under either of:
 
 at your option. This covers `src/`, `tests/`, `benches/`, `bindings/`,
 `wrapper/`, `torille-wasm/`, `torille-wasm-leptos/`, `demo-server/`,
-`torille-firefox/`, `torille-chromium/`, `docs/`, `rules/`, and the repository
+`extensions/firefox/`, `extensions/chromium/`, `docs/`, `rules/`, and the repository
 documentation.
 
 SPDX-License-Identifier: MIT OR Apache-2.0

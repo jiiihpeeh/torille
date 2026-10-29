@@ -1,18 +1,18 @@
 // e2e/polyfill.js -- the WebExtensions API stub the test page loads
-// instead of the real Chrome APIs. Loaded by test-page.html.
+// instead of the real Firefox APIs. Loaded by test-page.html.
 //
 // Exposes a `browser` global (and `window.browser`) that mimics the
 // subset of the WebExtensions API the content script uses:
 //
-//   browser.runtime.getURL(path) -> "http://localhost:8767/<path>"
+//   browser.runtime.getURL(path) -> "http://localhost:8766/<path>"
 //   browser.runtime.sendMessage(msg) -> routes torille:check /
 //     torille:suggest to a real Worker against
-//     http://localhost:8767/dist/spell-worker/spell-worker.js, so the
+//     http://localhost:8766/dist/spell-worker/spell-worker.js, so the
 //     content script's checks exercise the same code path as in
 //     production. The dev server is the one we run with
-//     `python3 -m http.server` rooted at torille-chromium/.
+//     `python3 -m http.server` rooted at extensions/firefox/.
 //   browser.runtime.onMessage.addListener(fn) -> captures the
-//     content-script's toggle-pending-input handler so the smoke script
+//     content-script's toggle-pending-input handler so the test runner
 //     can invoke it directly via `window.__listeners`.
 //   browser.storage.local.get(key) / .set(obj) -> in-memory map with
 //     `storage.onChanged` fan-out.
@@ -22,7 +22,7 @@
 
 (function () {
   /** Base URL where the dev server serves the extension files. */
-  const EXT_BASE = 'http://localhost:8767';
+  const EXT_BASE = 'http://localhost:8766';
 
   /**
    * Append a message to the on-page log element and echo to stdout.
@@ -65,7 +65,7 @@
   // worker against the dev server, so the content script's checks
   // exercise the same code path as in production. The dev server
   // is the one we run with `python3 -m http.server` rooted at
-  // torille-chromium/.
+  // extensions/firefox/.
   /** @type {Function[]} */
   const messageListeners = [];
   /** @type {Record<string, unknown>} */
@@ -283,7 +283,7 @@
     },
   };
   window.browser = api;
-  // Content scripts in Chromium see `browser` as a global (it's not on
+  // Content scripts in Firefox see `browser` as a global (it's not on
   // `window`), so we expose it that way too.
   // eslint-disable-next-line no-undef
   browser = api;

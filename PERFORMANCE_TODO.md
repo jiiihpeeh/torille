@@ -649,7 +649,7 @@ Correctness gates that must stay green:
   `kotus_nomines.sqlite`; fix the database first, then use it as the recall
   guard for P1.4/P2.4)
 - `node torille-wasm/demo/probe-timing.mjs`, `probe-toggle.mjs`
-- extension e2e (`torille-chromium/e2e/run.mjs`)
+- extension e2e (`extensions/chromium/e2e/run.mjs`)
 
 ---
 

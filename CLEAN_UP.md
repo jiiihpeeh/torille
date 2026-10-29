@@ -5,7 +5,7 @@ risk/return: each phase is independently landable, and the later phases depend
 on the earlier ones being green.
 
 `src/` (the engine) is **not** the browser-extension source; that lives in
-`torille-firefox/src` and `torille-chromium/src`. This file is only about the
+`extensions/firefox/src` and `extensions/chromium/src`. This file is only about the
 crate at the repository root.
 
 Baseline measured on 2026-10-23 (before this pass):
@@ -39,7 +39,7 @@ documented 0.05 bonus. The engine cleanup itself did not change ranking.
 
 - [x] Moved the nested worktrees out of the source trees. Both were clean,
       detached checkouts: `src/.kilo/worktrees/walnut-toaster` (**298 MB**)
-      and `torille-chromium/.kilo/worktrees/petite-hamster` (36 MB). Removed
+      and `extensions/chromium/.kilo/worktrees/petite-hamster` (36 MB). Removed
       with `git worktree remove` and pruned; the empty `.kilo/` directories
       are gone. `**/.kilo/` stays in `.gitignore` so fresh clones ignore any
       future agent worktrees.

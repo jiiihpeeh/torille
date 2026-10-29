@@ -50,8 +50,8 @@ is browser-friendly, completely client-side, and avoids every IPC
 round-trip the older demos were paying.
 
 The architecture is driven by `torille` already being a `no_std`-
-friendly Rust core. The extension code paths (`torille-firefox`,
-`torille-chromium`, `torille-wasm/demo`) keep their postMessage
+friendly Rust core. The extension code paths (`extensions/firefox`,
+`extensions/chromium`, `torille-wasm/demo`) keep their postMessage
 protocol because the browser sandbox forces them across origins;
 this Leptos deployment is the shape that's idiomatic when you
 control deployment.

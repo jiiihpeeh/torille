@@ -38,7 +38,7 @@ Cargo workspace, root package `torille`, members declared in `Cargo.toml`:
 | `wrapper/` | `wrapper` | hunspell-shaped C ABI over `torille::suggest` |
 | `torille-wasm/` | `torille-wasm` | wasm-bindgen bindings + per-textarea state |
 | `torille-wasm-leptos/` | `torille-wasm-leptos` | Leptos front-end for the wasm demo |
-| `torille-firefox/`, `torille-chromium/` | — | browser extensions (JS, not Rust) |
+| `extensions/firefox/`, `extensions/chromium/` | — | browser extensions (JS, not Rust) |
 
 ```
 src/
@@ -373,7 +373,7 @@ is gitignored and generated.
 | a new verb/noun class engine | `src/expand/verbs/`, `src/expand/nominals*/`, then `dispatch` + `AUTHORITATIVE_CLASSES` |
 | the grammar reading model | `src/tags.rs` |
 | hyphenation patterns/policy | `src/hyphenation/`, `data/hyphenation/` |
-| the wasm/browser surface | `torille-wasm/src/`, `torille-firefox/`, `torille-chromium/` |
+| the wasm/browser surface | `torille-wasm/src/`, `extensions/firefox/`, `extensions/chromium/` |
 | verification | `tools/*.py`, `tests/catalogue.rs`, `docs/harness.md` |
 
 ## Current known state
