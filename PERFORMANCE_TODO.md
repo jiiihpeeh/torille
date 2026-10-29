@@ -75,6 +75,12 @@ Done:
   (16 384 entries, clear-on-cap). It is a pure function of the word, so this
   also helps the *first* render of a page with repeated tokens and the
   reader/textarea panels that do not share a `TextAreaState`.
+- **Gate-1 duplication** — `check_normal_with` used to compute
+  `direct_base = is_known_word_no_compound(word)` at the top, which runs the
+  whole non-compound gate stack a second time. It is now computed only when
+  the cheaper gates have missed. `mehuvesi` dropped from ~60 ms to ~0.08 ms;
+  `avioliittoaikeita`'s gate 1 from 109 ms to 0.6 ms; the 2000-token corpus
+  from 3.70 s to 3.19 s (45448) and 8.58 s to 7.86 s (7000).
 
 Measured with `perf_check_suggest` on the reference host:
 
@@ -101,6 +107,14 @@ Thread-local `check_normal_fast` memo, 2000-token corpus first render:
 | `books/45448.txt` | 4840 ms | **3697 ms** |
 | `books/7000.txt` | 10 949 ms | **8583 ms** |
 | p50 (45448) | 42 µs | **3 µs** |
+
+Deferred `direct_base` probe, 2000-token corpus:
+
+| corpus | before | after |
+|---|---:|---:|
+| `books/45448.txt` | 3697 ms | **3190 ms** |
+| `books/7000.txt` | 8583 ms | **7864 ms** |
+| `mehuvesi` | ~60 ms | **0.08 ms** |
 
 Still open from this PR: the `forms_generated` / `paradigms_inflected` /
 `compound_splits` counters and the `lyökämme` compound-head regression.

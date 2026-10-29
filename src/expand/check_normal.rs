@@ -424,7 +424,12 @@ fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> Normalized
     // gate to fall back on -- this keeps a recognised word from turning
     // into `Unknown` (the negation forms, possessives and compounds the
     // gate-1 stripper knows and the stem maps do not).
-    let direct_base = crate::suggest::is_known_word_no_compound(word);
+    //
+    // It is *expensive*: `is_known_word_no_compound` runs the whole
+    // non-compound gate stack, which the later gates then run again. Do not
+    // compute it here; the fast and full paths ask for it only after their
+    // own gates have missed. For `avioliittoaikeita` this alone was 109 ms
+    // of the 1.2 s.
     // A direct lemma is the one thing gate 1 settles on its own; every
     // other recognised form falls through so a later gate can name the
     // base. The sanalista probe is the lemma test.
@@ -435,7 +440,7 @@ fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> Normalized
         return NormalizedOutcome::Lemma;
     }
     if verbose {
-        if direct_base.is_some() {
+        if crate::suggest::is_known_word_no_compound(word).is_some() {
             println!("    gate 1: productive form, not a lemma");
         } else {
             println!("    gate 1: miss");
@@ -730,6 +735,7 @@ fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> Normalized
         // found nothing at all: `äesteli` is a verb form gate 1 already
         // knows, and splitting it as `äes` + `teli` would name the wrong
         // base.
+        let direct_base = crate::suggest::is_known_word_no_compound(word);
         let short_compound = if direct_base.is_none() {
             crate::suggest::is_known_short_compound(word)
         } else {
@@ -777,6 +783,7 @@ fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> Normalized
             gate: "compound",
         };
     }
+    let direct_base = crate::suggest::is_known_word_no_compound(word);
     if let Some(base) = direct_base {
         if verbose {
             println!("    gate 5: miss -> known word {base}");
