@@ -211,6 +211,103 @@ pub(crate) fn is_known_short_compound(word: &str) -> Option<String> {
     None
 }
 
+/// Dynamic-programming compound segmentation.
+///
+/// Transitions are dictionary modifiers, not arbitrary character splits:
+/// `solve(pos)` asks whether the remainder from `pos` can be a compound
+/// ending in a valid final form, and memoises the answer. The final-form
+/// check is the same non-compound detector as before, so acceptance stays
+/// exact; the saving is that it runs at most once per position instead of
+/// once per split, and the transition loop only tests prefixes that
+/// `modifier_is_known` accepts. This supports compounds of any length
+/// without a component cap.
+/// A compound head is a content word; the negation auxiliary and the bare
+/// connegative are checked on the surface before this. Verbs are allowed
+/// because an adverb such as `torkuksiin` names `torkkua`.
+fn is_compound_head(base: &str) -> bool {
+    crate::compound::is_content_head(base)
+}
+
+fn segment_compound_dp(word: &str) -> Option<String> {
+    let offsets: Vec<usize> = word
+        .char_indices()
+        .map(|(i, _)| i)
+        .chain(std::iter::once(word.len()))
+        .collect();
+    let n = offsets.len() - 1;
+    if n < 2 {
+        return None;
+    }
+    let mut memo: Vec<Option<String>> = vec![None; n + 1];
+    let mut done = vec![false; n + 1];
+
+    fn solve(
+        pos: usize,
+        word: &str,
+        offsets: &[usize],
+        n: usize,
+        memo: &mut [Option<String>],
+        done: &mut [bool],
+    ) -> Option<String> {
+        if done[pos] {
+            return memo[pos].clone();
+        }
+        done[pos] = true;
+        // The remainder can be the final word form. Position 0 is the whole
+        // word: the caller's own gates have already decided that it is not a
+        // known non-compound, and a compound needs at least one modifier.
+        if pos > 0 {
+            let surface = &word[offsets[pos]..];
+            // A function word is not a compound head; `-en`/`-an`/`-än` and
+            // the bare connegatives otherwise look like a possessive or a
+            // verb form of the negation auxiliary.
+            if crate::expand::negation::negation_base(surface).is_some()
+                || crate::expand::connegative::base(surface).is_some()
+            {
+                // fall through to the modifier search
+            } else if let Some(base) = is_known_word_no_compound(surface)
+                && is_compound_head(&base)
+            {
+                memo[pos] = Some(base.clone());
+                return Some(base);
+            }
+        }
+        // Longest modifier first, matching the old split search's preference.
+        for end in (pos + 1..n).rev() {
+            // A one- or two-character modifier is usually a stem fragment,
+            // not a compound member; `ky` + `kynnsä` was the false split in
+            // `todistelukykynnsä`. Short real modifiers fall back to the old
+            // search, which is still available when the DP misses.
+            if end - pos < 3 {
+                continue;
+            }
+            let left = &word[offsets[pos]..offsets[end]];
+            if !crate::expand::modifier_is_known(left) {
+                continue;
+            }
+            if let Some(base) = solve(end, word, offsets, n, memo, done) {
+                memo[pos] = Some(base.clone());
+                return Some(base);
+            }
+        }
+        None
+    }
+
+    solve(0, word, &offsets, n, &mut memo, &mut done)
+}
+
+/// The DP compound probe used by `check_normal_fast`.
+///
+/// The caller (gate 4c) has already established that the word is not a
+/// known non-compound form, so this skips the expensive "already known"
+/// guard that `is_known_compound_with` would otherwise recompute.
+pub(crate) fn is_known_compound_dp(word: &str) -> Option<String> {
+    if word.contains('-') || word.chars().count() < 6 {
+        return None;
+    }
+    segment_compound_dp(&word.to_lowercase())
+}
+
 fn is_known_compound_with(word: &str, engine_fallback: bool) -> Option<String> {
     let lower = word.to_lowercase();
     // Hyphenated input is a spelling decision in its own right, not a closed
@@ -1801,4 +1898,9 @@ pub(super) fn s_less_host(word: &str) -> Option<String> {
 pub fn warm_caches() {
     let _ = lemma_set();
     let _ = catalogue();
+    // The non-compound detector is the last lazy layer: it builds the
+    // derivation tables and the stem-map verifiers. A miss warms all of them
+    // without accepting a word, so the first unknown word on a page does not
+    // pay the ~100 ms cold start.
+    let _ = is_known_word_no_compound("xyzzy");
 }

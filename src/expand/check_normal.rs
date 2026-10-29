@@ -411,6 +411,50 @@ thread_local! {
 
 const FAST_CACHE_LIMIT: usize = 16_384;
 
+/// The cheap derivation probes from `is_known_word_no_compound`, without
+/// its noun/verb stem loops. Productive `-inen`/`-kas`/`-lainen` adjectives,
+/// derived verbs and agent nouns, the lexical supplement and the closed
+/// pronoun class.
+fn cheap_derived_base(word: &str) -> Option<String> {
+    let lower = word.to_lowercase();
+    if let Some(base) = crate::expand::check_normal::adverb_base(&lower) {
+        return Some(base.to_string());
+    }
+    if let Some(base) = crate::expand::derived::base(&lower) {
+        return Some(base.to_string());
+    }
+    if let Some(base) = crate::expand::fast_path::base(&lower) {
+        return Some(base.to_string());
+    }
+    if let Some(base) = crate::expand::check_normal::pronoun_base(&lower) {
+        return Some(base.to_string());
+    }
+    // Shape guards keep the candidate generators off ordinary words:
+    // `inen_candidates` strips every case ending before testing.
+    if (lower.contains("is") || lower.contains("ine"))
+        && let Some(base) = crate::expand::derived_inen_base(&lower, cat(), None)
+    {
+        return Some(base);
+    }
+    if (lower.contains("kas")
+        || lower.contains("käs")
+        || lower.contains("kka")
+        || lower.contains("kkä"))
+        && let Some(base) = crate::expand::derived_kas_base(&lower, cat(), None)
+    {
+        return Some(base);
+    }
+    if (lower.contains("lainen")
+        || lower.contains("läinen")
+        || lower.contains("lais")
+        || lower.contains("läis"))
+        && let Some(base) = crate::expand::derived_lainen_base(&lower, cat(), None)
+    {
+        return Some(base);
+    }
+    crate::expand::derived_agent_base(&lower, cat(), None)
+}
+
 fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> NormalizedOutcome {
     // ── Gate 1: lemma + productive noun-case stripper ─────────────
     if verbose {
@@ -735,6 +779,32 @@ fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> Normalized
         // found nothing at all: `äesteli` is a verb form gate 1 already
         // knows, and splitting it as `äes` + `teli` would name the wrong
         // base.
+        // Long compounds are the case where the non-compound stack is
+        // expensive and the DP segmenter is cheap. Short words keep the
+        // old order: the direct probe is only microseconds there, and it
+        // keeps a known verb form from being renamed to a compound head.
+        // A productive derivation is a single word, not a compound: name it
+        // before the segmenter gets a chance to split it
+        // (`aikaansaamiseksi`, `kolmitahkoisella`).
+        if let Some(base) = cheap_derived_base(word) {
+            if verbose {
+                println!("    gate 4c0: derived -> {base}");
+            }
+            return NormalizedOutcome::Inflected {
+                base,
+                gate: "derived",
+            };
+        }
+        let long = word.chars().count() >= 12;
+        if long && let Some(base) = crate::suggest::is_known_compound_dp(word) {
+            if verbose {
+                println!("    gate 4c: compound (dp) -> {base}");
+            }
+            return NormalizedOutcome::Inflected {
+                base,
+                gate: "compound",
+            };
+        }
         let direct_base = crate::suggest::is_known_word_no_compound(word);
         let short_compound = if direct_base.is_none() {
             crate::suggest::is_known_short_compound(word)
@@ -1458,6 +1528,33 @@ mod tests {
         assert!(matches!(
             check_normal_fast("länkisääreksi", false),
             NormalizedOutcome::Inflected { .. }
+        ));
+    }
+
+    /// The DP compound segmenter handles long compounds without enumerating
+    /// every split, and still rejects a doubled possessive.
+    #[test]
+    fn fast_variant_segments_long_compounds() {
+        for word in [
+            "avioliittoaikeita",
+            "tietokoneohjelmointikurssi",
+            "kotiportilleen",
+        ] {
+            assert!(
+                matches!(
+                    check_normal_fast(word, false),
+                    NormalizedOutcome::Inflected { .. }
+                ),
+                "{word} not accepted"
+            );
+        }
+        assert!(matches!(
+            check_normal_fast("todistelukykynsä", false),
+            NormalizedOutcome::Inflected { .. }
+        ));
+        assert!(matches!(
+            check_normal_fast("todistelukykynnsä", false),
+            NormalizedOutcome::Unknown
         ));
     }
 

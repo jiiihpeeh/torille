@@ -81,6 +81,19 @@ Done:
   the cheaper gates have missed. `mehuvesi` dropped from ~60 ms to ~0.08 ms;
   `avioliittoaikeita`'s gate 1 from 109 ms to 0.6 ms; the 2000-token corpus
   from 3.70 s to 3.19 s (45448) and 8.58 s to 7.86 s (7000).
+- **P3.1 (partial) — DP compound segmentation.** `check_normal_fast` now
+  runs a memoised dynamic program over character positions for long words
+  (`segment_compound_dp` in `known.rs`): every transition is a
+  `modifier_is_known` prefix, the final component is the non-compound
+  detector with a content-head and negation guard, and the answer per
+  position is cached. It handles arbitrary-length compounds without a
+  component cap. The old split search remains as the fallback for short
+  words and cases the DP declines.
+
+  Measured: 2000-token corpus 45448 **3.19 s → 1.69 s**, max token
+  **1.05 s → 0.117 s**; 7000 7.86 s → 7.38 s. The DP also rejects the
+  doubled-possessive misspelling `todistelukynnsä` while accepting the
+  correct `todistelukykynsä` (`todistelu + kyky + -nsä`).
 
 Measured with `perf_check_suggest` on the reference host:
 
@@ -490,6 +503,24 @@ typo corpus.
 
 ### Phase 3 — compound analysis (3–5 days)
 
+**P3.0 Dynamic-programming compound segmentation (done, first cut)**
+
+- [x] Memoise over character positions: `solve(pos)` asks whether the
+      remainder can be a compound ending in a valid final form.
+- [x] Transitions are dictionary modifiers (`modifier_is_known`), not every
+      character boundary; longest modifier first.
+- [x] Final components use the non-compound detector plus a content-head
+      check; the negation auxiliary and bare connegative are rejected on the
+      surface.
+- [x] Keep the old split search as a fallback for short words and cases the
+      DP declines.
+- [ ] Use the lexicon prefix index / FST to enumerate transitions instead of
+      probing every prefix. The current DP is O(n²) `modifier_is_known`
+      probes; they are cheap, but a trie/FST would make transitions
+      proportional to dictionary matches.
+- [ ] Extend the DP to return the full component list (for the hyphenation
+      adapter and the suggestion metadata), not just the head.
+
 **P3.1 Split at morphological boundaries, not every character**
 (`src/suggest/known.rs::detect_compound_pass`)
 
@@ -648,6 +679,14 @@ numbers around without changing the candidate set.
 Third PR: P2.3/P2.4/P3.1. Larger, but this is where the structural win lives.
 
 ---
+
+## License and source rule
+
+Everything here is the repository's own `MIT OR Apache-2.0` code. Do not copy
+Voikko, HFST or any GPL oracle/harness source into the engine; those projects
+are references for behaviour, not a source of code. The DP and the trie/FST
+ideas are implemented from the existing lexicon indexes and morphology tables
+in this tree.
 
 ## Risks and rules
 

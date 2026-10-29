@@ -49,6 +49,7 @@ struct Args {
     json: bool,
     single_thread: bool,
     top: usize,
+    warm: bool,
 }
 
 fn parse_args() -> Args {
@@ -61,6 +62,7 @@ fn parse_args() -> Args {
         json: false,
         single_thread: false,
         top: 0,
+        warm: false,
     };
     let mut it = std::env::args().skip(1);
     while let Some(arg) = it.next() {
@@ -88,12 +90,13 @@ fn parse_args() -> Args {
             }
             "--json" => args.json = true,
             "--single-thread" => args.single_thread = true,
+            "--warm" => args.warm = true,
             "--top" => args.top = it.next().and_then(|n| n.parse().ok()).unwrap_or(args.top),
             "-h" | "--help" => {
                 println!(
                     "usage: perf_check_suggest [--corpus FILE] [--tokens N] \
                      [--iters N] [--fast-iters N] [--single-thread] [--json] \
-                     [--top N] [WORD...]"
+                     [--top N] [--warm] [WORD...]"
                 );
                 std::process::exit(0);
             }
@@ -139,6 +142,9 @@ fn main() -> ExitCode {
         torille::expand::set_single_thread(true);
     }
 
+    if args.warm {
+        torille::suggest::warm_caches();
+    }
     let nouns: HashSet<String> = HashSet::new();
     let mut word_rows = Vec::new();
     for (word, kind) in &args.words {
