@@ -71,6 +71,10 @@ Done:
   cache across renders (`known`). `find_misspells` takes `&mut self`; a
   re-render of an unchanged page is one hash probe per token. Proper-noun
   decisions stay generation-scoped and are still checked separately.
+- **P3.4 (library half)** — `check_normal_fast` now has a thread-local memo
+  (16 384 entries, clear-on-cap). It is a pure function of the word, so this
+  also helps the *first* render of a page with repeated tokens and the
+  reader/textarea panels that do not share a `TextAreaState`.
 
 Measured with `perf_check_suggest` on the reference host:
 
@@ -89,6 +93,14 @@ Cache measurement (4000-token book excerpt, native):
 | first render | 5013 ms |
 | unchanged re-render | **9.8 ms** |
 | one-word edit | **9.6 ms** |
+
+Thread-local `check_normal_fast` memo, 2000-token corpus first render:
+
+| corpus | before | after |
+|---|---:|---:|
+| `books/45448.txt` | 4840 ms | **3697 ms** |
+| `books/7000.txt` | 10 949 ms | **8583 ms** |
+| p50 (45448) | 42 µs | **3 µs** |
 
 Still open from this PR: the `forms_generated` / `paradigms_inflected` /
 `compound_splits` counters and the `lyökämme` compound-head regression.

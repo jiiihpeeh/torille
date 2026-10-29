@@ -53,6 +53,7 @@
 //!
 //! [`tools/build_stem_to_base_map.py`]: ../../tools/build_stem_to_base_map.py
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
@@ -376,8 +377,39 @@ pub fn check_normal(word: &str, verbose: bool) -> NormalizedOutcome {
 /// [`check_normal`]; callers on a hot path that must stay bounded
 /// (the wasm's per-candidate confirm pass) use this.
 pub fn check_normal_fast(word: &str, verbose: bool) -> NormalizedOutcome {
-    check_normal_with(word, verbose, /* engine_gate = */ false)
+    // The gate is a pure function of the word: the dictionary is static and
+    // no text-dependent input reaches it. A page repeats words constantly
+    // (`the`, names, case forms of the same lemma), and the per-textarea
+    // wasm cache covers only one panel, so a thread-local memo pays for
+    // itself even on the first render.
+    if verbose {
+        return check_normal_with(word, true, /* engine_gate = */ false);
+    }
+    if let Some(hit) = FAST_CACHE.with_borrow(|cache| cache.get(word).cloned()) {
+        return hit;
+    }
+    let outcome = check_normal_with(word, false, /* engine_gate = */ false);
+    FAST_CACHE.with_borrow_mut(|cache| {
+        if cache.len() >= FAST_CACHE_LIMIT {
+            // A large paste can hold tens of thousands of distinct tokens.
+            // Clearing keeps the memo bounded; the words still on screen are
+            // re-checked once.
+            cache.clear();
+        }
+        cache.insert(word.to_string(), outcome.clone());
+    });
+    outcome
 }
+
+thread_local! {
+    /// Thread-local memo for [`check_normal_fast`]. Per-thread rather than
+    /// process-wide so the native multi-threaded walks do not contend on a
+    /// lock; the wasm is one thread.
+    static FAST_CACHE: RefCell<HashMap<String, NormalizedOutcome>> =
+        RefCell::new(HashMap::new());
+}
+
+const FAST_CACHE_LIMIT: usize = 16_384;
 
 fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> NormalizedOutcome {
     // ── Gate 1: lemma + productive noun-case stripper ─────────────
