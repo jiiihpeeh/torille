@@ -1827,6 +1827,12 @@ pub fn suggest_over_lemmas(word: &str, max_n: usize, max_distance: usize) -> Vec
         return Vec::new();
     }
     let lower = word.to_lowercase();
+    // Human-approved answers are exact and cost nothing; the per-keystroke
+    // popup uses this lemma-only path too, so it must see the same curated
+    // pair (`alottanutkaan` -> `aloittanutkaan`) as the full ranker.
+    if let Some((right, _lemma)) = super::candidates::reported_correction(&lower) {
+        return vec![right.to_string()];
+    }
     let word_chars_len = lower.chars().count();
     let cap = max_distance.saturating_add(1);
     let mut scored: Vec<(usize, String)> = Vec::new();

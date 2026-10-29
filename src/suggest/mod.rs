@@ -1561,6 +1561,15 @@ mod tests {
         assert_eq!(suggest("kiväriään", 5, 2).first().map(String::as_str), Some("kivääriään"));
     }
 
+    /// The lemma-only popup path must see the curated clitic answer too.
+    #[test]
+    fn lemma_popup_uses_the_curated_clitic_answer() {
+        assert_eq!(
+            suggest_over_lemmas("alottanutkaan", 5, 2),
+            vec!["aloittanutkaan"]
+        );
+    }
+
     /// The productive feminine `-tar` noun is recognised; the j-spelling
     /// `valtijatar` is not a word, and the lexicalised `valtiatar` is the
     /// correction.

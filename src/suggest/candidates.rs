@@ -44,7 +44,7 @@ const REPORTED_CORRECTIONS: &[(&str, &str, &str)] = &[
     ("maiskauttelee", "maiskuttelee", "maiskutella"),
 ];
 
-fn reported_correction(word: &str) -> Option<(&'static str, &'static str)> {
+pub(super) fn reported_correction(word: &str) -> Option<(&'static str, &'static str)> {
     REPORTED_CORRECTIONS
         .iter()
         .find(|(wrong, _, _)| *wrong == word)
