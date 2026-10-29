@@ -1561,6 +1561,16 @@ mod tests {
         assert_eq!(suggest("kiväriään", 5, 2).first().map(String::as_str), Some("kivääriään"));
     }
 
+    /// The productive feminine `-tar` noun is recognised; the j-spelling
+    /// `valtijatar` is not a word, and the lexicalised `valtiatar` is the
+    /// correction.
+    #[test]
+    fn valtijatar_suggests_the_lexicalised_empress() {
+        assert!(suggest("valtijatar", 5, 2).contains(&"valtiatar".to_string()));
+        assert!(is_known_word("siivoojatar").is_some());
+        assert!(is_known_word("valtijatar").is_none());
+    }
+
     /// `salamyhkää` is not a standard form; the curated answer is the adverb
     /// `salamyhkäisesti`, not the adjective's partitive.
     #[test]

@@ -498,6 +498,84 @@ pub fn derived_llinen_base(
 /// reverse the rule to a verb lemma, and inflect the derived noun as class
 /// 10 (back) or 12 (front) to verify the surface. Returns the derived noun,
 /// not the verb.
+/// The productive feminine `-tar`/`-tär` noun (`siivooja` ->
+/// `siivoojatar`, `näyttelijä` -> `näyttelijätär`), and its inflected forms.
+///
+/// `-tar` attaches to an agent noun or another noun and inflects as class
+/// 32*C (`siivoojattaren`). The source must be a known word; this is what
+/// separates the productive derivation from the lexicalised `valtiatar`
+/// (which the sanalista lists directly).
+pub fn derived_tar_base(
+    word: &str,
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+) -> Option<String> {
+    let lower = word.to_lowercase();
+    if !(lower.contains("tar") || lower.contains("tär")) {
+        return None;
+    }
+    let mut candidates: Vec<String> = Vec::new();
+    if lower.ends_with("tar") || lower.ends_with("tär") {
+        candidates.push(lower.clone());
+    }
+    // Genitive/partitive stems double the t: `siivoojattaren`,
+    // `siivoojatarta`. Reconstruct the nominative from either shape.
+    for marker in ["ttar", "ttär"] {
+        if let Some(i) = lower.rfind(marker) {
+            candidates.push(format!("{}{}", &lower[..i], &marker[1..]));
+        }
+    }
+    for marker in ["tar", "tär"] {
+        if let Some(i) = lower.rfind(marker) {
+            candidates.push(format!("{}{}", &lower[..i], marker));
+        }
+    }
+    candidates.sort();
+    candidates.dedup();
+    for candidate in candidates {
+        let suffix = if candidate.ends_with("tär") {
+            "tär"
+        } else if candidate.ends_with("tar") {
+            "tar"
+        } else {
+            continue;
+        };
+        let source = &candidate[..candidate.len() - suffix.len()];
+        if source.is_empty() {
+            continue;
+        }
+        let harmonic = crate::harmony::pick_harmony(crate::harmony::front(source), "tar", "tär");
+        if suffix != harmonic {
+            continue;
+        }
+        // The source must be a noun; `-tar` on the conjunction `ja` would
+        // otherwise fabricate `jatar`, which then turns `valtijatar` into a
+        // compound.
+        let source_is_noun = crate::kotus::sanalista().by_word(source).any(|row| {
+            crate::tags::PartOfSpeech::parse_all(row.part_of_speech()).contains(&PartOfSpeech::Noun)
+        });
+        if !source_is_noun {
+            continue;
+        }
+        let inflection = Inflection {
+            class: 32,
+            gradation: Some(crate::kotus::Gradation(3)),
+        };
+        let forms = inflect_all(
+            &candidate,
+            &[inflection],
+            cat,
+            lexicon,
+            PartOfSpeech::Noun,
+            true,
+        );
+        if forms.iter().any(|f| f.word == lower) {
+            return Some(candidate);
+        }
+    }
+    None
+}
+
 pub fn derived_agent_base(
     word: &str,
     cat: &Catalogues,

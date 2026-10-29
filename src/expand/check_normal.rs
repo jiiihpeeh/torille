@@ -452,6 +452,11 @@ fn cheap_derived_base(word: &str) -> Option<String> {
     {
         return Some(base);
     }
+    if (lower.contains("tar") || lower.contains("tär"))
+        && let Some(base) = crate::expand::derived_tar_base(&lower, cat(), None)
+    {
+        return Some(base);
+    }
     crate::expand::derived_agent_base(&lower, cat(), None)
 }
 
@@ -1528,6 +1533,27 @@ mod tests {
         assert!(matches!(
             check_normal_fast("länkisääreksi", false),
             NormalizedOutcome::Inflected { .. }
+        ));
+    }
+
+    /// The productive feminine `-tar`/`-tär` noun: `siivooja` ->
+    /// `siivoojatar`, inflected as class 32*C. The lexicalised `valtiatar`
+    /// is a lemma, and the misspelling `valtijatar` is not accepted.
+    #[test]
+    fn fast_variant_accepts_feminine_tar_nouns() {
+        for word in ["siivoojatar", "siivoojattaren", "siivoojattarelle"] {
+            assert!(
+                matches!(
+                    check_normal_fast(word, false),
+                    NormalizedOutcome::Inflected { .. }
+                ),
+                "{word} not accepted"
+            );
+        }
+        assert!(matches!(check_normal_fast("valtiatar", false), NormalizedOutcome::Lemma));
+        assert!(matches!(
+            check_normal_fast("valtijatar", false),
+            NormalizedOutcome::Unknown
         ));
     }
 

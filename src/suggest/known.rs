@@ -533,18 +533,21 @@ fn is_known_word_with_compound(word: &str, allow_compound: bool) -> Option<Strin
         // would lose the path -- probe the noun stem map
         // directly here.
         //
-        // Skip the `inflect_all` verify: the kotus engine
-        // emits possessive forms only when called with
-        // `possessives=true`, and the fast path always
-        // passes `false`. The stem map is built from the
-        // engine's real inflect output, so the bare host
-        // is a real intermediate form; adding a
-        // possessive suffix to a real stem is always a
-        // real Finnish word, so the trust is justified.
-        if STEM_BUCKETS_NOUN.contains(host)
-            && let Some(first_base) = STEM_BUCKETS_NOUN.bases(host).next()
-        {
-            return Some(first_base.to_string());
+        // Verify a short host. The stem map key need not be a full stem for
+        // every class: `kä` is a map key, but `käki` has no `kämme`, and
+        // trusting the map turned `lyökämme` into `lyö` + `käki`. Long hosts
+        // are full case forms (`tuttavuutta`), and some possessive cells are
+        // still outside the engine's output, so those keep the old trust.
+        if STEM_BUCKETS_NOUN.contains(host) {
+            if host.chars().count() <= 4 {
+                for base in STEM_BUCKETS_NOUN.bases(host) {
+                    if let Some(b) = find_base_via_stem_map_static_possessive(&lower, base) {
+                        return Some(b);
+                    }
+                }
+            } else if let Some(first_base) = STEM_BUCKETS_NOUN.bases(host).next() {
+                return Some(first_base.to_string());
+            }
         }
         // A genitive plural contracts its `-en` before the possessive:
         // `talojen` + `-nsa` -> `talojensa`, `veljien` + `-nsä` ->
@@ -837,6 +840,10 @@ fn is_known_word_with_compound(word: &str, allow_compound: bool) -> Option<Strin
     //      stem maps cannot see it. The same derivation layer reconstructs
     //      the nominative and inflects it as class 10/12.
     if let Some(base) = crate::expand::derived_agent_base(&lower, catalogue(), None) {
+        return Some(base);
+    }
+    // Productive feminine `-tar`/`-tär`: `siivooja` -> `siivoojatar`.
+    if let Some(base) = crate::expand::derived_tar_base(&lower, catalogue(), None) {
         return Some(base);
     }
 
@@ -1700,20 +1707,24 @@ fn possessive_base_via_stem_map(word: &str, host: &str) -> Option<String> {
 fn find_base_via_stem_map_static_possessive(word: &str, base: &str) -> Option<String> {
     use crate::expand::inflect_all;
     use crate::kotus::sanalista;
-    let lemma = sanalista().by_word(base).next()?;
-    let inflections: Vec<_> = lemma.inflections().collect();
-    let forms = inflect_all(
-        lemma.word(),
-        &inflections,
-        catalogue(),
-        None,
-        PartOfSpeech::Noun,
-        true,
-    );
-    forms
-        .iter()
-        .any(|f| f.word == word)
-        .then(|| base.to_string())
+    // A base can be listed under more than one homonym row; the possessive
+    // form may come from a later class (`kuusi` is both the spruce and the
+    // numeral). Try every row before rejecting the stem.
+    for lemma in sanalista().by_word(base) {
+        let inflections: Vec<_> = lemma.inflections().collect();
+        let forms = inflect_all(
+            lemma.word(),
+            &inflections,
+            catalogue(),
+            None,
+            PartOfSpeech::Noun,
+            true,
+        );
+        if forms.iter().any(|f| f.word == word) {
+            return Some(base.to_string());
+        }
+    }
+    None
 }
 
 /// Verb counterpart. Both call into the same `inflect_all` and

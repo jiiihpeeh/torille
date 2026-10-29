@@ -100,7 +100,7 @@ use derived_forms::{
 pub(crate) use derived_forms::modifier_is_known;
 pub use derived_forms::{
     derived_agent_base, derived_inen_base, derived_kas_base, derived_lainen_base,
-    derived_llinen_base,
+    derived_llinen_base, derived_tar_base,
 };
 
 // Whether the hand-written `nominals` engine has been verified for a class.
