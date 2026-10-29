@@ -1557,6 +1557,21 @@ mod tests {
         ));
     }
 
+    /// `-llinen` derives from a stem, not always a lemma: `orsi` -> `orre`
+    /// -> `orrellinen`. The noun stem map names the base.
+    #[test]
+    fn fast_variant_accepts_llinen_from_a_stem() {
+        for word in ["orrellinen", "orrellisen", "orrellisella", "orrellisessa"] {
+            assert!(
+                matches!(
+                    check_normal_fast(word, false),
+                    NormalizedOutcome::Inflected { .. }
+                ),
+                "{word} not accepted"
+            );
+        }
+    }
+
     /// The DP compound segmenter handles long compounds without enumerating
     /// every split, and still rejects a doubled possessive.
     #[test]

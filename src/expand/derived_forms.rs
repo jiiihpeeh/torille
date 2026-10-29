@@ -467,7 +467,15 @@ pub fn derived_llinen_base(
         let Some(base) = candidate.strip_suffix("llinen") else {
             continue;
         };
-        if base.is_empty() || crate::kotus::sanalista().by_word(base).next().is_none() {
+        if base.is_empty() {
+            continue;
+        }
+        // The base is often a stem, not a lemma: `orsi` -> `orre` ->
+        // `orrellinen`. The noun stem map names the lemma behind `orre`;
+        // a listed base (`onni`) is accepted directly.
+        let base_known = crate::kotus::sanalista().by_word(base).next().is_some()
+            || crate::expand::check_normal::STEM_BUCKETS_NOUN.contains(base);
+        if !base_known {
             continue;
         }
         let forms = inflect_all(

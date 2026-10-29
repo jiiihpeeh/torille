@@ -9,8 +9,8 @@ use crate::rerank::{Pipeline, Suggestion, SuggestionSource};
 use crate::tags::Confidence;
 
 use super::known::{
-    catalogue, gradation_plural_alternate, is_known_compound_fast, is_known_word_fast, lexicon,
-    s_less_host,
+    catalogue, gradation_plural_alternate, is_known_compound_fast, is_known_word_fast,
+    is_known_word_no_compound, lexicon, s_less_host,
 };
 use super::levenshtein::{keyboard_bonus, levenshtein};
 
@@ -23,6 +23,10 @@ const DOUBLED_LETTER_BONUS: f32 = 0.1;
 /// inflection of the same verb, so it is several edits away and alphabetically
 /// behind unrelated candidates. Keep this tiny and explicit.
 const REPORTED_CORRECTIONS: &[(&str, &str, &str)] = &[
+    // The clitic form of the past participle: `aloittaa` + `-nut` + `-kaan`.
+    // The general clitic pre-pass also reaches this, but it still runs the
+    // host's candidate walk; the curated answer is instant.
+    ("alottanutkaan", "aloittanutkaan", "aloittaa"),
     // Frequentative-looking past 1sg instead of `ahertaa`'s `ahersin`.
     ("ahertelin", "ahersin", "ahertaa"),
     // A reported reading error: the intended word is the present active
@@ -136,6 +140,35 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     // suggestion.
     if is_known_compound_fast(&word).is_some() {
         return Vec::new();
+    }
+    // A clitic attaches to the whole inflected form, not to a lemma: the
+    // candidate pool generates forms, so `aloittanutkaan` (the past
+    // participle + `-kaan`) is never in it, and the cliticized input spends
+    // the whole search to find `aloittanuttaan`. Strip the clitic, suggest
+    // on the host, and put the same suffix back. Only do this when the full
+    // word is unknown (a known `kokin` is a form of `kokki`, not `ko`+`kin`).
+    let mut clitic_candidates: Vec<Suggestion> = Vec::new();
+    if let Some((host, _clitic)) = crate::expand::clitic::strip_clitic(&word)
+        && host.chars().count() >= 3
+    {
+        let suffix = &word[host.len()..];
+        let host_known = is_known_word_no_compound(&host).is_some();
+        let mut out = suggest_detailed(&host, max_n, max_distance);
+        if !out.is_empty() {
+            for suggestion in &mut out {
+                suggestion.word.push_str(suffix);
+            }
+            if host_known {
+                // A real clitic form with a known host: the cliticised
+                // reading is the only sensible one, and skipping the full
+                // search is what makes this fast.
+                return out;
+            }
+            // The host is itself a misspelling: keep the normal search for
+            // its own corrections (`metafysiikko` -> `metafyysikko`) and
+            // merge the cliticised candidates below.
+            clitic_candidates = out;
+        }
     }
     let cat = catalogue();
     let lexicon = lexicon();
@@ -344,6 +377,8 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
             existing_score: 0.0,
         });
     }
+
+    candidates.extend(clitic_candidates);
 
     // Alphabetical sort + dedup keeps the first occurrence's metadata,
     // matching the existing `suggest` body.
