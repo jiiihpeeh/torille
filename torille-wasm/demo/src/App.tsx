@@ -13,17 +13,23 @@
 // primary spell worker, the suggestion pool, and the side cache --
 // so a misspelling that finishes in one panel is instant in another.
 //
-// The header carries a single Spell-check toggle that turns the
-// red underlines + suggestion popups ON / OFF for every panel at
-// once. When OFF, every panel short-circuits its spell-check
-// resource (no wasm calls, no per-word dispatch, no popup). The
-// shared signal lives in `spell-check-toggle.ts` so the button
-// in this shell and the consumers in the panels stay in sync
-// without prop drilling.
+// The header carries two toggles that cover every panel at once:
+// the built-in checker's ON/OFF preference, and an "use the browser
+// extension" switch. Turning the extension on vetoes the built-in
+// engine, so the page hands the textareas to the installed add-on's
+// content script instead of double-underlining them. Both signals
+// live in `spell-check-toggle.ts` so the buttons in this shell and the
+// consumers in the panels stay in sync without prop drilling.
 
-import { Show } from 'solid-js';
+import { createSignal, onCleanup, onMount, Show } from 'solid-js';
 import { GutenbergReader } from './GutenbergReader';
-import { spellCheckEnabled, setSpellCheckEnabled } from './spell-check-toggle';
+import {
+  builtInSpellCheckEnabled,
+  setSpellCheckEnabled,
+  setUseExtension,
+  spellCheckEnabled,
+  useExtension,
+} from './spell-check-toggle';
 
 const DEFAULT_TEXT =
   'talo taloo koirra puhtaan öihin auto xyzzy\n\n' +
@@ -46,6 +52,32 @@ function initialTextFromUrl(): string {
 }
 
 export function App() {
+  // The extension's content script inserts one
+  // `.torille-overlay-host` per attached textarea. Watching for it
+  // lets the note distinguish "extension is handling this page" from
+  // "pick an extension build and load it" without relying on a
+  // private handshake. The observer is cheap (one selector per DOM
+  // mutation) and stops noticing as soon as a host exists.
+  const [extensionDetected, setExtensionDetected] = createSignal(false);
+  onMount(() => {
+    const check = () => {
+      if (document.querySelector('.torille-overlay-host')) {
+        setExtensionDetected(true);
+        return true;
+      }
+      return false;
+    };
+    if (check()) return;
+    const observer = new MutationObserver(() => {
+      if (check()) observer.disconnect();
+    });
+    observer.observe(document.documentElement || document.body, {
+      childList: true,
+      subtree: true,
+    });
+    onCleanup(() => observer.disconnect());
+  });
+
   return (
     <>
       <h1>
@@ -53,22 +85,61 @@ export function App() {
         <button
           type="button"
           class="spell-check-toggle"
-          aria-pressed={spellCheckEnabled() ? 'true' : 'false'}
+          disabled={useExtension()}
+          aria-pressed={builtInSpellCheckEnabled() ? 'true' : 'false'}
           title={
-            spellCheckEnabled()
-              ? 'Turn spell-check OFF for every panel'
-              : 'Turn spell-check ON for every panel'
+            useExtension()
+              ? 'Built-in checker paused while the browser extension is in use'
+              : builtInSpellCheckEnabled()
+                ? 'Turn the built-in checker OFF for every panel'
+                : 'Turn the built-in checker ON for every panel'
           }
           onClick={() => setSpellCheckEnabled(!spellCheckEnabled())}
         >
           <Show
-            when={spellCheckEnabled()}
-            fallback={<>Spell-check: <strong>OFF</strong></>}
+            when={builtInSpellCheckEnabled()}
+            fallback={<>Built-in: <strong>OFF</strong></>}
           >
-            Spell-check: <strong>ON</strong>
+            Built-in: <strong>ON</strong>
+          </Show>
+        </button>
+        <button
+          type="button"
+          class="extension-toggle"
+          aria-pressed={useExtension() ? 'true' : 'false'}
+          title={
+            useExtension()
+              ? 'Give the page back to the built-in checker'
+              : 'Pause the built-in checker and let the torille browser extension check this page'
+          }
+          onClick={() => setUseExtension(!useExtension())}
+        >
+          <Show
+            when={useExtension()}
+            fallback={<>Extension: <strong>OFF</strong></>}
+          >
+            Extension: <strong>ON</strong>
           </Show>
         </button>
       </h1>
+      <Show when={useExtension()}>
+        <p
+          class={
+            extensionDetected() ? 'extension-note' : 'extension-note missing'
+          }
+          aria-live="polite"
+        >
+          {extensionDetected()
+            ? 'Built-in checker paused. Underlines and suggestions on this page come from the torille browser extension.'
+            : 'Built-in checker paused. No extension overlay detected yet — load torille-chromium/dist or torille-firefox.xpi to check this page.'}
+        </p>
+      </Show>
+      <Show when={extensionDetected() && !useExtension()}>
+        <p class="extension-note missing" aria-live="polite">
+          The torille browser extension is active on this page too. Turn "Extension" on to let it own the
+          textareas, or remove the extension — otherwise both checkers underline the same text.
+        </p>
+      </Show>
       <p>
         Click a red word to see suggestions; arrow keys + Enter to pick.
         All panels share the same wasm worker + suggestion pool.

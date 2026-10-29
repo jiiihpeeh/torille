@@ -41,7 +41,7 @@ import {
   ready as wasmReady,
 } from './spell-client';
 import { Editor } from './Editor';
-import { spellCheckEnabled } from './spell-check-toggle';
+import { builtInSpellCheckEnabled, useExtension } from './spell-check-toggle';
 import {
   Book,
   CatalogEntry,
@@ -395,7 +395,7 @@ export function GutenbergReader() {
     () => ({
       text: debouncedText(),
       idx: stateIdx(),
-      on: spellCheckEnabled(),
+      on: builtInSpellCheckEnabled(),
     }),
     async ({ text, idx, on }): Promise<unknown[]> => {
       if (!on) {
@@ -755,8 +755,12 @@ export function GutenbergReader() {
         <div class="status" aria-live="polite">
           <span>{countWords(text())} words</span>
           <Show
-            when={spellCheckEnabled()}
-            fallback={<span class="muted">spell-check off</span>}
+            when={builtInSpellCheckEnabled()}
+            fallback={
+              <span class="muted">
+                {useExtension() ? 'built-in off — using extension' : 'spell-check off'}
+              </span>
+            }
           >
             <Show
               when={spellResource.loading && misspellings().length === 0}

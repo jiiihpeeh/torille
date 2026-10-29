@@ -52,7 +52,7 @@ const measureUnderlineLatency = async (text) => {
   let firstUnderline = -1;
   for (let i = 0; i < 200; i++) {
     const count = await page.evaluate(() =>
-      document.querySelectorAll('.editor .underlay .misspell').length,
+      document.querySelector('.editor').querySelectorAll('.underlay .misspell').length,
     );
     if (count > 0 && firstUnderline < 0) {
       firstUnderline = Date.now() - t0;
@@ -64,10 +64,10 @@ const measureUnderlineLatency = async (text) => {
   // also measure the final state.
   await new Promise((r) => setTimeout(r, 4000));
   const finalCount = await page.evaluate(() =>
-    document.querySelectorAll('.editor .underlay .misspell').length,
+    document.querySelector('.editor').querySelectorAll('.underlay .misspell').length,
   );
   const finalText = await page.evaluate(() => {
-    const els = document.querySelectorAll('.editor .underlay .misspell');
+    const els = document.querySelector('.editor').querySelectorAll('.underlay .misspell');
     return Array.from(els).map((e) => e.textContent);
   });
   // Pull the relevant page-side log lines.

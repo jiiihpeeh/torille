@@ -1,22 +1,41 @@
-// Global spell-check on/off toggle.
+// Global spell-check source toggle.
 //
-// All three panels (free-text, Canth, Gutenberg) read this
-// signal. When `false`, each panel short-circuits its spell-
-// check resource: the wasm `analyze_misspells` call is
-// skipped entirely, the suggestion pool is not consulted,
-// no underlines are rendered. Toggling on resumes normal
-// rendering on the next debounced tick.
+// All panels (free-text, Canth, Gutenberg) read these signals. The
+// built-in checker is the wasm engine bundled with the demo; the
+// extension is the separately-installed browser add-on, whose content
+// script overlays every textarea on the page. Running both at once
+// double-underlines the same text, so `useExtension` is a hard veto on
+// the built-in engine.
 //
-// The toggle lives in its own module so the button in App.tsx
-// and the consumers in TextPanel / GutenbergReader share
-// the same reactive signal without prop-drilling through
-// every panel.
+// `spellCheckEnabled` is the user's preference for the built-in
+// checker (the original ON/OFF button). `useExtension` temporarily
+// overrides it: `builtInSpellCheckEnabled()` is the effective state
+// every panel should consult. When the extension is selected each
+// panel short-circuits its spell-check resource: no wasm
+// `analyze_misspells`, no per-word dispatch, no built-in underlines or
+// popup. The extension's own overlay takes over the textarea.
 //
-// Default: ON. The demo's first paint should already be in
-// the working state the user expects to see.
+// The signals live in their own module so the buttons in App.tsx and
+// the consumers in TextPanel / GutenbergReader share them without
+// prop-drilling through every panel.
+//
+// Defaults: built-in ON, extension OFF. The demo's first paint should
+// already be in the working state the user expects to see.
 
 import { createSignal } from 'solid-js';
 
 const [spellCheckEnabled, setSpellCheckEnabled] = createSignal<boolean>(true);
+const [useExtension, setUseExtension] = createSignal<boolean>(false);
 
-export { spellCheckEnabled, setSpellCheckEnabled };
+// Effective built-in state. Read this instead of `spellCheckEnabled`
+// anywhere the wasm pipeline is gated.
+const builtInSpellCheckEnabled = (): boolean =>
+  spellCheckEnabled() && !useExtension();
+
+export {
+  spellCheckEnabled,
+  setSpellCheckEnabled,
+  useExtension,
+  setUseExtension,
+  builtInSpellCheckEnabled,
+};

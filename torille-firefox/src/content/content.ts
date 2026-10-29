@@ -538,6 +538,41 @@
     //     scrollbar reservation from the textarea carries over,
     //   * copy the textarea's padding so the overlay's content
     //     box has the same effective width.
+    //
+    // `host` is absolute, so left/top are measured from its
+    // containing block. That is the nearest positioned ancestor --
+    // which is often not the document. The demo's `.editor` is
+    // `position: relative`, for example; blindly adding
+    // `window.scrollX/Y` there shifts the mirror by the editor's own
+    // page offset (a double offset). Resolve the rect against
+    // `host.offsetParent` instead.
+    function hostPosition(rect: DOMRect): { left: number; top: number } {
+      const parent = host.offsetParent as HTMLElement | null;
+      if (!parent) {
+        return {
+          left: window.scrollX + rect.left,
+          top: window.scrollY + rect.top,
+        };
+      }
+      const parentStyle = getComputedStyle(parent);
+      if (
+        (parent === document.body || parent === document.documentElement) &&
+        parentStyle.position === 'static'
+      ) {
+        // No positioned ancestor: the containing block is the initial
+        // containing block, i.e. document coordinates.
+        return {
+          left: window.scrollX + rect.left,
+          top: window.scrollY + rect.top,
+        };
+      }
+      const pr = parent.getBoundingClientRect();
+      return {
+        left: rect.left - pr.left - parent.clientLeft + parent.scrollLeft,
+        top: rect.top - pr.top - parent.clientTop + parent.scrollTop,
+      };
+    }
+
     function syncBox(): void {
       const cs = getComputedStyle(el);
       // Set the font / text properties individually (not the shorthand)
@@ -564,8 +599,9 @@
       overlay.style.padding = cs.padding;
       const r = el.getBoundingClientRect();
       host.style.boxSizing = 'border-box';
-      host.style.left = (window.scrollX + r.left) + 'px';
-      host.style.top = (window.scrollY + r.top) + 'px';
+      const pos = hostPosition(r);
+      host.style.left = pos.left + 'px';
+      host.style.top = pos.top + 'px';
       host.style.width = r.width + 'px';
       host.style.height = r.height + 'px';
       // The overlay is positioned inside the host at the textarea's
@@ -841,6 +877,9 @@
       setVisible(visible: boolean) {
         host.style.display = visible ? '' : 'none';
         if (visible) {
+          // `syncBox` uses `host.offsetParent`, which is null while
+          // the host is display:none; re-place it as it comes back.
+          syncBox();
           disableNativeSpellcheck(el);
         } else {
           closePopup();

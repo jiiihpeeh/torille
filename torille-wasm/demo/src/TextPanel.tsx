@@ -34,7 +34,7 @@ import {
   destroyState,
   ready as wasmReady,
 } from './spell-client';
-import { spellCheckEnabled } from './spell-check-toggle';
+import { builtInSpellCheckEnabled, useExtension } from './spell-check-toggle';
 import { Editor } from './Editor';
 
 export interface TextPanelProps {
@@ -154,7 +154,7 @@ export function TextPanel(props: TextPanelProps) {
     () => ({
       text: debouncedText(),
       idx: stateIdx(),
-      on: spellCheckEnabled(),
+      on: builtInSpellCheckEnabled(),
     }),
     async ({ text, idx, on }): Promise<Misspell[]> => {
       // Off: wipe the visible underlay and any open popup,
@@ -359,8 +359,12 @@ export function TextPanel(props: TextPanelProps) {
       <div class="status" aria-live="polite">
         <span>{countWords(text())} words</span>
         <Show
-          when={spellCheckEnabled()}
-          fallback={<span class="muted">spell-check off</span>}
+          when={builtInSpellCheckEnabled()}
+          fallback={
+            <span class="muted">
+              {useExtension() ? 'built-in off — using extension' : 'spell-check off'}
+            </span>
+          }
         >
           <Show
             when={spellResource.loading && misspellings().length === 0}
