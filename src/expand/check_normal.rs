@@ -1629,6 +1629,20 @@ mod tests {
         );
     }
 
+    /// `vaikka` fused with a finite negative auxiliary is a constructional
+    /// word (`vaikkeivät` = `vaikka` + `eivät`), not a noun/verb paradigm.
+    #[test]
+    fn fast_variant_accepts_fused_vaikka_negation() {
+        for word in ["vaikken", "vaikket", "vaikkemme", "vaikkette", "vaikkeivät"] {
+            match check_normal_fast(word, false) {
+                NormalizedOutcome::Inflected { base, .. } => {
+                    assert_eq!(base, "vaikka", "{word}: wrong base");
+                }
+                other => panic!("{word}: expected Inflected, got {other:?}"),
+            }
+        }
+    }
+
     /// `yhteis-` is a bound combining form (`yhteis‑` in the sanalista) of
     /// the adjective `yhteinen`. The compound `yhteiskunta` is a lemma;
     /// its cases must resolve through the head.

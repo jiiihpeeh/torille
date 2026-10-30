@@ -43,6 +43,13 @@ mod table {
 /// so a common word is rejected on its first character before any clitic
 /// scan.
 pub fn negation_base(word: &str) -> Option<&'static str> {
+    // `vaikka` fused with a finite negative auxiliary is a closed family:
+    // `vaikken`, `vaikket`, `vaikkei`, `vaikkemme`, `vaikkette`,
+    // `vaikkeivät`. Like `miksei`, it is a constructional word rather than
+    // a verb paradigm, and it does not start with `e`/`j`.
+    if let Some(base) = vaikka_negation_base(word) {
+        return Some(base);
+    }
     // `miksei` is an adverb fused with the negation auxiliary. Its six
     // finite forms (`miksen`, `mikset`, ...) are not a verb paradigm the
     // engine can generate, and they do not start with `e`/`j`, so handle
@@ -52,6 +59,9 @@ pub fn negation_base(word: &str) -> Option<&'static str> {
         return Some(base);
     }
     let (stripped, _) = strip_all_clitics(word);
+    if let Some(base) = vaikka_negation_base(stripped.as_str()) {
+        return Some(base);
+    }
     if let Some(base) = miksei_base(stripped.as_str()) {
         return Some(base);
     }
@@ -77,6 +87,14 @@ pub fn negation_base(word: &str) -> Option<&'static str> {
         return Some(base);
     }
     None
+}
+
+/// The six finite forms of the fused conjunction + negation `vaikka`.
+/// `vaikka` drops its final `a` before the auxiliary: `vaikk` + `en` =
+/// `vaikken`, `vaikk` + `eivät` = `vaikkeivät`.
+fn vaikka_negation_base(word: &str) -> Option<&'static str> {
+    let rest = word.strip_prefix("vaikk")?;
+    matches!(rest, "en" | "et" | "ei" | "emme" | "ette" | "eivät").then_some("vaikka")
 }
 
 /// The six finite forms of the fused adverb + negation `miksei`.
@@ -140,6 +158,21 @@ mod tests {
             ("ettenkin", "että"),
         ] {
             assert_eq!(negation_base(word), Some(base), "{word}");
+        }
+    }
+
+    #[test]
+    fn the_fused_vaikka_family_names_the_conjunction() {
+        for word in [
+            "vaikken",
+            "vaikket",
+            "vaikkei",
+            "vaikkemme",
+            "vaikkette",
+            "vaikkeivät",
+            "vaikkeivätkö",
+        ] {
+            assert_eq!(negation_base(word), Some("vaikka"), "{word}");
         }
     }
 
