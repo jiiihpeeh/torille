@@ -457,6 +457,13 @@ fn cheap_derived_base(word: &str) -> Option<String> {
     {
         return Some(base);
     }
+    // ADJECTIVE -> NOUN `-uus`/`-yys` (`irstainen` -> `irstaisuus`).
+    // The `uu`/`yy` guard keeps the reverse derivation off ordinary words.
+    if (lower.contains("uu") || lower.contains("yy"))
+        && let Some(base) = crate::expand::derived_uus_base(&lower, cat(), None)
+    {
+        return Some(base);
+    }
     crate::expand::derived_agent_base(&lower, cat(), None)
 }
 
@@ -1572,8 +1579,55 @@ mod tests {
         }
     }
 
-    /// The DP compound segmenter handles long compounds without enumerating
-    /// every split, and still rejects a doubled possessive.
+    /// `-uus` derives from an adjective that is not a lemma in the form
+    /// set: `irstainen` -> `irstaisuus`, and its class-40 cases. A
+    /// truncated `irstaisuu` is not a form of that noun, and the old
+    /// stem-map compound split (`irstai` + `suu`) must not accept it.
+    #[test]
+    fn fast_variant_accepts_derived_uus_nouns() {
+        for word in [
+            "irstaisuus",
+            "irstaisuutta",
+            "irstaisuuden",
+            "irstaisuudessa",
+            "irstaisuuksia",
+        ] {
+            assert!(
+                matches!(
+                    check_normal_fast(word, false),
+                    NormalizedOutcome::Inflected { .. }
+                ),
+                "{word} not accepted"
+            );
+        }
+        assert!(
+            matches!(
+                check_normal_fast("irstaisuu", false),
+                NormalizedOutcome::Unknown
+            ),
+            "irstaisuu must not be accepted as a compound"
+        );
+    }
+
+    /// `yhteis-` is a bound combining form (`yhteis‑` in the sanalista) of
+    /// the adjective `yhteinen`. The compound `yhteiskunta` is a lemma;
+    /// its cases must resolve through the head.
+    #[test]
+    fn fast_variant_accepts_the_yhteis_compound() {
+        for word in [
+            "yhteiskunta",
+            "yhteiskunnan",
+            "yhteiskunnassa",
+            "yhteiskuntien",
+            "yhteiskunnallinen",
+        ] {
+            assert!(
+                !matches!(check_normal_fast(word, false), NormalizedOutcome::Unknown),
+                "{word} not accepted"
+            );
+        }
+    }
+
     #[test]
     fn fast_variant_segments_long_compounds() {
         for word in [

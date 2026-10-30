@@ -108,8 +108,9 @@ pub(super) fn compound_head_forms(
 ///
 /// The modifier is one of:
 ///   * a sanalista word (`täysi-` of `täysi-ikäinen`);
-///   * a combining form, a noun stem-map key (`nais-` of `nainen`,
-///     `kansalais-`);
+///   * a combining form, a noun/numeral stem-map key (`nais-` of `nainen`,
+///     `kansalais-`, `kolmi-` of `kolme`); an adjective case stem is not a
+///     combining form;
 ///   * a known inflected form -- the modifier of a compound is very often
 ///     the genitive singular (`luonnon-`, `kansan-`, `maan-`), which the
 ///     compile-time form set carries;
@@ -126,6 +127,13 @@ pub(crate) fn modifier_is_known(modifier: &str) -> bool {
         return false;
     }
     if crate::kotus::sanalista().by_word(bare).next().is_some() {
+        return true;
+    }
+    // A combining form can be its own classless sanalista row, written
+    // with the non-breaking hyphen the dictionary uses for bound
+    // suffixes/prefixes (`yhteis‑` of `yhteiskunta`, `‑mielisyys`).
+    let bound = format!("{bare}\u{2011}");
+    if crate::kotus::sanalista().by_word(&bound).next().is_some() {
         return true;
     }
     // A plural-only lemma contributes its dropped-`t` stem as the modifier:
@@ -153,8 +161,31 @@ pub(crate) fn modifier_is_known(modifier: &str) -> bool {
     {
         return true;
     }
-    if crate::expand::check_normal::STEM_BUCKETS_NOUN.contains(bare) {
+    // The productive `-nen` combining stem is its `s` stem: `yhteinen` ->
+    // `yhteis-` (`yhteiskunta`), `nainen` -> `nais-`, `kansalainen` ->
+    // `kansalais-`. This is a derivational combining form, so it is
+    // accepted even though the base is an adjective.
+    if let Some(stem) = bare.strip_suffix('s')
+        && !stem.is_empty()
+        && crate::kotus::sanalista()
+            .by_word(&format!("{stem}nen"))
+            .next()
+            .is_some()
+    {
         return true;
+    }
+    // A combining form is also a nominal stem (`lanki-` of `lankki`,
+    // `kolmi-` of `kolme`). The noun stem map contains every case stem,
+    // including the adjective stem `irstai` (partitive plural of
+    // `irstas`); accepting those split nonsense like `irstai` + `suu`.
+    // Only a noun/numeral base licenses the stem.
+    for base in crate::expand::check_normal::STEM_BUCKETS_NOUN.bases(bare) {
+        if let Some(row) = crate::kotus::sanalista().by_word(base).next() {
+            let pos = PartOfSpeech::parse_all(row.part_of_speech());
+            if pos.contains(&PartOfSpeech::Noun) || pos.contains(&PartOfSpeech::Numeral) {
+                return true;
+            }
+        }
     }
     if crate::expand::all_forms::is_known_inflected_form(bare) {
         return true;
@@ -445,6 +476,82 @@ fn kas_candidates(word: &str) -> Vec<String> {
         if let Some(stem) = word.strip_suffix(ending) {
             add(stem, &mut out);
         }
+    }
+    out.sort();
+    out.dedup();
+    out
+}
+
+/// The derived `-uus`/`-yys` abstract noun a surface form belongs to, if
+/// any.
+///
+/// `-uus` is the productive ADJECTIVE -> NOUN rule (`irstainen` ->
+/// `irstaisuus`, `suomalainen` -> `suomalaisuus`; `derivation::RULES`'s
+/// `ABSTRACT_UUS`). The derived noun is usually not a sanalista lemma, so
+/// `irstaisuus`/`irstaisuutta` are in neither the stem maps nor the form
+/// set. Reconstruct the nominative from any `uu`/`yy` in the surface,
+/// reverse the rule to the adjective base, and inflect the noun as class
+/// 40 to verify the exact surface.
+pub fn derived_uus_base(
+    word: &str,
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+) -> Option<String> {
+    let rule = crate::derivation::RULES
+        .iter()
+        .find(|r| r.id == "ABSTRACT_UUS")?;
+    for candidate in uus_candidates(word) {
+        for reverse in crate::derivation::reverse(&candidate) {
+            if reverse.rule != rule.id {
+                continue;
+            }
+            let Some(source) = crate::kotus::sanalista().by_word(&reverse.source).next() else {
+                continue;
+            };
+            if !crate::tags::PartOfSpeech::parse_all(source.part_of_speech())
+                .contains(&PartOfSpeech::Adjective)
+            {
+                continue;
+            }
+            if crate::derivation::derive(&reverse.source, rule).as_deref()
+                != Some(candidate.as_str())
+            {
+                continue;
+            }
+            let forms = inflect_all(
+                &candidate,
+                &[Inflection {
+                    class: 40,
+                    gradation: None,
+                }],
+                cat,
+                lexicon,
+                PartOfSpeech::Noun,
+                true,
+            );
+            if forms.iter().any(|f| f.word == word) {
+                return Some(candidate);
+            }
+        }
+    }
+    None
+}
+
+/// Candidate nominatives for a derived `-uus`/`-yys` noun surface.
+///
+/// The nominative is `...uu` + `s` (or `...yy` + `s`), so every `uu`/`yy`
+/// in the word is a possible stem boundary: `irstaisuutta` -> `irstaisuus`,
+/// `irstaisuudessa` -> `irstaisuus`. Both harmonies are tried and the
+/// reverse-derivation check rejects the wrong one.
+fn uus_candidates(word: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    for (i, _) in word.match_indices("uu").chain(word.match_indices("yy")) {
+        let prefix = &word[..i];
+        if prefix.chars().count() < 3 {
+            continue;
+        }
+        out.push(format!("{prefix}uus"));
+        out.push(format!("{prefix}yys"));
     }
     out.sort();
     out.dedup();

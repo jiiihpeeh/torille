@@ -42,6 +42,10 @@ const REPORTED_CORRECTIONS: &[(&str, &str, &str)] = &[
     ("salamyhkää", "salamyhkäisesti", "salamyhkäisesti"),
     // The frequentative of `maiskuttaa` loses the extra `a`.
     ("maiskauttelee", "maiskuttelee", "maiskutella"),
+    // A nonstandard frequentative past inserts `hd` into `kolauttaa`'s
+    // `kolautti`; the two-deletion repair is several edits behind unrelated
+    // head-1 candidates and the walk costs seconds.
+    ("kolahdutti", "kolautti", "kolauttaa"),
 ];
 
 pub(super) fn reported_correction(word: &str) -> Option<(&'static str, &'static str)> {
@@ -49,6 +53,26 @@ pub(super) fn reported_correction(word: &str) -> Option<(&'static str, &'static 
         .iter()
         .find(|(wrong, _, _)| *wrong == word)
         .map(|(_, right, lemma)| (*right, *lemma))
+}
+
+/// Repair a plural genitive written with the nonstandard `-jen` ending.
+///
+/// Finnish `-ia`/`-iä` nouns form the plural genitive in `-iden` (or
+/// `-itten`); `komppaniojen` is a common mis-spelling of
+/// `komppanioiden`/`vapaakomppanioiden`. The compound is not a lemma, so
+/// the head/tail walks never generate the whole word and an ordinary
+/// suggestion comes back empty. This is a zero-candidate repair: rewrite
+/// the ending and accept it only when the repaired word is a known form
+/// (including a known compound).
+fn repaired_plural_genitive(word: &str) -> Option<String> {
+    let stem = word.strip_suffix("jen")?;
+    if stem.chars().count() < 3 {
+        return None;
+    }
+    let candidate = format!("{stem}iden");
+    is_known_word_fast(&candidate)
+        .is_some()
+        .then_some(candidate)
 }
 
 /// Edit-distance suggestions for `word`, ranked by ascending distance.
@@ -140,6 +164,27 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     // suggestion.
     if is_known_compound_fast(&word).is_some() {
         return Vec::new();
+    }
+    // A compound whose head is inflected with `-jen` (`vapaakomppaniojen`)
+    // is not a lemma, so the head/tail walk has no candidate to repair:
+    // the whole surface is missing from the forms the walk generates.
+    // Rewrite the plural genitive to `-iden` and accept only a known form.
+    if is_known_word_fast(&word).is_none()
+        && let Some(right) = repaired_plural_genitive(&word)
+    {
+        let edit_distance = levenshtein(&word, &right, usize::MAX);
+        if edit_distance <= max_distance {
+            return vec![Suggestion {
+                word: right.clone(),
+                edit_distance,
+                lemma: Some(right.clone()),
+                source: SuggestionSource::GeneratedForm { lemma: right },
+                readings: Vec::new(),
+                confidence: Confidence::Plain,
+                original_rank: 0,
+                existing_score: 1.0 / (1.0 + edit_distance as f32) + 0.5,
+            }];
+        }
     }
     // A clitic attaches to the whole inflected form, not to a lemma: the
     // candidate pool generates forms, so `aloittanutkaan` (the past

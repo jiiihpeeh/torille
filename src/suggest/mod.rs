@@ -1308,6 +1308,19 @@ mod tests {
     }
 
     #[test]
+    fn a_truncated_uus_noun_is_not_a_suggestion() {
+        // `irstaisuus` is a real derived noun (better written `irstailu`),
+        // but `irstaisuu` is not a form of it, and the old
+        // `irstai` + `suu` compound split used to offer it first.
+        assert!(!is_known_word("irstaisuu").is_some());
+        let s = suggest("irstaisuus", 12, 5);
+        assert!(
+            !s.iter().any(|w| w == "irstaisuu"),
+            "irstaisuu must not be suggested: {s:?}"
+        );
+    }
+
+    #[test]
     fn ahertelin_suggests_the_base_verb_past() {
         let s = suggest("ahertelin", 8, 3);
         assert!(s.contains(&"ahersin".to_string()), "{s:?}");
@@ -1330,6 +1343,38 @@ mod tests {
         assert_eq!(
             suggest("maiskauttelee", 8, 2).first().map(String::as_str),
             Some("maiskuttelee")
+        );
+    }
+
+    #[test]
+    fn kolahdutti_suggests_the_standard_past() {
+        assert_eq!(
+            suggest("kolahdutti", 8, 2).first().map(String::as_str),
+            Some("kolautti")
+        );
+    }
+
+    #[test]
+    fn a_plural_genitive_jen_compound_suggests_the_iden_form() {
+        // `vapaakomppania` is a classless compound, so the head/tail walk
+        // never generates `vapaakomppanioiden` from the input. The `-jen`
+        // -> `-iden` repair supplies the whole compound.
+        assert_eq!(
+            suggest("vapaakomppaniojen", 8, 2)
+                .first()
+                .map(String::as_str),
+            Some("vapaakomppanioiden")
+        );
+    }
+
+    #[test]
+    fn asukasten_suggests_the_plural_genitive() {
+        // `asukasten` is not a standard plural genitive of `asukas`;
+        // `asukkaiden` is. The engine already reaches it through the
+        // head/tail walk.
+        assert_eq!(
+            suggest("asukasten", 8, 3).first().map(String::as_str),
+            Some("asukkaiden")
         );
     }
 

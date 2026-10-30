@@ -833,6 +833,13 @@ fn is_known_word_with_compound(word: &str, allow_compound: bool) -> Option<Strin
     if let Some(base) = crate::expand::derived_llinen_base(&lower, catalogue(), None) {
         return Some(base);
     }
+    // ADJECTIVE -> NOUN `-uus`/`-yys`: `irstainen` -> `irstaisuus`,
+    // `irstaisuutta` (class 40). The derived noun is not a lemma.
+    if (lower.contains("uu") || lower.contains("yy"))
+        && let Some(base) = crate::expand::derived_uus_base(&lower, catalogue(), None)
+    {
+        return Some(base);
+    }
 
     // 3e2. Derived `-ja`/`-jä` agent noun. `heiluttaja` is `heiluttaa`
     //      under the productive agent rule, and `heiluttajan` is its
