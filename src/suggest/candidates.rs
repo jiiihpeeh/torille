@@ -55,6 +55,48 @@ pub(super) fn reported_correction(word: &str) -> Option<(&'static str, &'static 
         .map(|(_, right, lemma)| (*right, *lemma))
 }
 
+/// The modern form of an archaic plural genitive with a third-person
+/// possessive suffix: `palvelijainsa` (`palvelijain` + `-sa`) ->
+/// `palvelijoidensa` (`palvelijoiden` + `-sa`).
+///
+/// The old `-in` genitive plural plus possessive is several edits behind
+/// unrelated one-letter fixes, so the ranker never brings it into the
+/// popup. Recover the lemma from the stem, inflect its possessive
+/// paradigm, and pick the genitive plural third-person form directly.
+fn archaic_genitive_plural_possessive(word: &str) -> Option<(String, String)> {
+    let stem = word
+        .strip_suffix("insa")
+        .or_else(|| word.strip_suffix("insä"))?;
+    if stem.chars().count() < 3 {
+        return None;
+    }
+    let base = is_known_word_fast(stem)?;
+    let lemma = crate::kotus::sanalista().by_word(&base).next()?;
+    let pos = crate::tags::PartOfSpeech::parse_all(lemma.part_of_speech())
+        .first()
+        .copied()
+        .unwrap_or(crate::tags::PartOfSpeech::Noun);
+    let inflections: Vec<_> = lemma.inflections().collect();
+    let forms = crate::expand::inflect_all(
+        &base,
+        &inflections,
+        catalogue(),
+        None,
+        pos,
+        /* possessives */ true,
+    );
+    forms
+        .into_iter()
+        .find(|f| {
+            f.readings.iter().any(|t| {
+                t.case == Some(crate::tags::Case::Genitive)
+                    && t.number == Some(crate::tags::Number::Plural)
+                    && t.possessive == Some(crate::tags::Possessive::Third)
+            })
+        })
+        .map(|f| (f.word, base))
+}
+
 /// Repair a plural genitive written with the nonstandard `-jen` ending.
 ///
 /// Finnish `-ia`/`-iä` nouns form the plural genitive in `-iden` (or
@@ -179,6 +221,27 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
                 edit_distance,
                 lemma: Some(right.clone()),
                 source: SuggestionSource::GeneratedForm { lemma: right },
+                readings: Vec::new(),
+                confidence: Confidence::Plain,
+                original_rank: 0,
+                existing_score: 1.0 / (1.0 + edit_distance as f32) + 0.5,
+            }];
+        }
+    }
+    // An archaic `-in` genitive plural plus a possessive suffix is far
+    // behind unrelated one-edit fixes in the normal ranker
+    // (`palvelijainsa` -> `palvelijoidensa` sits around rank 50). The
+    // morphological repair is exact and cheap, so answer it directly.
+    if is_known_word_fast(&word).is_none()
+        && let Some((right, lemma)) = archaic_genitive_plural_possessive(&word)
+    {
+        let edit_distance = levenshtein(&word, &right, usize::MAX);
+        if edit_distance <= max_distance {
+            return vec![Suggestion {
+                word: right,
+                edit_distance,
+                lemma: Some(lemma.clone()),
+                source: SuggestionSource::GeneratedForm { lemma },
                 readings: Vec::new(),
                 confidence: Confidence::Plain,
                 original_rank: 0,

@@ -1368,6 +1368,17 @@ mod tests {
     }
 
     #[test]
+    fn palvelijainsa_suggests_the_modern_possessive_genitive() {
+        // The archaic `-in` plural genitive + `-sa` is far down the ordinary
+        // rank; the morphological repair names `palvelijoidensa` directly.
+        assert!(is_known_word("palvelijainsa").is_none());
+        assert_eq!(
+            suggest("palvelijainsa", 8, 3).first().map(String::as_str),
+            Some("palvelijoidensa")
+        );
+    }
+
+    #[test]
     fn asukkasten_suggests_a_legal_genitive() {
         // `asukasten` is a legal plural genitive of `asukas`; the doubled
         // `asukkasten` is not. The class-41 `-sten` cell must use the
