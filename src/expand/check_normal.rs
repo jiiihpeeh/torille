@@ -1609,6 +1609,26 @@ mod tests {
         );
     }
 
+    /// The `-sten` plural genitive of a gradated `-as` noun rides the
+    /// citation stem: `asukas` -> `asukasten`, not `asukkasten`.
+    #[test]
+    fn fast_variant_accepts_asukan_sten_forms() {
+        assert!(
+            !matches!(
+                check_normal_fast("asukasten", false),
+                NormalizedOutcome::Unknown
+            ),
+            "asukasten must be accepted"
+        );
+        assert!(
+            matches!(
+                check_normal_fast("asukkasten", false),
+                NormalizedOutcome::Unknown
+            ),
+            "asukkasten must not be accepted"
+        );
+    }
+
     /// `yhteis-` is a bound combining form (`yhteis‑` in the sanalista) of
     /// the adjective `yhteinen`. The compound `yhteiskunta` is a lemma;
     /// its cases must resolve through the head.

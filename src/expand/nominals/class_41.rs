@@ -90,8 +90,18 @@ pub fn a_stem_inflect(
         // `vanttusten` and their possessive columns are all non-words -- so it
         // is repaired, never offered as a plain correction. Keep the parameter
         // for the plural-only branch above as well.
+        //
+        // The `-sten` genitive plural sits on the *citation* stem, not the
+        // gradated plural stem: `asukas` -> `asukasten` (not the doubled
+        // `asukkasten`), `eväs` -> `evästen`. Plural-only lemmas keep the
+        // short stem the rest of their paradigm uses.
+        let sten_stem = if plural_only {
+            short.to_string()
+        } else {
+            base_stem(lemma)
+        };
         cells.push(
-            cell(Case::Genitive, pl, short, ["sten", "sten"], false)
+            cell(Case::Genitive, pl, &sten_stem, ["sten", "sten"], false)
                 .on_ending(["ste", "ste"])
                 .as_rare(),
         );
@@ -241,6 +251,19 @@ mod tests {
         assert_eq!(at("koiraiden"), crate::tags::Confidence::Plain);
         assert_eq!(at("koiraitten"), crate::tags::Confidence::Plain);
         assert_ne!(at("koirasten"), crate::tags::Confidence::Plain);
+    }
+
+    #[test]
+    fn the_graded_as_family_sten_rides_the_citation_stem() {
+        // `asukas` is a 41*A noun: the plural genitive `-sten` sits on the
+        // citation stem `asuka`, so the form is `asukasten`, not the
+        // doubled-`k` `asukkasten`.
+        let forms: Vec<String> = super::super::class_41A::inflect("asukas", true)
+            .into_iter()
+            .map(|f| f.word)
+            .collect();
+        assert!(forms.contains(&"asukasten".to_string()));
+        assert!(!forms.contains(&"asukkasten".to_string()));
     }
 
     #[test]

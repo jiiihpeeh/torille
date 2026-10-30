@@ -1368,13 +1368,15 @@ mod tests {
     }
 
     #[test]
-    fn asukasten_suggests_the_plural_genitive() {
-        // `asukasten` is not a standard plural genitive of `asukas`;
-        // `asukkaiden` is. The engine already reaches it through the
-        // head/tail walk.
+    fn asukkasten_suggests_a_legal_genitive() {
+        // `asukasten` is a legal plural genitive of `asukas`; the doubled
+        // `asukkasten` is not. The class-41 `-sten` cell must use the
+        // citation stem, and the suggestion must point at the legal form.
+        assert!(is_known_word("asukasten").is_some());
+        assert!(is_known_word("asukkasten").is_none());
         assert_eq!(
-            suggest("asukasten", 8, 3).first().map(String::as_str),
-            Some("asukkaiden")
+            suggest("asukkasten", 8, 3).first().map(String::as_str),
+            Some("asukasten")
         );
     }
 
