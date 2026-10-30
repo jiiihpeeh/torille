@@ -22,7 +22,7 @@ import {
   onMount,
   Show,
 } from 'solid-js';
-import { countWords } from './tokenize';
+import { countWords, tokenize } from './tokenize';
 import {
   findMisspellings,
   MisspellCallbacks,
@@ -36,6 +36,7 @@ import {
 } from './spell-client';
 import { builtInSpellCheckEnabled, useExtension } from './spell-check-toggle';
 import { Editor } from './Editor';
+import type { FocusTarget } from './Editor';
 
 export interface TextPanelProps {
   /** Heading shown above the editor. */
@@ -56,7 +57,7 @@ export function TextPanel(props: TextPanelProps) {
   const [debouncedText, setDebouncedText] = createSignal(
     props.initialText,
   );
-  const [focused, setFocused] = createSignal<string | null>(null);
+  const [focused, setFocused] = createSignal<FocusTarget | null>(null);
 
   // The per-textbox state lives in the wasm worker. We start
   // at -1 (no state yet) and assign it on mount once the wasm
@@ -292,8 +293,23 @@ export function TextPanel(props: TextPanelProps) {
       // Editor's `createEffect` watches `props.focused`
       // and opens the popup the same way a user click
       // would. The probe uses this for the "click and
-      // read the popup" check.
-      setFocused: (w: string | null): void => setFocused(w),
+      // read the popup" check. A bare word string resolves
+      // to its first occurrence; pass `{ word, start }` to
+      // name a specific occurrence.
+      setFocused: (w: string | FocusTarget | null): void => {
+        if (typeof w === 'string') {
+          const tok = tokenize(text()).find(
+            (t) => t.kind === 'word' && t.text === w,
+          );
+          setFocused(
+            tok && tok.kind === 'word'
+              ? { word: w, start: tok.start }
+              : { word: w, start: -1 },
+          );
+        } else {
+          setFocused(w);
+        }
+      },
       // Hard reset of the panel's per-textbox state.
       // Drops the wasm state's text + proper-noun set
       // (so a fresh chapter starts with a clean slate),

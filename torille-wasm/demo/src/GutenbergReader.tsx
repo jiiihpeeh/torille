@@ -29,7 +29,7 @@ import {
   Show,
   untrack,
 } from 'solid-js';
-import { countWords } from './tokenize';
+import { countWords, tokenize } from './tokenize';
 import {
   findMisspellings,
   MisspellCallbacks,
@@ -41,6 +41,7 @@ import {
   ready as wasmReady,
 } from './spell-client';
 import { Editor } from './Editor';
+import type { FocusTarget } from './Editor';
 import { builtInSpellCheckEnabled, useExtension } from './spell-check-toggle';
 import {
   Book,
@@ -189,7 +190,7 @@ export function GutenbergReader() {
   // In-editor text for the current chapter. Reset on chapter change.
   const [text, setText] = createSignal<string>('');
   const [debouncedText, setDebouncedText] = createSignal<string>('');
-  const [focused, setFocused] = createSignal<string | null>(null);
+  const [focused, setFocused] = createSignal<FocusTarget | null>(null);
 
   // Spell-check state, mirrored from TextPanel.
   const [stateIdx, setStateIdx] = createSignal<number>(-1);
@@ -273,7 +274,10 @@ export function GutenbergReader() {
     const book = bookResource();
     if (!book) return;
     const ch = book.chapters[chapterIdx()];
-    const body = ch?.body ?? '';
+    // Gutenberg's plain-text files use CRLF. Normalise here so the
+    // editor, the wasm spell-checker and the bookmarked offsets all
+    // work on the same LF text (a textarea normalises CRLF anyway).
+    const body = (ch?.body ?? '').replace(/\r\n?/g, '\n');
     // Hard reset of the wasm per-textbox state on every
     // chapter flip. The previous chapter's
     // `proper_nouns: HashSet<String>` would stay alive in
@@ -498,8 +502,19 @@ export function GutenbergReader() {
       misspellings,
       heading: () => 'Project Gutenberg',
       setText: (next: string): void => onText(next),
-      setFocused: (w: string | null): void => {
-        setFocused(w);
+      setFocused: (w: string | FocusTarget | null): void => {
+        if (typeof w === 'string') {
+          const tok = tokenize(text()).find(
+            (t) => t.kind === 'word' && t.text === w,
+          );
+          setFocused(
+            tok && tok.kind === 'word'
+              ? { word: w, start: tok.start }
+              : { word: w, start: -1 },
+          );
+        } else {
+          setFocused(w);
+        }
       },
       // Hard reset -- drops the wasm per-textbox state
       // and the underlay's misspell list. Useful when

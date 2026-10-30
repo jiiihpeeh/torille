@@ -140,12 +140,21 @@
     resize: none;
     outline: none;
   }
+  /* Set after the pointer rests on an underlined word (see Editor.tsx).
+     Kept off during quick traversal so the cursor does not flicker. */
+  .editor textarea.over-misspell {
+    cursor: pointer;
+  }
   .editor .underlay .misspell {
     background: var(--miss-bg);
     text-decoration: underline wavy var(--miss);
     border-radius: 3px;
-    cursor: pointer;
-    pointer-events: auto;
+  }
+  /* While a misspelled word is selected, the tint hides the
+     textarea's native selection highlight (the underlay paints above
+     it), so drop the tint and keep the squiggle. */
+  .editor .underlay .misspell.selected {
+    background: transparent;
   }
   .editor .underlay .misspell.focused {
     outline: 2px solid var(--accent);
