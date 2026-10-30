@@ -833,6 +833,18 @@ fn is_known_word_with_compound(word: &str, allow_compound: bool) -> Option<Strin
     if let Some(base) = crate::expand::derived_llinen_base(&lower, catalogue(), None) {
         return Some(base);
     }
+    // NOUN -> ADJECTIVE privative `-ton`/`-tön`: `koriste` ->
+    // `koristeeton`, `koristeettominta`; `taide` -> `taiteeton`.
+    if (lower.contains("tom")
+        || lower.contains("töm")
+        || lower.contains("tonta")
+        || lower.contains("töntä")
+        || lower.ends_with("ton")
+        || lower.ends_with("tön"))
+        && let Some(base) = crate::expand::derived_ton_base(&lower, catalogue(), None)
+    {
+        return Some(base);
+    }
     // ADJECTIVE -> NOUN `-uus`/`-yys`: `irstainen` -> `irstaisuus`,
     // `irstaisuutta` (class 40). The derived noun is not a lemma.
     if (lower.contains("uu") || lower.contains("yy"))

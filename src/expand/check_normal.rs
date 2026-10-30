@@ -457,6 +457,18 @@ fn cheap_derived_base(word: &str) -> Option<String> {
     {
         return Some(base);
     }
+    // NOUN -> ADJECTIVE privative `-ton`/`-tön` (`koriste` ->
+    // `koristeeton`, `taide` -> `taiteeton`).
+    if (lower.contains("tom")
+        || lower.contains("töm")
+        || lower.contains("tonta")
+        || lower.contains("töntä")
+        || lower.ends_with("ton")
+        || lower.ends_with("tön"))
+        && let Some(base) = crate::expand::derived_ton_base(&lower, cat(), None)
+    {
+        return Some(base);
+    }
     // ADJECTIVE -> NOUN `-uus`/`-yys` (`irstainen` -> `irstaisuus`).
     // The `uu`/`yy` guard keeps the reverse derivation off ordinary words.
     if (lower.contains("uu") || lower.contains("yy"))
@@ -1627,6 +1639,32 @@ mod tests {
             ),
             "asukkasten must not be accepted"
         );
+    }
+
+    /// `-ton` privative adjectives are derived from a noun's genitive stem:
+    /// `koriste` -> `koristeeton` -> superlative `koristeettomin` and its
+    /// partitive `koristeettominta`.
+    #[test]
+    fn fast_variant_accepts_privative_ton_degrees() {
+        for (word, base) in [
+            ("koristeeton", "koristeeton"),
+            ("koristeettoman", "koristeeton"),
+            ("koristeetonta", "koristeeton"),
+            ("koristeettomassa", "koristeeton"),
+            ("koristeettomin", "koristeeton"),
+            ("koristeettominta", "koristeeton"),
+            ("koristeettomampi", "koristeeton"),
+            ("koristeettomampaa", "koristeeton"),
+            ("taiteeton", "taiteeton"),
+            ("taiteettominta", "taiteeton"),
+        ] {
+            match check_normal_fast(word, false) {
+                NormalizedOutcome::Inflected { base: got, .. } => {
+                    assert_eq!(got, base, "{word}: wrong base");
+                }
+                other => panic!("{word}: expected Inflected, got {other:?}"),
+            }
+        }
     }
 
     /// `vaikka` fused with a finite negative auxiliary is a constructional
