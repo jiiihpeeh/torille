@@ -298,7 +298,10 @@ python3 tools/summarize_class_report.py reports/noun-classes.json
 The numbers are from a 5-lemma sample of each of the 146 noun classes.
 Current totals: **96,216 confirmed, 8,679 missing, 539 illegal, 0 mistagged,
 722 unsupported, 0 not plain.** Recall — confirmed over confirmed plus missing
-— is **91.7%**, and the `illegal` rate is **0.6%** of confirmed. Ranking the
+— is **91.7%**, and the `illegal` rate is **0.6%** of confirmed. Running with
+`--verify-illegal` rechecks each illegal surface with live Voikko and the
+Wiktionary-checked caveats: **96,738 confirmed, 25 illegal**, all in `34*C`,
+and 714 unsupported. Ranking the
 classes by `illegal` count would be useless here (the largest classes are
 simply large), so the class table below is ranked by *rate*.
 

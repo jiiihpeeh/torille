@@ -9,9 +9,11 @@ Ordered by user-facing impact, which is not the same as gap size: an engine that
 offers a non-word has a user-visible bug, and an engine that is merely silent
 does not. The first open item is therefore the precision one.
 
-**Current full 5-lemma noun report (2026-10-31):** 96,216 confirmed, 8,679
+**Current full 5-lemma noun report (2026-11-01):** 96,216 confirmed, 8,679
 missing, 539 illegal, 0 mistagged, 722 unsupported, 0 not-plain; recall 91.7%,
-illegal rate 0.6%. The older per-item counts below predate the current
+illegal rate 0.6%. With `--verify-illegal` (live Voikko plus the
+Wiktionary-checked caveats): **96,738 confirmed, 25 illegal**, all in `34*C`,
+and 714 unsupported. The older per-item counts below predate the current
 class-engine round and are kept only where the item is still open.
 
 - [ ] **Stop offering whole classes built on the wrong stem**

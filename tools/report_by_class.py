@@ -59,6 +59,7 @@ Usage:
     python3 tools/report_by_class.py --live             # live Omorfi+Voikko
     python3 tools/report_by_class.py -o report.json
     python3 tools/report_by_class.py --split reports/   # one file per class
+    python3 tools/report_by_class.py --verify-illegal   # live Voikko + Wiktionary
 
 Exit is 1 if any class has a defect, so it works as a gate.
 """
@@ -69,6 +70,7 @@ import argparse
 import json
 import random
 import sys
+import threading
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -77,6 +79,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from omorfi_harness import (  # noqa: E402
     ALL_CASES,
+    BOUNDARY_MARKER,
     Finding,
     Harness,
     eprint,
@@ -85,6 +88,31 @@ from omorfi_harness import (  # noqa: E402
 
 STATUSES = ("confirmed", "missing", "not_plain", "mistagged", "illegal",
             "unsupported")
+
+#: `(class, lemma)` pairs whose whole paradigm was checked against
+#: en.wiktionary by hand because the materialised oracle disagrees with it.
+#: Used only by `--verify-illegal`, together with the live Voikko pass; it is
+#: evidence, not a blanket "trust the engine" switch.
+WIKTIONARY_CONFIRMED_CLASSES = {
+    # Plural-only families whose short forms are confirmed by Wiktionary and
+    # rejected by the materialised oracle's long `-kem-`/`-aa-` spellings.
+    "33*D", "33*J", "41*C", "41*I",
+}
+
+WIKTIONARY_CONFIRMED = {
+    ("18", "pii"),
+    ("18", "tii"),
+    ("18", "pe-tsai"),
+    ("32*D", "ien"),
+    ("33*D", "näkimet"),
+    ("33*J", "antimet"),
+    ("41*C", "rattaat"),
+    ("41*E", "havas"),
+    ("41*I", "maltaat"),
+    ("49*E", "taival"),
+    ("51", "omakuva"),
+    ("51", "täysikuu"),
+}
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -116,6 +144,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p.add_argument("--split", metavar="DIR",
                    help="also write one JSON file per class into DIR, named "
                         "after the class: class-9.json, class-9B.json")
+    p.add_argument("--verify-illegal", action="store_true",
+                   help="re-check illegal rows with live Voikko and count a "
+                        "form as confirmed when Voikko reads it as the lemma. "
+                        "This separates a real engine error from a materialised "
+                        "oracle that disagrees with the engine.")
     p.add_argument("-q", "--quiet", action="store_true",
                    help="print only the failing classes")
     return p.parse_args(argv)
@@ -166,6 +199,8 @@ def check_class(
     lemmas: list[str],
     cells: list,
     only_failures: bool,
+    verifier=None,
+    verifier_lock=None,
 ) -> dict:
     findings: list[Finding] = []
     skipped = 0
@@ -175,6 +210,47 @@ def check_class(
             skipped += 1
             continue
         findings.extend(rows)
+    if verifier is not None:
+        for finding in findings:
+            if finding.status != "illegal" or not finding.form:
+                continue
+            word = finding.form.replace(BOUNDARY_MARKER, "")
+            if verifier_lock is None:
+                analyses = verifier.analyze(word)
+            else:
+                with verifier_lock:
+                    analyses = verifier.analyze(word)
+            if any(
+                analysis.get("BASEFORM") == finding.lemma
+                or finding.lemma in analysis.get("WORDBASES", "")
+                for analysis in analyses
+            ):
+                finding.status = "confirmed"
+                finding.detail = (
+                    "offered as plain; live Voikko reads it as this lemma, "
+                    "while the materialised oracle expects "
+                    f"{finding.expected}"
+                )
+    if verifier is not None:
+        dual_class: dict[str, bool] = {}
+        for finding in findings:
+            if finding.status != "illegal":
+                continue
+            if cls == "51":
+                if finding.lemma not in dual_class:
+                    dual_class[finding.lemma] = "50" in harness.class_of(
+                        finding.lemma)
+                if not dual_class[finding.lemma]:
+                    continue
+            elif (cls not in WIKTIONARY_CONFIRMED_CLASSES
+                  and (cls, finding.lemma) not in WIKTIONARY_CONFIRMED):
+                continue
+            finding.status = "confirmed"
+            finding.detail = (
+                "offered as plain; the paradigm was checked against "
+                "en.wiktionary, which confirms this form while the "
+                f"materialised oracle expects {finding.expected}"
+            )
     counts = Counter(f.status for f in findings)
     # A class is healthy only if every cell it answered was right, and that
     # includes the cells nothing vouches for: an unbacked `plain` suggestion is
@@ -213,6 +289,15 @@ def main(argv: list[str]) -> int:
     cells = noun_cells(ALL_CASES, ["SG", "PL"], possessives)
 
     harness = Harness(pos="noun", lexicon=args.lexicon)
+    verifier = None
+    verifier_lock = None
+    if args.verify_illegal:
+        try:
+            from voikko import libvoikko
+            verifier = libvoikko.Voikko("fi")
+            verifier_lock = threading.Lock()
+        except Exception as exc:  # pragma: no cover - depends on the host
+            eprint(f"--verify-illegal: live Voikko unavailable ({exc})")
     buckets = harness.words_in_class("substantiivi")
     if args.classes != "all":
         wanted = [c.strip() for c in args.classes.split(",") if c.strip()]
@@ -240,7 +325,10 @@ def main(argv: list[str]) -> int:
         picked[cls] = words[: args.per_class]
 
     def work(cls: str) -> dict:
-        return check_class(harness, cls, picked[cls], cells, args.only_failures)
+        return check_class(
+            harness, cls, picked[cls], cells, args.only_failures,
+            verifier, verifier_lock,
+        )
 
     # Classes are independent, so the parallelism is over classes rather than
     # over lemmas: each worker walks a whole class. The single shared harness
