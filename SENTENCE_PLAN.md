@@ -1,6 +1,6 @@
 # Sentence analyzer plan
 
-Status: **phases 1–6 implemented** · owner: engine / wasm · target: case-aware checking
+Status: **phases 1–7 implemented** · owner: engine / wasm · target: case-aware checking
 
 Goal: replace the per-separator heuristics behind sentence-initial casing
 with one deterministic sentence analyzer, and build a second, on-demand
@@ -25,7 +25,7 @@ never change spell-checking output.
 
 ## Implementation status
 
-Phases 1–6 are implemented:
+Phases 1–7 are implemented:
 
 - `src/sentence.rs` with `TokenContext`, `SentenceSpan`, `analyze`, `spans`,
   `separator_ends_sentence`, and `separator_breaks_line`;
@@ -45,13 +45,14 @@ Phases 1–6 are implemented:
   readings, and assigns predicates and adverbials;
 - clause segmentation on finite verbs, subordinators/relatives, a comma
   before a finite verb, and `ja joi`-style coordination; core roles for
-  subjects, objects, complements, and modifiers. Coordination shares a
-  subject with the preceding clause; deeper coordination and non-finite
-  clauses remain phase 7.
+  subjects, objects, complements, and modifiers;
+- coordinated subjects and objects, infinitival clauses with their own
+  objects and a shared subject, participle complements, and perfect passive
+  (`Talo on rakennettu`) with no subject.
 
 Phase 4 removed the compatibility wrappers, so `src/sentence.rs` is the only
-home for boundary and context rules. Phase 7+ (deeper coordination,
-non-finite clauses, passive refinements) remains open.
+home for boundary and context rules. Phase 8 (optional `analyze_syntax` wasm
+export) and phase 9 (bundle rebuild) remain open.
 
 ## Why now
 
@@ -536,8 +537,9 @@ Gutenberg corpus in CI. Optionally add a ignored/local test that reads
    subordinators/relatives, comma boundaries, subject/object/complement/
    modifier roles, existential and necessity constructions, and basic
    coordinated-subject sharing.
-7. **Coordination and non-finite clauses** — shared subjects/objects,
-   infinitives, participles, passive constructions.
+7. **Coordination and non-finite clauses** — done: coordinated subjects
+   and objects, infinitival clauses, shared subjects, participle
+   complements, and perfect passive.
 8. **Optional wasm export** — `analyze_syntax(text)` for diagnostics; keep
    it out of the keystroke path.
 9. **Rebuild** — wasm, demo, both extension bundles.

@@ -14,8 +14,10 @@
 //! [`SyntacticRole::Unknown`] rather than being guessed.
 //!
 //! Clause segmentation covers finite predicates, subordinators and relative
-//! pronouns, a comma before a finite verb, and simple `ja joi`-style
-//! coordination. Deeper coordination and non-finite clauses remain phase 7.
+//! pronouns, a comma before a finite verb, `ja joi`-style coordination, and
+//! infinitival clauses. Coordinated subjects and objects are marked, a
+//! coordinated or non-finite clause shares the preceding subject, and a
+//! passive participle after `olla` is a complement rather than a subject.
 
 use std::collections::HashMap;
 use std::ops::Range;
@@ -252,7 +254,7 @@ fn analyze_with(
     for clause in &mut clauses {
         resolve_clause(clause, tokens, &mut out, &nominal_lemmas);
     }
-    share_coordinated_subjects(&mut clauses, &clause_sentences, tokens);
+    share_clause_roles(&mut clauses, &clause_sentences, tokens, &out);
 
     SyntaxAnalysis {
         sentences,
@@ -648,6 +650,14 @@ fn is_predicate_candidate(index: usize, out: &[TokenSyntax]) -> bool {
             .all(|reading| reading.part_of_speech == Some(PartOfSpeech::NegativeVerb))
 }
 
+/// An infinitive reading, which can head an infinitival clause.
+fn is_infinitive(index: usize, out: &[TokenSyntax]) -> bool {
+    out[index]
+        .readings
+        .iter()
+        .any(|reading| reading.mood == Some(Mood::Infinitive))
+}
+
 /// Split one sentence's words into clause-sized runs.
 ///
 /// This is deliberately conservative. A coordinating conjunction starts a
@@ -667,6 +677,14 @@ fn segment_clause_words(words: &[usize], tokens: &[Token], out: &[TokenSyntax]) 
             if position + 1 < words.len() && is_predicate_candidate(words[position + 1], out) {
                 starts.push(position);
             }
+            continue;
+        }
+        if is_infinitive(words[position], out)
+            && words[..position]
+                .iter()
+                .any(|&index| is_predicate_candidate(index, out))
+        {
+            starts.push(position);
             continue;
         }
         if is_predicate_candidate(words[position], out)
@@ -739,6 +757,12 @@ fn choose_predicate(words: &[usize], out: &[TokenSyntax]) -> Option<usize> {
                 .copied()
                 .find(|&index| is_predicate_candidate(index, out))
         })
+        .or_else(|| {
+            words
+                .iter()
+                .copied()
+                .find(|&index| is_infinitive(index, out))
+        })
 }
 
 /// Resolve the core roles in one clause.
@@ -755,6 +779,10 @@ fn resolve_clause(
         return;
     };
     clause.predicate = Some(predicate);
+    if out[predicate].role != SyntacticRole::Predicate {
+        out[predicate].role = SyntacticRole::Predicate;
+        out[predicate].confidence = RoleConfidence::Likely;
+    }
     let predicate_position = words
         .iter()
         .position(|&index| index == predicate)
@@ -766,16 +794,20 @@ fn resolve_clause(
         .readings
         .iter()
         .any(|reading| reading.voice == Some(crate::tags::Voice::Passive));
-    let negative = out[predicate]
-        .readings
-        .iter()
-        .any(|reading| reading.polarity == Polarity::Negative)
-        || words.iter().any(|&index| {
-            out[index].readings.iter().any(|reading| {
-                reading.polarity == Polarity::Negative
-                    && reading.part_of_speech == Some(PartOfSpeech::NegativeVerb)
-            })
-        });
+    let negative_auxiliary = words.iter().any(|&index| {
+        out[index].readings.iter().any(|reading| {
+            reading.polarity == Polarity::Negative
+                && reading.part_of_speech == Some(PartOfSpeech::NegativeVerb)
+        })
+    });
+    // An infinitive can carry a spurious passive reading (`syödä` does), so
+    // only a finite predicate's own polarity marks a finite clause negative.
+    let negative = negative_auxiliary
+        || (!is_infinitive(predicate, out)
+            && out[predicate]
+                .readings
+                .iter()
+                .any(|reading| reading.polarity == Polarity::Negative));
     clause.negative = negative;
 
     let lemma = out[predicate].lemma.clone().unwrap_or_default();
@@ -789,20 +821,24 @@ fn resolve_clause(
     });
     clause.existential = is_olla && locative_before && nominative_after;
 
+    let genitive_before = before.iter().rev().copied().find(|&index| {
+        is_nominal(&out[index])
+            && has_case(&out[index], &[Case::Genitive])
+            && !is_clause_marker(index, tokens)
+    });
+    let necessity = is_olla && genitive_before.is_some() && necessity_complement(after, out);
+    let passive_construction = is_olla && !necessity && passive_participle_after(after, out);
+
     let mut subject = None;
-    if !passive {
+    if !passive && !passive_construction {
         if clause.existential {
             subject = after.iter().copied().find(|&index| {
                 is_nominal(&out[index])
                     && has_case(&out[index], &[Case::Nominative, Case::Partitive])
                     && !is_clause_marker(index, tokens)
             });
-        } else if is_olla && necessity_complement(after, out) {
-            subject = before.iter().rev().copied().find(|&index| {
-                is_nominal(&out[index])
-                    && has_case(&out[index], &[Case::Genitive])
-                    && !is_clause_marker(index, tokens)
-            });
+        } else if necessity {
+            subject = genitive_before;
         }
         if subject.is_none() {
             subject = before
@@ -830,6 +866,7 @@ fn resolve_clause(
         );
         out[index].head = Some(predicate);
         clause.subject = Some(index);
+        mark_coordinated_subjects(before, index, predicate, tokens, out);
     }
 
     let object_cases: &[Case] = if negative {
@@ -842,7 +879,7 @@ fn resolve_clause(
             Case::Nominative,
         ]
     };
-    let object = if passive {
+    let object = if passive || passive_construction {
         before.iter().chain(after).copied().find(|&index| {
             is_nominal(&out[index])
                 && has_case(&out[index], object_cases)
@@ -867,6 +904,7 @@ fn resolve_clause(
         out[index].case = best_case(&out[index], object_cases);
         out[index].head = Some(predicate);
         clause.object = Some(index);
+        mark_coordinated_objects(after, index, predicate, object_cases, tokens, out);
     }
 
     if is_olla || is_change {
@@ -880,12 +918,26 @@ fn resolve_clause(
                 Case::Translative,
             ]
         };
-        if let Some(index) = after.iter().copied().find(|&index| {
+        let complement = after.iter().copied().find(|&index| {
             Some(index) != subject
                 && is_nominal(&out[index])
                 && has_case(&out[index], complement_cases)
                 && !is_clause_marker(index, tokens)
-        }) {
+        });
+        // A participle after `olla` is the complement too: `Minun on mentävä`,
+        // `Talo on rakennettu`. It has a verb reading and a case, not a noun
+        // reading, so the nominal search above cannot see it.
+        let complement = complement.or_else(|| {
+            after.iter().copied().find(|&index| {
+                Some(index) != subject
+                    && out[index].readings.iter().any(|reading| {
+                        reading.part_of_speech == Some(PartOfSpeech::Verb)
+                            && reading.case.is_some()
+                            && reading.mood != Some(Mood::Infinitive)
+                    })
+            })
+        });
+        if let Some(index) = complement {
             out[index].role = SyntacticRole::Complement;
             out[index].confidence = nominal_confidence(&out[index]);
             if let Some(noun) = &nominal_lemmas[index] {
@@ -912,6 +964,18 @@ fn necessity_complement(after: &[usize], out: &[TokenSyntax]) -> bool {
             .readings
             .iter()
             .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Verb))
+    })
+}
+
+/// A passive participle after `olla`: `Talo on rakennettu`.
+fn passive_participle_after(after: &[usize], out: &[TokenSyntax]) -> bool {
+    after.iter().any(|&index| {
+        out[index].readings.iter().any(|reading| {
+            reading.part_of_speech == Some(PartOfSpeech::Verb)
+                && reading.voice == Some(crate::tags::Voice::Passive)
+                && reading.case.is_some()
+                && reading.mood != Some(Mood::Infinitive)
+        })
     })
 }
 
@@ -977,11 +1041,85 @@ fn mark_modifiers(
     }
 }
 
-/// Share the subject of a coordinated clause with the clause before it.
-fn share_coordinated_subjects(
+/// Mark `maidon` in `Sami söi puuron ja maidon` as a coordinated object.
+fn mark_coordinated_objects(
+    after: &[usize],
+    object: usize,
+    predicate: usize,
+    object_cases: &[Case],
+    tokens: &[Token],
+    out: &mut [TokenSyntax],
+) {
+    for &index in after {
+        if index == object
+            || out[index].role != SyntacticRole::Unknown
+            || !is_nominal(&out[index])
+            || !has_case(&out[index], object_cases)
+            || is_clause_marker(index, tokens)
+        {
+            continue;
+        }
+        let (left, right) = if index < object {
+            (index, object)
+        } else {
+            (object, index)
+        };
+        if has_coordinator_between(tokens, left, right) {
+            out[index].role = SyntacticRole::Object;
+            out[index].confidence = nominal_confidence(&out[index]);
+            out[index].case = best_case(&out[index], object_cases);
+            out[index].head = Some(predicate);
+        }
+    }
+}
+
+/// Mark `Liisa` in `Sami ja Liisa söivät` as a coordinated subject.
+fn mark_coordinated_subjects(
+    before: &[usize],
+    subject: usize,
+    predicate: usize,
+    tokens: &[Token],
+    out: &mut [TokenSyntax],
+) {
+    for &index in before {
+        if index == subject
+            || out[index].role == SyntacticRole::Subject
+            || !is_nominal(&out[index])
+            || !has_case(&out[index], &[Case::Nominative])
+            || is_clause_marker(index, tokens)
+        {
+            continue;
+        }
+        let (left, right) = if index < subject {
+            (index, subject)
+        } else {
+            (subject, index)
+        };
+        if has_coordinator_between(tokens, left, right) {
+            out[index].role = SyntacticRole::Subject;
+            out[index].confidence = nominal_confidence(&out[index]);
+            out[index].case = Some(Case::Nominative);
+            out[index].head = Some(predicate);
+        }
+    }
+}
+
+/// Is there a coordinating conjunction between two token indices?
+fn has_coordinator_between(tokens: &[Token], left: usize, right: usize) -> bool {
+    tokens
+        .iter()
+        .skip(left + 1)
+        .take(right.saturating_sub(left + 1))
+        .filter(|token| token.is_word())
+        .any(|token| is_coordinating(&token.text.to_lowercase()))
+}
+
+/// Share the subject of a coordinated or non-finite clause with the one before.
+fn share_clause_roles(
     clauses: &mut [Clause],
     clause_sentences: &[usize],
     tokens: &[Token],
+    out: &[TokenSyntax],
 ) {
     for index in 1..clauses.len() {
         if clause_sentences[index] != clause_sentences[index - 1] {
@@ -993,7 +1131,13 @@ fn share_coordinated_subjects(
         let starts_with_coordinator = tokens
             .get(clauses[index].tokens.start)
             .is_some_and(|token| is_coordinating(&token.text.to_lowercase()));
-        if starts_with_coordinator {
+        let predicate_is_non_finite = clauses[index].predicate.is_some_and(|predicate| {
+            out[predicate]
+                .readings
+                .iter()
+                .any(|reading| matches!(reading.mood, Some(Mood::Infinitive | Mood::Instructive)))
+        });
+        if starts_with_coordinator || predicate_is_non_finite {
             clauses[index].subject = clauses[index - 1].subject;
         }
     }
@@ -1152,6 +1296,54 @@ mod tests {
     }
 
     #[test]
+    fn coordinated_subjects_are_both_subjects() {
+        let (tokens, analysis) = analyzed("Sami ja Liisa söivät.");
+        let sami = word_index(&tokens, "Sami");
+        let liisa = word_index(&tokens, "Liisa");
+        assert_eq!(analysis.tokens[sami].role, SyntacticRole::Subject);
+        assert_eq!(analysis.tokens[liisa].role, SyntacticRole::Subject);
+    }
+
+    #[test]
+    fn coordinated_objects_are_both_objects() {
+        let (tokens, analysis) = analyzed("Sami söi puuron ja maidon.");
+        let puuron = word_index(&tokens, "puuron");
+        let maidon = word_index(&tokens, "maidon");
+        assert_eq!(analysis.tokens[puuron].role, SyntacticRole::Object);
+        assert_eq!(analysis.tokens[maidon].role, SyntacticRole::Object);
+        assert_eq!(analysis.tokens[maidon].head, analysis.clauses[0].predicate);
+    }
+
+    #[test]
+    fn an_infinitive_clause_takes_an_object_and_shares_the_subject() {
+        let (tokens, analysis) = analyzed("Sami haluaa syödä puuron.");
+        assert_eq!(analysis.clauses.len(), 2);
+        let sami = word_index(&tokens, "Sami");
+        let syoda = word_index(&tokens, "syödä");
+        let puuron = word_index(&tokens, "puuron");
+        assert_eq!(analysis.tokens[syoda].role, SyntacticRole::Predicate);
+        assert_eq!(analysis.tokens[puuron].role, SyntacticRole::Object);
+        assert_eq!(analysis.clauses[1].subject, Some(sami));
+    }
+
+    #[test]
+    fn a_participle_after_olla_is_a_complement() {
+        let (tokens, analysis) = analyzed("Minun on mentävä.");
+        let mentava = word_index(&tokens, "mentävä");
+        assert_eq!(analysis.tokens[mentava].role, SyntacticRole::Complement);
+    }
+
+    #[test]
+    fn a_perfect_passive_has_no_subject_either() {
+        let (tokens, analysis) = analyzed("Talo on rakennettu.");
+        let talo = word_index(&tokens, "Talo");
+        let rakennettu = word_index(&tokens, "rakennettu");
+        assert_eq!(analysis.clauses[0].subject, None);
+        assert_eq!(analysis.tokens[talo].role, SyntacticRole::Object);
+        assert_eq!(analysis.tokens[rakennettu].role, SyntacticRole::Complement);
+    }
+
+    #[test]
     fn a_passive_has_no_subject_but_keeps_the_logical_object() {
         let (tokens, analysis) = analyzed("Talo rakennettiin.");
         let talo = word_index(&tokens, "Talo");
@@ -1206,12 +1398,13 @@ mod tests {
     }
 
     #[test]
-    fn an_infinitive_is_not_a_finite_predicate() {
+    fn an_infinitive_heads_its_own_clause() {
         let (tokens, analysis) = analyzed("Haluan syödä.");
         let haluan = word_index(&tokens, "Haluan");
         let syoda = word_index(&tokens, "syödä");
+        assert_eq!(analysis.clauses.len(), 2);
         assert_eq!(analysis.tokens[haluan].role, SyntacticRole::Predicate);
-        assert_ne!(analysis.tokens[syoda].role, SyntacticRole::Predicate);
+        assert_eq!(analysis.tokens[syoda].role, SyntacticRole::Predicate);
     }
 
     #[test]
