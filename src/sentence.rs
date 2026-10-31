@@ -16,6 +16,14 @@
 
 use crate::tokenise::{Token, TokenKind};
 
+/// Closed list of Finnish abbreviations whose final period is not a
+/// sentence boundary. Matched without the period and case-insensitively:
+/// the tokeniser keeps `esim` and `.` in separate runs.
+const ABBREVIATIONS: &[&str] = &[
+    "esim", "ym", "yms", "jne", "jms", "mm", "ns", "n", "s", "v", "t", "klo", "nro", "prof", "tri",
+    "toht", "hra", "rva", "nr", "siv", "vrt", "ts",
+];
+
 /// Per-token sentence context.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct TokenContext {
@@ -87,6 +95,7 @@ pub fn analyze(tokens: &[Token]) -> Vec<TokenContext> {
     let mut paragraph_start = true;
     let mut quote_depth = 0u16;
     let mut saw_word = false;
+    let mut previous_word: Option<&str> = None;
 
     for (i, token) in tokens.iter().enumerate() {
         if token.is_word() {
@@ -102,6 +111,7 @@ pub fn analyze(tokens: &[Token]) -> Vec<TokenContext> {
             saw_word = true;
             sentence_start = false;
             paragraph_start = false;
+            previous_word = Some(token.text.as_str());
             continue;
         }
 
@@ -111,7 +121,9 @@ pub fn analyze(tokens: &[Token]) -> Vec<TokenContext> {
         if separator_breaks_line(token) {
             sentence_start = true;
             paragraph_start = true;
-        } else if separator_ends_sentence(token) {
+        } else if separator_ends_sentence(token)
+            && !is_abbreviation_boundary(tokens, i, previous_word)
+        {
             sentence_start = true;
             paragraph_start = false;
         }
@@ -156,6 +168,46 @@ pub fn spans(tokens: &[Token]) -> Vec<SentenceSpan> {
         }
     }
     out
+}
+
+/// Is this period the end of an abbreviation or a single initial, rather
+/// than the end of a sentence?
+///
+/// The check is deliberately narrow: only a separator whose trimmed text is
+/// exactly `.`, after a known abbreviation (`esim.`, `ym.`) or a one-letter
+/// initial followed by a capitalized word (`J. Virtanen`). Ellipses and
+/// multi-dot separators are not abbreviations.
+fn is_abbreviation_boundary(
+    tokens: &[Token],
+    separator_index: usize,
+    previous_word: Option<&str>,
+) -> bool {
+    let Some(token) = tokens.get(separator_index) else {
+        return false;
+    };
+    if !matches!(token.kind, TokenKind::Separator) || token.text.trim() != "." {
+        return false;
+    }
+    let Some(previous) = previous_word else {
+        return false;
+    };
+    let lower = previous.to_lowercase();
+    if ABBREVIATIONS.contains(&lower.as_str()) {
+        return true;
+    }
+    let mut chars = previous.chars();
+    let (Some(first), None) = (chars.next(), chars.next()) else {
+        return false;
+    };
+    if !first.is_uppercase() {
+        return false;
+    }
+    tokens
+        .iter()
+        .skip(separator_index + 1)
+        .find(|t| t.is_word())
+        .and_then(Token::first_char)
+        .is_some_and(char::is_uppercase)
 }
 
 /// Advance the quotation depth over a separator run.
@@ -233,6 +285,32 @@ mod tests {
             let ela = tokens.iter().position(|t| t.text == "Elä").unwrap();
             assert!(ctx[ela].sentence_start, "{text}");
         }
+    }
+
+    #[test]
+    fn an_abbreviation_period_is_not_a_sentence_boundary() {
+        let tokens = tokenise("Hän tuli esim. eilen.");
+        let ctx = analyze(&tokens);
+        let eilen = tokens.iter().position(|t| t.text == "eilen").unwrap();
+        assert!(!ctx[eilen].sentence_start);
+        assert_eq!(ctx[eilen].sentence_index, 0);
+    }
+
+    #[test]
+    fn a_single_initial_does_not_start_a_sentence() {
+        let tokens = tokenise("J. Virtanen tuli.");
+        let ctx = analyze(&tokens);
+        let virtanen = tokens.iter().position(|t| t.text == "Virtanen").unwrap();
+        assert!(!ctx[virtanen].sentence_start);
+        assert_eq!(ctx[virtanen].sentence_index, 0);
+    }
+
+    #[test]
+    fn an_ellipsis_is_still_a_sentence_boundary() {
+        let tokens = tokenise("Hän tuli... Eilen.");
+        let ctx = analyze(&tokens);
+        let eilen = tokens.iter().position(|t| t.text == "Eilen").unwrap();
+        assert!(ctx[eilen].sentence_start);
     }
 
     #[test]

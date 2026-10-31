@@ -1,6 +1,6 @@
 # Sentence analyzer plan
 
-Status: **phase 1 implemented** · owner: engine / wasm · target: case-aware checking
+Status: **phases 1–2 implemented** · owner: engine / wasm · target: case-aware checking
 
 Goal: replace the per-separator heuristics behind sentence-initial casing
 with one deterministic sentence analyzer, and build a second, on-demand
@@ -25,17 +25,19 @@ never change spell-checking output.
 
 ## Implementation status
 
-Phase 1 is implemented:
+Phases 1–2 are implemented:
 
 - `src/sentence.rs` with `TokenContext`, `SentenceSpan`, `analyze`, `spans`,
   `separator_ends_sentence`, and `separator_breaks_line`;
 - `Token::ends_sentence` delegates to the sentence module;
 - `tokenise::annotate_sentence_initial` is a compatibility wrapper over
   `sentence::analyze`;
-- unit tests for periods, newlines, colons/quotes, spans, and quote depth.
+- closed abbreviation list (`esim.`, `ym.`, `jne.`, …) and single-initial
+  exception (`J. Virtanen`), while ellipses still split;
+- unit tests for periods, newlines, colons/quotes, abbreviations, initials,
+  spans, and quote depth.
 
-Phases 2+ (abbreviation exceptions, state integration, syntax roles
-`src/syntax.rs`) remain open.
+Phases 3+ (state integration, syntax roles `src/syntax.rs`) remain open.
 
 ## Why now
 
