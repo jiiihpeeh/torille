@@ -130,21 +130,17 @@ impl TextAreaState {
         // mid-sentence capitalised is learned; one that only ever starts
         // sentences is left to the spell-checker to flag.
         let mut mid_caps: HashSet<String> = HashSet::new();
-        let mut sentence_initial = true;
+        let mut analyzer = torille::sentence::Analyzer::new();
         for window in text_windows(text) {
             for tok in torille::tokenise::tokenise(window) {
-                if tok.is_word() {
-                    let at_sentence_start = sentence_initial;
-                    sentence_initial = false;
-                    if tok.is_capitalised()
-                        && !at_sentence_start
-                        && let Some(lower) = tok.lower_word()
-                        && lower.chars().count() >= 2
-                    {
-                        mid_caps.insert(lower);
-                    }
-                } else if tok.ends_sentence() {
-                    sentence_initial = true;
+                let context = analyzer.push(&tok);
+                if tok.is_word()
+                    && tok.is_capitalised()
+                    && !context.sentence_start
+                    && let Some(lower) = tok.lower_word()
+                    && lower.chars().count() >= 2
+                {
+                    mid_caps.insert(lower);
                 }
             }
         }
@@ -217,7 +213,7 @@ impl TextAreaState {
     pub fn find_misspells(&mut self, text: &str) -> Vec<MisspellRange> {
         let mut out = Vec::new();
         let tokens = torille::tokenise::tokenise(text);
-        let sentence_initial = torille::tokenise::annotate_sentence_initial(&tokens);
+        let contexts = torille::sentence::analyze(&tokens);
         let n = tokens.len();
         let mut i = 0;
         while i < n {
@@ -259,7 +255,7 @@ impl TextAreaState {
             let proper = self.proper_nouns.contains(&lower)
                 || torille::expand::proper_names::contains_capitalised(&tok.text);
             let recognised = known || proper;
-            let case_ok = case_accepts(&tok.text, known, sentence_initial[i], proper);
+            let case_ok = case_accepts(&tok.text, known, contexts[i].sentence_start, proper);
             if recognised && case_ok {
                 i += 1;
                 continue;
@@ -297,7 +293,7 @@ impl TextAreaState {
     pub fn analyze(&self, text: &str, max_suggestions: usize) -> Vec<Hit> {
         let mut out = Vec::new();
         let tokens = torille::tokenise::tokenise(text);
-        let sentence_initial = torille::tokenise::annotate_sentence_initial(&tokens);
+        let contexts = torille::sentence::analyze(&tokens);
         let n = tokens.len();
 
         let mut i = 0;
@@ -320,7 +316,7 @@ impl TextAreaState {
             let known = !matches!(check_normal_fast(&lower, false), NormalizedOutcome::Unknown);
             let proper = self.proper_nouns.contains(&lower)
                 || torille::expand::proper_names::contains_capitalised(&tok.text);
-            if case_accepts(&tok.text, known, sentence_initial[i], proper) {
+            if case_accepts(&tok.text, known, contexts[i].sentence_start, proper) {
                 i += 1;
                 continue;
             }
@@ -557,6 +553,16 @@ mod tests {
             capitalised.case_only,
             "the derived adjective is a case-only misspelling"
         );
+    }
+
+    #[test]
+    fn abbreviations_and_initials_keep_the_next_word_mid_sentence() {
+        // `Zorblax` after `esim.` and `Virtanen` after `J.` are not
+        // sentence-initial, so the proper-name learner sees them.
+        let mut st = TextAreaState::new();
+        st.update("Hän tuli esim. Zorblax ja J. Qwerty.");
+        assert!(st.knows_proper_noun("zorblax"));
+        assert!(st.knows_proper_noun("qwerty"));
     }
 
     #[test]

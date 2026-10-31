@@ -1,6 +1,6 @@
 # Sentence analyzer plan
 
-Status: **phases 1–2 implemented** · owner: engine / wasm · target: case-aware checking
+Status: **phases 1–3 implemented** · owner: engine / wasm · target: case-aware checking
 
 Goal: replace the per-separator heuristics behind sentence-initial casing
 with one deterministic sentence analyzer, and build a second, on-demand
@@ -25,7 +25,7 @@ never change spell-checking output.
 
 ## Implementation status
 
-Phases 1–2 are implemented:
+Phases 1–3 are implemented:
 
 - `src/sentence.rs` with `TokenContext`, `SentenceSpan`, `analyze`, `spans`,
   `separator_ends_sentence`, and `separator_breaks_line`;
@@ -35,9 +35,12 @@ Phases 1–2 are implemented:
 - closed abbreviation list (`esim.`, `ym.`, `jne.`, …) and single-initial
   exception (`J. Virtanen`), while ellipses still split;
 - unit tests for periods, newlines, colons/quotes, abbreviations, initials,
-  spans, and quote depth.
+  spans, and quote depth;
+- `torille-wasm/src/state.rs` uses `sentence::analyze` for misspelling case
+  validation and a stateful `sentence::Analyzer` across text windows for
+  proper-name learning.
 
-Phases 3+ (state integration, syntax roles `src/syntax.rs`) remain open.
+Phases 4+ (cleanup, syntax roles `src/syntax.rs`) remain open.
 
 ## Why now
 

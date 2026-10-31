@@ -87,49 +87,87 @@ pub fn separator_breaks_line(token: &Token) -> bool {
     matches!(token.kind, TokenKind::Separator) && token.text.contains('\n')
 }
 
-/// One context per token, in token order.
-pub fn analyze(tokens: &[Token]) -> Vec<TokenContext> {
-    let mut out = vec![TokenContext::default(); tokens.len()];
-    let mut sentence_index = 0usize;
-    let mut sentence_start = true;
-    let mut paragraph_start = true;
-    let mut quote_depth = 0u16;
-    let mut saw_word = false;
-    let mut previous_word: Option<&str> = None;
+/// Stateful sentence analyzer.
+///
+/// Feed tokens in order with [`Analyzer::push`]; the state (sentence
+/// number, line/paragraph start, quote depth, previous word) survives
+/// across calls. This is what lets the wasm proper-name learner walk a
+/// text in bounded windows without treating every window start as a new
+/// sentence.
+#[derive(Debug, Clone)]
+pub struct Analyzer {
+    sentence_index: usize,
+    sentence_start: bool,
+    paragraph_start: bool,
+    quote_depth: u16,
+    saw_word: bool,
+    previous_word: Option<String>,
+}
 
-    for (i, token) in tokens.iter().enumerate() {
+impl Default for Analyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Analyzer {
+    /// A fresh analyzer at the start of a document.
+    pub fn new() -> Self {
+        Self {
+            sentence_index: 0,
+            sentence_start: true,
+            paragraph_start: true,
+            quote_depth: 0,
+            saw_word: false,
+            previous_word: None,
+        }
+    }
+
+    /// Consume one token and return its sentence context.
+    pub fn push(&mut self, token: &Token) -> TokenContext {
         if token.is_word() {
-            if sentence_start && saw_word {
-                sentence_index += 1;
+            if self.sentence_start && self.saw_word {
+                self.sentence_index += 1;
             }
-            out[i] = TokenContext {
-                sentence_index,
-                sentence_start,
-                paragraph_start,
-                quote_depth,
+            let context = TokenContext {
+                sentence_index: self.sentence_index,
+                sentence_start: self.sentence_start,
+                paragraph_start: self.paragraph_start,
+                quote_depth: self.quote_depth,
             };
-            saw_word = true;
-            sentence_start = false;
-            paragraph_start = false;
-            previous_word = Some(token.text.as_str());
-            continue;
+            self.saw_word = true;
+            self.sentence_start = false;
+            self.paragraph_start = false;
+            self.previous_word = Some(token.text.clone());
+            return context;
         }
 
         // A separator can both close a sentence and open a quote. Process
         // the quote first so a word after `»` sees the new depth.
-        quote_depth = update_quote_depth(quote_depth, &token.text);
+        self.quote_depth = update_quote_depth(self.quote_depth, &token.text);
         if separator_breaks_line(token) {
-            sentence_start = true;
-            paragraph_start = true;
+            self.sentence_start = true;
+            self.paragraph_start = true;
         } else if separator_ends_sentence(token)
-            && !is_abbreviation_boundary(tokens, i, previous_word)
+            && !is_abbreviation_boundary(token, self.previous_word.as_deref())
         {
-            sentence_start = true;
-            paragraph_start = false;
+            self.sentence_start = true;
+            self.paragraph_start = false;
+        }
+        TokenContext {
+            sentence_index: self.sentence_index,
+            sentence_start: false,
+            paragraph_start: false,
+            quote_depth: self.quote_depth,
         }
     }
+}
 
-    out
+/// One context per token, in token order. See [`Analyzer`] for the
+/// streaming form.
+pub fn analyze(tokens: &[Token]) -> Vec<TokenContext> {
+    let mut analyzer = Analyzer::new();
+    tokens.iter().map(|token| analyzer.push(token)).collect()
 }
 
 /// Sentence spans derived from [`analyze`]. The spans partition
@@ -175,16 +213,11 @@ pub fn spans(tokens: &[Token]) -> Vec<SentenceSpan> {
 ///
 /// The check is deliberately narrow: only a separator whose trimmed text is
 /// exactly `.`, after a known abbreviation (`esim.`, `ym.`) or a one-letter
-/// initial followed by a capitalized word (`J. Virtanen`). Ellipses and
-/// multi-dot separators are not abbreviations.
-fn is_abbreviation_boundary(
-    tokens: &[Token],
-    separator_index: usize,
-    previous_word: Option<&str>,
-) -> bool {
-    let Some(token) = tokens.get(separator_index) else {
-        return false;
-    };
+/// initial (`J. Virtanen`). Ellipses and multi-dot separators are not
+/// abbreviations. A single initial is always treated as non-terminal: the
+/// analyzer is streaming and does not look ahead, and this only relaxes
+/// capitalization, never makes a word unrecognized.
+fn is_abbreviation_boundary(token: &Token, previous_word: Option<&str>) -> bool {
     if !matches!(token.kind, TokenKind::Separator) || token.text.trim() != "." {
         return false;
     }
@@ -199,15 +232,7 @@ fn is_abbreviation_boundary(
     let (Some(first), None) = (chars.next(), chars.next()) else {
         return false;
     };
-    if !first.is_uppercase() {
-        return false;
-    }
-    tokens
-        .iter()
-        .skip(separator_index + 1)
-        .find(|t| t.is_word())
-        .and_then(Token::first_char)
-        .is_some_and(char::is_uppercase)
+    first.is_uppercase()
 }
 
 /// Advance the quotation depth over a separator run.
