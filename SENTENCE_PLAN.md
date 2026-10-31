@@ -1,6 +1,6 @@
 # Sentence analyzer plan
 
-Status: **phases 1–7 implemented** · owner: engine / wasm · target: case-aware checking
+Status: **phases 1–9 implemented** · owner: engine / wasm · target: case-aware checking
 
 Goal: replace the per-separator heuristics behind sentence-initial casing
 with one deterministic sentence analyzer, and build a second, on-demand
@@ -25,7 +25,7 @@ never change spell-checking output.
 
 ## Implementation status
 
-Phases 1–7 are implemented:
+Phases 1–9 are implemented:
 
 - `src/sentence.rs` with `TokenContext`, `SentenceSpan`, `analyze`, `spans`,
   `separator_ends_sentence`, and `separator_breaks_line`;
@@ -48,11 +48,13 @@ Phases 1–7 are implemented:
   subjects, objects, complements, and modifiers;
 - coordinated subjects and objects, infinitival clauses with their own
   objects and a shared subject, participle complements, and perfect passive
-  (`Talo on rakennettu`) with no subject.
+  (`Talo on rakennettu`) with no subject;
+- `torille-wasm::analyze_syntax(text)` as an on-demand diagnostic export
+  (sentences, clauses, token roles/readings); it is not in the keystroke path;
+- wasm, demo, Firefox, and Chromium bundles rebuilt.
 
 Phase 4 removed the compatibility wrappers, so `src/sentence.rs` is the only
-home for boundary and context rules. Phase 8 (optional `analyze_syntax` wasm
-export) and phase 9 (bundle rebuild) remain open.
+home for boundary and context rules.
 
 ## Why now
 
@@ -540,9 +542,9 @@ Gutenberg corpus in CI. Optionally add a ignored/local test that reads
 7. **Coordination and non-finite clauses** — done: coordinated subjects
    and objects, infinitival clauses, shared subjects, participle
    complements, and perfect passive.
-8. **Optional wasm export** — `analyze_syntax(text)` for diagnostics; keep
-   it out of the keystroke path.
-9. **Rebuild** — wasm, demo, both extension bundles.
+8. **Optional wasm export** — done: `analyze_syntax(text)` returns sentence,
+   clause, token-role, and reading objects; it is not in the keystroke path.
+9. **Rebuild** — done: wasm, demo, Firefox, and Chromium bundles.
 
 ## Acceptance criteria
 

@@ -6,7 +6,7 @@
 //! sanalista and paradigm catalogue as static strings, so it is
 //! self-contained -- no fetch, no JSON, no setup.
 //!
-//! Two entry points, both shaped like hunspell's:
+//! The spell-checking entry points are shaped like hunspell's:
 //!
 //! - [`check`] is `hunspell_spell` -- true if the word is known, false
 //!   otherwise. The `wasm-bindgen` boundary makes this a JavaScript
@@ -14,6 +14,9 @@
 //! - [`suggest_words`] is `hunspell_suggest` -- up to `max_n`
 //!   candidates, ranked by edit distance. Returns a JavaScript
 //!   `Array<string>`.
+//!
+//! [`analyze_syntax`] is a separate, on-demand diagnostic export. It is not
+//! called by the keystroke path and must stay out of the render loop.
 //!
 //! ## Why this layer exists
 //!
@@ -167,6 +170,149 @@ pub fn hyphenate(
         arr.push(&obj);
     }
     arr
+}
+
+/// On-demand syntax diagnostics for `text`.
+///
+/// This is **not** part of the keystroke path: it tokenises the whole text,
+/// runs the morphology engine per word, and returns sentences, clauses, and
+/// per-token roles. Use it for a grammar/diagnostic panel, not for the red
+/// underlines returned by [`analyze_misspells`].
+///
+/// The shape is:
+///
+/// ```text
+/// {
+///   sentences: [{ start, end, index, paragraphStart }],
+///   clauses:   [{ start, end, tokensStart, tokensEnd, predicate, subject,
+///                 object, negative, existential }],
+///   tokens:    [{ word, start, end, role, confidence, clause, head,
+///                 case, lemma, readings: [{ pos, case, number, person,
+///                 tense, mood, voice, polarity }] }]
+/// }
+/// ```
+///
+/// Token indices in `predicate`, `subject`, `object`, and `head` refer to the
+/// `tokens` array; null means no such role or governor.
+#[wasm_bindgen]
+pub fn analyze_syntax(text: &str) -> js_sys::Object {
+    use js_sys::{Array, Object};
+
+    let tokens = torille::tokenise::tokenise(text);
+    let analysis = torille::syntax::analyze(&tokens);
+    let obj = Object::new();
+
+    let sentences = Array::new();
+    for sentence in &analysis.sentences {
+        let item = Object::new();
+        set(&item, "start", JsValue::from(sentence.start as u32));
+        set(&item, "end", JsValue::from(sentence.end as u32));
+        set(&item, "index", JsValue::from(sentence.index as u32));
+        set(
+            &item,
+            "paragraphStart",
+            JsValue::from(sentence.paragraph_start),
+        );
+        sentences.push(&item);
+    }
+    set(&obj, "sentences", sentences.into());
+
+    let clauses = Array::new();
+    for clause in &analysis.clauses {
+        let item = Object::new();
+        set(&item, "start", JsValue::from(clause.start as u32));
+        set(&item, "end", JsValue::from(clause.end as u32));
+        set(
+            &item,
+            "tokensStart",
+            JsValue::from(clause.tokens.start as u32),
+        );
+        set(&item, "tokensEnd", JsValue::from(clause.tokens.end as u32));
+        set_option(&item, "predicate", clause.predicate);
+        set_option(&item, "subject", clause.subject);
+        set_option(&item, "object", clause.object);
+        set(&item, "negative", JsValue::from(clause.negative));
+        set(&item, "existential", JsValue::from(clause.existential));
+        clauses.push(&item);
+    }
+    set(&obj, "clauses", clauses.into());
+
+    let token_items = Array::new();
+    for (index, token) in tokens.iter().enumerate() {
+        let syntax = &analysis.tokens[index];
+        let item = Object::new();
+        set(&item, "word", JsValue::from(token.text.as_str()));
+        set(&item, "start", JsValue::from(token.start as u32));
+        set(&item, "end", JsValue::from(token.end as u32));
+        set(&item, "role", JsValue::from(syntax.role.name()));
+        set(
+            &item,
+            "confidence",
+            JsValue::from(match syntax.confidence {
+                torille::syntax::RoleConfidence::Certain => "certain",
+                torille::syntax::RoleConfidence::Likely => "likely",
+                torille::syntax::RoleConfidence::Weak => "weak",
+            }),
+        );
+        set(&item, "clause", JsValue::from(syntax.clause as u32));
+        set_option(&item, "head", syntax.head);
+        set_option(&item, "case", syntax.case.map(|case| case.name()));
+        set_option(&item, "lemma", syntax.lemma.as_deref());
+
+        let readings = Array::new();
+        for reading in &syntax.readings {
+            let reading_item = Object::new();
+            set_option(
+                &reading_item,
+                "pos",
+                reading.part_of_speech.map(|pos| pos.name()),
+            );
+            set_option(&reading_item, "case", reading.case.map(|case| case.name()));
+            set_option(
+                &reading_item,
+                "number",
+                reading.number.map(|number| number.name()),
+            );
+            set_option(
+                &reading_item,
+                "person",
+                reading.person.map(|person| person.name()),
+            );
+            set_option(
+                &reading_item,
+                "tense",
+                reading.tense.map(|tense| tense.name()),
+            );
+            set_option(&reading_item, "mood", reading.mood.map(|mood| mood.name()));
+            set_option(
+                &reading_item,
+                "voice",
+                reading.voice.map(|voice| voice.name()),
+            );
+            set(
+                &reading_item,
+                "polarity",
+                JsValue::from(reading.polarity.name()),
+            );
+            readings.push(&reading_item);
+        }
+        set(&item, "readings", readings.into());
+        token_items.push(&item);
+    }
+    set(&obj, "tokens", token_items.into());
+
+    obj
+}
+
+fn set(obj: &js_sys::Object, key: &str, value: JsValue) {
+    let _ = js_sys::Reflect::set(obj, &JsValue::from(key), &value);
+}
+
+fn set_option<T: Into<JsValue>>(obj: &js_sys::Object, key: &str, value: Option<T>) {
+    match value {
+        Some(value) => set(obj, key, value.into()),
+        None => set(obj, key, JsValue::NULL),
+    }
 }
 
 /// One-shot: returns a JavaScript object that bundles a full spell-check
