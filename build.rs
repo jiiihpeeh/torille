@@ -36,6 +36,9 @@ use front_coded::{
 };
 use sanalista::{generate, push_blob_string};
 
+#[path = "src/rejected.rs"]
+mod rejected;
+
 fn main() {
     let manifest = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR");
     let data = Path::new(&manifest).join("data/nykysuomensanalista.csv");

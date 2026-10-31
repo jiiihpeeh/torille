@@ -462,6 +462,28 @@ mod tests {
         assert!(matches!(check(""), CheckOutcome::Unknown));
     }
 
+    /// A sanalista row the build script rejects must not be reachable as a
+    /// lemma, an inflected form, or a suggestion.
+    #[test]
+    fn a_rejected_dictionary_row_is_not_a_word() {
+        for word in ["viti", "vitejä", "vitinsä", "videikseen"] {
+            assert!(
+                matches!(check(word), CheckOutcome::Unknown),
+                "{word} should be unknown"
+            );
+            assert!(
+                is_known_word_fast(word).is_none(),
+                "{word} should miss the fast path"
+            );
+        }
+        assert!(
+            !suggest("viti", 8, 2)
+                .iter()
+                .any(|candidate| candidate == "viti"),
+            "a rejected row must not be suggested"
+        );
+    }
+
     /// `suggest` returns candidates within `max_distance` for a typo, ranked
     /// by distance.
     #[test]

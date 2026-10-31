@@ -251,7 +251,7 @@ pub(super) fn parse_rows(text: &str) -> Vec<Row<'_>> {
         let mut f = line.split('\t');
         let Some(word) = f.next() else { continue };
         let word = word.trim();
-        if word.is_empty() {
+        if word.is_empty() || crate::rejected::contains(word) {
             continue;
         }
         out.push(Row {

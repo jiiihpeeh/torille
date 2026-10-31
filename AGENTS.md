@@ -307,6 +307,11 @@ is gitignored and generated.
   the top. Regenerate, or fix `grammar/` / `expand/inflect.rs`. Generated-module
   lint noise is scoped with one `#[allow(...)]` on `mod nominals;` in
   `expand/mod.rs`; hand-written code is warning-free.
+- **Rejected dictionary rows.** `build.rs`'s `REJECTED_LEMMAS` is the one place
+  a sanalista row can be removed outright. It is filtered from the lexicon blob,
+  the fast form set, and the stem maps, so the row and its paradigm disappear
+  from `check`, `suggest`, and the wasm. Keep the list small, documented, and
+  regenerate the precomputed blobs after changing it.
 - **Plain vs offered.** A `Repaired`/`Guessed` form is accepted as a word but
   must never reach the suggestion set. `tests/catalogue.rs` pins this
   (`a_repaired_form_is_not_suggestible`,

@@ -54,6 +54,9 @@ pub(super) fn emit_front_coded_set(csv_path: &Path, blob_path: &Path) {
         let mut cols = line.split('\t');
         let form = cols.next().unwrap_or(""); // 1: form
         let lemma = cols.next().unwrap_or(""); // 2: lemma
+        if crate::rejected::contains(lemma) {
+            continue;
+        }
         let case = cols.next().unwrap_or(""); // 3: case
         let number = cols.next().unwrap_or(""); // 4: number
         let possessive = cols.next().unwrap_or(""); // 5: possessive
@@ -242,6 +245,9 @@ pub(super) fn emit_stem_map(csv_path: &Path, blob_path: &Path) {
         let Some((stem, base)) = line.split_once('\t') else {
             continue;
         };
+        if crate::rejected::contains(base) {
+            continue;
+        }
         buckets
             .entry(stem.to_string())
             .or_default()
