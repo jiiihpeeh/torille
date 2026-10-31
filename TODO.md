@@ -31,7 +31,9 @@ class-engine round and are kept only where the item is still open.
 
   The `33*D`/`33*J` and `41*C`/`41*I` rows are the documented plural-only
   caveat: `data/kotus_nomines.sqlite` marks the longer spellings `both` and the
-  short, Wiktionary/Kielitoimisto spellings `omorfi`. Verify against Wiktionary
+  short, Wiktionary/Kielitoimisto spellings `omorfi`. For `näkimet`, en.wiktionary
+  gives `näkimissä`, `näkimittä`, `näkimiltä` and the other short forms, and
+  rejects the oracle's `näkimkemittä` family. Verify against Wiktionary
   before changing those classes. `34*C` and `51` need the same external check;
   their expected forms look like oracle artifacts rather than engine errors.
 

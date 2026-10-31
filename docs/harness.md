@@ -449,8 +449,10 @@ remaining defects are clustered:
 The plural-only `33*D`/`33*J` and `41*C`/`41*I` rows are the documented caveat:
 the SQLite oracle marks the longer spellings `both` and the short
 Wiktionary/Kielitoimisto spellings `omorfi` (`antimet` -> `antimissa`/`antimitta`
-not `antimemissa`; `valjaat` -> `valjaissa`/`valjaitta` not `valjaaissa`). Do not
-"fix" those against the oracle. `34*C` and `51` need the same external check;
+not `antimemissa`; `valjaat` -> `valjaissa`/`valjaitta` not `valjaaissa`;
+`näkimet` -> `näkimissä`/`näkimittä`/`näkimiltä`, not the oracle's
+`näkimkemittä` family). Do not "fix" those against the oracle. `34*C` and `51`
+need the same external check;
 their expected forms look like oracle artifacts rather than engine errors
 (`liittoutumattomani` is the normal possessive, not `liittoutumatonni`).
 
