@@ -33,7 +33,9 @@ class-engine round and are kept only where the item is still open.
   caveat: `data/kotus_nomines.sqlite` marks the longer spellings `both` and the
   short, Wiktionary/Kielitoimisto spellings `omorfi`. For `näkimet`, en.wiktionary
   gives `näkimissä`, `näkimittä`, `näkimiltä` and the other short forms, and
-  rejects the oracle's `näkimkemittä` family. Verify against Wiktionary
+  rejects the oracle's `näkimkemittä` family. The same page gives `antimet`'s
+  possessive column as `antimieni`, `antimistani`, `antimissani`, not
+  `antimemieni`. Verify against Wiktionary
   before changing those classes. `34*C` and `51` need the same external check;
   their expected forms look like oracle artifacts rather than engine errors.
 

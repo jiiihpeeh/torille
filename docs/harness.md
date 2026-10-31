@@ -451,7 +451,9 @@ the SQLite oracle marks the longer spellings `both` and the short
 Wiktionary/Kielitoimisto spellings `omorfi` (`antimet` -> `antimissa`/`antimitta`
 not `antimemissa`; `valjaat` -> `valjaissa`/`valjaitta` not `valjaaissa`;
 `näkimet` -> `näkimissä`/`näkimittä`/`näkimiltä`, not the oracle's
-`näkimkemittä` family). Do not "fix" those against the oracle. `34*C` and `51`
+`näkimkemittä` family; `antimet` possessives -> `antimieni`/`antimistani`/
+`antimissani`, not `antimemieni`). Do not "fix" those against the oracle.
+`34*C` and `51`
 need the same external check;
 their expected forms look like oracle artifacts rather than engine errors
 (`liittoutumattomani` is the normal possessive, not `liittoutumatonni`).
