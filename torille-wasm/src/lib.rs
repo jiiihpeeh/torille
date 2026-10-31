@@ -417,6 +417,7 @@ pub fn analyze_misspells(idx: u32, text: &str) -> js_sys::Array {
         let _ = js_sys::Reflect::set(&obj, &"word".into(), &JsValue::from(hit.word));
         let _ = js_sys::Reflect::set(&obj, &"start".into(), &JsValue::from(hit.start as u32));
         let _ = js_sys::Reflect::set(&obj, &"end".into(), &JsValue::from(hit.end as u32));
+        let _ = js_sys::Reflect::set(&obj, &"caseOnly".into(), &JsValue::from(hit.case_only));
         out.push(&obj);
     }
     out

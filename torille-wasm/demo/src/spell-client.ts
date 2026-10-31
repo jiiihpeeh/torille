@@ -577,6 +577,7 @@ export interface Hit {
 /** Just the word, for the underlay renderer's {@link Misspell[]} list. */
 export interface Misspell {
   word: string;
+  caseOnly?: boolean;
 }
 
 export function createState(): Promise<number> {
@@ -642,7 +643,7 @@ export function analyzeMisspellsAsync(
     word: string, suggestions: string[],
     max: number, maxDistance: number,
   ) => void,
-): Promise<{ word: string; start: number; end: number }[]> {
+): Promise<{ word: string; start: number; end: number; caseOnly?: boolean }[]> {
   return new Promise((resolve, reject) => {
     const id = nextId++;
     if (onSuggestionReady) {

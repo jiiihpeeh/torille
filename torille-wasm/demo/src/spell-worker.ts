@@ -635,10 +635,10 @@ function handleAnalyzeMisspells(
              `id=${msg.id} ${String(err)}`);
     return;
   }
-  const hits: { word: string; start: number; end: number }[] = [];
+  const hits: { word: string; start: number; end: number; caseOnly?: boolean }[] = [];
   for (let i = 0; i < arr.length; i++) {
-    const h = arr[i] as { word: string; start: number; end: number };
-    hits.push({ word: h.word, start: h.start, end: h.end });
+    const h = arr[i] as { word: string; start: number; end: number; caseOnly?: boolean };
+    hits.push({ word: h.word, start: h.start, end: h.end, caseOnly: h.caseOnly });
   }
   const dt = (performance.now() - t0).toFixed(2);
   if (TORILLE_DEBUG) dbg('wasm:analyze-misspells', `id=${msg.id}`,

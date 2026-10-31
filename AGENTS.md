@@ -60,6 +60,7 @@ src/
     known/            lemma set, compound detector, stem probes, lemma suggestions
       mod.rs, compound.rs, derived.rs, stems.rs, lemmas.rs
     candidates.rs     `suggest`, `suggest_detailed`, the pipeline
+    casing.rs         suggestion case restoration + case-validity policy
     state.rs          `check_fast`, `suggest_with_state`
     levenshtein.rs    bounded edit distance + keyboard tie-break
   grammar/            THE TYPE-DRIVEN (heuristic) ENGINE

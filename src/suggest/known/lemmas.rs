@@ -1,5 +1,6 @@
 //! Lemma-only suggestion and warm-up helpers.
 
+use crate::suggest::casing::match_case;
 use crate::suggest::levenshtein::levenshtein;
 use crate::tags::PartOfSpeech;
 
@@ -33,7 +34,7 @@ pub fn suggest_over_lemmas(word: &str, max_n: usize, max_distance: usize) -> Vec
     // popup uses this lemma-only path too, so it must see the same curated
     // pair (`alottanutkaan` -> `aloittanutkaan`) as the full ranker.
     if let Some((right, _lemma)) = crate::suggest::candidates::reported_correction(&lower) {
-        return vec![right.to_string()];
+        return vec![match_case(word, right)];
     }
     let word_chars_len = lower.chars().count();
     let cap = max_distance.saturating_add(1);
@@ -83,7 +84,7 @@ pub fn suggest_over_lemmas(word: &str, max_n: usize, max_distance: usize) -> Vec
         out.insert(0, host);
     }
     out.truncate(max_n);
-    out
+    out.into_iter().map(|s| match_case(word, &s)).collect()
 }
 
 /// The s-less host of a colloquial `-s` word, when that host is itself a

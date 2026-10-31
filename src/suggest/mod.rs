@@ -47,11 +47,13 @@
 use crate::expand::{BasesReport, find_bases_for_check};
 
 mod candidates;
+mod casing;
 mod known;
 mod levenshtein;
 mod state;
 
 pub use candidates::{suggest, suggest_detailed, suggest_with_pipeline};
+pub use casing::case_is_valid;
 pub(crate) use known::{
     is_content_head, is_known_compound_dp, is_known_compound_fast, is_known_short_compound,
 };
@@ -1005,13 +1007,14 @@ mod tests {
     /// when the input is sentence-initial `Baromeetteri`,
     /// and the case-stable edit-distance check in
     /// [`suggest_detailed`] removes the bonus edit cost the
-    /// capital `B` would otherwise add.
+    /// capital `B` would otherwise add. The returned suggestion keeps the
+    /// input's capital (`Barometri`), not the lexicon spelling.
     #[test]
     fn known_word_suggests_modern_spelling() {
         let s = suggest("Baromeetteri", 5, 3);
         assert_eq!(
             s.first().map(|s| s.as_str()),
-            Some("barometri"),
+            Some("Barometri"),
             "expected modern spelling to top the suggestions, got {:?}",
             s,
         );
@@ -1339,6 +1342,18 @@ mod tests {
     }
 
     #[test]
+    fn suggestions_keep_the_input_capitalization() {
+        assert_eq!(
+            suggest("Tlao", 5, 2).first().map(String::as_str),
+            Some("Talo")
+        );
+        assert_eq!(
+            suggest("TALO", 5, 2).first().map(String::as_str),
+            Some("TALO")
+        );
+    }
+
+    #[test]
     fn maiskauttelee_suggests_the_frequentative() {
         assert_eq!(
             suggest("maiskauttelee", 8, 2).first().map(String::as_str),
@@ -1550,8 +1565,8 @@ mod tests {
         // fallback.
         let r = suggest_with_state("Heslinki", 5, 2, &pn);
         assert!(
-            r.iter().any(|s| s == "helsinki"),
-            "expected 'helsinki' fallback for 'Heslinki', got {r:?}"
+            r.iter().any(|s| s == "Helsinki"),
+            "expected 'Helsinki' fallback for 'Heslinki', got {r:?}"
         );
     }
 
@@ -1616,7 +1631,10 @@ mod tests {
     /// `kiväriään` should lead with `kivääriään`, not `kiveriään`.
     #[test]
     fn a_missing_doubled_vowel_wins_the_tie() {
-        assert_eq!(suggest("kiväriään", 5, 2).first().map(String::as_str), Some("kivääriään"));
+        assert_eq!(
+            suggest("kiväriään", 5, 2).first().map(String::as_str),
+            Some("kivääriään")
+        );
     }
 
     /// The lemma-only popup path must see the curated clitic answer too.

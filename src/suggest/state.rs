@@ -7,6 +7,7 @@ use std::collections::HashSet;
 
 use crate::expand::{BasesReport, find_any_base_with};
 
+use super::casing::match_case;
 use super::known::{
     catalogue, hyphenated_lexeme, is_known_compound, is_known_word, is_known_word_no_compound,
     lemma_set, lexicon,
@@ -186,5 +187,9 @@ pub fn suggest_with_state(
         }
     }
     merged.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| a.1.cmp(&b.1)));
-    merged.into_iter().take(max_n).map(|(_, s)| s).collect()
+    merged
+        .into_iter()
+        .take(max_n)
+        .map(|(_, s)| match_case(word, &s))
+        .collect()
 }

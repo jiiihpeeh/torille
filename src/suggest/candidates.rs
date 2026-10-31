@@ -8,11 +8,20 @@ use crate::expand::{find_any_base_with, find_bases_with_form_filter};
 use crate::rerank::{Pipeline, Suggestion, SuggestionSource};
 use crate::tags::Confidence;
 
+use super::casing::match_case;
 use super::known::{
     catalogue, gradation_plural_alternate, is_known_compound_fast, is_known_word_fast,
     is_known_word_no_compound, lexicon, s_less_host,
 };
 use super::levenshtein::{keyboard_bonus, levenshtein};
+
+/// Restore the input's capitalization on every returned suggestion.
+fn apply_input_case(input: &str, mut suggestions: Vec<Suggestion>) -> Vec<Suggestion> {
+    for suggestion in &mut suggestions {
+        suggestion.word = match_case(input, &suggestion.word);
+    }
+    suggestions
+}
 
 /// A missing doubled vowel (`kiväriään` for `kivääriään`) is a more
 /// specific typo than a same-distance substitution, so it wins the tie.
@@ -182,18 +191,21 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
         // `Suggestion::edit_distance` must not be told that a four-edit repair
         // is an exact match.
         let edit_distance = levenshtein(&word, right, usize::MAX);
-        return vec![Suggestion {
-            word: right.to_string(),
-            edit_distance,
-            lemma: Some(lemma.to_string()),
-            source: SuggestionSource::GeneratedForm {
-                lemma: lemma.to_string(),
-            },
-            readings: Vec::new(),
-            confidence: Confidence::Plain,
-            original_rank: 0,
-            existing_score: 1.0 / (1.0 + edit_distance as f32) + 0.5,
-        }];
+        return apply_input_case(
+            original,
+            vec![Suggestion {
+                word: right.to_string(),
+                edit_distance,
+                lemma: Some(lemma.to_string()),
+                source: SuggestionSource::GeneratedForm {
+                    lemma: lemma.to_string(),
+                },
+                readings: Vec::new(),
+                confidence: Confidence::Plain,
+                original_rank: 0,
+                existing_score: 1.0 / (1.0 + edit_distance as f32) + 0.5,
+            }],
+        );
     }
     // A correctly written compound needs no correction. Short-circuit before
     // the head-1 walk: `kahvikekkereitä` takes ~30 s there. Use the fast
@@ -216,16 +228,19 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     {
         let edit_distance = levenshtein(&word, &right, usize::MAX);
         if edit_distance <= max_distance {
-            return vec![Suggestion {
-                word: right.clone(),
-                edit_distance,
-                lemma: Some(right.clone()),
-                source: SuggestionSource::GeneratedForm { lemma: right },
-                readings: Vec::new(),
-                confidence: Confidence::Plain,
-                original_rank: 0,
-                existing_score: 1.0 / (1.0 + edit_distance as f32) + 0.5,
-            }];
+            return apply_input_case(
+                original,
+                vec![Suggestion {
+                    word: right.clone(),
+                    edit_distance,
+                    lemma: Some(right.clone()),
+                    source: SuggestionSource::GeneratedForm { lemma: right },
+                    readings: Vec::new(),
+                    confidence: Confidence::Plain,
+                    original_rank: 0,
+                    existing_score: 1.0 / (1.0 + edit_distance as f32) + 0.5,
+                }],
+            );
         }
     }
     // An archaic `-in` genitive plural plus a possessive suffix is far
@@ -237,16 +252,19 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     {
         let edit_distance = levenshtein(&word, &right, usize::MAX);
         if edit_distance <= max_distance {
-            return vec![Suggestion {
-                word: right,
-                edit_distance,
-                lemma: Some(lemma.clone()),
-                source: SuggestionSource::GeneratedForm { lemma },
-                readings: Vec::new(),
-                confidence: Confidence::Plain,
-                original_rank: 0,
-                existing_score: 1.0 / (1.0 + edit_distance as f32) + 0.5,
-            }];
+            return apply_input_case(
+                original,
+                vec![Suggestion {
+                    word: right,
+                    edit_distance,
+                    lemma: Some(lemma.clone()),
+                    source: SuggestionSource::GeneratedForm { lemma },
+                    readings: Vec::new(),
+                    confidence: Confidence::Plain,
+                    original_rank: 0,
+                    existing_score: 1.0 / (1.0 + edit_distance as f32) + 0.5,
+                }],
+            );
         }
     }
     // A clitic attaches to the whole inflected form, not to a lemma: the
@@ -270,7 +288,7 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
                 // A real clitic form with a known host: the cliticised
                 // reading is the only sensible one, and skipping the full
                 // search is what makes this fast.
-                return out;
+                return apply_input_case(original, out);
             }
             // The host is itself a misspelling: keep the normal search for
             // its own corrections (`metafysiikko` -> `metafyysikko`) and
@@ -601,7 +619,7 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     }
 
     candidates.truncate(max_n);
-    candidates
+    apply_input_case(original, candidates)
 }
 
 /// Add the other spelling of a compound whose hyphen is optional-looking:

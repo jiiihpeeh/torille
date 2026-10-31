@@ -43,6 +43,8 @@ export interface MisspellWithRange {
   word: string;
   start: number;
   end: number;
+  /** Known word, wrong capitalization: do not dispatch the slow check. */
+  caseOnly?: boolean;
 }
 
 export type { MisspellRange as MisspellByteRange };
@@ -188,7 +190,12 @@ export async function findMisspellings(
       stateIdx, window, /* max */ 8, /* maxDistance */ 3,
     );
     for (const h of windowHits) {
-      hits.push({ word: h.word, start: h.start + byteBase, end: h.end + byteBase });
+      hits.push({
+        word: h.word,
+        start: h.start + byteBase,
+        end: h.end + byteBase,
+        caseOnly: h.caseOnly,
+      });
     }
     byteBase += encoder.encode(window).length;
   }
@@ -223,9 +230,16 @@ export async function findMisspellings(
     }
   }
 
-  const hintFor = new Map<string, { start: number; end: number }>();
+  const hintFor = new Map<
+    string,
+    { start: number; end: number; caseOnly?: boolean }
+  >();
   for (const h of hits) {
-    hintFor.set(h.word, { start: h.start, end: h.end });
+    hintFor.set(h.word, {
+      start: h.start,
+      end: h.end,
+      caseOnly: h.caseOnly,
+    });
   }
   const words = Array.from(hintFor.keys());
 
@@ -246,9 +260,13 @@ export async function findMisspellings(
     const range = hintFor.get(word)!;
     const key = `${word}|${range.start}|${range.end}`;
     callbacks?.onMisspellCandidate?.({
-      word, start: range.start, end: range.end,
+      word, start: range.start, end: range.end, caseOnly: range.caseOnly,
     });
-    if (prevByKey.has(key)) {
+    if (range.caseOnly) {
+      // The slow check lowercases, so it would demote a case-only flag.
+      // The capitalization decision is final here.
+      reused++;
+    } else if (prevByKey.has(key)) {
       // Unchanged from the previous render: don't re-run the
       // slow check (the previous render already demoted or
       // confirmed it; either way the answer is settled).
@@ -352,7 +370,7 @@ export async function findMisspellings(
       }
     });
   return {
-    hits: hits.map((h) => ({ word: h.word })),
+    hits: hits.map((h) => ({ word: h.word, caseOnly: h.caseOnly })),
     drained,
   };
 }

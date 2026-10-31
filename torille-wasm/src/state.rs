@@ -58,6 +58,9 @@ pub struct MisspellRange {
     pub word: String,
     pub start: usize,
     pub end: usize,
+    /// The word is a known word, but its capitalization is wrong. The
+    /// slow `check-known` pass must not demote it: that pass lowercases.
+    pub case_only: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -81,6 +84,21 @@ pub struct TextAreaState {
 /// thousands of distinct tokens; clearing keeps the wasm heap bounded and
 /// costs only one re-check of the words still on screen.
 const KNOWN_CACHE_LIMIT: usize = 8192;
+
+/// Does the surface's capitalization fit the lexicon decision?
+///
+/// `known` is the lowercase-form answer. A lowercase or mixed-case word is
+/// accepted only when the lowercase form is a known common word; a
+/// title-case word additionally needs a sentence start or a proper name.
+fn case_accepts(word: &str, known: bool, sentence_initial: bool, proper: bool) -> bool {
+    let first_upper = word.chars().next().is_some_and(char::is_uppercase);
+    let cased = if first_upper {
+        torille::suggest::case_is_valid(word, sentence_initial, proper)
+    } else {
+        known
+    };
+    cased && (known || proper)
+}
 
 impl TextAreaState {
     pub fn new() -> Self {
@@ -144,7 +162,10 @@ impl TextAreaState {
                     continue;
                 };
                 let long_enough = lower.chars().count() >= 2;
-                let not_in_lexicon = !torille::suggest::is_lemma(&lower);
+                // A capitalized derived/common form (`Helsinkiläinen` of
+                // `helsinkiläinen`) is not evidence of a name; only a
+                // lowercase form the lexicon does not know is.
+                let not_in_lexicon = torille::suggest::is_known_word_no_compound(&lower).is_none();
                 let is_proper = tok.is_capitalised()
                     && long_enough
                     && not_in_lexicon
@@ -196,6 +217,7 @@ impl TextAreaState {
     pub fn find_misspells(&mut self, text: &str) -> Vec<MisspellRange> {
         let mut out = Vec::new();
         let tokens = torille::tokenise::tokenise(text);
+        let sentence_initial = torille::tokenise::annotate_sentence_initial(&tokens);
         let n = tokens.len();
         let mut i = 0;
         while i < n {
@@ -234,10 +256,11 @@ impl TextAreaState {
                 self.known.insert(lower.clone(), known);
                 known
             };
-            if self.proper_nouns.contains(&lower)
-                || torille::expand::proper_names::contains_capitalised(&tok.text)
-                || known
-            {
+            let proper = self.proper_nouns.contains(&lower)
+                || torille::expand::proper_names::contains_capitalised(&tok.text);
+            let recognised = known || proper;
+            let case_ok = case_accepts(&tok.text, known, sentence_initial[i], proper);
+            if recognised && case_ok {
                 i += 1;
                 continue;
             }
@@ -245,6 +268,7 @@ impl TextAreaState {
                 word: tok.text.clone(),
                 start: tok.start,
                 end: tok.end,
+                case_only: recognised && !case_ok,
             });
             i += 1;
         }
@@ -273,6 +297,7 @@ impl TextAreaState {
     pub fn analyze(&self, text: &str, max_suggestions: usize) -> Vec<Hit> {
         let mut out = Vec::new();
         let tokens = torille::tokenise::tokenise(text);
+        let sentence_initial = torille::tokenise::annotate_sentence_initial(&tokens);
         let n = tokens.len();
 
         let mut i = 0;
@@ -292,11 +317,10 @@ impl TextAreaState {
                 .lower_word()
                 .expect("is_word implies lower_word is Some");
 
-            // check_fast covers lemma + proper-noun; falls through
-            // to find_bases_with for inflected forms.
-            if torille::expand::proper_names::contains_capitalised(&tok.text)
-                || torille::suggest::check_fast(&lower, &self.proper_nouns).is_some()
-            {
+            let known = !matches!(check_normal_fast(&lower, false), NormalizedOutcome::Unknown);
+            let proper = self.proper_nouns.contains(&lower)
+                || torille::expand::proper_names::contains_capitalised(&tok.text);
+            if case_accepts(&tok.text, known, sentence_initial[i], proper) {
                 i += 1;
                 continue;
             }
@@ -481,6 +505,71 @@ mod tests {
         assert!(!st.knows_proper_noun("the"));
         let hits = st.find_misspells("this the");
         assert_eq!(hits.len(), 2, "expected both to be flagged, got {hits:?}");
+    }
+
+    #[test]
+    fn title_case_common_words_are_flagged_mid_sentence() {
+        let mut st = TextAreaState::new();
+        let hits = st.find_misspells("Talo on kaunis ja Koira istuu.");
+        // `Talo` starts a sentence and is fine; `Kissa` is a capitalized
+        // common noun mid-sentence.
+        assert!(
+            !hits.iter().any(|h| h.word == "Talo"),
+            "sentence-initial Talo must be accepted: {hits:?}"
+        );
+        let koira = hits
+            .iter()
+            .find(|h| h.word == "Koira")
+            .unwrap_or_else(|| panic!("mid-sentence Koira must be flagged: {hits:?}"));
+        assert!(koira.case_only, "Koira is a case-only misspelling");
+    }
+
+    #[test]
+    fn proper_names_keep_their_capital_and_lowercase_is_flagged() {
+        let mut st = TextAreaState::new();
+        let hits = st.find_misspells("Helsinki on kaupunki. Helsinki on iso.");
+        assert!(
+            !hits.iter().any(|h| h.word.starts_with("Helsinki")),
+            "proper Helsinki must be accepted: {hits:?}"
+        );
+        let hits = st.find_misspells("Helsinki on kaupunki. helsinki on iso.");
+        assert!(
+            hits.iter().any(|h| h.word == "helsinki"),
+            "lowercase helsinki must be flagged: {hits:?}"
+        );
+    }
+
+    #[test]
+    fn derived_place_adjectives_stay_lowercase() {
+        let mut st = TextAreaState::new();
+        let hits = st.find_misspells("helsinkiläinen on kiva ja Helsinkiläinen on kiva.");
+        assert!(
+            !hits.iter().any(|h| h.word == "helsinkiläinen"),
+            "lowercase derived adjective must be accepted: {hits:?}"
+        );
+        let capitalised = hits
+            .iter()
+            .find(|h| h.word == "Helsinkiläinen")
+            .unwrap_or_else(|| {
+                panic!("capitalized derived adjective mid-sentence must be flagged: {hits:?}")
+            });
+        assert!(
+            capitalised.case_only,
+            "the derived adjective is a case-only misspelling"
+        );
+    }
+
+    #[test]
+    fn capitalised_inen_surnames_are_not_case_errors() {
+        // `Ruotsalainen` is both a common adjective (`ruotsalainen`) and a
+        // surname in the embedded proper-name set. The capital is the name
+        // reading, not a capitalization mistake.
+        let mut st = TextAreaState::new();
+        let hits = st.find_misspells("Sami on täällä ja Ruotsalainen istuu.");
+        assert!(
+            hits.is_empty(),
+            "capitalised -inen surnames must not be case errors: {hits:?}"
+        );
     }
 
     #[test]
