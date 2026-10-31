@@ -35,7 +35,9 @@ class-engine round and are kept only where the item is still open.
   gives `näkimissä`, `näkimittä`, `näkimiltä` and the other short forms, and
   rejects the oracle's `näkimkemittä` family. The same page gives `antimet`'s
   possessive column as `antimieni`, `antimistani`, `antimissani`, not
-  `antimemieni`. Verify against Wiktionary
+  `antimemieni`. Wiktionary also gives `rattaat` as `rattaissa`/`rattaitta`
+  (not `rattaaissa`/`rattaaitta`), and `omakuva` has two valid declensions
+  (type 51 `omatkuvat` and type 10 `omakuvat`). Verify against Wiktionary
   before changing those classes. `34*C` and `51` need the same external check;
   their expected forms look like oracle artifacts rather than engine errors.
 

@@ -452,7 +452,10 @@ Wiktionary/Kielitoimisto spellings `omorfi` (`antimet` -> `antimissa`/`antimitta
 not `antimemissa`; `valjaat` -> `valjaissa`/`valjaitta` not `valjaaissa`;
 `näkimet` -> `näkimissä`/`näkimittä`/`näkimiltä`, not the oracle's
 `näkimkemittä` family; `antimet` possessives -> `antimieni`/`antimistani`/
-`antimissani`, not `antimemieni`). Do not "fix" those against the oracle.
+`antimissani`, not `antimemieni`; `rattaat` -> `rattaissa`/`rattaitta`, not
+`rattaaissa`/`rattaaitta`). `omakuva` is a dual-class word: type 51 gives
+`omatkuvat`, type 10 gives `omakuvat`, so the engine and the oracle are both
+right in different paradigms. Do not "fix" these against the oracle.
 `34*C` and `51`
 need the same external check;
 their expected forms look like oracle artifacts rather than engine errors
