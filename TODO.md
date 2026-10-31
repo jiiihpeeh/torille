@@ -9,37 +9,41 @@ Ordered by user-facing impact, which is not the same as gap size: an engine that
 offers a non-word has a user-visible bug, and an engine that is merely silent
 does not. The first open item is therefore the precision one.
 
+**Current full 5-lemma noun report (2026-10-31):** 96,221 confirmed, 8,679
+missing, 564 illegal, 0 mistagged, 722 unsupported, 0 not-plain; recall 91.7%,
+illegal rate 0.6%. The older per-item counts below predate the current
+class-engine round and are kept only where the item is still open.
+
 - [ ] **Stop offering whole classes built on the wrong stem**
-  **Known oracle caveat:** the lexicon report's plural-only rows are not always
-  right. Wiktionary, Kielitoimisto and live Voikko confirm `antimet` ->
-  `antimissa`/`antimitta`/`antimien` and `valjaat` ->
-  `valjaissa`/`valjaitta`/`valjaiden`, while `data/kotus_nomines.sqlite` marks
-  the longer `antimemissa`/`valjaaissa` spellings `both` and the correct short
-  ones `omorfi`. Do not "fix" the `33*D`/`33*J` or 41-plurative paradigms
-  against those rows; verify them against Wiktionary first.
+  **564 `illegal` forms across the current 5-lemma sample**, down from 15,431
+  after the class-engine rounds. The remaining defects are clustered rather
+  than spread across 118 classes:
 
-  The original sweep: **15431 `illegal` forms across 118 classes, every one of
-  them `Plain`** — the
-  worst of it by rate is class `50` at 441 illegal against 45 confirmed, then
-  `33*C` (352/52), `33*F` (274/84), `33*K` (464/164) and `9*D` (367/133). 391
-  lemmas carry the lot, so this is a stem defect per class repeated over every
-  case, not a scattering.
+  | class | illegal | confirmed | note |
+  |---|---|---|---|
+  | `51` | 141 | 628 | compound oracle disagrees about head/tail order |
+  | `41*C` / `41*I` | 88 / 88 | 651 / 637 | plural-only `-aat` rows; oracle caveat |
+  | `33*D` / `33*J` | 76 / 76 | 319 / 627 | plural-only `-imet` rows; oracle caveat |
+  | `34*C` | 25 | 795 | possessive oracle expects the nominative stem |
+  | `32*D` | 21 | 3 | rare `ien` paradigm |
+  | `7*F` | 10 | 902 | class-5 twin of a native 7*F word |
+  | `26` | 5 | 855 | class-5 twin of `kuori` |
 
-  Four mechanisms, and only the last is the one that was on the list before: a
-  gradation applied in cells the class does not have it in (`kuljetin` →
-  `kuljettikimiensa` for `kuljetintensa`, which is the `33*` and `41*` family);
-  a gradation applied one sound off its target (`mätäs` → `mättäattänsä` for
-  `mättäättään`, `penger` → `penkelittänsä` for `penkereittään`); a class's
-  linking vowel landing inside a compound's tail (`saapumisaika` →
-  `saapumisaiattaan` for `saapumisajattaan`, `laiskamato` inflected as one stem,
-  which is the `50` and `9*D` family and is almost entirely compounds); and the
-  doubled vowel, still on 1741 forms over 86 classes (`allergikkooihin`
-  alongside the correct `allergikoihin`).
+  The `33*D`/`33*J` and `41*C`/`41*I` rows are the documented plural-only
+  caveat: `data/kotus_nomines.sqlite` marks the longer spellings `both` and the
+  short, Wiktionary/Kielitoimisto spellings `omorfi`. Verify against Wiktionary
+  before changing those classes. `34*C` and `51` need the same external check;
+  their expected forms look like oracle artifacts rather than engine errors.
 
-  Class 27 (`käsi`) is separate and is the one no coverage-only test can see:
-  the fixed stem `käe` is applied across the whole paradigm when the word is
-  `käsi : käden`, and `käessä`/`käistä` are real words — Voikko reads them as
-  forms of *käki*, the magpie. `src/grammar/noun.rs`.
+  A recent round removed the singular translative possessive columns that hung
+  off the wrong stem in classes `24`, `31`, and `36` (`kuorikseen` for
+  `kuorekseen`, `haaksikseen` for `haahdekseen`, `vanhimmikseen` for
+  `vanhimmakseen`). Classes 24, 31, and 36 now report zero illegal in the
+  sampled sweep; class 26 still shows five in the full sample. The remaining
+  `7*F` and `26` rows come from native words that also carry a class-5
+  dictionary row; the class-5 nominative possessive uses the i-stem where the
+  native row uses the e-stem (`vyyhtini` for `vyyhteni`, `kuorini` for
+  `kuoreni`).
 
   Evidence: `docs/harness.md` → Known defects → C.
 

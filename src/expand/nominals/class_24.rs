@@ -19,7 +19,7 @@
 
 use crate::tags::{Case, Form, Number, PartOfSpeech, Possessive};
 
-use super::utility::{Builder, Decl, PERSONAL, cell, e_stem, nominal_tags, plain, possessed};
+use super::utility::{Builder, Decl, PERSONAL, cell, e_stem, nominal_tags, plain};
 
 pub const CLASS: &str = "24";
 
@@ -94,12 +94,9 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
 
     entries.extend([
         cell(Case::Essive, sg, &estem, ["na", "nä"], true),
-        // The translative's possessives sit on the `i`-stem: kuusikseen. The
-        // e-stem spelling (kuusekseen) is offered too, and it is the one the
-        // reference confirms (`merekseen`, `kuusekseen`).
-        cell(Case::Translative, sg, &estem, ["ksi", "ksi"], true)
-            .base_on(format!("{istem}kse"), ["", ""]),
-        possessed(Case::Translative, sg, format!("{estem}kse"), true),
+        // The translative's possessives stay on the e-stem: kuusekseen,
+        // merekseen. The i-stem spelling is not part of the paradigm.
+        cell(Case::Translative, sg, &estem, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
         cell(Case::Illative, sg, &estem, ["en", "en"], false).on_ending(["e", "e"]),
         cell(Case::Inessive, sg, &estem, ["ssa", "ssä"], true),
         cell(Case::Elative, sg, &estem, ["sta", "stä"], true),
@@ -231,19 +228,22 @@ mod tests {
         assert!(w.contains(&"mereksi".to_string()));
     }
 
-    /// The translative's two columns, of which the reference confirms the
-    /// `e`-stem one (`merekseen`, `merekseeni`).
+    /// The singular translative and its possessives both ride the `e`-stem.
+    /// The plural keeps the `i`-stem (`merikseen`), so the check is number-
+    /// specific.
     #[test]
-    fn the_translative_offers_both_stems() {
-        let w = words("meri");
-        assert!(
-            w.contains(&"mereksi".to_string()),
-            "the bare form is the e-stem's"
-        );
-        assert!(
-            w.contains(&"merikseen".to_string()),
-            "the i-stem's third person"
-        );
-        assert!(w.contains(&"merekseen".to_string()), "and the e-stem's");
+    fn the_singular_translative_uses_the_e_stem() {
+        let singular: Vec<String> = inflect("meri", true)
+            .into_iter()
+            .filter(|f| {
+                f.readings.iter().any(|r| {
+                    r.case == Some(Case::Translative) && r.number == Some(Number::Singular)
+                })
+            })
+            .map(|f| f.word)
+            .collect();
+        assert!(singular.contains(&"mereksi".to_string()));
+        assert!(singular.contains(&"merekseen".to_string()));
+        assert!(!singular.contains(&"merikseen".to_string()));
     }
 }

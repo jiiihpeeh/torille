@@ -5,17 +5,14 @@
 //! essive/illative stem `haahte` and partitive stem `haaht` (part `haahta`);
 //! the plural sits on the lemma (`haaksien`, `haaksia`).
 //!
-//! This is the first port that needs a possessive column with no bare form of
-//! its own. The singular translative's bare is `haahdeksi` while its possessives
-//! hang off the *lemma* stem (`haaksikseen`), which is neither the cell's stem
-//! nor its base, so [`possessed`] says the column on its own rather than
-//! smuggling a bare form in beside it.
+//! The singular translative and its possessives both ride the `hde` stem:
+//! `haahdeksi` / `haahdekseen`.
 
 #![allow(dead_code)]
 
 use crate::tags::{Case, Form, Number, PartOfSpeech};
 
-use super::utility::{Builder, Decl, cell, nominal_tags, plain, possessed};
+use super::utility::{Builder, Decl, cell, nominal_tags, plain};
 
 pub const CLASS: &str = "31";
 
@@ -44,8 +41,6 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
             cell(Case::Partitive, sg, &p, ["a", "ä"], true),
             cell(Case::Essive, sg, &e, ["na", "nä"], true),
             cell(Case::Translative, sg, &w, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
-            // The translative's possessives sit on the lemma stem: haaksikseen.
-            possessed(Case::Translative, sg, format!("{s}kse"), true),
             cell(Case::Illative, sg, &e, ["en", "en"], false).on_ending("e"),
             cell(Case::Inessive, sg, &w, ["ssa", "ssä"], true),
             cell(Case::Elative, sg, &w, ["sta", "stä"], true),
@@ -91,5 +86,19 @@ mod tests {
         assert!(w.contains(&"haaksien".to_string()));
         assert!(w.contains(&"haaksia".to_string()));
         assert!(!w.contains(&"haahtten".to_string()));
+        // The singular translative and its possessives are on the `hde`
+        // stem; the plural keeps the lemma stem (`haaksikseen`).
+        let singular: Vec<String> = inflect("haaksi", true)
+            .into_iter()
+            .filter(|f| {
+                f.readings.iter().any(|r| {
+                    r.case == Some(crate::tags::Case::Translative)
+                        && r.number == Some(crate::tags::Number::Singular)
+                })
+            })
+            .map(|f| f.word)
+            .collect();
+        assert!(singular.contains(&"haahdekseen".to_string()));
+        assert!(!singular.contains(&"haaksikseen".to_string()));
     }
 }

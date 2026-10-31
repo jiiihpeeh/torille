@@ -295,12 +295,12 @@ python3 tools/report_by_class.py -n 5 -j 8 --split reports/classes
 python3 tools/summarize_class_report.py reports/noun-classes.json
 ```
 
-The numbers are from a 5-lemma sample of each of the 146 noun classes. Totals:
-**49685 confirmed, 21807 missing, 15431 illegal, 3348 mistagged, 1341
-unsupported, 0 not plain.** Recall — confirmed over confirmed plus missing — is
-**69.5%**, and the `illegal` rate is **31.1%** of confirmed. Ranking the classes
-by `illegal` count would be useless here (391 lemmas carry all 15431, and the
-largest classes are simply large), so the class table below is ranked by *rate*.
+The numbers are from a 5-lemma sample of each of the 146 noun classes.
+Current totals: **96,221 confirmed, 8,679 missing, 564 illegal, 0 mistagged,
+722 unsupported, 0 not plain.** Recall — confirmed over confirmed plus missing
+— is **91.7%**, and the `illegal` rate is **0.6%** of confirmed. Ranking the
+classes by `illegal` count would be useless here (the largest classes are
+simply large), so the class table below is ranked by *rate*.
 
 **Every example was checked against Voikko by hand before it was written down**,
 and two candidates that looked real in the report were not and are absent here:
@@ -430,70 +430,41 @@ average over the ten says more about class 1 than about the idea.
 
 ### C. Whole classes built on the wrong stem
 
-**15431 `illegal` forms across 118 classes**, every one of them `Plain`, which is
-what makes this the item with the worst user impact: these are offered as
-corrections. By rate, over the classes with at least 40 confirmed forms:
+**564 `illegal` forms in the current sample**, down from 15,431 after the
+class-engine rounds. Every one is still `Plain`, which is what makes this the
+item with the worst user impact: these are offered as corrections. The
+remaining defects are clustered:
 
-| rate | class | confirmed | illegal | what the engine says | for |
-|---|---|---|---|---|---|
-| 980% | `50` | 45 | 441 | `laiskamateittaan` | `laiskamadoittaan` |
-| 677% | `33*C` | 52 | 352 | `kuljettikimiensa` | `kuljetintensa` |
-| 326% | `33*F` | 84 | 274 | `liitikimiensä` | `liitimiensä` |
-| 283% | `33*K` | 164 | 464 | `kutistumiskertottaan` | `kutistumiskertoimettaan` |
-| 276% | `9*D` | 133 | 367 | `saapumisaiattaan` | `saapumisajattaan` |
-| 190% | `41*C` | 154 | 293 | `mättäattänsä` | `mättäättään` |
-| 183% | `41*J` | 137 | 251 | `kintaraidensa` | `kintaittensa` |
-| 180% | `49*G` | 70 | 126 | `penkelittänsä` | `penkereittään` |
-| 164% | `49*J` | 350 | 574 | `pientalittaan` | `pientareittaan` |
-| 157% | `41*E` | 346 | 544 | `hapasittaan` | `havaksittaan` |
+| rate | class | confirmed | illegal | note |
+|---|---|---|---|---|
+| 23.8% | `33*D` | 319 | 76 | plural-only `-imet`, oracle caveat |
+| 22.5% | `51` | 628 | 141 | compound oracle disagrees on head/tail |
+| 13.8% | `41*I` | 637 | 88 | plural-only `-aat`, oracle caveat |
+| 13.5% | `41*C` | 651 | 88 | plural-only `-aat`, oracle caveat |
+| 12.1% | `33*J` | 627 | 76 | plural-only `-imet`, oracle caveat |
+| 3.1% | `34*C` | 795 | 25 | nominative possessive oracle |
+| 1.1% | `7*F` | 902 | 10 | class-5 twin of a native 7*F word |
 
-Every row is the same shape of failure — the error is inside the stem, not the
-ending, so the triage table's before/after columns are empty for all of them,
-which is why these had to be found by reading the examples. And they reduce to
-**one dominant mechanism** with two smaller ones:
+The plural-only `33*D`/`33*J` and `41*C`/`41*I` rows are the documented caveat:
+the SQLite oracle marks the longer spellings `both` and the short
+Wiktionary/Kielitoimisto spellings `omorfi` (`antimet` -> `antimissa`/`antimitta`
+not `antimemissa`; `valjaat` -> `valjaissa`/`valjaitta` not `valjaaissa`). Do not
+"fix" those against the oracle. `34*C` and `51` need the same external check;
+their expected forms look like oracle artifacts rather than engine errors
+(`liittoutumattomani` is the normal possessive, not `liittoutumatonni`).
 
-* **A gradation applied where the class has none** (`41*J`, `49*J`, `49*G`,
-  `50`, `33*C`, `33*F`, `41*E`). Each of these classes *has* an alternation —
-  `kinnas` really is `kintas`, `kinner` really is `kinteri`, `penger` really is
-  `penkere`, `havas` really is `havaksen` — and the engine applies it to the
-  wrong cells:
+A recent round removed the singular translative possessive columns that hung off
+the wrong stem in classes `24`, `31`, and `36` — `kuorikseen` for
+`kuorekseen`, `haaksikseen` for `haahdekseen`, `vanhimmikseen` for
+`vanhimmakseen`. Classes 24, 31, and 36 now report zero `illegal` in the
+sampled sweep; class 26 still shows five in the full sample. The remaining
+`7*F` and `26` rows come from native words that also carry a class-5 row;
+class 5 uses the i-stem for the nominative possessive where the native row uses
+the e-stem (`vyyhtini` for `vyyhteni`, `kuorini` for `kuoreni`).
 
-  ```
-  kinnas    kinaiden      for kintaitten/kintaiden     (the t is dropped)
-  kinner    kintelittä    for kintereittä/kinterittä   (nn -> n, then e -> i)
-  penger    penkelittä    for penkereittä/penkerittä   (ng -> nk)
-  kevytsora kevydsorittä  for kevytsoratta            (t -> d)
-  kuljetin  kuljeimien    for kuljetinten/kuljettimien (e -> i)
-  ryväs     rypäattä      for rypäättä                (väs -> pä)
-  ```
-
-  The alternation is real and the class is right about it; the engine cannot
-  say *which cells* it reaches. That is one question — where does a gradation
-  stop — asked once per class, and the answer is currently "everywhere" or
-  "wherever the stem happens to be". Note the 33* and 41* classes do it in the
-  **plural** (`kuljettimiet`, `liiti-` against `liii-`) while the 49* classes do
-  it in the **oblique**, so it is not a single number either.
-* **A theme vowel doubled** (`41*C`): `mätäs` gives `mättäattä` where the class
-  wants `mättäättä`. Small — 293 forms over two lemmas — but it is one letter.
-* **A linking vowel inside a compound's tail** (`9*D`): `saapumisaika` becomes
-  `saapumisaiattaan` for `saapumisajattaan`, an `i` before the compound's own
-  `a`. This is the only one of the three that is specifically about compounds,
-  and it is worth noting that the class-50 *and* 9\*D rows are almost entirely
-  compounds while the mechanism above is not — so "it is a compound" is the
-  first guess and the wrong one here.
-* **The doubled vowel** (1741 forms, 86 classes) — the rest of the original
-  defect 4, and a different bug with a similar symptom. `allergikko` offers
-  `allergikkooita`, `allergikkooihin`, `allergikkooiden` and `allergikkooitten`
-  alongside the correct `allergikoita`, `allergikoihin`, `allergikoitten` and
-  `allergikoiden`, so the wrong one is a suggestion away from the right one.
-  This one *is* visible in the triage table, because the two spellings differ
-  only in the ending's starting point.
-
-Class 27 (`käsi`) is the one no coverage-only test can see. It gives 117
-`illegal` forms against 499 confirmed, and `käessä` and `käistä` are real
-Finnish words — Voikko reads them as forms of *käki*, the magpie — so the engine
-applies the fixed stem `käe` across the whole paradigm when the word is
-`käsi : käden`. `src/grammar/noun.rs`.
+Class 27 (`käsi`) is no longer in the `illegal` table: the fixed-stem round and
+the class-27 engine removed the sampled `käittä`/`käettä` claims. Its remaining
+gap is coverage, not precision.
 
 ### D. `taloni` has no case
 

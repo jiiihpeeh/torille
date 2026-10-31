@@ -11,16 +11,15 @@
 //!
 //! [`superl_inflect`] is the shared engine and class 37 is its other user.
 //!
-//! Two entries are not ordinary cells, and both are visible at the call site:
-//! the translative carries a second, owned possessive column on the weak-`i`
-//! stem (`lähimmikseen` beside `lähimmäkseen`), and the `-in` genitive plural
-//! is a rare bare form.
+//! The `-in` genitive plural is a rare bare form. The translative's
+//! possessives stay on the weak stem (`vanhimmakseen`); the weak-`i` spelling
+//! (`vanhimmikseen`) is not part of the paradigm.
 
 #![allow(dead_code)]
 
 use crate::tags::{Case, Form, Number, PartOfSpeech};
 
-use super::utility::{Builder, Decl, Ending, cell, nominal_tags, plain, possessed, rare};
+use super::utility::{Builder, Decl, Ending, cell, nominal_tags, plain, rare};
 
 pub const CLASS: &str = "36";
 
@@ -78,10 +77,9 @@ pub fn superl_inflect(lemma: &str, possessives: bool, part_on_strong: bool) -> V
         // them on the weak stem invented `vanhimmansa`, which is not a word.
         cell(Case::Genitive, sg, &weak, ["n", "n"], false).base_on(strong.clone(), ["", ""]),
         cell(Case::Essive, sg, &strong, ["na", "nä"], true),
-        // The translative is spelled on the weak (lähimmäkseen) and, doubly,
-        // on the weak-i stem (lähimmikseen).
+        // The translative and its possessives are spelled on the weak stem:
+        // lähimmäksi / lähimmäkseen.
         cell(Case::Translative, sg, &weak, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
-        possessed(Case::Translative, sg, format!("{wi}kse"), true),
         // The illative doubles the strong stem's last letter: lähimpään.
         cell(
             Case::Illative,
@@ -171,13 +169,22 @@ mod tests {
         assert!(!w.contains(&"sisimmänsä".to_string()));
     }
 
-    /// The translative has two possessive columns, one on the weak stem and one
-    /// on the weak-i stem, and the `-in` genitive plural is a rare bare form.
+    /// The singular translative possessive stays on the weak stem, and the
+    /// `-in` genitive plural is a rare bare form. The plural keeps the
+    /// weak-`i` stem (`lähimmikseen`).
     #[test]
-    fn the_translative_double_column_and_the_rare_in_genitive() {
-        let w = words("lähin");
-        assert!(w.contains(&"lähimmäkseen".to_string()));
-        assert!(w.contains(&"lähimmikseen".to_string()));
+    fn the_singular_translative_possessive_and_the_rare_in_genitive() {
+        let singular: Vec<String> = inflect("lähin", true)
+            .into_iter()
+            .filter(|f| {
+                f.readings.iter().any(|r| {
+                    r.case == Some(Case::Translative) && r.number == Some(Number::Singular)
+                })
+            })
+            .map(|f| f.word)
+            .collect();
+        assert!(singular.contains(&"lähimmäkseen".to_string()));
+        assert!(!singular.contains(&"lähimmikseen".to_string()));
         let forms = inflect("lähin", true);
         let rare: Vec<&str> = forms
             .iter()
