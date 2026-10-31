@@ -6,13 +6,16 @@
 //! from the per-keystroke checker; the hot path only needs
 //! [`crate::sentence::analyze`].
 //!
-//! Phase 5 keeps the role rules conservative. A word is a [`SyntacticRole::Predicate`]
-//! only when a finite verb reading exists, and an [`SyntacticRole::Adverbial`]
-//! only when a local or manner case licenses that reading. Subjects, objects,
-//! complements, and modifiers stay [`SyntacticRole::Unknown`] until clause
-//! segmentation and valency rules can place them. In particular, no role is
-//! guessed from word order alone: positions without a morphological cue are
-//! `Unknown` with [`RoleConfidence::Weak`].
+//! The role rules are conservative. A word is a [`SyntacticRole::Predicate`]
+//! only when a finite verb reading exists; subjects, objects, complements, and
+//! modifiers need a morphological cue as well as word order, and a nominal
+//! that is also a verb form (such as `kirjaa`) keeps
+//! [`RoleConfidence::Weak`]. Positions without a cue stay
+//! [`SyntacticRole::Unknown`] rather than being guessed.
+//!
+//! Clause segmentation covers finite predicates, subordinators and relative
+//! pronouns, a comma before a finite verb, and simple `ja joi`-style
+//! coordination. Deeper coordination and non-finite clauses remain phase 7.
 
 use std::collections::HashMap;
 use std::ops::Range;
@@ -154,86 +157,102 @@ fn analyze_with(
     let contexts = sentence::analyze(tokens);
     let sentences = sentence::spans(tokens);
 
-    let mut clauses: Vec<Clause> = sentences
-        .iter()
-        .map(|span| Clause {
-            start: span.start,
-            end: span.end,
-            tokens: 0..0,
-            predicate: None,
-            subject: None,
-            object: None,
-            negative: false,
-            existential: false,
-        })
-        .collect();
-
     let mut out = vec![TokenSyntax::default(); tokens.len()];
-    let mut words_by_clause: Vec<Vec<usize>> = vec![Vec::new(); clauses.len()];
-    // Leading separators belong to the first sentence; later separators
-    // belong to the sentence they follow, matching `SentenceSpan`'s
-    // partition rule.
-    let mut current_clause = 0usize;
+    let mut nominal_lemmas: Vec<Option<String>> = vec![None; tokens.len()];
     let mut cache: HashMap<String, WordAnalysis> = HashMap::new();
 
+    // Morphology first: every later rule reads the same resolved readings.
     for (index, token) in tokens.iter().enumerate() {
         if !token.is_word() {
-            out[index].clause = current_clause;
             continue;
         }
-        let clause = contexts[index].sentence_index;
-        if clause >= clauses.len() {
-            // `sentence::analyze` and `sentence::spans` are built from the
-            // same walk, so this cannot happen; keep the token aligned
-            // rather than panicking if the invariant ever changes.
-            continue;
-        }
-        current_clause = clause;
-        words_by_clause[clause].push(index);
-
         let lower = token.text.to_lowercase();
         let analysis = cache
-            .entry(lower.clone())
-            .or_insert_with(|| resolve_word(lexicon, cat, &lower));
-        let (role, confidence, case) = classify(&analysis.readings);
+            .entry(lower)
+            .or_insert_with(|| resolve_word(lexicon, cat, &token.text.to_lowercase()));
+        let mut readings = analysis.readings.clone();
+        let mut lemma = analysis.lemma.clone();
+        if readings.is_empty()
+            && token.is_capitalised()
+            && crate::expand::proper_names::contains_capitalised(&token.text)
+        {
+            add_reading(&mut readings, proper_name_reading());
+            lemma = Some(token.text.clone());
+            nominal_lemmas[index] = Some(token.text.clone());
+        } else {
+            nominal_lemmas[index] = analysis.nominal_lemma.clone();
+        }
+        let (role, confidence, case) = classify(&readings);
+        if role == SyntacticRole::Predicate {
+            if let Some(verb_lemma) = &analysis.verb_lemma {
+                lemma = Some(verb_lemma.clone());
+            }
+        } else if let Some(nominal_lemma) = &analysis.nominal_lemma {
+            lemma = Some(nominal_lemma.clone());
+        }
         out[index] = TokenSyntax {
             role,
             confidence,
-            clause,
+            clause: 0,
             head: None,
             case,
-            lemma: analysis.lemma.clone(),
-            readings: analysis.readings.clone(),
+            lemma,
+            readings,
         };
     }
 
-    for (clause_index, words) in words_by_clause.iter().enumerate() {
-        let Some(&first) = words.first() else {
-            continue;
-        };
-        let last = *words.last().unwrap_or(&first);
-        let clause = &mut clauses[clause_index];
-        clause.tokens = first..last + 1;
-        clause.predicate = words
-            .iter()
-            .copied()
-            .find(|&index| out[index].role == SyntacticRole::Predicate);
-        clause.negative = words.iter().any(|&index| {
-            out[index]
-                .readings
-                .iter()
-                .any(|reading| reading.polarity == Polarity::Negative)
-        });
-    }
-
-    // An adverbial's governor is the clause predicate once one is known.
-    for token in &mut out {
-        if token.role == SyntacticRole::Adverbial {
-            token.head = clauses
-                .get(token.clause)
-                .and_then(|clause| clause.predicate);
+    let mut sentence_words: Vec<Vec<usize>> = vec![Vec::new(); sentences.len()];
+    for (index, token) in tokens.iter().enumerate() {
+        if token.is_word()
+            && let Some(words) = sentence_words.get_mut(contexts[index].sentence_index)
+        {
+            words.push(index);
         }
     }
+
+    let mut clauses: Vec<Clause> = Vec::new();
+    let mut clause_sentences: Vec<usize> = Vec::new();
+    for (sentence_index, words) in sentence_words.iter().enumerate() {
+        if words.is_empty() {
+            continue;
+        }
+        for segment in segment_clause_words(words, tokens, &out) {
+            let Some(&first) = segment.first() else {
+                continue;
+            };
+            let last = *segment.last().unwrap_or(&first);
+            let clause_index = clauses.len();
+            for &word in &segment {
+                out[word].clause = clause_index;
+            }
+            clauses.push(Clause {
+                start: tokens[first].start,
+                end: tokens[last].end,
+                tokens: first..last + 1,
+                predicate: None,
+                subject: None,
+                object: None,
+                negative: false,
+                existential: false,
+            });
+            clause_sentences.push(sentence_index);
+        }
+    }
+
+    // Separators follow the clause they trail, matching `SentenceSpan`.
+    let mut current_clause = 0usize;
+    for (index, token) in tokens.iter().enumerate() {
+        if token.is_word() {
+            current_clause = out[index].clause;
+        } else {
+            out[index].clause = current_clause;
+        }
+    }
+
+    for clause in &mut clauses {
+        resolve_clause(clause, tokens, &mut out, &nominal_lemmas);
+    }
+    share_coordinated_subjects(&mut clauses, &clause_sentences, tokens);
 
     SyntaxAnalysis {
         sentences,
@@ -246,6 +265,12 @@ fn analyze_with(
 #[derive(Debug, Clone, Default)]
 struct WordAnalysis {
     lemma: Option<String>,
+    /// The lemma of a finite-verb reading, when one exists. `tuli` is both a
+    /// noun and a past-tense verb; the context decides which, so both are
+    /// kept until a role is known.
+    verb_lemma: Option<String>,
+    /// The lemma of a nominal reading, for the same reason.
+    nominal_lemma: Option<String>,
     readings: Vec<Tags>,
 }
 
@@ -279,6 +304,26 @@ fn resolve_word(
             }
             add_reading(&mut out.readings, tags);
         }
+        let form_has_finite = source.form.readings.iter().any(|reading| {
+            let mut tags = *reading;
+            if tags.part_of_speech.is_none() {
+                tags.part_of_speech = pos;
+            }
+            is_finite_predicate(&tags)
+        });
+        if form_has_finite {
+            out.verb_lemma = Some(source.lemma.to_string());
+        }
+        let form_has_nominal = source.form.readings.iter().any(|reading| {
+            let mut tags = *reading;
+            if tags.part_of_speech.is_none() {
+                tags.part_of_speech = pos;
+            }
+            is_nominal_pos(tags.part_of_speech)
+        });
+        if form_has_nominal && is_nominal_pos(pos) {
+            out.nominal_lemma = Some(source.lemma.to_string());
+        }
     }
 
     // The prefix walks miss some stem-changing paradigm members (`söi` is
@@ -290,6 +335,22 @@ fn resolve_word(
     {
         out.lemma = Some(base.clone());
         add_readings_from_base(&base, lower, cat, &mut out.readings);
+        if is_nominal_pos(lemma_pos(&base)) {
+            out.nominal_lemma = Some(base);
+        }
+    }
+
+    // A direct lemma can hide a homonymous verb: `tuli` is the noun and the
+    // past tense of `tulla`, and the lemma probe stops before the verb stem
+    // map is asked. Recover the verb reading when the ordinary walk did not
+    // find one; the words themselves are context-disambiguated later.
+    if !out.readings.iter().any(is_verb_reading)
+        && let Some(base) = crate::expand::check_normal::find_base_via_verb_stem_map(lower, false)
+    {
+        add_readings_from_base(&base, lower, cat, &mut out.readings);
+        if out.readings.iter().any(is_finite_predicate) {
+            out.verb_lemma = Some(base);
+        }
     }
 
     // A direct lemma or a base with no retained form still has one reading:
@@ -297,11 +358,25 @@ fn resolve_word(
     if out.readings.is_empty() {
         for direct in &report.direct {
             add_reading(&mut out.readings, direct_reading(direct));
+            if is_nominal_pos(
+                PartOfSpeech::parse_all(direct.part_of_speech())
+                    .first()
+                    .copied(),
+            ) {
+                out.nominal_lemma = Some(direct.word().to_string());
+            }
         }
         if out.readings.is_empty() {
             for base in &report.bases {
                 if let Some(row) = crate::kotus::sanalista().by_word(base.word).next() {
                     add_reading(&mut out.readings, direct_reading(&row));
+                    if is_nominal_pos(
+                        PartOfSpeech::parse_all(row.part_of_speech())
+                            .first()
+                            .copied(),
+                    ) {
+                        out.nominal_lemma = Some(base.word.to_string());
+                    }
                 }
             }
         }
@@ -498,6 +573,445 @@ fn is_adverbial_case(case: Case) -> bool {
     )
 }
 
+/// A synthetic nominative reading for a recognized proper name.
+fn proper_name_reading() -> Tags {
+    Tags::nominal(Case::Nominative).of_pos(PartOfSpeech::Noun)
+}
+
+/// Whether any reading of a token is a verb.
+fn is_verb_reading(reading: &Tags) -> bool {
+    matches!(
+        reading.part_of_speech,
+        Some(PartOfSpeech::Verb | PartOfSpeech::NegativeVerb)
+    )
+}
+
+/// Whether a part of speech is nominal.
+fn is_nominal_pos(pos: Option<PartOfSpeech>) -> bool {
+    matches!(
+        pos,
+        Some(
+            PartOfSpeech::Noun
+                | PartOfSpeech::Adjective
+                | PartOfSpeech::Pronoun
+                | PartOfSpeech::Numeral
+                | PartOfSpeech::Ordinal
+        )
+    )
+}
+
+/// Whether any reading of a token is nominal.
+fn is_nominal(syntax: &TokenSyntax) -> bool {
+    syntax
+        .readings
+        .iter()
+        .any(|reading| is_nominal_pos(reading.part_of_speech))
+}
+
+/// A nominal role is only `Likely` when the word is not also a verb.
+fn nominal_confidence(syntax: &TokenSyntax) -> RoleConfidence {
+    let has_verb = syntax.readings.iter().any(is_verb_reading);
+    let has_nominal = is_nominal(syntax);
+    if has_verb && has_nominal {
+        RoleConfidence::Weak
+    } else {
+        RoleConfidence::Likely
+    }
+}
+
+/// Whether a token has a reading in one of `cases`.
+fn has_case(syntax: &TokenSyntax, cases: &[Case]) -> bool {
+    syntax
+        .readings
+        .iter()
+        .filter_map(|reading| reading.case)
+        .any(|case| cases.contains(&case))
+}
+
+/// The first case from `cases` that the token actually has.
+fn best_case(syntax: &TokenSyntax, cases: &[Case]) -> Option<Case> {
+    cases.iter().copied().find(|case| {
+        syntax
+            .readings
+            .iter()
+            .any(|reading| reading.case == Some(*case))
+    })
+}
+
+/// A finite predicate candidate, excluding a bare negative auxiliary when a
+/// main verb is also present.
+fn is_predicate_candidate(index: usize, out: &[TokenSyntax]) -> bool {
+    out[index].role == SyntacticRole::Predicate
+        && !out[index]
+            .readings
+            .iter()
+            .all(|reading| reading.part_of_speech == Some(PartOfSpeech::NegativeVerb))
+}
+
+/// Split one sentence's words into clause-sized runs.
+///
+/// This is deliberately conservative. A coordinating conjunction starts a
+/// clause only when the next word is a finite verb (`ja joi`), so `Sami ja
+/// Liisa söivät` stays one clause. Subordinators and relative pronouns always
+/// start a clause. A comma before a finite verb also starts one, which keeps
+/// `Kun hän tuli, söin` from merging into a single predicate.
+fn segment_clause_words(words: &[usize], tokens: &[Token], out: &[TokenSyntax]) -> Vec<Vec<usize>> {
+    let mut starts = vec![0usize];
+    for position in 1..words.len() {
+        let lower = tokens[words[position]].text.to_lowercase();
+        if is_subordinator(&lower) || is_relative(&lower) {
+            starts.push(position);
+            continue;
+        }
+        if is_coordinating(&lower) {
+            if position + 1 < words.len() && is_predicate_candidate(words[position + 1], out) {
+                starts.push(position);
+            }
+            continue;
+        }
+        if is_predicate_candidate(words[position], out)
+            && has_separator_between(tokens, words[position - 1], words[position], ',')
+            && words[..position]
+                .iter()
+                .any(|&index| is_predicate_candidate(index, out))
+        {
+            starts.push(position);
+        }
+    }
+    starts.sort_unstable();
+    starts.dedup();
+
+    let mut segments = Vec::new();
+    for (index, &start) in starts.iter().enumerate() {
+        let end = starts.get(index + 1).copied().unwrap_or(words.len());
+        if start < end {
+            segments.push(words[start..end].to_vec());
+        }
+    }
+    segments
+}
+
+fn is_coordinating(word: &str) -> bool {
+    matches!(
+        word,
+        "ja" | "mutta" | "tai" | "eli" | "sekä" | "vai" | "vaan"
+    )
+}
+
+fn is_subordinator(word: &str) -> bool {
+    matches!(
+        word,
+        "että" | "kun" | "jos" | "vaikka" | "koska" | "jotta" | "mikäli" | "ellei"
+    )
+}
+
+fn is_relative(word: &str) -> bool {
+    matches!(word, "joka" | "mikä" | "ken")
+}
+
+/// A function word that must not be mistaken for a subject or object merely
+/// because the lexicon also gives it a noun reading (`ja`, `kun`).
+fn is_clause_marker(index: usize, tokens: &[Token]) -> bool {
+    let lower = tokens[index].text.to_lowercase();
+    is_coordinating(&lower) || is_subordinator(&lower) || is_relative(&lower)
+}
+
+fn has_separator_between(tokens: &[Token], left: usize, right: usize, needle: char) -> bool {
+    tokens
+        .iter()
+        .skip(left + 1)
+        .take(right.saturating_sub(left + 1))
+        .filter(|token| !token.is_word())
+        .any(|token| token.text.contains(needle))
+}
+
+/// The first finite predicate candidate in a clause, preferring an
+/// unambiguous one over an ambiguous noun/verb word.
+fn choose_predicate(words: &[usize], out: &[TokenSyntax]) -> Option<usize> {
+    words
+        .iter()
+        .copied()
+        .filter(|&index| is_predicate_candidate(index, out))
+        .find(|&index| out[index].confidence != RoleConfidence::Weak)
+        .or_else(|| {
+            words
+                .iter()
+                .copied()
+                .find(|&index| is_predicate_candidate(index, out))
+        })
+}
+
+/// Resolve the core roles in one clause.
+fn resolve_clause(
+    clause: &mut Clause,
+    tokens: &[Token],
+    out: &mut [TokenSyntax],
+    nominal_lemmas: &[Option<String>],
+) {
+    let words: Vec<usize> = (clause.tokens.start..clause.tokens.end)
+        .filter(|&index| tokens[index].is_word())
+        .collect();
+    let Some(predicate) = choose_predicate(&words, out) else {
+        return;
+    };
+    clause.predicate = Some(predicate);
+    let predicate_position = words
+        .iter()
+        .position(|&index| index == predicate)
+        .unwrap_or(0);
+    let before = &words[..predicate_position];
+    let after = &words[predicate_position + 1..];
+
+    let passive = out[predicate]
+        .readings
+        .iter()
+        .any(|reading| reading.voice == Some(crate::tags::Voice::Passive));
+    let negative = out[predicate]
+        .readings
+        .iter()
+        .any(|reading| reading.polarity == Polarity::Negative)
+        || words.iter().any(|&index| {
+            out[index].readings.iter().any(|reading| {
+                reading.polarity == Polarity::Negative
+                    && reading.part_of_speech == Some(PartOfSpeech::NegativeVerb)
+            })
+        });
+    clause.negative = negative;
+
+    let lemma = out[predicate].lemma.clone().unwrap_or_default();
+    let is_olla = lemma == "olla";
+    let is_change = matches!(lemma.as_str(), "tulla" | "tulee");
+    let locative_before = before.iter().any(|&index| {
+        out[index].role == SyntacticRole::Adverbial && out[index].case.is_some_and(is_local_case)
+    });
+    let nominative_after = after.iter().any(|&index| {
+        is_nominal(&out[index]) && has_case(&out[index], &[Case::Nominative, Case::Partitive])
+    });
+    clause.existential = is_olla && locative_before && nominative_after;
+
+    let mut subject = None;
+    if !passive {
+        if clause.existential {
+            subject = after.iter().copied().find(|&index| {
+                is_nominal(&out[index])
+                    && has_case(&out[index], &[Case::Nominative, Case::Partitive])
+                    && !is_clause_marker(index, tokens)
+            });
+        } else if is_olla && necessity_complement(after, out) {
+            subject = before.iter().rev().copied().find(|&index| {
+                is_nominal(&out[index])
+                    && has_case(&out[index], &[Case::Genitive])
+                    && !is_clause_marker(index, tokens)
+            });
+        }
+        if subject.is_none() {
+            subject = before
+                .iter()
+                .copied()
+                .find(|&index| is_proper_name(index, tokens, out));
+        }
+        if subject.is_none() {
+            subject = before.iter().rev().copied().find(|&index| {
+                is_nominal(&out[index])
+                    && has_case(&out[index], &[Case::Nominative])
+                    && !is_clause_marker(index, tokens)
+            });
+        }
+    }
+    if let Some(index) = subject {
+        out[index].role = SyntacticRole::Subject;
+        out[index].confidence = nominal_confidence(&out[index]);
+        if let Some(noun) = &nominal_lemmas[index] {
+            out[index].lemma = Some(noun.clone());
+        }
+        out[index].case = best_case(
+            &out[index],
+            &[Case::Nominative, Case::Partitive, Case::Genitive],
+        );
+        out[index].head = Some(predicate);
+        clause.subject = Some(index);
+    }
+
+    let object_cases: &[Case] = if negative {
+        &[Case::Partitive]
+    } else {
+        &[
+            Case::Partitive,
+            Case::Genitive,
+            Case::Accusative,
+            Case::Nominative,
+        ]
+    };
+    let object = if passive {
+        before.iter().chain(after).copied().find(|&index| {
+            is_nominal(&out[index])
+                && has_case(&out[index], object_cases)
+                && !is_clause_marker(index, tokens)
+        })
+    } else if !is_olla && !is_change {
+        after.iter().copied().find(|&index| {
+            Some(index) != subject
+                && is_nominal(&out[index])
+                && has_case(&out[index], object_cases)
+                && !is_clause_marker(index, tokens)
+        })
+    } else {
+        None
+    };
+    if let Some(index) = object {
+        out[index].role = SyntacticRole::Object;
+        out[index].confidence = nominal_confidence(&out[index]);
+        if let Some(noun) = &nominal_lemmas[index] {
+            out[index].lemma = Some(noun.clone());
+        }
+        out[index].case = best_case(&out[index], object_cases);
+        out[index].head = Some(predicate);
+        clause.object = Some(index);
+    }
+
+    if is_olla || is_change {
+        let complement_cases: &[Case] = if is_change {
+            &[Case::Essive, Case::Translative]
+        } else {
+            &[
+                Case::Nominative,
+                Case::Partitive,
+                Case::Essive,
+                Case::Translative,
+            ]
+        };
+        if let Some(index) = after.iter().copied().find(|&index| {
+            Some(index) != subject
+                && is_nominal(&out[index])
+                && has_case(&out[index], complement_cases)
+                && !is_clause_marker(index, tokens)
+        }) {
+            out[index].role = SyntacticRole::Complement;
+            out[index].confidence = nominal_confidence(&out[index]);
+            if let Some(noun) = &nominal_lemmas[index] {
+                out[index].lemma = Some(noun.clone());
+            }
+            out[index].case = best_case(&out[index], complement_cases);
+            out[index].head = Some(predicate);
+        }
+    }
+
+    mark_modifiers(&words, predicate, subject, tokens, out);
+
+    for &index in &words {
+        if out[index].role == SyntacticRole::Adverbial && out[index].head.is_none() {
+            out[index].head = Some(predicate);
+        }
+    }
+}
+
+/// The `Minun on mentävä` construction: a genitive subject plus a participle.
+fn necessity_complement(after: &[usize], out: &[TokenSyntax]) -> bool {
+    after.iter().any(|&index| {
+        out[index]
+            .readings
+            .iter()
+            .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Verb))
+    })
+}
+
+/// A recognized proper name token (capitalized and in the name set).
+fn is_proper_name(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
+    tokens[index].is_capitalised()
+        && out[index]
+            .readings
+            .iter()
+            .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Noun))
+        && crate::expand::proper_names::contains_capitalised(&tokens[index].text)
+}
+
+/// Attributes, genitive modifiers, titles, and appositions.
+fn mark_modifiers(
+    words: &[usize],
+    predicate: usize,
+    subject: Option<usize>,
+    tokens: &[Token],
+    out: &mut [TokenSyntax],
+) {
+    for &index in words {
+        if out[index].role != SyntacticRole::Unknown
+            || !is_nominal(&out[index])
+            || is_clause_marker(index, tokens)
+        {
+            continue;
+        }
+
+        // A capitalized word between the subject and the predicate is the rest
+        // of a multiword name (`Sami Ruotsalainen`), not an object.
+        if let Some(subject) = subject
+            && index > subject
+            && index < predicate
+            && tokens[index].is_capitalised()
+        {
+            out[index].role = SyntacticRole::Modifier;
+            out[index].confidence = RoleConfidence::Weak;
+            out[index].head = Some(subject);
+            continue;
+        }
+
+        let next = words
+            .iter()
+            .copied()
+            .find(|&other| other > index && other != predicate);
+        if let Some(next) = next.filter(|&other| other != predicate) {
+            let genitive = has_case(&out[index], &[Case::Genitive]);
+            let next_is_nominal = is_nominal(&out[next]);
+            if genitive && next_is_nominal {
+                out[index].role = SyntacticRole::Modifier;
+                out[index].confidence = RoleConfidence::Likely;
+                out[index].case = Some(Case::Genitive);
+                out[index].head = Some(next);
+                continue;
+            }
+            if Some(next) == subject && index < predicate {
+                out[index].role = SyntacticRole::Modifier;
+                out[index].confidence = RoleConfidence::Weak;
+                out[index].head = Some(next);
+            }
+        }
+    }
+}
+
+/// Share the subject of a coordinated clause with the clause before it.
+fn share_coordinated_subjects(
+    clauses: &mut [Clause],
+    clause_sentences: &[usize],
+    tokens: &[Token],
+) {
+    for index in 1..clauses.len() {
+        if clause_sentences[index] != clause_sentences[index - 1] {
+            continue;
+        }
+        if clauses[index].subject.is_some() {
+            continue;
+        }
+        let starts_with_coordinator = tokens
+            .get(clauses[index].tokens.start)
+            .is_some_and(|token| is_coordinating(&token.text.to_lowercase()));
+        if starts_with_coordinator {
+            clauses[index].subject = clauses[index - 1].subject;
+        }
+    }
+}
+
+/// Local cases that can license an adverbial.
+fn is_local_case(case: Case) -> bool {
+    matches!(
+        case,
+        Case::Inessive
+            | Case::Elative
+            | Case::Illative
+            | Case::Adessive
+            | Case::Ablative
+            | Case::Allative
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -514,6 +1028,146 @@ mod tests {
             .iter()
             .position(|token| token.text == word)
             .unwrap_or_else(|| panic!("{word} not in {tokens:?}"))
+    }
+
+    #[test]
+    fn a_subject_and_object_get_their_cases() {
+        let (tokens, analysis) = analyzed("Sami söi aamupuuronsa.");
+        let sami = word_index(&tokens, "Sami");
+        let soi = word_index(&tokens, "söi");
+        let object = word_index(&tokens, "aamupuuronsa");
+        assert_eq!(analysis.tokens[sami].role, SyntacticRole::Subject);
+        assert_eq!(analysis.tokens[sami].lemma.as_deref(), Some("Sami"));
+        assert_eq!(analysis.tokens[soi].role, SyntacticRole::Predicate);
+        assert_eq!(analysis.tokens[object].role, SyntacticRole::Object);
+        assert_eq!(
+            analysis.tokens[object].head,
+            Some(soi),
+            "the object is governed by the predicate"
+        );
+        assert_eq!(
+            analysis.tokens[object].case,
+            Some(Case::Nominative),
+            "aamupuuronsa is read as the possessive object form"
+        );
+    }
+
+    #[test]
+    fn a_negative_clause_takes_a_partitive_object() {
+        let (tokens, analysis) = analyzed("En syö puuroa.");
+        let puuroa = word_index(&tokens, "puuroa");
+        assert!(analysis.clauses[0].negative);
+        assert_eq!(analysis.tokens[puuroa].role, SyntacticRole::Object);
+        assert_eq!(analysis.tokens[puuroa].case, Some(Case::Partitive));
+    }
+
+    #[test]
+    fn partitive_and_total_objects_differ() {
+        let (partitive_tokens, partitive) = analyzed("Luen kirjaa.");
+        let (total_tokens, total) = analyzed("Luen kirjan.");
+        let partitive_object = word_index(&partitive_tokens, "kirjaa");
+        let total_object = word_index(&total_tokens, "kirjan");
+        assert_eq!(
+            partitive.tokens[partitive_object].role,
+            SyntacticRole::Object
+        );
+        assert_eq!(
+            partitive.tokens[partitive_object].case,
+            Some(Case::Partitive)
+        );
+        assert_eq!(
+            partitive.tokens[partitive_object].lemma.as_deref(),
+            Some("kirja")
+        );
+        assert_eq!(
+            partitive.tokens[partitive_object].confidence,
+            RoleConfidence::Weak,
+            "kirjaa is also a verb form, so the nominal role is not certain"
+        );
+        assert_eq!(total.tokens[total_object].role, SyntacticRole::Object);
+        assert_eq!(total.tokens[total_object].case, Some(Case::Genitive));
+    }
+
+    #[test]
+    fn an_existential_has_a_post_predicate_subject() {
+        let (tokens, analysis) = analyzed("Pöydällä on kirja.");
+        let poydalla = word_index(&tokens, "Pöydällä");
+        let kirja = word_index(&tokens, "kirja");
+        assert!(analysis.clauses[0].existential);
+        assert_eq!(analysis.tokens[poydalla].role, SyntacticRole::Adverbial);
+        assert_eq!(analysis.tokens[kirja].role, SyntacticRole::Subject);
+    }
+
+    #[test]
+    fn a_necessity_subject_is_genitive() {
+        let (tokens, analysis) = analyzed("Minun on mentävä.");
+        let minun = word_index(&tokens, "Minun");
+        assert_eq!(analysis.tokens[minun].role, SyntacticRole::Subject);
+        assert_eq!(analysis.tokens[minun].case, Some(Case::Genitive));
+    }
+
+    #[test]
+    fn coordinated_clauses_share_the_subject() {
+        let (tokens, analysis) = analyzed("Sami söi puuron ja joi maidon.");
+        assert_eq!(analysis.clauses.len(), 2);
+        let sami = word_index(&tokens, "Sami");
+        let puuron = word_index(&tokens, "puuron");
+        let maidon = word_index(&tokens, "maidon");
+        assert_eq!(analysis.clauses[0].subject, Some(sami));
+        assert_eq!(analysis.clauses[1].subject, Some(sami));
+        assert_eq!(analysis.tokens[puuron].role, SyntacticRole::Object);
+        assert_eq!(analysis.tokens[maidon].role, SyntacticRole::Object);
+    }
+
+    #[test]
+    fn a_translative_after_a_change_verb_is_a_complement() {
+        let (tokens, analysis) = analyzed("Hän tuli iloiseksi.");
+        let tuli = word_index(&tokens, "tuli");
+        let iloiseksi = word_index(&tokens, "iloiseksi");
+        assert_eq!(analysis.tokens[tuli].role, SyntacticRole::Predicate);
+        assert_eq!(analysis.tokens[tuli].lemma.as_deref(), Some("tulla"));
+        assert_eq!(analysis.tokens[iloiseksi].role, SyntacticRole::Complement);
+        assert_eq!(analysis.tokens[iloiseksi].case, Some(Case::Translative));
+    }
+
+    #[test]
+    fn a_copula_complement_is_not_an_object() {
+        let (tokens, analysis) = analyzed("Talo on kaunis.");
+        let talo = word_index(&tokens, "Talo");
+        let kaunis = word_index(&tokens, "kaunis");
+        assert_eq!(analysis.tokens[talo].role, SyntacticRole::Subject);
+        assert_eq!(analysis.tokens[kaunis].role, SyntacticRole::Complement);
+    }
+
+    #[test]
+    fn noun_phrase_coordination_does_not_split_the_clause() {
+        let (_, analysis) = analyzed("Sami ja Liisa söivät.");
+        assert_eq!(analysis.clauses.len(), 1);
+    }
+
+    #[test]
+    fn a_comma_before_a_finite_verb_starts_a_clause() {
+        let (_, analysis) = analyzed("Kun hän tuli, söin.");
+        assert_eq!(analysis.clauses.len(), 2);
+    }
+
+    #[test]
+    fn a_passive_has_no_subject_but_keeps_the_logical_object() {
+        let (tokens, analysis) = analyzed("Talo rakennettiin.");
+        let talo = word_index(&tokens, "Talo");
+        assert_eq!(analysis.clauses[0].subject, None);
+        assert_eq!(analysis.tokens[talo].role, SyntacticRole::Object);
+    }
+
+    #[test]
+    fn a_multiword_name_is_one_subject() {
+        let (tokens, analysis) = analyzed("Sami Ruotsalainen söi puuron.");
+        let sami = word_index(&tokens, "Sami");
+        let ruotsalainen = word_index(&tokens, "Ruotsalainen");
+        let puuron = word_index(&tokens, "puuron");
+        assert_eq!(analysis.tokens[sami].role, SyntacticRole::Subject);
+        assert_ne!(analysis.tokens[ruotsalainen].role, SyntacticRole::Object);
+        assert_eq!(analysis.tokens[puuron].role, SyntacticRole::Object);
     }
 
     #[test]

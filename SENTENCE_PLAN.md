@@ -1,6 +1,6 @@
 # Sentence analyzer plan
 
-Status: **phases 1–5 implemented** · owner: engine / wasm · target: case-aware checking
+Status: **phases 1–6 implemented** · owner: engine / wasm · target: case-aware checking
 
 Goal: replace the per-separator heuristics behind sentence-initial casing
 with one deterministic sentence analyzer, and build a second, on-demand
@@ -25,7 +25,7 @@ never change spell-checking output.
 
 ## Implementation status
 
-Phases 1–5 are implemented:
+Phases 1–6 are implemented:
 
 - `src/sentence.rs` with `TokenContext`, `SentenceSpan`, `analyze`, `spans`,
   `separator_ends_sentence`, and `separator_breaks_line`;
@@ -42,12 +42,16 @@ Phases 1–5 are implemented:
 - `src/syntax.rs` with `SyntacticRole`, `RoleConfidence`, `Clause`,
   `TokenSyntax`, `SyntaxAnalysis`, and `syntax::analyze`. It resolves each
   word through `find_bases_with` and a cheap stem-map fallback, records the
-  readings, and assigns only predicates and adverbials; subjects, objects,
-  complements, and modifiers stay `Unknown` until phase 6.
+  readings, and assigns predicates and adverbials;
+- clause segmentation on finite verbs, subordinators/relatives, a comma
+  before a finite verb, and `ja joi`-style coordination; core roles for
+  subjects, objects, complements, and modifiers. Coordination shares a
+  subject with the preceding clause; deeper coordination and non-finite
+  clauses remain phase 7.
 
 Phase 4 removed the compatibility wrappers, so `src/sentence.rs` is the only
-home for boundary and context rules. Phases 6+ (clause segmentation and core
-roles) remain open.
+home for boundary and context rules. Phase 7+ (deeper coordination,
+non-finite clauses, passive refinements) remains open.
 
 ## Why now
 
@@ -528,8 +532,10 @@ Gutenberg corpus in CI. Optionally add a ignored/local test that reads
 5. **Role extraction** — done: `syntax.rs` carries the public role types,
    resolves morphology from the engine, and assigns predicate/adverbial roles
    only. Subjects and objects stay `Unknown`. No UI consumer yet.
-6. **Clause segmentation and core roles** — finite verbs, subjects,
-   objects, complements, adverbials; unit tests for the sentences above.
+6. **Clause segmentation and core roles** — done: finite-verb anchors,
+   subordinators/relatives, comma boundaries, subject/object/complement/
+   modifier roles, existential and necessity constructions, and basic
+   coordinated-subject sharing.
 7. **Coordination and non-finite clauses** — shared subjects/objects,
    infinitives, participles, passive constructions.
 8. **Optional wasm export** — `analyze_syntax(text)` for diagnostics; keep
