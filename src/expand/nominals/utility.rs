@@ -902,7 +902,7 @@ pub fn build_i_loans_with_nom_base(
             // Bare nominative is the lemma (argon); its possessives sit on the
             // i-stem (argonin).
             cell(Case::Nominative, sg, lemma, ["", ""], false).base_on(nom_base.clone(), ["", ""]),
-            cell(Case::Genitive, sg, &istem, ["n", "n"], false).on_stem(),
+            cell(Case::Genitive, sg, &istem, ["n", "n"], false).base_on(nom_base.clone(), ["", ""]),
             cell(Case::Partitive, sg, &istem, ["a", "ä"], true),
             cell(Case::Essive, sg, &istem, ["na", "nä"], true),
             cell(Case::Translative, sg, &istem, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),

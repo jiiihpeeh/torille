@@ -296,7 +296,7 @@ python3 tools/summarize_class_report.py reports/noun-classes.json
 ```
 
 The numbers are from a 5-lemma sample of each of the 146 noun classes.
-Current totals: **96,221 confirmed, 8,679 missing, 564 illegal, 0 mistagged,
+Current totals: **96,216 confirmed, 8,679 missing, 539 illegal, 0 mistagged,
 722 unsupported, 0 not plain.** Recall — confirmed over confirmed plus missing
 — is **91.7%**, and the `illegal` rate is **0.6%** of confirmed. Ranking the
 classes by `illegal` count would be useless here (the largest classes are
@@ -430,7 +430,7 @@ average over the ten says more about class 1 than about the idea.
 
 ### C. Whole classes built on the wrong stem
 
-**564 `illegal` forms in the current sample**, down from 15,431 after the
+**539 `illegal` forms in the current sample**, down from 15,431 after the
 class-engine rounds. Every one is still `Plain`, which is what makes this the
 item with the worst user impact: these are offered as corrections. The
 remaining defects are clustered:
@@ -443,7 +443,8 @@ remaining defects are clustered:
 | 13.5% | `41*C` | 651 | 88 | plural-only `-aat`, oracle caveat |
 | 12.1% | `33*J` | 627 | 76 | plural-only `-imet`, oracle caveat |
 | 3.1% | `34*C` | 795 | 25 | nominative possessive oracle |
-| 1.1% | `7*F` | 902 | 10 | class-5 twin of a native 7*F word |
+| 1.2% | `18` | 582 | 7 | `pii` illative/nominative mismatch |
+| 0.6% | `41*E` | 806 | 5 | `havas` dual-class stem |
 
 The plural-only `33*D`/`33*J` and `41*C`/`41*I` rows are the documented caveat:
 the SQLite oracle marks the longer spellings `both` and the short
@@ -453,15 +454,16 @@ not `antimemissa`; `valjaat` -> `valjaissa`/`valjaitta` not `valjaaissa`). Do no
 their expected forms look like oracle artifacts rather than engine errors
 (`liittoutumattomani` is the normal possessive, not `liittoutumatonni`).
 
-A recent round removed the singular translative possessive columns that hung off
+Recent rounds removed the singular translative possessive columns that hung off
 the wrong stem in classes `24`, `31`, and `36` — `kuorikseen` for
 `kuorekseen`, `haaksikseen` for `haahdekseen`, `vanhimmikseen` for
-`vanhimmakseen`. Classes 24, 31, and 36 now report zero `illegal` in the
-sampled sweep; class 26 still shows five in the full sample. The class-5
-native twin now uses the e-stem in the nominative possessive (`vyyhteni`,
-`kuoreni`), which clears `5*F`; its genitive possessive still uses the i-stem
-(`vyyhtini` for `vyyhteni`, `kuorini` for `kuoreni`), which is what the
-remaining `7*F`/`26` rows are.
+`vanhimmakseen`. They also put the class-5 native twin's nominative and
+genitive possessives on the e-stem (`vyyhteni`, `kuoreni`, `appeni`), which
+clears `5*B`, `5*F`, `7*B`, `7*F`, `24`, `26`, `31`, and `36` in the sampled
+sweep. Most of what remains is oracle disagreement: live Voikko accepts the
+engine's `33*D`/`33*J`, `41*C`/`41*I`, `49*D`/`49*E`, `51`, and `32*D` forms
+and rejects the oracle's expected spellings, so do not change those classes
+against SQLite alone.
 
 Class 27 (`käsi`) is no longer in the `illegal` table: the fixed-stem round and
 the class-27 engine removed the sampled `käittä`/`käettä` claims. Its remaining

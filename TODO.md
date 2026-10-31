@@ -9,13 +9,13 @@ Ordered by user-facing impact, which is not the same as gap size: an engine that
 offers a non-word has a user-visible bug, and an engine that is merely silent
 does not. The first open item is therefore the precision one.
 
-**Current full 5-lemma noun report (2026-10-31):** 96,221 confirmed, 8,679
-missing, 564 illegal, 0 mistagged, 722 unsupported, 0 not-plain; recall 91.7%,
+**Current full 5-lemma noun report (2026-10-31):** 96,216 confirmed, 8,679
+missing, 539 illegal, 0 mistagged, 722 unsupported, 0 not-plain; recall 91.7%,
 illegal rate 0.6%. The older per-item counts below predate the current
 class-engine round and are kept only where the item is still open.
 
 - [ ] **Stop offering whole classes built on the wrong stem**
-  **564 `illegal` forms across the current 5-lemma sample**, down from 15,431
+  **539 `illegal` forms across the current 5-lemma sample**, down from 15,431
   after the class-engine rounds. The remaining defects are clustered rather
   than spread across 118 classes:
 
@@ -26,8 +26,8 @@ class-engine round and are kept only where the item is still open.
   | `33*D` / `33*J` | 76 / 76 | 319 / 627 | plural-only `-imet` rows; oracle caveat |
   | `34*C` | 25 | 795 | possessive oracle expects the nominative stem |
   | `32*D` | 21 | 3 | rare `ien` paradigm |
-  | `7*F` | 10 | 902 | class-5 twin of a native 7*F word |
-  | `26` | 5 | 855 | class-5 twin of `kuori` |
+  | `18` | 7 | 582 | `pii` illative/nominative mismatch |
+  | `41*E` | 5 | 806 | `havas` dual-class stem |
 
   The `33*D`/`33*J` and `41*C`/`41*I` rows are the documented plural-only
   caveat: `data/kotus_nomines.sqlite` marks the longer spellings `both` and the
@@ -35,15 +35,16 @@ class-engine round and are kept only where the item is still open.
   before changing those classes. `34*C` and `51` need the same external check;
   their expected forms look like oracle artifacts rather than engine errors.
 
-  A recent round removed the singular translative possessive columns that hung
+  Recent rounds removed the singular translative possessive columns that hung
   off the wrong stem in classes `24`, `31`, and `36` (`kuorikseen` for
   `kuorekseen`, `haaksikseen` for `haahdekseen`, `vanhimmikseen` for
-  `vanhimmakseen`). Classes 24, 31, and 36 now report zero illegal in the
-  sampled sweep; class 26 still shows five in the full sample. The class-5
-  native twin now uses the e-stem in the nominative possessive (`vyyhteni`,
-  `kuoreni`), which clears `5*F`; its genitive possessive still uses the
-  i-stem (`vyyhtini` for `vyyhteni`, `kuorini` for `kuoreni`), which is what
-  the remaining `7*F`/`26` rows are.
+  `vanhimmakseen`). They also put the class-5 native twin's nominative and
+  genitive possessives on the e-stem (`vyyhteni`, `kuoreni`, `appeni`), which
+  clears `5*B`, `5*F`, `7*B`, `7*F`, `24`, `26`, `31`, and `36` in the sampled
+  sweep. Most of what remains is oracle disagreement: live Voikko accepts the
+  engine's `33*D`/`33*J`, `41*C`/`41*I`, `49*D`/`49*E`, `51`, and `32*D` forms
+  and rejects the oracle's expected spellings, so do not change those classes
+  against SQLite alone.
 
   Evidence: `docs/harness.md` → Known defects → C.
 

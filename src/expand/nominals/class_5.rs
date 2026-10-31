@@ -240,8 +240,10 @@ pub fn inflect_graded(lemma: &str, possessives: bool, grad: Gradation) -> Vec<Fo
             cell(Case::Illative, sg, strong, ["in", "in"], false).on_ending(["i", "i"]),
             // ---- singular, weak grade ----
             // Genitive is weak but its possessives sit on the strong stem.
-            cell(Case::Genitive, sg, &weak, ["n", "n"], false)
-                .base_on(strong.to_string(), ["", ""]),
+            cell(Case::Genitive, sg, &weak, ["n", "n"], false).base_on(
+                nom_base.clone().unwrap_or_else(|| strong.to_string()),
+                ["", ""],
+            ),
             cell(Case::Translative, sg, &weak, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
             cell(Case::Inessive, sg, &weak, ["ssa", "ssä"], true),
             cell(Case::Elative, sg, &weak, ["sta", "stä"], true),
@@ -307,9 +309,29 @@ mod tests {
         assert!(kuori.contains(&"kuoreni".to_string()));
         assert!(!kuori.contains(&"kuorini".to_string()));
 
+        fn genitive_singular(forms: Vec<Form>) -> Vec<String> {
+            forms
+                .into_iter()
+                .filter(|form| {
+                    form.readings.iter().any(|reading| {
+                        reading.case == Some(Case::Genitive)
+                            && reading.number == Some(Number::Singular)
+                    })
+                })
+                .map(|form| form.word)
+                .collect()
+        }
+
         let vyyhti = nominative_singular(inflect_graded("vyyhti", true, Gradation(6)));
         assert!(vyyhti.contains(&"vyyhteni".to_string()));
         assert!(!vyyhti.contains(&"vyyhtini".to_string()));
+        let vyyhti_gen = genitive_singular(inflect_graded("vyyhti", true, Gradation(6)));
+        assert!(vyyhti_gen.contains(&"vyyhteni".to_string()));
+        assert!(!vyyhti_gen.contains(&"vyyhtini".to_string()));
+
+        let appi_gen = genitive_singular(inflect_graded("appi", true, Gradation(2)));
+        assert!(appi_gen.contains(&"appeni".to_string()));
+        assert!(!appi_gen.contains(&"appini".to_string()));
 
         let viti = nominative_singular(inflect_graded("viti", true, Gradation(6)));
         assert!(viti.contains(&"vitini".to_string()));
