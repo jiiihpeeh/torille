@@ -466,7 +466,14 @@ mod tests {
     /// lemma, an inflected form, or a suggestion.
     #[test]
     fn a_rejected_dictionary_row_is_not_a_word() {
-        for word in ["viti", "vitejä", "vitinsä", "videikseen"] {
+        for word in [
+            "viti",
+            "vitejä",
+            "vitinsä",
+            "videikseen",
+            "vinka",
+            "vinkaanne",
+        ] {
             assert!(
                 matches!(check(word), CheckOutcome::Unknown),
                 "{word} should be unknown"

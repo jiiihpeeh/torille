@@ -14,6 +14,10 @@ pub(crate) const LEMMAS: &[&str] = &[
     // `viti` is a sanalista row with no accepted use in the checker; the
     // repository's language review rejects it outright.
     "viti",
+    // `vinka` is Swedish, not a Finnish noun. The sanalista has two rows
+    // for it, and the English/Finnish Wiktionary entry has only the Swedish
+    // verb section.
+    "vinka",
 ];
 
 /// Whether a sanalista lemma is rejected.
