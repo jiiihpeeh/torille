@@ -560,6 +560,23 @@ mod tests {
     }
 
     #[test]
+    fn verse_and_dialogue_line_starts_are_sentence_initial() {
+        // The Gutenberg reader's chapters start verse/dialogue lines with a
+        // capital, often without a preceding full stop. A newline is a
+        // sentence boundary for case validation.
+        let mut st = TextAreaState::new();
+        let hits = st.find_misspells(
+            "Pieniä eläjiä olivat.\nElä ole milläsikään.\nEhkäpä tuo raukka.\nVaan mitäpä tuosta.\nAivan niin.",
+        );
+        for word in ["Pieniä", "Elä", "Ehkäpä", "Vaan", "Aivan"] {
+            assert!(
+                !hits.iter().any(|h| h.word == word),
+                "line-initial {word} must be accepted: {hits:?}"
+            );
+        }
+    }
+
+    #[test]
     fn a_normal_sentence_with_an_inen_surname_passes() {
         let mut st = TextAreaState::new();
         let hits = st.find_misspells("Eräänä päivänä Sami Ruotsalainen söi aamupuuronsa.");

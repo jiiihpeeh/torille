@@ -7,7 +7,7 @@ use std::collections::HashSet;
 
 use crate::expand::{BasesReport, find_any_base_with};
 
-use super::casing::match_case;
+use super::casing::{capitalize, match_case};
 use super::known::{
     catalogue, hyphenated_lexeme, is_known_compound, is_known_word, is_known_word_no_compound,
     lemma_set, lexicon,
@@ -144,7 +144,7 @@ pub fn suggest_with_state(
         .filter_map(|p| {
             let d = levenshtein(&lower, p, max_distance);
             if d <= max_distance {
-                Some((d, p.clone()))
+                Some((d, capitalize(p)))
             } else {
                 None
             }
@@ -157,9 +157,9 @@ pub fn suggest_with_state(
     // appear in both pools).
     let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
     for (_, w) in &out {
-        seen.insert(w.clone());
+        seen.insert(w.to_lowercase());
     }
-    pn.retain(|(_, w)| seen.insert(w.clone()));
+    pn.retain(|(_, w)| seen.insert(w.to_lowercase()));
     // Merge. The proper noun wins ties: a learned name is
     // almost always a better answer than an unrelated
     // Finnish lemma at the same edit distance.

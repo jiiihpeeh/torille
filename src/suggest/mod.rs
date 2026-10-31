@@ -1571,6 +1571,18 @@ mod tests {
     }
 
     #[test]
+    fn a_learned_proper_noun_is_suggested_capitalised() {
+        // A name learned from a mid-sentence `Aloe` is stored lowercased.
+        // Asking for the lowercase spelling must return the name's
+        // canonical capitalization, not the lowercased lookup key.
+        let mut pn: HashSet<String> = HashSet::new();
+        pn.insert("aloe".to_string());
+        let r = suggest_with_state("aloe", 5, 2, &pn);
+        assert!(r.iter().any(|s| s == "Aloe"), "got {r:?}");
+        assert!(!r.iter().any(|s| s == "aloe"), "got {r:?}");
+    }
+
+    #[test]
     fn suggest_with_state_returns_lexicon_candidates_first() {
         // Even with a proper-noun set populated, "taloo" should still
         // get the standard lexicon suggestion ("talo") from the first

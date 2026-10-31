@@ -43,6 +43,18 @@ pub fn match_case(input: &str, candidate: &str) -> String {
     out
 }
 
+/// Capitalize the first character of `word`, leaving the rest alone.
+pub(crate) fn capitalize(word: &str) -> String {
+    let mut chars = word.chars();
+    let Some(first) = chars.next() else {
+        return String::new();
+    };
+    let mut out = String::with_capacity(word.len());
+    out.extend(first.to_uppercase());
+    out.push_str(chars.as_str());
+    out
+}
+
 /// Is the capitalization of `word` acceptable?
 ///
 /// `sentence_initial` says whether the token starts a sentence.

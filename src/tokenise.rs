@@ -68,17 +68,33 @@ impl Token {
         matches!(self.kind, TokenKind::Word)
     }
 
-    /// `true` if this is a separator run whose last non-whitespace
-    /// character is `.`, `!`, or `?`. The per-textbox state uses
-    /// this for sentence-initial detection — a more sophisticated
-    /// sentence splitter would be slow here and the engine does
-    /// not need it.
+    /// `true` if this is a separator run that ends a sentence or opens a
+    /// new one: a final `.`/`!`/`?`/`:`, an opening/closing quote mark, or
+    /// any line break. The per-textbox state uses this for sentence-initial
+    /// detection -- a more sophisticated sentence splitter would be slow
+    /// here and the engine does not need it. A newline counts because
+    /// Gutenberg verse and dialogue lines start with a capital without a
+    /// full stop.
     pub fn ends_sentence(&self) -> bool {
         if !matches!(self.kind, TokenKind::Separator) {
             return false;
         }
+        if self.text.contains('\n') {
+            return true;
+        }
         let last = self.text.chars().rev().find(|c| !c.is_whitespace());
-        matches!(last, Some('.') | Some('!') | Some('?'))
+        matches!(
+            last,
+            Some('.')
+                | Some('!')
+                | Some('?')
+                | Some(':')
+                | Some('»')
+                | Some('«')
+                | Some('"')
+                | Some('“')
+                | Some('”')
+        )
     }
 
     /// Lower-cased word text, or `None` for separators. The wasm
@@ -392,6 +408,26 @@ mod tests {
         assert!(a[0]);
         let helsinki_idx = t.iter().position(|t| t.text == "Helsinki").unwrap();
         assert!(a[helsinki_idx]);
+    }
+
+    #[test]
+    fn annotate_sentence_initial_marks_after_a_line_break() {
+        // Gutenberg verse/dialogue lines start with a capital even when the
+        // previous line did not end in a full stop.
+        let t = tokenise("Pieniä eläjiä olivat.\nElä ole milläsikään");
+        let a = annotate_sentence_initial(&t);
+        let ela = t.iter().position(|t| t.text == "Elä").unwrap();
+        assert!(a[ela]);
+    }
+
+    #[test]
+    fn annotate_sentence_initial_marks_after_a_colon_or_opening_quote() {
+        for text in ["Hän sanoi: Elä tule.", "Hän sanoi: »Elä tule."] {
+            let t = tokenise(text);
+            let a = annotate_sentence_initial(&t);
+            let ela = t.iter().position(|t| t.text == "Elä").unwrap();
+            assert!(a[ela], "{text}");
+        }
     }
 
     #[test]
