@@ -2,9 +2,8 @@
 //!
 //! Splits text into alternating word and separator runs. For each
 //! word run we record the original byte range in the input, the
-//! literal text, whether the first character is upper-case, and
-//! (via the [`annotate_sentence_initial`] helper) whether the run
-//! is sentence-initial.
+//! literal text, and whether the first character is upper-case.
+//! Sentence context is a separate layer: see [`crate::sentence`].
 //!
 //! "Word" means a maximal run of Unicode letters and digits with single
 //! internal hyphens, so split compounds (`nuori-isäntä`, `linja-auto`,
@@ -66,14 +65,6 @@ impl Token {
     /// `true` if this is a word run in the tokeniser's sense.
     pub fn is_word(&self) -> bool {
         matches!(self.kind, TokenKind::Word)
-    }
-
-    /// `true` if this is a separator run that ends a sentence or opens a
-    /// new one. The rules live in
-    /// [`crate::sentence::separator_ends_sentence`]; this is the token-level
-    /// wrapper kept for the existing callers.
-    pub fn ends_sentence(&self) -> bool {
-        crate::sentence::separator_ends_sentence(self)
     }
 
     /// Lower-cased word text, or `None` for separators. The wasm
@@ -168,19 +159,6 @@ pub fn tokenise(text: &str) -> Vec<Token> {
         merged.push(token);
     }
     merged
-}
-
-/// One `bool` per token, `true` when the token is a word at the
-/// start of a sentence.
-///
-/// Kept as a compatibility wrapper over [`crate::sentence::analyze`]; new
-/// code should read the [`crate::sentence::TokenContext`] that also carries
-/// sentence numbers and paragraph/quote state.
-pub fn annotate_sentence_initial(tokens: &[Token]) -> Vec<bool> {
-    crate::sentence::analyze(tokens)
-        .into_iter()
-        .map(|context| context.sentence_start)
-        .collect()
 }
 
 #[cfg(test)]
@@ -333,78 +311,6 @@ mod tests {
     #[test]
     fn number_hyphen_word_stays_in_one_word() {
         assert_eq!(words("20-vuotias"), vec!["20-vuotias".to_string()]);
-    }
-
-    #[test]
-    fn ends_sentence_recognises_period() {
-        let t = tokenise("eka. toka");
-        let dot = t
-            .iter()
-            .find(|t| t.kind == TokenKind::Separator)
-            .expect("separator after eka");
-        assert!(dot.ends_sentence());
-    }
-
-    #[test]
-    fn ends_sentence_recognises_multi_char_with_whitespace() {
-        let t = tokenise("eka.\n\ntoka");
-        let s = t.iter().find(|t| t.kind == TokenKind::Separator).unwrap();
-        assert!(s.ends_sentence());
-    }
-
-    #[test]
-    fn ends_sentence_handles_comma() {
-        let t = tokenise("eka, toka");
-        let s = t.iter().find(|t| t.kind == TokenKind::Separator).unwrap();
-        assert!(!s.ends_sentence());
-    }
-
-    #[test]
-    fn annotate_sentence_initial_marks_first_word() {
-        let t = tokenise("Helsinki on kaupunki.");
-        let a = annotate_sentence_initial(&t);
-        assert_eq!(a.iter().filter(|b| **b).count(), 1);
-        assert!(a[0]); // "Helsinki"
-    }
-
-    #[test]
-    fn annotate_sentence_initial_marks_after_period() {
-        let t = tokenise("Kaupunki. Helsinki");
-        let a = annotate_sentence_initial(&t);
-        // Two sentence-initial words: "Kaupunki" (start) and "Helsinki" (after `.`).
-        assert!(a[0]);
-        let helsinki_idx = t.iter().position(|t| t.text == "Helsinki").unwrap();
-        assert!(a[helsinki_idx]);
-    }
-
-    #[test]
-    fn annotate_sentence_initial_marks_after_a_line_break() {
-        // Gutenberg verse/dialogue lines start with a capital even when the
-        // previous line did not end in a full stop.
-        let t = tokenise("Pieniä eläjiä olivat.\nElä ole milläsikään");
-        let a = annotate_sentence_initial(&t);
-        let ela = t.iter().position(|t| t.text == "Elä").unwrap();
-        assert!(a[ela]);
-    }
-
-    #[test]
-    fn annotate_sentence_initial_marks_after_a_colon_or_opening_quote() {
-        for text in ["Hän sanoi: Elä tule.", "Hän sanoi: »Elä tule."] {
-            let t = tokenise(text);
-            let a = annotate_sentence_initial(&t);
-            let ela = t.iter().position(|t| t.text == "Elä").unwrap();
-            assert!(a[ela], "{text}");
-        }
-    }
-
-    #[test]
-    fn annotate_sentence_initial_skips_comma() {
-        let t = tokenise("Helsinki, kaupunki");
-        let a = annotate_sentence_initial(&t);
-        // Only "Helsinki" is sentence-initial; the comma does not
-        // start a new sentence.
-        let kaupunki_idx = t.iter().position(|t| t.text == "kaupunki").unwrap();
-        assert!(!a[kaupunki_idx]);
     }
 
     #[test]

@@ -1,6 +1,6 @@
 # Sentence analyzer plan
 
-Status: **phases 1–3 implemented** · owner: engine / wasm · target: case-aware checking
+Status: **phases 1–4 implemented** · owner: engine / wasm · target: case-aware checking
 
 Goal: replace the per-separator heuristics behind sentence-initial casing
 with one deterministic sentence analyzer, and build a second, on-demand
@@ -25,12 +25,12 @@ never change spell-checking output.
 
 ## Implementation status
 
-Phases 1–3 are implemented:
+Phases 1–4 are implemented:
 
 - `src/sentence.rs` with `TokenContext`, `SentenceSpan`, `analyze`, `spans`,
   `separator_ends_sentence`, and `separator_breaks_line`;
-- `Token::ends_sentence` delegates to the sentence module;
-- `tokenise::annotate_sentence_initial` is a compatibility wrapper over
+- `tokenise` is a dumb splitter again: `Token::ends_sentence` and
+  `annotate_sentence_initial` were removed once their last callers moved to
   `sentence::analyze`;
 - closed abbreviation list (`esim.`, `ym.`, `jne.`, …) and single-initial
   exception (`J. Virtanen`), while ellipses still split;
@@ -40,12 +40,14 @@ Phases 1–3 are implemented:
   validation and a stateful `sentence::Analyzer` across text windows for
   proper-name learning.
 
-Phases 4+ (cleanup, syntax roles `src/syntax.rs`) remain open.
+Phase 4 removed the compatibility wrappers, so `src/sentence.rs` is the only
+home for boundary and context rules. Phases 5+ (syntax roles in
+`src/syntax.rs`) remain open.
 
 ## Why now
 
-The case layer currently infers sentence starts from
-`Token::ends_sentence`, a one-token helper in `src/tokenise.rs`. It has
+The case layer used to infer sentence starts from
+`Token::ends_sentence`, a one-token helper in `src/tokenise.rs`. It had
 grown by accretion:
 
 - `.`, `!`, `?`, `:`;
@@ -515,8 +517,9 @@ Gutenberg corpus in CI. Optionally add a ignored/local test that reads
    single-initial rule. Unit tests only; no consumer change.
 3. **Quotes and verse** — replace `ends_sentence` usage in `state.rs`
    with `sentence::analyze`; add the Gutenberg regression tests.
-4. **Cleanup** — remove or deprecate `annotate_sentence_initial`;
-   update docs and `AGENTS.md`.
+4. **Cleanup** — done: `annotate_sentence_initial` and
+   `Token::ends_sentence` were removed from `src/tokenise.rs`; docs and
+   `AGENTS.md` point at `sentence.rs`.
 5. **Role extraction** — add `syntax.rs` with morphological input and
    `Unknown`-first role assignment. No UI consumer yet.
 6. **Clause segmentation and core roles** — finite verbs, subjects,

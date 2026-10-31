@@ -4,11 +4,10 @@
 //! which sentence each token belongs to, whether a word starts a sentence,
 //! whether it starts a paragraph/line block, and the active quote depth.
 //!
-//! The rules are intentionally the ones the checker already used through
-//! [`crate::tokenise::Token::ends_sentence`], plus the line-break,
-//! colon and quote boundaries added for the Gutenberg reader. The syntax
-//! layer (`src/syntax.rs`, planned) consumes these spans; the hot render
-//! path only needs [`analyze`].
+//! The rules are the ones the case layer needs: terminal punctuation,
+//! line breaks, colons and quotes. The syntax layer (`src/syntax.rs`,
+//! planned) consumes these spans; the hot render path only needs
+//! [`analyze`].
 //!
 //! Byte offsets are source-text offsets. A sentence span starts at the
 //! previous boundary and ends at the next one, so the spans partition the
@@ -56,9 +55,9 @@ pub struct SentenceSpan {
 
 /// Determine which separator tokens close a sentence.
 ///
-/// This is the single boundary predicate behind [`Token::ends_sentence`].
-/// It is public so the tokeniser wrapper and future syntax code do not
-/// drift apart.
+/// This is the single boundary predicate behind [`Analyzer`]. It is
+/// public so callers that already hold tokens and future syntax code do
+/// not duplicate the rules.
 pub fn separator_ends_sentence(token: &Token) -> bool {
     if !matches!(token.kind, TokenKind::Separator) {
         return false;
@@ -393,6 +392,29 @@ mod tests {
         let ctx = analyze(&tokens);
         let ela = tokens.iter().position(|t| t.text == "Elä").unwrap();
         assert_eq!(ctx[ela].quote_depth, 1);
+    }
+
+    #[test]
+    fn separator_predicate_recognises_terminal_runs() {
+        let tokens = tokenise("eka. toka");
+        let dot = tokens
+            .iter()
+            .find(|t| !t.is_word())
+            .expect("separator after eka");
+        assert!(separator_ends_sentence(dot));
+
+        let tokens = tokenise("eka.\n\ntoka");
+        let line = tokens.iter().find(|t| !t.is_word()).unwrap();
+        assert!(separator_ends_sentence(line));
+        assert!(separator_breaks_line(line));
+    }
+
+    #[test]
+    fn separator_predicate_rejects_commas() {
+        let tokens = tokenise("eka, toka");
+        let comma = tokens.iter().find(|t| !t.is_word()).unwrap();
+        assert!(!separator_ends_sentence(comma));
+        assert!(!separator_breaks_line(comma));
     }
 
     #[test]
