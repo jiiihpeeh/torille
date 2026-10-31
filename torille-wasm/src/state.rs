@@ -560,6 +560,16 @@ mod tests {
     }
 
     #[test]
+    fn a_normal_sentence_with_an_inen_surname_passes() {
+        let mut st = TextAreaState::new();
+        let hits = st.find_misspells("Eräänä päivänä Sami Ruotsalainen söi aamupuuronsa.");
+        assert!(
+            hits.is_empty(),
+            "the sentence should pass case validation: {hits:?}"
+        );
+    }
+
+    #[test]
     fn capitalised_inen_surnames_are_not_case_errors() {
         // `Ruotsalainen` is both a common adjective (`ruotsalainen`) and a
         // surname in the embedded proper-name set. The capital is the name
