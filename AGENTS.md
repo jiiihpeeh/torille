@@ -57,7 +57,8 @@ src/
   harmony.rs          vowel-harmony primitives for the hand-written engines
   suggest/            check / suggest / find-bases wrappers
     mod.rs            public re-exports, `check`, `classify`
-    known.rs          lemma set, compound detector, stem probes
+    known/            lemma set, compound detector, stem probes, lemma suggestions
+      mod.rs, compound.rs, derived.rs, stems.rs, lemmas.rs
     candidates.rs     `suggest`, `suggest_detailed`, the pipeline
     state.rs          `check_fast`, `suggest_with_state`
     levenshtein.rs    bounded edit distance + keyboard tie-break
@@ -75,7 +76,7 @@ src/
     sound.rs          sound changes + phonotactic filter (is_phonotactic)
     clitic.rs         -ko -kin -kaan -han -pa
     compound.rs       compound expansion (class 50/51)
-    derived_forms.rs  classless heads, -inen/-lainen, numerals, degrees
+    derived_forms/    classless heads, numerals, degrees, productive suffixes
     build.rs          reverse index (`FormBuilder`) + `ClassPrior`
     find_bases.rs     four-phase "which lemma is this a form of?" search
     lexicon_index.rs  compile-time sorted head/tail index over the lexicon
@@ -321,7 +322,7 @@ is gitignored and generated.
 - **No shortcuts in the inflection detection.** The right place for a
   missing-form bug is the inflection engine (`src/expand/`,
   `src/expand/verbs/`, `src/expand/find_bases.rs`, `src/grammar/`), never
-  another suffix-stripper entry in `is_known_word` in `src/suggest/known.rs`.
+  another suffix-stripper entry in `is_known_word` in `src/suggest/known/`.
   Each suffix added there is a bypass around the actual paradigm table
   / gradation / inflection code, and the bypass does not generalise:
   if `tiedä → tietää` is missing, the fix is to make `find_bases_with`

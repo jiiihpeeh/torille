@@ -142,6 +142,11 @@ documented 0.05 bonus. The engine cleanup itself did not change ranking.
       module would otherwise resolve in the repo root, not `build/`.
 - [x] **Did not split** `src/grammar/noun.rs` or `src/grammar/verb.rs`:
       TODO A/B/C are still open and the harness is the guard.
+- [x] Post-P5 follow-up: `src/suggest/known.rs` and
+      `src/expand/derived_forms.rs` were split by layer and suffix family
+      (`known/{mod,compound,derived,stems,lemmas}.rs`,
+      `derived_forms/{mod,inen,kas,llinen,agent,ton,uus}.rs`). Public paths
+      are unchanged; the engine output and test count are unchanged.
 
 ## P6 — API surface
 
@@ -222,7 +227,7 @@ Public paths are unchanged (`suggest::*`, `expand::derived_*`,
 ## What not to "clean up"
 
 - Do **not** hand-edit `expand/nominals*` or `expand/verbs`; regenerate.
-- Do **not** simplify `is_known_word` in `src/suggest/known.rs`; AGENTS is explicit
+- Do **not** simplify `is_known_word` in `src/suggest/known/`; AGENTS is explicit
   that it is a bypass and the fix belongs in `find_bases_with` / the class
   engine.
 - Do **not** touch stem/possessive behaviour as part of a cleanup commit; TODO

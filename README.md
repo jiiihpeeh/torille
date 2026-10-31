@@ -80,7 +80,7 @@ torille/
       harmony.rs        the front/back harmony
     expand/
       mod.rs            the pipeline: build the form, then read it back
-      derived_forms.rs  classless heads, -inen/-lainen, numerals, degrees
+      derived_forms/    classless heads, numerals, degrees, productive suffixes
       build.rs          the reverse index
       inflect.rs        the slots, the stems, the possessive suffixes
       align.rs          aligning a slot's form onto a stem
