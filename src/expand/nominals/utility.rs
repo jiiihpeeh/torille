@@ -672,12 +672,7 @@ impl Builder {
     /// follow it, the same as every other column here.
     pub fn comitative(&mut self, stem: &str) {
         let base = stem.strip_suffix('i').unwrap_or(stem);
-        self.push(
-            Case::Comitative,
-            Number::Plural,
-            None,
-            format!("{base}ine"),
-        );
+        self.push(Case::Comitative, Number::Plural, None, format!("{base}ine"));
         if !self.possessives {
             return;
         }
@@ -856,9 +851,26 @@ impl IPlural {
 /// and `-ja`/`-ita` partitive. The bare nominative is the lemma (for a
 /// consonant-final word).
 pub fn build_i_loans(lemma: &str, possessives: bool, front: bool, ipl: IPlural) -> Vec<Form> {
+    build_i_loans_with_nom_base(lemma, possessives, front, ipl, None)
+}
+
+/// [`build_i_loans`] with a caller-chosen base for the two nominative
+/// possessive columns. Native words that also carry a class-5 dictionary row
+/// take `kuoreni`/`vyyhteni` there, while the rest of the class-5 grid stays on
+/// the i-stem.
+pub fn build_i_loans_with_nom_base(
+    lemma: &str,
+    possessives: bool,
+    front: bool,
+    ipl: IPlural,
+    nom_base: Option<&str>,
+) -> Vec<Form> {
     let mut b = Builder::new_harmony(lemma, possessives, front);
     let istem = i_stem(lemma);
     let estem = e_stem(&istem);
+    let nom_base = nom_base
+        .map(str::to_string)
+        .unwrap_or_else(|| istem.clone());
     let (sg, pl) = (Number::Singular, Number::Plural);
 
     // The `-i`-plural alternants on the `e`-stem: genitive `-iden`, genitive
@@ -889,7 +901,7 @@ pub fn build_i_loans(lemma: &str, possessives: bool, front: bool, ipl: IPlural) 
             // ---- the singular, on the i-stem ----
             // Bare nominative is the lemma (argon); its possessives sit on the
             // i-stem (argonin).
-            cell(Case::Nominative, sg, lemma, ["", ""], false).base_on(istem.clone(), ["", ""]),
+            cell(Case::Nominative, sg, lemma, ["", ""], false).base_on(nom_base.clone(), ["", ""]),
             cell(Case::Genitive, sg, &istem, ["n", "n"], false).on_stem(),
             cell(Case::Partitive, sg, &istem, ["a", "ä"], true),
             cell(Case::Essive, sg, &istem, ["na", "nä"], true),
@@ -903,7 +915,8 @@ pub fn build_i_loans(lemma: &str, possessives: bool, front: bool, ipl: IPlural) 
             cell(Case::Allative, sg, &istem, ["lle", "lle"], true),
             cell(Case::Abessive, sg, &istem, ["tta", "ttä"], true),
             // ---- the plural ----
-            cell(Case::Nominative, pl, &istem, ["t", "t"], false).on_stem(),
+            cell(Case::Nominative, pl, &istem, ["t", "t"], false)
+                .base_on(nom_base.clone(), ["", ""]),
             // Genitive plural keeps the i: aari -> aarien.
             cell(Case::Genitive, pl, &istem, ["en", "en"], false).on_ending(["e", "e"]),
             // Every other oblique plural cell is on the e-stem.

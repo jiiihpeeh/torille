@@ -39,11 +39,11 @@ class-engine round and are kept only where the item is still open.
   off the wrong stem in classes `24`, `31`, and `36` (`kuorikseen` for
   `kuorekseen`, `haaksikseen` for `haahdekseen`, `vanhimmikseen` for
   `vanhimmakseen`). Classes 24, 31, and 36 now report zero illegal in the
-  sampled sweep; class 26 still shows five in the full sample. The remaining
-  `7*F` and `26` rows come from native words that also carry a class-5
-  dictionary row; the class-5 nominative possessive uses the i-stem where the
-  native row uses the e-stem (`vyyhtini` for `vyyhteni`, `kuorini` for
-  `kuoreni`).
+  sampled sweep; class 26 still shows five in the full sample. The class-5
+  native twin now uses the e-stem in the nominative possessive (`vyyhteni`,
+  `kuoreni`), which clears `5*F`; its genitive possessive still uses the
+  i-stem (`vyyhtini` for `vyyhteni`, `kuorini` for `kuoreni`), which is what
+  the remaining `7*F`/`26` rows are.
 
   Evidence: `docs/harness.md` → Known defects → C.
 

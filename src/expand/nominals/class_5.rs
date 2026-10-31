@@ -29,7 +29,8 @@ use crate::tags::{Case, Form, Number, PartOfSpeech};
 
 use super::harmony::loanword_harmony;
 use super::utility::{
-    Builder, Decl, IPlural, build_i_loans, cell, e_stem, nominal_tags, plain, rare,
+    Builder, Decl, IPlural, build_i_loans, build_i_loans_with_nom_base, cell, e_stem, nominal_tags,
+    plain, rare,
 };
 
 pub const CLASS: &str = "5";
@@ -121,6 +122,21 @@ const STRONG_INSTRUCTIVE: &[&str] = &[
     "valmiuslaki",
 ];
 
+/// Native `-i`/`-ri` words that also carry a class-5 row take the native
+/// `e`-stem in the nominative possessive (`kuoreni`, `vyyhteni`), while the
+/// rest of the class-5 grid stays on its i-stem.
+fn native_nom_base(lemma: &str) -> Option<String> {
+    let mut native = false;
+    for row in crate::kotus::sanalista().by_word(lemma) {
+        for inflection in row.inflections() {
+            if matches!(inflection.class, 7 | 24 | 26) {
+                native = true;
+            }
+        }
+    }
+    native.then(|| e_stem(lemma))
+}
+
 /// Inflect a base-class-5 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     // `peitsi` has a 30 row beside its spurious 5 row. The class-5 i-plural
@@ -136,12 +152,31 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     }
     // A few ambiguous loanwords (analyysi) are genuinely a/ä both, so both
     // spellings are built; otherwise the shared loanword harmony decides.
+    let nom_base = native_nom_base(lemma);
     if BOTH_HARMONY.contains(&lemma) {
-        let mut out = build_i_loans(lemma, possessives, true, i_plural(lemma));
-        out.extend(build_i_loans(lemma, possessives, false, i_plural(lemma)));
+        let mut out = build_i_loans_with_nom_base(
+            lemma,
+            possessives,
+            true,
+            i_plural(lemma),
+            nom_base.as_deref(),
+        );
+        out.extend(build_i_loans_with_nom_base(
+            lemma,
+            possessives,
+            false,
+            i_plural(lemma),
+            nom_base.as_deref(),
+        ));
         return out;
     }
-    build_i_loans(lemma, possessives, loanword_harmony(lemma), i_plural(lemma))
+    build_i_loans_with_nom_base(
+        lemma,
+        possessives,
+        loanword_harmony(lemma),
+        i_plural(lemma),
+        nom_base.as_deref(),
+    )
 }
 
 /// The graded class-5 subtypes (5*A..5*J). A graded class-5 word is a base-5
@@ -170,6 +205,7 @@ pub fn inflect_graded(lemma: &str, possessives: bool, grad: Gradation) -> Vec<Fo
         return build_i_loans(lemma, possessives, b.is_front(), i_plural(lemma));
     }
     let strong = lemma;
+    let nom_base = native_nom_base(lemma);
     let weak = grad.apply(strong, Grade::Weak);
     let estrong = e_stem(strong);
     let eweak = e_stem(&weak);
@@ -194,7 +230,10 @@ pub fn inflect_graded(lemma: &str, possessives: bool, grad: Gradation) -> Vec<Fo
     b.decline(
         &Decl::new(vec![
             // ---- singular, strong grade ----
-            cell(Case::Nominative, sg, strong, ["", ""], false).on_stem(),
+            cell(Case::Nominative, sg, strong, ["", ""], false).base_on(
+                nom_base.clone().unwrap_or_else(|| strong.to_string()),
+                ["", ""],
+            ),
             cell(Case::Partitive, sg, strong, ["a", "ä"], true),
             cell(Case::Essive, sg, strong, ["na", "nä"], true),
             // The illative doubles the i: aerobikki -> aerobikkiin.
@@ -219,9 +258,12 @@ pub fn inflect_graded(lemma: &str, possessives: bool, grad: Gradation) -> Vec<Fo
             cell(Case::Essive, pl, &estrong, ["ina", "inä"], true),
             cell(Case::Illative, pl, &estrong, ["ihin", "ihin"], false).on_ending(["ihi", "ihi"]),
             // ---- plural, weak grade ----
-            // Nominative is weak but its possessives sit on the strong stem.
-            cell(Case::Nominative, pl, &weak, ["t", "t"], false)
-                .base_on(strong.to_string(), ["", ""]),
+            // Nominative is weak but its possessives sit on the strong stem,
+            // or the native e-stem when this word also has a native row.
+            cell(Case::Nominative, pl, &weak, ["t", "t"], false).base_on(
+                nom_base.clone().unwrap_or_else(|| strong.to_string()),
+                ["", ""],
+            ),
             cell(Case::Translative, pl, &eweak, ["iksi", "iksi"], true).on_ending(["ikse", "ikse"]),
             cell(Case::Inessive, pl, &eweak, ["issa", "issä"], true),
             cell(Case::Elative, pl, &eweak, ["ista", "istä"], true),
@@ -241,6 +283,39 @@ pub fn inflect_graded(lemma: &str, possessives: bool, grad: Gradation) -> Vec<Fo
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::kotus::Gradation;
+
+    /// A native word that also carries a class-5 row takes the native e-stem
+    /// in the nominative possessive, not the loanword i-stem.
+    #[test]
+    fn a_native_twin_uses_the_e_stem_for_nominative_possessives() {
+        fn nominative_singular(forms: Vec<Form>) -> Vec<String> {
+            forms
+                .into_iter()
+                .filter(|form| {
+                    form.readings.iter().any(|reading| {
+                        reading.case == Some(Case::Nominative)
+                            && reading.number == Some(Number::Singular)
+                    })
+                })
+                .map(|form| form.word)
+                .collect()
+        }
+
+        let kuori = nominative_singular(inflect("kuori", true));
+        assert!(kuori.contains(&"kuoreni".to_string()));
+        assert!(!kuori.contains(&"kuorini".to_string()));
+
+        let vyyhti = nominative_singular(inflect_graded("vyyhti", true, Gradation(6)));
+        assert!(vyyhti.contains(&"vyyhteni".to_string()));
+        assert!(!vyyhti.contains(&"vyyhtini".to_string()));
+
+        let viti = nominative_singular(inflect_graded("viti", true, Gradation(6)));
+        assert!(viti.contains(&"vitini".to_string()));
+        assert!(!viti.contains(&"viteni".to_string()));
+    }
+
     use super::*;
     use crate::tags::Confidence;
 
