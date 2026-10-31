@@ -18,6 +18,7 @@ pub mod kotus;
 mod map_reader;
 pub mod pronoun;
 pub mod rerank;
+pub mod sentence;
 pub mod spec;
 pub mod suggest;
 pub mod tags;

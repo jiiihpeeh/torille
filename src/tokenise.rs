@@ -69,32 +69,11 @@ impl Token {
     }
 
     /// `true` if this is a separator run that ends a sentence or opens a
-    /// new one: a final `.`/`!`/`?`/`:`, an opening/closing quote mark, or
-    /// any line break. The per-textbox state uses this for sentence-initial
-    /// detection -- a more sophisticated sentence splitter would be slow
-    /// here and the engine does not need it. A newline counts because
-    /// Gutenberg verse and dialogue lines start with a capital without a
-    /// full stop.
+    /// new one. The rules live in
+    /// [`crate::sentence::separator_ends_sentence`]; this is the token-level
+    /// wrapper kept for the existing callers.
     pub fn ends_sentence(&self) -> bool {
-        if !matches!(self.kind, TokenKind::Separator) {
-            return false;
-        }
-        if self.text.contains('\n') {
-            return true;
-        }
-        let last = self.text.chars().rev().find(|c| !c.is_whitespace());
-        matches!(
-            last,
-            Some('.')
-                | Some('!')
-                | Some('?')
-                | Some(':')
-                | Some('»')
-                | Some('«')
-                | Some('"')
-                | Some('“')
-                | Some('”')
-        )
+        crate::sentence::separator_ends_sentence(self)
     }
 
     /// Lower-cased word text, or `None` for separators. The wasm
@@ -192,28 +171,16 @@ pub fn tokenise(text: &str) -> Vec<Token> {
 }
 
 /// One `bool` per token, `true` when the token is a word at the
-/// start of a sentence. A token is sentence-initial if it is the
-/// first word of the input, or if the most recent preceding
-/// separator run ends a sentence (`ends_sentence` is `true`).
+/// start of a sentence.
 ///
-/// Used by the wasm side to filter proper-noun candidates: every
-/// sentence in Finnish starts with a capital, so a sentence-
-/// initial capital is ambiguous and the conservative rule is to
-/// only learn capitalised words that appear 2+ times in the text.
+/// Kept as a compatibility wrapper over [`crate::sentence::analyze`]; new
+/// code should read the [`crate::sentence::TokenContext`] that also carries
+/// sentence numbers and paragraph/quote state.
 pub fn annotate_sentence_initial(tokens: &[Token]) -> Vec<bool> {
-    let mut out = vec![false; tokens.len()];
-    let mut sentence_initial = true;
-    for (i, tok) in tokens.iter().enumerate() {
-        if tok.is_word() {
-            out[i] = sentence_initial;
-            // Any word ends the "start of sentence" state, regardless
-            // of whether the sentence continues after it.
-            sentence_initial = false;
-        } else if tok.ends_sentence() {
-            sentence_initial = true;
-        }
-    }
-    out
+    crate::sentence::analyze(tokens)
+        .into_iter()
+        .map(|context| context.sentence_start)
+        .collect()
 }
 
 #[cfg(test)]

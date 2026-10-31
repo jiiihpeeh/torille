@@ -72,6 +72,7 @@ torille/
     pronoun.rs          the pronouns
     suggest/            check, suggest, candidate generation, edit distance
     tokenise.rs         word/separator tokeniser
+    sentence.rs         sentence spans and token context
     grammar/
       noun.rs           the noun classes, their stems and their lexical cases
       verb.rs           the verb classes
