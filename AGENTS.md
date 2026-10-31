@@ -53,6 +53,7 @@ src/
   pronoun.rs          personal pronouns (a closed paradigm)
   tokenise.rs         word/separator tokeniser for the wasm API
   sentence.rs         sentence spans and token sentence/paragraph context
+  syntax.rs           on-demand clause/role analysis over the morphology engine
   hyphenation/        Finnish line-break hyphenation (patterns + policy)
   gradation.rs        consonant gradation ("*X" code) strong<->weak
   harmony.rs          vowel-harmony primitives for the hand-written engines
@@ -239,7 +240,9 @@ paradigm).
 `check`, `suggest`, `suggest_detailed`, `levenshtein_with_ops`, `EditOp`;
 `inflect`/`inflect_all`/`form_of`/`forms_of` under `expand`; `sanalista`,
 `parse_sanalista`, `read_sanalista`, `Sanalista`, `Lemma`, `Inflection`;
-`Tags`, `Form`, `Confidence`; the `rerank` traits/types.
+`Tags`, `Form`, `Confidence`; `sentence::{analyze, spans, Analyzer, TokenContext,
+SentenceSpan}`; `syntax::{analyze, SyntaxAnalysis, Clause, TokenSyntax,
+SyntacticRole, RoleConfidence}`; the `rerank` traits/types.
 
 ## Build, test, lint
 

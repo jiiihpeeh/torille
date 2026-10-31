@@ -1,6 +1,6 @@
 # Sentence analyzer plan
 
-Status: **phases 1–4 implemented** · owner: engine / wasm · target: case-aware checking
+Status: **phases 1–5 implemented** · owner: engine / wasm · target: case-aware checking
 
 Goal: replace the per-separator heuristics behind sentence-initial casing
 with one deterministic sentence analyzer, and build a second, on-demand
@@ -25,7 +25,7 @@ never change spell-checking output.
 
 ## Implementation status
 
-Phases 1–4 are implemented:
+Phases 1–5 are implemented:
 
 - `src/sentence.rs` with `TokenContext`, `SentenceSpan`, `analyze`, `spans`,
   `separator_ends_sentence`, and `separator_breaks_line`;
@@ -38,11 +38,16 @@ Phases 1–4 are implemented:
   spans, and quote depth;
 - `torille-wasm/src/state.rs` uses `sentence::analyze` for misspelling case
   validation and a stateful `sentence::Analyzer` across text windows for
-  proper-name learning.
+  proper-name learning;
+- `src/syntax.rs` with `SyntacticRole`, `RoleConfidence`, `Clause`,
+  `TokenSyntax`, `SyntaxAnalysis`, and `syntax::analyze`. It resolves each
+  word through `find_bases_with` and a cheap stem-map fallback, records the
+  readings, and assigns only predicates and adverbials; subjects, objects,
+  complements, and modifiers stay `Unknown` until phase 6.
 
 Phase 4 removed the compatibility wrappers, so `src/sentence.rs` is the only
-home for boundary and context rules. Phases 5+ (syntax roles in
-`src/syntax.rs`) remain open.
+home for boundary and context rules. Phases 6+ (clause segmentation and core
+roles) remain open.
 
 ## Why now
 
@@ -520,8 +525,9 @@ Gutenberg corpus in CI. Optionally add a ignored/local test that reads
 4. **Cleanup** — done: `annotate_sentence_initial` and
    `Token::ends_sentence` were removed from `src/tokenise.rs`; docs and
    `AGENTS.md` point at `sentence.rs`.
-5. **Role extraction** — add `syntax.rs` with morphological input and
-   `Unknown`-first role assignment. No UI consumer yet.
+5. **Role extraction** — done: `syntax.rs` carries the public role types,
+   resolves morphology from the engine, and assigns predicate/adverbial roles
+   only. Subjects and objects stay `Unknown`. No UI consumer yet.
 6. **Clause segmentation and core roles** — finite verbs, subjects,
    objects, complements, adverbials; unit tests for the sentences above.
 7. **Coordination and non-finite clauses** — shared subjects/objects,

@@ -21,6 +21,7 @@ pub mod rerank;
 pub mod sentence;
 pub mod spec;
 pub mod suggest;
+pub mod syntax;
 pub mod tags;
 pub mod tokenise;
 pub(crate) mod wordset;
