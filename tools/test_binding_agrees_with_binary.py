@@ -37,6 +37,10 @@ WORDS = [
     "kala", "talo", "käsi", "nainen", "joki", "lapsi", "maa", "tieto",
     "sisu", "valo", "ori", "pieni", "hame", "ahkeraliisa", "aallokko",
     "laskea", "mennä", "tulla", "tehdä", "pitää", "rauhallinen",
+    # A row with no class is a compound: Kotus omits the type because the word
+    # declines like its final component, and both paths have to reach the
+    # head's paradigm rather than refuse the word.
+    "pikkuaivot", "aamuhartaus",
 ]
 
 

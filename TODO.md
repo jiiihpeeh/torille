@@ -10,12 +10,12 @@ offers a non-word has a user-visible bug, and an engine that is merely silent
 does not. The precision sweep is closed (see the `34*C` entry below); the first
 open item is now the prose sample.
 
-**Current full 5-lemma noun report (2026-11-01):** 96,736 confirmed, 1,709
-missing, 78 oracle-only, 4,041 not-plain, 0 illegal, 0 mistagged, 646
-unsupported; recall 98.3%.
-The raw oracle (`--raw-illegal`) is 96,130 confirmed, 538 illegal and 1,787
+**Current full 5-lemma noun report (2026-11-01):** 96,908 confirmed, 1,041
+missing, 244 oracle-only, 4,041 not-plain, 0 illegal, 0 mistagged, 646
+unsupported; recall 98.9%.
+The raw oracle (`--raw-illegal`) is 96,239 confirmed, 595 illegal and 1,285
 missing, all covered by `data/oracle_exceptions.json`. With `--verify-illegal`
-(live Voikko plus the curated rules) the report is: **96,736 confirmed, 0
+(live Voikko plus the curated rules) the report is: **96,908 confirmed, 0
 illegal**, 4,041 not plain, 0 mistagged, and 646 unsupported. The 25 `34*C`
 cells that used to be illegal now show as `missing`: the oracle expects
 `levotonni`, which is not a word, while the engine emits the genitive-stem
@@ -69,16 +69,15 @@ still open.
   against SQLite alone.
 
   An `n=20` sweep (2,896 lemmas) found 343 illegal rows across 7 classes; the
-  evidence file covers the whole default `n=20` report (2,003 rows),
-  and the verified run is 0 illegal. An `n=100` sweep found 6,271 raw illegal
-  rows across 30 classes; the evidence file now covers all of them,
-  and the default `n=100` report is 0 illegal (868,334 confirmed, 9,687
-  missing, 931 oracle-only, 7,611 unsupported). The full-lexicon (`n=1000`)
-  raw report has 12,179 illegal rows; the evidence file covers all of them
-  with 44 rules, so the default full report is 0 illegal (2,904,774 confirmed,
-  19,787 missing, 5,199 oracle-only, 25,475 unsupported). The evidence file
-  now curates the `missing` direction too: the oracle's strong-grade
-  comparative spellings (`kuurompalta` for `kuurommalta`,
+  evidence file covers the whole default `n=20` report (2,076 rows), and the
+  verified run is 0 illegal. An `n=100` sweep found 6,424 raw illegal rows
+  across 30 classes; the evidence file covers all of them, and the default
+  `n=100` report is 0 illegal (868,695 confirmed, 7,781 missing, 1,908
+  oracle-only, 7,611 unsupported). The full-lexicon (`n=1000`) raw report has 12,332 illegal rows; the
+  evidence file covers all of them with 46 rules, so the default full report is
+  0 illegal (2,905,135 confirmed, 17,881 missing, 6,176 oracle-only, 25,475
+  unsupported). The evidence file now curates the `missing` direction too: the
+  oracle's strong-grade comparative spellings (`kuurompalta` for `kuurommalta`,
   `alamaisempalta` for `alamaisemmalta`) are not words, so they are
   `oracle-only` rather than recall gaps. The class-50 compound engine now
   inflects bound heads (`‑kulmio` -> `suorakulmion`) and plural-only tails
@@ -88,7 +87,14 @@ still open.
   (`aktiivat` -> `aktiivoiden`, `rintsikat` -> `rintsikoiden`,
   `menkat` -> `menkkojen`). Classes 2, 3, 5\*G, 16\*H, 18, 20 and 38 still
   treat a `-t`-final lemma as a singular; that is the remaining engine issue.
-  The remaining work is in `TODO_ILLEGAL_REMOVAL_PLAN.md`.
+  A class-51 head is no longer required to be a lemma in the bare nominative:
+  a participle head (`särkynyt` -> `särkyneensydämen`) and a head in its
+  nominative plural (`isot` in `isotaivot`, `pitkät` in `pitkäthousut`) both
+  inflect, and a plural head makes the compound plural-only. A row with no
+  class at all is a compound and now inflects through `compound_head_forms`
+  (`pikkuaivot` -> `pikkuaivojen`, `aamuhartaus` -> `aamuhartauden`), as
+  `Repaired`; `PLAN_COMPOUND.md` has the phases that make those rows
+  first-class. The remaining work is in `TODO_ILLEGAL_REMOVAL_PLAN.md`.
 
   Evidence: `docs/harness.md` → Known defects → C.
 

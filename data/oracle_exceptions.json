@@ -393,6 +393,26 @@
       "sample": 1000,
       "source": "live Voikko (--verify-illegal, 2026-11-01)",
       "note": "kiiru has the kiiruun and kiireen possessive stems; the oracle lists only the kiiruun spelling"
+    },
+    {
+      "id": "lemma-51-plural-head",
+      "classes": ["51"],
+      "lemmas": ["isotaivot", "pitkäthousut"],
+      "predicate": "lemma",
+      "sample": 1000,
+      "applies_to": ["illegal", "missing", "unsupported"],
+      "source": "https://en.wiktionary.org/wiki/isotaivot",
+      "note": "a class-51 compound whose first part is the nominative plural of its head (isot + aivot, pitkät + housut) is plural-only, and the engine now inflects both parts in the plural (isojenaivojen, isojaaivoja, pitkienhousujen). The oracle's expected set for these long compounds is a split of unrelated parts (isotoittamerittä, pitkäthouenkuiden), which is not a word"
+    },
+    {
+      "id": "lemma-51-participle-head",
+      "classes": ["51"],
+      "lemmas": ["särkynytsydän"],
+      "predicate": "lemma",
+      "sample": 1000,
+      "applies_to": ["illegal", "missing", "unsupported"],
+      "source": "https://en.wiktionary.org/wiki/s%C3%A4rkynytsyd%C3%A4n",
+      "note": "the head is the participle särkynyt (broken), which is not a sanalista lemma; the class-47 engine inflects it, so the paradigm is särkyneensydämen, särkyneetsydämet, särkyneittäsydämittä. The oracle's expected set is a split of unrelated parts (särkynytöillämerillä, särkynyillesärjöille)"
     }
   ]
 }

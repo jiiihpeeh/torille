@@ -1437,6 +1437,95 @@ mod tests {
         );
     }
 
+    /// A class-51 head that appears as its nominative plural.
+    ///
+    /// `isotaivot` is `isot` + `aivot`, not `iso` + `taivot`: the first part is
+    /// the nominative plural of `iso`, so the ordinary head scan finds no tail.
+    /// The compound is plural-only, like `isovanhemmat`, and both parts carry
+    /// the plural case: `isojenaivojen`, `isojaaivoja`, `isoissaaivoissa`.
+    #[test]
+    fn a_plural_head_inflects_both_parts_in_the_plural() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let plain = |word: &str| -> Vec<String> {
+            inflect_in(
+                word,
+                Inflection {
+                    class: 51,
+                    gradation: None,
+                },
+                &cat,
+                Some(&LexiconIndex::new(&lexicon)),
+                PartOfSpeech::Noun,
+                true,
+            )
+            .into_iter()
+            .filter(|f| f.readings.iter().all(|r| r.possessive.is_none()))
+            .map(|g| g.word)
+            .collect()
+        };
+
+        for (word, expected) in [
+            ("isotaivot", "isojenaivojen"),
+            ("isotaivot", "isojaaivoja"),
+            ("isotaivot", "isoissaaivoissa"),
+            ("pitkäthousut", "pitkienhousujen"),
+            ("pitkäthousut", "pitkiähousuja"),
+            ("pitkäthousut", "pitkissähousuissa"),
+        ] {
+            let forms = plain(word);
+            assert!(
+                forms.iter().any(|w| w == expected),
+                "{word} lost {expected}: {} forms",
+                forms.len()
+            );
+        }
+        // A plural head makes a plural-only compound: no singular cell.
+        let forms = plain("isotaivot");
+        assert!(
+            !forms.iter().any(|w| w == "isonaivo"),
+            "a plural-head compound produced a singular: {forms:?}"
+        );
+    }
+
+    /// A class-51 head that is a participle.
+    ///
+    /// `särkynytsydän` is `särkynyt` + `sydän`, and `särkynyt` is not a
+    /// sanalista lemma: it is the `-nyt` participle of `särkyä`. The ordinary
+    /// head scan cannot see it, so the class-47 engine inflects the participle
+    /// and the class-51 join does the rest.
+    #[test]
+    fn a_participle_head_inflects_with_the_class_47_paradigm() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let forms: Vec<String> = inflect_in(
+            "särkynytsydän",
+            Inflection {
+                class: 51,
+                gradation: None,
+            },
+            &cat,
+            Some(&LexiconIndex::new(&lexicon)),
+            PartOfSpeech::Noun,
+            false,
+        )
+        .into_iter()
+        .map(|g| g.word)
+        .collect();
+
+        for expected in [
+            "särkyneensydämen",     // genitive singular
+            "särkyneetsydämet",     // nominative plural
+            "särkyneittäsydämittä", // abessive plural
+        ] {
+            assert!(
+                forms.iter().any(|w| w == expected),
+                "särkynytsydän lost {expected}: {} forms",
+                forms.len()
+            );
+        }
+    }
+
     /// Two classes that spell a form the same way say it once.
 ///
 /// `ahtaus` is two homonym rows, `40` and `39`, and the two grids coincide

@@ -51,25 +51,41 @@ pub(super) fn compound_paradigm(
         // The head's bare case forms (class 51 only; a class-50 prefix is fixed).
         let mut head_cells: HashMap<(Case, Number), Vec<String>> = HashMap::new();
         if class == 51 {
-            for head_inf in &head.inflections {
-                if compound_class(head_inf.class) {
-                    continue;
-                }
-                for h in super::inflect_in(
-                    head.word,
-                    *head_inf,
+            let head_forms: Vec<Generated> = match &head {
+                HeadPart::Lemma(head) => head
+                    .inflections
+                    .iter()
+                    .filter(|inf| !compound_class(inf.class))
+                    .flat_map(|inf| {
+                        super::inflect_in(
+                            head.word,
+                            *inf,
+                            cat,
+                            Some(lexicon),
+                            PartOfSpeech::Noun,
+                            false,
+                        )
+                    })
+                    .collect(),
+                HeadPart::Participle(word) => super::inflect_in(
+                    word,
+                    Inflection {
+                        class: 47,
+                        gradation: None,
+                    },
                     cat,
                     Some(lexicon),
                     PartOfSpeech::Noun,
                     false,
-                ) {
-                    let tags = h.union();
-                    if tags.possessive.is_some() {
-                        continue;
-                    }
-                    if let (Some(c), Some(n)) = (tags.case, tags.number) {
-                        head_cells.entry((c, n)).or_default().push(h.word);
-                    }
+                ),
+            };
+            for h in head_forms {
+                let tags = h.union();
+                if tags.possessive.is_some() {
+                    continue;
+                }
+                if let (Some(c), Some(n)) = (tags.case, tags.number) {
+                    head_cells.entry((c, n)).or_default().push(h.word);
                 }
             }
         }
@@ -181,6 +197,16 @@ fn compound_class(class: u16) -> bool {
     class == 50 || class == 51
 }
 
+/// The first part of a class-51 compound.
+///
+/// Usually a sanalista lemma (`nuori` in `nuoripari`). A participle head
+/// (`särkynyt` in `särkynytsydän`) is not a lemma -- it is the `-nut`/`-nyt`
+/// form of a verb -- so it is inflected with class 47 instead.
+enum HeadPart<'a> {
+    Lemma(&'a Lemma<'a>),
+    Participle(String),
+}
+
 /// How a compound's tail surface relates to the lemma that inflects it.
 ///
 /// The sanalista spells some compound heads as bound combining forms with a
@@ -274,7 +300,7 @@ fn find_parts<'a>(
     index: &'a LexiconIndex<'a>,
     cat: &Catalogues,
     accept_compound_tail: bool,
-) -> Vec<(String, &'a Lemma<'a>, &'a Lemma<'a>, TailShape)> {
+) -> Vec<(String, HeadPart<'a>, &'a Lemma<'a>, TailShape)> {
     let mut parts = Vec::new();
     if class == 51 {
         // The head is a prefix of the compound, so the bucket index narrows the
@@ -301,7 +327,7 @@ fn find_parts<'a>(
                 .tail_exactly(rest)
                 .find(|e| carries_a_case(e) || (accept_compound_tail && e.is_compound_like()))
             {
-                parts.push((String::new(), head, tail, TailShape::Exact));
+                parts.push((String::new(), HeadPart::Lemma(head), tail, TailShape::Exact));
             }
         }
         // `nuori-isäntä` is the one class-51 lemma the sanalista writes with a
@@ -317,7 +343,52 @@ fn find_parts<'a>(
             let head = index.tail_exactly(head_word).find(|e| carries_a_case(e));
             let tail = index.tail_exactly(tail_word).find(|e| carries_a_case(e));
             if let (Some(head), Some(tail)) = (head, tail) {
-                parts.push(("-".to_string(), head, tail, TailShape::Exact));
+                parts.push((
+                    "-".to_string(),
+                    HeadPart::Lemma(head),
+                    tail,
+                    TailShape::Exact,
+                ));
+            }
+        }
+        // A head that appears as its nominative plural (`isot` in `isotaivot`,
+        // `pitkät` in `pitkäthousut`) is the class-51 counterpart of a
+        // plural-only tail. The ordinary scan looks for `iso` + `taivot` and
+        // finds no tail, because the surface carries the head's plural `-t`.
+        // Such a compound has no singular at all, so it takes the
+        // [`TailShape::PluralOnly`] filter like `isovanhemmat`.
+        if parts.is_empty()
+            && let Some((head, tail)) = plural_head(lemma, index, cat)
+        {
+            parts.push((
+                String::new(),
+                HeadPart::Lemma(head),
+                tail,
+                TailShape::PluralOnly,
+            ));
+        }
+        // A participle head (`särkynyt` in `särkynytsydän`) is not a lemma: it
+        // is the `-nut`/`-nyt` form of a verb, so the class-47 engine inflects
+        // it. The ordinary head scan cannot see it because the lexicon has no
+        // such lemma.
+        if parts.is_empty() {
+            for (at, _) in lemma.char_indices().skip(SHORTEST_HEAD) {
+                let head = &lemma[..at];
+                if !(head.ends_with("nut") || head.ends_with("nyt")) {
+                    continue;
+                }
+                let rest = &lemma[at..];
+                if rest.chars().count() < SHORTEST_TAIL {
+                    continue;
+                }
+                if let Some(tail) = index.tail_exactly(rest).find(|e| carries_a_case(e)) {
+                    parts.push((
+                        String::new(),
+                        HeadPart::Participle(head.to_string()),
+                        tail,
+                        TailShape::Exact,
+                    ));
+                }
             }
         }
     } else {
@@ -382,10 +453,51 @@ fn find_parts<'a>(
             best = Some((prefix, base, base, TailShape::PluralOnly, width));
         }
         if let Some((p, h, t, shape, _)) = best {
-            parts.push((p, h, t, shape));
+            parts.push((p, HeadPart::Lemma(h), t, shape));
         }
     }
     parts
+}
+
+/// Resolves a class-51 head that is the nominative plural of another lemma.
+///
+/// `isotaivot` is `isot` + `aivot` and `pitkäthousut` is `pitkät` + `housut`:
+/// the first part is the nominative plural of `iso`/`pitkä`, not the lemma
+/// itself, so [`find_parts`]'s ordinary head scan (which looks for `iso` +
+/// `taivot`) finds no tail. The tail is still an ordinary lemma, and the whole
+/// compound is plural-only.
+fn plural_head<'a>(
+    lemma: &str,
+    index: &'a LexiconIndex<'a>,
+    cat: &Catalogues,
+) -> Option<(&'a Lemma<'a>, &'a Lemma<'a>)> {
+    // Only a `-t` surface can be a nominative plural, and only a `-t` lemma can
+    // end in one.
+    if !lemma.ends_with('t') {
+        return None;
+    }
+    let mut best: Option<(&Lemma, &Lemma, usize)> = None;
+    for (at, _) in lemma.char_indices().skip(SHORTEST_HEAD) {
+        let surface = &lemma[..at];
+        if !surface.ends_with('t') || surface.chars().count() < SHORTEST_HEAD {
+            continue;
+        }
+        let rest = &lemma[at..];
+        if rest.chars().count() < SHORTEST_TAIL {
+            continue;
+        }
+        let Some(base) = nominative_plural_base(surface, index, cat) else {
+            continue;
+        };
+        let Some(tail) = index.tail_exactly(rest).find(|e| carries_a_case(e)) else {
+            continue;
+        };
+        let width = surface.chars().count();
+        if best.as_ref().is_none_or(|&(_, _, w)| w < width) {
+            best = Some((base, tail, width));
+        }
+    }
+    best.map(|(base, tail, _)| (base, tail))
 }
 
 /// Resolves a class-50 tail that is the nominative plural of another lemma.

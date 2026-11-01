@@ -25,6 +25,8 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
   policy, offsets and exceptions. The plan is `PLAN_HYPHENATION.md`.
 - `TODO.md` — known gaps ordered by user-facing impact.
 - `PLAN.md` / `PLAN_REFACTOR.md` — the stem refactor and its outcome.
+- `PLAN_COMPOUND.md` — the compound engine: what the spec asks for, what
+  already exists, and the phases for the inflection-mode/compound-kind model.
 
 ## Repository map
 
@@ -170,13 +172,27 @@ Called for every lemma/class; short-circuits in order:
 2. `try_compound_marker` — class 50/51 compounds are inflected part by part.
    Class 50 with no split falls back to its head's class; class 51 deliberately
    does not (its semantics are the opposite). A class-50 tail may be a bound
-   combining form (`‑kulmio` in `suorakulmio`, hyphen stripped) or the
+   combining form (`‑kulmio` in `suorakulmio`, hyphen stripped), the
    nominative plural of a lemma (`vanhemmat` in `isovanhemmat`, resolved to
-   `vanhempi`; only the plural cells are emitted).
+   `vanhempi`; only the plural cells are emitted), or a compound of its own
+   (`viinimarja` in `mustaviinimarja`). A class-51 *head* may be a participle
+   (`särkynyt` in `särkynytsydän`, inflected with class 47) or the nominative
+   plural of its lemma (`isot` in `isotaivot`, `pitkät` in `pitkäthousut`),
+   which makes the compound plural-only.
 3. Heuristic engine over the catalogue model (`inflect_from`, with `spellings`
    covering length compensation and epenthetic vowels).
 4. Hand-written `nominals`/`verbs` modules (authoritative or additive, above).
 5. `dedup`.
+
+A sanalista row with **no class** is a compound (56 486 rows): Kotus omits the
+type because the word declines like its final component. `inflect_all` runs
+`compound_head_forms` (modifier fixed, head's class) and the derived `-inen`
+adjectives for such a row, so `inflect` and the binding reach the whole
+paradigm. The forms are `Repaired`, so `check` accepts them but `suggest` never
+offers them. The reverse index does **not** include them: `FormBuilder` walks
+the row's classes and a classless row has none, so only the citation form is
+indexed — the same limit as compound analysis in the fast `check`/`suggest`.
+The class report does not see the rows either, because they carry no class.
 
 Public wrappers: `inflect`, `inflect_all` (preserves first-occurrence order and
 drops only fully-identical copies), `form_of`/`form_of_in` (filter by `Tags`

@@ -322,17 +322,17 @@ python3 tools/summarize_class_report.py reports/noun-classes.json
 ```
 
 The numbers are from a 5-lemma sample of each of the 146 noun classes.
-Current totals: **96,736 confirmed, 1,709 missing, 78 oracle-only,
+Current totals: **96,908 confirmed, 1,041 missing, 244 oracle-only,
 4,041 not plain, 0 illegal, 0 mistagged, 646 unsupported.** Recall — confirmed
-over confirmed plus missing — is **98.3%**. The default report applies the
+over confirmed plus missing — is **98.9%**. The default report applies the
 curated evidence in `data/oracle_exceptions.json`; the oracle on its own
-(`--raw-illegal`) shows **96,130 confirmed, 538 illegal and 1,787 missing**,
-all 538 covered by rules. `oracle-only` is the `missing` direction of the same
+(`--raw-illegal`) shows **96,239 confirmed, 595 illegal and 1,285 missing**,
+all 595 covered by rules. `oracle-only` is the `missing` direction of the same
 curation: the oracle claims a form that is not a word (a comparative's strong
 `-mpa-` in a weak cell, `kuurompalta` for `kuurommalta`), so it is not counted
 as a recall gap.
 `--verify-illegal` additionally rechecks the raw illegal rows with live Voikko:
-**96,736 confirmed, 0 illegal**, 4,041 not plain, 0 mistagged, and 646
+**96,908 confirmed, 0 illegal**, 4,041 not plain, 0 mistagged, and 646
 unsupported. Under the
 curated pass the 25 `34*C` cells that used to be illegal
 now show as `missing`: the oracle attaches the nominative possessive to the

@@ -97,11 +97,11 @@ fn main() -> ExitCode {
         torille_tools::resolve_inflections(&word)
     };
 
-    if inflections.is_empty() {
-        eprintln!("{word}: no class to inflect with");
-        return ExitCode::from(2);
-    }
-
+    // A sanalista row with no class is a compound: Kotus omits the type
+    // because the word declines like its final component, and
+    // `inflect_all`'s classless branch inflects it by its head. That is not an
+    // error, so the empty list is passed through. The earlier check already
+    // rejected a word that is neither in the sanalista nor given a class.
     let pos = part_of_speech.unwrap_or(torille::tags::PartOfSpeech::Unknown);
     let possessives = pos == torille::tags::PartOfSpeech::Noun;
     // The lexicon, because a class-50/51 compound is inflected part by part and
@@ -117,7 +117,12 @@ fn main() -> ExitCode {
         None => forms,
     };
 
-    let classes: Vec<String> = inflections.iter().map(|i| i.to_string()).collect();
+    let classes: Vec<String> = if inflections.is_empty() {
+        // A classless row is a compound; there is no class number to print.
+        vec!["(none: compound)".to_string()]
+    } else {
+        inflections.iter().map(|i| i.to_string()).collect()
+    };
     println!("{word}  class {}  {}\n", classes.join(", "), pos.finnish());
     if forms.is_empty() {
         println!("(no forms generated)");

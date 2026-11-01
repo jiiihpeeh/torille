@@ -5,19 +5,21 @@ defect is fixed, and so are the class-50 compound defects behind the
 plural-only tails (bound combining forms like `‑kulmio`, and tails that are the
 nominative plural of their head, like `vanhemmat`/`vanhempi`) and the
 plural-only `-t` lemmas in classes 9, 9\*, 12, 13 and 14\*A (`aktiivat` ->
-`aktiivoiden`, `rintsikat` -> `rintsikoiden`). The default report applies
+`aktiivoiden`, `rintsikat` -> `rintsikoiden`). The class-51 head shapes are
+fixed too: a participle head (`särkynyt` in `särkynytsydän`) and a head in its
+nominative plural (`isot` in `isotaivot`, `pitkät` in `pitkäthousut`), which
+makes the compound plural-only. The default report applies
 `data/oracle_exceptions.json` and is 0 illegal at every sample. `missing` is
 counted per cell (`drop_covered_missing`): a cell is missing only when the
 engine produces **none** of its confirmed spellings, which takes the
-full-lexicon `missing` from 100,453 to **24,986** and the default from 73,386
-to **19,787** (recall 99.3%). The raw oracle
-report is **538 illegal at n=5, 2,003 at n=20, 6,271 at n=100 and 12,179 at
-full lexicon**, all covered by **44 rules**; the verified run is 0 illegal at
-full lexicon. The evidence file also curates the `missing` direction: the
-oracle's strong-grade comparative spellings (`kuurompalta`,
+full-lexicon `missing` from 100,453 to **24,057** and the default from 73,386
+to **17,881** (recall 99.4%). The raw oracle report is **595 illegal at n=5,
+2,076 at n=20, 6,424 at n=100 and 12,332 at full lexicon**, all covered by
+**46 rules**; the verified run is 0 illegal at full lexicon. The evidence file also curates the `missing`
+direction: the oracle's strong-grade comparative spellings (`kuurompalta`,
 `alamaisempalta`) and plural-only `-iset` singulars are not words, so they are
-reported as `oracle-only` (**78 at n=5, 238 at n=20, 931 at n=100, 5,199 at full lexicon**)
-rather than as recall gaps. The evidence gate `tools/test_illegal_evidence.py`
+reported as `oracle-only` (**244 at n=5, 630 at n=20, 1,908 at n=100, 6,176 at
+full lexicon**) rather than as recall gaps. The evidence gate `tools/test_illegal_evidence.py`
 is green at n=5, n=20, n=100 and full.
 
 The remaining plural-only work is the classes whose engines still treat a
@@ -299,16 +301,16 @@ engine: class 9*B declines the dropped-`t` base, strong-graded back to `hippa`,
 so `hipat` reaches `hippoja` and `hippojen`. The evidence rule is the
 class-scoped `plural-only-t-stems`.
 
-The default n=20 report's 2,003 illegal rows are all covered by the evidence
+The default n=20 report's 2,076 illegal rows are all covered by the evidence
 file; `tools/test_illegal_evidence.py --report reports/noun-classes-n20.json
--n 20` passes. The raw n=20 report is 287,763 confirmed, 3,534 missing, 2,003
-illegal and 2,334 unsupported; the default report reclassifies 238 of the
-missing rows as `oracle-only` (289,970 confirmed, 3,296 missing, 13,810
+-n 20` passes. The raw n=20 report is 287,938 confirmed, 2,608 missing, 2,076
+illegal and 2,346 unsupported; the default report reclassifies 630 of the
+missing rows as `oracle-only` (290,230 confirmed, 1,978 missing, 13,810
 not plain, 2,130 unsupported).
 
 ### n=100 slice
 
-The `-n 100` run found **6,271 raw illegal rows** across 30 classes (861,260
+The `-n 100` run found **6,424 raw illegal rows** across 30 classes (861,436
 confirmed); the verified run had 1,356 before the new rules. The extra raw rows
 are the case-less possessive readings live Voikko confirms. The evidence file
 now covers the whole raw n=100 report:
@@ -325,14 +327,14 @@ now covers the whole raw n=100 report:
 - class 50 compounds: case-less NOM possessive, and the plural-only tail rule
   (`omakustannukset` is in this sample).
 
-The default n=100 report is 868,334 confirmed, 9,687 missing, 931
+The default n=100 report is 868,695 confirmed, 7,781 missing, 1,908
 oracle-only, 27,552 not plain, 0 illegal, 7,611 unsupported.
 
 ### Full lexicon
 
-The `-n 1000` pass checked 2,891,112 raw confirmed forms and found **12,179
+The `-n 1000` pass checked 2,891,288 raw confirmed forms and found **12,332
 raw illegal** across 30 classes; the verified run had 1,274. The evidence file
-now covers the whole raw report with 40 rules:
+now covers the whole raw report with 46 rules:
 
 - class 39 and 10 plural-only `-t` stems: `shorter` (the engine uses the stem,
   the oracle concatenates the nominative);
@@ -353,9 +355,9 @@ now covers the whole raw report with 40 rules:
 - class 10 partitive plural possessives (`pässinpökkimät`, `bänät`,
   `oltavat`).
 
-The raw full report is 2,891,112 confirmed, 24,986 missing, 12,179 illegal,
-26,958 unsupported; all 12,179 are covered, and the default full report is
-**2,904,774 confirmed, 19,787 missing, 5,199 oracle-only, 72,540 not plain,
+The raw full report is 2,891,288 confirmed, 24,057 missing, 12,332 illegal,
+26,990 unsupported; all 12,332 are covered, and the default full report is
+**2,905,135 confirmed, 17,881 missing, 6,176 oracle-only, 72,540 not plain,
 0 illegal, 25,475 unsupported**. The verified run's 1,274 illegal
 rows are also all covered, so `--verify-illegal` is 0 illegal at full lexicon.
 
@@ -372,8 +374,8 @@ covers.
 
 `drop_covered_missing` in `tools/omorfi_harness.py` now counts per cell: a
 cell is `missing` only if the engine produces **none** of its confirmed
-spellings. At the 5-lemma sample that takes `missing` from 6,808 to **1,709**
-(recall 93.4% -> 98.3%), and it is what stops the class-50/51 compound rows
+spellings. At the 5-lemma sample that takes `missing` from 6,808 to **1,041**
+(recall 93.4% -> 98.9%), and it is what stops the class-50/51 compound rows
 (`kevytsinkoilta` against the engine's `kevytsingoilta`) counting as gaps.
 
 What remains is two kinds, and the evidence file handles the ones the oracle
@@ -436,6 +438,32 @@ part inflects as well: `mustanviinimarjan`, `mustaaviinimarjaa`,
 a lemma that is class 51 alone, so the dual-class words (`isomaksaruoho` is
 `50, 51`) keep their correct class-50 reading instead of gaining a second
 paradigm. Pinned by `a_compound_like_tail_is_split_recursively`.
+
+A class-51 **head** has the same problem on the other side. `isotaivot` is
+`isot` + `aivot` and `pitkäthousut` is `pitkät` + `housut`: the first part is
+the nominative plural of `iso`/`pitkä`, so the ordinary head scan looks for
+`iso` + `taivot` and finds no tail. `särkynytsydän` is `särkynyt` + `sydän`,
+and `särkynyt` is not a lemma at all -- it is the `-nyt` participle of
+`särkyä`. The plural head is resolved by inflecting the candidate lemmas and
+checking which one owns the surface, and the participle head is inflected with
+class 47. Both shapes are plural/singular as the parts dictate:
+`isojenaivojen`, `isojaaivoja`, `isoissaaivoissa` (plural only),
+`pitkienhousujen`, `pitkiähousuja`, and `särkyneensydämen`,
+`särkyneetsydämet`, `särkyneittäsydämittä`. Sources:
+`en.wiktionary.org/wiki/isotaivot`, `.../pitkäthousut`,
+`.../särkynytsydän`. Pinned by
+`a_plural_head_inflects_both_parts_in_the_plural` and
+`a_participle_head_inflects_with_the_class_47_paradigm`.
+
+A sanalista row with **no class** is a compound: Kotus omits the type because
+the word declines like its final component. 56 486 rows are in that position
+(`pikkuaivot`, `aamuhartaus`, `kirjakauppa`). `inflect_all` already inflected
+them through `compound_head_forms` (modifier fixed, head's class), but the
+`inflect` CLI rejected the empty class list before reaching it, so those words
+looked uninflectable. The CLI now passes the empty list through:
+`pikkuaivojen`, `pikkuaivoja`, `pikkuaivoihin`; `aamuhartauden`,
+`aamuhartaudessa`. The forms are `Repaired` (accepted, never suggested), and
+`PLAN_COMPOUND.md` has the phases that make the rows first-class.
 
 The class-22 loanwords had a harmony bug in the apostrophe illative.
 Wiktionary gives `parfait'hen` (front) but `nougat'han` (back), and the harmony

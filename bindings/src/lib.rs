@@ -820,6 +820,10 @@ mod tests {
         let owned = |word: &str| -> usize {
             e.generate(word, &e.plan(word, None, None).unwrap())
                 .iter()
+                // Only the word's own paradigm: a degree is a derivation, and
+                // a comparative takes possessive suffixes whether or not the
+                // positive can be a noun (`miedommakseni` is an adjective).
+                .filter(|f| f.confidence == Confidence::Plain)
                 .filter(|f| f.readings.iter().any(|r| r.possessive.is_some()))
                 .count()
         };
@@ -874,6 +878,11 @@ mod tests {
             let owned: Vec<_> = e
                 .generate(word, &plan)
                 .into_iter()
+                // A degree form is an adjective by construction and may carry a
+                // possessive suffix even on a noun-capable word
+                // (`alamaisempattaan`); the invariant here is about the word's
+                // own paradigm.
+                .filter(|f| f.confidence == Confidence::Plain)
                 .filter(|f| f.readings.iter().any(|r| r.possessive.is_some()))
                 .collect();
             if owned.is_empty() {
