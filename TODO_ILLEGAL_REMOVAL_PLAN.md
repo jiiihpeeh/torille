@@ -6,13 +6,17 @@ plural-only tails (bound combining forms like `‑kulmio`, and tails that are th
 nominative plural of their head, like `vanhemmat`/`vanhempi`) and the
 plural-only `-t` lemmas in classes 9, 9\*, 12, 13 and 14\*A (`aktiivat` ->
 `aktiivoiden`, `rintsikat` -> `rintsikoiden`). The default report applies
-`data/oracle_exceptions.json` and is 0 illegal at every sample. The raw oracle
+`data/oracle_exceptions.json` and is 0 illegal at every sample. `missing` is
+counted per cell (`drop_covered_missing`): a cell is missing only when the
+engine produces **none** of its confirmed spellings, which takes the
+full-lexicon `missing` from 100,453 to **24,986** and the default from 73,386
+to **19,787** (recall 99.3%). The raw oracle
 report is **538 illegal at n=5, 2,003 at n=20, 6,271 at n=100 and 12,179 at
 full lexicon**, all covered by **44 rules**; the verified run is 0 illegal at
-full lexicon. The same evidence file now curates the `missing` direction too:
-the oracle's strong-grade comparative spellings (`kuurompalta`,
-`alamaisempalta`) are not words, so they are reported as `oracle-only`
-(**1,366 at n=5, 4,097 at n=20, 8,453 at n=100, 27,067 at full lexicon**)
+full lexicon. The evidence file also curates the `missing` direction: the
+oracle's strong-grade comparative spellings (`kuurompalta`,
+`alamaisempalta`) and plural-only `-iset` singulars are not words, so they are
+reported as `oracle-only` (**78 at n=5, 238 at n=20, 931 at n=100, 5,199 at full lexicon**)
 rather than as recall gaps. The evidence gate `tools/test_illegal_evidence.py`
 is green at n=5, n=20, n=100 and full.
 
@@ -297,9 +301,9 @@ class-scoped `plural-only-t-stems`.
 
 The default n=20 report's 2,003 illegal rows are all covered by the evidence
 file; `tools/test_illegal_evidence.py --report reports/noun-classes-n20.json
--n 20` passes. The raw n=20 report is 287,763 confirmed, 19,386 missing, 2,003
-illegal and 2,334 unsupported; the default report reclassifies 4,097 of the
-missing rows as `oracle-only` (289,970 confirmed, 15,289 missing, 13,810
+-n 20` passes. The raw n=20 report is 287,763 confirmed, 3,534 missing, 2,003
+illegal and 2,334 unsupported; the default report reclassifies 238 of the
+missing rows as `oracle-only` (289,970 confirmed, 3,296 missing, 13,810
 not plain, 2,130 unsupported).
 
 ### n=100 slice
@@ -321,7 +325,7 @@ now covers the whole raw n=100 report:
 - class 50 compounds: case-less NOM possessive, and the plural-only tail rule
   (`omakustannukset` is in this sample).
 
-The default n=100 report is 868,334 confirmed, 31,083 missing, 8,453
+The default n=100 report is 868,334 confirmed, 9,687 missing, 931
 oracle-only, 27,552 not plain, 0 illegal, 7,611 unsupported.
 
 ### Full lexicon
@@ -349,9 +353,9 @@ now covers the whole raw report with 40 rules:
 - class 10 partitive plural possessives (`pässinpökkimät`, `bänät`,
   `oltavat`).
 
-The raw full report is 2,891,112 confirmed, 100,453 missing, 12,179 illegal,
+The raw full report is 2,891,112 confirmed, 24,986 missing, 12,179 illegal,
 26,958 unsupported; all 12,179 are covered, and the default full report is
-**2,904,774 confirmed, 73,386 missing, 27,067 oracle-only, 72,540 not plain,
+**2,904,774 confirmed, 19,787 missing, 5,199 oracle-only, 72,540 not plain,
 0 illegal, 25,475 unsupported**. The verified run's 1,274 illegal
 rows are also all covered, so `--verify-illegal` is 0 illegal at full lexicon.
 
@@ -359,31 +363,37 @@ rows are also all covered, so `--verify-illegal` is 0 illegal at full lexicon.
 ### The `missing` side
 
 `missing` is the recall direction: the oracle confirmed a form and the engine
-does not produce it. It is not a clean number, because the oracle confirms
-several spellings per cell and because some of those spellings are not words.
+does not produce it. The raw number is dominated by **alternative spellings**:
+the oracle confirms several spellings for one cell (`kevytsinkoilta` and
+`kevytsingoilta`, `ommel` and `ompele`, `säen` and `säkene`), and the engine
+produces one of them. Counting each spelling separately made **81%** of the
+5-lemma `missing` rows alternative spellings of a cell the engine already
+covers.
 
-The comparative is the big case. `-mpi` takes the weak `-mm-` grade in the
-open-syllable cases (`kuuromman`, `kuurommalta`, `alamaisemmalta`,
-`krouvimmalta`), and the strong `-mpa-` belongs only to the nominative,
-partitive, illative and essive. The oracle sometimes keeps the strong grade in
-the weak cells (`kuurompalta`, `alamaisempalta`, `krouvimpalta`), which is not
-a word. The evidence rule `comparative-strong-grade-in-weak-cells` reclassifies
-those rows as `oracle-only`: **22,027 at full lexicon**. The engine already
-emits the weak forms (as `Repaired`, since a degree is a derivation), so the
-cell is covered.
+`drop_covered_missing` in `tools/omorfi_harness.py` now counts per cell: a
+cell is `missing` only if the engine produces **none** of its confirmed
+spellings. At the 5-lemma sample that takes `missing` from 6,808 to **1,709**
+(recall 93.4% -> 98.3%), and it is what stops the class-50/51 compound rows
+(`kevytsinkoilta` against the engine's `kevytsingoilta`) counting as gaps.
 
-The class-38 `-iset` nouns (`avajaiset`, `läksiäiset`, `kuukautiset`) are the
-other `oracle-only` block. They are plural-only (Wiktionary marks them
-`{{monikollinen}}` with `yks=-`), so the engine keeps only the plural cells;
-the oracle still claims the singulars, and `plural-only-38-iset` reclassifies
-them: **5,040 at full lexicon**.
+What remains is two kinds, and the evidence file handles the ones the oracle
+gets wrong:
 
-That leaves **73,386 `missing` rows**, all in cells with no engine form at all:
-the class-50/51 compound cells, the remaining degree cells, and the ordinary
-class-1/6/10 gaps. The comparative possessives (`alamaisempattaan`,
-`olemattomampaaan`) are no longer among them: `degree_forms` now generates
-them as `Repaired`, which moved **10,219 rows** from `missing` to `not plain`
-at full lexicon.
+- **Comparative strong-grade in weak cells.** `-mpi` takes the weak `-mm-`
+  grade in the open-syllable cases (`kuuromman`, `kuurommalta`,
+  `alamaisemmalta`), and the oracle sometimes keeps the strong `-mpa-` there
+  (`kuurompalta`, `alamaisempalta`), which is not a word. Where the cell has
+  no engine form at all, `comparative-strong-grade-in-weak-cells` reclassifies
+  the row as `oracle-only`.
+- **Plural-only `-iset` singulars.** `avajaiset`, `läksiäiset`, `kuukautiset`
+  are plural-only (Wiktionary marks them `{{monikollinen}}` with `yks=-`), so
+  the engine keeps only the plural cells; the oracle still claims the
+  singulars, and `plural-only-38-iset` reclassifies them.
+
+The rest is real: the class-50/51 compound cells, the remaining degree cells,
+and the ordinary class-1/6/10 gaps. The comparative possessives
+(`alamaisempattaan`, `olemattomampaaan`) are no longer among them:
+`degree_forms` now generates them as `Repaired`.
 
 The `unsupported` direction has its own case. The class-18 `-i` loanwords
 (`pii`, `koi`, `täi`, `bi`, `sei`, ...) take the `maa`-type singular obliques

@@ -10,13 +10,13 @@ offers a non-word has a user-visible bug, and an engine that is merely silent
 does not. The precision sweep is closed (see the `34*C` entry below); the first
 open item is now the prose sample.
 
-**Current full 5-lemma noun report (2026-11-01):** 96,738 confirmed, 7,408
-missing, 1,296 oracle-only, 3,441 not-plain, 0 illegal, 0 mistagged, 714
-unsupported; recall 92.9%.
-The raw oracle (`--raw-illegal`) is 96,200 confirmed, 538 illegal and 8,704
+**Current full 5-lemma noun report (2026-11-01):** 96,736 confirmed, 1,709
+missing, 78 oracle-only, 4,041 not-plain, 0 illegal, 0 mistagged, 646
+unsupported; recall 98.3%.
+The raw oracle (`--raw-illegal`) is 96,130 confirmed, 538 illegal and 1,787
 missing, all covered by `data/oracle_exceptions.json`. With `--verify-illegal`
-(live Voikko plus the curated rules) the report is: **96,738 confirmed, 0
-illegal**, 3,441 not plain, 0 mistagged, and 714 unsupported. The 25 `34*C`
+(live Voikko plus the curated rules) the report is: **96,736 confirmed, 0
+illegal**, 4,041 not plain, 0 mistagged, and 646 unsupported. The 25 `34*C`
 cells that used to be illegal now show as `missing`: the oracle expects
 `levotonni`, which is not a word, while the engine emits the genitive-stem
 `levottomani` that en.wiktionary confirms. The older per-item counts below
@@ -72,11 +72,11 @@ still open.
   evidence file covers the whole default `n=20` report (2,003 rows),
   and the verified run is 0 illegal. An `n=100` sweep found 6,271 raw illegal
   rows across 30 classes; the evidence file now covers all of them,
-  and the default `n=100` report is 0 illegal (868,334 confirmed, 31,083
-  missing, 8,453 oracle-only, 7,611 unsupported). The full-lexicon (`n=1000`)
+  and the default `n=100` report is 0 illegal (868,334 confirmed, 9,687
+  missing, 931 oracle-only, 7,611 unsupported). The full-lexicon (`n=1000`)
   raw report has 12,179 illegal rows; the evidence file covers all of them
   with 44 rules, so the default full report is 0 illegal (2,904,774 confirmed,
-  73,386 missing, 27,067 oracle-only, 25,475 unsupported). The evidence file
+  19,787 missing, 5,199 oracle-only, 25,475 unsupported). The evidence file
   now curates the `missing` direction too: the oracle's strong-grade
   comparative spellings (`kuurompalta` for `kuurommalta`,
   `alamaisempalta` for `alamaisemmalta`) are not words, so they are

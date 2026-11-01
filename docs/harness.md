@@ -322,11 +322,11 @@ python3 tools/summarize_class_report.py reports/noun-classes.json
 ```
 
 The numbers are from a 5-lemma sample of each of the 146 noun classes.
-Current totals: **96,736 confirmed, 6,808 missing, 1,366 oracle-only,
+Current totals: **96,736 confirmed, 1,709 missing, 78 oracle-only,
 4,041 not plain, 0 illegal, 0 mistagged, 646 unsupported.** Recall — confirmed
-over confirmed plus missing — is **93.4%**. The default report applies the
+over confirmed plus missing — is **98.3%**. The default report applies the
 curated evidence in `data/oracle_exceptions.json`; the oracle on its own
-(`--raw-illegal`) shows **96,130 confirmed, 538 illegal and 8,174 missing**,
+(`--raw-illegal`) shows **96,130 confirmed, 538 illegal and 1,787 missing**,
 all 538 covered by rules. `oracle-only` is the `missing` direction of the same
 curation: the oracle claims a form that is not a word (a comparative's strong
 `-mpa-` in a weak cell, `kuurompalta` for `kuurommalta`), so it is not counted

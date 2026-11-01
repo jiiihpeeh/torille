@@ -300,6 +300,29 @@ class Finding:
     candidates: list[Cell] = field(default_factory=list)
 
 
+def drop_covered_missing(findings: list[Finding]) -> list[Finding]:
+    """Drop `missing` rows for a cell the engine covers with another spelling.
+
+    The oracle can confirm several spellings for one cell -- `kevytsinkoilta`
+    and `kevytsingoilta`, `ommel` and `ompele`, `säen` and `säkene`. The engine
+    produces one of them, so the cell is not a recall gap; the other spellings
+    are alternatives, not missing words. Without this the same cell is counted
+    once as `confirmed` and again as `missing` for every spelling the engine
+    does not happen to emit, which made the recall number read 81%
+    alternative spellings at the 5-lemma sample.
+    """
+    covered = {
+        (f.cell.case, f.cell.number, f.cell.possessive)
+        for f in findings
+        if f.status != "missing"
+    }
+    return [
+        f for f in findings
+        if f.status != "missing"
+        or (f.cell.case, f.cell.number, f.cell.possessive) not in covered
+    ]
+
+
 @dataclass
 class Verdict:
     """The outcome for one lemma.
@@ -1073,6 +1096,7 @@ class Harness:
                         (list(given[0].tags) if given else []),
                         detail=detail, candidates=list(expecting))
             )
+        findings = drop_covered_missing(findings)
         # Forms torille offers as plain that no cell accounts for are the
         # precision failures. `expected` is what the oracle *would* have said for
         # the reading's own cell, which is what makes the row actionable: for
@@ -1260,6 +1284,7 @@ class Harness:
                 (list(given[0].tags) if given else []),
                 detail=detail, candidates=list(expecting)))
 
+        findings = drop_covered_missing(findings)
         accounted = {f.form for f in findings if f.form}
         for word, given in sorted(by_word.items()):
             plain = [r for r in given if r.plain]
