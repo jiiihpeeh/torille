@@ -24,7 +24,7 @@
 
 use crate::tags::{Case, Form, Number, PartOfSpeech};
 
-use super::utility::{Builder, Decl, Ending, cell, nominal_tags, plain, rare};
+use super::utility::{Builder, Decl, Ending, cell, nominal_tags, plain, plural_only, rare};
 
 pub const CLASS: &str = "12";
 
@@ -41,6 +41,15 @@ fn o_stem(stem: &str) -> String {
 
 /// Inflect a class-12 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
+    // Class 12 carries plural-only lemmas (`markkinat`, `orgiat`, `passiivat`):
+    // the citation form is the nominative plural of a base the sanalista does
+    // not list (`markkina`, `orgia`, `passiiva`), so decline the dropped-`t`
+    // stem and keep only its plural cells.
+    if let Some(base) = lemma.strip_suffix('t')
+        && !base.is_empty()
+    {
+        return plural_only(inflect(base, possessives));
+    }
     let mut b = Builder::new(lemma, possessives);
     let stem = lemma;
     let ostem = o_stem(stem);
@@ -124,6 +133,25 @@ mod tests {
 
     fn words(lemma: &str) -> Vec<String> {
         inflect(lemma, true).into_iter().map(|f| f.word).collect()
+    }
+
+    /// `passiivat` is the plural of `passiiva`, which the sanalista does not
+    /// list; the engine must not invent the singular.
+    #[test]
+    fn a_plural_only_lemma_declines_from_the_dropped_stem() {
+        let w = words("passiivat");
+        for want in [
+            "passiivat",
+            "passiivoiden",
+            "passiivoitten",
+            "passiivoita",
+            "passiivoissa",
+        ] {
+            assert!(w.contains(&want.to_string()), "missing {want}");
+        }
+        for bad in ["passiivatn", "passiivata", "passiivatt", "passiiva"] {
+            assert!(!w.contains(&bad.to_string()), "invented {bad}");
+        }
     }
 
     #[test]

@@ -1,0 +1,398 @@
+{
+  "version": 1,
+  "about": "Curated evidence for cells where the materialised noun oracle disagrees with the engine and an external authority settles it. This is not dictionary data: each rule names the source. Loaded by tools/illegal_evidence.py and gated by tools/test_illegal_evidence.py.",
+  "rules": [
+    {
+      "id": "34c-nom-possessive-genitive-stem",
+      "classes": ["34*C"],
+      "cell": {"case": "NOM", "possessive": "*"},
+      "predicate": "oblique-stem",
+      "source": "https://en.wiktionary.org/wiki/levoton",
+      "note": "the privative -ton/-tön nominative possessive is built on the genitive -ttoma- stem (levottomani, not levotonni)"
+    },
+    {
+      "id": "plural-only-33d-short-imet",
+      "classes": ["33*D"],
+      "cell": {"number": "PL"},
+      "predicate": "shorter-than-expected",
+      "source": "https://en.wiktionary.org/wiki/n%C3%A4kimet",
+      "note": "the short -imet plural forms (näkimissä, näkimittä) are the real ones; the oracle's long -kem- spellings are not"
+    },
+    {
+      "id": "plural-only-33j-short-imet",
+      "classes": ["33*J"],
+      "cell": {"number": "PL"},
+      "predicate": "shorter-than-expected",
+      "source": "https://en.wiktionary.org/wiki/antimet",
+      "note": "the short -imet plural forms (antimissa, antimitta) are the real ones; the oracle's long -em- spellings are not"
+    },
+    {
+      "id": "plural-only-41c-short-aat",
+      "classes": ["41*C"],
+      "cell": {"number": "PL"},
+      "predicate": "shorter-than-expected",
+      "source": "https://en.wiktionary.org/wiki/rattaat",
+      "note": "rattaat has the short plural rattaissa/rattaitta, not the oracle's rattaaissa/rattaaitta"
+    },
+    {
+      "id": "plural-only-41i-short-aat",
+      "classes": ["41*I"],
+      "cell": {"number": "PL"},
+      "predicate": "shorter-than-expected",
+      "source": "https://en.wiktionary.org/wiki/maltaat",
+      "note": "maltaat has the short plural maltaissa/maltaitta, not the oracle's maltaaissa/maltaaitta"
+    },
+    {
+      "id": "plural-only-6-short-imet",
+      "classes": ["6"],
+      "cell": {"number": "PL"},
+      "predicate": "shorter-than-expected",
+      "sample": 20,
+      "source": "https://en.wiktionary.org/wiki/simmarit",
+      "note": "simmarit has the short plural simmareitta, not the oracle's simmariteitta"
+    },
+    {
+      "id": "plural-only-48-short-eet",
+      "classes": ["48"],
+      "cell": {"number": "PL"},
+      "predicate": "shorter-than-expected",
+      "sample": 20,
+      "source": "https://en.wiktionary.org/wiki/r%C3%A4%C3%A4ppeet",
+      "note": "rääppeet has the short plural rääppeittä, not the oracle's rääppeeeittä"
+    },
+    {
+      "id": "lemma-7-plural-only",
+      "classes": ["7"],
+      "lemmas": ["suitset", "happiviikset", "päitset", "sakset"],
+      "cell": {"number": "PL"},
+      "predicate": "lemma",
+      "sample": 20,
+      "source": "https://en.wiktionary.org/wiki/suitset",
+      "note": "class-7 plural-only -t words use the stem without the nominative -t (suitsitta, happiviiksittä, päitsittä, saksitta); the oracle concatenates the nominative"
+    },
+    {
+      "id": "plural-only-33c-short-imet",
+      "classes": ["33*C"],
+      "cell": {"number": "PL"},
+      "predicate": "shorter-than-expected",
+      "sample": 20,
+      "source": "https://en.wiktionary.org/wiki/kiittimet",
+      "note": "kiittimet has the short plural kiittimittä, not the oracle's kiittimmemittä"
+    },
+    {
+      "id": "compound-51-fixed-prefix",
+      "classes": ["51"],
+      "exclude_lemmas": ["raskassarja", "vierasmies", "mustaraamattu", "mustaviinimarja"],
+      "predicate": "fixed-prefix",
+      "source": "https://en.wiktionary.org/wiki/omakuva",
+      "note": "class-51 compounds keep the modifier in the nominative (kuiva + kakku, oma + kuva); the oracle inflects the modifier into the middle of the word (kuiviinkakkuihinsa, omittakuvitta), which is not the only paradigm"
+    },
+    {
+      "id": "compound-51-nom-case-less",
+      "classes": ["51"],
+      "exclude_lemmas": ["nuori-isäntä", "vierasmies", "raskassarja"],
+      "cell": {"case": "NOM"},
+      "predicate": "case-less",
+      "sample": 100,
+      "source": "live Voikko (--verify-illegal, 2026-11-01)",
+      "note": "a case-less possessive reading is checked against the nominative cell; the engine also emits the correct nominative possessive (omakuvani, mustamakkarani)"
+    },
+    {
+      "id": "lemma-51-raskassarja",
+      "classes": ["51"],
+      "lemmas": ["raskassarja", "vierasmies"],
+      "predicate": "lemma",
+      "sample": 20,
+      "source": "https://en.wiktionary.org/wiki/raskassarja",
+      "note": "raskas/vieras have the genitive-plural variants raskasten/raskaiden/raskaitten and vierasten/vieraiden/vieraiten; raskastensarjojen and vierastenmiehien are valid rare forms the oracle's set omits"
+    },
+    {
+      "id": "compound-50-nom-case-less",
+      "classes": ["50"],
+      "exclude_lemmas": ["isoaivot", "isovanhemmat", "normaaliolot", "suorakulmio", "suoraommel", "mustatorvisieni", "pitkäperjantai", "vapaataival", "omakustannukset", "täysisisarukset"],
+      "cell": {"case": "NOM"},
+      "predicate": "case-less",
+      "sample": 100,
+      "source": "live Voikko (--verify-illegal, 2026-11-01)",
+      "note": "a case-less possessive reading is checked against the nominative cell; mustaherukkaani is the partitive possessive and mustaherukkani the nominative, and both are emitted"
+    },
+    {
+      "id": "compound-50-fixed-prefix",
+      "classes": ["50"],
+      "exclude_lemmas": ["suorakulmio", "suoraommel", "mustatorvisieni", "pitkäperjantai", "vapaataival", "täysisisarukset"],
+      "predicate": "fixed-prefix",
+      "sample": 1000,
+      "source": "https://en.wiktionary.org/wiki/raskassarja",
+      "note": "class-50 compounds keep the modifier fixed or use its genitive-plural variant (raskas/raskaiden, pitkä/pitkättä, raitis/raittiiden); the engine's form is the compound reading"
+    },
+    {
+      "id": "lemma-18-koi",
+      "classes": ["18"],
+      "lemmas": ["koi"],
+      "predicate": "lemma",
+      "sample": 20,
+      "source": "https://en.wiktionary.org/wiki/koi",
+      "note": "koi has the illative koihin; the oracle's koihan/koihen are the class-18 alternatives, not the only reading"
+    },
+    {
+      "id": "plural-only-t-stems",
+      "classes": ["9", "9*A", "9*B", "9*F", "12", "13", "14*A"],
+      "cell": {"number": "PL"},
+      "predicate": "plural-only-t",
+      "sample": 1000,
+      "source": "https://en.wiktionary.org/wiki/rintsikat#Finnish",
+      "note": "these classes carry pluralia tantum whose citation form is the nominative plural (aktiivat, rintsikat, menkat, perskat, markkinat); the engine declines the dropped-`t` base and strong-grades it back where the class gradates (aktiivoiden, rintsikoiden, menkkojen), while the oracle builds every plural cell from the nominative plural (aktiivatiden, rintsikatiden, menkatiden)"
+    },
+    {
+      "id": "comparative-strong-grade-in-weak-cells",
+      "predicate": "strong-comparative",
+      "applies_to": ["missing"],
+      "sample": 1000,
+      "source": "https://en.wiktionary.org/wiki/alamainen",
+      "note": "a comparative's -mpi takes the weak -mm- grade in the open-syllable cases (alamaisemman, alamaisemmalta, alamaisemmatta; kuurommalta; krouvimmalta), and the strong -mpa- belongs only to the nominative, partitive, illative and essive; the oracle sometimes keeps the strong grade in the weak cells (alamaisempalta, kuurompalta, krouvimpalta), which is not a word"
+    },
+    {
+      "id": "plural-only-38-iset",
+      "classes": ["38"],
+      "predicate": "plural-only-iset",
+      "applies_to": ["missing"],
+      "sample": 1000,
+      "source": "https://en.wiktionary.org/wiki/avajaiset",
+      "note": "a class-38 -iset noun (avajaiset, läksiäiset, kuukautiset) is the nominative plural of an -inen singular and Wiktionary marks it plural-only ({{monikollinen}}, yks=-); the engine declines the singular and keeps only the plural cells, while the oracle still claims the singular"
+    },
+    {
+      "id": "class-18-i-singular",
+      "classes": ["18"],
+      "lemmas": ["pii", "koi", "täi", "bi", "tii", "khii", "deejii", "lei", "sei", "paksoi", "thai", "maasai", "masai", "pai", "pak-choi", "pe-tsai", "tah tsai", "fengshui", "ratatui"],
+      "cell": {"number": "SG"},
+      "predicate": "lemma",
+      "applies_to": ["unsupported"],
+      "sample": 1000,
+      "source": "https://en.wiktionary.org/wiki/pii#Finnish",
+      "note": "the -i loanwords take the maa-type singular obliques (piitä, piissä, piiltä, piiksi; koita, koissa; täitä, täissä) and Wiktionary lists them; Omorfi generates only the plural, so the engine's correct singular forms have neither oracle and are reported unsupported"
+    },
+    {
+      "id": "lemma-5d-7d-laki",
+      "classes": ["5*D", "7*D"],
+      "lemmas": ["laki"],
+      "predicate": "lemma",
+      "sample": 20,
+      "source": "live Voikko (--verify-illegal, 2026-11-01)",
+      "note": "laki accepts both lakini and lakeni as the nominative possessive; the oracle lists only the strong-stem spelling"
+    },
+    {
+      "id": "lemma-48e-live",
+      "classes": ["48*E"],
+      "lemmas": ["live"],
+      "predicate": "lemma",
+      "sample": 20,
+      "source": "https://fi.wiktionary.org/wiki/live",
+      "note": "the 48-E noun is the dialectal lipeä with genitive lipeen; the oracle's livenne belongs to the separate class-8 loanword homonym"
+    },
+    {
+      "id": "lemma-32d-ien",
+      "classes": ["32*D"],
+      "lemmas": ["ien"],
+      "predicate": "lemma",
+      "source": "https://en.wiktionary.org/wiki/ien",
+      "note": "ien is an irregular iken-/ien- paradigm; the engine's ikenittä family is the one Wiktionary gives"
+    },
+    {
+      "id": "lemma-18-pii",
+      "classes": ["18"],
+      "lemmas": ["pii", "tii", "pe-tsai"],
+      "predicate": "lemma",
+      "source": "https://en.wiktionary.org/wiki/pii",
+      "note": "pii and its class-18 neighbours have the illative piihin; the oracle's piihan/piihen are not the only reading"
+    },
+    {
+      "id": "lemma-49d-saen",
+      "classes": ["49*D"],
+      "lemmas": ["säen"],
+      "predicate": "lemma",
+      "source": "live Voikko (--verify-illegal, 2026-11-01)",
+      "note": "live Voikko reads the engine's säkene- forms as this lemma; a Wiktionary citation is still to be added"
+    },
+    {
+      "id": "lemma-49e-taival",
+      "classes": ["49*E"],
+      "lemmas": ["taival"],
+      "predicate": "lemma",
+      "source": "https://en.wiktionary.org/wiki/taival",
+      "note": "taival's plural illative is the taipale- family; the oracle's taipali- spelling is not the word"
+    },
+    {
+      "id": "lemma-41e-havas",
+      "classes": ["41*E"],
+      "lemmas": ["havas"],
+      "predicate": "lemma",
+      "source": "https://en.wiktionary.org/wiki/havas",
+      "note": "havas is a dual-class word; the engine's hapaa- possessive forms are one valid paradigm"
+    },
+    {
+      "id": "plural-only-41-short",
+      "classes": ["41"],
+      "predicate": "shorter-than-expected",
+      "sample": 100,
+      "source": "https://en.wiktionary.org/wiki/valjaat",
+      "note": "class-41 plural-only and comparative forms keep the short stem (valjaitta, rynttyittä, lunnaitta); the oracle inserts extra material (valjaaitta, rynttyyittä) or the comparative stem (valmiimpattaan)"
+    },
+    {
+      "id": "plural-only-1-short",
+      "classes": ["1"],
+      "cell": {"number": "PL"},
+      "predicate": "shorter-than-expected",
+      "sample": 100,
+      "source": "live Voikko (--verify-illegal, 2026-11-01)",
+      "note": "fudut/chinot are plural-only class-1 words; fuduitta/chinoitta are the short abessive plurals, not fudutitta/chinotitta"
+    },
+    {
+      "id": "plural-only-41a-short",
+      "classes": ["41*A"],
+      "cell": {"number": "PL"},
+      "predicate": "shorter-than-expected",
+      "sample": 100,
+      "source": "https://en.wiktionary.org/wiki/tikkaat",
+      "note": "tikkaat has the short abessive plural tikkaitta, not tikkaaitta"
+    },
+    {
+      "id": "plural-only-33-short",
+      "classes": ["33"],
+      "cell": {"number": "PL"},
+      "predicate": "shorter-than-expected",
+      "sample": 100,
+      "source": "https://en.wiktionary.org/wiki/aterimet",
+      "note": "aterimet has the short abessive plural aterimitta, not aterimemitta"
+    },
+    {
+      "id": "plural-only-33f-short",
+      "classes": ["33*F"],
+      "cell": {"number": "PL"},
+      "predicate": "shorter-than-expected",
+      "sample": 100,
+      "source": "https://en.wiktionary.org/wiki/hohtimet",
+      "note": "hohtimet has the short abessive plural hohtimitta, not hohtimemitta"
+    },
+    {
+      "id": "plural-only-39-short",
+      "classes": ["39"],
+      "cell": {"number": "PL"},
+      "predicate": "shorter",
+      "sample": 1000,
+      "source": "live Voikko (--verify-illegal, 2026-11-01)",
+      "note": "class-39 plural-only -t words use the stem without the nominative -t (kiduksitta, toveruksitta); the oracle concatenates the nominative"
+    },
+    {
+      "id": "lemma-18-i-illative",
+      "classes": ["18"],
+      "lemmas": ["bi", "fengshui", "hurlumhei", "masai", "pai", "pak-choi", "sheavoi", "tah tsai", "täi", "paranvoi", "thai", "vartalovoi", "deejii", "karitevoi", "khii", "lei", "maasai", "paksoi", "ratatui", "sei"],
+      "cell": {"case": "ILL", "number": "SG"},
+      "predicate": "lemma",
+      "sample": 100,
+      "source": "live Voikko (--verify-illegal, 2026-11-01)",
+      "note": "class-18 -i loanwords take the illative -hin (pak-choihin, bihin); the oracle offers -han/-hen alternatives"
+    },
+    {
+      "id": "lemma-18-i-nom",
+      "classes": ["18"],
+      "lemmas": ["bi", "fengshui", "hurlumhei", "masai", "pai", "pak-choi", "sheavoi", "tah tsai", "täi", "paranvoi", "thai", "vartalovoi", "deejii", "karitevoi", "khii", "lei", "maasai", "paksoi", "ratatui", "sei"],
+      "cell": {"case": "NOM", "number": "SG"},
+      "predicate": "lemma",
+      "sample": 100,
+      "source": "live Voikko (--verify-illegal, 2026-11-01)",
+      "note": "pak-choin is the genitive singular; the case-less reading is checked against the nominative cell, whose correct form pak-choi is also emitted"
+    },
+    {
+      "id": "lemma-51-nuori-isanta",
+      "classes": ["51"],
+      "lemmas": ["nuori-isäntä", "mustaraamattu"],
+      "predicate": "lemma",
+      "sample": 100,
+      "source": "live Voikko (--verify-illegal, 2026-11-01)",
+      "note": "hyphenated/compound class-51 words keep the established modifier spelling (nuoritta-isännittä, mustainraamattujen); the oracle's inserted material is not a word"
+    },
+    {
+      "id": "lemma-51-mustaviinimarja",
+      "classes": ["51"],
+      "lemmas": ["mustaviinimarja"],
+      "predicate": "lemma",
+      "sample": 1000,
+      "source": "https://en.wiktionary.org/wiki/mustaviinimarja",
+      "note": "mustaviinimarja is musta + viini + marja; the engine now splits the compound-like middle tail and inflects the first part and the head (mustanviinimarjan, mustiinviinimarjoihin), while the oracle's expected set for the multi-part compound is a combinatorial split of its own (mudtaviinienkuiden, mustaviinimarjiinkuihin)"
+    },
+    {
+      "id": "lemma-9-kipsa-nom-poss",
+      "classes": ["9"],
+      "lemmas": ["kipsa"],
+      "cell": {"case": "NOM", "number": "SG"},
+      "predicate": "lemma",
+      "sample": 100,
+      "source": "live Voikko (--verify-illegal, 2026-11-01)",
+      "note": "kipsaasi is the partitive possessive; the case-less reading is checked against the nominative cell, whose correct form kipsasi is also emitted"
+    },
+    {
+      "id": "case-less-plural-only-t",
+      "classes": ["9", "9*A", "10", "12", "13", "14*A"],
+      "exclude_lemmas": ["perskat", "menkat", "passiivat", "aktiivat", "kipsa", "pässinpökkimät", "bänät", "oltavat"],
+      "cell": {"case": "NOM"},
+      "predicate": "case-less",
+      "sample": 1000,
+      "source": "live Voikko (--verify-illegal, 2026-11-01)",
+      "note": "the engine's instructive plural or partitive possessive of a plural-only -t lemma is checked against the nominative cell; the correct nominative form is also emitted"
+    },
+    {
+      "id": "lemma-50-modifier-genitive",
+      "classes": ["50"],
+      "lemmas": ["suorakulmio", "suoraommel"],
+      "predicate": "lemma",
+      "sample": 1000,
+      "source": "live Voikko (--verify-illegal, 2026-11-01)",
+      "note": "suorakulmio/suoraommel have head variants (kulmio/kulmi-, ommel/ompel-) that the oracle's set omits"
+    },
+    {
+      "id": "plural-only-50-short",
+      "classes": ["50"],
+      "lemmas": ["isoaivot", "isovanhemmat", "normaaliolot", "omakustannukset", "täysisisarukset"],
+      "predicate": "lemma",
+      "sample": 1000,
+      "source": "live Voikko (--verify-illegal, 2026-11-01)",
+      "note": "these are plural-only compounds whose tail is the nominative plural of a lemma (vanhemmat/vanhempi, olot/olo, kustannukset/kustannus, sisarukset/sisarus); the engine inflects that plural paradigm (isovanhemmitta, omakustannuksitta), while the oracle either concatenates the nominative (isovanhemmatitta) or uses the singular genitive stem (omakustannukseitta)"
+    },
+    {
+      "id": "lemma-10-partitive-poss",
+      "classes": ["10"],
+      "lemmas": ["pässinpökkimät", "bänät", "oltavat"],
+      "predicate": "lemma",
+      "sample": 1000,
+      "source": "live Voikko (--verify-illegal, 2026-11-01)",
+      "note": "the engine's partitive plural possessive (pässinpökkimiänsä) is the real form; the oracle's pässinpökkimätään concatenates the nominative"
+    },
+    {
+      "id": "case-less-class-5",
+      "classes": ["5"],
+      "cell": {"case": "NOM"},
+      "predicate": "case-less",
+      "sample": 1000,
+      "source": "live Voikko (--verify-illegal, 2026-11-01)",
+      "note": "silkkivuori/tikkivuori/villiviini NOM possessive readings are case-less; the correct nominative possessive is also emitted"
+    },
+    {
+      "id": "lemma-50-compound-variants",
+      "classes": ["50"],
+      "lemmas": ["mustatorvisieni", "pitkäperjantai", "vapaataival"],
+      "predicate": "lemma",
+      "sample": 1000,
+      "source": "live Voikko (--verify-illegal, 2026-11-01)",
+      "note": "mustatorvisieni/vapaataival have head variants (torvisieni, taipale-), and pitkäperjantai accepts both pitkä- and pitkään-; the oracle's set omits the engine's forms"
+    },
+    {
+      "id": "lemma-48-kiiru",
+      "classes": ["48"],
+      "lemmas": ["kiiru"],
+      "predicate": "lemma",
+      "sample": 1000,
+      "source": "live Voikko (--verify-illegal, 2026-11-01)",
+      "note": "kiiru has the kiiruun and kiireen possessive stems; the oracle lists only the kiiruun spelling"
+    }
+  ]
+}

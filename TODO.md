@@ -7,26 +7,40 @@ ordered by user-facing impact. Update as items are done.
 
 Ordered by user-facing impact, which is not the same as gap size: an engine that
 offers a non-word has a user-visible bug, and an engine that is merely silent
-does not. The first open item is therefore the precision one.
+does not. The precision sweep is closed (see the `34*C` entry below); the first
+open item is now the prose sample.
 
-**Current full 5-lemma noun report (2026-11-01):** 96,216 confirmed, 8,679
-missing, 539 illegal, 0 mistagged, 722 unsupported, 0 not-plain; recall 91.7%,
-illegal rate 0.6%. With `--verify-illegal` (live Voikko plus the
-Wiktionary-checked caveats): **96,738 confirmed, 25 illegal**, all in `34*C`,
-and 714 unsupported. The older per-item counts below predate the current
-class-engine round and are kept only where the item is still open.
+**Current full 5-lemma noun report (2026-11-01):** 96,738 confirmed, 7,408
+missing, 1,296 oracle-only, 3,441 not-plain, 0 illegal, 0 mistagged, 714
+unsupported; recall 92.9%.
+The raw oracle (`--raw-illegal`) is 96,200 confirmed, 538 illegal and 8,704
+missing, all covered by `data/oracle_exceptions.json`. With `--verify-illegal`
+(live Voikko plus the curated rules) the report is: **96,738 confirmed, 0
+illegal**, 3,441 not plain, 0 mistagged, and 714 unsupported. The 25 `34*C`
+cells that used to be illegal now show as `missing`: the oracle expects
+`levotonni`, which is not a word, while the engine emits the genitive-stem
+`levottomani` that en.wiktionary confirms. The older per-item counts below
+predate the current class-engine round and are kept only where the item is
+still open.
 
-- [ ] **Stop offering whole classes built on the wrong stem**
-  **539 `illegal` forms across the current 5-lemma sample**, down from 15,431
-  after the class-engine rounds. The remaining defects are clustered rather
-  than spread across 118 classes:
+- [x] **Stop offering whole classes built on the wrong stem**
+  Done for the current sample: the default report and `--verify-illegal` both
+  report **0 illegal**. The last genuine defect was `34*C`, where the class
+  engine attached the nominative possessive to the lemma (`levotonni`) while
+  also emitting the correct genitive-stem form (`levottomani`); the oracle
+  confirmed the former, so the latter was reported illegal. The possessive now
+  sits on the oblique stem (`src/expand/nominals/class_34.rs`), so `levotonni`
+  is not emitted, and the same 25 cells show as `missing` because the oracle
+  still expects the non-word. en.wiktionary's `levoton` paradigm gives `levottomani`,
+  `levottomasi`, `levottomamme`, `levottomanne`, `levottomansa`.
+  The remaining default-oracle rows are the documented caveats; the plan for
+  removing them from the default report is `TODO_ILLEGAL_REMOVAL_PLAN.md`:
 
   | class | illegal | confirmed | note |
   |---|---|---|---|
   | `51` | 141 | 628 | compound oracle disagrees about head/tail order |
   | `41*C` / `41*I` | 88 / 88 | 651 / 637 | plural-only `-aat` rows; oracle caveat |
   | `33*D` / `33*J` | 76 / 76 | 319 / 627 | plural-only `-imet` rows; oracle caveat |
-  | `34*C` | 25 | 795 | possessive oracle expects the nominative stem |
   | `32*D` | 21 | 3 | rare `ien` paradigm |
   | `18` | 7 | 582 | `pii` illative/nominative mismatch |
   | `41*E` | 5 | 806 | `havas` dual-class stem |
@@ -40,8 +54,8 @@ class-engine round and are kept only where the item is still open.
   `antimemieni`. Wiktionary also gives `rattaat` as `rattaissa`/`rattaitta`
   (not `rattaaissa`/`rattaaitta`), and `omakuva` has two valid declensions
   (type 51 `omatkuvat` and type 10 `omakuvat`). Verify against Wiktionary
-  before changing those classes. `34*C` and `51` need the same external check;
-  their expected forms look like oracle artifacts rather than engine errors.
+  before changing those classes. `51` needs the same external check; its
+  expected forms look like oracle artifacts rather than engine errors.
 
   Recent rounds removed the singular translative possessive columns that hung
   off the wrong stem in classes `24`, `31`, and `36` (`kuorikseen` for
@@ -53,6 +67,28 @@ class-engine round and are kept only where the item is still open.
   engine's `33*D`/`33*J`, `41*C`/`41*I`, `49*D`/`49*E`, `51`, and `32*D` forms
   and rejects the oracle's expected spellings, so do not change those classes
   against SQLite alone.
+
+  An `n=20` sweep (2,896 lemmas) found 343 illegal rows across 7 classes; the
+  evidence file covers the whole default `n=20` report (2,003 rows),
+  and the verified run is 0 illegal. An `n=100` sweep found 6,271 raw illegal
+  rows across 30 classes; the evidence file now covers all of them,
+  and the default `n=100` report is 0 illegal (868,334 confirmed, 31,083
+  missing, 8,453 oracle-only, 7,611 unsupported). The full-lexicon (`n=1000`)
+  raw report has 12,179 illegal rows; the evidence file covers all of them
+  with 44 rules, so the default full report is 0 illegal (2,904,774 confirmed,
+  73,386 missing, 27,067 oracle-only, 25,475 unsupported). The evidence file
+  now curates the `missing` direction too: the oracle's strong-grade
+  comparative spellings (`kuurompalta` for `kuurommalta`,
+  `alamaisempalta` for `alamaisemmalta`) are not words, so they are
+  `oracle-only` rather than recall gaps. The class-50 compound engine now
+  inflects bound heads (`‑kulmio` -> `suorakulmion`) and plural-only tails
+  (`vanhemmat` -> `isovanhempien`), so those lemmas no longer fall through to
+  the class-50 model; see `src/expand/compound.rs`. The plural-only `-t` engine
+  now declines classes 9, 9\*, 12, 13 and 14\*A from the dropped base
+  (`aktiivat` -> `aktiivoiden`, `rintsikat` -> `rintsikoiden`,
+  `menkat` -> `menkkojen`). Classes 2, 3, 5\*G, 16\*H, 18, 20 and 38 still
+  treat a `-t`-final lemma as a singular; that is the remaining engine issue.
+  The remaining work is in `TODO_ILLEGAL_REMOVAL_PLAN.md`.
 
   Evidence: `docs/harness.md` → Known defects → C.
 

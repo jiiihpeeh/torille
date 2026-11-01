@@ -112,3 +112,13 @@ data and is not covered by the terms above.
 
 The full MIT text is in `data/hyphenation/LICENSE`, and the provenance
 is in `data/hyphenation/README.md`. The file is reproduced unmodified.
+
+oracle_exceptions.json
+======================
+
+Project-authored curated evidence for the verification harness. It is not
+Kotus data and contains no dictionary content: each rule names the external
+source that settles a materialised-oracle disagreement. It is part of the
+harness and is licensed GPL-3.0-or-later, like the Omorfi/Voikko tool files
+in `tools/`. See `tools/illegal_evidence.py` and
+`TODO_ILLEGAL_REMOVAL_PLAN.md`.

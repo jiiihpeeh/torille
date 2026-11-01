@@ -1275,6 +1275,168 @@ mod tests {
         );
     }
 
+    /// A class-50 tail the sanalista spells as a bound form still inflects.
+    ///
+    /// `suorakulmio` is `suora` + `kulmio`, and the sanalista lists the head as
+    /// `‑kulmio` with a leading U+2011. The tail index matches spellings, so it
+    /// could not find the head and the word fell through to the class-50 model,
+    /// which aligned it against `isoisä` and produced `suorakulmdin`. The
+    /// bound form is looked up with the hyphen prepended, and the hyphen comes
+    /// off every generated form.
+    #[cfg(feature = "generated-nominals")]
+    #[test]
+    fn a_bound_combining_form_can_be_a_compound_tail() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let forms: Vec<String> = inflect_in(
+            "suorakulmio",
+            Inflection {
+                class: 50,
+                gradation: None,
+            },
+            &cat,
+            Some(&LexiconIndex::new(&lexicon)),
+            PartOfSpeech::Noun,
+            true,
+        )
+        .into_iter()
+        .map(|g| g.word)
+        .collect();
+
+        for expected in [
+            "suorakulmion",  // genitive singular
+            "suorakulmiota", // partitive singular
+            "suorakulmiossa",
+            "suorakulmioiden",
+        ] {
+            assert!(
+                forms.iter().any(|w| w == expected),
+                "suorakulmio lost {expected}: {} forms",
+                forms.len()
+            );
+        }
+        assert!(
+            !forms.iter().any(|w| w.starts_with("suorakulmd")),
+            "suorakulmio still falls through to the class-50 model"
+        );
+        assert!(
+            !forms.iter().any(|w| w.contains('\u{2011}')),
+            "the bound form's hyphen leaked into a compound"
+        );
+    }
+
+    /// A plural-only compound's tail is the nominative plural of its head.
+    ///
+    /// `isovanhemmat` is `iso` + `vanhemmat`, and the sanalista lists only
+    /// `vanhempi`; `omakustannukset` and `normaaliolot` are the same shape
+    /// against `kustannus` and `olo`. The tail index cannot find a base whose
+    /// plural differs from its lemma, so these fell through to the class-50
+    /// model and produced stems like `isovanhemmaeihin` and
+    /// `omakusdannukseikseen`. The bounded neighbourhood probe resolves the
+    /// base, and the compound keeps only the base's plural cells.
+    #[cfg(feature = "generated-nominals")]
+    #[test]
+    fn a_plural_only_compound_tail_inflects_from_its_base() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let plain = |word: &str| -> Vec<String> {
+            inflect_in(
+                word,
+                Inflection {
+                    class: 50,
+                    gradation: None,
+                },
+                &cat,
+                Some(&LexiconIndex::new(&lexicon)),
+                PartOfSpeech::Noun,
+                true,
+            )
+            .into_iter()
+            .filter(|f| f.readings.iter().all(|r| r.possessive.is_none()))
+            .map(|g| g.word)
+            .collect()
+        };
+
+        for (word, expected) in [
+            ("isovanhemmat", "isovanhempien"),
+            ("isovanhemmat", "isovanhemmitta"),
+            ("omakustannukset", "omakustannusten"),
+            ("normaaliolot", "normaalioloja"),
+            ("täysisisarukset", "täysisisarusten"),
+        ] {
+            let forms = plain(word);
+            assert!(
+                forms.iter().any(|w| w == expected),
+                "{word} lost {expected}: {} forms",
+                forms.len()
+            );
+        }
+
+        // The compound is plural-only, so it has no singular at all.
+        let forms = plain("isovanhemmat");
+        assert!(
+            forms.iter().all(|w| w != "isovanhempi"),
+            "isovanhemmat gained a singular"
+        );
+        assert!(
+            !forms.iter().any(|w| w.starts_with("isovanhemmaei")),
+            "isovanhemmat still falls through to the class-50 model"
+        );
+    }
+
+    /// A compound-like tail is a compound of its own.
+    ///
+    /// `mustaviinimarja` is `musta` + `viini` + `marja`, and the sanalista lists
+    /// the middle tail `viinimarja` as a compound-like row with no inflection of
+    /// its own. The class-51 split therefore found no tail and the word produced
+    /// nothing at all. The tail is now resolved as its own class-50 compound
+    /// (`viini` fixed, `marja` inflecting), and the class-51 first part inflects
+    /// as well: `mustanviinimarjan`, `mustassaviinimarjassa`.
+    #[cfg(feature = "generated-nominals")]
+    #[test]
+    fn a_compound_like_tail_is_split_recursively() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let plain = |word: &str| -> Vec<String> {
+            inflect_in(
+                word,
+                Inflection {
+                    class: 51,
+                    gradation: None,
+                },
+                &cat,
+                Some(&LexiconIndex::new(&lexicon)),
+                PartOfSpeech::Noun,
+                true,
+            )
+            .into_iter()
+            .filter(|f| f.readings.iter().all(|r| r.possessive.is_none()))
+            .map(|g| g.word)
+            .collect()
+        };
+
+        let forms = plain("mustaviinimarja");
+        for expected in [
+            "mustaviinimarja",       // nominative singular
+            "mustanviinimarjan",     // first part and head in the genitive
+            "mustaaviinimarjaa",     // ... and the partitive
+            "mustassaviinimarjassa", // ... and the inessive
+            "mustienviinimarjojen",  // plural genitive
+            "mustiaviinimarjoja",    // plural partitive
+        ] {
+            assert!(
+                forms.iter().any(|w| w == expected),
+                "mustaviinimarja lost {expected}: {} forms",
+                forms.len()
+            );
+        }
+        // The middle `viini` stays in the nominative in every cell.
+        assert!(
+            forms.iter().all(|w| w.contains("viini")),
+            "the middle part was inflected"
+        );
+    }
+
     /// Two classes that spell a form the same way say it once.
 ///
 /// `ahtaus` is two homonym rows, `40` and `39`, and the two grids coincide

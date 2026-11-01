@@ -18,7 +18,7 @@
 
 use crate::tags::{Case, Form, Number, PartOfSpeech};
 
-use super::utility::{Builder, Decl, Ending, cell, nominal_tags, plain, rare};
+use super::utility::{Builder, Decl, Ending, cell, nominal_tags, plain, plural_only, rare};
 
 pub const CLASS: &str = "13";
 
@@ -54,6 +54,16 @@ fn o_stem(stem: &str) -> String {
 
 /// Inflect a class-13 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
+    // Class 13 carries plural-only lemmas (`aktiivat`): the citation form is
+    // the nominative plural of a base the sanalista does not list (`aktiiva`,
+    // Kotus type 13/katiska), so decline the dropped-`t` stem and keep only its
+    // plural cells. Without this the engine builds `aktiivatn`, `aktiivata`
+    // and `aktiivatiden` from the plural nominative.
+    if let Some(base) = lemma.strip_suffix('t')
+        && !base.is_empty()
+    {
+        return plural_only(inflect(base, possessives));
+    }
     let mut b = Builder::new(lemma, possessives);
     let stem = lemma;
     let ostem = o_stem(stem);
@@ -154,6 +164,35 @@ mod tests {
 
     fn words(lemma: &str) -> Vec<String> {
         inflect(lemma, true).into_iter().map(|f| f.word).collect()
+    }
+
+    /// `aktiivat` is the plural of `aktiiva` (Kotus type 13/katiska, which
+    /// Wiktionary and Kielitoimiston sanakirja both give). The sanalista lists
+    /// only the plural, so the engine must decline the dropped-`t` base and
+    /// keep the plural-only cells.
+    #[test]
+    fn a_plural_only_lemma_declines_from_the_dropped_stem() {
+        let w = words("aktiivat");
+        for want in [
+            "aktiivat",
+            "aktiivoiden",
+            "aktiivoitten",
+            "aktiivojen",
+            "aktiivoita",
+            "aktiivoissa",
+            "aktiivoihin",
+        ] {
+            assert!(w.contains(&want.to_string()), "missing {want}");
+        }
+        for bad in [
+            "aktiivatn",
+            "aktiivata",
+            "aktiivatiden",
+            "aktiivatja",
+            "aktiiva",
+        ] {
+            assert!(!w.contains(&bad.to_string()), "invented {bad}");
+        }
     }
 
     fn plain_words(lemma: &str) -> Vec<String> {

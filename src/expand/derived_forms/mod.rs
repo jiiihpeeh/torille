@@ -384,9 +384,11 @@ pub(super) fn degree_forms(
         let Some(nominal) = nominal else {
             continue;
         };
-        // A degree is an adjective form, and an adjective takes no
-        // possessive suffix, so both are fixed here rather than taken
-        // from the caller: `paha` inflected as a noun still derives
+        // A degree is an adjective form, but the oracle does confirm the
+        // possessive cells of a comparative (`alamaisempattaan`,
+        // `olemattomampaaan`), so they are generated here as `Repaired` like
+        // every other degree form: accepted, never suggested. The part of
+        // speech is fixed so that `paha` inflected as a noun still derives
         // adjective degrees.
         for form in inflect_in(
             nominal,
@@ -394,7 +396,7 @@ pub(super) fn degree_forms(
             cat,
             lexicon,
             PartOfSpeech::Adjective,
-            false,
+            true,
         ) {
             out.push(form.with(Confidence::Repaired));
         }

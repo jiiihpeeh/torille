@@ -59,9 +59,12 @@ Usage:
     python3 tools/report_by_class.py --live             # live Omorfi+Voikko
     python3 tools/report_by_class.py -o report.json
     python3 tools/report_by_class.py --split reports/   # one file per class
-    python3 tools/report_by_class.py --verify-illegal   # live Voikko + Wiktionary
+    python3 tools/report_by_class.py --verify-illegal   # live Voikko + curated rules
+    python3 tools/report_by_class.py --raw-illegal      # oracle's raw illegal rows
 
-Exit is 1 if any class has a defect, so it works as a gate.
+The default report applies `data/oracle_exceptions.json`; `--raw-illegal` turns
+that off for the evidence gate. Exit is 1 if any class has a defect, so it works
+as a gate.
 """
 
 from __future__ import annotations
@@ -85,34 +88,10 @@ from omorfi_harness import (  # noqa: E402
     eprint,
     noun_cells,
 )
+import illegal_evidence  # noqa: E402
 
-STATUSES = ("confirmed", "missing", "not_plain", "mistagged", "illegal",
-            "unsupported")
-
-#: `(class, lemma)` pairs whose whole paradigm was checked against
-#: en.wiktionary by hand because the materialised oracle disagrees with it.
-#: Used only by `--verify-illegal`, together with the live Voikko pass; it is
-#: evidence, not a blanket "trust the engine" switch.
-WIKTIONARY_CONFIRMED_CLASSES = {
-    # Plural-only families whose short forms are confirmed by Wiktionary and
-    # rejected by the materialised oracle's long `-kem-`/`-aa-` spellings.
-    "33*D", "33*J", "41*C", "41*I",
-}
-
-WIKTIONARY_CONFIRMED = {
-    ("18", "pii"),
-    ("18", "tii"),
-    ("18", "pe-tsai"),
-    ("32*D", "ien"),
-    ("33*D", "näkimet"),
-    ("33*J", "antimet"),
-    ("41*C", "rattaat"),
-    ("41*E", "havas"),
-    ("41*I", "maltaat"),
-    ("49*E", "taival"),
-    ("51", "omakuva"),
-    ("51", "täysikuu"),
-}
+STATUSES = ("confirmed", "missing", "oracle-only", "not_plain", "mistagged",
+            "illegal", "unsupported")
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -145,10 +124,21 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                    help="also write one JSON file per class into DIR, named "
                         "after the class: class-9.json, class-9B.json")
     p.add_argument("--verify-illegal", action="store_true",
-                   help="re-check illegal rows with live Voikko and count a "
-                        "form as confirmed when Voikko reads it as the lemma. "
+                   help="re-check illegal rows with live Voikko and the "
+                        "curated rules in data/oracle_exceptions.json, and "
+                        "count a form as confirmed when either vouches for it. "
                         "This separates a real engine error from a materialised "
                         "oracle that disagrees with the engine.")
+    p.add_argument("--strict-illegal", action="store_true",
+                   help="keep every illegal row illegal and annotate it with "
+                        "the evidence rule that would have reclassified it. "
+                        "This is the audit mode for reviewing a new rule; it "
+                        "does not need live Voikko.")
+    p.add_argument("--raw-illegal", action="store_true",
+                   help="do not apply data/oracle_exceptions.json; report the "
+                        "oracle's raw illegal rows. This is the input the "
+                        "evidence gate checks, and it cannot be combined with "
+                        "--verify-illegal or --strict-illegal.")
     p.add_argument("-q", "--quiet", action="store_true",
                    help="print only the failing classes")
     return p.parse_args(argv)
@@ -176,7 +166,9 @@ def finding_json(f: Finding) -> dict:
     out = {
         "lemma": f.lemma,
         "form": f.form,
-        "status": f.status,
+        # The harness spells this status `not plain`; the totals and the other
+        # tools use `not_plain`, so the JSON keeps one spelling for both.
+        "status": f.status.replace(" ", "_"),
         "cell": cell_json(f.cell),
         "expected": f.expected,
         "got": f.got,
@@ -201,6 +193,9 @@ def check_class(
     only_failures: bool,
     verifier=None,
     verifier_lock=None,
+    evidence: list[dict] | None = None,
+    strict_illegal: bool = False,
+    raw_illegal: bool = False,
 ) -> dict:
     findings: list[Finding] = []
     skipped = 0
@@ -210,7 +205,18 @@ def check_class(
             skipped += 1
             continue
         findings.extend(rows)
-    if verifier is not None:
+
+    class_of_cache: dict[str, str] = {}
+
+    def class_of(lemma: str) -> str:
+        if lemma not in class_of_cache:
+            class_of_cache[lemma] = harness.class_of(lemma)
+        return class_of_cache[lemma]
+
+    # The live second opinion. Strict mode deliberately skips it: the whole
+    # point of an audit is to see the raw illegal rows and what the evidence
+    # file says about them, not to watch them disappear.
+    if verifier is not None and not strict_illegal:
         for finding in findings:
             if finding.status != "illegal" or not finding.form:
                 continue
@@ -231,34 +237,83 @@ def check_class(
                     "while the materialised oracle expects "
                     f"{finding.expected}"
                 )
-    if verifier is not None:
-        dual_class: dict[str, bool] = {}
+
+    if evidence and strict_illegal:
         for finding in findings:
             if finding.status != "illegal":
                 continue
-            if cls == "51":
-                if finding.lemma not in dual_class:
-                    dual_class[finding.lemma] = "50" in harness.class_of(
-                        finding.lemma)
-                if not dual_class[finding.lemma]:
-                    continue
-            elif (cls not in WIKTIONARY_CONFIRMED_CLASSES
-                  and (cls, finding.lemma) not in WIKTIONARY_CONFIRMED):
-                continue
-            finding.status = "confirmed"
-            finding.detail = (
-                "offered as plain; the paradigm was checked against "
-                "en.wiktionary, which confirms this form while the "
-                f"materialised oracle expects {finding.expected}"
+            matched = illegal_evidence.match(
+                evidence, finding, cls, class_of)
+            note = (
+                "would be reclassified by "
+                + ", ".join(rule["id"] for rule in matched)
+                if matched else "no evidence rule"
             )
-    counts = Counter(f.status for f in findings)
+            finding.detail = (
+                f"{finding.detail} [{note}]" if finding.detail
+                else f"[{note}]"
+            )
+    elif evidence and not raw_illegal:
+        for finding in findings:
+            if finding.status not in ("illegal", "unsupported"):
+                continue
+            matched = illegal_evidence.match(
+                evidence, finding, cls, class_of)
+            if not matched:
+                continue
+            rule = matched[0]
+            extra = ""
+            if len(matched) > 1:
+                extra = (
+                    " (also matched "
+                    + ", ".join(r["id"] for r in matched[1:])
+                    + ")"
+                )
+            was = finding.status
+            finding.status = "confirmed"
+            if was == "illegal":
+                finding.detail = (
+                    "offered as plain; "
+                    f"{rule['note']} "
+                    f"[{rule['id']}; {rule['source']}]{extra}, while the "
+                    f"materialised oracle expects {finding.expected}"
+                )
+            else:
+                finding.detail = (
+                    "offered as plain; "
+                    f"{rule['note']} "
+                    f"[{rule['id']}; {rule['source']}]{extra}, though neither "
+                    "oracle lists it"
+                )
+        # A `missing` row is the other direction: the oracle claims a form the
+        # engine does not produce. Where the evidence says the oracle's spelling
+        # is not a word (a comparative's strong grade in a weak cell), the row
+        # is the oracle's mistake, not a recall gap, so it is not counted as
+        # missing.
+        for finding in findings:
+            if finding.status != "missing":
+                continue
+            matched = illegal_evidence.match(
+                evidence, finding, cls, class_of)
+            if not matched:
+                continue
+            rule = matched[0]
+            finding.status = "oracle-only"
+            finding.detail = (
+                "the oracle's expected form is not a word; "
+                f"{rule['note']} [{rule['id']}; {rule['source']}]"
+            )
+    counts = Counter(f.status.replace(" ", "_") for f in findings)
     # A class is healthy only if every cell it answered was right, and that
     # includes the cells nothing vouches for: an unbacked `plain` suggestion is
     # a risk even when no oracle can say what the right answer was, so
     # `unsupported` fails the class. `confirmed` is in the totals so the rate is
     # readable -- 1204 confirmed and 16 missing is a 99% class, and 0 confirmed
     # means something is badly wrong rather than that the class is clean.
-    failed = sum(counts[s] for s in STATUSES if s != "confirmed")
+    failed = sum(
+        counts[s] for s in STATUSES
+        if s not in ("confirmed", "oracle-only")
+    )
     rows = [
         finding_json(f) for f in findings
         if not only_failures or f.status != "confirmed"
@@ -288,9 +343,20 @@ def main(argv: list[str]) -> int:
     possessives = [""] if args.bare else None
     cells = noun_cells(ALL_CASES, ["SG", "PL"], possessives)
 
+    if args.raw_illegal and (args.verify_illegal or args.strict_illegal):
+        eprint("--raw-illegal cannot be combined with --verify-illegal "
+               "or --strict-illegal")
+        return 2
     harness = Harness(pos="noun", lexicon=args.lexicon)
     verifier = None
     verifier_lock = None
+    evidence = None
+    if not args.raw_illegal:
+        try:
+            evidence = illegal_evidence.load()
+        except illegal_evidence.EvidenceError as exc:
+            eprint(f"evidence: {exc}")
+            return 2
     if args.verify_illegal:
         try:
             from voikko import libvoikko
@@ -298,6 +364,10 @@ def main(argv: list[str]) -> int:
             verifier_lock = threading.Lock()
         except Exception as exc:  # pragma: no cover - depends on the host
             eprint(f"--verify-illegal: live Voikko unavailable ({exc})")
+            # A verified run that silently did not verify is worse than no
+            # run: the curated rules would still be applied, but the live
+            # second opinion would be missing without saying so.
+            return 2
     buckets = harness.words_in_class("substantiivi")
     if args.classes != "all":
         wanted = [c.strip() for c in args.classes.split(",") if c.strip()]
@@ -327,7 +397,8 @@ def main(argv: list[str]) -> int:
     def work(cls: str) -> dict:
         return check_class(
             harness, cls, picked[cls], cells, args.only_failures,
-            verifier, verifier_lock,
+            verifier, verifier_lock, evidence, args.strict_illegal,
+            args.raw_illegal,
         )
 
     # Classes are independent, so the parallelism is over classes rather than

@@ -59,7 +59,12 @@ fn apostrophe(lemma: &str, possessives: bool) -> Vec<Form> {
             cell(Case::Partitive, sg, &st, ["ta", "tä"], true),
             cell(Case::Essive, sg, &st, ["na", "nä"], true),
             cell(Case::Translative, sg, &st, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
+            // The illative's harmony is lexical, not derivable from the
+            // spelling: Wiktionary gives `parfait'hen` (front) but
+            // `nougat'han` (back). Both apostrophe spellings are emitted, as
+            // the external illatives below are.
             cell(Case::Illative, sg, &st, ["hen", "hen"], false).on_ending(["he", "he"]),
+            cell(Case::Illative, sg, &st, ["han", "han"], false).on_ending(["ha", "ha"]),
             cell(Case::Inessive, sg, &st, ["ssa", "ssä"], true),
             cell(Case::Elative, sg, &st, ["sta", "stä"], true),
             cell(Case::Adessive, sg, &st, ["lla", "llä"], true),

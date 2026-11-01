@@ -941,6 +941,30 @@ pub fn build_i_loans_with_nom_base(
 
     b.into_forms()
 }
+
+/// Keeps only the plural cells of a paradigm.
+///
+/// A plural-only lemma (`aktiivat`, `housut`, `käräjät`) is the nominative
+/// plural of a word the sanalista does not list separately, so a class engine
+/// is run on the dropped-`t` stem (`aktiiva`, `housu`, `käräjä`) and the
+/// singular cells it builds (`aktiiva`, `aktiivan`) are not forms of the word.
+/// The nominative plural the stem produces is the lemma itself, so nothing has
+/// to be rewritten.
+///
+/// A form is kept when *any* of its readings is plural. The class engines tag
+/// each cell with one number, so this is the cell's own number; the `any` is
+/// there for a form that later carries two readings and is plural under one.
+pub fn plural_only(forms: Vec<Form>) -> Vec<Form> {
+    forms
+        .into_iter()
+        .filter(|form| {
+            form.readings
+                .iter()
+                .any(|reading| reading.number == Some(Number::Plural))
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

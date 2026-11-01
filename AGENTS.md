@@ -169,7 +169,10 @@ Called for every lemma/class; short-circuits in order:
    `aprilli`) supersede everything.
 2. `try_compound_marker` — class 50/51 compounds are inflected part by part.
    Class 50 with no split falls back to its head's class; class 51 deliberately
-   does not (its semantics are the opposite).
+   does not (its semantics are the opposite). A class-50 tail may be a bound
+   combining form (`‑kulmio` in `suorakulmio`, hyphen stripped) or the
+   nominative plural of a lemma (`vanhemmat` in `isovanhemmat`, resolved to
+   `vanhempi`; only the plural cells are emitted).
 3. Heuristic engine over the catalogue model (`inflect_from`, with `spellings`
    covering length compensation and epenthetic vowels).
 4. Hand-written `nominals`/`verbs` modules (authoritative or additive, above).
@@ -262,7 +265,12 @@ cargo test --release --workspace
 python3 tools/test_binding_agrees_with_binary.py
 python3 tools/test_reverse_lookup_recall.py
 python3 tools/test_experimental_features.py
+python3 tools/test_illegal_evidence.py
 ```
+
+`test_illegal_evidence.py` generates the raw (`--raw-illegal`) 5-lemma report,
+so it is slower than the other Python gates; it is the gate for the curated
+oracle exceptions in `data/oracle_exceptions.json`.
 
 The Python binding (needed for the harness, not for the engine):
 

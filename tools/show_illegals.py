@@ -63,8 +63,8 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
-STATUSES = ("confirmed", "missing", "not_plain", "mistagged", "illegal",
-            "unsupported")
+STATUSES = ("confirmed", "missing", "oracle-only", "not_plain", "mistagged",
+            "illegal", "unsupported")
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:

@@ -38,4 +38,30 @@ mod tests {
         assert!(w.contains(&"aatelitonten".to_string()));
         assert!(w.contains(&"aatelittomien".to_string()));
     }
+
+    /// The nominative possessive sits on the oblique stem, not the lemma:
+    /// `levoton` gives `levottomani`, and `levotonni` is not a word.
+    /// en.wiktionary's `levoton` possessive table gives the same five shapes.
+    #[test]
+    fn nominative_possessives_sit_on_the_oblique_stem() {
+        let w = words("levoton");
+        for want in [
+            "levottomani",
+            "levottomasi",
+            "levottomamme",
+            "levottomanne",
+            "levottomansa",
+        ] {
+            assert!(w.contains(&want.to_string()), "{want} missing");
+        }
+        for bad in [
+            "levotonni",
+            "levotonsi",
+            "levotonmme",
+            "levotonnne",
+            "levotonnsa",
+        ] {
+            assert!(!w.contains(&bad.to_string()), "{bad} emitted");
+        }
+    }
 }

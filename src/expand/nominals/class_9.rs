@@ -27,7 +27,7 @@
 use crate::kotus::{Gradation, Grade};
 use crate::tags::{Case, Form, Number, PartOfSpeech};
 
-use super::utility::{Builder, Decl, Ending, cell, nominal_tags, plain, rare};
+use super::utility::{Builder, Decl, Ending, cell, nominal_tags, plain, plural_only, rare};
 
 pub const CLASS: &str = "9";
 
@@ -52,6 +52,16 @@ const I_PLURAL_LOANS: &[&str] = &["estetiikka", "solakka"];
 
 /// Inflect a class-9 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
+    // Class 9 carries plural-only lemmas (`perskat`, `tangat`, `kihlat`): the
+    // citation form is the nominative plural of a base the sanalista does not
+    // list (`perska`, `tanka`, `kihla`), so decline the dropped-`t` stem and
+    // keep only its plural cells. Without this the engine builds `perskatn`,
+    // `perskata` and `perskatt`, none of which is a word.
+    if let Some(base) = lemma.strip_suffix('t')
+        && !base.is_empty()
+    {
+        return plural_only(inflect(base, possessives));
+    }
     let mut b = Builder::new(lemma, possessives);
     let stem = lemma;
     let ostem = o_stem(stem);
@@ -119,6 +129,16 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
 /// partitive/essive/illative (`iltojen`, `iltoja`), weak for the nominative
 /// (`illat`), translative, locals and instructive.
 pub fn inflect_graded(lemma: &str, possessives: bool, grad: Gradation) -> Vec<Form> {
+    // A plural-only lemma (`menkat`, `hipat`, `harkat`) is the nominative
+    // plural of a base the sanalista does not list. Dropping the `-t` leaves the
+    // *weak* grade (`menka`, `hipa`), and this engine takes the strong stem
+    // (`menkka`, `hippa`), so turn it back before declining.
+    if let Some(base) = lemma.strip_suffix('t')
+        && !base.is_empty()
+    {
+        let strong = grad.strongen(base);
+        return plural_only(inflect_graded(&strong, possessives, grad));
+    }
     let weak = grad.apply(lemma, Grade::Weak);
     inflect_graded_impl(lemma, possessives, &weak, false)
 }
@@ -128,6 +148,14 @@ pub fn inflect_graded(lemma: &str, possessives: bool, grad: Gradation) -> Vec<Fo
 /// `allakkojen`/`allakkoja` and `allakoiden`/`allakoita`). The weak `i`-plural
 /// is offered plainly alongside the strong vowel-plural.
 pub fn inflect_graded_both(lemma: &str, possessives: bool, grad: Gradation) -> Vec<Form> {
+    // The class-14 plural-only lemmas (`rintsikat`) reach here too; see
+    // [`inflect_graded`] for why the weak stem is strong-graded first.
+    if let Some(base) = lemma.strip_suffix('t')
+        && !base.is_empty()
+    {
+        let strong = grad.strongen(base);
+        return plural_only(inflect_graded_both(&strong, possessives, grad));
+    }
     let weak = grad.apply(lemma, Grade::Weak);
     inflect_graded_impl(lemma, possessives, &weak, true)
 }
@@ -242,6 +270,63 @@ mod tests {
 
     fn words(lemma: &str) -> Vec<String> {
         inflect(lemma, true).into_iter().map(|f| f.word).collect()
+    }
+
+    /// A plural-only lemma declines from the dropped-`t` base and invents no
+    /// singular.
+    ///
+    /// `perskat` is the nominative plural of `perska`; the base is not a
+    /// sanalista headword, so the engine used to treat the plural as the
+    /// nominative singular and build `perskatn`, `perskata`, `perskatt`. The
+    /// graded subtypes need the strong stem back (`hipat` -> `hippa`,
+    /// `menkat` -> `menkka`), which `Gradation::strongen` supplies.
+    #[test]
+    fn a_plural_only_lemma_declines_from_the_dropped_stem() {
+        // Class 9 (ungraded): `perskat` is the plural of `perska`.
+        let perskat = words("perskat");
+        for want in ["perskat", "perskojen", "perskoja", "perskoissa"] {
+            assert!(
+                perskat.contains(&want.to_string()),
+                "perskat missing {want}"
+            );
+        }
+        for bad in ["perskatn", "perskata", "perskatt"] {
+            assert!(
+                !perskat.contains(&bad.to_string()),
+                "perskat invented {bad}"
+            );
+        }
+
+        // The graded subtypes take the strong stem back: `hipat` (9*B) is the
+        // plural of `hippa`, and `menkat` (9*A) of `menkka`.
+        for (lemma, grad, wants) in [
+            (
+                "hipat",
+                Gradation(2),
+                ["hipat", "hippojen", "hippoja", "hipoissa"],
+            ),
+            (
+                "menkat",
+                Gradation(1),
+                ["menkat", "menkkojen", "menkkoja", "menkkoihin"],
+            ),
+        ] {
+            let w: Vec<String> = inflect_graded(lemma, true, grad)
+                .into_iter()
+                .map(|f| f.word)
+                .collect();
+            for want in wants {
+                assert!(w.contains(&want.to_string()), "{lemma} missing {want}");
+            }
+            let base = lemma.strip_suffix('t').unwrap();
+            for bad in [
+                format!("{lemma}n"),
+                format!("{base}ta"),
+                format!("{lemma}t"),
+            ] {
+                assert!(!w.contains(&bad), "{lemma} invented {bad}");
+            }
+        }
     }
 
     #[test]

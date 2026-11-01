@@ -20,9 +20,10 @@ build_nomine_lexicon.py       build_proper_name_forms.py
 build_verb_lexicon.py         check_all_derivations.py
 apply_all_derivations.py      audit_all.py
 classify_lemma.py
-omorfi_harness.py             report_by_class.py
-run_wordlist.py               test_binding_agrees_with_binary.py
-walk_check.py
+illegal_evidence.py           omorfi_harness.py
+report_by_class.py            run_wordlist.py
+test_binding_agrees_with_binary.py
+test_illegal_evidence.py      walk_check.py
 ```
 
 Each of those files carries an SPDX header saying so. The other tools are

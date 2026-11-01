@@ -49,8 +49,12 @@ pub fn inflect_ton(lemma: &str, possessives: bool, weak: &str) -> Vec<Form> {
     b.decline(
         &Decl::new(vec![
             // ---- the singular ----
-            // The bare nominative and its possessives ride the lemma.
-            cell(Case::Nominative, sg, lemma, ["", ""], false).on_stem(),
+            // The bare nominative rides the lemma, but its possessives sit on
+            // the oblique stem: `levoton` gives `levottomani`, not
+            // `levotonni`. The `-ton` adjectives that are also nouns are the
+            // only members with a possessive column, and their genitive stem
+            // is the one the suffix belongs on.
+            cell(Case::Nominative, sg, lemma, ["", ""], false).base_on(weak.to_string(), ""),
             cell(Case::Genitive, sg, weak, ["n", "n"], false).on_stem(),
             // The partitive stays on the lemma: alaston -> alastonta.
             cell(Case::Partitive, sg, lemma, ["ta", "tä"], true),

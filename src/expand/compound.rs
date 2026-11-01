@@ -38,7 +38,16 @@ pub(super) fn compound_paradigm(
         return Vec::new();
     }
     let mut out: Vec<Generated> = Vec::new();
-    for (prefix, head, tail) in find_parts(lemma, class, lexicon) {
+    // A compound-like tail is accepted only for a lemma that is class 51
+    // alone. `mustaviinimarja` (51) is `musta` + `viinimarja`, and the middle
+    // `viinimarja` has no inflection of its own. A dual-class word
+    // (`isomaksaruoho` is `50, 51`) already has a correct class-50 reading, and
+    // letting the 51 reading recurse into the same tail would add a second
+    // paradigm the oracle does not confirm.
+    let dual_class = lexicon
+        .tail_exactly(lemma)
+        .any(|row| row.inflections.iter().any(|inf| inf.class == 50));
+    for (prefix, head, tail, shape) in find_parts(lemma, class, lexicon, cat, !dual_class) {
         // The head's bare case forms (class 51 only; a class-50 prefix is fixed).
         let mut head_cells: HashMap<(Case, Number), Vec<String>> = HashMap::new();
         if class == 51 {
@@ -64,72 +73,103 @@ pub(super) fn compound_paradigm(
                 }
             }
         }
-        for tail_inf in &tail.inflections {
-            if compound_class(tail_inf.class) {
+        // A compound-like tail has no inflection of its own. It is either a
+        // plural-only lemma (`sisarukset` is the plural of `sisarus`) or a
+        // compound of its own (`viinimarja` is `viini` + `marja`). The first
+        // takes the base's plural cells; the second recurses as a class-50
+        // compound so its head inflects and its modifiers stay fixed.
+        let tail_forms: Vec<Generated> = if tail.inflections.is_empty() {
+            if tail.word.ends_with('t')
+                && let Some(base) = nominative_plural_base(tail.word, lexicon, cat)
+            {
+                plural_only_forms(base, cat, lexicon)
+            } else {
+                compound_paradigm(
+                    tail.word,
+                    Inflection {
+                        class: 50,
+                        gradation: None,
+                    },
+                    cat,
+                    Some(lexicon),
+                )
+            }
+        } else {
+            tail.inflections
+                .iter()
+                .filter(|inf| !compound_class(inf.class))
+                .flat_map(|inf| {
+                    super::inflect_in(
+                        tail.word,
+                        *inf,
+                        cat,
+                        Some(lexicon),
+                        PartOfSpeech::Noun,
+                        true,
+                    )
+                })
+                .collect()
+        };
+        for t in tail_forms {
+            let tags = t.union();
+            // A class-51 tail possessive that does not name its case is
+            // ambiguous between the nominative and the genitive, and joining
+            // it to either head gives one real and one unconfirmed word, so
+            // it is left out rather than guessed. A class-50 prefix is fixed,
+            // so the ambiguity does not arise there.
+            if class == 51 && tags.case.is_none() {
                 continue;
             }
-            for t in super::inflect_in(
-                tail.word,
-                *tail_inf,
-                cat,
-                Some(lexicon),
-                PartOfSpeech::Noun,
-                true,
-            ) {
-                let tags = t.union();
-                // A class-51 tail possessive that does not name its case is
-                // ambiguous between the nominative and the genitive, and joining
-                // it to either head gives one real and one unconfirmed word, so
-                // it is left out rather than guessed. A class-50 prefix is fixed,
-                // so the ambiguity does not arise there.
-                if class == 51 && tags.case.is_none() {
-                    continue;
-                }
-                // A possessive tail form is often case-ambiguous (`amaryllikseni`
-                // is both the nominative and the genitive singular), so match the
-                // head on whatever the tail actually claims -- a missing field is
-                // a wildcard, never a disqualification.
-                let heads: Vec<String> = if class == 51 {
-                    let mut v: Vec<String> = Vec::new();
-                    for ((c, n), h) in &head_cells {
-                        // The head's case must be the reading's own: an
-                        // ambiguous tail possessive combined with the wrong head
-                        // case is a different word (`aavanmereni` vs the
-                        // unconfirmed `aavamerini`).
-                        if tags.case.is_none_or(|cs| cs == *c)
-                            && tags.number.is_none_or(|nu| nu == *n)
-                        {
-                            v.extend(h.iter().cloned());
-                        }
+            // A plural-only compound's tail is the nominative plural of its
+            // base (`vanhemmat` against `vanhempi`), so the compound has no
+            // singular at all: `isovanhemmat` is the whole lemma, and
+            // `isovanhempi` is not a word.
+            if shape == TailShape::PluralOnly && tags.number != Some(Number::Plural) {
+                continue;
+            }
+            // A possessive tail form is often case-ambiguous (`amaryllikseni`
+            // is both the nominative and the genitive singular), so match the
+            // head on whatever the tail actually claims -- a missing field is
+            // a wildcard, never a disqualification.
+            let heads: Vec<String> = if class == 51 {
+                let mut v: Vec<String> = Vec::new();
+                for ((c, n), h) in &head_cells {
+                    // The head's case must be the reading's own: an
+                    // ambiguous tail possessive combined with the wrong head
+                    // case is a different word (`aavanmereni` vs the
+                    // unconfirmed `aavamerini`).
+                    if tags.case.is_none_or(|cs| cs == *c) && tags.number.is_none_or(|nu| nu == *n)
+                    {
+                        v.extend(h.iter().cloned());
                     }
-                    v.sort();
-                    v.dedup();
-                    v
+                }
+                v.sort();
+                v.dedup();
+                v
+            } else {
+                // A class-50 prefix is fixed, so every tail cell joins it.
+                vec![prefix.clone()]
+            };
+            if heads.is_empty() {
+                continue;
+            }
+            for h in &heads {
+                // A hyphenated class-51 lemma keeps its hyphen in every
+                // cell: `nuori-isäntä` is an established expression, so the
+                // table is `nuoren-isännän`, `nuorta-isäntää`,
+                // `nuoret-isännät`, not the closed spelling a generic
+                // compound would use. The separator is not part of either
+                // part, so it is chosen here.
+                let separator = if class == 51 && prefix == "-" {
+                    "-"
                 } else {
-                    // A class-50 prefix is fixed, so every tail cell joins it.
-                    vec![prefix.clone()]
+                    ""
                 };
-                if heads.is_empty() {
-                    continue;
-                }
-                for h in &heads {
-                    // A hyphenated class-51 lemma keeps its hyphen in every
-                    // cell: `nuori-isäntä` is an established expression, so the
-                    // table is `nuoren-isännän`, `nuorta-isäntää`,
-                    // `nuoret-isännät`, not the closed spelling a generic
-                    // compound would use. The separator is not part of either
-                    // part, so it is chosen here.
-                    let separator = if class == 51 && prefix == "-" {
-                        "-"
-                    } else {
-                        ""
-                    };
-                    out.push(Form {
-                        word: format!("{h}{separator}{}", t.word),
-                        readings: t.readings.clone(),
-                        confidence: t.confidence,
-                    });
-                }
+                out.push(Form {
+                    word: format!("{h}{separator}{}", shape.surface(&t.word)),
+                    readings: t.readings.clone(),
+                    confidence: t.confidence,
+                });
             }
         }
     }
@@ -139,6 +179,36 @@ pub(super) fn compound_paradigm(
 /// Whether a class is one of the compound markers.
 fn compound_class(class: u16) -> bool {
     class == 50 || class == 51
+}
+
+/// How a compound's tail surface relates to the lemma that inflects it.
+///
+/// The sanalista spells some compound heads as bound combining forms with a
+/// leading U+2011 NON-BREAKING HYPHEN (`‑kulmio`, `‑mielisyys`), and a class-50
+/// lemma that ends in one writes it without the hyphen (`suorakulmio`). The
+/// hyphen is not part of the compound, so it has to come off every generated
+/// form.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum TailShape {
+    /// The tail surface is the lemma itself: `vety` in `raskasvety`.
+    Exact,
+    /// The tail surface is the lemma without its leading U+2011:
+    /// `kulmio` in `suorakulmio` against the bound lemma `‑kulmio`.
+    Bound,
+    /// The tail surface is the nominative plural of the lemma: `vanhemmat` in
+    /// `isovanhemmat` against `vanhempi`. Only plural cells are emitted, so the
+    /// compound stays plural-only the way its lemma is.
+    PluralOnly,
+}
+
+impl TailShape {
+    /// The tail form as it appears in the compound.
+    fn surface(self, tail: &str) -> &str {
+        match self {
+            Self::Exact | Self::PluralOnly => tail,
+            Self::Bound => tail.strip_prefix('\u{2011}').unwrap_or(tail),
+        }
+    }
 }
 
 /// Whether a lemma can carry a case ending, and so can be a compound's tail.
@@ -202,7 +272,9 @@ fn find_parts<'a>(
     lemma: &str,
     class: u16,
     index: &'a LexiconIndex<'a>,
-) -> Vec<(String, &'a Lemma<'a>, &'a Lemma<'a>)> {
+    cat: &Catalogues,
+    accept_compound_tail: bool,
+) -> Vec<(String, &'a Lemma<'a>, &'a Lemma<'a>, TailShape)> {
     let mut parts = Vec::new();
     if class == 51 {
         // The head is a prefix of the compound, so the bucket index narrows the
@@ -222,8 +294,14 @@ fn find_parts<'a>(
             if rest.chars().count() < SHORTEST_TAIL {
                 continue;
             }
-            if let Some(tail) = index.tail_exactly(rest).find(|e| carries_a_case(e)) {
-                parts.push((String::new(), head, tail));
+            // A compound-like tail (`viinimarja` in `mustaviinimarja`) has no
+            // inflection of its own but is still the right part: the class-51
+            // branch recurses into it as a class-50 compound.
+            if let Some(tail) = index
+                .tail_exactly(rest)
+                .find(|e| carries_a_case(e) || (accept_compound_tail && e.is_compound_like()))
+            {
+                parts.push((String::new(), head, tail, TailShape::Exact));
             }
         }
         // `nuori-isäntä` is the one class-51 lemma the sanalista writes with a
@@ -239,13 +317,20 @@ fn find_parts<'a>(
             let head = index.tail_exactly(head_word).find(|e| carries_a_case(e));
             let tail = index.tail_exactly(tail_word).find(|e| carries_a_case(e));
             if let (Some(head), Some(tail)) = (head, tail) {
-                parts.push(("-".to_string(), head, tail));
+                parts.push(("-".to_string(), head, tail, TailShape::Exact));
             }
         }
     } else {
         // Class 50: only the tail inflects; the prefix is whatever precedes the
         // longest suffix that is a word of its own.
-        let mut best: Option<(String, &Lemma, &Lemma)> = None;
+        //
+        // The fourth field is how many characters of `lemma` the tail surface
+        // occupies. It is not always the lemma's own length: a bound form is one
+        // character longer than the surface (`‑kulmio` against `kulmio`), and a
+        // plural surface is not the lemma at all (`vanhemmat` against
+        // `vanhempi`). Comparing surface widths is what makes the longest tail
+        // win.
+        let mut best: Option<(String, &Lemma, &Lemma, TailShape, usize)> = None;
         for tail in index.tails_of(lemma) {
             if tail.word.chars().count() < SHORTEST_TAIL
                 || tail.word.len() + 1 > lemma.len()
@@ -260,18 +345,152 @@ fn find_parts<'a>(
             if prefix.is_empty() {
                 continue;
             }
-            let longer = best
-                .as_ref()
-                .is_none_or(|(_, _, t)| t.word.len() < tail.word.len());
+            let width = tail.word.chars().count();
+            let longer = best.as_ref().is_none_or(|&(_, _, _, _, w)| w < width);
             if longer {
-                best = Some((prefix.to_string(), tail, tail));
+                best = Some((prefix.to_string(), tail, tail, TailShape::Exact, width));
             }
         }
-        if let Some((p, h, t)) = best {
-            parts.push((p, h, t));
+        // A bound combining form is written with a leading U+2011 in the
+        // sanalista but without it inside a compound: `suorakulmio` is `suora` +
+        // `kulmio`, and the lemma the sanalista lists is `‑kulmio`. The tail
+        // index cannot see this because the stored word carries the hyphen, so
+        // each suffix is looked up with one prepended.
+        for (at, _) in lemma.char_indices().skip(1) {
+            let surface = &lemma[at..];
+            if surface.chars().count() < SHORTEST_TAIL {
+                continue;
+            }
+            let bound = format!("\u{2011}{surface}");
+            let Some(tail) = index.tail_exactly(&bound).find(|e| carries_a_case(e)) else {
+                continue;
+            };
+            let width = surface.chars().count();
+            let longer = best.as_ref().is_none_or(|&(_, _, _, _, w)| w < width);
+            if longer {
+                best = Some((lemma[..at].to_string(), tail, tail, TailShape::Bound, width));
+            }
+        }
+        // A plural-only compound's tail is the nominative plural of a lemma
+        // that the tail index cannot find by spelling: `isovanhemmat` is `iso` +
+        // `vanhemmat`, and the sanalista lists `vanhempi`; `omakustannukset` is
+        // `oma` + `kustannukset` against `kustannus`. [`plural_tail`] resolves
+        // the surface, and the compound then takes the base's plural cells.
+        if best.is_none()
+            && let Some((prefix, base, width)) = plural_tail(lemma, index, cat)
+        {
+            best = Some((prefix, base, base, TailShape::PluralOnly, width));
+        }
+        if let Some((p, h, t, shape, _)) = best {
+            parts.push((p, h, t, shape));
         }
     }
     parts
+}
+
+/// Resolves a class-50 tail that is the nominative plural of another lemma.
+///
+/// `isovanhemmat` is `iso` + `vanhemmat`, and `vanhemmat` is the nominative
+/// plural of `vanhempi`; `omakustannukset` is `oma` + `kustannukset` against
+/// `kustannus`, and `normaaliolot` is `normaali` + `olot` against `olo`. The
+/// tail index matches spellings, so it never finds a base whose plural differs
+/// from its lemma. The candidates are the lemmas sharing the surface's leading
+/// characters, and each is inflected once to see whether it owns the surface.
+///
+/// Returns the prefix, the base lemma and the surface width, or `None` when no
+/// suffix of `lemma` resolves to a nominative plural.
+fn plural_tail<'a>(
+    lemma: &str,
+    index: &'a LexiconIndex<'a>,
+    cat: &Catalogues,
+) -> Option<(String, &'a Lemma<'a>, usize)> {
+    // Only a `-t` surface can be a nominative plural.
+    if !lemma.ends_with('t') {
+        return None;
+    }
+    let mut best: Option<(String, &Lemma, usize)> = None;
+    for (at, _) in lemma.char_indices().skip(1) {
+        let surface = &lemma[at..];
+        if surface.chars().count() < SHORTEST_TAIL || !surface.ends_with('t') {
+            continue;
+        }
+        let Some(base) = nominative_plural_base(surface, index, cat) else {
+            continue;
+        };
+        let width = surface.chars().count();
+        if best.as_ref().is_none_or(|&(_, _, w)| w < width) {
+            best = Some((lemma[..at].to_string(), base, width));
+        }
+    }
+    best
+}
+
+/// The lemma whose nominative plural is `surface`, if there is one.
+///
+/// Only the lemmas sharing `surface`'s leading characters are considered, so
+/// this is the bounded neighbourhood [`crate::expand::find_bases_with`] starts
+/// from, narrowed to one question: does this lemma inflect to the surface in the
+/// plural? A compound lemma is skipped outright -- its own expansion is what
+/// called this, and re-entering it is what the old reverse-lookup version did.
+fn nominative_plural_base<'a>(
+    surface: &str,
+    index: &'a LexiconIndex<'a>,
+    cat: &Catalogues,
+) -> Option<&'a Lemma<'a>> {
+    for base in index.heads_of(surface) {
+        if !carries_a_case(base) || base.word.contains('\u{2011}') {
+            continue;
+        }
+        if base.inflections.iter().any(|i| compound_class(i.class)) {
+            continue;
+        }
+        for inf in &base.inflections {
+            if compound_class(inf.class) {
+                continue;
+            }
+            let forms =
+                super::inflect_in(base.word, *inf, cat, Some(index), PartOfSpeech::Noun, false);
+            if forms
+                .iter()
+                .any(|f| f.word == surface && f.union().number == Some(Number::Plural))
+            {
+                return Some(base);
+            }
+        }
+    }
+    None
+}
+
+/// The plural cells of `base`, for a compound-like tail that is itself a
+/// plural-only lemma.
+///
+/// `sisarukset` in `täysisisarukset` is the nominative plural of `sisarus`, and
+/// the sanalista lists it as a compound-like row of its own (no inflection), so
+/// the tail is resolved back to `sisarus` and only its plural cells are kept.
+fn plural_only_forms(
+    base: &Lemma<'_>,
+    cat: &Catalogues,
+    lexicon: &LexiconIndex<'_>,
+) -> Vec<Generated> {
+    let mut out = Vec::new();
+    for inf in &base.inflections {
+        if compound_class(inf.class) {
+            continue;
+        }
+        for form in super::inflect_in(
+            base.word,
+            *inf,
+            cat,
+            Some(lexicon),
+            PartOfSpeech::Noun,
+            true,
+        ) {
+            if form.union().number == Some(Number::Plural) {
+                out.push(form);
+            }
+        }
+    }
+    out
 }
 
 /// A class 51 compound, split into the forms of its two parts.

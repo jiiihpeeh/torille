@@ -7,7 +7,7 @@
 //! consonant-word engine with the computed stems.
 #![allow(dead_code)]
 
-use crate::tags::Form;
+use crate::tags::{Form, Number};
 
 use super::class_32::inflect_with_stems_harmony;
 use super::harmony::class_38_harmony;
@@ -23,8 +23,31 @@ fn istem(lemma: &str) -> String {
     }
 }
 
+/// The `-inen` singular of a plural-only `-iset` lemma.
+///
+/// `läksiäiset` is the nominative plural of `läksiäinen`, and the sanalista
+/// lists the plural as the lemma; Wiktionary's `{{fi-subs-nainen|...|yks=-}}`
+/// marks the singular as omitted. The singular cells the base would build are
+/// therefore not forms of the word.
+fn plural_only_inen(lemma: &str) -> Option<String> {
+    let stem = lemma.strip_suffix("set")?;
+    if stem.ends_with(['i', 'ä', 'ö']) {
+        Some(format!("{stem}nen"))
+    } else {
+        None
+    }
+}
+
 /// Inflect a class-38 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
+    // A plural-only `-iset` lemma declines from its `-inen` singular and keeps
+    // only the plural cells; the nominative plural the base builds is the lemma
+    // itself (`läksiäiset`).
+    if let Some(base) = plural_only_inen(lemma) {
+        let mut forms = inflect(&base, possessives);
+        forms.retain(|f| f.readings.iter().any(|r| r.number == Some(Number::Plural)));
+        return forms;
+    }
     let is = istem(lemma);
     let estem = format!("{is}e");
     // The `-nen` family is spelled with nothing but neutral vowels, so ordinary
@@ -54,5 +77,36 @@ mod tests {
         assert!(w.contains(&"aakkosena".to_string()));
         assert!(w.contains(&"aakkosia".to_string()));
         assert!(w.contains(&"aakkosien".to_string()));
+    }
+
+    /// A plural-only `-iset` lemma declines from its `-inen` singular and
+    /// invents no singular cells.
+    ///
+    /// `läksiäiset` and `avajaiset` are the nominative plural of `läksiäinen`
+    /// and `avajainen`, and Wiktionary marks them `{{monikollinen}}` with
+    /// `yks=-`. The engine used to build `läksiäisen` and `läksiäistä`, which
+    /// live Voikko rejects.
+    #[test]
+    fn iset_is_plural_only() {
+        for (lemma, wants, bad) in [
+            (
+                "läksiäiset",
+                &["läksiäiset", "läksiäisten", "läksiäisiä", "läksiäisissä"][..],
+                &["läksiäisen", "läksiäistä", "läksiäisessä"][..],
+            ),
+            (
+                "avajaiset",
+                &["avajaiset", "avajaisten", "avajaisia"][..],
+                &["avajaisen", "avajaista"][..],
+            ),
+        ] {
+            let w = words(lemma);
+            for want in wants {
+                assert!(w.contains(&want.to_string()), "{lemma} missing {want}");
+            }
+            for wrong in bad {
+                assert!(!w.contains(&wrong.to_string()), "{lemma} invented {wrong}");
+            }
+        }
     }
 }

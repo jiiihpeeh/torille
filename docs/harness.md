@@ -134,6 +134,12 @@ hides the interesting one.
 | `mistagged` | tag | a confirmed form offered as `plain` but filed under the wrong cell |
 | `illegal` | precision | a form it offers as `plain` where the oracle confirmed a **different** word for that cell |
 | `unsupported` | precision | a form it offers as `plain` that **neither** oracle vouches for, in either direction |
+| `oracle-only` | — | the oracle claims a form that is not a word; the evidence file names the source |
+
+`oracle-only` is the `missing` direction of `illegal`: the engine does not
+produce the form, and the evidence says the oracle's spelling is the mistake
+(a comparative's strong `-mpa-` in a weak cell, `kuurompalta` for
+`kuurommalta`). It is not a recall gap and does not fail a class.
 
 The two oracles disagree about coverage, and the disagreement is not symmetric.
 Omorfi is the coverage authority and is sometimes simply missing a cell: it has
@@ -229,7 +235,12 @@ python3 tools/report_by_class.py [-n 5] [-c 9,9B,27] [--bare] [--split DIR]
 Per inflection class, as a JSON array. The unit is the class as torille reads
 it, so `9` and `9*B` stay separate — the `*B` is a consonant gradation, and
 lumping them would report every `kauppa` form as a defect of class 9. Exits 1
-if any class has a defect.
+if any class has a defect. The default report applies the curated evidence in
+`data/oracle_exceptions.json`. `--raw-illegal` turns that off and reports the
+oracle's raw rows, which is the input the evidence gate checks;
+`--verify-illegal` additionally rechecks the raw rows with live Voikko;
+`--strict-illegal` keeps them illegal and annotates the evidence rule that
+would have reclassified them, without needing live Voikko.
 
 ```
 python3 tools/summarize_class_report.py reports/noun-classes.json
@@ -238,6 +249,21 @@ Triage. Groups findings on their shape rather than their word, so
 `allergikkooihin` → `allergikoihin` is one defect across a hundred classes
 rather than a hundred defects, and the before/after columns are the two strings
 to choose between in the code.
+
+```
+python3 tools/test_illegal_evidence.py [--report JSON] [-n N]
+```
+The gate for the curated oracle exceptions. Every `illegal` row in the default
+report must match exactly one rule in `data/oracle_exceptions.json`, and every
+rule in scope must still match at least one row. The second check is the
+staleness guard: an engine fix or an oracle rebuild that removes a
+disagreement turns its rule into a red test instead of leaving a dead
+exemption. Without `--report` it generates the raw report (`--raw-illegal`)
+itself; pass a saved raw report to check that instead. `-n` says how many
+lemmas per class the report was built with; a rule discovered by a wider sweep
+carries a `sample` field and is not called stale by a narrower one. Do not pass
+a report built without `--raw-illegal`: the curated pass has already removed
+the illegal rows, so every in-scope rule would look stale.
 
 ```
 python3 tools/test_binding_agrees_with_binary.py
@@ -296,14 +322,26 @@ python3 tools/summarize_class_report.py reports/noun-classes.json
 ```
 
 The numbers are from a 5-lemma sample of each of the 146 noun classes.
-Current totals: **96,216 confirmed, 8,679 missing, 539 illegal, 0 mistagged,
-722 unsupported, 0 not plain.** Recall — confirmed over confirmed plus missing
-— is **91.7%**, and the `illegal` rate is **0.6%** of confirmed. Running with
-`--verify-illegal` rechecks each illegal surface with live Voikko and the
-Wiktionary-checked caveats: **96,738 confirmed, 25 illegal**, all in `34*C`,
-and 714 unsupported. Ranking the
-classes by `illegal` count would be useless here (the largest classes are
-simply large), so the class table below is ranked by *rate*.
+Current totals: **96,736 confirmed, 6,808 missing, 1,366 oracle-only,
+4,041 not plain, 0 illegal, 0 mistagged, 646 unsupported.** Recall — confirmed
+over confirmed plus missing — is **93.4%**. The default report applies the
+curated evidence in `data/oracle_exceptions.json`; the oracle on its own
+(`--raw-illegal`) shows **96,130 confirmed, 538 illegal and 8,174 missing**,
+all 538 covered by rules. `oracle-only` is the `missing` direction of the same
+curation: the oracle claims a form that is not a word (a comparative's strong
+`-mpa-` in a weak cell, `kuurompalta` for `kuurommalta`), so it is not counted
+as a recall gap.
+`--verify-illegal` additionally rechecks the raw illegal rows with live Voikko:
+**96,736 confirmed, 0 illegal**, 4,041 not plain, 0 mistagged, and 646
+unsupported. Under the
+curated pass the 25 `34*C` cells that used to be illegal
+now show as `missing`: the oracle attaches the nominative possessive to the
+lemma (`levotonni`), which is not a word, while the engine emits the
+genitive-stem form (`levottomani`) that en.wiktionary confirms. The engine no
+longer emits the oracle's non-word, so the remaining `missing` rows are the
+oracle's expected spelling, not a form the engine lost. Ranking the classes by
+`illegal` count would be useless here (the largest classes are simply large),
+so the class table below is ranked by *rate*.
 
 **Every example was checked against Voikko by hand before it was written down**,
 and two candidates that looked real in the report were not and are absent here:
@@ -433,10 +471,13 @@ average over the ten says more about class 1 than about the idea.
 
 ### C. Whole classes built on the wrong stem
 
-**539 `illegal` forms in the current sample**, down from 15,431 after the
-class-engine rounds. Every one is still `Plain`, which is what makes this the
-item with the worst user impact: these are offered as corrections. The
-remaining defects are clustered:
+**538 raw-oracle `illegal` forms in the current sample**, down from 15,431
+after the class-engine rounds. Every one is still `Plain` in the raw report,
+which is what makes precision the direction that matters: these are offered as
+corrections. All 538 are covered by `data/oracle_exceptions.json`, so the
+default report reclassifies them and reports 0 illegal. Most are oracle
+disagreements rather than engine errors; `34*C` was the last engine-side defect
+and is fixed below. The raw rows are clustered:
 
 | rate | class | confirmed | illegal | note |
 |---|---|---|---|---|
@@ -445,7 +486,6 @@ remaining defects are clustered:
 | 13.8% | `41*I` | 637 | 88 | plural-only `-aat`, oracle caveat |
 | 13.5% | `41*C` | 651 | 88 | plural-only `-aat`, oracle caveat |
 | 12.1% | `33*J` | 627 | 76 | plural-only `-imet`, oracle caveat |
-| 3.1% | `34*C` | 795 | 25 | nominative possessive oracle |
 | 1.2% | `18` | 582 | 7 | `pii` illative/nominative mismatch |
 | 0.6% | `41*E` | 806 | 5 | `havas` dual-class stem |
 
@@ -459,10 +499,44 @@ not `antimemissa`; `valjaat` -> `valjaissa`/`valjaitta` not `valjaaissa`;
 `rattaaissa`/`rattaaitta`). `omakuva` is a dual-class word: type 51 gives
 `omatkuvat`, type 10 gives `omakuvat`, so the engine and the oracle are both
 right in different paradigms. Do not "fix" these against the oracle.
-`34*C` and `51`
-need the same external check;
-their expected forms look like oracle artifacts rather than engine errors
+
+`34*C` was the one genuine engine defect left in this table, and it is fixed.
+The class engine attached the nominative possessive to the lemma (`levotonni`)
+while also emitting the correct genitive-stem form (`levottomani`); the oracle
+confirmed the former, so the latter was reported `illegal`. The possessive now
+sits on the oblique stem (`src/expand/nominals/class_34.rs`), so `levotonni` is
+not emitted at all. Under `--verify-illegal`, the same 25 cells show as
+`missing` because the oracle still expects `levotonni`; en.wiktionary's
+`levoton` paradigm gives
+`levottomani`, `levottomasi`, `levottomamme`, `levottomanne` and
+`levottomansa`. The form is also the genitive possessive, so `Form::union`
+leaves it case-less and the precision pass has to pick a cell;
+`--verify-illegal` reclassifies that nominative-possessive reading against the
+oracle's non-word, leaving 0 illegal. `51` still needs the same external check;
+its expected forms look like oracle artifacts rather than engine errors
 (`liittoutumattomani` is the normal possessive, not `liittoutumatonni`).
+
+Two class-50 compound defects were fixed the same way — in the engine, not the
+evidence file. A bound combining-form head (`‑kulmio`, `‑jussi`, `‑mielisyys`)
+is written with a leading U+2011 in the sanalista and without it in the
+compound, so `suorakulmio`, `hullujussi` and `matalamielisyys` were not split
+and fell through to the class-50 model (`suorakulmdin`). A plural-only tail
+(`vanhemmat` in `isovanhemmat`, `kustannukset` in `omakustannukset`, `olot` in
+`normaaliolot`, `sisarukset` in `täysisisarukset`) is the nominative plural of
+a lemma, which the spelling index never matches, so those fell through too
+(`isovanhemmaeihin`, `omakusdannukseikseen`). Both now inflect through the
+head's own paradigm in `src/expand/compound.rs` and keep the plural-only
+compound plural-only.
+
+The plural-only `-t` lemmas were the same kind of engine defect. `aktiivat` is
+the nominative plural of `aktiiva` (Kotus type 13/katiska: `aktiivoiden`,
+`aktiivoitten`, `aktiivojen`, `aktiivoita`), and `rintsikat` is a pluralia
+tantum of type 14\*A; the sanalista lists only the plural. Classes 9, 9\*, 12,
+13 and 14\*A took the lemma as the nominative singular and built
+`aktiivatn`, `aktiivata`, `aktiivatiden`, `rintsikatn`. They now decline the
+dropped-`t` base and keep only the plural cells, strong-grading it back where
+the class gradates (`menkat` -> `menkka` -> `menkkojen`). Classes 2, 3, 5\*G,
+16\*H, 18, 20 and 38 still have the defect.
 
 Recent rounds removed the singular translative possessive columns that hung off
 the wrong stem in classes `24`, `31`, and `36` — `kuorikseen` for
