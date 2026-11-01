@@ -325,9 +325,10 @@ The numbers are from a 5-lemma sample of each of the 146 noun classes.
 `--classless` adds a synthetic `(none)` class for the rows the sanalista gives
 no type number (Kotus omits the type of a compound because it declines like its
 final component); the engine inflects those through `compound_head_forms`, and
-the class is audited like any other. At n=100 the engine produces every
-confirmed form for 97% of the cells, as `Repaired`; see `PLAN_COMPOUND.md`
-Phase 2 for the measurement and why they are not yet `Plain`.
+the class is audited like any other. At n=100: 13,967 confirmed, 442 missing,
+267 not plain, 0 illegal, 571 unsupported. A compound form takes the head's
+confidence, so a plain head gives a plain compound and a repaired variant
+(`väkein`) stays repaired. See `PLAN_COMPOUND.md` Phase 2.
 Current totals: **96,908 confirmed, 1,041 missing, 244 oracle-only,
 4,041 not plain, 0 illegal, 0 mistagged, 646 unsupported.** Recall — confirmed
 over confirmed plus missing — is **98.9%**. The default report applies the

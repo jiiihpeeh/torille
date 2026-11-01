@@ -106,65 +106,52 @@ is reconstructed from the lemmas (`pitkähousut`) and the plural `-t` is lost,
 so it reads as `genitive-initial`. The inflector is unaffected; this is an
 `explain` limitation until the ambiguity work in Phase 5.
 
-### Phase 2 — ordinary compounds as first-class
+### Phase 2 — ordinary compounds as first-class  *(done 2026-11-02)*
 
-A row with no class is a compound, and `compound_head_forms` already inflects it
-by its head (modifier fixed, every form `Repaired`). **Covered (2026-11-02):**
 `report_by_class.py --classless` audits the rows under a synthetic `(none)`
-class, so the 56 486 rows are no longer invisible. The measurement on a
-100-lemma sample (96 checked, 4 skipped):
+class, so the 56 486 rows are no longer invisible. The first measurement on a
+100-lemma sample (96 checked, 4 skipped) was 14,286 `not_plain` and 442
+`missing`: the engine produced every confirmed form, but as `Repaired`.
+
+Promotion to `Plain` was blocked twice, and the two fixes are different in kind:
+
+- **The head's degrees.** `happiradikaali` is a noun, and its head `radikaali`
+  is an adjective, so the compound inherited `happiradikaaleimmittaan`. Fixed
+  by `inflect_paradigms`: a nominal compound takes the head's paradigms only,
+  an adjective compound still takes the degrees (`tummanpunaisempi`).
+- **The `-in` genitive plural.** The engine emits `heinäväkein` beside
+  `heinäväkien`, and Wiktionary gives `väki` with no `-in` variant. The fix is
+  not to prune the variant but to stop the prefix re-stamping the head's
+  confidence: `compound_head_forms` gives each form the head's own confidence,
+  so a plain head form makes a plain compound form and `väkein` stays
+  `Repaired`. That is the right rule anyway — the modifier adds a prefix, not a
+  repair.
+
+Re-measured with the promotion in place:
 
 | status | count | what |
 |---|---:|---|
-| `not_plain` | 14,286 | the engine produces every confirmed form, as `Repaired` |
-| `missing` | 442 | three lemmas with no engine paradigm |
-| `illegal` | 0 | not measurable while the forms are not plain |
+| `confirmed` | 13,967 | every oracle-confirmed cell the engine reaches |
+| `missing` | 442 | three lemmas with no paradigm |
+| `not_plain` | 267 | the head's repaired forms (`tahdinlyöntein`) |
+| `illegal` | 0 | no plain form the oracle does not confirm |
+| `unsupported` | 571 | plain forms whose cell the oracle has no row for |
 
-So the split is right for 97% of the confirmed cells: the forms match the
-oracle, they are just not offered. The 442 missing are three shapes, not a
-general failure:
+`aamuhartaus` is 160 plain forms; `pikkuaivot` 89 plain + 3 repaired (its
+`-in` variants); `happiradikaali` 160 plain + 19 repaired. The forms are plain
+in `inflect` and the binding, but the reverse index still holds only the
+citation form for a classless row, so `check_fast`/`suggest` do not see them —
+the same limit as compound analysis in the fast path.
+
+The 442 missing are three shapes, and they are the next work:
 
 - `kotimaanmatka` — the modifier is the genitive of a *classless* compound
   (`kotimaa`), and the reverse index holds only its citation form, so
   `kotimaan` is not a known form and the split fails. Fixing it means indexing
-  classless forms (or resolving the modifier recursively), which is the
-  reverse-index decision below.
+  classless forms, or resolving the modifier recursively.
 - `leijupakastus` — the head is a derived noun (`pakastaa` + `-us`), and
   `compound_head_forms` needs a head lemma.
 - `kos-salaatti` — a hyphen the ordinary split does not handle.
-
-**Promotion was tried and is blocked.** Changing `compound_head_forms` to
-`Plain` turned the 14,286 into `confirmed` but first added **246 `illegal`**
-and 586 `unsupported`. 241 of the 246 were one lemma, `happiradikaali`, and
-they were adjective **degree** forms (`happiradikaaleimmittaan`) on a compound
-that is a *noun*: `inflect_all` added the head's degrees whatever part of
-speech the caller asked under, and the compound inherited them.
-
-**Fixed (2026-11-02):** `compound_head_forms` now runs the head's paradigms
-only (`inflect_paradigms`) for a nominal compound, and `inflect_all` for an
-adjective compound, so `happiradikaali` has 179 forms and no degree, while
-`tummanpunainen` keeps `tummanpunaisempi`. Pinned by
-`a_noun_compound_does_not_take_the_heads_degrees`. Re-measured with `Plain`,
-the sample is **14,234 `confirmed`, 442 `missing`, 5 `illegal`**.
-
-The five are all the engine's over-complete `-in` genitive plural
-(`heinäväkein`, `lankkipoikain`, `pyöränjälkein`, `terveysoppein`,
-`keuhkoputkein`). Wiktionary gives `väki` as `väkien` with no `-in` variant, so
-these are not rare forms the oracle missed; they are the engine's variant
-generator. Promoting before that is pruned would make the engine offer
-non-words as corrections, so the forms stay `Repaired`.
-
-The order that unblocks promotion:
-
-1. ~~stop `inflect_all` adding degree forms when the caller asks for a noun~~
-   (done);
-2. prune the `-in` genitive plural variant where the class does not license it
-   (the remaining blocker; five rows in the n=100 sample);
-3. index classless forms, or resolve a classless modifier recursively, for the
-   nested compounds (`kotimaanmatka`), and handle derived heads
-   (`leijupakastus`) and the odd hyphen (`kos-salaatti`) for the 442 missing;
-4. then promote and re-run `--classless` at n=100 and full; the target is
-   `illegal` at 0 with `missing` no worse.
 
 ### Phase 3 — genitive-initial and coordinated compounds
 

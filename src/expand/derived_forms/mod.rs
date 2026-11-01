@@ -115,9 +115,14 @@ pub(super) fn compound_head_forms(
             super::inflect_paradigms(head, &inflections, cat, lexicon, pos, possessives)
         };
         for form in head_forms {
+            // The compound is as trustworthy as its head: a plain head form
+            // gives a plain compound form, and a repaired one (`väkein` for
+            // `väkien`) stays repaired rather than being promoted by the
+            // prefix. The modifier only adds the prefix; it does not repair
+            // anything.
             out.push(
                 Generated::new(format!("{modifier}{}", form.word), form.union())
-                    .with(Confidence::Repaired),
+                    .with(form.confidence),
             );
         }
         if !out.is_empty() {
