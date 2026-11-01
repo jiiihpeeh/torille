@@ -109,18 +109,49 @@ so it reads as `genitive-initial`. The inflector is unaffected; this is an
 ### Phase 2 — ordinary compounds as first-class
 
 A row with no class is a compound, and `compound_head_forms` already inflects it
-by its head (modifier fixed, every form `Repaired`). Two things remain:
+by its head (modifier fixed, every form `Repaired`). **Covered (2026-11-02):**
+`report_by_class.py --classless` audits the rows under a synthetic `(none)`
+class, so the 56 486 rows are no longer invisible. The measurement on a
+100-lemma sample (96 checked, 4 skipped):
 
-- **Promote the stated cases.** When the sanalista row is classless *and* the
-  head split is the only one, the forms are as plain as any other dictionary
-  word; `Repaired` was the safe default while the path was new. Promoting needs
-  evidence, not a hunch: the classless rows are outside the class report, so
-  the check is a sampled run of `inflect` against the live oracle
-  (`tools/check_word_against_omorfi.py`), recorded in the plan before the
-  change.
-- **Cover the report.** Extend `report_by_class.py` with a synthetic
-  `(none)` class for classless nominals so their recall is measured like every
-  other class. This is the only way the 56 486 rows stop being invisible.
+| status | count | what |
+|---|---:|---|
+| `not_plain` | 14,286 | the engine produces every confirmed form, as `Repaired` |
+| `missing` | 442 | three lemmas with no engine paradigm |
+| `illegal` | 0 | not measurable while the forms are not plain |
+
+So the split is right for 97% of the confirmed cells: the forms match the
+oracle, they are just not offered. The 442 missing are three shapes, not a
+general failure:
+
+- `kotimaanmatka` — the modifier is the genitive of a *classless* compound
+  (`kotimaa`), and the reverse index holds only its citation form, so
+  `kotimaan` is not a known form and the split fails. Fixing it means indexing
+  classless forms (or resolving the modifier recursively), which is the
+  reverse-index decision below.
+- `leijupakastus` — the head is a derived noun (`pakastaa` + `-us`), and
+  `compound_head_forms` needs a head lemma.
+- `kos-salaatti` — a hyphen the ordinary split does not handle.
+
+**Promotion was tried and is blocked.** Changing `compound_head_forms` to
+`Plain` turned the 14,286 into `confirmed` but added **246 `illegal`** and 586
+`unsupported`. 241 of the 246 are one lemma, `happiradikaali`, and they are
+adjective **degree** forms (`happiradikaaleimmittaan`) on a compound that is a
+*noun*: `inflect_all` adds the head's degrees whatever part of speech the
+caller asks under, and the compound inherits them. The other five are the
+engine's over-complete `-in` genitive plural (`heinäväkein` for `heinäväkien`).
+Promoting before those are fixed would make the engine offer non-words as
+corrections, so the forms stay `Repaired`.
+
+The order that unblocks promotion:
+
+1. stop `inflect_all` adding degree forms when the caller asks for a noun
+   (the compound's POS is the compound's, not the head's);
+2. prune the `-in` genitive plural variant where the class does not license it;
+3. index classless forms, or resolve a classless modifier recursively, for the
+   nested compounds;
+4. then promote and re-run `--classless` at n=100 and full; the target is
+   `illegal` at 0 with `missing` no worse.
 
 ### Phase 3 — genitive-initial and coordinated compounds
 

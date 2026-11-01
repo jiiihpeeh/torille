@@ -87,6 +87,7 @@ entry points are:
 ```bash
 python3 tools/check_word_against_omorfi.py kissa
 python3 tools/report_by_class.py --split reports/classes
+python3 tools/report_by_class.py --classless -c "(none)" -n 100  # classless compounds
 python3 tools/summarize_class_report.py reports/noun-classes.json
 python3 tools/show_illegals.py --summary
 python3 tools/show_illegals.py --no-refresh reports/noun-classes.json

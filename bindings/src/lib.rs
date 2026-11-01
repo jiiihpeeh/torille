@@ -423,24 +423,27 @@ impl Engine {
             .unwrap_or_default()
     }
 
-    /// Every lemma of the given part of speech that has a class, with its first
-    /// class. This is the wordlist the harness samples from, read through the
-    /// sanalista parser rather than by splitting the file again in Python.
+    /// Every lemma of the given part of speech with its first class. This is
+    /// the wordlist the harness samples from, read through the sanalista
+    /// parser rather than by splitting the file again in Python.
     ///
-    /// Lemmas with no class are left out: a compound or an indeclinable has no
-    /// paradigm of its own and cannot be inflected, so offering one here would
-    /// only fill the sampler's `--limit` with words that get skipped.
-    #[pyo3(signature = (part_of_speech))]
-    fn words(&self, part_of_speech: &str) -> Vec<(String, String)> {
+    /// Lemmas with no class are left out by default: an indeclinable has no
+    /// paradigm, and offering one here would only fill the sampler's `--limit`
+    /// with words that get skipped. `include_classless` keeps the classless
+    /// *nominals* under the key `(none)`: Kotus omits the type of a compound
+    /// because it declines like its final component, and the engine inflects
+    /// it through `compound_head_forms`, so the report can audit it.
+    #[pyo3(signature = (part_of_speech, include_classless=false))]
+    fn words(&self, part_of_speech: &str, include_classless: bool) -> Vec<(String, String)> {
         let wanted = part_of_speech.trim();
         self.data
             .lexicon
             .iter()
             .filter(|l| l.part_of_speech.split(", ").any(|p| p.trim() == wanted))
-            .filter_map(|l| {
-                l.inflections
-                    .first()
-                    .map(|i| (l.word.to_string(), i.to_string()))
+            .filter_map(|l| match l.inflections.first() {
+                Some(i) => Some((l.word.to_string(), i.to_string())),
+                None if include_classless => Some((l.word.to_string(), "(none)".to_string())),
+                None => None,
             })
             .collect()
     }

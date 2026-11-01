@@ -552,25 +552,37 @@ class Harness:
                     return parts[3] if len(parts) >= 4 else ""
         return ""
 
-    def words_in_class(self, part_of_speech: str = "substantiivi") -> dict[str, list[str]]:
+    def words_in_class(
+        self,
+        part_of_speech: str = "substantiivi",
+        include_classless: bool = False,
+    ) -> dict[str, list[str]]:
         """Every class the sanalista uses for this part of speech, to its words.
 
         The class value is torille's, so `9` and `9*B` are separate keys. That
         is deliberate: the `*B` is a gradation, so `kauppa` (`9*B`, consonant
         gradation) has different forms from `kala` (`9`, no gradation), and a
         report that lumped them would report every `kaupan` as a defect.
+
+        `include_classless` keeps the rows with no type number under `(none)`.
+        Kotus omits the type of a compound because it declines like its final
+        component, so those rows are compounds the engine inflects through
+        `compound_head_forms`; without this they are invisible to every report.
         """
         buckets: dict[str, list[str]] = {}
         if self.engine is not None:
-            for word, cls in self.engine.words(part_of_speech):
+            for word, cls in self.engine.words(part_of_speech, include_classless):
                 buckets.setdefault(cls, []).append(word)
         else:
             with open(SANALISTA, encoding="utf-8") as fh:
                 next(fh, None)
                 for line in fh:
                     parts = line.rstrip("\n").split("\t")
-                    if len(parts) >= 4 and parts[0] and parts[3] and part_of_speech in parts[2]:
-                        buckets.setdefault(parts[3], []).append(parts[0])
+                    if len(parts) < 4 or not parts[0] or part_of_speech not in parts[2]:
+                        continue
+                    cls = parts[3] or ("(none)" if include_classless else "")
+                    if cls:
+                        buckets.setdefault(cls, []).append(parts[0])
         return buckets
 
     def confirmed_forms(self, lemma: str, cells: list[Cell]) -> set[str]:
