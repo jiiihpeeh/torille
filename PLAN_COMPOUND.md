@@ -134,22 +134,35 @@ general failure:
 - `kos-salaatti` — a hyphen the ordinary split does not handle.
 
 **Promotion was tried and is blocked.** Changing `compound_head_forms` to
-`Plain` turned the 14,286 into `confirmed` but added **246 `illegal`** and 586
-`unsupported`. 241 of the 246 are one lemma, `happiradikaali`, and they are
-adjective **degree** forms (`happiradikaaleimmittaan`) on a compound that is a
-*noun*: `inflect_all` adds the head's degrees whatever part of speech the
-caller asks under, and the compound inherits them. The other five are the
-engine's over-complete `-in` genitive plural (`heinäväkein` for `heinäväkien`).
-Promoting before those are fixed would make the engine offer non-words as
-corrections, so the forms stay `Repaired`.
+`Plain` turned the 14,286 into `confirmed` but first added **246 `illegal`**
+and 586 `unsupported`. 241 of the 246 were one lemma, `happiradikaali`, and
+they were adjective **degree** forms (`happiradikaaleimmittaan`) on a compound
+that is a *noun*: `inflect_all` added the head's degrees whatever part of
+speech the caller asked under, and the compound inherited them.
+
+**Fixed (2026-11-02):** `compound_head_forms` now runs the head's paradigms
+only (`inflect_paradigms`) for a nominal compound, and `inflect_all` for an
+adjective compound, so `happiradikaali` has 179 forms and no degree, while
+`tummanpunainen` keeps `tummanpunaisempi`. Pinned by
+`a_noun_compound_does_not_take_the_heads_degrees`. Re-measured with `Plain`,
+the sample is **14,234 `confirmed`, 442 `missing`, 5 `illegal`**.
+
+The five are all the engine's over-complete `-in` genitive plural
+(`heinäväkein`, `lankkipoikain`, `pyöränjälkein`, `terveysoppein`,
+`keuhkoputkein`). Wiktionary gives `väki` as `väkien` with no `-in` variant, so
+these are not rare forms the oracle missed; they are the engine's variant
+generator. Promoting before that is pruned would make the engine offer
+non-words as corrections, so the forms stay `Repaired`.
 
 The order that unblocks promotion:
 
-1. stop `inflect_all` adding degree forms when the caller asks for a noun
-   (the compound's POS is the compound's, not the head's);
-2. prune the `-in` genitive plural variant where the class does not license it;
+1. ~~stop `inflect_all` adding degree forms when the caller asks for a noun~~
+   (done);
+2. prune the `-in` genitive plural variant where the class does not license it
+   (the remaining blocker; five rows in the n=100 sample);
 3. index classless forms, or resolve a classless modifier recursively, for the
-   nested compounds;
+   nested compounds (`kotimaanmatka`), and handle derived heads
+   (`leijupakastus`) and the odd hyphen (`kos-salaatti`) for the 442 missing;
 4. then promote and re-run `--classless` at n=100 and full; the target is
    `illegal` at 0 with `missing` no worse.
 

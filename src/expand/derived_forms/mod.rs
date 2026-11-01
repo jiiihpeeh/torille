@@ -104,7 +104,17 @@ pub(super) fn compound_head_forms(
             pos
         };
         let mut out: Vec<Generated> = Vec::new();
-        for form in inflect_all(head, &inflections, cat, lexicon, pos, possessives) {
+        // A noun compound does not take the head's adjective degrees:
+        // `happiradikaali` is a noun, and `happiradikaaleimmittaan` is not a
+        // word. An adjective compound does take them -- `tummanpunaisempi` is
+        // `tumman` + `punaisempi` -- so only the nominal case drops the derived
+        // layers.
+        let head_forms = if pos == PartOfSpeech::Adjective {
+            inflect_all(head, &inflections, cat, lexicon, pos, possessives)
+        } else {
+            super::inflect_paradigms(head, &inflections, cat, lexicon, pos, possessives)
+        };
+        for form in head_forms {
             out.push(
                 Generated::new(format!("{modifier}{}", form.word), form.union())
                     .with(Confidence::Repaired),

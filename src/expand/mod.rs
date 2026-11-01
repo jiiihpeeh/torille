@@ -341,8 +341,14 @@ pub fn inflect_in(
 /// repair and class 21 derives it cleanly, and a `repaired` form beside a
 /// `plain` one is the correction the caller is being offered, not a duplicate of
 /// the form it corrects. Keying on the spelling alone would swallow it, which is
-/// why the key carries the confidence.
-pub fn inflect_all(
+/// The forms of `lemma` under each inflection, deduplicated.
+///
+/// This is the core of [`inflect_all`] without the derived layers (degrees,
+/// numerals, and the classless-compound and `-inen` fallbacks). A compound head
+/// needs the core only: its degrees belong to the compound, and prefixing the
+/// head's comparative onto a noun compound is how `happiradikaali` grew
+/// `happiradikaaleimmittaan`.
+pub(super) fn inflect_paradigms(
     lemma: &str,
     inflections: &[Inflection],
     cat: &Catalogues,
@@ -360,6 +366,23 @@ pub fn inflect_all(
             }
         }
     }
+    out
+}
+
+/// why the key carries the confidence.
+pub fn inflect_all(
+    lemma: &str,
+    inflections: &[Inflection],
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+    pos: PartOfSpeech,
+    possessives: bool,
+) -> Vec<Generated> {
+    let mut out = inflect_paradigms(lemma, inflections, cat, lexicon, pos, possessives);
+    let mut seen: HashSet<(String, Confidence, Vec<Tags>)> = out
+        .iter()
+        .map(|f| (f.word.clone(), f.confidence, f.readings.clone()))
+        .collect();
     // Degree forms are added for any lemma in the table, whatever part of
     // speech the caller asks under: `paha` is `adjektiivi, substantiivi`
     // and is inflected as a noun in some callers, but it still has
@@ -1434,6 +1457,40 @@ mod tests {
         assert!(
             forms.iter().all(|w| w.contains("viini")),
             "the middle part was inflected"
+        );
+    }
+
+    /// A noun compound does not take the head's adjective degrees.
+    ///
+    /// `happiradikaali` is a noun, so `happiradikaaleimmittaan` is not a word,
+    /// even though its head `radikaali` has degrees. An adjective compound does
+    /// take them: `tummanpunaisempi` is `tumman` + `punaisempi`.
+    #[test]
+    fn a_noun_compound_does_not_take_the_heads_degrees() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let index = LexiconIndex::new(&lexicon);
+        let words = |word: &str, pos: PartOfSpeech| -> Vec<String> {
+            inflect_all(word, &[], &cat, Some(&index), pos, pos == PartOfSpeech::Noun)
+                .into_iter()
+                .map(|g| g.word)
+                .collect()
+        };
+
+        let noun = words("happiradikaali", PartOfSpeech::Noun);
+        assert!(
+            noun.iter().any(|w| w == "happiradikaalin"),
+            "happiradikaali lost its own paradigm"
+        );
+        assert!(
+            !noun.iter().any(|w| w.contains("radikaaleimmi")),
+            "a noun compound took the head's degrees"
+        );
+
+        let adjective = words("tummanpunainen", PartOfSpeech::Adjective);
+        assert!(
+            adjective.iter().any(|w| w == "tummanpunaisempi"),
+            "an adjective compound lost its comparative"
         );
     }
 
