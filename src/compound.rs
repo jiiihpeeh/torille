@@ -9,16 +9,26 @@
 //!
 //! The analyzer works on the bare word. Inflection, clitics and possessives
 //! attach downstream to the whole compound, which the rest of the engine
-//! already handles. The output here is the analysis: the parts, the head, and
-//! whether the word is a simple word, a compound, or unknown.
+//! already handles. The output here is the analysis: the parts, the head,
+//! whether the word is a simple word, a compound, or unknown, and -- for a
+//! compound -- which parts inflect ([`CompoundKind`], [`ComponentInflection`]).
+//! That distribution is a separate question from the split: `nuoripari` and
+//! `suomalais-ruotsalainen` both inflect two parts, and `linja-auto` inflects
+//! one, although all three are compounds.
+//!
+//! [`explain`] is the same analysis with the action on each part spelled out
+//! (`talon` is a frozen genitive, `miehen` is an inflected head), which is what
+//! the `check` tool prints.
 
 use crate::expand::FormBuilder;
-use crate::tags::PartOfSpeech;
+use crate::tags::{Case, PartOfSpeech};
 
 /// The result of analysing a word.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Analysis {
-    /// A word the lexicon lists outright.
+    /// A word the lexicon lists and this analyzer does not decompose: either
+    /// it is not a compound, or the dictionary calls it one but no split was
+    /// found.
     Simple(String),
     /// A compound of two or more components.
     Compound(Compound),
@@ -35,6 +45,10 @@ pub struct Compound {
     pub parts: Vec<Component>,
     /// The index into `parts` of the head, which is the rightmost part.
     pub head_index: usize,
+    /// Which parts inflect. This is a fact about the word, not about the
+    /// writing: `nuoripari` and `suomalais-ruotsalainen` are both
+    /// [`CompoundKind::BothParts`], and `linja-auto` is ordinary.
+    pub kind: CompoundKind,
 }
 
 /// One component of a compound.
@@ -46,6 +60,11 @@ pub struct Component {
     pub lemma: String,
     /// Whether it is the modifier or the head.
     pub role: Role,
+    /// How the component takes part in the compound's inflection.
+    pub inflection: ComponentInflection,
+    /// The case a frozen modifier is in (`talon` is genitive). `None` for a
+    /// bare lemma, a bound form, and the head.
+    pub case: Option<Case>,
 }
 
 /// Whether a component modifies the head or is the head.
@@ -53,6 +72,45 @@ pub struct Component {
 pub enum Role {
     Modifier,
     Head,
+}
+
+/// How a component takes part in the compound's inflection.
+///
+/// This is deliberately not a boolean: a modifier is not simply "fixed" or
+/// "inflecting". `talon` in `talonmies` is frozen in a case, `aamu` in
+/// `aamukahvi` is a bare lemma that stays as written, and `nuori` in
+/// `nuoripari` inflects when the whole word does.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ComponentInflection {
+    /// A bare lemma used as a modifier: it stays as written in every cell
+    /// (`aamu` in `aamukahvi`).
+    Invariant,
+    /// The head: it carries the case, the number and the owner suffix
+    /// (`kahvi` in `aamukahvi`).
+    Inflect,
+    /// A modifier the compound froze in an inflected or bound form (`talon` of
+    /// `talo`, `esi-` of `esipuhe`): it keeps that surface in every cell.
+    Lexical,
+    /// A first part that inflects only when the whole expression does
+    /// (`nuori` in `nuoripari`, `suomalais-` in `suomalais-ruotsalainen`).
+    Conditional,
+}
+
+/// The shape of a compound as a whole.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CompoundKind {
+    /// Only the head inflects (`kirjakauppa`, `linja-auto`).
+    Ordinary,
+    /// The modifier is already in the genitive and stays frozen (`talonmies`,
+    /// `viikonloppu`).
+    GenitiveInitial,
+    /// More than one part inflects: a class-51 word (`nuoripari`) or a
+    /// coordinated hyphenated pair (`suomalais-ruotsalainen`). The hyphen is
+    /// one way to get here, not the definition.
+    BothParts,
+    /// The first part is bound or combining (`esi-`, `‑kulmio`), so it has no
+    /// paradigm of its own.
+    Lexicalised,
 }
 
 /// Why a hyphen is allowed between the parts of a compound.
@@ -248,7 +306,16 @@ where
 /// the rest, so `tietokoneohjelmointi` is `tieto` + `kone` + `ohjelmointi`. A
 /// word that neither the index nor any split accounts for is unknown.
 pub fn analyze(word: &str, builder: &FormBuilder) -> Analysis {
-    if builder.bases_of(word).iter().any(|b| **b == *word) {
+    // A dictionary word is simple unless the dictionary itself says it is a
+    // compound: a class 50/51 marker, or no class at all (Kotus omits the type
+    // of a compound because it declines like its final component). The other
+    // rows are simple words, and splitting them would be guessing. A
+    // dictionary compound whose split this analyzer cannot find is still a
+    // known word, so it falls back to `Simple` below rather than `Unknown`.
+    let is_lemma = builder.bases_of(word).iter().any(|b| **b == *word);
+    let dictionary_compound =
+        is_lemma && (is_class_50(word) || is_class_51(word) || is_classless(word));
+    if is_lemma && !dictionary_compound {
         return Analysis::Simple(word.to_string());
     }
     // A possessive suffix belongs to the whole compound, not to its head:
@@ -267,7 +334,7 @@ pub fn analyze(word: &str, builder: &FormBuilder) -> Analysis {
         let closed = pieces.concat().to_lowercase();
         let closed_known = !builder.bases_of(&closed).is_empty();
         let Some(rule) = hyphen_rule(word, &pieces, closed_known) else {
-            return Analysis::Unknown;
+            return fallback(word, dictionary_compound);
         };
         let first_is_special = matches!(
             rule,
@@ -277,13 +344,22 @@ pub fn analyze(word: &str, builder: &FormBuilder) -> Analysis {
         let mut parts = Vec::with_capacity(pieces.len());
         for (i, piece) in pieces.iter().enumerate() {
             let lower = piece.to_lowercase();
-            let resolved = lemma_of(piece, builder)
-                .or_else(|| lemma_of(&lower, builder))
-                .or_else(|| crate::expand::modifier_is_known(&lower).then_some(lower.clone()))
-                .or_else(|| {
-                    (i == head_index && is_proper_name_part(piece)).then_some(lower.clone())
-                });
             let is_head = i == head_index;
+            // A modifier that is only a bound prefix or a combining form is
+            // lexicalised: `esi-` of `esipuhe` has no paradigm of its own.
+            let mut bound = false;
+            let resolved = if let Some(lemma) =
+                lemma_of(piece, builder).or_else(|| lemma_of(&lower, builder))
+            {
+                Some(lemma)
+            } else if crate::expand::modifier_is_known(&lower) {
+                bound = true;
+                Some(lower.clone())
+            } else if is_head && is_proper_name_part(piece) {
+                Some(lower.clone())
+            } else {
+                None
+            };
             let lemma = match resolved {
                 Some(lemma) => lemma,
                 None if (i == 0 && first_is_special)
@@ -293,7 +369,7 @@ pub fn analyze(word: &str, builder: &FormBuilder) -> Analysis {
                 {
                     lower
                 }
-                None => return Analysis::Unknown,
+                None => return fallback(word, dictionary_compound),
             };
             // A function word is not a compound head: `ennen-kuin` is two
             // words, not a hyphenated compound. A proper name used as the
@@ -301,23 +377,30 @@ pub fn analyze(word: &str, builder: &FormBuilder) -> Analysis {
             if is_head && !is_content_head(&lemma) && !is_proper_name_part(piece) {
                 return Analysis::Unknown;
             }
-            parts.push(Component {
-                surface: piece.to_string(),
-                lemma,
-                role: if is_head { Role::Head } else { Role::Modifier },
-            });
+            let role = if is_head { Role::Head } else { Role::Modifier };
+            parts.push(component(piece, lemma, role, bound, builder));
         }
+        let kind = classify(&mut parts, head_index, word, Some(rule), builder);
         return Analysis::Compound(Compound {
             surface: word.to_string(),
             head_index,
             parts,
+            kind,
         });
     }
-    // Recursive split. Try every boundary from the left, so the modifier is
-    // the longest possible prefix; the rest is analysed the same way. The head
-    // is the rightmost component, which is the head of the deepest rest.
+    // Recursive split. Try the boundaries longest-modifier first, so the
+    // modifier is the longest possible prefix; the rest is analysed the same
+    // way. The head is the rightmost component, which is the head of the
+    // deepest rest.
+    //
+    // The direction is not cosmetic. Scanning left to right accepts the first
+    // split that resolves, and a short prefix is often a word of its own:
+    // `nuoriparin` came back as `nuo` + `ripa` + `ry`, `isotaivot` as `iso` +
+    // `taivo`, and `särkynytsydän` as `särky` + `nyt` + `sydän`. Scanning from
+    // the right finds `nuoren` + `parin`, `isot` + `aivot` and `särkynyt` +
+    // `sydän`, which are the real parts.
     let n = word.len();
-    for split in 1..n {
+    for split in (1..n).rev() {
         if !word.is_char_boundary(split) {
             continue;
         }
@@ -337,14 +420,7 @@ pub fn analyze(word: &str, builder: &FormBuilder) -> Analysis {
                 if !is_content_head(&rl) {
                     continue;
                 }
-                (
-                    vec![Component {
-                        surface: right.to_string(),
-                        lemma: rl,
-                        role: Role::Head,
-                    }],
-                    0,
-                )
+                (vec![component(right, rl, Role::Head, false, builder)], 0)
             }
             Analysis::Unknown => {
                 // The right half can be an inflected form rather than a
@@ -357,30 +433,261 @@ pub fn analyze(word: &str, builder: &FormBuilder) -> Analysis {
                 if !is_content_head(&rl) {
                     continue;
                 }
-                (
-                    vec![Component {
-                        surface: right.to_string(),
-                        lemma: rl,
-                        role: Role::Head,
-                    }],
-                    0,
-                )
+                (vec![component(right, rl, Role::Head, false, builder)], 0)
             }
         };
         let mut parts = Vec::with_capacity(rest_parts.len() + 1);
-        parts.push(Component {
-            surface: left.to_string(),
-            lemma: left_lemma,
-            role: Role::Modifier,
-        });
+        parts.push(component(left, left_lemma, Role::Modifier, false, builder));
         parts.extend(rest_parts);
+        let head_index = rest_head + 1;
+        let kind = classify(&mut parts, head_index, word, None, builder);
         return Analysis::Compound(Compound {
             surface: word.to_string(),
-            head_index: rest_head + 1,
+            head_index,
             parts,
+            kind,
         });
     }
-    Analysis::Unknown
+    fallback(word, dictionary_compound)
+}
+
+/// What to answer when the split fails.
+///
+/// A dictionary compound whose split this analyzer cannot find is still a known
+/// word (`aakkosnumeerinen` has a derived head), so it is `Simple`; anything
+/// else is `Unknown`.
+fn fallback(word: &str, dictionary_compound: bool) -> Analysis {
+    if dictionary_compound {
+        Analysis::Simple(word.to_string())
+    } else {
+        Analysis::Unknown
+    }
+}
+
+/// What happened to one component in the analysed word.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Action {
+    /// The component is as the dictionary spells it.
+    Unchanged,
+    /// The component carries an ending in this word (`miehen`, `talossa`).
+    Inflected,
+    /// The compound froze an inflected or bound form (`talon`, `esi-`).
+    Frozen,
+}
+
+/// One component's part in the analysed word, for [`explain`].
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ComponentAction {
+    /// The part as it appears in the word.
+    pub surface: String,
+    /// The lemma it resolves to.
+    pub lemma: String,
+    /// Whether it is the modifier or the head.
+    pub role: Role,
+    /// How it takes part in the inflection.
+    pub inflection: ComponentInflection,
+    /// The case a frozen modifier is in.
+    pub case: Option<Case>,
+    /// What happened to it in this word.
+    pub action: Action,
+}
+
+/// Why a compound is spelled the way it is.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Explanation {
+    /// The orthographic surface, the whole word.
+    pub surface: String,
+    /// Which parts inflect.
+    pub kind: CompoundKind,
+    /// The components, left to right.
+    pub components: Vec<ComponentAction>,
+}
+
+/// Explains `word` component by component, or `None` when it is not a compound.
+///
+/// The action is relative to the dictionary: a component whose surface is the
+/// lemma is `Unchanged`, one carrying an ending is `Inflected`, and a frozen
+/// modifier (`talon`, `esi-`) is `Frozen`. That is the distinction a reader
+/// needs: `talonmiehen` is not `talo` + `miehen` with both parts inflected, it
+/// is a frozen genitive plus an inflected head.
+pub fn explain(word: &str, builder: &FormBuilder) -> Option<Explanation> {
+    let Analysis::Compound(c) = analyze(word, builder) else {
+        return None;
+    };
+    let components = c
+        .parts
+        .iter()
+        .map(|p| {
+            let action = match p.inflection {
+                ComponentInflection::Lexical => Action::Frozen,
+                ComponentInflection::Invariant => Action::Unchanged,
+                ComponentInflection::Conditional | ComponentInflection::Inflect => {
+                    if same_word(&p.surface, &p.lemma) {
+                        Action::Unchanged
+                    } else {
+                        Action::Inflected
+                    }
+                }
+            };
+            ComponentAction {
+                surface: p.surface.clone(),
+                lemma: p.lemma.clone(),
+                role: p.role,
+                inflection: p.inflection,
+                case: p.case,
+                action,
+            }
+        })
+        .collect();
+    Some(Explanation {
+        surface: c.surface,
+        kind: c.kind,
+        components,
+    })
+}
+
+/// One component, with the inflection mode and any frozen case worked out.
+///
+/// A modifier is [`ComponentInflection::Invariant`] when it is the lemma itself
+/// (`aamu`), [`ComponentInflection::Lexical`] when the compound froze a form of
+/// it (`talon`) or only a bound prefix survives (`esi-`), and the head is
+/// [`ComponentInflection::Inflect`]. The case is recorded only for a frozen
+/// form: `talon` is genitive, and saying so is what distinguishes `talonmies`
+/// from a typo.
+fn component(
+    surface: &str,
+    lemma: String,
+    role: Role,
+    bound: bool,
+    builder: &FormBuilder,
+) -> Component {
+    let is_head = role == Role::Head;
+    let inflection = if is_head {
+        ComponentInflection::Inflect
+    } else if bound || !same_word(surface, &lemma) {
+        ComponentInflection::Lexical
+    } else {
+        ComponentInflection::Invariant
+    };
+    let case = if inflection == ComponentInflection::Lexical {
+        frozen_case(surface, builder)
+    } else {
+        None
+    };
+    Component {
+        surface: surface.to_string(),
+        lemma,
+        role,
+        inflection,
+        case,
+    }
+}
+
+/// Whether the surface is the lemma as written, ignoring capitalisation.
+fn same_word(surface: &str, lemma: &str) -> bool {
+    surface == lemma || surface.to_lowercase() == lemma.to_lowercase()
+}
+
+/// The case a frozen surface is in, if the index reads it as a case form.
+fn frozen_case(surface: &str, builder: &FormBuilder) -> Option<Case> {
+    builder
+        .readings_of(surface)
+        .and_then(|readings| readings.iter().find_map(|r| r.case))
+}
+
+/// Whether the sanalista marks `word` as a class-51 compound.
+///
+/// Class 51 is the dictionary's way of saying that the first part inflects as
+/// well as the head (`nuoripari : nuorenparin`). It is a lexical fact, not an
+/// orthographic one: `suomalais-ruotsalainen` has the same distribution and is
+/// not in the sanalista at all.
+fn is_class_51(word: &str) -> bool {
+    crate::kotus::sanalista()
+        .by_word(word)
+        .any(|row| row.inflections().any(|i| i.class == 51))
+}
+
+/// Whether the sanalista marks `word` as a class-50 compound.
+fn is_class_50(word: &str) -> bool {
+    crate::kotus::sanalista()
+        .by_word(word)
+        .any(|row| row.inflections().any(|i| i.class == 50))
+}
+
+/// Whether the sanalista gives `word` no inflection class at all.
+///
+/// Kotus writes a compound without a type number because it declines like its
+/// final component, so a classless row is a compound too.
+fn is_classless(word: &str) -> bool {
+    let mut rows = crate::kotus::sanalista().by_word(word).peekable();
+    rows.peek().is_some() && rows.all(|row| row.inflections().next().is_none())
+}
+
+/// The kind of a compound, and the inflection mode that follows from it.
+fn classify(
+    parts: &mut [Component],
+    head_index: usize,
+    word: &str,
+    rule: Option<HyphenRule>,
+    builder: &FormBuilder,
+) -> CompoundKind {
+    // The citation is the lemmas joined the way the word joins them: a
+    // hyphenated pair keeps its hyphen, a closed compound does not. This is
+    // what finds the class-51 row behind an inflected form (`nuorenparin` ->
+    // `nuoripari`).
+    let hyphenated = word.contains('-');
+    let citation: String = {
+        let lemmas: Vec<&str> = parts.iter().map(|p| p.lemma.as_str()).collect();
+        if hyphenated {
+            lemmas.join("-")
+        } else {
+            lemmas.concat()
+        }
+    };
+    // A participle first part agrees with the head and inflects with it:
+    // `särkynyt` in `särkynytsydän` is `särkyneen` + `sydämen`. It is not a
+    // lemma, so the class-51 row cannot name it.
+    let participle_first = parts
+        .first()
+        .is_some_and(|p| is_participle(&p.surface, builder));
+    let kind = if rule == Some(HyphenRule::PairedExpression)
+        || participle_first
+        || is_class_51(&citation)
+        || is_class_51(word)
+    {
+        CompoundKind::BothParts
+    } else if parts.first().is_some_and(|p| {
+        p.inflection == ComponentInflection::Lexical && p.case == Some(Case::Genitive)
+    }) {
+        CompoundKind::GenitiveInitial
+    } else if parts
+        .iter()
+        .enumerate()
+        .any(|(i, p)| i != head_index && p.inflection == ComponentInflection::Lexical)
+    {
+        CompoundKind::Lexicalised
+    } else {
+        CompoundKind::Ordinary
+    };
+    // A class-51 or coordinated compound inflects its first part along with
+    // the head. The middle parts of a three-part compound do not (`viini` in
+    // `mustaviinimarja`), so only the first is promoted.
+    if kind == CompoundKind::BothParts
+        && let Some(first) = parts.first_mut()
+        && first.role == Role::Modifier
+    {
+        first.inflection = ComponentInflection::Conditional;
+    }
+    kind
+}
+
+/// Whether `surface` is a participle: a verb reading that carries a case.
+fn is_participle(surface: &str, builder: &FormBuilder) -> bool {
+    builder.readings_of(surface).is_some_and(|readings| {
+        readings
+            .iter()
+            .any(|r| r.part_of_speech == Some(PartOfSpeech::Verb) && r.case.is_some())
+    })
 }
 
 /// Whether `word` may head a compound. A pronoun or a function word is
@@ -432,16 +739,13 @@ fn strip_possessive(word: &str) -> Option<&str> {
 /// `talo`, so a compound modifier `talon` resolves to `talo`. The first base
 /// named is the one chosen, which is the primary reading.
 fn lemma_of(word: &str, builder: &FormBuilder) -> Option<String> {
-    let bases = builder.bases_of(word);
-    if bases.is_empty() {
-        return None;
+    // A word that is its own base is the lemma; otherwise the best base is.
+    // The choice matters for a compound head: `parin` is both `pari` and the
+    // golf term `par`, and only `pari` makes `nuorenparin` a pair.
+    if builder.bases_of(word).contains(&word) {
+        return Some(word.to_string());
     }
-    // A word that is its own base is the lemma; otherwise the first base is.
-    if bases.contains(&word) {
-        Some(word.to_string())
-    } else {
-        Some(bases[0].to_string())
-    }
+    builder.best_base(word).map(str::to_string)
 }
 
 #[cfg(test)]
@@ -507,18 +811,16 @@ mod tests {
             Analysis::Compound(Compound {
                 surface: "aamukahvi".to_string(),
                 parts: vec![
-                    Component {
-                        surface: "aamu".to_string(),
-                        lemma: "aamu".to_string(),
-                        role: Role::Modifier,
-                    },
-                    Component {
-                        surface: "kahvi".to_string(),
-                        lemma: "kahvi".to_string(),
-                        role: Role::Head,
-                    },
+                    part(
+                        "aamu",
+                        "aamu",
+                        Role::Modifier,
+                        ComponentInflection::Invariant
+                    ),
+                    part("kahvi", "kahvi", Role::Head, ComponentInflection::Inflect),
                 ],
                 head_index: 1,
+                kind: CompoundKind::Ordinary,
             })
         );
     }
@@ -628,6 +930,85 @@ mod tests {
             word_with_pos("kuin", 1, "konjunktio"),
         ]);
         assert_eq!(analyze("ennenkuin", &b), Analysis::Unknown);
+    }
+
+    /// One expected component, with no frozen case.
+    fn part(surface: &str, lemma: &str, role: Role, inflection: ComponentInflection) -> Component {
+        Component {
+            surface: surface.to_string(),
+            lemma: lemma.to_string(),
+            role,
+            inflection,
+            case: None,
+        }
+    }
+
+    #[test]
+    fn a_genitive_modifier_is_recorded_as_frozen() {
+        let b = builder(vec![noun("talo", 1), noun("mies", 42)]);
+        let got = analyze("talonmies", &b);
+        let Analysis::Compound(c) = got else {
+            panic!("expected a compound, got {got:?}");
+        };
+        assert_eq!(c.kind, CompoundKind::GenitiveInitial);
+        assert_eq!(c.parts[0].inflection, ComponentInflection::Lexical);
+        assert_eq!(c.parts[0].case, Some(Case::Genitive));
+        assert_eq!(c.parts[1].inflection, ComponentInflection::Inflect);
+    }
+
+    #[test]
+    fn a_class_51_word_inflects_its_first_part() {
+        // The classifier is asked directly: a class-51 row cannot live in a
+        // test lexicon, because `LexiconIndex` indexes the embedded orders.
+        // `nuoripari` is a real sanalista row, so the class check sees it.
+        let b = builder(vec![noun("nuori", 1), noun("pari", 1)]);
+        let mut parts = vec![
+            part(
+                "nuori",
+                "nuori",
+                Role::Modifier,
+                ComponentInflection::Invariant,
+            ),
+            part("pari", "pari", Role::Head, ComponentInflection::Inflect),
+        ];
+        let kind = classify(&mut parts, 1, "nuoripari", None, &b);
+        assert_eq!(kind, CompoundKind::BothParts);
+        assert_eq!(parts[0].inflection, ComponentInflection::Conditional);
+        assert_eq!(parts[1].inflection, ComponentInflection::Inflect);
+    }
+
+    #[test]
+    fn a_coordinated_pair_inflects_both_parts_without_a_class() {
+        // The hyphen is not the signal: `linja-auto` is ordinary. The pair is
+        // `-lainen`/`-lais-`, and neither half is a class-51 row.
+        let b = builder(vec![
+            noun("suomalais", 1),
+            noun("ruotsalainen", 1),
+            noun("linja", 1),
+            noun("auto", 1),
+        ]);
+        let got = analyze("suomalais-ruotsalainen", &b);
+        let Analysis::Compound(c) = got else {
+            panic!("expected a compound, got {got:?}");
+        };
+        assert_eq!(c.kind, CompoundKind::BothParts);
+        assert_eq!(c.parts[0].inflection, ComponentInflection::Conditional);
+
+        let got = analyze("linja-auto", &b);
+        let Analysis::Compound(c) = got else {
+            panic!("expected a compound, got {got:?}");
+        };
+        assert_eq!(c.kind, CompoundKind::Ordinary);
+        assert_eq!(c.parts[0].inflection, ComponentInflection::Invariant);
+    }
+
+    #[test]
+    fn explain_separates_a_frozen_modifier_from_an_inflected_head() {
+        let b = builder(vec![noun("talo", 1), noun("mies", 42)]);
+        let got = explain("talonmiehen", &b).expect("talonmiehen is a compound");
+        assert_eq!(got.kind, CompoundKind::GenitiveInitial);
+        assert_eq!(got.components[0].action, Action::Frozen);
+        assert_eq!(got.components[1].action, Action::Inflected);
     }
 
     #[test]

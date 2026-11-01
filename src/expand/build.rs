@@ -78,6 +78,14 @@ pub struct FormBuilder {
     /// and not something the index has to have stored.
     pub base_classes: Vec<Vec<crate::kotus::Inflection>>,
     pub base_poses: Vec<Vec<PartOfSpeech>>,
+    /// The class prior, so a word's bases can be tried commonest-first.
+    ///
+    /// `bases_of` reports the order the index reached the bases, which is the
+    /// sanalista's order: `parin` is `par` (class 5) before `pari` (class 1).
+    /// For a compound head the commoner reading is the right one
+    /// (`nuorenparin` is `nuori` + `pari`), so the prior is kept here rather
+    /// than rebuilt per lookup.
+    prior: ClassPrior,
 }
 
 /// How many lemmas of a lexicon each class accounts for.
@@ -232,8 +240,14 @@ impl FormBuilder {
                 {
                     continue;
                 }
-                for form in inflect_in(lemma.word, *inflection, cat, Some(lexicon), pos,
-                           lemma.part_of_speech.contains("substantiivi")) {
+                for form in inflect_in(
+                    lemma.word,
+                    *inflection,
+                    cat,
+                    Some(lexicon),
+                    pos,
+                    lemma.part_of_speech.contains("substantiivi"),
+                ) {
                     let plain = form.plain() && is_phonotactic(&form.word);
                     self.accept(&form.word, lemma.word, form.readings());
                     if plain {
@@ -297,6 +311,33 @@ impl FormBuilder {
             .into_iter()
             .map(|(base, _)| base)
             .collect()
+    }
+
+    /// The one base to name for `word`, or `None` when it is not a known form.
+    ///
+    /// Two keys, in order: the commonest class ([`ClassPrior`]), then how much
+    /// of the surface the base covers. The first key is the general one -- a
+    /// word that could be class 1 or class 47 is likelier the class-1 word.
+    /// The second breaks ties the class cannot: `parin` is both `pari` (class
+    /// 5) and the golf term `par` (class 5), and `pari` + `n` covers more of
+    /// the surface than `par` + `in`, which is the reading a compound head
+    /// wants (`nuorenparin` is `nuori` + `pari`).
+    pub fn best_base(&self, word: &str) -> Option<&str> {
+        let mut best: Option<(&str, usize, usize)> = None;
+        for (base, classes) in self.bases_with_classes(word) {
+            let score = self.prior.score(classes);
+            let prefix = common_prefix(word, base);
+            let better = match best {
+                None => true,
+                Some((_, best_score, best_prefix)) => {
+                    score > best_score || (score == best_score && prefix > best_prefix)
+                }
+            };
+            if better {
+                best = Some((base, score, prefix));
+            }
+        }
+        best.map(|(base, _, _)| base)
     }
 
     /// The base forms a word is an inflected form of in the case given, in the
@@ -659,6 +700,14 @@ impl FormBuilder {
 /// and never a state the index is left in.
 const NO_BASE: u32 = u32::MAX;
 
+/// How many bytes `word` and `base` share from the start.
+fn common_prefix(word: &str, base: &str) -> usize {
+    word.bytes()
+        .zip(base.bytes())
+        .take_while(|(a, b)| a == b)
+        .count()
+}
+
 /// Puts the commonest class first, leaving everything the prior cannot separate
 /// in the order it arrived.
 ///
@@ -736,6 +785,7 @@ pub fn build(lemmas: &[Lemma], cat: &Catalogues) -> FormBuilder {
         for lemma in lemmas {
             b.add(lemma, cat, lexicon_index);
         }
+        b.prior = ClassPrior::of(lemmas);
         return b;
     }
     // A share is a multiple of a thousand lemmas or so, which is small enough
@@ -762,6 +812,7 @@ pub fn build(lemmas: &[Lemma], cat: &Catalogues) -> FormBuilder {
     for share in built {
         b.merge(share);
     }
+    b.prior = ClassPrior::of(lemmas);
     b
 }
 
@@ -856,6 +907,29 @@ mod tests {
             "class 47 is a small class"
         );
         assert_eq!(prior.size_of(9_999), 0, "a class nobody uses scores zero");
+    }
+
+    /// Naming one base uses the prior, then how much of the surface the base
+    /// covers.
+    ///
+    /// `par` and `pari` are both class 5, so the prior cannot separate them.
+    /// `parin` is `pari` + `n` before it is `par` + `in`, and the longer cover
+    /// is the reading a compound head wants (`nuorenparin` is `nuori` +
+    /// `pari`).
+    #[test]
+    fn the_best_base_prefers_the_reading_that_covers_the_surface() {
+        let lex = lexicon(&[("par", &[5]), ("pari", &[5])]);
+        let cat = cat();
+        let mut b = FormBuilder::new();
+        for lemma in &lex {
+            b.add(lemma, &cat, &LexiconIndex::new(&lex));
+        }
+        assert_eq!(
+            b.bases_of("parin"),
+            vec!["par", "pari"],
+            "the order reached"
+        );
+        assert_eq!(b.best_base("parin"), Some("pari"), "the longer cover");
     }
 
     /// A word with two base forms is a form of both, and the two orders answer

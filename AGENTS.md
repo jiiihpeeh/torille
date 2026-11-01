@@ -49,7 +49,7 @@ src/
   spec.rs             paradigm-catalogue parser (`Catalogues`)
   tags.rs             Tags/Form/Confidence — the grammatical reading
   case.rs             declarative case model (docs/morfologia.yaml is its copy)
-  compound.rs         split an unknown word into head + tail
+  compound.rs         split a word into components: kind, per-part mode, explain
   derivation.rs       productive suffix rules (-ja, -minen, -nen, ...)
   wordset.rs          compact concatenated word set (u32 offsets)
   pronoun.rs          personal pronouns (a closed paradigm)
@@ -251,12 +251,14 @@ allocation); it mirrors `tools/train/model.py` and is pinned by
 `gradation.rs` (strong↔weak consonant alternation), `harmony.rs` +
 `grammar/harmony.rs` (front/back vowel harmony), `expand/clitic.rs` (post-
 inflectional particles — no gradation), `derivation.rs` (new lexemes, not
-inflections), `compound.rs` (split unknown words), `pronoun.rs` (closed
-paradigm).
+inflections), `compound.rs` (component analysis: `CompoundKind`, the per-part
+`ComponentInflection` mode, and `explain`), `pronoun.rs` (closed paradigm).
 
 ## Public API (crate root)
 
 `check`, `suggest`, `suggest_detailed`, `levenshtein_with_ops`, `EditOp`;
+`compound::{analyze, explain, Analysis, Compound, Component, CompoundKind,
+ComponentInflection, Explanation, Action}`;
 `inflect`/`inflect_all`/`form_of`/`forms_of` under `expand`; `sanalista`,
 `parse_sanalista`, `read_sanalista`, `Sanalista`, `Lemma`, `Inflection`;
 `Tags`, `Form`, `Confidence`; `sentence::{analyze, spans, Analyzer, TokenContext,

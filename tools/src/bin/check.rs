@@ -32,9 +32,15 @@ fn main() -> ExitCode {
         // A compound is a valid word even if it is not in the index on its own:
         // its components are, and the compound is their concatenation.
         let compound = torille::compound::analyze(word, &builder);
+        let explanation = torille::compound::explain(word, &builder);
         let known = !builder.bases_of(word).is_empty() || builder.readings_of(word).is_some();
         if known {
-            println!("{word}: known word");
+            // A dictionary compound still has an analysis worth printing: the
+            // parts, which of them inflect, and which are frozen.
+            match &explanation {
+                Some(e) => println!("{word}: known word; {}", describe(e)),
+                None => println!("{word}: known word"),
+            }
         } else if let Some(base) = torille::expand::derived::base(word) {
             // The sanalista omits productive derived verbs, so the reverse
             // index cannot see them; report the class-engine base directly.
@@ -44,9 +50,9 @@ fn main() -> ExitCode {
                 torille::compound::Analysis::Simple(_) => {
                     println!("{word}: known word (in the sanalista)");
                 }
-                torille::compound::Analysis::Compound(c) => {
-                    let parts: Vec<&str> = c.parts.iter().map(|p| p.lemma.as_str()).collect();
-                    println!("{word}: compound {}", parts.join(" + "));
+                torille::compound::Analysis::Compound(_) => {
+                    let e = explanation.expect("a compound has an explanation");
+                    println!("{word}: compound {}", describe(&e));
                 }
                 torille::compound::Analysis::Unknown => {
                     // The engine's fast path knows derived verbs and
@@ -74,4 +80,35 @@ fn main() -> ExitCode {
         }
     }
     ExitCode::SUCCESS
+}
+
+/// A compound in one line: the parts, what each does, and the shape.
+///
+/// `talonmiehen` is `talo` (frozen genitive) + `mies` (inflected), and the
+/// shape is genitive-initial. That is the answer `check` could not give when it
+/// only printed the lemmas.
+fn describe(e: &torille::compound::Explanation) -> String {
+    use torille::compound::{Action, CompoundKind};
+    let kind = match e.kind {
+        CompoundKind::Ordinary => "ordinary",
+        CompoundKind::GenitiveInitial => "genitive-initial",
+        CompoundKind::BothParts => "both parts inflect",
+        CompoundKind::Lexicalised => "lexicalised",
+    };
+    let parts: Vec<String> = e
+        .components
+        .iter()
+        .map(|c| {
+            let what = match c.action {
+                Action::Unchanged => "unchanged",
+                Action::Inflected => "inflected",
+                Action::Frozen => "frozen",
+            };
+            match c.case {
+                Some(case) => format!("{} ({what} {})", c.lemma, case.name()),
+                None => format!("{} ({what})", c.lemma),
+            }
+        })
+        .collect();
+    format!("{} [{kind}]", parts.join(" + "))
 }

@@ -53,27 +53,58 @@ model.
 
 ## Phases
 
-### Phase 1 — say what the planner already knows
+### Phase 1 — say what the analyzer already knows  *(done 2026-11-02)*
 
-Add to `src/compound.rs`, without changing any generated form:
+`src/compound.rs` now carries the distribution model, and no generated form
+changed:
 
 - `Component.inflection: ComponentInflection` with `Invariant`, `Inflect`,
-  `Lexical` and `Conditional` (the spec's four modes, not a bool). A modifier
-  resolved through a *case form* is `Lexical`; a modifier that is a bare lemma
-  is `Invariant`; the head is `Inflect`; a coordinated first half is
-  `Conditional`.
+  `Lexical` and `Conditional` — the spec's four modes, not a bool. A modifier
+  resolved through a case form is `Lexical`; a bare lemma modifier is
+  `Invariant`; the head is `Inflect`; the first part of a class-51 or
+  coordinated compound is `Conditional`.
+- `Component.case` records the case a frozen modifier is in (`talon` is
+  genitive), so `talonmies` can be told from a typo.
 - `Compound.kind: CompoundKind` with `Ordinary`, `GenitiveInitial`,
-  `Coordinated`, `Lexicalised`. Classification uses the resolved surface vs the
-  lemma (genitive `talon` vs `talo`), the hyphen rule (`PairedExpression`), and
-  the sanalista marker (50/51) when the row has one.
-- `explain(word, builder) -> Explanation` returning each component's surface,
-  lemma, mode and — where the word is an inflected form — the action taken.
+  `BothParts`, `Lexicalised`. `BothParts` covers class 51 (`nuoripari`) and
+  the coordinated hyphen pair (`suomalais-ruotsalainen`); the hyphen is one
+  route to it, not the definition.
+- `explain(word, builder) -> Explanation` returns each component's surface,
+  lemma, mode, case and `Action` (`Unchanged`, `Inflected`, `Frozen`).
+  `check` prints it: `talonmiehen: compound talo (frozen genitive) + mies
+  (inflected) [genitive-initial]`.
 
-The class-50/51 planner is then rewritten to read `kind`/`inflection` instead of
-re-deriving them. The regression net is the existing `expand::tests` compound
-tests plus the class-50/51 report: **the forms must be identical before and
-after**, which is checkable by diffing `inflect` output over the 93 class-51
-lemmas and a sample of class-50 rows.
+Two decomposition defects surfaced while writing the tests and are fixed:
+
+- the recursive split scanned boundaries left to right and returned the first
+  success, so a short prefix that is a word of its own won: `nuoriparin` was
+  `nuo` + `ripa` + `ry`, `isotaivot` was `iso` + `taivo`, `särkynytsydän` was
+  `särky` + `nyt` + `sydän`. It now scans longest-modifier first.
+- the base named for a head was whichever the index reached first, which is
+  the sanalista's order. `FormBuilder::best_base` ranks by `ClassPrior` and
+  then by how much of the surface the base covers, so `parin` is `pari` before
+  the golf term `par`.
+
+**Not done, deliberately:** `expand/compound.rs` was not rewritten to consume
+`kind`/`inflection`. It starts from a sanalista row and a class marker and
+works in `Lemma` rows and case cells; the analyzer starts from an orthographic
+word and works in strings. They meet at `check`/`explain`, and rebuilding the
+planner on the analyzer is Phase 2's job, when classless compounds become
+first-class. Forcing it now would be a refactor with no behaviour to show.
+
+The regression net was the existing `expand::tests` compound tests plus the
+class-50/51 report; the forms are unchanged. `check` is the new consumer, and
+`a_genitive_modifier_is_recorded_as_frozen`,
+`a_class_51_word_inflects_its_first_part`,
+`a_coordinated_pair_inflects_both_parts_without_a_class`,
+`explain_separates_a_frozen_modifier_from_an_inflected_head` and
+`the_best_base_prefers_the_reading_that_covers_the_surface` pin the model.
+
+**Known limit:** `kind` is exact for the citation form. For an inflected form
+of a class-51 compound whose head is a plural (`pitkienhousujen`), the citation
+is reconstructed from the lemmas (`pitkähousut`) and the plural `-t` is lost,
+so it reads as `genitive-initial`. The inflector is unaffected; this is an
+`explain` limitation until the ambiguity work in Phase 5.
 
 ### Phase 2 — ordinary compounds as first-class
 
