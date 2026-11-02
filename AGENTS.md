@@ -186,13 +186,14 @@ Called for every lemma/class; short-circuits in order:
 
 A sanalista row with **no class** is a compound (56 486 rows): Kotus omits the
 type because the word declines like its final component. `inflect_all` runs
-`compound_head_forms` (modifier fixed, head's class) and the derived `-inen`
-adjectives for such a row, so `inflect` and the binding reach the whole
-paradigm. A compound form takes the **head's confidence**, not a fresh one: a
-plain head form is plain, and a repaired one (`väkein` for `väkien`) stays
-repaired. The reverse index does **not** include the rows: `FormBuilder` walks
-the row's classes and a classless row has none, so only the citation form is
-indexed — the same limit as compound analysis in the fast `check`/`suggest`.
+`compound_head_forms` (modifier fixed, head's class), the derived `-inen`
+adjectives, and `compound_verb_forms` for a verb head (`aliarvioida` is `ali` +
+`arvioida`), so `inflect` and the binding reach the whole paradigm. A compound
+form takes the **head's confidence**, not a fresh one: a plain head form is
+plain, and a repaired one (`väkein` for `väkien`) stays repaired. The reverse
+index does **not** include the rows: `FormBuilder` walks the row's classes and
+a classless row has none, so only the citation form is indexed — the same limit
+as compound analysis in the fast `check`/`suggest`.
 `report_by_class.py --classless` audits the rows under `(none)`.
 
 Public wrappers: `inflect`, `inflect_all` (preserves first-occurrence order and
