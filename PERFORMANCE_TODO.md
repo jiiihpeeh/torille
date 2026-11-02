@@ -50,6 +50,53 @@ needs Phase 3.
 
 ## Progress
 
+### 2026-11-02 — the compound verifies use the paradigm cache
+
+The cache in `emits_form` only helped callers that called `emits_form`. The
+stem-map verifies in `src/suggest/known/stems.rs` called `inflect_all` directly
+and listed the whole paradigm on every ask, so the compound split search never
+hit the cache: it asks the same `(surface, base)` pair once per pass, per
+possessive variant and per recursion. On `valentine` the verb base `valua` was
+verified 50 times, each building a 1 258-form paradigm.
+
+The three helpers now call `emits_form`, which walks the same engines and stops
+at the first match, with the paradigm cached. The cache key now includes the
+inflection list as well: a lemma can carry two classes (`kungfu` is `1,21`) and
+a caller may ask about one of them
+(`expand::tests::the_paradigm_cache_keys_on_the_inflections`).
+
+| word, `check_normal_fast`, new process | before | after |
+|---|---:|---:|
+| `valentine` | 0.32 s | **0.03 s** |
+| `triestistä` | 0.23 s | **0.04 s** |
+| `tapasitteko` | 0.22 s | **0.04 s** |
+| `mesaanipurjeineen` | 0.17 s | **0.03 s** |
+| `mehuvesi` | 0.17 s | **0.03 s** |
+
+The corpus moves much more than the single-word runs, because the cache is
+per-base and a page repeats bases:
+
+| corpus (2000 tokens) | before | after |
+|---|---:|---:|
+| `45448.txt` | 1,652–1,747 ms | **396–425 ms** |
+| `45448.txt` p95 | 1,325 µs | **883 µs** |
+| `7000.txt` | 8,712 ms | **1,120–1,289 ms** |
+
+Unknown counts are identical (293 / 406 / 566), so this is the same acceptance
+at a fraction of the cost.
+
+What is left on the fast path is now mostly one-off and coverage, not repeated
+work:
+
+- `pronoun_forms()` scans all 104k lemma rows on the first miss to find the 32
+  class-101 lemmas (~20 ms once per process; the wasm pays it on its first
+  unknown word). A build-time class-101 word list would remove the scan; the
+  paradigms stay in the engine.
+- The remaining per-unknown cost is the compound DP and the *first* verify of
+  each base, which is the slot-level reverse match (a per-class ending
+  inventory, so a candidate can be rejected before its paradigm is built).
+  That is still a codegen project, not a micro-optimisation.
+
 ### 2026-11-02 — paradigm cache in `emits_form`
 
 The stem-map gates verify the same base once per token, and a page has many case

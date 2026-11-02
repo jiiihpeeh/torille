@@ -57,13 +57,24 @@ pub(super) fn find_base_via_stem_map_static(
     base: &str,
     pos: PartOfSpeech,
 ) -> Option<String> {
-    use crate::expand::inflect_all;
     use crate::kotus::sanalista;
     let lex = sanalista();
     let lemma = lex.by_word(base).next()?;
     let inflections: Vec<_> = lemma.inflections().collect();
-    let forms = inflect_all(lemma.word(), &inflections, catalogue(), None, pos, false);
-    if forms.iter().any(|f| f.word == word) {
+    // `emits_form`, not `inflect_all`: the compound split search asks the same
+    // (surface, base) pair many times -- once per pass, per possessive variant,
+    // per recursion -- and `emits_form` caches the built paradigm. Listing it
+    // rebuilt a 1 200-form verb paradigm per ask.
+    let hit = crate::expand::emits_form(
+        lemma.word(),
+        &inflections,
+        catalogue(),
+        None,
+        pos,
+        false,
+        word,
+    );
+    if hit {
         return Some(base.to_string());
     }
     None
@@ -109,22 +120,21 @@ pub(super) fn possessive_base_via_stem_map(word: &str, host: &str) -> Option<Str
 /// direct stem-map probe, this asks the engine for the possessive forms, so
 /// only a surface the paradigm really emits is accepted.
 pub(super) fn find_base_via_stem_map_static_possessive(word: &str, base: &str) -> Option<String> {
-    use crate::expand::inflect_all;
     use crate::kotus::sanalista;
     // A base can be listed under more than one homonym row; the possessive
     // form may come from a later class (`kuusi` is both the spruce and the
     // numeral). Try every row before rejecting the stem.
     for lemma in sanalista().by_word(base) {
         let inflections: Vec<_> = lemma.inflections().collect();
-        let forms = inflect_all(
+        if crate::expand::emits_form(
             lemma.word(),
             &inflections,
             catalogue(),
             None,
             PartOfSpeech::Noun,
             true,
-        );
-        if forms.iter().any(|f| f.word == word) {
+            word,
+        ) {
             return Some(base.to_string());
         }
     }
@@ -139,13 +149,20 @@ fn find_base_via_verb_stem_map_static(
     base: &str,
     pos: PartOfSpeech,
 ) -> Option<String> {
-    use crate::expand::inflect_all;
     use crate::kotus::sanalista;
     let lex = sanalista();
     let lemma = lex.by_word(base).next()?;
     let inflections: Vec<_> = lemma.inflections().collect();
-    let forms = inflect_all(lemma.word(), &inflections, catalogue(), None, pos, false);
-    if forms.iter().any(|f| f.word == word) {
+    let hit = crate::expand::emits_form(
+        lemma.word(),
+        &inflections,
+        catalogue(),
+        None,
+        pos,
+        false,
+        word,
+    );
+    if hit {
         return Some(base.to_string());
     }
     None

@@ -441,6 +441,17 @@ pub fn inflect_all(
     out
 }
 
+/// The key of [`emits_form`]'s paradigm cache: the lemma, its inflections,
+/// the reading, the possessive flag, and whether a lexicon was supplied.
+///
+/// The inflections are part of the key: two callers may ask about the same
+/// lemma under different subsets, and the cached set is the union of the
+/// forms of the inflections it was built from.
+type ParadigmKey = (String, Vec<(u16, u8)>, u8, bool, bool);
+
+/// One lemma's verified word set.
+type Paradigm = std::rc::Rc<HashSet<String>>;
+
 /// Whether `lemma` under `inflections` produces `word`.
 ///
 /// [`inflect_all`] exists to *list* a paradigm: it deduplicates with a
@@ -453,13 +464,6 @@ pub fn inflect_all(
 /// surface such as `pahempi` is a form of `paha` only through them. A classless
 /// lemma has nothing but those layers and the compound fallbacks, so it takes
 /// the full [`inflect_all`] path.
-/// The key of [`emits_form`]'s paradigm cache: lemma, reading, possessives,
-/// and whether a lexicon was supplied.
-type ParadigmKey = (String, u8, bool, bool);
-
-/// One lemma's verified word set.
-type Paradigm = std::rc::Rc<HashSet<String>>;
-
 pub fn emits_form(
     lemma: &str,
     inflections: &[Inflection],
@@ -487,6 +491,10 @@ pub fn emits_form(
     const WORD_CAP: usize = 100_000;
     let key = (
         lemma.to_string(),
+        inflections
+            .iter()
+            .map(|inflection| (inflection.class, inflection.gradation.map_or(0, |g| g.0)))
+            .collect(),
         pos as u8,
         possessives,
         lexicon.is_some(),
@@ -2260,6 +2268,63 @@ mod tests {
                 assert_eq!(listed, emitted, "{lemma_word} / {word}");
             }
         }
+    }
+
+    /// The paradigm cache keys on the inflection list, not just the lemma.
+    ///
+    /// A lemma can carry more than one class (`kungfu` is `1,21`). A caller
+    /// may ask about one class and a later caller about the other; if the
+    /// cache keyed only on the lemma, the second would get the first's set.
+    #[test]
+    fn the_paradigm_cache_keys_on_the_inflections() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let index = LexiconIndex::new(&lexicon);
+        let found = lexicon.iter().find_map(|lemma| {
+            if lemma.inflections.len() < 2 {
+                return None;
+            }
+            let pos = PartOfSpeech::inflecting_reading(lemma.part_of_speech);
+            let forms_of = |inflection| {
+                inflect_all(lemma.word, &[inflection], &cat, Some(&index), pos, false)
+                    .into_iter()
+                    .map(|form| form.word)
+                    .collect::<HashSet<_>>()
+            };
+            let first = forms_of(lemma.inflections[0]);
+            let second = forms_of(lemma.inflections[1]);
+            let word = second.difference(&first).next()?.clone();
+            Some((lemma, pos, word))
+        });
+        let Some((lemma, pos, word)) = found else {
+            panic!("no lemma has two classes with differing forms");
+        };
+        let [first, second, ..] = lemma.inflections[..] else {
+            unreachable!("the lemma was filtered on two inflections");
+        };
+        assert!(
+            !emits_form(lemma.word, &[first], &cat, Some(&index), pos, false, &word),
+            "{word} is not a form of {} under {first}",
+            lemma.word
+        );
+        assert!(
+            emits_form(lemma.word, &[second], &cat, Some(&index), pos, false, &word),
+            "{word} is a form of {} under {second}",
+            lemma.word
+        );
+        assert!(
+            emits_form(
+                lemma.word,
+                &lemma.inflections,
+                &cat,
+                Some(&index),
+                pos,
+                false,
+                &word
+            ),
+            "{word} is a form of {} under its full reading",
+            lemma.word
+        );
     }
 
     /// A classless compound is classified by its head, not by its ending.
