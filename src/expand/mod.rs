@@ -453,6 +453,13 @@ pub fn inflect_all(
 /// surface such as `pahempi` is a form of `paha` only through them. A classless
 /// lemma has nothing but those layers and the compound fallbacks, so it takes
 /// the full [`inflect_all`] path.
+/// The key of [`emits_form`]'s paradigm cache: lemma, reading, possessives,
+/// and whether a lexicon was supplied.
+type ParadigmKey = (String, u8, bool, bool);
+
+/// One lemma's verified word set.
+type Paradigm = std::rc::Rc<HashSet<String>>;
+
 pub fn emits_form(
     lemma: &str,
     inflections: &[Inflection],
@@ -467,23 +474,49 @@ pub fn emits_form(
             .iter()
             .any(|f| f.word == word);
     }
+    // The stem-map gates verify the same base once per token, and a page has
+    // many case forms of one lemma (`talo`, `talossa`, `talolle`, ...). Each
+    // verification otherwise rebuilds the whole paradigm; the first builds the
+    // word set and the rest are one hash probe.
+    thread_local! {
+        static CACHE: std::cell::RefCell<
+            std::collections::HashMap<ParadigmKey, Paradigm>,
+        > = std::cell::RefCell::new(std::collections::HashMap::new());
+        static WORDS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    }
+    const WORD_CAP: usize = 100_000;
+    let key = (
+        lemma.to_string(),
+        pos as u8,
+        possessives,
+        lexicon.is_some(),
+    );
+    if let Some(set) = CACHE.with_borrow(|cache| cache.get(&key).cloned()) {
+        return set.contains(word);
+    }
+    let mut set: HashSet<String> = HashSet::new();
     for inflection in inflections {
-        if inflect_in(lemma, *inflection, cat, lexicon, pos, possessives)
-            .iter()
-            .any(|f| f.word == word)
-        {
-            return true;
+        for form in inflect_in(lemma, *inflection, cat, lexicon, pos, possessives) {
+            set.insert(form.word);
         }
     }
-    if degree_forms(lemma, cat, lexicon)
-        .iter()
-        .any(|f| f.word == word)
-    {
-        return true;
+    for form in degree_forms(lemma, cat, lexicon) {
+        set.insert(form.word);
     }
-    numeral_forms(lemma, cat, lexicon)
-        .iter()
-        .any(|f| f.word == word)
+    for form in numeral_forms(lemma, cat, lexicon) {
+        set.insert(form.word);
+    }
+    let hit = set.contains(word);
+    let cached = std::rc::Rc::new(set);
+    CACHE.with_borrow_mut(|cache| {
+        if WORDS.with(std::cell::Cell::get) + cached.len() > WORD_CAP {
+            cache.clear();
+            WORDS.with(|w| w.set(0));
+        }
+        WORDS.with(|w| w.set(w.get() + cached.len()));
+        cache.insert(key, cached);
+    });
+    hit
 }
 
 /// Generates every form of `lemma` under `inflection` whose readings

@@ -50,6 +50,27 @@ needs Phase 3.
 
 ## Progress
 
+### 2026-11-02 — paradigm cache in `emits_form`
+
+The stem-map gates verify the same base once per token, and a page has many case
+forms of one lemma (`talo`, `talossa`, `talolle`, ...). Each verification
+rebuilt the whole paradigm. `emits_form` now keeps the verified word set per
+(lemma, reading, possessives, lexicon) in a thread-local cache, bounded at
+100 000 words and cleared when full; the first call builds the set and the rest
+are one probe.
+
+| corpus (2000 tokens) | before | after |
+|---|---:|---:|
+| `45448.txt` | 1,869 ms | 1,652–1,747 ms |
+| `45448.txt` p95 | 1,672 µs | 1,325 µs |
+| `7000.txt` | 9,601 ms | 8,712 ms |
+
+The one-off compounds do not move (`valentine` 170 ms, `mesaanipurjeineen`
+70 ms): their suffixes are distinct, so nothing is reused. Cutting those needs
+the slot-level reverse match — a per-class ending inventory used to reject a
+candidate before its paradigm is built — which is the rest of P1.3 and a larger
+design than the cache.
+
 ### 2026-11-02 — derived tables precomputed
 
 The parallel build cut `derived()` from 85 to 26 ms on the native host, but the
