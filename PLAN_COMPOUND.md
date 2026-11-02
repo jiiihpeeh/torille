@@ -131,11 +131,11 @@ Re-measured with the promotion in place:
 
 | status | count | what |
 |---|---:|---|
-| `confirmed` | 14,105 | every oracle-confirmed cell the engine reaches |
-| `missing` | 303 | two lemmas with no paradigm |
-| `not_plain` | 268 | the head's repaired forms (`tahdinlyöntein`) |
+| `confirmed` | 14,407 | every oracle-confirmed cell of the sample |
+| `missing` | 0 | — |
+| `not_plain` | 269 | the head's repaired forms (`tahdinlyöntein`) |
 | `illegal` | 0 | no plain form the oracle does not confirm |
-| `unsupported` | 581 | plain forms whose cell the oracle has no row for |
+| `unsupported` | 591 | plain forms whose cell the oracle has no row for |
 
 `aamuhartaus` is 160 plain forms; `pikkuaivot` 89 plain + 3 repaired (its
 `-in` variants); `happiradikaali` 160 plain + 19 repaired. The forms are plain
@@ -143,19 +143,19 @@ in `inflect` and the binding, but the reverse index still holds only the
 citation form for a classless row, so `check_fast`/`suggest` do not see them —
 the same limit as compound analysis in the fast path.
 
-`kotimaanmatka` was the first of the missing three and is fixed: its modifier
-is the genitive of a *classless* compound (`kotimaa`), which the compile-time
-form set does not hold, so `classless_modifier_is_known` inflects the classless
-base and matches the surface. Pinned by
-`a_classless_modifier_resolves_through_its_own_compound`.
+The three lemmas that were missing had three different causes, and all are
+fixed:
 
-The 303 left are two shapes:
-
-- `leijupakastus` — the modifier is a verb stem (`leiju-` of `leijua`), and
-  `modifier_is_known` deliberately accepts only nominal stems. A verb-stem
-  modifier is real in this family (`leijukerros`, `leijupata`), so the rule
-  needs a considered exception rather than a blanket one.
-- `kos-salaatti` — a lexical hyphen the ordinary split does not handle.
+- `kotimaanmatka` — the modifier is the genitive of a *classless* compound
+  (`kotimaa`), which the compile-time form set does not hold.
+  `classless_modifier_is_known` inflects the classless base and matches the
+  surface. Pinned by `a_classless_modifier_resolves_through_its_own_compound`.
+- `leijupakastus`, `kos-salaatti` — the modifier is a verb stem (`leiju-` of
+  `leijua`, `kos-` of `kosia`), and `modifier_is_known` deliberately accepts
+  only nominal stems. `verb_stem_is_a_modifier` checks the verb stem map and
+  requires the base to be a verb lemma, which keeps a noun that happens to share
+  the spelling out. The same probe is used on the verb-head path
+  (`riippuliitää`).
 
 ### Phase 3 — genitive-initial and coordinated compounds
 
