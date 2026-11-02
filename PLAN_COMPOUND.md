@@ -127,21 +127,42 @@ Promotion to `Plain` was blocked twice, and the two fixes are different in kind:
   `Repaired`. That is the right rule anyway — the modifier adds a prefix, not a
   repair.
 
-Re-measured with the promotion in place:
+Re-measured with the promotion in place, at n=1000 (919 lemmas checked, 81
+skipped):
 
 | status | count | what |
 |---|---:|---|
-| `confirmed` | 14,407 | every oracle-confirmed cell of the sample |
-| `missing` | 0 | — |
-| `not_plain` | 269 | the head's repaired forms (`tahdinlyöntein`) |
-| `illegal` | 0 | no plain form the oracle does not confirm |
-| `unsupported` | 591 | plain forms whose cell the oracle has no row for |
+| `confirmed` | 137,206 | 99.2% of the sample's confirmed cells |
+| `missing` | 1,141 | ten lemmas, all with a stem-changing or derived part |
+| `not_plain` | 2,313 | the head's repaired forms (`tahdinlyöntein`) |
+| `illegal` | 30 | 0.02%; head over-generation, see below |
+| `unsupported` | 5,724 | plain forms whose cell the oracle has no row for |
 
-`aamuhartaus` is 160 plain forms; `pikkuaivot` 89 plain + 3 repaired (its
-`-in` variants); `happiradikaali` 160 plain + 19 repaired. The forms are plain
-in `inflect` and the binding, but the reverse index still holds only the
-citation form for a classless row, so `check_fast`/`suggest` do not see them —
-the same limit as compound analysis in the fast path.
+At n=100 the same sample was complete (14,407 confirmed, 0 missing, 0
+illegal); the larger sample is the honest number. `aamuhartaus` is 160 plain
+forms; `pikkuaivot` 89 plain + 3 repaired (its `-in` variants);
+`happiradikaali` 160 plain + 19 repaired. The forms are plain in `inflect` and
+the binding, but the reverse index still holds only the citation form for a
+classless row, so `check_fast`/`suggest` do not see them — the same limit as
+compound analysis in the fast path.
+
+The 1,141 missing are ten lemmas, and the cause is always the same shape: the
+modifier is a classless compound whose stem changes, so the citation is not a
+prefix of the surface (`koulutoimen` is the genitive of `koulutoimi`,
+`kylmäveren` of `kylmäveri`) and the prefix probe cannot find the base. The
+rest are derived heads (`parantaja`, `ryöstäjä`, `hieroma`) and the bound
+prefix `sosiaali-`. Resolving them needs the classless forms in the reverse
+index, or a stem-aware search over classless lemmas.
+
+The 30 `illegal` are not compound defects; promoting the forms made the head's
+own over-generation visible:
+
+- 24 are the translative possessive with the nominative stem (`loimulohikseni`
+  beside `loimulohekseni`) — the head `lohi` emits both on its own;
+- 5 are `leikkimielisyytensä`, where the oracle wants the nominative-stem
+  `leikkimielisyysinsä`; the engine's genitive-stem form is the standard one;
+- 1 is `kaskinauriin`, the genitive of `nauris`, which the class-41 engine
+  tags with no case at all, so the harness reads it as a nominative.
 
 The three lemmas that were missing had three different causes, and all are
 fixed:

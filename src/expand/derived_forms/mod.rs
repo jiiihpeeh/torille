@@ -579,4 +579,3 @@ pub(super) fn degree_forms(
     }
     out
 }
-
