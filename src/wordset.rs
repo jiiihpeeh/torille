@@ -148,14 +148,49 @@ impl WordSet {
 
     /// Adds `word`, returning `true` when it was not already present.
     pub fn insert(&mut self, word: &str) -> bool {
-        if word.is_empty() || self.contains(word) {
-            return false;
+        self.insert_at(word).0
+    }
+
+    /// Adds `word` and returns its position, or the position it already has.
+    ///
+    /// The boolean is "was it new". The position is the insertion index, which
+    /// is what [`Self::position`] would return; a caller that keeps a table
+    /// beside the set can index it without a second probe, which is what
+    /// `FormBuilder` does for its readings. A new word is written at the empty
+    /// slot the search already found, so an insert probes once rather than
+    /// twice.
+    pub fn insert_at(&mut self, word: &str) -> (bool, usize) {
+        if word.is_empty() {
+            return (false, 0);
         }
+        let mut i = self.probe(word) & self.mask;
+        loop {
+            let slot = self.table[i];
+            if slot == EMPTY {
+                break;
+            }
+            let idx = (slot - 1) as usize;
+            if &self.buffer[self.offsets[idx] as usize..self.end_of(idx)] == word {
+                return (false, idx);
+            }
+            i = (i + 1) & self.mask;
+        }
+        // `i` is the empty slot. A grow rehashes every existing word, so the
+        // slot is found again in the new table.
         if self.len * 10 >= self.table.len() * 7 {
             self.grow();
+            i = self.probe(word) & self.mask;
+            while self.table[i] != EMPTY {
+                i = (i + 1) & self.mask;
+            }
         }
-        self.insert_new(word);
-        true
+        let offset = self.buffer.len() as u32;
+        self.buffer.push_str(word);
+        self.offsets.push(offset);
+        let idx = self.offsets.len() - 1;
+        self.table[i] = (idx + 1) as u32;
+        self.len += 1;
+        (true, idx)
     }
 
     /// Adds `word` and reports whether it was already present.
@@ -189,8 +224,26 @@ impl WordSet {
         self.len += 1;
     }
 
+    /// Makes room for `additional` more words without a rehash.
+    ///
+    /// The table is sized for the final count at the same load factor
+    /// [`Self::with_capacity`] uses, so a caller that knows how many words it
+    /// is about to insert pays for one table rather than the doubling chain.
+    pub fn reserve(&mut self, additional: usize) {
+        let needed = self.len + additional;
+        let slots = ((needed * 10 / 7 + 16).max(32)).next_power_of_two();
+        if slots > self.table.len() {
+            self.rehash(slots);
+        }
+        self.offsets.reserve(additional);
+        self.buffer.reserve(additional * 12);
+    }
+
     fn grow(&mut self) {
-        let slots = self.table.len() * 2;
+        self.rehash(self.table.len() * 2);
+    }
+
+    fn rehash(&mut self, slots: usize) {
         let mut table = vec![EMPTY; slots];
         self.mask = slots - 1;
         for idx in 0..self.offsets.len() {
@@ -279,6 +332,32 @@ mod tests {
         assert!(!s.contains("tal"));
         assert!(!s.contains("taloo"));
         assert_eq!(s.len(), 2);
+    }
+
+    #[test]
+    fn insert_at_returns_the_position_position_would_look_up() {
+        let mut s = WordSet::new();
+        assert_eq!(s.insert_at("talo"), (true, 0));
+        assert_eq!(s.insert_at("kala"), (true, 1));
+        assert_eq!(s.insert_at("talo"), (false, 0));
+        assert_eq!(s.position("talo"), Some(0));
+        assert_eq!(s.position("kala"), Some(1));
+        assert_eq!(s.len(), 2);
+    }
+
+    #[test]
+    fn reserve_keeps_positions_and_skips_the_grow_chain() {
+        let mut s = WordSet::new();
+        s.reserve(1000);
+        let slots = s.table.len();
+        for i in 0..1000 {
+            let word = format!("w{i}");
+            assert_eq!(s.insert_at(&word), (true, i));
+        }
+        for i in 0..1000 {
+            assert_eq!(s.position(&format!("w{i}")), Some(i));
+        }
+        assert_eq!(s.table.len(), slots, "a reserved set did not grow");
     }
 
     #[test]

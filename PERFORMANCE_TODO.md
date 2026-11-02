@@ -50,6 +50,61 @@ needs Phase 3.
 
 ## Progress
 
+### 2026-11-02 — the reverse index build (`check`/`lookup` start-up)
+
+`tools/src/bin/perf_index.rs` measures the build that `check` and `lookup` do
+before answering the first word: total time, field sizes, and peak RSS (the
+latter from `/usr/bin/time -v`). It also honours `TORILLE_SINGLE_THREAD` /
+`set_single_thread`, so `--single-thread` reports the wasm-shaped build.
+
+| | before | after |
+|---|---:|---:|
+| `build` (12 threads) | 29.4 s | **8.6 s** |
+| `build` (1 thread) | 40.8 s | **23.3 s** |
+| peak RSS | 3.24 GB | **1.86 GB** |
+| `check xyzzy` wall time | 32.3 s | **9.8 s** |
+| `suggestible` | 446 MB, 16.8M entries | **2 MB bitset** |
+| merge phase | 24.3 s | **4.6 s** |
+
+What was actually wrong, in the order it mattered:
+
+1. **`add_base` scanned `more_bases`.** The list holds the second base of every
+   homonym word (~233k entries), and every call did a linear `iter().any`. The
+   merge makes ~233k such calls while the list grows to 233k: **27 billion
+   comparisons**, most of the 24 s merge. A `HashMap<(word, base), index>` makes
+   it a probe and keeps the list in insertion order.
+2. **`suggestible` was a second `WordSet`.** 16.8M words, 446 MB and one hash
+   insert per generated form, and nothing in the tree reads it: `suggest` walks
+   `find_bases_with`, not the builder. It is now one bit per position in
+   `known` (2 MB), with `is_suggestible(word)` and `suggestible_len()` as the
+   API. `tests/catalogue::a_repaired_form_is_not_suggestible` and
+   `expand::build::tests::a_repaired_form_is_accepted_but_not_suggestible` pin
+   the plain/offered split.
+3. **Every insert probed twice, and the merge three times.**
+   `WordSet::insert` ran `contains` and then `insert_new` (which probed again),
+   and `merge` called `position` after `insert` for the mapping. `insert_at`
+   returns `(is_new, position)` and writes at the empty slot the search already
+   found, so an insert is one probe. `accept` and `merge` use it.
+4. **The merge copied and then freed every share's readings.** The `Vec<Tags>`
+   is now *moved* for a word the merged half has not seen, and only copied for
+   a word it already has. That removed most of the copy and the 17M small
+   frees, and dropped peak RSS by 660 MB on its own.
+5. **The merged `known` grew through the doubling chain.** At 17M words that
+   rehashes the whole set twice. `reserve_words` sizes the table, `offsets`,
+   `analyses` and `first_base` once from the shares' total: merge 7.8 s → 4.6 s.
+
+Still open:
+
+- The merge is 4.6 s of single-threaded `insert_at` over 17M words. A sharded
+  merge (partition by hash, merge shards in parallel, keep a sharded lookup)
+  is the next structural step.
+- `analyses` is 564 MB: one `Vec<Tags>` header per word (24 bytes × 17M) plus
+  the 10-byte readings. A flat arena (`Vec<Tags>` + `Vec<u32>` starts) would be
+  ~250 MB, but a reading can be added to a word after later words exist, so it
+  needs a batch/sort or the same sharding; it is not a drop-in change.
+- `first_base` is 130 MB as `Vec<(u32, u16)>` (8 bytes each). Two parallel
+  arrays would save 28 MB; not worth the churn alone.
+
 ### 2026-10-29 — first PR: recognition fast paths
 
 Done:

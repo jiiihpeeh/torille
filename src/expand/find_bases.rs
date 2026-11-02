@@ -191,7 +191,7 @@ pub(crate) fn find_bases_for_check<'a>(
 /// `TORILLE_SINGLE_THREAD=1` forces the sequential path. The wasm always
 /// takes it (one thread); the native performance probe uses the switch to
 /// measure the same shape as the extension instead of the host's core count.
-fn worker_count() -> usize {
+pub(super) fn worker_count() -> usize {
     static SINGLE: OnceLock<bool> = OnceLock::new();
     if *SINGLE.get_or_init(|| std::env::var_os("TORILLE_SINGLE_THREAD").is_some())
         || FORCE_SINGLE_THREAD.load(Ordering::Relaxed)

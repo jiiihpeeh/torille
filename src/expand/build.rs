@@ -12,8 +12,16 @@ use super::lexicon_index::LexiconIndex;
 pub struct FormBuilder {
     /// Everything that is accepted as a word.
     pub known: WordSet,
-    /// The subset offered as spelling suggestions.
-    pub suggestible: WordSet,
+    /// Which of `known`'s words may be offered as a spelling correction, one
+    /// bit per position in `known`.
+    ///
+    /// This used to be a second [`WordSet`]: 446 MB and a hash insert per form,
+    /// to answer a question the position already answers. A word is
+    /// suggestible only if it is known, and [`Self::accept`] hands back the
+    /// position, so a bit is enough.
+    suggestible: Vec<u64>,
+    /// How many bits in [`Self::suggestible`] are set.
+    suggestible_len: usize,
     /// Lemmas only, for head detection in compound analysis.
     pub lemmas: WordSet,
     /// The readings of every word in `known`, in the order the words went in.
@@ -59,6 +67,13 @@ pub struct FormBuilder {
     /// [`FormBuilder::build`] to hand over something sorted, and that is a
     /// change worth making when someone needs it.
     pub more_bases: Vec<(u32, u32, u16)>,
+    /// `(word position, base id)` -> index into [`Self::more_bases`].
+    ///
+    /// The list is small (a couple of hundred thousand entries), but the build
+    /// calls `add_base` once per word and a scan of the list is what made
+    /// `merge` quadratic: 27 billion comparisons across the 96 shares. A hash
+    /// probe keeps the merge linear and the list in its insertion order.
+    more_index: std::collections::HashMap<(u32, u32), u32>,
     /// The base forms themselves, in the order they were first reached.
     ///
     /// A word is named here once however many forms of it the index holds, so
@@ -204,7 +219,6 @@ impl FormBuilder {
         // `accept` is what keeps `analyses` the same length as `known` and an
         // insert here without a reading to go with it would leave the two out
         // of step.
-        self.suggestible.insert(lemma.word);
         self.lemmas.insert(lemma.word);
         // A record can name more than one part of speech, and each of them is
         // generated in full: `aamen` is in the data as an adverb and a noun of
@@ -228,7 +242,8 @@ impl FormBuilder {
                 _ if lemma.is_indeclinable() => Tags::UNKNOWN.of_pos(pos),
                 _ => Tags::of_number(Case::Nominative, Number::Singular).of_pos(pos),
             };
-            self.accept(lemma.word, lemma.word, &[citation]);
+            let p = self.accept(lemma.word, lemma.word, &[citation]);
+            self.mark_suggestible(p);
             for inflection in &lemma.inflections {
                 // A class the sanalista gives no model for is skipped, because
                 // there is nothing to inflect from -- unless the engine has a
@@ -249,9 +264,9 @@ impl FormBuilder {
                     lemma.part_of_speech.contains("substantiivi"),
                 ) {
                     let plain = form.plain() && is_phonotactic(&form.word);
-                    self.accept(&form.word, lemma.word, form.readings());
+                    let p = self.accept(&form.word, lemma.word, form.readings());
                     if plain {
-                        self.suggestible.insert(&form.word);
+                        self.mark_suggestible(p);
                     }
                 }
             }
@@ -266,38 +281,60 @@ impl FormBuilder {
     /// `voi` is reached three times over: as the noun of class 18, as the
     /// interjection that shares the spelling, and as the first person present
     /// of `voida`.
-    fn accept(&mut self, word: &str, base: &str, readings: &[Tags]) {
+    fn accept(&mut self, word: &str, base: &str, readings: &[Tags]) -> usize {
         let next = self.base_words.len() as u32;
         let base_id = *self.base_ids.entry(base.to_string()).or_insert_with(|| {
             self.base_words.push(base.to_string());
             next
         });
         let cases: u16 = readings.iter().fold(0, |mask, r| mask | case_bit(r.case));
-        if self.known.insert(word) {
+        let (is_new, p) = self.known.insert_at(word);
+        if is_new {
             let mut slot: Vec<Tags> = Vec::with_capacity(readings.len());
             for reading in readings {
                 crate::tags::add_reading(&mut slot, *reading);
             }
             self.analyses.push(slot);
             self.first_base.push((base_id, cases));
-        } else if let Some(p) = self.known.position(word) {
+        } else {
             for reading in readings {
                 crate::tags::add_reading(&mut self.analyses[p], *reading);
             }
-            let (id, _) = self.first_base[p];
-            if id == base_id {
-                self.first_base[p].1 |= cases;
-            } else {
-                match self
-                    .more_bases
-                    .iter_mut()
-                    .find(|(at, other, _)| *at == p as u32 && *other == base_id)
-                {
-                    Some((_, _, held)) => *held |= cases,
-                    None => self.more_bases.push((p as u32, base_id, cases)),
-                }
-            }
+            self.add_base(p, base_id, cases);
         }
+        p
+    }
+
+    /// Marks the word at `position` as one a suggestion may offer.
+    fn mark_suggestible(&mut self, position: usize) {
+        let word = position / 64;
+        if word >= self.suggestible.len() {
+            self.suggestible.resize(word + 1, 0);
+        }
+        let bit = 1u64 << (position % 64);
+        if self.suggestible[word] & bit == 0 {
+            self.suggestible[word] |= bit;
+            self.suggestible_len += 1;
+        }
+    }
+
+    /// Whether the word at `position` is marked suggestible.
+    fn suggestible_bit(&self, position: usize) -> bool {
+        self.suggestible
+            .get(position / 64)
+            .is_some_and(|w| w & (1u64 << (position % 64)) != 0)
+    }
+
+    /// Whether `word` may be offered as a spelling correction.
+    pub fn is_suggestible(&self, word: &str) -> bool {
+        self.known
+            .position(word)
+            .is_some_and(|p| self.suggestible_bit(p))
+    }
+
+    /// How many of the known words may be offered as corrections.
+    pub fn suggestible_len(&self) -> usize {
+        self.suggestible_len
     }
 
     /// The base forms a word could be an inflected form of.
@@ -602,16 +639,16 @@ impl FormBuilder {
     /// word one thread reached as a noun and another as a verb is one word with
     /// two readings rather than whichever half was merged last.
     fn merge(&mut self, other: FormBuilder) {
-        // Where each of the other's words has landed here, and whether it was
-        // already here. Inserting a word that is already known does not move
-        // it, so the positions stay valid as the loop goes on, and a word that
-        // is new has to have its place in the two arrays beside `known` made
-        // for it before anything is said about its readings.
+        // Where each of the other's words has landed here. Inserting a word
+        // that is already known does not move it, so the positions stay valid
+        // as the loop goes on, and a word that is new has to have its place in
+        // the two arrays beside `known` made for it before anything is said
+        // about its readings.
         let mut where_from: Vec<u32> = Vec::with_capacity(other.known.len());
         let mut fresh: Vec<bool> = Vec::with_capacity(other.known.len());
         for word in other.known.iter() {
-            let is_new = self.known.insert(word);
-            where_from.push(self.known.position(word).expect("just inserted") as u32);
+            let (is_new, position) = self.known.insert_at(word);
+            where_from.push(position as u32);
             fresh.push(is_new);
             if is_new {
                 self.analyses.push(Vec::new());
@@ -620,16 +657,25 @@ impl FormBuilder {
                 self.first_base.push((NO_BASE, 0));
             }
         }
-        for word in other.suggestible.iter() {
-            self.suggestible.insert(word);
+        for (op, &p) in where_from.iter().enumerate() {
+            if other.suggestible_bit(op) {
+                self.mark_suggestible(p as usize);
+            }
         }
         for word in other.lemmas.iter() {
             self.lemmas.insert(word);
         }
-        for (op, readings) in other.analyses.iter().enumerate() {
+        // A word this half has not seen takes the other's reading list whole:
+        // the `Vec` moves instead of being copied and then freed, which is what
+        // made the merge spend as long releasing the shares as merging them.
+        for (op, readings) in other.analyses.into_iter().enumerate() {
             let p = where_from[op] as usize;
-            for reading in readings {
-                crate::tags::add_reading(&mut self.analyses[p], *reading);
+            if fresh[op] {
+                self.analyses[p] = readings;
+            } else {
+                for reading in readings {
+                    crate::tags::add_reading(&mut self.analyses[p], reading);
+                }
             }
         }
         // A base is named once here however many words reach it, and the names
@@ -666,16 +712,35 @@ impl FormBuilder {
         }
     }
 
+    /// Makes room for `words` more known words without rehashing or
+    /// reallocating the tables that run beside `known`.
+    ///
+    /// The merge knows its final size (the sum of the shares), so it can pay
+    /// for one table instead of the doubling chain. A rehash re-probes every
+    /// word already in the set, and at 17M words that chain is seconds.
+    pub fn reserve_words(&mut self, words: usize) {
+        self.known.reserve(words);
+        self.analyses.reserve(words);
+        self.first_base.reserve(words);
+        self.more_bases.reserve(words / 64);
+        self.more_index.reserve(words / 64);
+        self.suggestible.reserve(words.div_ceil(64));
+    }
+
     /// Records that a word is also a form of a base, in the cases given.
     fn add_base(&mut self, p: usize, id: u32, cases: u16) {
         if self.first_base[p].0 == id {
             self.first_base[p].1 |= cases;
-        } else if !self
-            .more_bases
-            .iter()
-            .any(|(at, other, _)| *at == p as u32 && *other == id)
-        {
-            self.more_bases.push((p as u32, id, cases));
+            return;
+        }
+        let key = (p as u32, id);
+        match self.more_index.get(&key) {
+            Some(&at) => self.more_bases[at as usize].2 |= cases,
+            None => {
+                let at = self.more_bases.len() as u32;
+                self.more_bases.push((key.0, key.1, cases));
+                self.more_index.insert(key, at);
+            }
         }
     }
 
@@ -692,7 +757,7 @@ impl FormBuilder {
 
     /// Reports the number of words a lemma list yields, for logging.
     pub fn stats(&self) -> (usize, usize, usize) {
-        (self.known.len(), self.suggestible.len(), self.lemmas.len())
+        (self.known.len(), self.suggestible_len, self.lemmas.len())
     }
 }
 
@@ -775,11 +840,10 @@ pub fn build(lemmas: &[Lemma], cat: &Catalogues) -> FormBuilder {
     // way round: the whole point of the index is that the scans are expensive.
     let lexicon_index = LexiconIndex::new(lemmas);
     let lexicon_index = &lexicon_index;
-    let threads = std::thread::available_parallelism()
-        .map(|n| n.get())
-        .unwrap_or(1)
-        .min(lemmas.len())
-        .max(1);
+    // The same worker count the reverse walk uses: `TORILLE_SINGLE_THREAD`
+    // and `set_single_thread(true)` give the build the wasm's shape, so
+    // `perf_index --single-thread` measures what the extension pays.
+    let threads = super::find_bases::worker_count().min(lemmas.len()).max(1);
     if threads == 1 {
         let mut b = FormBuilder::new();
         for lemma in lemmas {
@@ -809,6 +873,7 @@ pub fn build(lemmas: &[Lemma], cat: &Catalogues) -> FormBuilder {
         handles.into_iter().filter_map(|h| h.join().ok()).collect()
     });
     let mut b = FormBuilder::new();
+    b.reserve_words(built.iter().map(|s| s.known.len()).sum());
     for share in built {
         b.merge(share);
     }
@@ -907,6 +972,33 @@ mod tests {
             "class 47 is a small class"
         );
         assert_eq!(prior.size_of(9_999), 0, "a class nobody uses scores zero");
+    }
+
+    /// A repaired form is accepted but never offered as a correction.
+    ///
+    /// `väki` (class 7*D) has the genitive plural `väkien` beside the
+    /// over-complete `väkein`; the first is plain, the second repaired. The
+    /// index marks only the plain one suggestible.
+    #[test]
+    fn a_repaired_form_is_accepted_but_not_suggestible() {
+        let cat = cat();
+        let lemma = Lemma {
+            word: "väki",
+            homonymy: "",
+            part_of_speech: "substantiivi",
+            inflections: crate::kotus::parse_inflections("7*D"),
+        };
+        let b = build(&[lemma], &cat);
+        assert!(b.known.contains("väkien"), "the plain form is a word");
+        assert!(b.known.contains("väkein"), "the repaired form is a word");
+        assert!(
+            b.is_suggestible("väkien"),
+            "the plain form is offered as a correction"
+        );
+        assert!(
+            !b.is_suggestible("väkein"),
+            "a repaired form is never offered as a correction"
+        );
     }
 
     /// Naming one base uses the prior, then how much of the surface the base
