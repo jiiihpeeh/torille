@@ -193,6 +193,15 @@ fixed:
   requires the base to be a verb lemma, which keeps a noun that happens to share
   the spelling out. The same probe is used on the verb-head path
   (`riippuliitää`).
+- `kaksikymmenvuotias` — the modifier is a numeral's combining stem
+  (`kaksikymmen` of `kaksikymmentä`, `kolmikymmen` of `kolmekymmentä`,
+  `nelitoista` of `neljätoista`, `seitsenkymmen` of `seitsemänkymmentä`).
+  `modifier_is_known` accepts the fixed tails `kymmen` and `toista` after a
+  known modifier, so the bound head `‑vuotias` (class 41) is reached and the
+  whole family inflects: all 45 classless `*vuotias` rows now have paradigms,
+  where 10 had none. The `-ias` `-s` stem (`viisikymmenvuotis-` in
+  `viisikymmenvuotispäivä`) is the same combining-form shape as `-nen` ->
+  `-s`. Pinned by `a_numeral_combining_modifier_reaches_the_head`.
 
 ### Phase 3 — genitive-initial and coordinated compounds
 

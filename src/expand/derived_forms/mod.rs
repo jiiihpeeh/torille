@@ -433,6 +433,38 @@ pub(crate) fn modifier_is_known(modifier: &str) -> bool {
     {
         return true;
     }
+    // The `-as`/`-ias` adjective has the same `-s` combining stem:
+    // `viisikymmenvuotias` -> `viisikymmenvuotis-`
+    // (`viisikymmenvuotispäivä`). Reconstruct the citation from the stem so
+    // only a listed `-as` row licenses it.
+    if let Some(stem) = bare.strip_suffix('s')
+        && !stem.is_empty()
+        && crate::kotus::sanalista()
+            .by_word(&format!("{stem}as"))
+            .next()
+            .is_some()
+    {
+        return true;
+    }
+    // A compound modifier may itself be a numeral phrase whose tail is
+    // fixed:
+    //   * the tens -- `kaksikymmen` of `kaksikymmentä`, `kolmikymmen` of
+    //     `kolmekymmentä`, `seitsenkymmen` of `seitsemänkymmentä`. The first
+    //     member keeps its combining stem and `kymmen` is the class-32 noun;
+    //   * the teens -- `nelitoista` of `neljätoista`, `seitsentoista` of
+    //     `seitsemäntoista`, where `toista` stays fixed.
+    // `kaksikymmenvuotias` then inflects by its bound head `‑vuotias`
+    // (class 41) instead of producing no forms at all. The tail is accepted
+    // only after a known modifier, so an arbitrary fragment does not become
+    // one.
+    for tail in ["kymmen", "toista"] {
+        if let Some(prefix) = bare.strip_suffix(tail)
+            && !prefix.is_empty()
+            && modifier_is_known(prefix)
+        {
+            return true;
+        }
+    }
     // A combining form is also a nominal stem (`lanki-` of `lankki`,
     // `kolmi-` of `kolme`). The noun stem map contains every case stem,
     // including the adjective stem `irstai` (partitive plural of

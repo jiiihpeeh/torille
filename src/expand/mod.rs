@@ -2426,6 +2426,55 @@ mod tests {
         }
     }
 
+    /// A numeral's combining stem is a compound modifier.
+    ///
+    /// `kaksikymmenvuotias` is `kaksikymmen` (the combining stem of
+    /// `kaksikymmentä`) + the bound head `‑vuotias` (class 41). The
+    /// modifier check did not know the numeral shape, so the head was never
+    /// reached and the row produced no forms at all -- which is why
+    /// `kaksikymmenvuotiaalla` was unknown. `kolmi`/`neli`/`seitsen` are
+    /// the same shape through the bound rows `kolmi‑`, `neli‑`,
+    /// `seitsen‑`.
+    #[test]
+    fn a_numeral_combining_modifier_reaches_the_head() {
+        let cat = cat();
+        for (lemma, pos, want) in [
+            (
+                "kaksikymmenvuotias",
+                PartOfSpeech::Adjective,
+                "kaksikymmenvuotiaalla",
+            ),
+            (
+                "kolmikymmenvuotias",
+                PartOfSpeech::Adjective,
+                "kolmikymmenvuotiaana",
+            ),
+            (
+                "nelitoistavuotias",
+                PartOfSpeech::Adjective,
+                "nelitoistavuotiaaksi",
+            ),
+            (
+                "seitsentoistavuotias",
+                PartOfSpeech::Adjective,
+                "seitsentoistavuotiaan",
+            ),
+            // The `-s` stem of the same adjective: `viisikymmenvuotis-`
+            // in `viisikymmenvuotispäivä`.
+            (
+                "viisikymmenvuotispäivä",
+                PartOfSpeech::Noun,
+                "viisikymmenvuotispäivänä",
+            ),
+        ] {
+            let forms = inflect_all(lemma, &[], &cat, None, pos, false);
+            assert!(
+                forms.iter().any(|f| f.word == want),
+                "{lemma} does not emit {want}"
+            );
+        }
+    }
+
     #[test]
     fn a_classless_inen_adjective_inflects_as_class_38() {
         // `kovakorvainen` = `kova` + `korvainen`, `yksinkertainen` =

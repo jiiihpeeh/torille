@@ -1473,6 +1473,10 @@ mod tests {
             ("käräjätuvissa", "tupa"),
             ("toimeenpanijat", "panija"),
             ("keskenämme", "kesken"),
+            // `kaksikymmen` is the combining stem of `kaksikymmentä`; its
+            // head is the bound `‑vuotias` (class 41).
+            ("kaksikymmenvuotiaalla", "vuotias"),
+            ("seitsentoistavuotiaana", "vuotias"),
             ("lasittomat", "lasiton"),
             ("pihteihin", "pihdit"),
             ("jauhoitus", "jauhoitus"),
@@ -1607,7 +1611,10 @@ mod tests {
                 "{word} not accepted"
             );
         }
-        assert!(matches!(check_normal_fast("valtiatar", false), NormalizedOutcome::Lemma));
+        assert!(matches!(
+            check_normal_fast("valtiatar", false),
+            NormalizedOutcome::Lemma
+        ));
         assert!(matches!(
             check_normal_fast("valtijatar", false),
             NormalizedOutcome::Unknown
