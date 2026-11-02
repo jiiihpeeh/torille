@@ -95,7 +95,9 @@ pub(super) fn compound_head_forms(
         ) {
             continue;
         }
-        if !modifier_is_known(modifier) {
+        if !modifier_is_known(modifier)
+            && !classless_modifier_is_known(modifier, cat, lexicon)
+        {
             continue;
         }
         let pos = if pos == PartOfSpeech::Unknown {
@@ -130,6 +132,36 @@ pub(super) fn compound_head_forms(
         }
     }
     Vec::new()
+}
+
+/// Whether `modifier` is an inflected form of a classless compound.
+///
+/// The compile-time form set is built from the classed lemmas, so it has no
+/// `kotimaan` even though `kotimaa` is in the sanalista: a classless row is a
+/// compound, and its paradigm is built by this module. `kotimaanmatka` is
+/// `kotimaan` (the genitive of `kotimaa`) + `matka`, and without this the split
+/// is rejected and the whole word has no paradigm.
+///
+/// Only classless candidates are tried: a classed lemma's forms are already in
+/// the form set, so `modifier_is_known` has seen them.
+fn classless_modifier_is_known(
+    modifier: &str,
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+) -> bool {
+    for (at, _) in modifier.char_indices().skip(1) {
+        let base = &modifier[..at];
+        let mut rows = crate::kotus::sanalista().by_word(base).peekable();
+        if rows.peek().is_none() || !rows.all(|row| row.inflections().next().is_none()) {
+            continue;
+        }
+        for form in compound_head_forms(base, cat, lexicon, PartOfSpeech::Noun, true) {
+            if form.word == modifier {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 /// Whether `modifier` can be the first member of a compound. A trailing

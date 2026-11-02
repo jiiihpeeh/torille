@@ -131,11 +131,11 @@ Re-measured with the promotion in place:
 
 | status | count | what |
 |---|---:|---|
-| `confirmed` | 13,967 | every oracle-confirmed cell the engine reaches |
-| `missing` | 442 | three lemmas with no paradigm |
-| `not_plain` | 267 | the head's repaired forms (`tahdinlyöntein`) |
+| `confirmed` | 14,105 | every oracle-confirmed cell the engine reaches |
+| `missing` | 303 | two lemmas with no paradigm |
+| `not_plain` | 268 | the head's repaired forms (`tahdinlyöntein`) |
 | `illegal` | 0 | no plain form the oracle does not confirm |
-| `unsupported` | 571 | plain forms whose cell the oracle has no row for |
+| `unsupported` | 581 | plain forms whose cell the oracle has no row for |
 
 `aamuhartaus` is 160 plain forms; `pikkuaivot` 89 plain + 3 repaired (its
 `-in` variants); `happiradikaali` 160 plain + 19 repaired. The forms are plain
@@ -143,15 +143,19 @@ in `inflect` and the binding, but the reverse index still holds only the
 citation form for a classless row, so `check_fast`/`suggest` do not see them —
 the same limit as compound analysis in the fast path.
 
-The 442 missing are three shapes, and they are the next work:
+`kotimaanmatka` was the first of the missing three and is fixed: its modifier
+is the genitive of a *classless* compound (`kotimaa`), which the compile-time
+form set does not hold, so `classless_modifier_is_known` inflects the classless
+base and matches the surface. Pinned by
+`a_classless_modifier_resolves_through_its_own_compound`.
 
-- `kotimaanmatka` — the modifier is the genitive of a *classless* compound
-  (`kotimaa`), and the reverse index holds only its citation form, so
-  `kotimaan` is not a known form and the split fails. Fixing it means indexing
-  classless forms, or resolving the modifier recursively.
-- `leijupakastus` — the head is a derived noun (`pakastaa` + `-us`), and
-  `compound_head_forms` needs a head lemma.
-- `kos-salaatti` — a hyphen the ordinary split does not handle.
+The 303 left are two shapes:
+
+- `leijupakastus` — the modifier is a verb stem (`leiju-` of `leijua`), and
+  `modifier_is_known` deliberately accepts only nominal stems. A verb-stem
+  modifier is real in this family (`leijukerros`, `leijupata`), so the rule
+  needs a considered exception rather than a blanket one.
+- `kos-salaatti` — a lexical hyphen the ordinary split does not handle.
 
 ### Phase 3 — genitive-initial and coordinated compounds
 

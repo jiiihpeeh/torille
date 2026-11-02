@@ -2124,6 +2124,23 @@ mod tests {
     }
 
     #[test]
+    fn a_classless_modifier_resolves_through_its_own_compound() {
+        // `kotimaanmatka` = `kotimaan` + `matka`. The modifier is the genitive
+        // of `kotimaa`, which is classless, so the compile-time form set does
+        // not hold `kotimaan`; the modifier is resolved by inflecting the
+        // classless base (`koti` + `maa`) and matching the surface.
+        let cat = cat();
+        let forms = inflect_all("kotimaanmatka", &[], &cat, None, PartOfSpeech::Noun, true);
+        let words: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
+        for want in ["kotimaanmatkan", "kotimaanmatkassa", "kotimaanmatkoja"] {
+            assert!(
+                words.contains(&want),
+                "kotimaanmatka does not inflect to {want}"
+            );
+        }
+    }
+
+    #[test]
     fn a_classless_inen_adjective_inflects_as_class_38() {
         // `kovakorvainen` = `kova` + `korvainen`, `yksinkertainen` =
         // `yksin`/`yksi` + `kertainen`: the head is a *derived* `-inen`
