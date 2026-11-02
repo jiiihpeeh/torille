@@ -545,9 +545,15 @@ fn lemma_emit(
     pos: PartOfSpeech,
     possessives: bool,
 ) -> bool {
-    inflect_all(lemma.word, &lemma.inflections, cat, None, pos, possessives)
-        .iter()
-        .any(|f| f.word == word)
+    super::emits_form(
+        lemma.word,
+        &lemma.inflections,
+        cat,
+        None,
+        pos,
+        possessives,
+        word,
+    )
 }
 
 /// All lemmas whose word starts with `prefix`, in word order.

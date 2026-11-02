@@ -50,6 +50,42 @@ needs Phase 3.
 
 ## Progress
 
+### 2026-11-02 — P1.3: `emits_form`
+
+`inflect_all` lists a paradigm: it deduplicates with a
+`HashSet<(String, Confidence, Vec<Tags>)>`, cloning every word and reading. The
+stem-map gates only ask "is this one form in the paradigm", and paid that clone
+for every other form.
+
+`expand::emits_form` walks the same engines, stops at the first match, and keeps
+the derived layers (`degree_forms`, `numeral_forms`) so `pahempi` is still a
+form of `paha`. A classless lemma has nothing but those layers and the compound
+fallbacks, so it takes the full `inflect_all` path. It is used by `lemma_emit`
+(`find_bases`) and by gate 4, gate 4b and the possessive-noun verifier
+(`check_normal`).
+
+| corpus (2000 tokens) | before | after |
+|---|---:|---:|
+| `45448.txt` | 2,245 ms | **1,970 ms** |
+| `45448.txt` p95 | 2,858 µs | **1,522 µs** |
+| `7000.txt` | 10,077 ms | **9,601 ms** |
+| unknown tokens | 293 / 566 | 293 / 566 (unchanged) |
+
+`huomasi -> huomata` and `puhtaassa -> puhdas` still resolve; the answers and
+the unknown count are unchanged, and
+`expand::tests::emits_form_agrees_with_inflect_all` pins the function against
+the full list on noun, adjective and verb forms.
+
+Baseline note: the 2026-10-29 DP number for `45448` was 1.69 s. The morphology
+commits after it (`5c3290f`, `231d284`, `65f4d4e`, `d5c4587`, `916a89d`,
+`2828978`, `3dc6c17`, `20c376d`) added gates for correctness, so today's
+pre-P1.3 number was 2.245 s, not 1.69 s. The new baseline is 1.97 s.
+
+The remaining tail is gate 5 (`find_bases_with`), not the stem maps:
+`valentine` 165 ms, `tapasitteko` 112 ms, `the` 109 ms, `triestistä` 102 ms on
+`45448`. That is P1.4 (bound the engine fallback) and P2.4 (morphology-driven
+candidate discovery), which are the next levers.
+
 ### 2026-11-02 — the reverse index build (`check`/`lookup` start-up)
 
 `tools/src/bin/perf_index.rs` measures the build that `check` and `lookup` do
@@ -419,13 +455,14 @@ Expected: `check("talossa")` and every ordinary inflected form drop from
 (`src/expand/mod.rs`, `src/expand/inflect.rs`, gate 4/4b in
 `src/expand/check_normal.rs`)
 
-- [ ] Add `emits_form(lemma, inflections, cat, pos, word) -> bool`, using the
-      class's slot table (`expand/slot.rs`) and stems to try only the slots
-      whose ending can produce `word` (length-compatible, harmony-compatible,
-      gradation-compatible).
-- [ ] Make `lemma_emit` in `find_bases.rs` and the stem-map verifiers in
+- [x] Add `emits_form(lemma, inflections, cat, pos, word) -> bool`. First cut:
+      walks the same engines and stops at the first match, skipping
+      `inflect_all`'s dedup clone; the degree and numeral layers stay.
+      The slot-level reverse match (ending + stem + gradation) is still open —
+      it is the next step after P1.4.
+- [x] Make `lemma_emit` in `find_bases.rs` and the stem-map verifiers in
       `check_normal.rs` use it.
-- [ ] Keep `inflect_all` unchanged for callers that need the paradigm
+- [x] Keep `inflect_all` unchanged for callers that need the paradigm
       (`inflect` tool, reranker, tests).
 
 Expected: gate 4/4b verification (`huomasi` 40 ms, `valentine` 150 ms) stops

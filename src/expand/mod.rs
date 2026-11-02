@@ -441,6 +441,51 @@ pub fn inflect_all(
     out
 }
 
+/// Whether `lemma` under `inflections` produces `word`.
+///
+/// [`inflect_all`] exists to *list* a paradigm: it deduplicates with a
+/// `HashSet<(String, Confidence, Vec<Tags>)>`, cloning every word and reading.
+/// A caller that only asks "is this one form in the paradigm" pays that clone
+/// for every other form, and the stem-map gates ask it thousands of times. This
+/// walks the same engines and stops at the first match.
+///
+/// The derived layers are kept (`degree_forms`, `numeral_forms`), because a
+/// surface such as `pahempi` is a form of `paha` only through them. A classless
+/// lemma has nothing but those layers and the compound fallbacks, so it takes
+/// the full [`inflect_all`] path.
+pub fn emits_form(
+    lemma: &str,
+    inflections: &[Inflection],
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+    pos: PartOfSpeech,
+    possessives: bool,
+    word: &str,
+) -> bool {
+    if inflections.is_empty() {
+        return inflect_all(lemma, inflections, cat, lexicon, pos, possessives)
+            .iter()
+            .any(|f| f.word == word);
+    }
+    for inflection in inflections {
+        if inflect_in(lemma, *inflection, cat, lexicon, pos, possessives)
+            .iter()
+            .any(|f| f.word == word)
+        {
+            return true;
+        }
+    }
+    if degree_forms(lemma, cat, lexicon)
+        .iter()
+        .any(|f| f.word == word)
+    {
+        return true;
+    }
+    numeral_forms(lemma, cat, lexicon)
+        .iter()
+        .any(|f| f.word == word)
+}
+
 /// Generates every form of `lemma` under `inflection` whose readings
 /// fit `want`, tagged.
 ///
@@ -2133,6 +2178,55 @@ mod tests {
             words.contains(&"luonnonkaasun"),
             "luonnonkaasu does not inflect to luonnonkaasun"
         );
+    }
+
+    /// `emits_form` answers exactly what listing the paradigm would.
+    ///
+    /// It exists to skip the dedup clone in `inflect_all`, not to change the
+    /// answer: every word the full list holds must be `true`, and a word it
+    /// does not hold `false`, including the degree forms (`pahempi`) and the
+    /// verb forms.
+    #[test]
+    fn emits_form_agrees_with_inflect_all() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let index = LexiconIndex::new(&lexicon);
+        let cases: &[(&str, &[&str])] = &[
+            ("puhdas", &["puhtaan", "puhtaassa", "puhtaat", "puhtaampi", "puhtain"]),
+            ("huomata", &["huomasi", "huomaan", "huomannut", "huomattiin"]),
+            ("talo", &["talossa", "talon", "taloja", "taloton"]),
+            ("paha", &["pahempi", "pahin", "pahaa"]),
+            ("kissa", &["kissalle", "kissatta", "kissoja"]),
+        ];
+        for &(lemma_word, words) in cases {
+            let lemma = lexicon
+                .iter()
+                .find(|l| l.word == lemma_word)
+                .unwrap_or_else(|| panic!("{lemma_word} is not in the lexicon"));
+            let pos = PartOfSpeech::inflecting_reading(lemma.part_of_speech);
+            for &word in words {
+                let listed = inflect_all(
+                    lemma.word,
+                    &lemma.inflections,
+                    &cat,
+                    Some(&index),
+                    pos,
+                    false,
+                )
+                .iter()
+                .any(|f| f.word == word);
+                let emitted = emits_form(
+                    lemma.word,
+                    &lemma.inflections,
+                    &cat,
+                    Some(&index),
+                    pos,
+                    false,
+                    word,
+                );
+                assert_eq!(listed, emitted, "{lemma_word} / {word}");
+            }
+        }
     }
 
     /// A classless compound is classified by its head, not by its ending.

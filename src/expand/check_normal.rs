@@ -979,15 +979,15 @@ pub fn find_base_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) -> O
             let mut hit = false;
             for lemma in crate::kotus::sanalista().by_word(base) {
                 let inflections: Vec<_> = lemma.inflections().collect();
-                let forms = inflect_all(
+                if crate::expand::emits_form(
                     lemma.word(),
                     &inflections,
                     cat(),
                     None,
                     lemma_pos(&lemma, pos),
                     false,
-                );
-                if forms.iter().any(|f| f.word == word) {
+                    word,
+                ) {
                     hit = true;
                     break;
                 }
@@ -1062,15 +1062,15 @@ pub fn find_base_via_verb_stem_map(word: &str, verbose: bool) -> Option<String> 
                 let mut hit = false;
                 for lemma in crate::kotus::sanalista().by_word(base) {
                     let inflections: Vec<_> = lemma.inflections().collect();
-                    let forms = inflect_all(
+                    if crate::expand::emits_form(
                         lemma.word(),
                         &inflections,
                         cat(),
                         None,
                         lemma_pos(&lemma, PartOfSpeech::Verb),
                         false,
-                    );
-                    if forms.iter().any(|f| f.word == word) {
+                        word,
+                    ) {
                         hit = true;
                         break;
                     }
@@ -1104,15 +1104,15 @@ fn find_base_via_possessive_noun(stem: &str, possessive_word: &str) -> Option<St
     for base in STEM_BUCKETS_NOUN.bases(stem) {
         for lemma in crate::kotus::sanalista().by_word(base) {
             let inflections: Vec<_> = lemma.inflections().collect();
-            let forms = inflect_all(
+            if crate::expand::emits_form(
                 lemma.word(),
                 &inflections,
                 cat(),
                 None,
                 lemma_pos(&lemma, PartOfSpeech::Noun),
                 /* possessives = */ true,
-            );
-            if forms.iter().any(|f| f.word == possessive_word) {
+                possessive_word,
+            ) {
                 return Some(base.to_string());
             }
         }
