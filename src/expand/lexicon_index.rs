@@ -93,6 +93,16 @@ impl<'a> LexiconIndex<'a> {
         Self { lexicon }
     }
 
+    /// The lexicon the two orders index into.
+    ///
+    /// Exposed for the callers that need the slice rather than the index: the
+    /// reverse lookup (`find_bases_with`) takes the lexicon directly, and a
+    /// compound modifier with gradation (`puhtaaksi` of `puhdas`) can only be
+    /// resolved that way.
+    pub fn lemmas(&self) -> &'a [Lemma<'a>] {
+        self.lexicon
+    }
+
     /// The rows gathered for one word, in **lexicon order** and without repeats.
     ///
     /// Two things have to be undone. The scans come out in sorted order because

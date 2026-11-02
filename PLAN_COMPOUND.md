@@ -188,11 +188,18 @@ are verb classes, and runs `inflect_paradigms` on the head. Two details matter:
   only for a verb head, where the head constraint keeps it off nominal
   compounds.
 
-266 of the 269 inflect. The three left are `puhtaaksikirjoittaa` and
-`puhtaaksimuurata` (the modifier `puhtaaksi` is the translative of `puhdas`,
-and the gradation `d` -> `t` means no lemma is a prefix of the surface), and
-`riippuliitää` (a verb-stem modifier, which `modifier_is_known` deliberately
-rejects). Pinned by `a_classless_verb_inflects_by_its_verb_head`.
+All 269 inflect. Two modifier shapes needed more than the prefix probe:
+
+- `puhtaaksikirjoittaa`, `puhtaaksimuurata` — `puhtaaksi` is the translative of
+  `puhdas`, and the `d` -> `t` gradation means no lemma is a prefix of the
+  surface. `verb_modifier_is_known` falls back to the engine's reverse lookup
+  (`find_bases_with`), which handles gradation.
+- `riippuliitää` — `riippu` is the stem of `riippua`, and `modifier_is_known`
+  deliberately accepts only nominal stems. The verb path checks the verb stem
+  map, where the head is a verb and the widening cannot reach a nominal
+  compound.
+
+Pinned by `a_classless_verb_inflects_by_its_verb_head`.
 
 ### Phase 5 — phrases and ambiguity
 

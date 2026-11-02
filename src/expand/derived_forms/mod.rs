@@ -226,6 +226,28 @@ fn verb_modifier_is_known(
             }
         }
     }
+    // A verb stem is a modifier in its own right: `riippu` of `riippua` in
+    // `riippuliitää` (`riippumatto`, `riippuliidin`). `modifier_is_known`
+    // deliberately accepts only nominal stems, so this is checked here, where
+    // the head is a verb and the widening cannot reach a nominal compound.
+    let bare = modifier.strip_suffix('-').unwrap_or(modifier);
+    for base in crate::expand::check_normal::STEM_BUCKETS_VERB.bases(bare) {
+        if let Some(row) = crate::kotus::sanalista().by_word(base).next()
+            && PartOfSpeech::parse_all(row.part_of_speech()).contains(&PartOfSpeech::Verb)
+        {
+            return true;
+        }
+    }
+    // A gradation inside the modifier means no lemma is a prefix of the
+    // surface: `puhtaaksi` is the translative of `puhdas`, and `puhdas` is not
+    // a prefix of `puhtaaksi`. The engine's reverse lookup handles gradation,
+    // so it is the last resort.
+    if let Some(index) = lexicon {
+        let report = crate::expand::find_bases_with(index.lemmas(), cat, modifier);
+        if !report.bases.is_empty() {
+            return true;
+        }
+    }
     false
 }
 

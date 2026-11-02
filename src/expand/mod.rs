@@ -2164,6 +2164,20 @@ mod tests {
                 "aikaansaada does not inflect to {want}"
             );
         }
+
+        // A gradation in the modifier (`puhdas` -> `puhtaaksi`) needs the
+        // reverse lookup; a verb stem (`riippu` of `riippua`) needs the verb
+        // stem map.
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let index = LexiconIndex::new(&lexicon);
+        for (lemma, want) in [
+            ("puhtaaksikirjoittaa", "puhtaaksikirjoitan"),
+            ("riippuliitää", "riippuliidän"),
+        ] {
+            let forms = inflect_all(lemma, &[], &cat, Some(&index), PartOfSpeech::Verb, false);
+            let words: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
+            assert!(words.contains(&want), "{lemma} does not inflect to {want}");
+        }
     }
 
     #[test]
