@@ -2139,9 +2139,9 @@ mod tests {
     ///
     /// Kotus omits the type of a compound because it declines like its final
     /// component, so the head's class is the compound's class. The head must be
-    /// a listed nominal (a lemma or a bound form like `‑mielisyys`); a case or
-    /// personal ending is not a head, and a word whose modifier cannot be
-    /// resolved is left unclassified rather than guessed at.
+    /// a listed **free** nominal; a bound head is a suffix, a non-nominal
+    /// suffix is not a head, and a word whose modifier cannot be resolved is
+    /// left unclassified rather than guessed at.
     #[test]
     fn a_classless_compound_takes_its_heads_class() {
         let cat = cat();
@@ -2153,12 +2153,16 @@ mod tests {
             ("pikkuaivot", 1),           // aivot
             ("kaskinauris", 41),         // nauris
             ("illallistanssiaiset", 38), // tanssiaiset
-            ("leikkimielisyys", 40),     // the listed bound head ‑mielisyys
         ] {
             let inflections = head_inflections(word, &cat, Some(&index))
                 .unwrap_or_else(|| panic!("{word} was not classified"));
             assert_eq!(inflections[0].class, class, "{word}");
         }
+        // A bound head is a suffix, not a word: `leikkimielisyys` is `leikki` +
+        // the listed `‑mielisyys`, and taking that class would be taking a class
+        // from an ending. It must not fall through to the shorter head `syys`
+        // (class 99) either.
+        assert!(head_inflections("leikkimielisyys", &cat, Some(&index)).is_none());
         // `kuin` is a conjunction, not a nominal head, so `ennenkuin` keeps no
         // class rather than taking a suffix for one.
         assert!(head_inflections("ennenkuin", &cat, Some(&index)).is_none());

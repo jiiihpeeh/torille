@@ -67,40 +67,44 @@ pub(super) fn compound_head_forms(
     pos: PartOfSpeech,
     possessives: bool,
 ) -> Vec<Generated> {
-    let Some(head) = classless_head(lemma, cat, lexicon) else {
-        return Vec::new();
-    };
-    // The compound's reading is the lemma's, not the head's: `aamukylmä` and
-    // `aamuvarhainen` are `adjektiivi, substantiivi` even though their heads are
-    // adjective-first or adjective-only, and their possessive forms must carry
-    // the noun reading. Taking the head's first reading made `aamukylmienne`
-    // and `aamuvarhaiseemme` adjectives.
-    let pos = if pos == PartOfSpeech::Unknown {
-        head.pos
-    } else {
-        pos
-    };
-    let mut out: Vec<Generated> = Vec::new();
-    // A noun compound does not take the head's adjective degrees:
-    // `happiradikaali` is a noun, and `happiradikaaleimmittaan` is not a word.
-    // An adjective compound does take them -- `tummanpunaisempi` is `tumman` +
-    // `punaisempi` -- so only the nominal case drops the derived layers.
-    let head_forms = if pos == PartOfSpeech::Adjective {
-        inflect_all(head.word, &head.inflections, cat, lexicon, pos, possessives)
-    } else {
-        super::inflect_paradigms(head.word, &head.inflections, cat, lexicon, pos, possessives)
-    };
-    for form in head_forms {
-        // The compound is as trustworthy as its head: a plain head form gives a
-        // plain compound form, and a repaired one (`väkein` for `väkien`) stays
-        // repaired rather than being promoted by the prefix. The modifier only
-        // adds the prefix; it does not repair anything.
-        out.push(
-            Generated::new(format!("{}{}", head.modifier, form.word), form.union())
-                .with(form.confidence),
-        );
+    for head in classless_heads(lemma, cat, lexicon) {
+        // The compound's reading is the lemma's, not the head's: `aamukylmä`
+        // and `aamuvarhainen` are `adjektiivi, substantiivi` even though their
+        // heads are adjective-first or adjective-only, and their possessive
+        // forms must carry the noun reading. Taking the head's first reading
+        // made `aamukylmienne` and `aamuvarhaiseemme` adjectives.
+        let pos = if pos == PartOfSpeech::Unknown {
+            head.pos
+        } else {
+            pos
+        };
+        let mut out: Vec<Generated> = Vec::new();
+        // A noun compound does not take the head's adjective degrees:
+        // `happiradikaali` is a noun, and `happiradikaaleimmittaan` is not a
+        // word. An adjective compound does take them -- `tummanpunaisempi` is
+        // `tumman` + `punaisempi` -- so only the nominal case drops the
+        // derived layers.
+        let head_forms = if pos == PartOfSpeech::Adjective {
+            inflect_all(head.word, &head.inflections, cat, lexicon, pos, possessives)
+        } else {
+            super::inflect_paradigms(head.word, &head.inflections, cat, lexicon, pos, possessives)
+        };
+        for form in head_forms {
+            // The compound is as trustworthy as its head: a plain head form
+            // gives a plain compound form, and a repaired one (`väkein` for
+            // `väkien`) stays repaired rather than being promoted by the
+            // prefix. The modifier only adds the prefix; it does not repair
+            // anything.
+            out.push(
+                Generated::new(format!("{}{}", head.modifier, form.word), form.union())
+                    .with(form.confidence),
+            );
+        }
+        if !out.is_empty() {
+            return out;
+        }
     }
-    out
+    Vec::new()
 }
 
 /// The split of a classless compound: its modifier, its head and the head's
@@ -110,19 +114,27 @@ struct ClasslessHead<'a> {
     word: &'a str,
     inflections: Vec<Inflection>,
     pos: PartOfSpeech,
+    /// Whether the head is a bound form (`‑mielisyys`), not a free lemma.
+    ///
+    /// A bound form is inflected as a head but is a suffix, not a word, so it
+    /// does not classify the compound; see [`head_inflections`].
+    bound: bool,
 }
 
-/// Finds the head of a classless compound.
+/// The heads of a classless compound, longest first.
 ///
-/// The split is the first boundary whose right half is a classed nominal and
-/// whose left half is a word, a form, a stem or a bound prefix. The head's
-/// class is what the compound declines as: Kotus omits the type of a compound
-/// because it declines like its final component.
-fn classless_head<'a>(
+/// A split is a boundary whose right half is a classed nominal and whose left
+/// half is a word, a form, a stem or a bound prefix. The head's class is what
+/// the compound declines as: Kotus omits the type of a compound because it
+/// declines like its final component. More than one split can pass (a word can
+/// have a compound head that is itself a compound), and the caller takes the
+/// first whose paradigm is not empty.
+fn classless_heads<'a>(
     lemma: &'a str,
     cat: &Catalogues,
     lexicon: Option<&LexiconIndex>,
-) -> Option<ClasslessHead<'a>> {
+) -> Vec<ClasslessHead<'a>> {
+    let mut heads = Vec::new();
     for split in 1..lemma.len() {
         if !lemma.is_char_boundary(split) {
             continue;
@@ -151,29 +163,44 @@ fn classless_head<'a>(
         {
             continue;
         }
-        return Some(ClasslessHead {
+        // `compound_head_row` also accepts the bound spelling (`‑head`); a
+        // head found only that way is a suffix, not a word.
+        let bound = crate::kotus::sanalista().get(head).is_none();
+        heads.push(ClasslessHead {
             modifier,
             word: head,
             inflections,
             pos: top,
+            bound,
         });
     }
-    None
+    heads
 }
 
 /// The classes a classless compound declines as: its head's.
 ///
 /// Kotus omits the type of a compound because it declines like its final
 /// component, so the head's class is not a guess: `aamuhartaus` is `aamu` +
-/// `hartaus`, and its paradigm is class 32's with the modifier in front.
-/// `None` when the head is not a classed nominal, or no split passes the
-/// modifier check (a derived head, a verb stem, ...).
+/// `hartaus`, and its paradigm is class 40's with the modifier in front.
+///
+/// A **bound** head does not classify: `‑mielisyys` in `leikkimielisyys` is a
+/// listed head the engine inflects, but it is a suffix, not a word, and a class
+/// taken from it would be a class taken from an ending. The first split is the
+/// longest head, so the answer is `None` rather than the class of a shorter
+/// head further in: `leikkimielisyys` must not become class 99 through `syys`.
+///
+/// `None` also when the head is not a classed nominal, or no split passes the
+/// modifier check (a derived head, a verb stem, an unresolved modifier).
 pub fn head_inflections(
     lemma: &str,
     cat: &Catalogues,
     lexicon: Option<&LexiconIndex>,
 ) -> Option<Vec<Inflection>> {
-    classless_head(lemma, cat, lexicon).map(|head| head.inflections)
+    let head = classless_heads(lemma, cat, lexicon).into_iter().next()?;
+    if head.bound {
+        return None;
+    }
+    Some(head.inflections)
 }
 
 /// The forms of a classless lemma that is a compound with a verb head.
@@ -620,4 +647,3 @@ pub(super) fn degree_forms(
     }
     out
 }
-

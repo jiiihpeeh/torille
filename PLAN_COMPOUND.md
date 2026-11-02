@@ -112,15 +112,18 @@ so it reads as `genitive-initial`. The inflector is unaffected; this is an
 number, so the 56 486 rows are no longer invisible. They are **classified by
 their head** (`expand::head_inflections`): Kotus omits the type of a compound
 because it declines like its final component, so the head's class is the
-compound's class. The head must be a **listed nominal** — a lemma (`hartaus` in
-`aamuhartaus`, class 40) or a bound head the engine already inflects
-(`‑mielisyys` in `leikkimielisyys`, class 40). A case or personal ending is not
-a head, and a word whose modifier cannot be resolved is left at the bare
-`(none)` rather than guessed at: `ennenkuin` (`kuin` is a conjunction) and
-`kylmäverihevonen` (the modifier `kylmäveri` is an unlisted compound) both stay
-unclassified. The report buckets each row under `(none:<class>)`, which
-attributes a defect to the class engine that actually produced the form. Of the
-50 449 classless nouns, 46 536 classify and 3 913 do not.
+compound's class. The head must be a **listed free nominal** — a lemma, as
+`hartaus` is in `aamuhartaus` (class 40). A **bound** head is a suffix, not a
+word, so it does not classify: `leikkimielisyys` is `leikki` + the listed
+`‑mielisyys`, and taking that class would be taking a class from an ending. The
+first split is the longest head, so the answer is `(none)` rather than the class
+of a shorter head further in — `leikkimielisyys` must not become class 99
+through `syys`. A case or personal ending is not a head at all (`ennenkuin`,
+where `kuin` is a conjunction), and a word whose modifier cannot be resolved is
+left unclassified too (`kylmäverihevonen`: `kylmäveri` is an unlisted compound).
+The report buckets each row under `(none:<class>)`, which attributes a defect to
+the class engine that produced the form. Of the 50 449 classless nouns, 46 152
+classify and 4 297 do not.
 
 The first measurement on a 100-lemma sample (96 checked, 4 skipped) was 14,286
 `not_plain` and 442 `missing`: the engine produced every confirmed form, but as
