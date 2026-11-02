@@ -1121,14 +1121,26 @@ fn step(lemma: &str, rule: &Rule) -> Option<String> {
     step_with(lemma, rule, None)
 }
 
+/// One sanalista row that carries derivation flags.
+type Row = (&'static str, &'static str, &'static str, &'static str);
+
+/// The derived tables built from one chunk of the flagged rows.
+#[derive(Default)]
+struct Partial {
+    forms: Vec<(String, &'static str)>,
+    by_form: HashMap<String, &'static str>,
+    nominal: HashSet<String>,
+    modifiers: HashSet<String>,
+}
+
 fn derived() -> &'static Derived {
     static CELL: OnceLock<Derived> = OnceLock::new();
     CELL.get_or_init(|| {
         let cat = Catalogues::embedded();
-        let mut forms = Vec::new();
-        let mut by_form = HashMap::new();
-        let mut nominal = HashSet::new();
-        let mut modifiers = HashSet::new();
+        // The parse is negligible (28 µs); the work is inflecting every
+        // derived lemma, which is why it is split across the cores. A few
+        // thousand lemmas were 90 ms single-threaded.
+        let mut rows: Vec<Row> = Vec::new();
         for line in crate::SANALISTA.lines().skip(1) {
             let mut fields = line.split('\t');
             let Some(base) = fields.next().map(str::trim).filter(|w| !w.is_empty()) else {
@@ -1138,107 +1150,157 @@ fn derived() -> &'static Derived {
             let pos_name = fields.next().unwrap_or("").trim();
             let class_name = fields.next().unwrap_or("").trim();
             let flags = fields.next().unwrap_or("").trim();
-            let (base_class_text, base_gradation_text) =
-                class_name.split_once('*').unwrap_or((class_name, ""));
-            let base_class = base_class_text.parse::<u16>().unwrap_or(0);
-            let base_gradation = base_gradation_text
-                .chars()
-                .next()
-                .map(|c| c.to_ascii_uppercase())
-                .filter(|c| c.is_ascii_uppercase())
-                .map(|c| Gradation(c as u8 - b'A' + 1));
-            if flags.is_empty() {
-                continue;
+            if !flags.is_empty() {
+                rows.push((base, pos_name, class_name, flags));
             }
-            let Some(base_pos) = crate::tags::PartOfSpeech::parse_all(pos_name)
-                .first()
-                .copied()
-            else {
-                continue;
-            };
-            for chain in flags.split(';').map(str::trim).filter(|c| !c.is_empty()) {
-                // Each chain starts from the base row's POS. Without this,
-                // a preceding adjective-output flag (e.g. `PRIV_TON`) would
-                // make the next noun-input flag fail.
-                let mut pos = base_pos;
-                let mut lemma = base.to_string();
-                for part in chain.split('>').map(str::trim).filter(|p| !p.is_empty()) {
-                    let (code, class) = part.split_once(':').unwrap_or((part, ""));
-                    let Some(rule) = RULES.iter().find(|r| r.code == code) else {
-                        break;
-                    };
-                    if rule.input != pos
-                        || (!rule.input_classes.is_empty()
-                            && !rule.input_classes.contains(&base_class))
-                    {
-                        break;
-                    }
-                    let Some(next) = step_with(&lemma, rule, base_gradation) else {
-                        break;
-                    };
-                    lemma = next;
-                    pos = rule.output;
-                    let (class_text, gradation_text) = class.split_once('*').unwrap_or((class, ""));
-                    let class = class_text.parse::<u16>().unwrap_or(rule.class);
-                    let gradation = if rule.inherit_gradation {
-                        base_gradation
-                    } else {
-                        gradation_text
-                            .chars()
-                            .next()
-                            .map(|c| c.to_ascii_uppercase())
-                            .filter(|c| c.is_ascii_uppercase())
-                            .map(|c| Gradation(c as u8 - b'A' + 1))
-                            .or(rule.gradation)
-                    };
-                    let lemma: &'static str = Box::leak(lemma.clone().into_boxed_str());
-                    if pos == PartOfSpeech::Adverb {
-                        // Adverbs are indeclinable; class 99 is only a
-                        // storage marker, so expose the surface itself.
-                        by_form.insert(lemma.to_string(), lemma);
-                        forms.push((lemma.to_string(), lemma));
+        }
+        let threads = super::find_bases::worker_count().min(rows.len()).max(1);
+        let partials: Vec<Partial> = if threads <= 1 {
+            vec![build_rows(&rows, cat)]
+        } else {
+            // Only ~55 rows carry flags, so the share cannot have a floor of
+            // 64 (that made one chunk and no parallelism at all). Two rows
+            // per chunk spreads the heavy `-minen` chains.
+            let share = (rows.len() / (threads * 2)).max(1);
+            let chunks: Vec<&[Row]> = rows.chunks(share).collect();
+            std::thread::scope(|scope| {
+                let handles: Vec<_> = chunks
+                    .iter()
+                    .map(|chunk| scope.spawn(move || build_rows(chunk, cat)))
+                    .collect();
+                handles
+                    .into_iter()
+                    .filter_map(|handle| handle.join().ok())
+                    .collect()
+            })
+        };
+        let mut out = Partial::default();
+        let forms_total: usize = partials.iter().map(|p| p.forms.len()).sum();
+        out.forms.reserve(forms_total);
+        out.by_form.reserve(forms_total);
+        out.nominal.reserve(forms_total);
+        out.modifiers.reserve(partials.iter().map(|p| p.modifiers.len()).sum());
+        for partial in partials {
+            out.forms.extend(partial.forms);
+            out.by_form.extend(partial.by_form);
+            out.nominal.extend(partial.nominal);
+            out.modifiers.extend(partial.modifiers);
+        }
+        Derived {
+            forms: out.forms,
+            by_form: out.by_form,
+            nominal: out.nominal,
+            modifiers: out.modifiers,
+        }
+    })
+}
+
+/// Builds the derived tables for one chunk of flagged rows.
+fn build_rows(rows: &[Row], cat: &Catalogues) -> Partial {
+    let mut forms = Vec::new();
+    let mut by_form = HashMap::new();
+    let mut nominal = HashSet::new();
+    let mut modifiers = HashSet::new();
+    for &(base, pos_name, class_name, flags) in rows {
+        let (base_class_text, base_gradation_text) =
+            class_name.split_once('*').unwrap_or((class_name, ""));
+        let base_class = base_class_text.parse::<u16>().unwrap_or(0);
+        let base_gradation = base_gradation_text
+            .chars()
+            .next()
+            .map(|c| c.to_ascii_uppercase())
+            .filter(|c| c.is_ascii_uppercase())
+            .map(|c| Gradation(c as u8 - b'A' + 1));
+        if flags.is_empty() {
+            continue;
+        }
+        let Some(base_pos) = crate::tags::PartOfSpeech::parse_all(pos_name)
+            .first()
+            .copied()
+        else {
+            continue;
+        };
+        for chain in flags.split(';').map(str::trim).filter(|c| !c.is_empty()) {
+            // Each chain starts from the base row's POS. Without this,
+            // a preceding adjective-output flag (e.g. `PRIV_TON`) would
+            // make the next noun-input flag fail.
+            let mut pos = base_pos;
+            let mut lemma = base.to_string();
+            for part in chain.split('>').map(str::trim).filter(|p| !p.is_empty()) {
+                let (code, class) = part.split_once(':').unwrap_or((part, ""));
+                let Some(rule) = RULES.iter().find(|r| r.code == code) else {
+                    break;
+                };
+                if rule.input != pos
+                    || (!rule.input_classes.is_empty() && !rule.input_classes.contains(&base_class))
+                {
+                    break;
+                }
+                let Some(next) = step_with(&lemma, rule, base_gradation) else {
+                    break;
+                };
+                lemma = next;
+                pos = rule.output;
+                let (class_text, gradation_text) = class.split_once('*').unwrap_or((class, ""));
+                let class = class_text.parse::<u16>().unwrap_or(rule.class);
+                let gradation = if rule.inherit_gradation {
+                    base_gradation
+                } else {
+                    gradation_text
+                        .chars()
+                        .next()
+                        .map(|c| c.to_ascii_uppercase())
+                        .filter(|c| c.is_ascii_uppercase())
+                        .map(|c| Gradation(c as u8 - b'A' + 1))
+                        .or(rule.gradation)
+                };
+                let lemma: &'static str = Box::leak(lemma.clone().into_boxed_str());
+                if pos == PartOfSpeech::Adverb {
+                    // Adverbs are indeclinable; class 99 is only a
+                    // storage marker, so expose the surface itself.
+                    by_form.insert(lemma.to_string(), lemma);
+                    forms.push((lemma.to_string(), lemma));
+                    continue;
+                }
+                if pos == PartOfSpeech::Noun
+                    && let Some(stem) = lemma.strip_suffix("minen")
+                {
+                    modifiers.insert(format!("{stem}mis"));
+                }
+                let generated = inflect_all(
+                    lemma,
+                    &[Inflection { class, gradation }],
+                    cat,
+                    None,
+                    pos,
+                    true,
+                );
+                for form in generated {
+                    if form.word.is_empty() || form.word.contains(' ') {
                         continue;
                     }
-                    if pos == PartOfSpeech::Noun
-                        && let Some(stem) = lemma.strip_suffix("minen")
-                    {
-                        modifiers.insert(format!("{stem}mis"));
+                    if matches!(pos, PartOfSpeech::Noun | PartOfSpeech::Adjective) {
+                        nominal.insert(form.word.clone());
                     }
-                    let generated = inflect_all(
-                        lemma,
-                        &[Inflection { class, gradation }],
-                        cat,
-                        None,
-                        pos,
-                        true,
-                    );
-                    for form in generated {
-                        if form.word.is_empty() || form.word.contains(' ') {
-                            continue;
-                        }
-                        if matches!(pos, PartOfSpeech::Noun | PartOfSpeech::Adjective) {
-                            nominal.insert(form.word.clone());
-                        }
-                        by_form.insert(form.word.clone(), lemma);
-                        forms.push((form.word, lemma));
-                    }
-                    if code == "ACTION_MIMEN"
-                        && let Some(stem) = lemma.strip_suffix("nen")
-                    {
-                        let alias = format!("{stem}men");
-                        by_form.insert(alias.clone(), lemma);
-                        forms.push((alias, lemma));
-                    }
+                    by_form.insert(form.word.clone(), lemma);
+                    forms.push((form.word, lemma));
+                }
+                if code == "ACTION_MIMEN"
+                    && let Some(stem) = lemma.strip_suffix("nen")
+                {
+                    let alias = format!("{stem}men");
+                    by_form.insert(alias.clone(), lemma);
+                    forms.push((alias, lemma));
                 }
             }
         }
-        Derived {
-            forms,
-            by_form,
-            nominal,
-            modifiers,
-        }
-    })
+    }
+    Partial {
+        forms,
+        by_form,
+        nominal,
+        modifiers,
+    }
 }
 
 /// The derived lemma a surface belongs to.

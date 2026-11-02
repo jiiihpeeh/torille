@@ -50,6 +50,29 @@ needs Phase 3.
 
 ## Progress
 
+### 2026-11-02 — `derived()` built on the cores
+
+The `derived()` tables (surface -> derived lemma, plus the nominal and modifier
+sets) are built on the first *unknown* word of a process: `check_normal_fast`
+never needs them for a known word, but an unknown token such as `the` pays them.
+The sanalista parse is 28 µs; the work is inflecting the 55 flagged rows, which
+make 42,532 surfaces.
+
+Those rows are now cut into chunks and built across `worker_count()` (the wasm
+shape honours `TORILLE_SINGLE_THREAD`), then merged in row order so the table
+contents are identical. Two details: the chunk floor is one row, not 64 — a
+floor of 64 made a single chunk and no parallelism — and the merged maps reserve
+their final sizes.
+
+| | before | after |
+|---|---:|---:|
+| `derived()` | 85.3 ms | 25.8 ms (12 threads) |
+| `check_normal_fast("the")`, first unknown, new process | 0.12 s | 0.06 s |
+
+The wasm is one thread, so the extension still pays ~85 ms. A precomputed blob
+(the `StemMap`/`StaticSet` machinery the other tables use) is the fix there,
+not threading.
+
 ### 2026-11-02 — P1.4: bound the engine fallback by shape
 
 `find_any_base_with` and `find_bases_with_inner` verified a full paradigm for
