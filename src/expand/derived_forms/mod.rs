@@ -134,6 +134,101 @@ pub(super) fn compound_head_forms(
     Vec::new()
 }
 
+/// The forms of a classless lemma that is a compound with a verb head.
+///
+/// `aliarvioida` is `ali` + `arvioida` and `aivopestä` is `aivo` + `pestä`:
+/// Kotus gives the compound no type, and the head is a verb with a verb class,
+/// so the whole inflects as the head with the modifier in front. This is the
+/// verb counterpart of [`compound_head_forms`], which refuses a verb head
+/// because a nominal compound's head is nominal.
+///
+/// Only the head's verb classes are run: a head that is also a noun does not
+/// give the compound a noun paradigm.
+pub(super) fn compound_verb_forms(
+    lemma: &str,
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+) -> Vec<Generated> {
+    for split in 1..lemma.len() {
+        if !lemma.is_char_boundary(split) {
+            continue;
+        }
+        let (modifier, head) = lemma.split_at(split);
+        if modifier.is_empty() || head.is_empty() {
+            continue;
+        }
+        let Some(row) = compound_head_row(head) else {
+            continue;
+        };
+        let inflections: Vec<Inflection> = row
+            .inflections()
+            .filter(|i| crate::grammar::is_verb_class(i.class))
+            .collect();
+        if inflections.is_empty() {
+            continue;
+        }
+        if !verb_modifier_is_known(modifier, cat, lexicon) {
+            continue;
+        }
+        let mut out: Vec<Generated> = Vec::new();
+        for form in super::inflect_paradigms(
+            head,
+            &inflections,
+            cat,
+            lexicon,
+            PartOfSpeech::Verb,
+            false,
+        ) {
+            // The negative is two words, and the modifier belongs on the main
+            // verb, not on the auxiliary: `ei aliarvioi`, never `aliei arvioi`.
+            let word = match form.word.split_once(' ') {
+                Some((auxiliary, verb)) => format!("{auxiliary} {modifier}{verb}"),
+                None => format!("{modifier}{}", form.word),
+            };
+            out.push(Generated::new(word, form.union()).with(form.confidence));
+        }
+        if !out.is_empty() {
+            return out;
+        }
+    }
+    Vec::new()
+}
+
+/// Whether `modifier` can precede a verb head.
+///
+/// The compile-time form subset holds bare lemmas and genitive singulars only,
+/// so it has no `aikaan` (the illative of `aika`) or `hyväksi` (the translative
+/// of `hyvä`), and `aikaansaada`, `hyväksikäyttää` and `maahantuoda` had no
+/// paradigm. The fallback inflects a lemma that is a prefix of the modifier and
+/// matches the surface, which is the bounded reverse lookup `modifier_is_known`
+/// does not do. It is used only for a verb head, where the head constraint is
+/// tight enough to keep the widening off nominal compounds.
+fn verb_modifier_is_known(
+    modifier: &str,
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+) -> bool {
+    if modifier_is_known(modifier) {
+        return true;
+    }
+    for (at, _) in modifier.char_indices().skip(1) {
+        let base = &modifier[..at];
+        for row in crate::kotus::sanalista().by_word(base) {
+            let inflections: Vec<Inflection> = row.inflections().collect();
+            if inflections.is_empty() {
+                continue;
+            }
+            let pos = crate::tags::PartOfSpeech::inflecting_reading(row.part_of_speech());
+            for form in super::inflect_paradigms(base, &inflections, cat, lexicon, pos, true) {
+                if form.word == modifier {
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
+
 /// Whether `modifier` is an inflected form of a classless compound.
 ///
 /// The compile-time form set is built from the classed lemmas, so it has no

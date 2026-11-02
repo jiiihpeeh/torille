@@ -171,13 +171,28 @@ The 303 left are two shapes:
 - Fixtures: the spec's own examples plus the sanalista's hyphenated rows
   (`nuori-isäntä` is class 51 and already covered).
 
-### Phase 4 — classless verbs
+### Phase 4 — classless verbs  *(done 2026-11-02)*
 
 `aliarvioida`, `aivopestä`, `alijäähtyä` (269 rows) are `prefix + verb`. The
 tail is a verb lemma with a verb class, so the paradigm is the tail's with the
 prefix fixed — the verb counterpart of `compound_head_forms`, not class 50.
-Implement as a classless-verb branch in `inflect_all`, `Repaired` like the
-nominal one, and measure it with a sampled `check_word_against_omorfi.py` run.
+
+`compound_verb_forms` does that: it splits the word, keeps a head whose classes
+are verb classes, and runs `inflect_paradigms` on the head. Two details matter:
+
+- the negative is two words (`ei arvioi`), and the modifier belongs on the main
+  verb (`ei aliarvioi`, never `aliei arvioi`);
+- the modifier may be a case form the compile-time subset does not hold
+  (`aikaan` is the illative of `aika`), so `verb_modifier_is_known` falls back
+  to inflecting a lemma that is a prefix of the modifier. That widening is used
+  only for a verb head, where the head constraint keeps it off nominal
+  compounds.
+
+266 of the 269 inflect. The three left are `puhtaaksikirjoittaa` and
+`puhtaaksimuurata` (the modifier `puhtaaksi` is the translative of `puhdas`,
+and the gradation `d` -> `t` means no lemma is a prefix of the surface), and
+`riippuliitää` (a verb-stem modifier, which `modifier_is_known` deliberately
+rejects). Pinned by `a_classless_verb_inflects_by_its_verb_head`.
 
 ### Phase 5 — phrases and ambiguity
 

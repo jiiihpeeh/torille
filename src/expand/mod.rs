@@ -95,7 +95,7 @@ use split::dedup;
 use std::collections::HashSet;
 
 use derived_forms::{
-    compound_head_forms, degree_forms, derived_inen_forms, numeral_forms,
+    compound_head_forms, compound_verb_forms, degree_forms, derived_inen_forms, numeral_forms,
 };
 pub(crate) use derived_forms::modifier_is_known;
 pub use derived_forms::{
@@ -423,6 +423,17 @@ pub fn inflect_all(
             let key = (form.word.clone(), form.confidence, form.readings.clone());
             if seen.insert(key) {
                 out.push(form);
+            }
+        }
+        // A classless verb is a compound with a verb head (`aliarvioida` is
+        // `ali` + `arvioida`). `compound_head_forms` refuses a verb head, so
+        // the verb case has its own path.
+        if matches!(pos, PartOfSpeech::Verb | PartOfSpeech::Unknown) {
+            for form in compound_verb_forms(lemma, cat, lexicon) {
+                let key = (form.word.clone(), form.confidence, form.readings.clone());
+                if seen.insert(key) {
+                    out.push(form);
+                }
             }
         }
     }
@@ -2121,6 +2132,38 @@ mod tests {
             words.contains(&"luonnonkaasun"),
             "luonnonkaasu does not inflect to luonnonkaasun"
         );
+    }
+
+    #[test]
+    fn a_classless_verb_inflects_by_its_verb_head() {
+        // `aliarvioida` is `ali` + `arvioida`. `compound_head_forms` refuses a
+        // verb head, so classless verbs have their own path; the negative is
+        // two words and the modifier belongs on the main verb.
+        let cat = cat();
+        let forms = inflect_all("aliarvioida", &[], &cat, None, PartOfSpeech::Verb, false);
+        let words: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
+        for want in ["aliarvioin", "aliarvioi", "aliarvioidaan", "ei aliarvioi"] {
+            assert!(
+                words.contains(&want),
+                "aliarvioida does not inflect to {want}"
+            );
+        }
+        assert!(
+            !words.iter().any(|w| w.starts_with("aliei")),
+            "the modifier went on the negative auxiliary"
+        );
+
+        // The modifier can be a case form the compile-time subset does not
+        // hold: `aikaan` is the illative of `aika`, and `aikaansaada` is
+        // `aikaan` + `saada`.
+        let forms = inflect_all("aikaansaada", &[], &cat, None, PartOfSpeech::Verb, false);
+        let words: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
+        for want in ["aikaansaan", "aikaansaa", "ei aikaansaa"] {
+            assert!(
+                words.contains(&want),
+                "aikaansaada does not inflect to {want}"
+            );
+        }
     }
 
     #[test]
