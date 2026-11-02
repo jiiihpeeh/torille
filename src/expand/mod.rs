@@ -605,6 +605,7 @@ pub(crate) use find_bases::{find_bases_for_check, find_bases_with_form_filter};
 pub use sound::is_phonotactic;
 
 pub mod all_forms;
+mod blob;
 pub mod check_normal;
 mod huffman_set;
 pub mod prefix_index;

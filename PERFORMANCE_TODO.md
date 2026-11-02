@@ -50,6 +50,33 @@ needs Phase 3.
 
 ## Progress
 
+### 2026-11-02 — pronoun table precomputed; lemma set from packed rows
+
+The first *unknown* word of a process still cost ~20 ms after the cache work.
+It was two tables built by materialising the whole lexicon:
+
+- `pronoun_forms()` scanned all 104k lemma rows to find the 32 class-101
+  lemmas, then inflected them (395 surfaces). The table is now a committed blob
+  (`data/precomputed/pronoun_forms.bin`, 7.5 KB) written by `gen_derived` from
+  `expand::check_normal::compute_pronoun_forms`; the runtime reads it into a map
+  once. The 104k-row scan is gone.
+- `lemma_set()` called `kotus::lemmas()`, which allocates an `Inflection` vector
+  for every row (measured: **16.2 ms**, 104,775 rows). The set only needs the
+  words, so it is now built from the packed rows
+  (`sanalista().iter()` / `EmbeddedLemma::word`), which borrows the blob.
+
+| first miss, new process | before | after |
+|---|---:|---:|
+| `kotus::lemmas()` materialisation | 16.2 ms | not on this path |
+| `the` in the 2000-token corpus | 18–22 ms | 7–14 ms |
+
+`expand::check_normal::tests::the_pronoun_blob_matches_compute` pins the blob to
+`compute_pronoun_forms`, and the `Blob` reader moved to `expand/blob.rs` so the
+derived and pronoun tables share it. The corpus steady state is unchanged
+within measurement noise (the host was under load ~11 during these runs).
+The wasm is the beneficiary: it pays the first miss once per page, and it has
+no threads to hide it behind.
+
 ### 2026-11-02 — memoise the recognition stack
 
 `is_known_word_with_compound` is a pure function of the word and the static

@@ -85,9 +85,12 @@ cargo run --release -p torille-tools --bin gen_derived   # derived tables (blobs
 ```
 
 `gen_derived` writes `data/precomputed/derived_{by_form,nominal,modifiers}.bin`
-and is the one generator that must run with the engine, because the tables are
-built by `expand::derived::compute`. Commit the blobs;
-`expand::derived::tests::the_blobs_match_compute` fails if they drift.
+and `data/precomputed/pronoun_forms.bin`, and is the one generator that must run
+with the engine, because the tables are built by `expand::derived::compute` and
+`expand::check_normal::compute_pronoun_forms`. Commit the blobs;
+`expand::derived::tests::the_blobs_match_compute` and
+`expand::check_normal::tests::the_pronoun_blob_matches_compute` fail if they
+drift.
 
 ### Python harness
 

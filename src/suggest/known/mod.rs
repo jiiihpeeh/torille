@@ -65,10 +65,13 @@ static LEMMA_SET: OnceLock<HashSet<&'static str>> = OnceLock::new();
 /// alike.
 pub(super) fn lemma_set() -> &'static HashSet<&'static str> {
     LEMMA_SET.get_or_init(|| {
-        let lex = lexicon();
+        // From the packed rows, not `lexicon()`: the set needs the words only,
+        // and materialising 104k `Lemma`s allocates an `Inflection` vec per row
+        // (~16 ms on the first miss). `EmbeddedLemma::word` borrows the blob.
+        let lex = crate::kotus::sanalista();
         let mut s: HashSet<&'static str> = HashSet::with_capacity(lex.len());
-        for l in lex {
-            s.insert(l.word);
+        for lemma in lex.iter() {
+            s.insert(lemma.word());
         }
         s
     })

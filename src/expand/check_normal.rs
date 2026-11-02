@@ -58,6 +58,7 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 
 use crate::expand::all_forms;
+use crate::expand::blob::Blob;
 use crate::expand::clitic::strip_clitic;
 use crate::expand::find_any_base_with;
 use crate::expand::inflect_all;
@@ -274,37 +275,54 @@ fn lex() -> &'static [Lemma<'static>] {
 /// The pronouns are the one class whose forms the class catalogue cannot
 /// derive, so their paradigms live in `grammar::irregular`. The fast path
 /// cannot afford `find_any_base_with` for every word, but the class is
-/// closed and tiny: inflect every class-101 lemma once, then probe the map.
+/// closed and tiny: inflect every class-101 lemma once, then probe the table.
 /// This is what makes `minkä` and `millä` constant-time while keeping the
 /// forms themselves in the engine's paradigm, not a second hand-written
 /// table.
-static PRONOUN_FORMS: OnceLock<HashMap<String, &'static str>> = OnceLock::new();
-
-fn pronoun_forms() -> &'static HashMap<String, &'static str> {
-    PRONOUN_FORMS.get_or_init(|| {
-        let mut map = HashMap::new();
-        for lemma in lex() {
-            if !lemma.inflections.iter().any(|i| i.class == 101) {
-                continue;
-            }
-            let pos = PartOfSpeech::parse_all(lemma.part_of_speech)
-                .first()
-                .copied()
-                .unwrap_or(PartOfSpeech::Noun);
-            for form in inflect_all(lemma.word, &lemma.inflections, cat(), None, pos, false) {
-                map.entry(form.word).or_insert(lemma.word);
-            }
+///
+/// The table is precomputed (`gen_derived`) because scanning the 104k lemma
+/// rows to find the 32 class-101 lemmas cost ~20 ms on the first unknown word
+/// of a process -- the wasm paid it on its first keystroke. [`compute`] stays
+/// for the tool and for the blob test.
+pub fn compute_pronoun_forms() -> HashMap<String, &'static str> {
+    let mut map = HashMap::new();
+    for lemma in lex() {
+        if !lemma.inflections.iter().any(|i| i.class == 101) {
+            continue;
         }
-        map
-    })
+        let pos = PartOfSpeech::parse_all(lemma.part_of_speech)
+            .first()
+            .copied()
+            .unwrap_or(PartOfSpeech::Noun);
+        for form in inflect_all(lemma.word, &lemma.inflections, cat(), None, pos, false) {
+            map.entry(form.word).or_insert(lemma.word);
+        }
+    }
+    map
 }
+
+static PRONOUN_FORMS: OnceLock<Blob> = OnceLock::new();
+static PRONOUN_MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
+
+const PRONOUN_FORMS_BIN: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/data/precomputed/pronoun_forms.bin"
+));
 
 /// The pronoun lemma `word` is a form of, if any.
 ///
-/// `word` is expected lowercase. The map is built on the first miss, so the
-/// typing path pays for it once; the ordinary lemma hit never does.
+/// `word` is expected lowercase. The table is a committed blob, so there is no
+/// lexicon scan; the 395 entries are copied into a map once, because every
+/// miss probes this gate.
 pub fn pronoun_base(word: &str) -> Option<&'static str> {
-    pronoun_forms().get(word).copied()
+    PRONOUN_MAP
+        .get_or_init(|| {
+            crate::expand::blob::cell(&PRONOUN_FORMS, PRONOUN_FORMS_BIN)
+                .iter()
+                .collect()
+        })
+        .get(word)
+        .copied()
 }
 
 /// The lemma of a tabulated adverbial form (`torkuksissa` -> `torkku`).
@@ -1160,6 +1178,26 @@ fn find_through_possessive(host: &str, verbose: bool) -> Option<(String, &'stati
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The committed pronoun blob is the computation's own table.
+    ///
+    /// `compute_pronoun_forms` is the source of truth; the runtime reads the
+    /// blob `gen_derived` writes from it. A class-101 or engine change without
+    /// regenerating the blob fails here instead of drifting silently.
+    #[test]
+    fn the_pronoun_blob_matches_compute() {
+        let computed = compute_pronoun_forms();
+        assert!(!computed.is_empty());
+        for (surface, lemma) in &computed {
+            assert_eq!(pronoun_base(surface), Some(*lemma), "{surface}");
+        }
+        let blob = crate::expand::blob::cell(&PRONOUN_FORMS, PRONOUN_FORMS_BIN);
+        assert_eq!(
+            blob.iter().count(),
+            computed.len(),
+            "the pronoun blob has a different size"
+        );
+    }
 
     #[test]
     fn direct_lemma() {

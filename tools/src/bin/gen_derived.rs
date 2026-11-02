@@ -39,11 +39,26 @@ fn main() {
         modifiers.iter().map(|word| (*word, None)),
     );
 
+    // The closed pronoun class (Kotus 101): scanning the 104k lemma rows to
+    // find its 32 lemmas costs ~20 ms on the first unknown word of a process.
+    let mut pronouns: Vec<(String, &'static str)> =
+        torille::expand::check_normal::compute_pronoun_forms()
+            .into_iter()
+            .collect();
+    pronouns.sort_by(|a, b| a.0.cmp(&b.0));
+    write(
+        Path::new("data/precomputed/pronoun_forms.bin"),
+        pronouns
+            .iter()
+            .map(|(surface, lemma)| (surface.as_str(), Some(*lemma))),
+    );
+
     println!(
-        "derived: {} forms, {} nominal, {} modifiers",
+        "derived: {} forms, {} nominal, {} modifiers; {} pronouns",
         by_form.len(),
         nominal.len(),
-        modifiers.len()
+        modifiers.len(),
+        pronouns.len()
     );
 }
 
