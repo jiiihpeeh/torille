@@ -338,6 +338,28 @@ where
 /// return type mirrors the multi-base API so callers that don't
 /// care about the count pay no cost; callers that need the full
 /// list use [`find_bases_with`].
+/// Whether `lemma` and `word` share their first two characters.
+///
+/// A form is the lemma's stem plus an ending: the stem is a prefix of the lemma
+/// and gradation changes only its last consonant, so a regular form shares at
+/// least the lemma's first two characters. The suppletive `olla` forms (`on`,
+/// `ovat`) are the exception, and they reach the checker through the verb stem
+/// map and the short-lemma scan rather than this walk. The suggestion walks
+/// keep their first-character match, because there a near miss is the point.
+fn shares_first_two(lemma: &str, word: &str) -> bool {
+    let mut l = lemma.chars().map(|c| c.to_ascii_lowercase());
+    let mut w = word.chars().map(|c| c.to_ascii_lowercase());
+    match (l.next(), w.next()) {
+        (Some(a), Some(b)) if a == b => {}
+        _ => return false,
+    }
+    match (l.next(), w.next()) {
+        (Some(a), Some(b)) => a == b,
+        // A one-character lemma has only one character to share.
+        _ => true,
+    }
+}
+
 pub fn find_any_base_with<'a>(
     lexicon: &'a [Lemma<'a>],
     cat: &Catalogues,
@@ -381,6 +403,7 @@ pub fn find_any_base_with<'a>(
     // Phase 1.5: head-1 walk. Capped at HEAD1_CAP to bound the
     // worst case; matches the `find_bases_with_inner` cap.
     const HEAD1_CAP: usize = 3000;
+    let f_len = word.chars().count();
     if let Some(c) = word.chars().next() {
         let head_start: usize = sanalista().word_order().partition_point(|&row| {
             let fc = lexicon[row as usize].word.chars().next();
@@ -391,6 +414,19 @@ pub fn find_any_base_with<'a>(
             let l = &lexicon[row as usize];
             if l.word.is_empty() || !l.word.starts_with(c) {
                 break;
+            }
+            // A form is at most two characters shorter than its lemma (the
+            // `-da/-dä` infinitive against the stem), and never longer than
+            // the lemma by less than an ending. A lemma far longer than the
+            // query cannot make it; verifying its paradigm was the walk's cost.
+            if l.word.chars().count() > f_len + 2 {
+                continue;
+            }
+            // A regular form shares the lemma's first two characters; a lemma
+            // that shares only the first cannot produce this word, and
+            // verifying its paradigm is what the walk spent its time on.
+            if !shares_first_two(l.word, word) {
+                continue;
             }
             if lemma_emit(cat, l, word, pos, possessives) {
                 return vec![l];
@@ -407,7 +443,6 @@ pub fn find_any_base_with<'a>(
     // The candidate walk runs in parallel across the available
     // cores via `par_first_some`; the first matching base wins
     // and the remaining workers bail on the atomic flag.
-    let f_len = word.chars().count();
     for n in [3usize, 2, 4] {
         if let Some(prefix) = take_chars(word, n) {
             let candidates: Vec<&Lemma<'_>> = prefix_candidates(lexicon, &prefix)
@@ -425,7 +460,10 @@ pub fn find_any_base_with<'a>(
     // individually; the inflect-all cost is small for short
     // lemmas.
     for lemma in lexicon.iter() {
-        if lemma.word.chars().count() <= 3 && lemma_emit(cat, lemma, word, pos, possessives) {
+        if lemma.word.chars().count() <= 3
+            && shares_first_two(lemma.word, word)
+            && lemma_emit(cat, lemma, word, pos, possessives)
+        {
             return vec![lemma];
         }
     }
@@ -726,6 +764,16 @@ fn find_bases_with_inner<'a>(
             if l.word.is_empty() || !l.word.starts_with(c) {
                 break;
             }
+            // In recognition the question is "is this a form of that lemma",
+            // not "which lemma is it near": a lemma that shares only the first
+            // character cannot make the word (the `olla` suppletives are
+            // handled by the stem map and the short-lemma scan).
+            if recognition_only
+                && (!shares_first_two(l.word, &word_lc)
+                    || l.word.chars().count() > word_lc.chars().count() + 2)
+            {
+                continue;
+            }
             if seen.insert(l as *const _) {
                 head1.push(l);
                 if head1.len() >= HEAD1_CAP {
@@ -798,6 +846,9 @@ fn find_bases_with_inner<'a>(
     // Phase 4: short-lemma scan.
     if bases.is_empty() {
         for lemma in short_lemma_run(lexicon) {
+            if !shares_first_two(lemma.word, &word_lc) {
+                continue;
+            }
             if seen.insert(lemma as *const _) {
                 let generated = inflect_all(
                     lemma.word,

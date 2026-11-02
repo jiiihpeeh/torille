@@ -50,6 +50,49 @@ needs Phase 3.
 
 ## Progress
 
+### 2026-11-02 — P1.4: bound the engine fallback by shape
+
+`find_any_base_with` and `find_bases_with_inner` verified a full paradigm for
+every lemma in the head-1 bucket and for every lemma of three characters or
+fewer. A lemma that cannot produce the query was still inflected: `taloo` paid
+~1 000 short-lemma paradigms, `valentine` every `va` lemma.
+
+Two bounds, both morphology, neither a suffix list:
+
+- **Two characters.** A form is the lemma's stem plus an ending; the stem is a
+  prefix of the lemma and gradation changes only its last consonant, so a
+  regular form shares the lemma's first two characters. The suppletive `olla`
+  forms (`on`, `ovat`) are the exception and reach the checker through the verb
+  stem map, not this walk. Applied to the head-1 walk in the recognition paths
+  and to the short-lemma scan in every mode (the scan is `≤3`-char lemmas,
+  whose forms all share two).
+- **Two characters of length.** A form is at most two characters shorter than
+  its lemma (the `-da/-dä` infinitive against the stem); sampled across 1 500
+  lemmas the largest shrink is 2 (`räksyttää` → `räksytä`). A lemma longer than
+  `word.len() + 2` cannot make the word. Applied to the recognition head-1
+  walks.
+
+| call | before | after |
+|---|---:|---:|
+| `check_fast("taloo")` | 1.45 s | **170 ms** |
+| `check_fast("koirra")` | 1.57 s | **260 ms** |
+| `check_fast("baromeetteri")` | 417 ms | **134 ms** |
+| `check_fast("salamyhkää")` | 13.4 s | **2.1 s** |
+| `check_fast("silmäränpäyksen")` | 7.7 s | **1.5 s** |
+| `check_fast("xyzzy")` | 65 ms | **1.8 ms** |
+| `suggest("taloo")` | 1.9 s | **640 ms** |
+| `check("taloo")` | 386 ms | **110 ms** |
+
+The suggestion goldens and the workspace tests are unchanged; the unknown
+counts are unchanged.
+
+**What this does not move:** `check_normal_fast` — the demo's first pass —
+because it calls `check_normal_with(..., engine_gate = false)`, so gate 5 never
+runs. Its corpus stays at ~1.97 s (`45448`), and its tail is gate 4/4b/4c plus
+one-off initialisation, not the engine walk. The next lever for *that* path is
+the slot-level `emits_form` (the rest of P1.3) and eager initialisation, not
+P1.4.
+
 ### 2026-11-02 — P1.3: `emits_form`
 
 `inflect_all` lists a paradigm: it deduplicates with a
@@ -471,12 +514,14 @@ This is the most important recognition change after P1.2.
 
 **P1.4 Bound `check_fast`'s engine fallback** (`src/suggest/state.rs`)
 
-- [ ] After the gates miss, run the engine only if the surface has a plausible
-      inflected shape: it ends in a case/personal ending, a possessive/clitic,
-      or is a possible bare lemma. Exceptions (indeclinable loans, names) are
-      lemmas and hit gate 1.
-- [ ] If the engine walk runs, feed the morphology-derived ending/stem
-      candidates (P2.4) instead of the full head/tail/prefix walk.
+- [x] First cut: bound the walks by morphology — a lemma shares the word's
+      first two characters, and is at most two characters longer (see the
+      Progress entry). `check_fast` 5–40× on the typo corpus.
+- [ ] The surface-shape gate: a word that cannot be a Finnish form (no
+      case/personal ending, not a bare lemma, not a compound) should not run
+      the walk at all.
+- [ ] Feed the morphology-derived ending/stem candidates (P2.4) instead of the
+      full head/tail/prefix walk.
 - [ ] Keep a documented recall escape hatch and measure it against
       `tools/test_reverse_lookup_recall.py` (once its database is clean).
 
