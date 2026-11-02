@@ -193,8 +193,10 @@ form takes the **head's confidence**, not a fresh one: a plain head form is
 plain, and a repaired one (`väkein` for `väkien`) stays repaired. The reverse
 index does **not** include the rows: `FormBuilder` walks the row's classes and
 a classless row has none, so only the citation form is indexed — the same limit
-as compound analysis in the fast `check`/`suggest`.
-`report_by_class.py --classless` audits the rows under `(none)`.
+as compound analysis in the fast `check`/`suggest`. `expand::head_inflections`
+gives the class the head declines as (a listed nominal, never an ending), and
+`report_by_class.py --classless` buckets the rows under `(none:<class>)`, so a
+defect lands on the class engine that produced it.
 
 Public wrappers: `inflect`, `inflect_all` (preserves first-occurrence order and
 drops only fully-identical copies), `form_of`/`form_of_in` (filter by `Tags`

@@ -98,6 +98,7 @@ use derived_forms::{
     compound_head_forms, compound_verb_forms, degree_forms, derived_inen_forms, numeral_forms,
 };
 pub(crate) use derived_forms::modifier_is_known;
+pub use derived_forms::head_inflections;
 pub use derived_forms::{
     derived_agent_base, derived_inen_base, derived_kas_base, derived_lainen_base,
     derived_llinen_base, derived_tar_base, derived_ton_base, derived_uus_base,
@@ -2132,6 +2133,37 @@ mod tests {
             words.contains(&"luonnonkaasun"),
             "luonnonkaasu does not inflect to luonnonkaasun"
         );
+    }
+
+    /// A classless compound is classified by its head, not by its ending.
+    ///
+    /// Kotus omits the type of a compound because it declines like its final
+    /// component, so the head's class is the compound's class. The head must be
+    /// a listed nominal (a lemma or a bound form like `‑mielisyys`); a case or
+    /// personal ending is not a head, and a word whose modifier cannot be
+    /// resolved is left unclassified rather than guessed at.
+    #[test]
+    fn a_classless_compound_takes_its_heads_class() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let index = LexiconIndex::new(&lexicon);
+        for (word, class) in [
+            ("aamuhartaus", 40),         // hartaus
+            ("kirjakauppa", 9),          // kauppa (9*B)
+            ("pikkuaivot", 1),           // aivot
+            ("kaskinauris", 41),         // nauris
+            ("illallistanssiaiset", 38), // tanssiaiset
+            ("leikkimielisyys", 40),     // the listed bound head ‑mielisyys
+        ] {
+            let inflections = head_inflections(word, &cat, Some(&index))
+                .unwrap_or_else(|| panic!("{word} was not classified"));
+            assert_eq!(inflections[0].class, class, "{word}");
+        }
+        // `kuin` is a conjunction, not a nominal head, so `ennenkuin` keeps no
+        // class rather than taking a suffix for one.
+        assert!(head_inflections("ennenkuin", &cat, Some(&index)).is_none());
+        // An unresolved modifier is not guessed at either.
+        assert!(head_inflections("kylmäverihevonen", &cat, Some(&index)).is_none());
     }
 
     #[test]

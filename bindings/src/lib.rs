@@ -430,9 +430,13 @@ impl Engine {
     /// Lemmas with no class are left out by default: an indeclinable has no
     /// paradigm, and offering one here would only fill the sampler's `--limit`
     /// with words that get skipped. `include_classless` keeps the classless
-    /// *nominals* under the key `(none)`: Kotus omits the type of a compound
-    /// because it declines like its final component, and the engine inflects
-    /// it through `compound_head_forms`, so the report can audit it.
+    /// *nominals* under the key `(none:<class>)`, where `<class>` is the class
+    /// its head declines as. Kotus omits the type of a compound because it
+    /// declines like its final component, so `aamuhartaus` is a class-32 word
+    /// for every purpose the report has. The head is a sanalista lemma, never
+    /// an ending: a suffix only classifies if it is an independent nominal
+    /// lemma, which the splitter's POS filter requires. A row with no classed
+    /// head keeps the bare `(none)`.
     #[pyo3(signature = (part_of_speech, include_classless=false))]
     fn words(&self, part_of_speech: &str, include_classless: bool) -> Vec<(String, String)> {
         let wanted = part_of_speech.trim();
@@ -442,7 +446,20 @@ impl Engine {
             .filter(|l| l.part_of_speech.split(", ").any(|p| p.trim() == wanted))
             .filter_map(|l| match l.inflections.first() {
                 Some(i) => Some((l.word.to_string(), i.to_string())),
-                None if include_classless => Some((l.word.to_string(), "(none)".to_string())),
+                None if include_classless => {
+                    let class = torille::expand::head_inflections(
+                        l.word,
+                        &self.data.catalogue,
+                        Some(&self.data.index),
+                    )
+                    .and_then(|inflections| {
+                        inflections.first().map(std::string::ToString::to_string)
+                    });
+                    Some((
+                        l.word.to_string(),
+                        class.map_or_else(|| "(none)".to_string(), |c| format!("(none:{c})")),
+                    ))
+                }
                 None => None,
             })
             .collect()

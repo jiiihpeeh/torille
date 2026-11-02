@@ -140,10 +140,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                         "evidence gate checks, and it cannot be combined with "
                         "--verify-illegal or --strict-illegal.")
     p.add_argument("--classless", action="store_true",
-                   help="also audit the rows the sanalista gives no type number, "
-                        "under the class '(none)'. Kotus omits the type of a "
-                        "compound because it declines like its final component; "
-                        "the engine inflects it through compound_head_forms.")
+                   help="also audit the rows the sanalista gives no type number. "
+                        "Kotus omits the type of a compound because it declines "
+                        "like its final component, so each row is bucketed under "
+                        "'(none:<class>)' by its head's class; a row whose head "
+                        "is not a listed nominal stays '(none)'. -c '(none)' "
+                        "selects them all.")
     p.add_argument("-q", "--quiet", action="store_true",
                    help="print only the failing classes")
     return p.parse_args(argv)
@@ -375,26 +377,42 @@ def main(argv: list[str]) -> int:
             return 2
     buckets = harness.words_in_class("substantiivi", args.classless)
 
-    def class_key(c: str) -> tuple[int, str]:
-        # `(none)` is not a number: it sorts after every real class.
-        if c == "(none)":
-            return (10**9, c)
-        return (int(c.split("*")[0]), c)
+    def class_key(c: str) -> tuple[int, int, str]:
+        # `(none)` and `(none:<class>)` are the rows the sanalista gives no type
+        # number. They sort after every real class, and among themselves by the
+        # class their head declines as; the bare `(none)` (no classed head)
+        # comes last.
+        if c.startswith("(none"):
+            inner = c[len("(none:"):-1] if c.startswith("(none:") else ""
+            if inner:
+                return (1, int(inner.split("*")[0]), inner)
+            return (1, 10**9, "")
+        return (0, int(c.split("*")[0]), c)
     if args.classes != "all":
         wanted = [c.strip() for c in args.classes.split(",") if c.strip()]
         # `9B` and `9*B` are the same class written two ways; accept both.
         canonical = {w.replace("*", "").upper(): w for w in buckets}
         selected: list[str] = []
         for w in wanted:
+            # `(none)` selects every classless bucket, whatever head class it
+            # was classified under.
+            if w == "(none)":
+                for cls in sorted(buckets, key=class_key):
+                    if cls.startswith("(none") and cls not in selected:
+                        selected.append(cls)
+                continue
             key = w.replace("*", "").upper()
-            if key in canonical:
+            if key in canonical and canonical[key] not in selected:
                 selected.append(canonical[key])
-            elif w in buckets:
+            elif w in buckets and w not in selected:
                 selected.append(w)
             else:
                 eprint(f"unknown class: {w}")
                 eprint(f"known: {', '.join(sorted(buckets))}")
                 return 2
+        if not selected:
+            eprint("no classless rows to audit")
+            return 2
     else:
         selected = sorted(buckets, key=class_key)
 

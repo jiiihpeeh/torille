@@ -108,10 +108,23 @@ so it reads as `genitive-initial`. The inflector is unaffected; this is an
 
 ### Phase 2 — ordinary compounds as first-class  *(done 2026-11-02)*
 
-`report_by_class.py --classless` audits the rows under a synthetic `(none)`
-class, so the 56 486 rows are no longer invisible. The first measurement on a
-100-lemma sample (96 checked, 4 skipped) was 14,286 `not_plain` and 442
-`missing`: the engine produced every confirmed form, but as `Repaired`.
+`report_by_class.py --classless` audits the rows the sanalista gives no type
+number, so the 56 486 rows are no longer invisible. They are **classified by
+their head** (`expand::head_inflections`): Kotus omits the type of a compound
+because it declines like its final component, so the head's class is the
+compound's class. The head must be a **listed nominal** — a lemma (`hartaus` in
+`aamuhartaus`, class 40) or a bound head the engine already inflects
+(`‑mielisyys` in `leikkimielisyys`, class 40). A case or personal ending is not
+a head, and a word whose modifier cannot be resolved is left at the bare
+`(none)` rather than guessed at: `ennenkuin` (`kuin` is a conjunction) and
+`kylmäverihevonen` (the modifier `kylmäveri` is an unlisted compound) both stay
+unclassified. The report buckets each row under `(none:<class>)`, which
+attributes a defect to the class engine that actually produced the form. Of the
+50 449 classless nouns, 46 536 classify and 3 913 do not.
+
+The first measurement on a 100-lemma sample (96 checked, 4 skipped) was 14,286
+`not_plain` and 442 `missing`: the engine produced every confirmed form, but as
+`Repaired`.
 
 Promotion to `Plain` was blocked twice, and the two fixes are different in kind:
 
