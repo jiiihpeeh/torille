@@ -145,7 +145,43 @@ pub fn is_known_word_fast(word: &str) -> Option<String> {
         .or_else(|| is_known_compound_fast(word))
         .or_else(|| is_known_short_compound(word))
 }
+thread_local! {
+    /// Memo for [`is_known_word_with_compound`], see there.
+    static KW_MEMO: std::cell::RefCell<
+        std::collections::HashMap<String, [Option<Option<String>>; 2]>,
+    > = std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+/// The recognition stack, memoised per thread.
+///
+/// The result is a pure function of the word and the static dictionary, and
+/// the compound split search asks about overlapping substrings, so a page
+/// reuses most probes (`kaksikymmenvuotiaalla` and
+/// `kaksikymmenvuotiaana` share their modifier). Bounded at 20 000 words;
+/// the memo is a speed-up, not state, so dropping it is safe.
 fn is_known_word_with_compound(word: &str, allow_compound: bool) -> Option<String> {
+    const CAP: usize = 20_000;
+    let slot = usize::from(allow_compound);
+    if let Some(out) = KW_MEMO.with_borrow(|memo| {
+        memo.get(word)
+            .and_then(|entry| entry[slot].as_ref())
+            .cloned()
+    }) {
+        return out;
+    }
+    let out = is_known_word_with_compound_uncached(word, allow_compound);
+    KW_MEMO.with_borrow_mut(|memo| {
+        if memo.len() >= CAP && !memo.contains_key(word) {
+            // A large paste has tens of thousands of distinct tokens; the
+            // memo is a speed-up, not state, so dropping it is safe.
+            memo.clear();
+        }
+        memo.entry(word.to_string()).or_default()[slot] = Some(out.clone());
+    });
+    out
+}
+
+fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Option<String> {
     use crate::expand::check_normal::STEM_BUCKETS_NOUN;
     let lower = word.to_lowercase();
     let lex = lemma_set();

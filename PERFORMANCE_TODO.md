@@ -50,6 +50,28 @@ needs Phase 3.
 
 ## Progress
 
+### 2026-11-02 — memoise the recognition stack
+
+`is_known_word_with_compound` is a pure function of the word and the static
+dictionary, and the compound split search asks it about overlapping substrings:
+`kaksikymmenvuotiaalla` and `kaksikymmenvuotiaana` share their modifier, and a
+page repeats heads across tokens. The result is now memoised per thread (both
+the compound and the non-compound reading), bounded at 20 000 words; the memo
+is a speed-up, not state, so dropping it when full is safe. The lookup borrows
+the word as `&str`, so a hit allocates nothing.
+
+| corpus | before `7fe9538` | after |
+|---|---:|---:|
+| `45448.txt` 2000 | 396–425 ms | **344 ms** |
+| `45448.txt` 2000 p95 | 883 µs | **672 µs** |
+| `45448.txt` 4000 | 707 ms | **609 ms** |
+| `7000.txt` 2000 | 1 120–1 289 ms | **828 ms** |
+| `7000.txt` 2000 p95 | 3 517 µs | **2 087 µs** |
+| `7000.txt` 4000 | 2 319 ms | **1 435 ms** |
+
+Unknown counts are again unchanged (293 / 406 / 566 / 964), and the single-word
+runs stay at 0.03–0.04 s.
+
 ### 2026-11-02 — the compound verifies use the paradigm cache
 
 The cache in `emits_form` only helped callers that called `emits_form`. The
