@@ -386,16 +386,16 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     //     `jouduttaitui` must still find `jouduttautui`.
     if max_distance > 0 {
         let input_len = word.chars().count();
-        for (surface, lemma) in crate::expand::derived::forms().iter() {
+        for (surface, lemma) in crate::expand::derived::forms() {
             if surface.chars().count().abs_diff(input_len) > max_distance {
                 continue;
             }
             candidates.push(Suggestion {
-                word: surface.clone(),
+                word: surface.to_string(),
                 edit_distance: 0,
-                lemma: Some((*lemma).to_string()),
+                lemma: Some(lemma.to_string()),
                 source: SuggestionSource::GeneratedForm {
-                    lemma: (*lemma).to_string(),
+                    lemma: lemma.to_string(),
                 },
                 readings: Vec::new(),
                 confidence: Confidence::Plain,

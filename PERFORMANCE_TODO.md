@@ -50,6 +50,32 @@ needs Phase 3.
 
 ## Progress
 
+### 2026-11-02 — derived tables precomputed
+
+The parallel build cut `derived()` from 85 to 26 ms on the native host, but the
+wasm is one thread and still paid the whole build. The tables are now
+**committed blobs**: `tools/src/bin/gen_derived.rs` runs
+`expand::derived::compute()` and writes
+
+- `data/precomputed/derived_by_form.bin` — 38 211 surfaces -> lemma, 1.4 MB,
+- `data/precomputed/derived_nominal.bin` — 8 389 surfaces, 159 KB,
+- `data/precomputed/derived_modifiers.bin` — 9 stems, 163 B.
+
+`src/expand/derived.rs` reads them with a sorted-offset blob and a binary
+search (`Blob` in that file); there is no build at run time and no per-lookup
+map. `base`, `forms`, `is_modifier` and `is_nominal` are unchanged in meaning;
+`forms()` is now an iterator over the blob's sorted entries. The bundle grows
+by ~1.6 MB.
+
+| | before | after |
+|---|---:|---:|
+| `derived()` at first unknown | 85.3 ms (26 ms / 12 threads) | **0 ms** |
+| `check_normal_fast("the")`, first unknown, new process | 0.12 s | **0.02 s** |
+
+`expand::derived::tests::the_blobs_match_compute` compares every blob entry
+against `compute()`, so a `RULES` or sanalista change without regenerating the
+blobs fails the suite rather than drifting silently.
+
 ### 2026-11-02 — `derived()` built on the cores
 
 The `derived()` tables (surface -> derived lemma, plus the nominal and modifier

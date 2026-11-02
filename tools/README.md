@@ -78,6 +78,17 @@ Profiling and one-off probes:
 | `profile_hot` | phase timings for the per-keystroke path |
 | `probe_koirissa` | reproduce the `koirissa` / `korissa` candidate-pruning case |
 
+### Data generators
+
+```bash
+cargo run --release -p torille-tools --bin gen_derived   # derived tables (blobs)
+```
+
+`gen_derived` writes `data/precomputed/derived_{by_form,nominal,modifiers}.bin`
+and is the one generator that must run with the engine, because the tables are
+built by `expand::derived::compute`. Commit the blobs;
+`expand::derived::tests::the_blobs_match_compute` fails if they drift.
+
 ### Python harness
 
 The Python files are the external-verification harness. The gates and their

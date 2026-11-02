@@ -1041,16 +1041,23 @@ const RULES: &[Rule] = &[
     },
 ];
 
-struct Derived {
-    forms: Vec<(String, &'static str)>,
-    by_form: HashMap<String, &'static str>,
+/// The derived tables, as computed from the sanalista.
+///
+/// The runtime does not call [`compute`]: it reads the blobs the `gen_derived`
+/// tool writes from this (`data/precomputed/derived_*.bin`). The type stays
+/// public so that tool can build them, and [`compute`] stays public so the
+/// blobs can be regenerated after a `RULES` or sanalista change.
+#[derive(Default)]
+pub struct Computed {
+    pub forms: Vec<(String, &'static str)>,
+    pub by_form: HashMap<String, &'static str>,
     /// Surfaces whose derived lemma is a noun or adjective, so a compound
     /// head may be one even though the lemma has no sanalista row
     /// (`paahtama` in `päivänpaahtama`).
-    nominal: HashSet<String>,
+    pub nominal: HashSet<String>,
     /// Compound stems that are not words on their own. The `-minen` action
     /// noun compounds on `-mis-` (`sämpylöityminen` -> `sämpylöitymisprosessi`).
-    modifiers: HashSet<String>,
+    pub modifiers: HashSet<String>,
 }
 
 /// The stem operation of `rule` on `lemma`. `gradation` is the base row's
@@ -1125,17 +1132,10 @@ fn step(lemma: &str, rule: &Rule) -> Option<String> {
 type Row = (&'static str, &'static str, &'static str, &'static str);
 
 /// The derived tables built from one chunk of the flagged rows.
-#[derive(Default)]
-struct Partial {
-    forms: Vec<(String, &'static str)>,
-    by_form: HashMap<String, &'static str>,
-    nominal: HashSet<String>,
-    modifiers: HashSet<String>,
-}
-
-fn derived() -> &'static Derived {
-    static CELL: OnceLock<Derived> = OnceLock::new();
-    CELL.get_or_init(|| {
+/// Builds the derived tables from the sanalista. The tool `gen_derived` runs
+/// this to write the blobs the runtime embeds; it is not on the runtime path.
+pub fn compute() -> Computed {
+    {
         let cat = Catalogues::embedded();
         // The parse is negligible (28 µs); the work is inflecting every
         // derived lemma, which is why it is split across the cores. A few
@@ -1155,7 +1155,7 @@ fn derived() -> &'static Derived {
             }
         }
         let threads = super::find_bases::worker_count().min(rows.len()).max(1);
-        let partials: Vec<Partial> = if threads <= 1 {
+        let partials: Vec<Computed> = if threads <= 1 {
             vec![build_rows(&rows, cat)]
         } else {
             // Only ~55 rows carry flags, so the share cannot have a floor of
@@ -1174,29 +1174,30 @@ fn derived() -> &'static Derived {
                     .collect()
             })
         };
-        let mut out = Partial::default();
+        let mut out = Computed::default();
         let forms_total: usize = partials.iter().map(|p| p.forms.len()).sum();
         out.forms.reserve(forms_total);
         out.by_form.reserve(forms_total);
         out.nominal.reserve(forms_total);
-        out.modifiers.reserve(partials.iter().map(|p| p.modifiers.len()).sum());
+        out.modifiers
+            .reserve(partials.iter().map(|p| p.modifiers.len()).sum());
         for partial in partials {
             out.forms.extend(partial.forms);
             out.by_form.extend(partial.by_form);
             out.nominal.extend(partial.nominal);
             out.modifiers.extend(partial.modifiers);
         }
-        Derived {
+        Computed {
             forms: out.forms,
             by_form: out.by_form,
             nominal: out.nominal,
             modifiers: out.modifiers,
         }
-    })
+    }
 }
 
 /// Builds the derived tables for one chunk of flagged rows.
-fn build_rows(rows: &[Row], cat: &Catalogues) -> Partial {
+fn build_rows(rows: &[Row], cat: &Catalogues) -> Computed {
     let mut forms = Vec::new();
     let mut by_form = HashMap::new();
     let mut nominal = HashSet::new();
@@ -1295,7 +1296,7 @@ fn build_rows(rows: &[Row], cat: &Catalogues) -> Partial {
             }
         }
     }
-    Partial {
+    Computed {
         forms,
         by_form,
         nominal,
@@ -1303,31 +1304,168 @@ fn build_rows(rows: &[Row], cat: &Catalogues) -> Partial {
     }
 }
 
+/// A sorted, `include_bytes!`'d table.
+///
+/// Computed by the `gen_derived` tool from [`compute`] and committed, because
+/// building it at start-up costs ~85 ms: the 55 flagged rows inflect to 42 532
+/// surfaces. The layout is little-endian:
+///
+/// ```text
+/// "DER1" | u32 count | u32 keys_len | u32 vals_len
+/// | u32 key_offsets[count + 1]
+/// | u32 value_offsets[count + 1]   (only when vals_len > 0)
+/// | keys bytes | vals bytes
+/// ```
+///
+/// Offsets are relative to their own byte pool. A set has `vals_len == 0` and
+/// no value table. Loading costs nothing: the bytes are the embedded blob and
+/// a lookup is a binary search over the key offsets.
+struct Blob {
+    bytes: &'static [u8],
+    count: usize,
+    has_values: bool,
+    values_at: usize,
+    keys_start: usize,
+    vals_start: usize,
+}
+
+impl Blob {
+    fn load(bytes: &'static [u8]) -> Self {
+        assert!(
+            bytes.len() >= 16 && &bytes[..4] == b"DER1",
+            "derived: bad blob header"
+        );
+        let count = le_u32(bytes, 4) as usize;
+        let keys_len = le_u32(bytes, 8) as usize;
+        let vals_len = le_u32(bytes, 12) as usize;
+        let has_values = vals_len > 0;
+        let values_at = if has_values { 16 + (count + 1) * 4 } else { 0 };
+        let keys_start = 16 + (count + 1) * 4 + if has_values { (count + 1) * 4 } else { 0 };
+        Blob {
+            bytes,
+            count,
+            has_values,
+            values_at,
+            keys_start,
+            vals_start: keys_start + keys_len,
+        }
+    }
+
+    fn key(&self, i: usize) -> &'static str {
+        let start = le_u32(self.bytes, 16 + i * 4) as usize;
+        let end = le_u32(self.bytes, 16 + (i + 1) * 4) as usize;
+        std::str::from_utf8(&self.bytes[self.keys_start + start..self.keys_start + end])
+            .expect("derived: key is not utf-8")
+    }
+
+    fn value(&self, i: usize) -> &'static str {
+        if !self.has_values {
+            return "";
+        }
+        let at = self.values_at + i * 4;
+        let start = le_u32(self.bytes, at) as usize;
+        let end = le_u32(self.bytes, at + 4) as usize;
+        std::str::from_utf8(&self.bytes[self.vals_start + start..self.vals_start + end])
+            .expect("derived: value is not utf-8")
+    }
+
+    fn find(&self, word: &str) -> Option<usize> {
+        let (mut lo, mut hi) = (0usize, self.count);
+        while lo < hi {
+            let mid = (lo + hi) / 2;
+            match self.key(mid).cmp(word) {
+                std::cmp::Ordering::Less => lo = mid + 1,
+                std::cmp::Ordering::Greater => hi = mid,
+                std::cmp::Ordering::Equal => return Some(mid),
+            }
+        }
+        None
+    }
+
+    fn iter(&'static self) -> impl Iterator<Item = (&'static str, &'static str)> {
+        (0..self.count).map(move |i| (self.key(i), self.value(i)))
+    }
+}
+
+fn le_u32(bytes: &[u8], at: usize) -> u32 {
+    u32::from_le_bytes(
+        bytes[at..at + 4]
+            .try_into()
+            .expect("derived: blob is shorter than its header"),
+    )
+}
+
+fn blob(slot: &'static OnceLock<Blob>, bytes: &'static [u8]) -> &'static Blob {
+    slot.get_or_init(|| Blob::load(bytes))
+}
+
+static BY_FORM: OnceLock<Blob> = OnceLock::new();
+static NOMINAL: OnceLock<Blob> = OnceLock::new();
+static MODIFIERS: OnceLock<Blob> = OnceLock::new();
+
+const BY_FORM_BIN: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/data/precomputed/derived_by_form.bin"
+));
+const NOMINAL_BIN: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/data/precomputed/derived_nominal.bin"
+));
+const MODIFIERS_BIN: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/data/precomputed/derived_modifiers.bin"
+));
+
 /// The derived lemma a surface belongs to.
 pub fn base(word: &str) -> Option<&'static str> {
-    derived().by_form.get(word).copied()
+    let blob = blob(&BY_FORM, BY_FORM_BIN);
+    blob.find(word).map(|i| blob.value(i))
 }
 
 /// Every generated derived surface, paired with its lemma.
-pub fn forms() -> &'static [(String, &'static str)] {
-    &derived().forms
+pub fn forms() -> impl Iterator<Item = (&'static str, &'static str)> + 'static {
+    blob(&BY_FORM, BY_FORM_BIN).iter()
 }
 
 /// Whether `word` is a derived compound stem rather than a standalone word.
 pub fn is_modifier(word: &str) -> bool {
-    derived().modifiers.contains(word)
+    blob(&MODIFIERS, MODIFIERS_BIN).find(word).is_some()
 }
 
 /// Whether `word` is a form of a derived noun or adjective lemma. Compound
 /// heads are nominals, but a derived nominal (`paahtama`) has no sanalista
 /// row for `is_content_head` to probe.
 pub fn is_nominal(word: &str) -> bool {
-    derived().nominal.contains(word)
+    blob(&NOMINAL, NOMINAL_BIN).find(word).is_some()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The committed blobs are the computation's own tables.
+    ///
+    /// `compute()` is the source of truth; the runtime reads the blobs the
+    /// `gen_derived` tool writes from it. If a rule or the sanalista changes
+    /// without the blobs being regenerated, this is the test that says so.
+    #[test]
+    fn the_blobs_match_compute() {
+        let computed = compute();
+        for (surface, lemma) in &computed.by_form {
+            assert_eq!(base(surface), Some(*lemma), "{surface}");
+        }
+        assert_eq!(
+            forms().count(),
+            computed.by_form.len(),
+            "the by-form blob has a different size"
+        );
+        for word in &computed.nominal {
+            assert!(is_nominal(word), "{word} is nominal in the computation");
+        }
+        for word in &computed.modifiers {
+            assert!(is_modifier(word), "{word} is a modifier in the computation");
+        }
+    }
 
     #[test]
     fn noun_adjective_rules_build_their_expected_lemma() {

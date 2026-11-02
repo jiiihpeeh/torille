@@ -61,14 +61,14 @@ pub fn suggest_over_lemmas(word: &str, max_n: usize, max_distance: usize) -> Vec
         // `max_n`; left as future work.)
         let _ = cap;
     }
-    for (surface, _lemma) in crate::expand::derived::forms().iter() {
+    for (surface, _lemma) in crate::expand::derived::forms() {
         let l_len = surface.chars().count();
         if word_chars_len.abs_diff(l_len) > max_distance {
             continue;
         }
         let d = levenshtein(lower.as_str(), surface, max_distance);
         if d <= max_distance {
-            scored.push((d, surface.clone()));
+            scored.push((d, surface.to_string()));
         }
     }
     // The colloquial `-s` (`ymmärrätkös`, `mitäs`, `kukas`): the checker

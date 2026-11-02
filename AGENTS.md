@@ -110,6 +110,13 @@ docs/                 harness.md, lexicon.md, morfologia.yaml, hyphenation.md
 
 Both are `include_str!`'d (`lib.rs`), so the shipped crate needs no data files.
 
+`data/precomputed/derived_{by_form,nominal,modifiers}.bin` are the exception to
+the build-script writers below: the derived tables are built with the engine
+(`expand::derived::compute`), which a build script cannot call. Run
+`cargo run --release -p torille-tools --bin gen_derived` after a `RULES` or
+sanalista change and commit the blobs;
+`expand::derived::tests::the_blobs_match_compute` fails if they drift.
+
 ### Build-time codegen (`build.rs` + `build/`)
 
 Parsing the 2.8 MB sanalista at every process start costs ~31 ms and ~420k
