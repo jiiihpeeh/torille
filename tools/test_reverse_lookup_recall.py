@@ -120,9 +120,9 @@ def measure(binary: str, pairs: list[tuple[str, str]], out_path: str | None):
         with open(rows_path, encoding="utf-8") as fh:
             for line in fh:
                 parts = line.rstrip("\n").split("\t")
-                if len(parts) != 7:
+                if len(parts) != 8:
                     raise SystemExit(f"unexpected tool output: {line!r}")
-                form, _lemma, found, nbases, plain, ranked, len_ok = parts
+                form, _lemma, found, nbases, plain, ranked, len_ok, _first_base = parts
                 totals["n"] += 1
                 totals["found"] += int(found)
                 totals["plain"] += int(plain)

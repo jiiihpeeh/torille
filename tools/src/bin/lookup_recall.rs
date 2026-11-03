@@ -6,7 +6,7 @@
 //! per pair to stdout:
 //!
 //! ```text
-//! form  lemma  found  nbases  plain_top1  ranked_top1  len_ok
+//! form  lemma  found  nbases  plain_top1  ranked_top1  len_ok  first_base
 //! ```
 //!
 //! - `found` is 1 when `lemma` is among the word's base forms. This is the
@@ -21,6 +21,10 @@
 //! - `len_ok` is 1 when the two orders hold the same bases. The ranking
 //!   reorders and must never filter, so a word that comes back with fewer bases
 //!   than it has is the one failure this could hide.
+//! - `first_base` is the ranked first base itself, empty when there is none.
+//!   `ranked_top1` only says whether it is the reference's lemma; the name is
+//!   what lets a report ask whether it is *a* confirmed base of the surface,
+//!   which is the right question when the word genuinely has several.
 //!
 //! The thresholds live in `tools/test_reverse_lookup_recall.py`, not here. A
 //! measurement that grades itself cannot be disagreed with.
@@ -119,12 +123,13 @@ fn answer(
                         }
                         tally.by_size[bases.len().min(7)] += 1;
                         lines.push(format!(
-                            "{form}\t{lemma}\t{}\t{}\t{}\t{}\t{}",
+                            "{form}\t{lemma}\t{}\t{}\t{}\t{}\t{}\t{}",
                             found as u8,
                             bases.len(),
                             plain_top1 as u8,
                             ranked_top1 as u8,
                             (bases.len() == ranked.len()) as u8,
+                            ranked.first().copied().unwrap_or(""),
                         ));
                     }
                     (lines, tally)

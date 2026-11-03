@@ -57,7 +57,7 @@ Everyday probes:
 | `hyphenate` | show permitted Finnish line breaks, with `--json` offsets |
 | `look_base` | show the bases and generated forms for one word |
 | `derive` | derivational forms of a base word |
-| `lookup_recall` | score lookup against `(form, lemma)` pairs on stdin |
+| `lookup_recall` | score lookup against `(form, lemma)` pairs on stdin; writes the ranked first base |
 | `suggest_correct` | print ranked suggestions for a misspelling |
 
 Corpus and code generation:
@@ -110,6 +110,7 @@ python3 tools/show_illegals.py --no-refresh reports/noun-classes.json
 python3 tools/show_illegals.py --refresh
 python3 tools/test_binding_agrees_with_binary.py
 python3 tools/test_reverse_lookup_recall.py
+python3 tools/report_multiple_bases.py reports/recall5.tsv
 python3 tools/test_experimental_features.py
 ```
 
@@ -135,7 +136,7 @@ The remaining scripts fall into four groups:
   heads.
 - **Audits and reports** — `audit_*`, `walk_check.py`, `fingerprint_nouns.py`,
   `compound_recall.py`, `classify_lemma.py`, `report_by_class.py`,
-  `show_illegals.py`.
+  `report_multiple_bases.py`, `show_illegals.py`.
 - **Diagnostics** — `diag_*.py`, `csvtool.py`, `run_wordlist.py`,
   `make_*.py`, `omorfi_harness.py`, `check_hyphenation_against_voikko.py`.
 - **Corpus fetches** — `fetch_wiktionary.py`, `fetch_finnish_books.py`,

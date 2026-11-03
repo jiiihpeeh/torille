@@ -15,8 +15,9 @@ homonymy, and a listed adjective and its source verb really do share participle
 forms. Of the 15,315 reference pairs whose first base is not the reference's
 lemma, **13,151 have a first base that is itself double-confirmed (`both`) for
 the surface** and another **1,613 have a first base one oracle confirms**. Only
-**551** have a first base neither oracle confirms, and some of those are oracle
-gaps rather than engine bugs.
+**551 of those** have a first base neither oracle confirms, and some of those
+are oracle gaps rather than engine bugs. The 751 not-found pairs are a separate
+recall problem.
 
 So the fix is not "return one base". It is:
 
@@ -98,18 +99,22 @@ Grouped by what the first base is:
 | one-authority alternative (`omorfi` only) | **1,613** |
 | unconfirmed (`engine` or absent) | **551** |
 
-That gives three different "first-base" scores over the 640,873 pairs:
+That gives three different "first-base" scores.
+
+Over all 640,873 pairs:
 
 | score | count | share |
 |---|---:|---:|
 | exact reference lemma (today's figure) | 624,807 | 97.49% |
-| first base is **a** `both`-confirmed base of the surface | 637,958 | **99.55%** |
-| first base is confirmed by at least one oracle | 639,571 | **99.80%** |
-| first base is unconfirmed | 551 | **0.086%** |
+| first base is **a** `both`-confirmed base of the surface | 638,058 | **99.56%** |
+| first base is confirmed by at least one oracle | 639,699 | **99.82%** |
+| first base is unconfirmed | 1,174 | **0.18%** |
 
-Over the 640,122 pairs where the reference base is found, the same figures are
-97.61%, 99.66% and 99.91%. The 751 not-found pairs are outside this breakdown
-and are a recall problem, not an ambiguity one.
+The 1,174 unconfirmed rows split into **551 found-but-not-first** (the ranking
+audit list) and **623 not-found** rows; 596 of the not-found rows have no first
+base at all. Over the 640,122 found pairs the figures are 97.61%, 99.66%,
+99.91% and **551 (0.086%)**. The plan's audit target is the 551, not the 623
+recall misses.
 
 ### The unconfirmed 551
 
@@ -251,9 +256,8 @@ Extend `lookup_recall` to print the ranked first base, not only a boolean:
 form  lemma  found  nbases  plain_top1  ranked_top1  len_ok  first_base
 ```
 
-Then `tools/test_reverse_lookup_recall.py` (or a new
-`tools/report_multiple_bases.py`) can join `first_base` against both oracles
-and report:
+Then `tools/report_multiple_bases.py` can join `first_base` against both
+oracles and report:
 
 - exact first (the current figure);
 - first base is a `both`-confirmed base of the surface;
@@ -267,20 +271,27 @@ in `reports/` (gitignored).
 
 ## Phases
 
-### Phase 0 — make ambiguity visible  *(0.5 day)*
+### Phase 0 — make ambiguity visible  *(done 2026-11-03)*
 
-- [ ] Add `first_base` to `tools/src/bin/lookup_recall.rs` output and update
+- [x] Add `first_base` to `tools/src/bin/lookup_recall.rs` output and update
       the parser in `tools/test_reverse_lookup_recall.py`.
-- [ ] Add a `--multiple-bases` mode (or `tools/report_multiple_bases.py`) that
-      reads the TSV and both SQLite oracles and prints the table from this
-      file.
-- [ ] Add a permanent `BaseAnalysis` dump to `lookup` (`--all`, `--explain`) so
-      a report row can be reproduced by hand.
-- [ ] Record the baseline in the tool's module docs; do not add a hard floor
+- [x] Add `tools/report_multiple_bases.py`; it reads the TSV and both SQLite
+      oracles, prints the table from this file, and writes
+      `reports/wrong_first.tsv` (15,315 rows) and
+      `reports/unconfirmed_first.tsv` (1,174 rows, of which 551 found).
+- [x] Add `lookup --explain` (and accept `--all`, which is the default) so a
+      report row can be reproduced by hand with the first base marked and the
+      part of speech beside each base.
+- [x] Record the baseline in the tool's module docs; do not add a hard floor
       for the exact figure until Phase 2 is measured.
 
-Acceptance: one command regenerates the 15,315-row table and the 551-row audit
-list; no engine output changes.
+Acceptance met: one command regenerates the 15,315-row table and the 551-row
+audit list; no engine output changed.
+
+```bash
+python3 tools/test_reverse_lookup_recall.py reports/recall5.tsv
+python3 tools/report_multiple_bases.py reports/recall5.tsv
+```
 
 ### Phase 1 — audit the 551 unconfirmed first bases  *(2-3 days)*
 

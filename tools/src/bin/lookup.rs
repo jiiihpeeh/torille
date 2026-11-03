@@ -14,6 +14,9 @@
 //!   --unranked    report the sanalista's order instead of the ranked one, which
 //!                 is what the sanalista reaches the words in. Comparing the two
 //!                 is how the ranking is measured rather than assumed.
+//!   --explain     mark the first base and show each base's part of speech, so
+//!                 a reader can see why the ranking named it first. `--all` is
+//!                 accepted as a no-op because every base is always printed.
 //!
 //! Builds the index over the whole sanalista, then for WORD prints the base
 //! forms it is an inflected form of, likelier first, and the readings the index
@@ -34,6 +37,7 @@ use torille_tools::{catalogue, sanalista};
 fn main() -> ExitCode {
     let mut case: Option<Option<Case>> = None;
     let mut ranked = true;
+    let mut explain = false;
     let mut word = String::new();
     let mut args = std::env::args().skip(1);
     while let Some(arg) = args.next() {
@@ -51,8 +55,10 @@ fn main() -> ExitCode {
                 }
             },
             "--unranked" => ranked = false,
+            "--explain" => explain = true,
+            "--all" => {}
             "--help" | "-h" => {
-                eprintln!("usage: lookup [--case NAME] [--unranked] WORD");
+                eprintln!("usage: lookup [--case NAME] [--unranked] [--explain] WORD");
                 return ExitCode::from(2);
             }
             other if word.is_empty() => word = other.to_string(),
@@ -63,7 +69,7 @@ fn main() -> ExitCode {
         }
     }
     if word.is_empty() {
-        eprintln!("usage: lookup [--case NAME] [--unranked] WORD");
+        eprintln!("usage: lookup [--case NAME] [--unranked] [--explain] WORD");
         return ExitCode::from(2);
     }
 
@@ -101,8 +107,20 @@ fn main() -> ExitCode {
         }
     } else {
         println!("{word} is a form of:");
-        for (base, classes) in with_classes(&builder, &word, &bases) {
-            println!("  {base}{}", describe_classes(&classes));
+        for (i, (base, classes)) in with_classes(&builder, &word, &bases)
+            .into_iter()
+            .enumerate()
+        {
+            if explain {
+                let marker = if i == 0 { "*" } else { " " };
+                println!(
+                    "  {marker} {base}{}  {}",
+                    describe_classes(&classes),
+                    describe_pos(base)
+                );
+            } else {
+                println!("  {base}{}", describe_classes(&classes));
+            }
         }
         if case.is_none() && ranked {
             let plain = builder.bases_of(&word);
@@ -159,6 +177,18 @@ fn describe_classes(classes: &[torille::kotus::Inflection]) -> String {
     }
     let spelled: Vec<String> = classes.iter().map(ToString::to_string).collect();
     format!("  [{}]", spelled.join(", "))
+}
+
+/// The sanalista's part of speech for a base, or an empty string.
+fn describe_pos(base: &str) -> String {
+    let mut seen: Vec<&str> = Vec::new();
+    for lemma in sanalista().by_word(base) {
+        let pos = lemma.part_of_speech();
+        if !pos.is_empty() && !seen.contains(&pos) {
+            seen.push(pos);
+        }
+    }
+    seen.join(", ")
 }
 
 /// The case a `--case` argument names.
