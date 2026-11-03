@@ -668,10 +668,10 @@ readings:
 The ranking is `ClassPrior` in the core rather than in this binary, so the Python
 binding ranks identically — see [FIX_ME.md](FIX_ME.md). How often the answer is
 right is measured, not assumed: `tools/test_reverse_lookup_recall.py` asserts that
-99.87% of the reference's 626 201 `(lemma, form)` pairs have the right base
+99.87% of the reference's 640 873 `(lemma, form)` pairs have the right base
 *among* the answers, and that ranking beats the sanalista's own order on the first
-base by 0.67 points (97.48% against 96.81%). The 2.3-point gap between those two
-is not a defect: 5.75% of the reference's words genuinely have two base forms.
+base by 0.66 points (97.49% against 96.83%). The 2.4-point gap between those two
+is not a defect: 5.78% of the reference's words genuinely have two base forms.
 
 A pronoun's forms are indexed even though the sanalista gives a pronoun no
 declension number, because a pronoun has no model *because it is irregular* and
@@ -901,7 +901,7 @@ formatter rewrite those two.
 three cannot see. The fingerprint digests the *forward* direction — how many
 forms each lemma makes — so an index that attaches a form to the wrong base is
 byte-identical to a correct one, and the two tree gates never ask the question at
-all. It compares against the Kotus reference over 626 201 `(lemma, form)` pairs
+all. It compares against the Kotus reference over 640 873 `(lemma, form)` pairs
 and asserts a 99.8% floor, plus that ranking the bases does not make the *first*
 base worse than leaving them in the sanalista's own order. A reference built
 with the old `--engine` default (which wrote engine rows as `ok='both'`) is

@@ -54,8 +54,10 @@ forms:  lemma │ homonym │ form │ case │ number │ possessive │ ok
   because it is one word and two cells, and the primary key is
   `(lemma, homonym, form, case, number, possessive)`.
 
-The current build: **25 401 words, 4 261 603 form rows, 245 classes**,
-657 MB. 3 500 922 rows are `ok='both'`; 760 681 are `ok='omorfi'`.
+The current build: **30 511 words, 5 184 663 oracle form rows** (16 695 522
+including the engine enrichment), 245 classes, 2.7 GB. 3 931 222 rows are
+`ok='both'`, 1 253 441 `ok='omorfi'` and 11 510 859 `ok='engine'`; the oracle
+grid alone is ~0.7 GB.
 
 ## Building it
 
