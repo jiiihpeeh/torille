@@ -202,6 +202,13 @@ fixed:
   where 10 had none. The `-ias` `-s` stem (`viisikymmenvuotis-` in
   `viisikymmenvuotispäivä`) is the same combining-form shape as `-nen` ->
   `-s`. Pinned by `a_numeral_combining_modifier_reaches_the_head`.
+- `kaksikymmentä` — a classless numeral row, so it had no paradigm at all.
+  `numeral_forms` now builds the tens: both members decline
+  (`kahdenkymmenen`, `kahtakymmentä`, `kahdellakymmenellä`) and the
+  nominative puts `kymmen` in the partitive singular. The citation comes from
+  the sanalista row because `seitsemän`/`kahdeksan`/`yhdeksän` are class 10
+  and have no nominative reading in the class output. The 8 tens are now
+  inflectable; pinned by `a_tens_numeral_declines_both_members`.
 
 ### Phase 3 — genitive-initial and coordinated compounds
 

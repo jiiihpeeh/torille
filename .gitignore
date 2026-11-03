@@ -13,6 +13,7 @@ __pycache__/
 # Generated noun lexicon and examples. Rebuild with
 #   python3 tools/build_nomine_lexicon.py -o data/kotus_nomines.sqlite
 data/kotus_nomines.sqlite
+data/kotus_nomines.new.sqlite
 data/kotus_nomines_example.*
 # The original hand-written sketch, superseded by the generated lexicon
 data/kotus_nomines.json

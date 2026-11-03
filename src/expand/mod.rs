@@ -2426,6 +2426,57 @@ mod tests {
         }
     }
 
+    /// A tens numeral declines both members.
+    ///
+    /// `kaksikymmentä` is a classless sanalista row, so nothing made its
+    /// paradigm and `inflect` returned none. Both members decline
+    /// (`kahdenkymmenen`, `kahtakymmentä`, `kahdellakymmenellä`); the
+    /// nominative keeps the first member as the citation and puts `kymmen` in
+    /// the partitive singular. `seitsemän`/`kahdeksan`/`yhdeksän` are class 10
+    /// and have no nominative reading in the class output, so the citation is
+    /// taken from the sanalista row.
+    #[test]
+    fn a_tens_numeral_declines_both_members() {
+        let cat = cat();
+        for (lemma, wants) in [
+            (
+                "kaksikymmentä",
+                &[
+                    "kaksikymmentä",
+                    "kahdenkymmenen",
+                    "kahtakymmentä",
+                    "kahteenkymmeneen",
+                    "kahdellakymmenellä",
+                ][..],
+            ),
+            (
+                "seitsemänkymmentä",
+                &[
+                    "seitsemänkymmentä",
+                    "seitsemänkymmenen",
+                    "seitsemääkymmentä",
+                ][..],
+            ),
+            (
+                "kahdeksankymmentä",
+                &[
+                    "kahdeksankymmentä",
+                    "kahdeksankymmenen",
+                    "kahdeksaakymmentä",
+                ][..],
+            ),
+        ] {
+            let forms = inflect_all(lemma, &[], &cat, None, PartOfSpeech::Numeral, false);
+            let words: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
+            for want in wants {
+                assert!(
+                    words.contains(want),
+                    "{lemma} does not emit {want}"
+                );
+            }
+        }
+    }
+
     /// A numeral's combining stem is a compound modifier.
     ///
     /// `kaksikymmenvuotias` is `kaksikymmen` (the combining stem of

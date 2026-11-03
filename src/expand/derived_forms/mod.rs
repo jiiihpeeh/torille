@@ -7,11 +7,11 @@
 
 use crate::kotus::{EmbeddedLemma, Inflection};
 use crate::spec::Catalogues;
-use crate::tags::{Confidence, PartOfSpeech};
+use crate::tags::{Case, Confidence, Number, PartOfSpeech, Tags};
 
 use super::degrees;
 use super::lexicon_index::LexiconIndex;
-use super::{Generated, inflect_all, inflect_in};
+use super::{Generated, forms_of, inflect_all, inflect_in};
 
 mod agent;
 mod inen;
@@ -537,21 +537,23 @@ fn is_bound_prefix(word: &str) -> bool {
             | "morsius"
     )
 }
-/// The derived forms of a `-toista` numeral.
+/// The derived forms of a compound numeral: the `-toista` teens and the
+/// `-kymmentä` tens.
 ///
 /// The teens (`kuusitoista` = 16) and their ordinals (`kuudestoista` =
 /// 16th) are compounds whose *first* member inflects while `toista`
 /// stays fixed: the genitive of `kuusitoista` is `kuuden` + `toista`.
 /// The sanalista gives these words no class, so nothing else makes them;
 /// the prefix is a numeral with a class of its own (`kuusi` : `kuuden`),
-/// which supplies the paradigm.
+/// which supplies the paradigm. The tens are [`tens_forms`]: both members
+/// decline.
 pub(super) fn numeral_forms(
     lemma: &str,
     cat: &Catalogues,
     lexicon: Option<&LexiconIndex>,
 ) -> Vec<Generated> {
     let Some(prefix) = lemma.strip_suffix("toista").filter(|p| !p.is_empty()) else {
-        return Vec::new();
+        return tens_forms(lemma, cat, lexicon).unwrap_or_default();
     };
     // The prefix must be a *numeral*: `kuusi` is also the spruce
     // (substantiivi, class 24), whose paradigm would give `kuusentoista`.
@@ -576,6 +578,92 @@ pub(super) fn numeral_forms(
         );
     }
     out
+}
+
+/// The tens (`kaksikymmentä` = 20), or `None` when `lemma` is not one.
+///
+/// Both members decline together -- `kahdenkymmenen`, `kahtakymmentä`,
+/// `kahdellakymmenellä` -- except in the nominative, where the first member is
+/// nominative and `kymmen` is partitive singular (`kaksi` + `kymmentä`). The
+/// first member must be a numeral lemma; `kymmen` supplies the head forms, so
+/// the class-32 noun's own spelling is used (`kymmenen`, not the numeral
+/// `kymmenen`'s `kymmeneneen`).
+fn tens_forms(
+    lemma: &str,
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+) -> Option<Vec<Generated>> {
+    let prefix = lemma.strip_suffix("kymmentä").filter(|p| !p.is_empty())?;
+    let prefix_row = crate::kotus::sanalista()
+        .by_word(prefix)
+        .find(|row| row.part_of_speech().contains("numeraali"))?;
+    let kymmen_row = crate::kotus::sanalista().by_word("kymmen").next()?;
+    let prefix_inflections: Vec<Inflection> = prefix_row.inflections().collect();
+    let kymmen_inflections: Vec<Inflection> = kymmen_row.inflections().collect();
+    if prefix_inflections.is_empty() || kymmen_inflections.is_empty() {
+        return None;
+    }
+    let mut out = Vec::new();
+    for case in Case::ALL {
+        let first_want = Tags {
+            case: Some(case),
+            number: Some(Number::Singular),
+            ..Tags::UNKNOWN
+        };
+        let head_case = if case == Case::Nominative {
+            Case::Partitive
+        } else {
+            case
+        };
+        let head_want = Tags {
+            case: Some(head_case),
+            number: Some(Number::Singular),
+            ..Tags::UNKNOWN
+        };
+        let heads = forms_of(
+            "kymmen",
+            &kymmen_inflections,
+            cat,
+            lexicon,
+            &head_want,
+            PartOfSpeech::Noun,
+            false,
+        );
+        // The citation is the first member's nominative whatever the numeral's
+        // own class does with that cell: `seitsemän` is class 10 and its
+        // nominative reading is missing from the class output, but the
+        // sanalista word is the form.
+        let firsts = if case == Case::Nominative {
+            vec![Generated::new(
+                prefix_row.word().to_string(),
+                Tags {
+                    part_of_speech: Some(PartOfSpeech::Numeral),
+                    case: Some(Case::Nominative),
+                    number: Some(Number::Singular),
+                    ..Tags::UNKNOWN
+                },
+            )]
+        } else {
+            forms_of(
+                prefix,
+                &prefix_inflections,
+                cat,
+                lexicon,
+                &first_want,
+                PartOfSpeech::Numeral,
+                false,
+            )
+        };
+        for head in &heads {
+            for first in &firsts {
+                out.push(
+                    Generated::new(format!("{}{}", first.word, head.word), first.union())
+                        .with(Confidence::Repaired),
+                );
+            }
+        }
+    }
+    Some(out)
 }
 
 /// The comparative (class 16) and superlative (class 36) paradigms an
