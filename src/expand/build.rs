@@ -1,6 +1,6 @@
 use crate::kotus::Lemma;
 use crate::spec::Catalogues;
-use crate::tags::{Case, Number, PartOfSpeech, Tags};
+use crate::tags::{Case, Confidence, Number, PartOfSpeech, Tags};
 use crate::wordset::WordSet;
 
 use super::inflect_in;
@@ -38,8 +38,13 @@ pub struct FormBuilder {
     /// length of `known` at all times: one entry goes in for every word that
     /// was not already there.
     pub analyses: Vec<Vec<Tags>>,
-    /// The first base form of every word, in the order the words went in, as an
-    /// index into `base_words` and the set of cases the word was reached in.
+    /// The first base form of every word, in the order the words went in, as a
+    /// packed index into `base_words` and the set of cases the word was reached
+    /// in.
+    ///
+    /// The index is the low [`BASE_ID_BITS`] bits; the top two carry the
+    /// [`Confidence`] the form was generated with. Use [`base_id`] to read the
+    /// index; the packed value is an implementation detail of the ranking.
     ///
     /// This is the way back, and it is flat because a word has one base form
     /// almost always and a `Vec` per word would cost more in allocations than
@@ -54,7 +59,10 @@ pub struct FormBuilder {
     /// there.
     pub first_base: Vec<(u32, u16)>,
     /// The base forms of a word beyond its first, as the word's position, the
-    /// base and the set of cases.
+    /// packed base id and the set of cases.
+    ///
+    /// The base id is packed the same way as [`Self::first_base`]: low bits are
+    /// the index, the top two are the [`Confidence`].
     ///
     /// A word is reached once for each lemma that makes it, and a word made by
     /// two lemmas has two bases. The first one to reach it takes the slot that
@@ -242,8 +250,16 @@ impl FormBuilder {
                 _ if lemma.is_indeclinable() => Tags::UNKNOWN.of_pos(pos),
                 _ => Tags::of_number(Case::Nominative, Number::Singular).of_pos(pos),
             };
-            let p = self.accept(lemma.word, lemma.word, &[citation]);
+            let p = self.accept(lemma.word, lemma.word, &[citation], Confidence::Plain);
             self.mark_suggestible(p);
+            // An interjection is a word, not a nominal paradigm. The sanalista
+            // gives `stop` class 5, but the noun is `stoppi`; running class 5
+            // over `stop` invents `stopeiksi` and `stopeilla`, which neither
+            // oracle confirms. The citation above is still recorded, so the
+            // interjection remains a known, suggestible word.
+            if pos == PartOfSpeech::Interjection {
+                continue;
+            }
             for inflection in &lemma.inflections {
                 // A class the sanalista gives no model for is skipped, because
                 // there is nothing to inflect from -- unless the engine has a
@@ -267,7 +283,7 @@ impl FormBuilder {
                     lemma.part_of_speech.contains("substantiivi"),
                 ) {
                     let plain = form.plain() && is_phonotactic(&form.word);
-                    let p = self.accept(&form.word, lemma.word, form.readings());
+                    let p = self.accept(&form.word, lemma.word, form.readings(), form.confidence);
                     if plain {
                         self.mark_suggestible(p);
                     }
@@ -284,13 +300,20 @@ impl FormBuilder {
     /// `voi` is reached three times over: as the noun of class 18, as the
     /// interjection that shares the spelling, and as the first person present
     /// of `voida`.
-    fn accept(&mut self, word: &str, base: &str, readings: &[Tags]) -> usize {
+    fn accept(
+        &mut self,
+        word: &str,
+        base: &str,
+        readings: &[Tags],
+        confidence: Confidence,
+    ) -> usize {
         let next = self.base_words.len() as u32;
         let base_id = *self.base_ids.entry(base.to_string()).or_insert_with(|| {
             self.base_words.push(base.to_string());
             next
         });
         let cases: u16 = readings.iter().fold(0, |mask, r| mask | case_bit(r.case));
+        let packed = pack_base(base_id, confidence);
         let (is_new, p) = self.known.insert_at(word);
         if is_new {
             let mut slot: Vec<Tags> = Vec::with_capacity(readings.len());
@@ -298,12 +321,12 @@ impl FormBuilder {
                 crate::tags::add_reading(&mut slot, *reading);
             }
             self.analyses.push(slot);
-            self.first_base.push((base_id, cases));
+            self.first_base.push((packed, cases));
         } else {
             for reading in readings {
                 crate::tags::add_reading(&mut self.analyses[p], *reading);
             }
-            self.add_base(p, base_id, cases);
+            self.add_base(p, packed, cases);
         }
         p
     }
@@ -363,21 +386,24 @@ impl FormBuilder {
     /// the surface than `par` + `in`, which is the reading a compound head
     /// wants (`nuorenparin` is `nuori` + `pari`).
     pub fn best_base(&self, word: &str) -> Option<&str> {
-        let mut best: Option<(&str, usize, usize)> = None;
-        for (base, classes) in self.bases_with_classes(word) {
+        let mut best: Option<(&str, Confidence, usize, usize)> = None;
+        for (base, classes, confidence) in self.bases_with_evidence(word) {
             let score = self.prior.score(classes);
             let prefix = common_prefix(word, base);
             let better = match best {
                 None => true,
-                Some((_, best_score, best_prefix)) => {
-                    score > best_score || (score == best_score && prefix > best_prefix)
+                Some((_, best_confidence, best_score, best_prefix)) => {
+                    confidence > best_confidence
+                        || (confidence == best_confidence
+                            && (score > best_score
+                                || (score == best_score && prefix > best_prefix)))
                 }
             };
             if better {
-                best = Some((base, score, prefix));
+                best = Some((base, confidence, score, prefix));
             }
         }
-        best.map(|(base, _, _)| base)
+        best.map(|(base, _, _, _)| base)
     }
 
     /// The base forms a word is an inflected form of in the case given, in the
@@ -398,26 +424,41 @@ impl FormBuilder {
             .collect()
     }
 
-    /// The base forms of a word could be an inflected form of, and the classes
-    /// each was reached under, in the order the index reached them.
+    /// The base forms of a word could be an inflected form of, the classes
+    /// each was reached under, and how confidently, in the order the index
+    /// reached them.
     ///
     /// This is the half of [`FormBuilder::bases_of`] that a ranking needs and
     /// that a caller showing its working wants anyway: `talo` is class 1 and
-    /// `kaiku` class 47, and that is not visible from the name.
-    pub fn bases_with_classes(&self, word: &str) -> Vec<(&str, &[crate::kotus::Inflection])> {
+    /// `kaiku` class 47, and that is not visible from the name. The confidence
+    /// is the one the form was generated with; a base reached twice keeps the
+    /// stronger of the two, since one plain reading is enough to make it plain.
+    pub fn bases_with_evidence(
+        &self,
+        word: &str,
+    ) -> Vec<(&str, &[crate::kotus::Inflection], Confidence)> {
         let Some(p) = self.known.position(word) else {
             return Vec::new();
         };
-        let mut out: Vec<(&str, &[crate::kotus::Inflection])> = Vec::new();
+        let mut out: Vec<(&str, &[crate::kotus::Inflection], Confidence)> = Vec::new();
         for id in self.base_ids_of(p) {
-            let id = id as usize;
+            let confidence = base_confidence(id);
+            let id = base_id(id) as usize;
             let base = self.base_words[id].as_str();
-            if out.iter().any(|(b, _)| *b == base) {
-                continue;
+            match out.iter_mut().find(|(b, _, _)| *b == base) {
+                Some((_, _, seen)) => *seen = (*seen).max(confidence),
+                None => out.push((base, &self.base_classes[id], confidence)),
             }
-            out.push((base, &self.base_classes[id]));
         }
         out
+    }
+
+    /// The same, without the confidence, for callers that only need the names.
+    pub fn bases_with_classes(&self, word: &str) -> Vec<(&str, &[crate::kotus::Inflection])> {
+        self.bases_with_evidence(word)
+            .into_iter()
+            .map(|(base, classes, _)| (base, classes))
+            .collect()
     }
 
     /// The base forms a word is an inflected form of in the case given, with the
@@ -436,6 +477,18 @@ impl FormBuilder {
         word: &str,
         case: Option<Case>,
     ) -> Vec<(&str, &[crate::kotus::Inflection])> {
+        self.bases_in_with_evidence(word, case)
+            .into_iter()
+            .map(|(base, classes, _)| (base, classes))
+            .collect()
+    }
+
+    /// The same, with the confidence each base was reached under.
+    pub fn bases_in_with_evidence(
+        &self,
+        word: &str,
+        case: Option<Case>,
+    ) -> Vec<(&str, &[crate::kotus::Inflection], Confidence)> {
         let Some(p) = self.known.position(word) else {
             return Vec::new();
         };
@@ -445,16 +498,24 @@ impl FormBuilder {
             ids.push(first_id);
         }
         for &(at, id, cases) in &self.more_bases {
-            if at == p as u32 && case_mask_matches(cases, case) && !ids.contains(&id) {
+            if at == p as u32
+                && case_mask_matches(cases, case)
+                && !ids.iter().any(|seen| base_id(*seen) == base_id(id))
+            {
                 ids.push(id);
             }
         }
-        ids.into_iter()
-            .map(|id| {
-                let id = id as usize;
-                (self.base_words[id].as_str(), &self.base_classes[id][..])
-            })
-            .collect()
+        let mut out: Vec<(&str, &[crate::kotus::Inflection], Confidence)> = Vec::new();
+        for packed in ids {
+            let confidence = base_confidence(packed);
+            let id = base_id(packed) as usize;
+            let base = self.base_words[id].as_str();
+            match out.iter_mut().find(|(b, _, _)| *b == base) {
+                Some((_, _, seen)) => *seen = (*seen).max(confidence),
+                None => out.push((base, &self.base_classes[id], confidence)),
+            }
+        }
+        out
     }
 
     /// The base forms of a word could be an inflected form of, likelier first.
@@ -470,7 +531,7 @@ impl FormBuilder {
     /// gives no class to, and it is the right outcome rather than a fallback:
     /// the sanalista's order is then the only order there is.
     pub fn ranked_bases_of(&self, word: &str, prior: &ClassPrior) -> Vec<&str> {
-        rank(self.bases_with_classes(word), prior)
+        rank(self.bases_with_evidence(word), prior)
     }
 
     /// The base forms of a word in the case given, likelier first.
@@ -479,7 +540,7 @@ impl FormBuilder {
     /// both asked here rather than by a caller sorting one answer itself, so
     /// that the ranking is the same ranking whichever question it arrived with.
     pub fn ranked_bases_in(&self, word: &str, case: Option<Case>, prior: &ClassPrior) -> Vec<&str> {
-        rank(self.bases_in_with_classes(word, case), prior)
+        rank(self.bases_in_with_evidence(word, case), prior)
     }
 
     /// The ids of every base form of a word, in the order they were reached.
@@ -688,18 +749,19 @@ impl FormBuilder {
         for base in &other.base_words {
             base_of.push(self.base_id_of(base));
         }
-        for (op, (id, cases)) in other.first_base.iter().enumerate() {
+        for (op, (packed, cases)) in other.first_base.iter().enumerate() {
             let p = where_from[op] as usize;
-            let id = base_of[*id as usize];
+            let id = pack_base(base_of[base_id(*packed) as usize], base_confidence(*packed));
             if self.first_base[p].0 == NO_BASE {
                 self.first_base[p] = (id, *cases);
             } else {
                 self.add_base(p, id, *cases);
             }
         }
-        for (at, id, cases) in other.more_bases {
+        for (at, packed, cases) in other.more_bases {
             let p = where_from[at as usize] as usize;
-            self.add_base(p, base_of[id as usize], cases);
+            let id = pack_base(base_of[base_id(packed) as usize], base_confidence(packed));
+            self.add_base(p, id, cases);
         }
         // Each half numbered its bases in its own order, so `other`'s id `id`
         // is `self`'s id `base_of[id]`. Reading `self` at `id` would put one
@@ -732,16 +794,25 @@ impl FormBuilder {
 
     /// Records that a word is also a form of a base, in the cases given.
     fn add_base(&mut self, p: usize, id: u32, cases: u16) {
-        if self.first_base[p].0 == id {
+        let raw = base_id(id);
+        let confidence = base_confidence(id);
+        if base_id(self.first_base[p].0) == raw {
+            let current = base_confidence(self.first_base[p].0);
+            self.first_base[p].0 = pack_base(raw, current.max(confidence));
             self.first_base[p].1 |= cases;
             return;
         }
-        let key = (p as u32, id);
+        let key = (p as u32, raw);
         match self.more_index.get(&key) {
-            Some(&at) => self.more_bases[at as usize].2 |= cases,
+            Some(&at) => {
+                let entry = &mut self.more_bases[at as usize];
+                let current = base_confidence(entry.1);
+                entry.1 = pack_base(raw, current.max(confidence));
+                entry.2 |= cases;
+            }
             None => {
                 let at = self.more_bases.len() as u32;
-                self.more_bases.push((key.0, key.1, cases));
+                self.more_bases.push((key.0, id, cases));
                 self.more_index.insert(key, at);
             }
         }
@@ -768,6 +839,31 @@ impl FormBuilder {
 /// and never a state the index is left in.
 const NO_BASE: u32 = u32::MAX;
 
+/// How many low bits of a packed base id are the id itself.
+///
+/// A base id is a lemma index (a hundred thousand or so), so the top two bits
+/// are free. They hold the form's [`Confidence`], which lets the index rank a
+/// plain form above a repaired or guessed one without a second array.
+const BASE_ID_BITS: u32 = 30;
+const BASE_ID_MASK: u32 = (1 << BASE_ID_BITS) - 1;
+
+fn pack_base(id: u32, confidence: Confidence) -> u32 {
+    debug_assert!(id <= BASE_ID_MASK, "base id does not fit in 30 bits");
+    id | ((confidence as u32) << BASE_ID_BITS)
+}
+
+fn base_id(packed: u32) -> u32 {
+    packed & BASE_ID_MASK
+}
+
+fn base_confidence(packed: u32) -> Confidence {
+    match packed >> BASE_ID_BITS {
+        0 => Confidence::Guessed,
+        1 => Confidence::Repaired,
+        _ => Confidence::Plain,
+    }
+}
+
 /// How many bytes `word` and `base` share from the start.
 fn common_prefix(word: &str, base: &str) -> usize {
     word.bytes()
@@ -785,15 +881,20 @@ fn common_prefix(word: &str, base: &str) -> usize {
 /// of that are the point: the ranking is a stated guess and it is the *only*
 /// guess, so a caller can turn it off and get the sanalista's answer back.
 fn rank<'a>(
-    bases: Vec<(&'a str, &'a [crate::kotus::Inflection])>,
+    bases: Vec<(&'a str, &'a [crate::kotus::Inflection], Confidence)>,
     prior: &ClassPrior,
 ) -> Vec<&'a str> {
-    let mut scored: Vec<(usize, &str)> = bases
+    let mut scored: Vec<(Confidence, usize, &str)> = bases
         .into_iter()
-        .map(|(base, classes)| (prior.score(classes), base))
+        .map(|(base, classes, confidence)| (confidence, prior.score(classes), base))
         .collect();
-    scored.sort_by_key(|(score, _)| std::cmp::Reverse(*score));
-    scored.into_iter().map(|(_, base)| base).collect()
+    // Confidence first: a guessed form must not outrank a plain one when both
+    // explain the surface. The class prior and the stable order are unchanged
+    // inside a confidence tier.
+    scored.sort_by_key(|(confidence, score, _)| {
+        (std::cmp::Reverse(*confidence), std::cmp::Reverse(*score))
+    });
+    scored.into_iter().map(|(_, _, base)| base).collect()
 }
 
 /// The bit a case occupies in the set of cases a form is in.
@@ -1041,8 +1142,8 @@ mod tests {
         // A word both lemmas reach, reached by the rarer class first so that the
         // two orders cannot come out the same by accident.
         let word = "kalastaja";
-        b.accept(word, "kaiku", &[Tags::UNKNOWN]);
-        b.accept(word, "talo", &[Tags::UNKNOWN]);
+        b.accept(word, "kaiku", &[Tags::UNKNOWN], Confidence::Plain);
+        b.accept(word, "talo", &[Tags::UNKNOWN], Confidence::Plain);
         assert_eq!(b.bases_of(word), vec!["kaiku", "talo"], "the order reached");
         let prior = ClassPrior::of(&whole_lexicon());
         assert_eq!(
@@ -1050,6 +1151,58 @@ mod tests {
             vec!["talo", "kaiku"],
             "the commoner class first"
         );
+    }
+
+    /// A plain form outranks a repaired one even when the repaired base is in
+    /// the commoner class. The confidence is evidence about this word, not
+    /// about the class, so it comes first.
+    #[test]
+    fn a_plain_form_outranks_a_repaired_one() {
+        let lex = lexicon(&[("talo", &[1]), ("kaiku", &[47])]);
+        let cat = cat();
+        let mut b = FormBuilder::new();
+        for lemma in &lex {
+            b.add(lemma, &cat, &LexiconIndex::new(&lex));
+        }
+        let word = "kalastaja";
+        b.accept(word, "talo", &[Tags::UNKNOWN], Confidence::Repaired);
+        b.accept(word, "kaiku", &[Tags::UNKNOWN], Confidence::Plain);
+        let prior = ClassPrior::of(&whole_lexicon());
+        assert_eq!(
+            b.ranked_bases_of(word, &prior),
+            vec!["kaiku", "talo"],
+            "the plain form first, even in the rarer class"
+        );
+        assert_eq!(
+            b.best_base(word),
+            Some("kaiku"),
+            "the one-name answer uses the same key"
+        );
+    }
+
+    /// Two shares can reach the same word from the same base with different
+    /// confidence; the merged index keeps the stronger one, because one plain
+    /// reading is enough to make the attachment plain.
+    #[test]
+    fn a_merge_keeps_the_stronger_confidence() {
+        let lex = lexicon(&[("talo", &[1]), ("kaiku", &[47])]);
+        let cat = cat();
+        let mut a = FormBuilder::new();
+        let mut b = FormBuilder::new();
+        for lemma in &lex {
+            a.add(lemma, &cat, &LexiconIndex::new(&lex));
+            b.add(lemma, &cat, &LexiconIndex::new(&lex));
+        }
+        let word = "kalastaja";
+        a.accept(word, "talo", &[Tags::UNKNOWN], Confidence::Repaired);
+        b.accept(word, "talo", &[Tags::UNKNOWN], Confidence::Plain);
+        a.merge(b);
+        let evidence = a.bases_with_evidence(word);
+        let (_, _, confidence) = evidence
+            .iter()
+            .find(|(base, _, _)| *base == "talo")
+            .expect("talo is a base");
+        assert_eq!(*confidence, Confidence::Plain);
     }
 
     /// Bases the prior scores level keep the order the index reached them in,
@@ -1064,8 +1217,8 @@ mod tests {
             b.add(lemma, &cat, &LexiconIndex::new(&lex));
         }
         let word = "kalastaja";
-        b.accept(word, "kaiku", &[Tags::UNKNOWN]);
-        b.accept(word, "talo", &[Tags::UNKNOWN]);
+        b.accept(word, "kaiku", &[Tags::UNKNOWN], Confidence::Plain);
+        b.accept(word, "talo", &[Tags::UNKNOWN], Confidence::Plain);
         let flat = ClassPrior::of(&[]);
         assert_eq!(b.ranked_bases_of(word, &flat), vec!["kaiku", "talo"]);
     }
@@ -1194,8 +1347,9 @@ mod tests {
             word,
             "talo",
             &[Tags::of_number(Case::Genitive, Number::Plural)],
+            Confidence::Plain,
         );
-        b.accept(word, "kaiku", &[Tags::UNKNOWN]);
+        b.accept(word, "kaiku", &[Tags::UNKNOWN], Confidence::Plain);
         assert_eq!(b.bases_in(word, Some(Case::Genitive)), vec!["talo"]);
         assert_eq!(
             b.bases_in(word, Some(Case::Allative)),
@@ -1263,5 +1417,31 @@ mod tests {
                 "{guess} is a guess, and the index says so"
             );
         }
+    }
+    /// An interjection with a nominal class is still an interjection: the
+    /// citation is a word, the class is not a declension. `stop` is class 5 in
+    /// the sanalista, but the noun is `stoppi`; the index must not make `stop`
+    /// the base of `stopeiksi`.
+    #[test]
+    fn an_interjection_is_not_given_a_nominal_paradigm() {
+        let lex = vec![Lemma {
+            word: "stop",
+            homonymy: "",
+            part_of_speech: "interjektio",
+            inflections: vec![Inflection {
+                class: 5,
+                gradation: None,
+            }],
+        }];
+        let cat = cat();
+        let mut b = FormBuilder::new();
+        for lemma in &lex {
+            b.add(lemma, &cat, &LexiconIndex::new(&lex));
+        }
+        assert_eq!(b.bases_of("stop"), vec!["stop"]);
+        assert!(
+            b.bases_of("stopeiksi").is_empty(),
+            "stopeiksi must not be a stop form"
+        );
     }
 }

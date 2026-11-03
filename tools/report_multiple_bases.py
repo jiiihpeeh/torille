@@ -11,15 +11,15 @@ A first base of `aavistaa` is not an error, it is a different valid answer.
 
 This tool reads the TSV `lookup_recall` writes and separates three questions:
 
-* **exact** -- the first base is the reference pair's lemma (97.49% over all
+* **exact** -- the first base is the reference pair's lemma (97.52% over all
   640,873 pairs at the 2026-11-03 baseline);
 * **confirmed** -- the first base is *a* `ok='both'` base of the surface, even
-  if it is not the reference's lemma (99.56% over all pairs, 99.66% over the
+  if it is not the reference's lemma (99.59% over all pairs, 99.69% over the
   640,122 found pairs);
 * **one authority** -- the first base is confirmed by Omorfi or Voikko but not
-  both (99.82% over all pairs, 99.91% over found pairs);
+  both (99.85% over all pairs, 99.95% over found pairs);
 * **unconfirmed** -- the first base has an `engine` row or no row at all
-  (1,174 rows over all pairs: 551 found-but-not-first, the audit list, and 623
+  (967 rows over all pairs: 344 found-but-not-first, the audit list, and 623
   not-found recall misses).
 
 The verb oracle (`data/kotus_verbit.sqlite`) has `ok IN ('both','omorfi')`;

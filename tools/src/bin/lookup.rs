@@ -30,7 +30,7 @@
 use std::process::ExitCode;
 
 use torille::expand::ClassPrior;
-use torille::tags::{Case, Tags};
+use torille::tags::{Case, Confidence, Tags};
 
 use torille_tools::{catalogue, sanalista};
 
@@ -107,16 +107,17 @@ fn main() -> ExitCode {
         }
     } else {
         println!("{word} is a form of:");
-        for (i, (base, classes)) in with_classes(&builder, &word, &bases)
+        for (i, (base, classes, confidence)) in with_evidence(&builder, &word, &bases)
             .into_iter()
             .enumerate()
         {
             if explain {
                 let marker = if i == 0 { "*" } else { " " };
                 println!(
-                    "  {marker} {base}{}  {}",
+                    "  {marker} {base}{}  {}  {}",
                     describe_classes(&classes),
-                    describe_pos(base)
+                    describe_pos(base),
+                    confidence_label(confidence)
                 );
             } else {
                 println!("  {base}{}", describe_classes(&classes));
@@ -145,29 +146,37 @@ fn main() -> ExitCode {
     ExitCode::SUCCESS
 }
 
-/// The classes and part of speech behind each reported base, in the reported
-/// order.
+/// The classes, part of speech and confidence behind each reported base, in the
+/// reported order.
 ///
 /// The order comes from the index rather than from a fresh lookup, so what is
 /// printed beside a base is the classes the index actually reached the word
 /// under and not a second reading of the sanalista that could disagree.
-fn with_classes<'a>(
+fn with_evidence<'a>(
     builder: &'a torille::expand::FormBuilder,
     word: &str,
     bases: &[&'a str],
-) -> Vec<(&'a str, Vec<torille::kotus::Inflection>)> {
-    let by_word = builder.bases_with_classes(word);
+) -> Vec<(&'a str, Vec<torille::kotus::Inflection>, Confidence)> {
+    let by_word = builder.bases_with_evidence(word);
     bases
         .iter()
         .map(|base| {
-            let classes = by_word
+            let (classes, confidence) = by_word
                 .iter()
-                .find(|(b, _)| b == base)
-                .map(|(_, c)| c.to_vec())
+                .find(|(b, _, _)| b == base)
+                .map(|(_, c, confidence)| (c.to_vec(), *confidence))
                 .unwrap_or_default();
-            (*base, classes)
+            (*base, classes, confidence)
         })
         .collect()
+}
+
+fn confidence_label(confidence: Confidence) -> &'static str {
+    match confidence {
+        Confidence::Plain => "plain",
+        Confidence::Repaired => "repaired",
+        Confidence::Guessed => "guessed",
+    }
 }
 
 /// How the sanalista describes a base, beside its name.
