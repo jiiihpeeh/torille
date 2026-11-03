@@ -82,6 +82,7 @@ Profiling and one-off probes:
 
 ```bash
 cargo run --release -p torille-tools --bin gen_derived   # derived tables (blobs)
+python3 tools/build_oi_plural_lemmas.py                  # class-10 -oi- plural set
 ```
 
 `gen_derived` writes `data/precomputed/derived_{by_form,nominal,modifiers}.bin`
@@ -90,7 +91,8 @@ with the engine, because the tables are built by `expand::derived::compute` and
 `expand::check_normal::compute_pronoun_forms`. Commit the blobs;
 `expand::derived::tests::the_blobs_match_compute` and
 `expand::check_normal::tests::the_pronoun_blob_matches_compute` fail if they
-drift.
+drift. `build_oi_plural_lemmas.py` reads `data/kotus_nomines.sqlite` (rebuild it
+first) and writes `oi_plural_lemmas.bin`; it is the one oracle-derived blob.
 
 ### Python harness
 

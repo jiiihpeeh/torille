@@ -25,6 +25,9 @@
 
 #![allow(dead_code)]
 
+use std::sync::OnceLock;
+
+use crate::expand::blob::{Blob, cell as blob_cell};
 use crate::kotus::{Gradation, Grade};
 use crate::tags::{Case, Form, Number, PartOfSpeech};
 
@@ -41,6 +44,57 @@ const NON_GRADATING: &[&str] = &["rukka"];
 /// spelling (`sopanansa`), so the doubled `sopanaan` is an unconfirmed
 /// alternate and must not be offered as plain.
 const NO_ESSIVE_SG_DOUBLE: &[&str] = &["sopa", "lonka", "punka"];
+
+/// Class-10 lemmas whose reference paradigm confirms the alternative
+/// `-oi-`/`-öi-` plural (`ampuja` -> `ampujoita`, `ampujoiden`). The subset is
+/// lexical -- `alkaja` has no such plural and is the same class -- so it is
+/// read from the reference (`tools/build_oi_plural_lemmas.py`) rather than
+/// derived.
+static OI_PLURAL_LEMMAS: OnceLock<Blob> = OnceLock::new();
+
+const OI_PLURAL_LEMMAS_BIN: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/data/precomputed/oi_plural_lemmas.bin"
+));
+
+fn takes_oi_plural(lemma: &str) -> bool {
+    blob_cell(&OI_PLURAL_LEMMAS, OI_PLURAL_LEMMAS_BIN)
+        .find(lemma)
+        .is_some()
+}
+
+/// The alternative `-oi-`/`-öi-` plural, when the lemma has one.
+///
+/// Unlike the `i`-stem grid this is a full second plural: the genitive keeps
+/// both `-den` and `-tten`, and the possessives hang off the `-oi-` stem
+/// (`ampujoideni`, `ampujoitteni`, `ampujoihini`).
+fn add_oi_plural(b: &mut Builder, stem: &str) {
+    let mut letters = stem.chars();
+    let Some(last) = letters.next_back() else {
+        return;
+    };
+    let mut oi = letters.as_str().to_string();
+    oi.push_str(if last == 'ä' { "öi" } else { "oi" });
+    let pl = Number::Plural;
+    b.decline(
+        &Decl::new(vec![
+            cell(Case::Genitive, pl, &oi, ["den", "den"], false).on_ending(["de", "de"]),
+            cell(Case::Genitive, pl, &oi, ["tten", "tten"], false).on_ending(["tte", "tte"]),
+            cell(Case::Partitive, pl, &oi, ["ta", "tä"], true),
+            cell(Case::Essive, pl, &oi, ["na", "nä"], true),
+            cell(Case::Translative, pl, &oi, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
+            cell(Case::Illative, pl, &oi, ["hin", "hin"], false).on_ending(["hi", "hi"]),
+            cell(Case::Inessive, pl, &oi, ["ssa", "ssä"], true),
+            cell(Case::Elative, pl, &oi, ["sta", "stä"], true),
+            cell(Case::Adessive, pl, &oi, ["lla", "llä"], true),
+            cell(Case::Ablative, pl, &oi, ["lta", "ltä"], true),
+            cell(Case::Allative, pl, &oi, ["lle", "lle"], true),
+            cell(Case::Abessive, pl, &oi, ["tta", "ttä"], true),
+            plain(Case::Instructive, pl, &oi, ["n", "n"]),
+        ]),
+        |case, number, poss| nominal_tags(PartOfSpeech::Noun, case, number, poss),
+    );
+}
 
 /// The plural stem: the final `a`/`ä` written `i` (`koira -> koiri`).
 fn i_stem(stem: &str) -> String {
@@ -149,6 +203,9 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
         nominal_tags(PartOfSpeech::Noun, case, number, poss)
     });
     b.comitative(&istem);
+    if takes_oi_plural(stem) {
+        add_oi_plural(&mut b, stem);
+    }
 
     b.into_forms()
 }
@@ -463,6 +520,38 @@ mod tests {
         );
         assert!(w.contains(&"rukkien".to_string()));
         assert!(!w.iter().any(|f| f.starts_with("ruj")), "{:?}", w);
+    }
+
+    /// The alternative `-oi-` plural is lexical, not derivable.
+    ///
+    /// `ampuja` has it, `alkaja` does not, and both are class 10; `suoja` is
+    /// confirmed only on Omorfi's side, so it is not in the `both` list. The
+    /// whole second plural must be emitted, including the possessives.
+    #[test]
+    fn the_oi_plural_is_read_from_the_reference() {
+        let ampuja = words("ampuja");
+        for want in [
+            "ampujoita",
+            "ampujoiden",
+            "ampujoitten",
+            "ampujoilla",
+            "ampujoihin",
+            "ampujoinaan",
+            "ampujoideni",
+            "ampujoitteni",
+            "ampujoihini",
+        ] {
+            assert!(ampuja.contains(&want.to_string()), "{want} missing");
+        }
+        assert!(ampuja.contains(&"ampujia".to_string()), "the i-stem remains");
+        assert!(
+            !words("alkaja").iter().any(|f| f.starts_with("alkajoi")),
+            "alkaja has no -oi- plural in the reference"
+        );
+        assert!(
+            !words("suoja").iter().any(|f| f.starts_with("suojoi")),
+            "suoja is omorfi-only, not a both row"
+        );
     }
 
     /// The doubled third-person essive singular is the one cell of the graded

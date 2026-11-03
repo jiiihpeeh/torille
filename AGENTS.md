@@ -120,6 +120,13 @@ call. Run `cargo run --release -p torille-tools --bin gen_derived` after a
 `expand::check_normal::tests::the_pronoun_blob_matches_compute` fail if they
 drift.
 
+`data/precomputed/oi_plural_lemmas.bin` is the one oracle-derived table: the
+class-10 lemmas whose `ok='both'` paradigm has the alternative `-oi-` plural
+(`ampuja` -> `ampujoita`). It is lexical, not derivable (`alkaja` is class 10
+and has no such plural), so `tools/build_oi_plural_lemmas.py` reads it off the
+rebuilt oracle and writes the sorted set that `expand/nominals/class_10.rs`
+embeds.
+
 ### Build-time codegen (`build.rs` + `build/`)
 
 Parsing the 2.8 MB sanalista at every process start costs ~31 ms and ~420k
