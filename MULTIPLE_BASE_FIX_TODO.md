@@ -337,7 +337,7 @@ interjection, confidence, dual 72/74 and `5*C` fixes already take it to 334
 found-but-not-first; the rest stay on the list until they are classified. A fixed form must not
 regress recall (the reference pair may still be found through another base).
 
-### Phase 2 — rank with confidence and derivation  *(confidence done 2026-11-03; derivation measured and deferred)*
+### Phase 2 — rank with confidence and derivation  *(done 2026-11-03)*
 
 - [x] Store the form's `Confidence` with each base occurrence. The top two bits
       of the base id in `first_base`/`more_bases` carry it, so the arrays do not
@@ -345,10 +345,12 @@ regress recall (the reference pair may still be found through another base).
 - [x] Extend the rank key with the confidence tier; `Plain` > `Repaired` >
       `Guessed`, then the class prior. `best_base` and `rank` now use the same
       key.
-- [x] Tried the derivation tie-break using `crate::derivation::reverse`
-      (`aamu` over `aamuinen`). It also flips `abstrakti`/`abstraktinen` and
-      other doublets, so the net was exact -8, confirmed +8. Reverted; it needs
-      a POS or frequency signal, not the suffix relation alone.
+- [x] The suffix-only derivation tie-break was tried first (`aamu` over
+      `aamuinen`). It also flipped `abstrakti`/`abstraktinen` and other
+      doublets, net exact -8, so it was reverted. The kept rule is narrower:
+      an adjective derived from a **noun** that is also a base loses to that
+      noun (`aamu`, `huume`, `aateli`), while adjective/adjective doublets
+      keep the class prior. This is net exact +5, confirmed +5, no regression.
 - [x] Use one rank key in `rank` and `best_base`; the tests pin the plain-over-
       repaired order and the merge.
 - [x] Measure exact-first, confirmed-first and unconfirmed-first before and
@@ -359,18 +361,17 @@ Measured after the interjection, confidence, dual 72/74 and `5*C` fixes
 
 | metric | before | after |
 |---|---:|---:|
-| exact first | 624,807 / 97.49% | 625,033 / **97.53%** |
-| first base confirmed (all rows) | 638,058 / 99.56% | 638,291 / **99.60%** |
-| first base confirmed (found rows) | 637,958 / 99.66% | 638,191 / **99.70%** |
+| exact first | 624,807 / 97.49% | 625,038 / **97.53%** |
+| first base confirmed (all rows) | 638,058 / 99.56% | 638,296 / **99.60%** |
+| first base confirmed (found rows) | 637,958 / 99.66% | 638,196 / **99.70%** |
 | first base one-authority (all) | 639,699 / 99.82% | 639,933 / **99.85%** |
 | unconfirmed found-but-not-first | 551 | **334** |
 | ambiguous pairs | 37,073 / 5.78% | 37,042 / 5.78% |
 
-Expected: a small exact-first change on the nominal-nominal doublets. The
-`-inen` family is mixed (`aamu`/`aamuinen` prefers the underived base;
-`abstrakti`/`abstraktinen` prefers the derived one), so keep the tie-break only
-if the net is positive. Do **not** expect the exact figure to approach 99.9%:
-13,151 of the 15,315 misses are genuine double analyses.
+The narrow rule is net positive: `aamu`/`aamuinen` and the other noun ->
+adjective pairs now name the noun, while `abstrakti`/`abstraktinen` keeps the
+class prior. Do **not** expect the exact figure to approach 99.9%: the
+confirmed alternatives are genuine double analyses.
 
 Acceptance: `len_ok` is 100%; recall is unchanged; the new `confirmed-first`
 metric does not regress; `best_base` and `ranked_bases_of` agree.

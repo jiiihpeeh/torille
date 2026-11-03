@@ -386,24 +386,69 @@ impl FormBuilder {
     /// the surface than `par` + `in`, which is the reading a compound head
     /// wants (`nuorenparin` is `nuori` + `pari`).
     pub fn best_base(&self, word: &str) -> Option<&str> {
-        let mut best: Option<(&str, Confidence, usize, usize)> = None;
-        for (base, classes, confidence) in self.bases_with_evidence(word) {
+        let bases = self.bases_with_evidence(word);
+        let names: Vec<&str> = bases.iter().map(|(base, _, _)| *base).collect();
+        let mut best: Option<(&str, Confidence, bool, usize, usize)> = None;
+        for (base, classes, confidence) in bases {
+            let derived = self.is_derived_adjective(base, &names);
             let score = self.prior.score(classes);
             let prefix = common_prefix(word, base);
             let better = match best {
                 None => true,
-                Some((_, best_confidence, best_score, best_prefix)) => {
+                Some((_, best_confidence, best_derived, best_score, best_prefix)) => {
                     confidence > best_confidence
                         || (confidence == best_confidence
-                            && (score > best_score
-                                || (score == best_score && prefix > best_prefix)))
+                            && (best_derived && !derived
+                                || (derived == best_derived
+                                    && (score > best_score
+                                        || (score == best_score && prefix > best_prefix)))))
                 }
             };
             if better {
-                best = Some((base, confidence, score, prefix));
+                best = Some((base, confidence, derived, score, prefix));
             }
         }
-        best.map(|(base, _, _, _)| base)
+        best.map(|(base, _, _, _, _)| base)
+    }
+
+    /// The parts of speech the sanalista gives a base, or an empty slice when
+    /// the index does not know the name.
+    fn base_pos(&self, base: &str) -> &[PartOfSpeech] {
+        self.base_ids
+            .get(base)
+            .map(|&id| self.base_poses[id as usize].as_slice())
+            .unwrap_or(&[])
+    }
+
+    /// Whether `base` is an adjective derived from a noun that is also a base
+    /// of the same word.
+    ///
+    /// `aamuinen` is `aamu` + `-inen` and `huumeinen` is `huume` + `-inen`;
+    /// when both describe the surface, the noun is the lexical source and the
+    /// adjective is the derivation. The rule deliberately stops at noun ->
+    /// adjective: `abstraktinen`/`abstrakti` are both adjectives, and the
+    /// reference sometimes prefers the derived one, so that pair keeps the
+    /// class prior.
+    fn is_derived_adjective(&self, base: &str, bases: &[&str]) -> bool {
+        if !self.base_pos(base).contains(&PartOfSpeech::Adjective) {
+            return false;
+        }
+        let direct = base.strip_suffix("inen");
+        let reverse = crate::derivation::reverse(base);
+        let mut sources: Vec<&str> = reverse
+            .iter()
+            .map(|reverse| reverse.source.as_str())
+            .collect();
+        if let Some(direct) = direct {
+            sources.push(direct);
+        }
+        sources.iter().any(|source| {
+            bases.iter().any(|other| {
+                *other != base
+                    && *source == *other
+                    && self.base_pos(other).contains(&PartOfSpeech::Noun)
+            })
+        })
     }
 
     /// The base forms a word is an inflected form of in the case given, in the
@@ -531,7 +576,7 @@ impl FormBuilder {
     /// gives no class to, and it is the right outcome rather than a fallback:
     /// the sanalista's order is then the only order there is.
     pub fn ranked_bases_of(&self, word: &str, prior: &ClassPrior) -> Vec<&str> {
-        rank(self.bases_with_evidence(word), prior)
+        rank(self, self.bases_with_evidence(word), prior)
     }
 
     /// The base forms of a word in the case given, likelier first.
@@ -540,7 +585,7 @@ impl FormBuilder {
     /// both asked here rather than by a caller sorting one answer itself, so
     /// that the ranking is the same ranking whichever question it arrived with.
     pub fn ranked_bases_in(&self, word: &str, case: Option<Case>, prior: &ClassPrior) -> Vec<&str> {
-        rank(self.bases_in_with_evidence(word, case), prior)
+        rank(self, self.bases_in_with_evidence(word, case), prior)
     }
 
     /// The ids of every base form of a word, in the order they were reached.
@@ -881,20 +926,33 @@ fn common_prefix(word: &str, base: &str) -> usize {
 /// of that are the point: the ranking is a stated guess and it is the *only*
 /// guess, so a caller can turn it off and get the sanalista's answer back.
 fn rank<'a>(
+    builder: &FormBuilder,
     bases: Vec<(&'a str, &'a [crate::kotus::Inflection], Confidence)>,
     prior: &ClassPrior,
 ) -> Vec<&'a str> {
-    let mut scored: Vec<(Confidence, usize, &str)> = bases
+    let names: Vec<&str> = bases.iter().map(|(base, _, _)| *base).collect();
+    let mut scored: Vec<(Confidence, bool, usize, &str)> = bases
         .into_iter()
-        .map(|(base, classes, confidence)| (confidence, prior.score(classes), base))
+        .map(|(base, classes, confidence)| {
+            (
+                confidence,
+                builder.is_derived_adjective(base, &names),
+                prior.score(classes),
+                base,
+            )
+        })
         .collect();
-    // Confidence first: a guessed form must not outrank a plain one when both
-    // explain the surface. The class prior and the stable order are unchanged
-    // inside a confidence tier.
-    scored.sort_by_key(|(confidence, score, _)| {
-        (std::cmp::Reverse(*confidence), std::cmp::Reverse(*score))
+    // Confidence first, then the noun over its derived adjective, then the
+    // class prior and the stable order. A guessed form must not outrank a
+    // plain one when both explain the surface.
+    scored.sort_by_key(|(confidence, derived, score, _)| {
+        (
+            std::cmp::Reverse(*confidence),
+            *derived,
+            std::cmp::Reverse(*score),
+        )
     });
-    scored.into_iter().map(|(_, _, base)| base).collect()
+    scored.into_iter().map(|(_, _, _, base)| base).collect()
 }
 
 /// The bit a case occupies in the set of cases a form is in.
@@ -1203,6 +1261,32 @@ mod tests {
             .find(|(base, _, _)| *base == "talo")
             .expect("talo is a base");
         assert_eq!(*confidence, Confidence::Plain);
+    }
+
+    /// A noun outranks the adjective derived from it when both explain the
+    /// surface. `aamuista` is a form of `aamu` and of `aamuinen`; class 38 is
+    /// large enough to win on the prior alone, so the noun/adjective rule is
+    /// what puts `aamu` first.
+    #[test]
+    fn a_noun_outranks_its_derived_adjective() {
+        let mut lex = lexicon(&[("aamu", &[1]), ("aamuinen", &[38])]);
+        lex[1].part_of_speech = "adjektiivi";
+        let cat = cat();
+        let mut b = FormBuilder::new();
+        for lemma in &lex {
+            b.add(lemma, &cat, &LexiconIndex::new(&lex));
+        }
+        assert_eq!(b.bases_of("aamuista"), vec!["aamu", "aamuinen"]);
+        assert_eq!(b.base_pos("aamu"), &[PartOfSpeech::Noun]);
+        assert_eq!(b.base_pos("aamuinen"), &[PartOfSpeech::Adjective]);
+        assert!(b.is_derived_adjective("aamuinen", &["aamu", "aamuinen"]));
+        let prior = ClassPrior::of(&whole_lexicon());
+        assert_eq!(
+            b.ranked_bases_of("aamuista", &prior),
+            vec!["aamu", "aamuinen"],
+            "the noun before its derived adjective"
+        );
+        assert_eq!(b.best_base("aamuista"), Some("aamu"));
     }
 
     /// Bases the prior scores level keep the order the index reached them in,
