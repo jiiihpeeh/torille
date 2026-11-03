@@ -212,9 +212,19 @@ impl FormBuilder {
         match self.base_ids.get(lemma.word).copied() {
             Some(id) => {
                 let id = id as usize;
+                // The class prior keeps the first homonym row's classes, which
+                // is the order the sanalista gives and the one the ranking has
+                // always scored. The parts of speech are unioned because the
+                // derivation rule needs every reading: `toiste` is an adverb
+                // of class 99 and a noun of class 48, and `toisteinen` is
+                // derived from the noun.
                 if self.base_classes[id].is_empty() {
                     self.base_classes[id] = lemma.inflections.clone();
-                    self.base_poses[id] = PartOfSpeech::parse_all(lemma.part_of_speech);
+                }
+                for pos in PartOfSpeech::parse_all(lemma.part_of_speech) {
+                    if !self.base_poses[id].contains(&pos) {
+                        self.base_poses[id].push(pos);
+                    }
                 }
             }
             None => {
@@ -433,13 +443,18 @@ impl FormBuilder {
         if !self.base_pos(base).contains(&PartOfSpeech::Adjective) {
             return false;
         }
-        let direct = base.strip_suffix("inen");
         let reverse = crate::derivation::reverse(base);
         let mut sources: Vec<&str> = reverse
             .iter()
             .map(|reverse| reverse.source.as_str())
             .collect();
-        if let Some(direct) = direct {
+        // `-inen` is the productive suffix, but a noun ending in `i` takes
+        // `-nen` instead: `emali` + `nen` is `emalinen`, and stripping
+        // `inen` would leave `emal`. Try both segmentations.
+        if let Some(direct) = base.strip_suffix("inen") {
+            sources.push(direct);
+        }
+        if let Some(direct) = base.strip_suffix("nen") {
             sources.push(direct);
         }
         sources.iter().any(|source| {
@@ -1287,6 +1302,49 @@ mod tests {
             "the noun before its derived adjective"
         );
         assert_eq!(b.best_base("aamuista"), Some("aamu"));
+    }
+
+    /// Two homonym rows keep both classes and both parts of speech.
+    /// `toiste` is an adverb of class 99 and a noun of class 48; the noun
+    /// reading has to survive so `toisteinen` can be told it is derived from a
+    /// noun.
+    #[test]
+    fn a_homonym_keeps_every_rows_class_and_pos() {
+        let lex = vec![
+            Lemma {
+                word: "toiste",
+                homonymy: "1",
+                part_of_speech: "adverbi",
+                inflections: vec![Inflection {
+                    class: 99,
+                    gradation: None,
+                }],
+            },
+            Lemma {
+                word: "toiste",
+                homonymy: "2",
+                part_of_speech: "substantiivi",
+                inflections: vec![Inflection {
+                    class: 48,
+                    gradation: None,
+                }],
+            },
+        ];
+        let cat = cat();
+        let mut b = FormBuilder::new();
+        for lemma in &lex {
+            b.add(lemma, &cat, &LexiconIndex::new(&lex));
+        }
+        assert_eq!(
+            b.base_pos("toiste"),
+            &[PartOfSpeech::Adverb, PartOfSpeech::Noun]
+        );
+        let classes: Vec<u16> = b.bases_with_classes("toiste")[0]
+            .1
+            .iter()
+            .map(|i| i.class)
+            .collect();
+        assert_eq!(classes, vec![99], "the prior keeps the first row's class");
     }
 
     /// Bases the prior scores level keep the order the index reached them in,

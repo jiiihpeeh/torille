@@ -19,7 +19,7 @@ This tool reads the TSV `lookup_recall` writes and separates three questions:
 * **one authority** -- the first base is confirmed by Omorfi or Voikko but not
   both (99.85% over all pairs, 99.95% over found pairs);
 * **unconfirmed** -- the first base has an `engine` row or no row at all
-  (940 rows over all pairs: 334 found-but-not-first, the audit list, and 606
+  (934 rows over all pairs: 328 found-but-not-first, the audit list, and 606
   not-found recall misses).
 
 The verb oracle (`data/kotus_verbit.sqlite`) has `ok IN ('both','omorfi')`;

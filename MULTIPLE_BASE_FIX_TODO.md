@@ -333,8 +333,8 @@ python3 tools/report_multiple_bases.py reports/recall5.tsv
 
 Acceptance: every row in the original 551 has a disposition; A rows lower the
 count by fixing forms, and B/C rows are documented rather than hidden. The
-interjection, confidence, dual 72/74 and `5*C` fixes already take it to 334
-found-but-not-first; the rest stay on the list until they are classified. A fixed form must not
+interjection, confidence, dual 72/74, `5*C` and derivation fixes already take
+it to 328 found-but-not-first; the rest stay on the list until they are classified. A fixed form must not
 regress recall (the reference pair may still be found through another base).
 
 ### Phase 2 — rank with confidence and derivation  *(done 2026-11-03)*
@@ -350,7 +350,11 @@ regress recall (the reference pair may still be found through another base).
       doublets, net exact -8, so it was reverted. The kept rule is narrower:
       an adjective derived from a **noun** that is also a base loses to that
       noun (`aamu`, `huume`, `aateli`), while adjective/adjective doublets
-      keep the class prior. This is net exact +5, confirmed +5, no regression.
+      keep the class prior. Both `-inen` and the `-nen` segmentation (as in
+      `emali` + `nen` -> `emalinen`) are read. Homonym rows union their parts
+      of speech for this rule while the class prior keeps the first row's
+      class (`toiste` is adverb 99 and noun 48; the noun reading must survive).
+      Net exact +4, confirmed +4, unconfirmed 334 -> 328, no regression.
 - [x] Use one rank key in `rank` and `best_base`; the tests pin the plain-over-
       repaired order and the merge.
 - [x] Measure exact-first, confirmed-first and unconfirmed-first before and
@@ -361,11 +365,11 @@ Measured after the interjection, confidence, dual 72/74 and `5*C` fixes
 
 | metric | before | after |
 |---|---:|---:|
-| exact first | 624,807 / 97.49% | 625,038 / **97.53%** |
-| first base confirmed (all rows) | 638,058 / 99.56% | 638,296 / **99.60%** |
-| first base confirmed (found rows) | 637,958 / 99.66% | 638,196 / **99.70%** |
-| first base one-authority (all) | 639,699 / 99.82% | 639,933 / **99.85%** |
-| unconfirmed found-but-not-first | 551 | **334** |
+| exact first | 624,807 / 97.49% | 625,042 / **97.53%** |
+| first base confirmed (all rows) | 638,058 / 99.56% | 638,301 / **99.60%** |
+| first base confirmed (found rows) | 637,958 / 99.66% | 638,201 / **99.70%** |
+| first base one-authority (all) | 639,699 / 99.82% | 639,939 / **99.85%** |
+| unconfirmed found-but-not-first | 551 | **328** |
 | ambiguous pairs | 37,073 / 5.78% | 37,042 / 5.78% |
 
 The narrow rule is net positive: `aamu`/`aamuinen` and the other noun ->
@@ -449,7 +453,7 @@ Only if exact-first ranking must improve beyond what morphology can justify:
   `one_authority_first` >= **99.85%** (99.95% over found rows); no regression.
 - exact-first >= **97.53%**; further gains must come from derivation,
   frequency or context, not from a POS rule.
-- `unconfirmed_first` <= **334** found-but-not-first, with every remaining row
+- `unconfirmed_first` <= **328** found-but-not-first, with every remaining row
   disposed of in the report; the 606 not-found rows are recall work.
 - ambiguity rate stays around **5.8%**; it is not a target. A drop is allowed
   only when an analysis is proven spurious.
