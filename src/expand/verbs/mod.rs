@@ -48,6 +48,32 @@ pub mod class_78;
 
 pub mod compound;
 
+/// Lemmas the sanalista gives both a 72 and a 74 reading, where only one
+/// reading is the verb the reference confirms.
+///
+/// The two types are close -- both are `-ta/-tä` change-of-state verbs -- and
+/// the sanalista lists some members under both. `kotus_verbit.sqlite` decides
+/// which one is real: for `oieta`, `raueta`, `isota`, `sietä` and `sueta` the
+/// class-72 paradigm matches 982 of 986 `both` forms (or all of the union),
+/// while class 74 invents ~680 forms; for `aueta`, `tyvetä`, `iljetä` and
+/// `juljeta` it is the other way round. Suppressing the losing reading keeps
+/// the index from naming `oikeaa` as a form of `oieta`.
+const CLASS_72_WINS: &[&str] = &["oieta", "raueta", "isota", "sietä", "sueta"];
+const CLASS_74_WINS: &[&str] = &["aueta", "tyvetä", "iljetä", "juljeta"];
+
+/// Whether `class`'s paradigm for `lemma` is the one the reference rejects.
+///
+/// This is a lexical decision, not a stem rule: the two classes use the same
+/// stem and differ only in the theme vowel. The list is the nine dual-reading
+/// lemmas the class-72 module names in its own documentation.
+pub fn suppresses_reading(lemma: &str, class: u16) -> bool {
+    match class {
+        72 => CLASS_74_WINS.contains(&lemma),
+        74 => CLASS_72_WINS.contains(&lemma),
+        _ => false,
+    }
+}
+
 /// Inflect `lemma` as `class`, or `None` if no hand-written module covers it.
 pub fn dispatch(class: &str, lemma: &str) -> Option<Vec<Form>> {
     // A class string carries the lemma's gradation code after the number
@@ -87,5 +113,26 @@ pub fn dispatch(class: &str, lemma: &str) -> Option<Vec<Form>> {
         77 => Some(class_77::inflect(lemma)),
         78 => Some(class_78::inflect(lemma)),
         _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::suppresses_reading;
+
+    /// The dual 72/74 lemmas keep one reading only; a single-class lemma of
+    /// either type keeps its own.
+    #[test]
+    fn a_dual_72_74_lemma_keeps_the_reference_reading() {
+        for lemma in ["oieta", "raueta", "isota", "sietä", "sueta"] {
+            assert!(suppresses_reading(lemma, 74), "{lemma} is not class 74");
+            assert!(!suppresses_reading(lemma, 72), "{lemma} is class 72");
+        }
+        for lemma in ["aueta", "tyvetä", "iljetä", "juljeta"] {
+            assert!(suppresses_reading(lemma, 72), "{lemma} is not class 72");
+            assert!(!suppresses_reading(lemma, 74), "{lemma} is class 74");
+        }
+        assert!(!suppresses_reading("vanheta", 72));
+        assert!(!suppresses_reading("katketa", 74));
     }
 }

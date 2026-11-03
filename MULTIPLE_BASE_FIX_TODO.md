@@ -317,17 +317,21 @@ python3 tools/report_multiple_bases.py reports/recall5.tsv
       the sanalista but the noun is `stoppi`, so `FormBuilder` now records the
       citation and skips the class-5 forms. This removed 17 rows from the
       audit list without losing recall.
+- [x] The nine dual 72/74 verbs keep only the reading the verb oracle
+      confirms: class 72 for `oieta`, `raueta`, `isota`, `sietä`, `sueta`;
+      class 74 for `aueta`, `tyvetä`, `iljetä`, `juljeta`. `audit_verbs.py`
+      now reports 0 invented forms for all nine; this removed 9 audit rows.
 - [ ] For each row that stays, record the disposition in the commit message
       (and, if the set is stable, a short table in this file). Do not add the
       whole oracle to the engine.
 
 Acceptance: every row in the original 551 has a disposition; A rows lower the
 count by fixing forms, and B/C rows are documented rather than hidden. The
-interjection and confidence fixes already take it to 344 found-but-not-first;
-the rest stay on the list until they are classified. A fixed form must not
+interjection, confidence and dual 72/74 fixes already take it to 335
+found-but-not-first; the rest stay on the list until they are classified. A fixed form must not
 regress recall (the reference pair may still be found through another base).
 
-### Phase 2 — rank with confidence and derivation  *(confidence done 2026-11-03; derivation pending)*
+### Phase 2 — rank with confidence and derivation  *(confidence done 2026-11-03; derivation measured and deferred)*
 
 - [x] Store the form's `Confidence` with each base occurrence. The top two bits
       of the base id in `first_base`/`more_bases` carry it, so the arrays do not
@@ -335,23 +339,26 @@ regress recall (the reference pair may still be found through another base).
 - [x] Extend the rank key with the confidence tier; `Plain` > `Repaired` >
       `Guessed`, then the class prior. `best_base` and `rank` now use the same
       key.
-- [ ] Add the derivation tie-break using `crate::derivation::reverse` and a
-      check that the source is another competing base.
+- [x] Tried the derivation tie-break using `crate::derivation::reverse`
+      (`aamu` over `aamuinen`). It also flips `abstrakti`/`abstraktinen` and
+      other doublets, so the net was exact -8, confirmed +8. Reverted; it needs
+      a POS or frequency signal, not the suffix relation alone.
 - [x] Use one rank key in `rank` and `best_base`; the tests pin the plain-over-
       repaired order and the merge.
 - [x] Measure exact-first, confirmed-first and unconfirmed-first before and
       after. Keep the change only if confirmed-first does not fall.
 
-Measured after the interjection and confidence fixes (2026-11-03):
+Measured after the interjection, confidence and dual 72/74 fixes
+(2026-11-03):
 
 | metric | before | after |
 |---|---:|---:|
-| exact first | 624,807 / 97.49% | 625,006 / **97.52%** |
-| first base confirmed (all rows) | 638,058 / 99.56% | 638,264 / **99.59%** |
-| first base confirmed (found rows) | 637,958 / 99.66% | 638,164 / **99.69%** |
-| first base one-authority (all) | 639,699 / 99.82% | 639,906 / **99.85%** |
-| unconfirmed found-but-not-first | 551 | **344** |
-| ambiguous pairs | 37,073 / 5.78% | 37,056 / 5.78% |
+| exact first | 624,807 / 97.49% | 625,015 / **97.53%** |
+| first base confirmed (all rows) | 638,058 / 99.56% | 638,273 / **99.59%** |
+| first base confirmed (found rows) | 637,958 / 99.66% | 638,173 / **99.70%** |
+| first base one-authority (all) | 639,699 / 99.82% | 639,915 / **99.85%** |
+| unconfirmed found-but-not-first | 551 | **335** |
+| ambiguous pairs | 37,073 / 5.78% | 37,043 / 5.78% |
 
 Expected: a small exact-first change on the nominal-nominal doublets. The
 `-inen` family is mixed (`aamu`/`aamuinen` prefers the underived base;
@@ -431,11 +438,11 @@ Only if exact-first ranking must improve beyond what morphology can justify:
 ## Acceptance
 
 - `first_base` agrees with `lookup` for the fixture words.
-- `confirmed_first` >= **99.59%** over all rows (99.69% over found rows) and
+- `confirmed_first` >= **99.59%** over all rows (99.70% over found rows) and
   `one_authority_first` >= **99.85%** (99.95% over found rows); no regression.
-- exact-first >= **97.52%**; further gains must come from derivation,
+- exact-first >= **97.53%**; further gains must come from derivation,
   frequency or context, not from a POS rule.
-- `unconfirmed_first` <= **344** found-but-not-first, with every remaining row
+- `unconfirmed_first` <= **335** found-but-not-first, with every remaining row
   disposed of in the report; the 623 not-found rows are recall work.
 - ambiguity rate stays around **5.8%**; it is not a target. A drop is allowed
   only when an analysis is proven spurious.

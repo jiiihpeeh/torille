@@ -255,6 +255,13 @@ pub fn inflect_in(
     if try_compound_marker(lemma, inflection, cat, lexicon, pos, possessives, &mut out) {
         return out;
     }
+    // A dual 72/74 lemma has one real reading and one the reference rejects.
+    // Suppress the losing class before either the heuristic or the hand-written
+    // module can emit it; the module alone cannot do this because an empty
+    // module result leaves the heuristic's forms in place.
+    if verbs::suppresses_reading(lemma, inflection.class) {
+        return out;
+    }
     // The catalogue model drives the heuristic engine. Some classes have no
     // model at all -- 99 is the "indeclinable" marker (`Sana on taipumaton`)
     // -- so the heuristic contributes nothing; the hand-written `nominals`
@@ -2361,6 +2368,40 @@ mod tests {
         assert!(head_inflections("ennenkuin", &cat, Some(&index)).is_none());
         // An unresolved modifier is not guessed at either.
         assert!(head_inflections("kylmäverihevonen", &cat, Some(&index)).is_none());
+    }
+
+    /// `oieta` and `aueta` are both listed under classes 72 and 74, but only
+    /// one reading is real. `oieta` is the class-72 `vanheta` type (`oikenee`),
+    /// `aueta` the class-74 `katketa` type (`aukeaa`); the other paradigm's
+    /// forms are not words.
+    #[test]
+    fn a_dual_72_74_lemma_uses_only_its_real_reading() {
+        let cat = cat();
+        for (lemma, wanted, unwanted) in [
+            ("oieta", "oikenee", "oikeaa"),
+            ("aueta", "aukeaa", "aukenee"),
+            ("tyvetä", "tyvennee", "tyvenee"),
+        ] {
+            let mut inflections: Vec<Inflection> = Vec::new();
+            for row in crate::kotus::sanalista().by_word(lemma) {
+                inflections.extend(row.inflections());
+            }
+            assert!(!inflections.is_empty(), "{lemma} is not in the sanalista");
+            let got = inflect_all(
+                lemma,
+                &inflections,
+                &cat,
+                None,
+                PartOfSpeech::Verb,
+                false,
+            );
+            let words: Vec<&str> = got.iter().map(|f| f.word.as_str()).collect();
+            assert!(words.contains(&wanted), "{lemma}: {wanted} missing");
+            assert!(
+                !words.contains(&unwanted),
+                "{lemma}: the rejected reading {unwanted} is still emitted"
+            );
+        }
     }
 
     #[test]
