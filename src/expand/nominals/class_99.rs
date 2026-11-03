@@ -18,6 +18,17 @@ use super::utility::{Builder, Decl, IPlural, build_i_loans, cell, front, nominal
 
 pub const CLASS: &str = "99";
 
+/// Whether `lemma` is a class-99 word with a real paradigm rather than the
+/// shared i-loan guesses.
+///
+/// These are the words [`inflect`] delegates to a real class (`seesam` -> 5,
+/// `tenä` and `ainut` -> 10/43) or spells out. They are the only class-99
+/// words whose forms belong in the reverse index; indexing the guesses would
+/// add thousands of forms the reference confirms for none.
+pub fn has_real_paradigm(lemma: &str) -> bool {
+    matches!(lemma, "seesam" | "tenä" | "ainut")
+}
+
 /// Class-99 words that do not inflect at all: indeclinable adverbs, particles
 /// and interjections (oikein, pahoin, toisin, takaisin, usein, mi, ...) whose
 /// whole paradigm, per the reference lexicon, is the bare lemma. They are
@@ -182,6 +193,13 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     if lemma == "seesam" {
         return super::class_5::inflect(lemma, possessives);
     }
+    // `ainut` is marked 99 because only the nominative and partitive are
+    // common, but it declines like class 43 (`ohut`): Wiktionary gives
+    // `ainuen`, `ainutta`, `ainueen`, `ainuella`, ... and the reference
+    // confirms the common cells. The i-loan grid invented `ainutia` instead.
+    if lemma == "ainut" {
+        return super::class_43::inflect(lemma, possessives);
+    }
     if lemma == "tenä" {
         // Wiktionary: "Sana taipuu vain harvoissa sijoissa" -- only the
         // nominative and a few oblique/plural forms. Live Voikko confirms
@@ -225,6 +243,23 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// `ainut` is class 99 in the sanalista, but it is the class-43 `ohut`
+    /// shape: partitive `ainutta`, genitive `ainuen`, illative `ainueen`.
+    /// The reference confirms nominative and partitive; the rest is the same
+    /// paradigm Wiktionary gives.
+    #[test]
+    fn ainut_declines_as_class_43() {
+        let forms = inflect("ainut", true);
+        let words: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
+        for want in ["ainut", "ainutta", "ainuen", "ainueen", "ainuella"] {
+            assert!(words.contains(&want), "{want} missing");
+        }
+        assert!(
+            !words.iter().any(|f| *f == "ainutia"),
+            "the i-loan partitive must not be offered"
+        );
+    }
 
     #[test]
     fn indeclinable() {

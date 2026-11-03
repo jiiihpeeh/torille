@@ -668,9 +668,9 @@ readings:
 The ranking is `ClassPrior` in the core rather than in this binary, so the Python
 binding ranks identically — see [FIX_ME.md](FIX_ME.md). How often the answer is
 right is measured, not assumed: `tools/test_reverse_lookup_recall.py` asserts that
-99.87% of the reference's 640 873 `(lemma, form)` pairs have the right base
+99.88% of the reference's 640 873 `(lemma, form)` pairs have the right base
 *among* the answers, and that ranking beats the sanalista's own order on the first
-base by 0.66 points (97.49% against 96.83%). The 2.4-point gap between those two
+base by 0.66 points (97.49% against 96.84%). The 2.4-point gap between those two
 is not a defect: 5.78% of the reference's words genuinely have two base forms.
 
 A pronoun's forms are indexed even though the sanalista gives a pronoun no

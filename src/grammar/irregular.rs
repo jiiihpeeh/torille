@@ -535,6 +535,16 @@ pub const IRREGULAR_WORDS: &[(&str, &[WordForm])] = &[
     ),
 ];
 
+/// Whether `word` has a hand-written paradigm in [`IRREGULAR_WORDS`] or is
+/// realised by [`word_irregular`].
+///
+/// The reverse index normally skips class 99, but a hand-written word's forms
+/// are real and belong in it (`aprilli` is class 99 in the sanalista and
+/// declines in full).
+pub fn has_handwritten(word: &str) -> bool {
+    IRREGULAR_WORDS.iter().any(|(lemma, _)| *lemma == word)
+}
+
 /// The hardcoded forms of `lemma`, where the class system cannot derive them.
 pub fn word_irregular(lemma: &str) -> Option<&'static [WordForm]> {
     IRREGULAR_WORDS

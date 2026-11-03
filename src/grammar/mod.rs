@@ -28,8 +28,8 @@ mod verb;
 pub(crate) use harmony::harmonise;
 pub use harmony::{Harmony, harmony, reading};
 pub use irregular::{
-    Form, Irregular, Step, WordForm, cases, cases_by_slot, irregular, realise, word_cases,
-    word_irregular,
+    Form, Irregular, Step, WordForm, cases, cases_by_slot, has_handwritten, irregular, realise,
+    word_cases, word_irregular,
 };
 pub use noun::{class_stem, oblique};
 pub use stem::{

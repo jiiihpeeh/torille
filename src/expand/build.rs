@@ -252,6 +252,9 @@ impl FormBuilder {
                 // irregular, and `class_101.rs` is that irregular paradigm.
                 if !crate::kotus::carries_a_model(inflection.class)
                     && !crate::kotus::has_own_paradigm(inflection.class)
+                    && !(inflection.class == 99
+                        && (crate::expand::nominals::class_99::has_real_paradigm(lemma.word)
+                            || crate::grammar::has_handwritten(lemma.word)))
                 {
                     continue;
                 }
