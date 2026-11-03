@@ -321,13 +321,19 @@ python3 tools/report_multiple_bases.py reports/recall5.tsv
       confirms: class 72 for `oieta`, `raueta`, `isota`, `sietä`, `sueta`;
       class 74 for `aueta`, `tyvetä`, `iljetä`, `juljeta`. `audit_verbs.py`
       now reports 0 invented forms for all nine; this removed 9 audit rows.
+- [x] `anakoluutti` was routed through a non-graded exception, but the
+      reference confirms the weak `5*C` obliques (`anakoluutin`,
+      `anakoluutissa`, `anakoluutista`) and marks the strong ones only
+      `engine`. Removing the exception fixed the audit row and 17 missing
+      reference pairs; the `5*C` report at `-n 100` is now 0 illegal, 0 missing,
+      0 not-plain, 0 mistagged.
 - [ ] For each row that stays, record the disposition in the commit message
       (and, if the set is stable, a short table in this file). Do not add the
       whole oracle to the engine.
 
 Acceptance: every row in the original 551 has a disposition; A rows lower the
 count by fixing forms, and B/C rows are documented rather than hidden. The
-interjection, confidence and dual 72/74 fixes already take it to 335
+interjection, confidence, dual 72/74 and `5*C` fixes already take it to 334
 found-but-not-first; the rest stay on the list until they are classified. A fixed form must not
 regress recall (the reference pair may still be found through another base).
 
@@ -348,17 +354,17 @@ regress recall (the reference pair may still be found through another base).
 - [x] Measure exact-first, confirmed-first and unconfirmed-first before and
       after. Keep the change only if confirmed-first does not fall.
 
-Measured after the interjection, confidence and dual 72/74 fixes
+Measured after the interjection, confidence, dual 72/74 and `5*C` fixes
 (2026-11-03):
 
 | metric | before | after |
 |---|---:|---:|
-| exact first | 624,807 / 97.49% | 625,015 / **97.53%** |
-| first base confirmed (all rows) | 638,058 / 99.56% | 638,273 / **99.59%** |
-| first base confirmed (found rows) | 637,958 / 99.66% | 638,173 / **99.70%** |
-| first base one-authority (all) | 639,699 / 99.82% | 639,915 / **99.85%** |
-| unconfirmed found-but-not-first | 551 | **335** |
-| ambiguous pairs | 37,073 / 5.78% | 37,043 / 5.78% |
+| exact first | 624,807 / 97.49% | 625,033 / **97.53%** |
+| first base confirmed (all rows) | 638,058 / 99.56% | 638,291 / **99.60%** |
+| first base confirmed (found rows) | 637,958 / 99.66% | 638,191 / **99.70%** |
+| first base one-authority (all) | 639,699 / 99.82% | 639,933 / **99.85%** |
+| unconfirmed found-but-not-first | 551 | **334** |
+| ambiguous pairs | 37,073 / 5.78% | 37,042 / 5.78% |
 
 Expected: a small exact-first change on the nominal-nominal doublets. The
 `-inen` family is mixed (`aamu`/`aamuinen` prefers the underived base;
@@ -438,12 +444,12 @@ Only if exact-first ranking must improve beyond what morphology can justify:
 ## Acceptance
 
 - `first_base` agrees with `lookup` for the fixture words.
-- `confirmed_first` >= **99.59%** over all rows (99.70% over found rows) and
+- `confirmed_first` >= **99.60%** over all rows (99.70% over found rows) and
   `one_authority_first` >= **99.85%** (99.95% over found rows); no regression.
 - exact-first >= **97.53%**; further gains must come from derivation,
   frequency or context, not from a POS rule.
-- `unconfirmed_first` <= **335** found-but-not-first, with every remaining row
-  disposed of in the report; the 623 not-found rows are recall work.
+- `unconfirmed_first` <= **334** found-but-not-first, with every remaining row
+  disposed of in the report; the 606 not-found rows are recall work.
 - ambiguity rate stays around **5.8%**; it is not a target. A drop is allowed
   only when an analysis is proven spurious.
 - recall >= **99.88%**; `len_ok` = 100%; workspace tests and clippy green.

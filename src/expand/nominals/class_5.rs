@@ -29,7 +29,7 @@ use crate::tags::{Case, Form, Number, PartOfSpeech};
 
 use super::harmony::loanword_harmony;
 use super::utility::{
-    Builder, Decl, IPlural, build_i_loans, build_i_loans_with_nom_base, cell, e_stem, nominal_tags,
+    Builder, Decl, IPlural, build_i_loans_with_nom_base, cell, e_stem, nominal_tags,
     plain, rare,
 };
 
@@ -44,11 +44,6 @@ pub const CLASS: &str = "5";
 /// catalogue but are genuinely ambiguous-harmony words in the language at
 /// large, so both are built on purpose rather than on the reference's word.
 const BOTH_HARMONY: &[&str] = &["analyysi", "design", "estrogeeni", "kitaristi"];
-
-/// Loanwords in a graded class that do not actually gradate (anakoluutti keeps
-/// its `tt`), the `kyty`-style irregular; they inflect through the plain
-/// non-graded paradigm.
-const NON_GRADATING: &[&str] = &["anakoluutti"];
 
 /// Native `-ppi` words the sanalista also lists under 5*B beside their real
 /// 7*B row. The loanword grid would give `apit`/`appini`; the native word takes
@@ -198,12 +193,6 @@ pub fn inflect_graded(lemma: &str, possessives: bool, grad: Gradation) -> Vec<Fo
         return super::class_7::inflect_graded(lemma, possessives, grad);
     }
     let mut b = Builder::new_harmony(lemma, possessives, loanword_harmony(lemma));
-    // A rare loanword in a graded class may be non-gradating (anakoluutti keeps
-    // its tt while instituutti/absoluutti weaken): route it through the
-    // ordinary non-graded paradigm.
-    if NON_GRADATING.contains(&lemma) {
-        return build_i_loans(lemma, possessives, b.is_front(), i_plural(lemma));
-    }
     let strong = lemma;
     let nom_base = native_nom_base(lemma);
     let weak = grad.apply(strong, Grade::Weak);
@@ -554,20 +543,22 @@ mod tests {
         assert_eq!(plain, vec!["prinssinakkein".to_string()], "{plain:?}");
     }
 
-    /// `anakoluutti` is filed under the gradating `5*C` (`tt -> t`) but the
-    /// reference gives it 25 forms and not one of them weakens, so it inflects
-    /// through the plain paradigm and `anakoluutin`/`anakoluutissa` are never
-    /// offered -- unlike `instituutti`, whose the reference does weaken.
+    /// `anakoluutti` is a `5*C` (`tt -> t`) word like `instituutti`; the
+    /// reference confirms the weak singular obliques (`anakoluutin`,
+    /// `anakoluutissa`, `anakoluutista`) as `both`, while the strong
+    /// `anakoluuttin`/`anakoluuttissa` rows exist only as `engine` output.
+    /// The class-5 grid must therefore weaken it, not route it through the
+    /// non-graded loan paradigm.
     #[test]
-    fn a_word_that_does_not_gradate_in_a_gradating_class() {
-        let forms = inflect("anakoluutti", true);
+    fn anakoluutti_gradates_like_its_class() {
+        let forms = inflect_graded("anakoluutti", true, Gradation(3));
         let ws: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
+        assert!(ws.contains(&"anakoluutti"), "{ws:?}");
         assert!(ws.contains(&"anakoluuttia"), "{ws:?}");
-        assert!(ws.contains(&"anakoluuttin"), "{ws:?}");
-        assert!(ws.contains(&"anakoluuttissa"), "{ws:?}");
-        assert!(!ws.contains(&"anakoluutissa"), "weak form offered: {ws:?}");
-        assert!(NON_GRADATING.contains(&"anakoluutti"));
-        // Its class-5*C sibling does weaken, so the entry is word-specific.
-        assert!(!NON_GRADATING.contains(&"instituutti"));
+        assert!(ws.contains(&"anakoluutin"), "weak genitive missing: {ws:?}");
+        assert!(ws.contains(&"anakoluutissa"), "weak inessive missing: {ws:?}");
+        assert!(ws.contains(&"anakoluutista"), "weak elative missing: {ws:?}");
+        assert!(!ws.contains(&"anakoluuttin"), "strong non-word offered: {ws:?}");
+        assert!(!ws.contains(&"anakoluuttissa"), "strong non-word offered: {ws:?}");
     }
 }
