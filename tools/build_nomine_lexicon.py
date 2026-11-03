@@ -820,7 +820,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--classes", default="all",
                    help="'all' (146 values), 'numeric' (the 51 plain Kotus "
                         "classes), or a comma list")
-    p.add_argument("--pos", default="substantiivi",
+    p.add_argument("--pos", default="substantiivi,numeraali,adjektiivi,pronomini",
                    help="part(s) of speech to include, as in the Sanaluokka "
                         "column: 'substantiivi', 'numeraali', 'adjektiivi', "
                         "'pronomini', a comma list, or 'all' to take every "
