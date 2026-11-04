@@ -12,7 +12,7 @@
 // It is a separate Solid entry point (`extension-test.tsx`) so it stays
 // out of `main.tsx` and never loads the wasm bundle.
 
-import { createSignal, For, onCleanup, onMount } from 'solid-js';
+import { createSignal, For, onCleanup, onMount, Show } from 'solid-js';
 import type { JSX } from 'solid-js';
 import { render } from 'solid-js/web';
 
@@ -125,6 +125,7 @@ function App() {
   const [hosts, setHosts] = createSignal(0);
   const [misses, setMisses] = createSignal(0);
   const [debug, setDebug] = createSignal(false);
+  const [cover, setCover] = createSignal(false);
   const [log, setLog] = createSignal<string[]>([]);
   let nextId = 1;
   let shadowHost: HTMLDivElement | undefined;
@@ -267,6 +268,9 @@ function App() {
         </button>
         <button type="button" onClick={clearAll}>
           Clear every box
+        </button>
+        <button type="button" onClick={() => setCover(!cover())}>
+          Toggle cover banner (z-index test)
         </button>
       </div>
 
@@ -465,6 +469,12 @@ Rivi 12.`}
 
       <h2>7. Diagnostics</h2>
       <pre id="log">{log().join('\n')}</pre>
+
+      <Show when={cover()}>
+        <div class="cover-banner">
+          Cover banner (z-index: 10) — underlines must stay underneath
+        </div>
+      </Show>
 
       <div class="status">
         <span>

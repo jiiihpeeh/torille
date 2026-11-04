@@ -530,9 +530,15 @@
     popup.style.display = 'none';
     shadow.appendChild(popup);
 
-    el.parentNode!.insertBefore(host, el);
+    // Put the host *after* the input and leave it at the input's own
+    // stacking level. A huge z-index made every underline paint over
+    // sticky headers, dialogs and dropdowns that legitimately sit above
+    // the field. A positioned sibling after the input still paints above
+    // its text (including when the input creates a z-index: 0 context),
+    // but page chrome with a higher z-index now wins.
+    el.parentNode!.insertBefore(host, el.nextSibling);
     host.style.position = 'absolute';
-    host.style.zIndex = '2147483646';
+    host.style.zIndex = 'auto';
     host.style.pointerEvents = 'none';
 
     // Mirror the textarea's box so the overlay text lines up.
