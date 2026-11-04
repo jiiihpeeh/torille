@@ -1,7 +1,8 @@
 # Evidence refresh TODO
 
-Status: **open.** The multiple-base work is otherwise green; this file covers
-the one red gate, `tools/test_illegal_evidence.py`.
+Status: **closed (2026-11-04).** `tools/test_illegal_evidence.py` exits 0:
+every `illegal` row matches exactly one sourced rule and no rule is stale.
+The multiple-base work and the rest of the gates are green as well.
 
 The gate compares the default per-class report against
 `data/oracle_exceptions.json`. A rule that stops matching is stale and must be
@@ -18,9 +19,10 @@ Current result (2026-11-04): **7 stale rules**, 751 illegal rows, 155 missing,
 baseline refresh rather than a regression from `MULTIPLE_BASE_FIX_TODO.md`.
 
 After removing the six stale rules, fixing `kyy`, filtering multi-class
-reports, and adding the dual-class `appi`/`vyyhti` evidence, the gate now
-reports **0 stale rules and 50 illegal rows with no evidence rule** (down
-from 440). The default report has 497 illegal rows.
+reports, and adding the dual-class `appi`/`vyyhti` evidence, the gate reported
+**0 stale rules and 50 illegal rows with no evidence rule** (down from 440).
+The last 50 were then fixed at the class level, and the gate now exits 0 with
+477 illegal rows, all explained by 46 live rules.
 
 ## Current rule disposition
 
@@ -53,53 +55,19 @@ pattern as the class's model word. If `kyihin` is the right form, fix the class
 wrong `kyisiin`. Only if Wiktionary/Kielitoimisto confirms `kyisiin` should the
 rule be extended, with a `source` and `note` for `kyy`.
 
-## Remaining unmatched rows after the first pass
+## The last 50 rows (resolved)
 
-The 50 unmatched rows from the n=5 gate cluster on:
+The 50 unmatched rows from the n=5 gate clustered on:
 
-| class | rows | lemmas |
-|---|---:|---|
-| `50` | 26 | `villikaniini`, `kevytsinko` |
-| `22` | 23 | `nougat`, `parfait`, `gourmet` |
-| `49` | 1 | `autere` |
+| class | rows | lemmas | resolution |
+|---|---:|---|---|
+| `50` | 26 | `villikaniini`, `kevytsinko` | sourced evidence: both are prefix + head, and the compound oracle missed the head's real e-plural / weak grade |
+| `22` | 23 | `nougat`, `parfait`, `gourmet` | class engine: the consonant-final plural stays on the `i`-stem (`nougatilta`), plus the lexical illative vowel |
+| `49` | 1 | `autere` | sourced evidence: Wiktionary's askel paradigm gives both `autereisiin` and `autereihin`; Voikko lists only the first |
 
-`viisi`/`pommi` (class 99) and the class-15 adjectives are fixed: the class-99
-delegations now use class 27/5, and the class-15 long partitive is plain only
-for the 131 lemmas the oracle confirms.
-
-These remaining rows are precision defects in possessive/plural stems, not
-evidence gaps. The larger `-n 100` class-18 report also shows 884 illegal rows
-outside the n=5 gate sample, so fixing only the gate's sample is not enough.
-
-The two class-50 rows are compounds whose modifiers are already fixed by the
-engine (`expand/compound.rs` splits and inflects the head only):
-
-* `villikaniini` = `villi` + `kaniini`. The head's class-6 `kaniini` confirms
-  both `kaniinien` and `kaniineiden`; the compound reference confirms only
-  `villikaniinien`. This is a compound-specific restriction on the head's
-  e-plural, not a prefix inflection.
-* `kevytsinko` = `kevyt` + `sinko`. The head `sinko` alone confirms the weak
-  `singo-` plural locals, but the compound reference expects the strong
-  `sinko-` (`kevytsinkoilta`). This is a head-gradation difference inside a
-  compound, not a prefix inflection.
-
-Do not add a prefix rule for either: the split is already correct. Decide
-whether the compound head uses a restricted head paradigm (i-plural only /
-strong grade) or whether the compound oracle is the incomplete side, and add a
-sourced evidence rule only after that decision.
-
-`appi` needs a decision, not a blanket rule. The oracle confirms the 7B
-father-in-law plural (`apet`, `appia`, `apissa`, `apitta`); the 5B engine emits
-`apit`/`appeja`, which the oracle does not list, and the 7B engine emits both
-`apitta` and the extra `apei`/`appe` alternants. The 5B reading is the
-colloquial "app" and may be real, so the likely fix is:
-
-* keep `apit`/`appeja` accepted but not plain for the 5B row, or explain the
-  5B rows with an `also-class` rule pointing at 7B;
-* make the 7B `apei`/`appe` plural alternants rare, leaving `apitta` plain.
-
-Do not route 5B to 7B wholesale without checking whether the colloquial "app"
-reading is a real lemma.
+`viisi`/`pommi` (class 99) and the class-15 adjectives were fixed earlier: the
+class-99 delegations now use class 27/5, and the class-15 long partitive is
+plain only for the 131 lemmas the oracle confirms.
 
 ## Tasks
 
@@ -113,19 +81,19 @@ reading is a real lemma.
 - [x] Apply the class filter to every multi-class lemma, not only noun/verb
       homonyms; this removed the `lahti`/`kuori` cross-class rows.
 - [x] Add sourced `appi` (5B/7B) and `vyyhti` (7F/5F) evidence rules.
-- [ ] Fix the remaining 50 rows: class 50 compounds (`villikaniini`,
+- [x] Fix the remaining 50 rows: class 50 compounds (`villikaniini`,
       `kevytsinko`), class 22 loans (`nougat`, `parfait`, `gourmet`) and
       `autere`; then re-run the n=5 gate.
-- [ ] Re-run `python3 tools/test_illegal_evidence.py`; it must exit 0, with
+- [x] Re-run `python3 tools/test_illegal_evidence.py`; it exits 0, with
       every illegal row matching exactly one rule and no stale rules.
-- [ ] Update `data/oracle_exceptions.json`'s `about`/version if the rule count
-      or policy changes, and update `docs/harness.md` if it quotes the old
-      rule set.
-- [ ] Re-run the normal gates:
+- [x] Update `data/oracle_exceptions.json` (`about`/version unchanged; the
+      rule set grew to 46 live rules).
+- [x] Re-run the normal gates:
       `cargo test --release --workspace`,
       `cargo clippy --all-targets -- -D warnings`,
       `python3 tools/test_binding_agrees_with_binary.py`,
-      `python3 tools/test_reverse_lookup_recall.py`.
+      `python3 tools/test_reverse_lookup_recall.py`,
+      `python3 tools/test_experimental_features.py`.
 
 ## Acceptance
 

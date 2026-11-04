@@ -9,34 +9,70 @@
 //! forms match the parser's database, the apostrophe forms the classic
 //! spelling the Wiktionary catalogue uses.
 //!
-//! The plain half is class 5/6's shared [`build_i_loans`](super::utility::build_i_loans)
-//! grid. The apostrophe half is a full 27-cell `Decl` built with
-//! `Builder::new_rare`, so every form it makes is repaired. Two external
-//! illatives (`nougathan`, `nougathan`) are plain and come last.
+//! The plain half is the consonant-final [`build_i_loans_consonant`] grid:
+//! unlike a vowel-final `-i` loan, the plural stays on the `i`-stem
+//! (`nougatissa`, `nougatilta`), not the `e`-stem. The apostrophe half is a
+//! full 27-cell `Decl` built with `Builder::new_rare`, so every form it makes
+//! is repaired. Two external illatives (`nougathan`, `nougathan`) are plain
+//! and come last.
 
 #![allow(dead_code)]
 
 use crate::tags::{Case, Form, Number, PartOfSpeech};
 
-use super::utility::{Builder, Decl, IPlural, build_i_loans, cell, front, nominal_tags, plain};
+use super::utility::{
+    Builder, Decl, IPlural, build_i_loans_consonant, cell, front, nominal_tags, plain,
+};
 
 pub const CLASS: &str = "22";
 
+/// The lexical vowel of a class-22 singular illative (`nougathan`,
+/// `parfaithen`, `showhun`). It is not vowel harmony: `nougat` and `parfait`
+/// end in the same spelling but take different vowels, because the loan's
+/// pronunciation decides it. The entries come from the Wiktionary
+/// `fi-decl-parfait` template; the rest fall back to the word's harmony.
+fn illative_vowel(lemma: &str) -> &'static str {
+    match lemma {
+        "bavarois" | "nougat" => "a",
+        "beignet" | "bouquet" | "buffet" | "gourmet" | "parfait" => "e",
+        "bordeaux" => "o",
+        "ragoût" | "roux" | "show" => "u",
+        _ => {
+            if front(lemma) {
+                "e"
+            } else {
+                "a"
+            }
+        }
+    }
+}
+
 /// Inflect a class-22 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
-    let mut out = build_i_loans(lemma, possessives, front(lemma), IPlural::NONE);
+    let mut out = build_i_loans_consonant(lemma, possessives, front(lemma), IPlural::NONE);
     out.extend(apostrophe(lemma, possessives));
-    // The plain external illatives (`nougathen`, `nougathan`) beside the
-    // forms above.
+    // The plain external illative (`nougathen`/`nougathan`) beside the forms
+    // above. Only the word's own vowel is plain; the other standard vowels
+    // stay repaired (the curated catalogue carries `showhan`/`showhen`).
     let sg = Number::Singular;
+    let chosen = illative_vowel(lemma);
+    let mut cells = vec![
+        cell(Case::Illative, sg, lemma, format!("h{chosen}n"), false)
+            .on_ending(format!("h{chosen}")),
+    ];
+    for vowel in ["a", "e", "u"] {
+        if vowel != chosen {
+            cells.push(
+                cell(Case::Illative, sg, lemma, format!("h{vowel}n"), false)
+                    .on_ending(format!("h{vowel}"))
+                    .as_rare(),
+            );
+        }
+    }
     let mut b = Builder::new(lemma, possessives);
-    b.decline(
-        &Decl::new(vec![
-            cell(Case::Illative, sg, lemma, ["hen", "hen"], false).on_ending(["he", "he"]),
-            cell(Case::Illative, sg, lemma, ["han", "han"], false).on_ending(["ha", "ha"]),
-        ]),
-        |case, number, poss| nominal_tags(PartOfSpeech::Noun, case, number, poss),
-    );
+    b.decline(&Decl::new(cells), |case, number, poss| {
+        nominal_tags(PartOfSpeech::Noun, case, number, poss)
+    });
     out.extend(b.into_forms());
     out
 }
@@ -109,6 +145,19 @@ mod tests {
         assert!(w.contains(&"buffetissa".to_string()));
         assert!(w.contains(&"buffet'n".to_string()));
         assert!(w.contains(&"buffet'ssa".to_string()));
+    }
+
+    /// A consonant-final loan keeps the whole plural on the `i`-stem:
+    /// `nougatilta`, not the vowel-final loan's `nougateilta`.
+    #[test]
+    fn consonant_final_plural_stays_on_the_i_stem() {
+        let w = words("nougat");
+        assert!(w.contains(&"nougatilta".to_string()));
+        assert!(w.contains(&"nougatissa".to_string()));
+        assert!(w.contains(&"nougatita".to_string()));
+        assert!(w.contains(&"nougatihin".to_string()));
+        assert!(!w.contains(&"nougateilta".to_string()));
+        assert!(!w.contains(&"nougateissa".to_string()));
     }
 
     /// The plain and apostrophe halves are both present; the external

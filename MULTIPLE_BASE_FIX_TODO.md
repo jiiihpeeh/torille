@@ -489,14 +489,11 @@ Only if exact-first ranking must improve beyond what morphology can justify:
 
 Green: `cargo test --release --workspace`, `cargo clippy --all-targets -- -D
 warnings`, `test_binding_agrees_with_binary.py` (23/23),
-`test_reverse_lookup_recall.py` (99.89% recall), `test_experimental_features.py`.
-
-Not green: `test_illegal_evidence.py` now has **0 stale rules** after the
-evidence refresh, but still reports **50 illegal rows with no evidence rule**
-in the n=5 report. Those are class-50 compounds, class-22 loans and `autere`,
-tracked in `EVIDENCE_REFRESH_TODO.md`. It
-must be refreshed before claiming an all-green merge gate; the work is scoped
-in `EVIDENCE_REFRESH_TODO.md`.
+`test_reverse_lookup_recall.py` (99.89% recall), `test_experimental_features.py`,
+and `test_illegal_evidence.py` (0 stale rules; every illegal row explained by
+one of 46 sourced rules). The class-50 compound, class-22 loan and `autere`
+rows were closed in the class engines or with sourced evidence; see
+`EVIDENCE_REFRESH_TODO.md`.
 
 - `cargo test --release --workspace`; `cargo clippy --all-targets -- -D warnings`.
 - `python3 tools/test_reverse_lookup_recall.py reports/recall7.tsv`:

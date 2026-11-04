@@ -875,12 +875,44 @@ pub fn build_i_loans_with_nom_base(
     ipl: IPlural,
     nom_base: Option<&str>,
 ) -> Vec<Form> {
+    build_i_loans_impl(lemma, possessives, front, ipl, nom_base, false)
+}
+
+/// The consonant-final `-i` loan paradigm (class 22: `nougat`, `gourmet`).
+///
+/// A vowel-final loan elides its final `i` to `e` before the plural obliques
+/// (`paperi` -> `papereissa`). A consonant-final loan keeps the `i`, so the
+/// same `i`-stem carries the whole plural (`nougatissa`, `nougatilta`) and the
+/// partitive and illative take the bare `-ta`/`-hin` endings instead of the
+/// `e`-stem `-ja`/`-ihin` ones.
+pub fn build_i_loans_consonant(
+    lemma: &str,
+    possessives: bool,
+    front: bool,
+    ipl: IPlural,
+) -> Vec<Form> {
+    build_i_loans_impl(lemma, possessives, front, ipl, None, true)
+}
+
+fn build_i_loans_impl(
+    lemma: &str,
+    possessives: bool,
+    front: bool,
+    ipl: IPlural,
+    nom_base: Option<&str>,
+    consonant_plural: bool,
+) -> Vec<Form> {
     let mut b = Builder::new_harmony(lemma, possessives, front);
     let istem = i_stem(lemma);
     let estem = e_stem(&istem);
     let nom_base = nom_base
         .map(str::to_string)
         .unwrap_or_else(|| istem.clone());
+    let pstem = if consonant_plural {
+        istem.clone()
+    } else {
+        estem.clone()
+    };
     let (sg, pl) = (Number::Singular, Number::Plural);
 
     // The `-i`-plural alternants on the `e`-stem: genitive `-iden`, genitive
@@ -906,48 +938,140 @@ pub fn build_i_loans_with_nom_base(
     let ita = cell(Case::Partitive, pl, &estem, ["ita", "itä"], true);
     let ita = if ipl.ita_plain() { ita } else { ita.as_rare() };
 
-    b.decline(
-        &Decl::new(vec![
-            // ---- the singular, on the i-stem ----
-            // Bare nominative is the lemma (argon); its possessives sit on the
-            // i-stem (argonin).
-            cell(Case::Nominative, sg, lemma, ["", ""], false).base_on(nom_base.clone(), ["", ""]),
-            cell(Case::Genitive, sg, &istem, ["n", "n"], false).base_on(nom_base.clone(), ["", ""]),
-            cell(Case::Partitive, sg, &istem, ["a", "ä"], true),
-            cell(Case::Essive, sg, &istem, ["na", "nä"], true),
-            cell(Case::Translative, sg, &istem, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
-            cell(Case::Inessive, sg, &istem, ["ssa", "ssä"], true),
-            cell(Case::Elative, sg, &istem, ["sta", "stä"], true),
-            // The illative doubles the i: aari -> aariin, argoni -> argoniin.
-            cell(Case::Illative, sg, &istem, ["in", "in"], false).on_ending(["i", "i"]),
-            cell(Case::Adessive, sg, &istem, ["lla", "llä"], true),
-            cell(Case::Ablative, sg, &istem, ["lta", "ltä"], true),
-            cell(Case::Allative, sg, &istem, ["lle", "lle"], true),
-            cell(Case::Abessive, sg, &istem, ["tta", "ttä"], true),
-            // ---- the plural ----
-            cell(Case::Nominative, pl, &istem, ["t", "t"], false)
-                .base_on(nom_base.clone(), ["", ""]),
-            // Genitive plural keeps the i: aari -> aarien.
-            cell(Case::Genitive, pl, &istem, ["en", "en"], false).on_ending(["e", "e"]),
-            // Every other oblique plural cell is on the e-stem.
-            cell(Case::Partitive, pl, &estem, ["ja", "jä"], true),
-            iden,
-            itten,
-            ita,
-            cell(Case::Essive, pl, &estem, ["ina", "inä"], true),
-            cell(Case::Translative, pl, &estem, ["iksi", "iksi"], true).on_ending(["ikse", "ikse"]),
-            cell(Case::Inessive, pl, &estem, ["issa", "issä"], true),
-            cell(Case::Elative, pl, &estem, ["ista", "istä"], true),
-            cell(Case::Illative, pl, &estem, ["ihin", "ihin"], false).on_ending(["ihi", "ihi"]),
-            cell(Case::Adessive, pl, &estem, ["illa", "illä"], true),
-            cell(Case::Ablative, pl, &estem, ["ilta", "iltä"], true),
-            cell(Case::Allative, pl, &estem, ["ille", "ille"], true),
-            cell(Case::Abessive, pl, &estem, ["itta", "ittä"], true),
-            plain(Case::Instructive, pl, &estem, ["in", "in"]),
-        ]),
-        |case, number, poss| nominal_tags(PartOfSpeech::Noun, case, number, poss),
-    );
-    b.comitative(&estem);
+    // A consonant-final loan carries the plural `i` in its stem, so the
+    // oblique endings drop the `i` the vowel-final `e`-stem endings begin
+    // with: `gourmetilta`, not `gourmetiilta`. The partitive and illative
+    // keep their own bare shape (`gourmetita`, `gourmetihin`).
+    let part = if consonant_plural {
+        ["ta", "tä"]
+    } else {
+        ["ja", "jä"]
+    };
+    let ess = if consonant_plural {
+        ["na", "nä"]
+    } else {
+        ["ina", "inä"]
+    };
+    let tra = if consonant_plural {
+        ["ksi", "ksi"]
+    } else {
+        ["iksi", "iksi"]
+    };
+    let tra_end = if consonant_plural {
+        ["kse", "kse"]
+    } else {
+        ["ikse", "ikse"]
+    };
+    let ine = if consonant_plural {
+        ["ssa", "ssä"]
+    } else {
+        ["issa", "issä"]
+    };
+    let ela = if consonant_plural {
+        ["sta", "stä"]
+    } else {
+        ["ista", "istä"]
+    };
+    let ill = if consonant_plural {
+        ["hin", "hin"]
+    } else {
+        ["ihin", "ihin"]
+    };
+    let ill_end = if consonant_plural {
+        ["hi", "hi"]
+    } else {
+        ["ihi", "ihi"]
+    };
+    let ade = if consonant_plural {
+        ["lla", "llä"]
+    } else {
+        ["illa", "illä"]
+    };
+    let abl = if consonant_plural {
+        ["lta", "ltä"]
+    } else {
+        ["ilta", "iltä"]
+    };
+    let all = if consonant_plural {
+        ["lle", "lle"]
+    } else {
+        ["ille", "ille"]
+    };
+    let abe = if consonant_plural {
+        ["tta", "ttä"]
+    } else {
+        ["itta", "ittä"]
+    };
+    let ins = if consonant_plural {
+        ["n", "n"]
+    } else {
+        ["in", "in"]
+    };
+
+    let mut cells = vec![
+        // ---- the singular, on the i-stem ----
+        // Bare nominative is the lemma (argon); its possessives sit on the
+        // i-stem (argonin).
+        cell(Case::Nominative, sg, lemma, ["", ""], false).base_on(nom_base.clone(), ["", ""]),
+        cell(Case::Genitive, sg, &istem, ["n", "n"], false).base_on(nom_base.clone(), ["", ""]),
+        cell(Case::Partitive, sg, &istem, ["a", "ä"], true),
+        cell(Case::Essive, sg, &istem, ["na", "nä"], true),
+        cell(Case::Translative, sg, &istem, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
+        cell(Case::Inessive, sg, &istem, ["ssa", "ssä"], true),
+        cell(Case::Elative, sg, &istem, ["sta", "stä"], true),
+        cell(Case::Adessive, sg, &istem, ["lla", "llä"], true),
+        cell(Case::Ablative, sg, &istem, ["lta", "ltä"], true),
+        cell(Case::Allative, sg, &istem, ["lle", "lle"], true),
+        cell(Case::Abessive, sg, &istem, ["tta", "ttä"], true),
+        // ---- the plural ----
+        cell(Case::Nominative, pl, &istem, ["t", "t"], false).base_on(nom_base.clone(), ["", ""]),
+        // Genitive plural keeps the i: aari -> aarien.
+        cell(Case::Genitive, pl, &istem, ["en", "en"], false).on_ending(["e", "e"]),
+        // Every other oblique plural cell is on the plural stem: the
+        // `e`-stem for a vowel-final loan, the `i`-stem for a
+        // consonant-final one.
+        cell(Case::Partitive, pl, &pstem, part, true),
+        iden,
+        itten,
+        ita,
+        cell(Case::Essive, pl, &pstem, ess, true),
+        cell(Case::Translative, pl, &pstem, tra, true).on_ending(tra_end),
+        cell(Case::Inessive, pl, &pstem, ine, true),
+        cell(Case::Elative, pl, &pstem, ela, true),
+        cell(Case::Illative, pl, &pstem, ill, false).on_ending(ill_end),
+        cell(Case::Adessive, pl, &pstem, ade, true),
+        cell(Case::Ablative, pl, &pstem, abl, true),
+        cell(Case::Allative, pl, &pstem, all, true),
+        cell(Case::Abessive, pl, &pstem, abe, true),
+        plain(Case::Instructive, pl, &pstem, ins),
+    ];
+    // A vowel-final loan doubles the i for its singular illative
+    // (`aariin`). A consonant-final loan has a lexical `-han`/`-hen`
+    // illative instead (class 22 adds it), so the doubled-i shape is only a
+    // repaired guess there (`nougatiin` is not a plain word).
+    if !consonant_plural {
+        cells.push(cell(Case::Illative, sg, &istem, ["in", "in"], false).on_ending(["i", "i"]));
+    } else {
+        // The curated class-22 catalogue still carries the i-stem illative
+        // (`showiin`) and the e-stem partitive/illative plurals (`showeja`,
+        // `showeihin`). They are not the confirmed shape for a consonant-final
+        // loan, so they stay repaired, but the catalogue has to be reproduced.
+        cells.push(
+            cell(Case::Illative, sg, &istem, ["in", "in"], false)
+                .on_ending(["i", "i"])
+                .as_rare(),
+        );
+        cells.push(cell(Case::Partitive, pl, &estem, ["ja", "jä"], true).as_rare());
+        cells.push(
+            cell(Case::Illative, pl, &estem, ["ihin", "ihin"], false)
+                .on_ending(["ihi", "ihi"])
+                .as_rare(),
+        );
+    }
+    b.decline(&Decl::new(cells), |case, number, poss| {
+        nominal_tags(PartOfSpeech::Noun, case, number, poss)
+    });
+    b.comitative(&pstem);
 
     b.into_forms()
 }
