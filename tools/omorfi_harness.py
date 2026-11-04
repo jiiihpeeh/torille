@@ -1224,17 +1224,14 @@ class Harness:
         Omorfi never reached the cell" to tell apart from "not a word", so such
         a form is `unsupported` rather than `confirmed`.
         """
-        # Only a noun/verb homonym needs the class filter. `taata` is a
-        # class-73 verb and a class-9 noun; the noun report must not read the
-        # verb's forms. A lemma with two nominal classes (`karhi` 5 and 7)
-        # keeps the old full-paradigm read, so the class evidence rules do not
-        # lose their rows.
-        pos_rows = self.lexicon.execute(
-            "SELECT part_of_speech FROM base WHERE lemma=?", (lemma,)
-        ).fetchall()
-        has_verb = any("verbi" in p for (p,) in pos_rows)
-        has_noun = any("substantiivi" in p for (p,) in pos_rows)
-        effective_klass = klass if has_verb and has_noun else None
+        # A lemma can be two homonym rows in different classes (`taata` is a
+        # class-73 verb and a class-9 noun; `lahti` is 7*F and 5*F). A class
+        # report must read only the reported class's forms, or the other
+        # class's paradigm looks like an illegal form of this one.
+        multi_class = self.lexicon.execute(
+            "SELECT count(DISTINCT class) FROM base WHERE lemma=?", (lemma,)
+        ).fetchone()[0] > 1
+        effective_klass = klass if multi_class else None
         try:
             forms = self.torille_forms(lemma, effective_klass)
         except (ValueError, subprocess.CalledProcessError):

@@ -492,9 +492,10 @@ warnings`, `test_binding_agrees_with_binary.py` (23/23),
 `test_reverse_lookup_recall.py` (99.89% recall), `test_experimental_features.py`.
 
 Not green: `test_illegal_evidence.py` now has **0 stale rules** after the
-evidence refresh, but still reports **440 illegal rows with no evidence rule**
-in the n=5 report. Those are class-level precision defects (`appi`, `lahti`,
-`vyyhti`, `kuori`, ...), tracked in `EVIDENCE_REFRESH_TODO.md`. It
+evidence refresh, but still reports **125 illegal rows with no evidence rule**
+in the n=5 report. Those are class-level precision defects (`viisi`, `pommi`,
+the class-15 adjectives, class-50 compounds, class-22 loans, `autere`),
+tracked in `EVIDENCE_REFRESH_TODO.md`. It
 must be refreshed before claiming an all-green merge gate; the work is scoped
 in `EVIDENCE_REFRESH_TODO.md`.
 

@@ -357,6 +357,22 @@
       "applies_to": ["illegal", "missing", "unsupported"],
       "source": "https://en.wiktionary.org/wiki/s%C3%A4rkynytsyd%C3%A4n",
       "note": "the head is the participle särkynyt (broken), which is not a sanalista lemma; the class-47 engine inflects it, so the paradigm is särkyneensydämen, särkyneetsydämet, särkyneittäsydämittä. The oracle's expected set is a split of unrelated parts (särkynytöillämerillä, särkynyillesärjöille)"
+    },
+    {
+      "id": "lemma-5b-appi-5b-colloquial",
+      "classes": ["5*B"],
+      "lemmas": ["appi"],
+      "predicate": "lemma",
+      "source": "https://en.wiktionary.org/wiki/appi",
+      "note": "appi is two words: the 5B informal app (apit, appeja, apeissa, apeitta) and the 7B father-in-law (apet, appia, apissa, apitta). The oracle reads only the 7B paradigm under this homonym; the 5B forms are real per Wiktionary."
+    },
+    {
+      "id": "lemma-7f-vyyhti-5f-forms",
+      "classes": ["7*F"],
+      "lemmas": ["vyyhti"],
+      "predicate": "lemma",
+      "source": "https://en.wiktionary.org/wiki/vyyhti",
+      "note": "vyyhti is one sanalista row carrying both 7*F and 5*F. The 7F report sees the 5F forms (vyyhdeittä, vyyhdeissä, ...) too; Wiktionary gives both declensions, so they are real, not invented."
     }
   ]
 }
