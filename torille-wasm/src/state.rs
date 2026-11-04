@@ -521,6 +521,27 @@ mod tests {
     }
 
     #[test]
+    fn the_postposition_kuulten_is_accepted() {
+        // `hänen kuultensa` = "in his hearing"; the postposition and its
+        // possessive forms are a closed lexical exception, not a `kuulla`
+        // participle.
+        let mut st = TextAreaState::new();
+        for text in [
+            "Hän puhui hänen kuultensa.",
+            "Se tapahtui heidän kuultensa.",
+            "kuulteni ja kuultesi",
+        ] {
+            let hits = st.find_misspells(text);
+            assert!(
+                !hits
+                    .iter()
+                    .any(|h| h.word.to_lowercase().starts_with("kuulte")),
+                "{text}: {hits:?}"
+            );
+        }
+    }
+
+    #[test]
     fn clitics_on_names_keep_the_capital() {
         // A clitic on a name (`-kin`) is still the name; the proper-name
         // table holds the bare case form.
