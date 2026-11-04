@@ -664,11 +664,34 @@
           ? (el.clientWidth || r.width - borderLeft - borderRight)
           : r.width - borderLeft - borderRight
       ) + 'px';
-      overlay.style.height = (
+      const boxHeight =
         isTextarea
           ? (el.clientHeight || r.height - borderTop - borderBottom)
-          : r.height - borderTop - borderBottom
-      ) + 'px';
+          : r.height - borderTop - borderBottom;
+      overlay.style.height = boxHeight + 'px';
+
+      // A single-line `<input>` centres its one line box inside the
+      // content box, while the mirror stacks lines from the top. When the
+      // field is taller than its line-height (Ecosia's 38px search box with
+      // a 19px line), the underline lands through the middle of the glyphs.
+      // Give the input mirror a line box as tall as the content area so its
+      // glyphs land on the same baseline. Textareas keep their own
+      // line-height because they wrap and scroll.
+      if (!isTextarea) {
+        const contentHeight = Math.max(
+          0,
+          r.height - borderTop - borderBottom
+            - (parseFloat(cs.paddingTop) || 0)
+            - (parseFloat(cs.paddingBottom) || 0),
+        );
+        overlay.style.lineHeight = contentHeight + 'px';
+        // An `<input>` never wraps: it scrolls horizontally. Mirror that
+        // instead of letting the overlay turn a long query into several
+        // visual lines whose later underlines sit under the wrong text.
+        overlay.style.whiteSpace = 'pre';
+        overlay.style.wordWrap = 'normal';
+        overlay.style.overflowWrap = 'normal';
+      }
     }
 
     // The mirror follows the input's own scroll offset as well as its

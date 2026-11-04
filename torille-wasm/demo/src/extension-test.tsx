@@ -360,6 +360,16 @@ Kymmenes rivi.`}
         <Card label="Auto-growing textarea">
           <AutoTextarea rows={1} value="kirjoitusvirhee taloo" />
         </Card>
+        <Card label="Tall single-line input (centered text)">
+          <input
+            type="search"
+            value="size limit for firefox extensions"
+            style={{
+              height: '38px',
+              'line-height': '19px',
+            }}
+          />
+        </Card>
         <Card label="Input with a custom font">
           <input
             type="text"
