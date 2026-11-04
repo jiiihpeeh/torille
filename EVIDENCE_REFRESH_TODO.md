@@ -76,6 +76,19 @@ of plural-possessive disagreement. The larger `-n 100` class-18 report also
 shows 884 illegal rows outside the n=5 gate sample, so fixing only the gate's
 sample is not enough.
 
+`appi` needs a decision, not a blanket rule. The oracle confirms the 7B
+father-in-law plural (`apet`, `appia`, `apissa`, `apitta`); the 5B engine emits
+`apit`/`appeja`, which the oracle does not list, and the 7B engine emits both
+`apitta` and the extra `apei`/`appe` alternants. The 5B reading is the
+colloquial "app" and may be real, so the likely fix is:
+
+* keep `apit`/`appeja` accepted but not plain for the 5B row, or explain the
+  5B rows with an `also-class` rule pointing at 7B;
+* make the 7B `apei`/`appe` plural alternants rare, leaving `apitta` plain.
+
+Do not route 5B to 7B wholesale without checking whether the colloquial "app"
+reading is a real lemma.
+
 ## Tasks
 
 - [x] Run `python3 tools/report_by_class.py -n 5 -j 8 -o reports/noun-classes-current.json`
