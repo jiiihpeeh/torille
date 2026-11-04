@@ -40,9 +40,11 @@
 //!    (`lukeneen`, `lukeneita`, `kukistumiseen`). Verify
 //!    uses `PartOfSpeech::Verb`.
 //!
-//! 5. **Slow check** -- [`crate::expand::find_any_base_with`].
-//!    The head/tail/prefix walks plus the clitic phase. Per-word,
-//!    ~50-200 ms; the typing path rarely reaches this.
+//! 5. **Slow check** -- [`crate::expand::find_best_base_with`].
+//!    The head/tail bucket is ranked with the same class prior the reverse
+//!    index uses; the remaining prefix walks keep the first-match order. The
+//!    clitic phase is preserved. Per-word, ~50-200 ms; the typing path
+//!    rarely reaches this.
 //!
 //! The verify step (re-inflect the candidate base) is what
 //! makes gates 4 and 4b correct: a wrong stem split (e.g.,
@@ -60,9 +62,11 @@ use std::sync::OnceLock;
 use crate::expand::all_forms;
 use crate::expand::blob::Blob;
 use crate::expand::clitic::strip_clitic;
-use crate::expand::find_any_base_with;
 use crate::expand::inflect_all;
 use crate::expand::static_table::StemMap;
+use crate::expand::{
+    ClassPrior, find_all_bases_with, find_best_base_with, lemma_by_word, rank_lemma_bases,
+};
 use crate::kotus::{Lemma, Sanalista};
 use crate::spec::Catalogues;
 use crate::suggest::is_known_word;
@@ -382,7 +386,7 @@ pub fn check_normal(word: &str, verbose: bool) -> NormalizedOutcome {
 ///
 /// The cheap gates (1, 2, 3, 4, 4b) are constant-time
 /// HashMap / StaticSet / StemMap probes; the *engine gate* is the
-/// head/tail/prefix walk (`find_any_base_with`), which retains every
+/// head/tail/prefix walk (`find_best_base_with`), which retains every
 /// candidate form it visits. It is the dominant cost by orders of
 /// magnitude -- in the wasm it is tens to hundreds of MB of
 /// transient heap and up to seconds per word -- and both gate 5 and
@@ -417,6 +421,30 @@ pub fn check_normal_fast(word: &str, verbose: bool) -> NormalizedOutcome {
         cache.insert(word.to_string(), outcome.clone());
     });
     outcome
+}
+
+/// Every base the engine can prove for `word`, ranked like `lookup`.
+///
+/// [`check_normal`] returns one name because that is what the per-keystroke
+/// path needs. This is the diagnostic view behind `check_normal --all`: it
+/// runs the recognition walk (no generated-form payload) and applies the same
+/// class prior the reverse index uses. A word only the cheap gates know falls
+/// back to the single outcome's base, so the two views cannot contradict each
+/// other about whether the word is known.
+pub fn check_normal_bases(word: &str) -> Vec<String> {
+    let report = find_all_bases_with(lex(), cat(), word);
+    let ranked = rank_lemma_bases(report.bases, class_prior());
+    if !ranked.is_empty() {
+        return ranked
+            .into_iter()
+            .map(|lemma| lemma.word.to_string())
+            .collect();
+    }
+    match check_normal(word, false) {
+        NormalizedOutcome::Lemma => vec![word.to_string()],
+        NormalizedOutcome::Inflected { base, .. } => vec![base],
+        NormalizedOutcome::Unknown => Vec::new(),
+    }
 }
 
 thread_local! {
@@ -716,7 +744,18 @@ fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> Normalized
     if verbose {
         println!("    gate 4: stem hashmap ({} known endings)", ENDINGS.len());
     }
-    if let Some(base) = find_base_via_stem_map(word, PartOfSpeech::Noun, verbose) {
+    // The full path ranks the union of the noun and verb maps, because the
+    // maps are separate gates but the word is one question: `paloin` is both
+    // a noun form and a verb form. The fast path keeps the noun-first
+    // first-hit order -- it cannot afford the whole bucket per keystroke.
+    if engine_gate {
+        if let Some((base, gate)) = ranked_stem_map_base(word, verbose) {
+            if verbose {
+                println!("    gate 4: hit -> {base} ({gate})");
+            }
+            return NormalizedOutcome::Inflected { base, gate };
+        }
+    } else if let Some(base) = find_base_via_stem_map(word, PartOfSpeech::Noun, verbose) {
         if verbose {
             println!("    gate 4: hit -> {base}");
         }
@@ -736,7 +775,7 @@ fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> Normalized
             VERB_ENDINGS.len()
         );
     }
-    if let Some(base) = find_base_via_verb_stem_map(word, verbose) {
+    if !engine_gate && let Some(base) = find_base_via_verb_stem_map(word, verbose) {
         if verbose {
             println!("    gate 4b: hit -> {base}");
         }
@@ -926,20 +965,60 @@ fn engine_base(word: &str, engine_gate: bool, verbose: bool) -> Option<String> {
 }
 
 /// Slow check: ask the engine's head/tail/prefix walks + clitic
-/// phase for the base. Returns the first matching lemma's word.
+/// phase for the base. The head/tail bucket is ranked with the same class
+/// prior the reverse index uses, so the name agrees with `lookup`; the
+/// expensive prefix walks keep their first-match behaviour.
 fn find_any_base_via_engine(word: &str, verbose: bool) -> Option<String> {
     if verbose {
         println!(
-            "      base_for({word:?}) -> find_any_base_with \
-             (short-circuits on first match; pure inflect check)"
+            "      base_for({word:?}) -> find_best_base_with \
+             (ranks the head/tail bucket, then the pure inflect walks)"
         );
     }
-    let bases = find_any_base_with(lex(), cat(), word);
+    let bases = find_best_base_with(lex(), cat(), word, class_prior());
     let first = bases.first()?;
     if verbose {
         println!("      base_for: {:?}", first.word);
     }
     Some(first.word.to_string())
+}
+
+/// The class prior the check paths rank with, built once over the leaked
+/// lexicon.
+fn class_prior() -> &'static ClassPrior {
+    static PRIOR: OnceLock<ClassPrior> = OnceLock::new();
+    PRIOR.get_or_init(|| ClassPrior::of(lex()))
+}
+
+/// The stem-map answer when both maps are allowed to contribute and the
+/// verified bases are ranked.
+///
+/// `check_normal_fast` keeps the first-hit stem-map gate: it is one hash probe
+/// and the per-keystroke path cannot pay for the whole bucket. The full
+/// diagnostic path asks both maps here so a genuine cross-POS homonym
+/// (`paloin` is a noun form and a verb form) ranks like `lookup` instead of
+/// stopping at whichever map ran first.
+fn ranked_stem_map_base(word: &str, verbose: bool) -> Option<(String, &'static str)> {
+    let mut found: Vec<(String, &'static str)> = Vec::new();
+    for base in collect_bases_via_stem_map(word, PartOfSpeech::Noun, verbose) {
+        found.push((base, "noun stem"));
+    }
+    for base in collect_bases_via_verb_stem_map(word, verbose) {
+        if !found.iter().any(|(seen, _)| *seen == base) {
+            found.push((base, "verb stem"));
+        }
+    }
+    let lemmas: Vec<&Lemma> = found
+        .iter()
+        .filter_map(|(base, _)| lemma_by_word(lex(), base))
+        .collect();
+    let best = *rank_lemma_bases(lemmas, class_prior()).first()?;
+    let gate = found
+        .iter()
+        .find(|(base, _)| base == best.word)
+        .map(|(_, gate)| *gate)
+        .unwrap_or("stem");
+    Some((best.word.to_string(), gate))
 }
 
 /// Look up `word` in the noun stem map. For each known Finnish
@@ -962,7 +1041,8 @@ fn lemma_pos(lemma: &crate::kotus::EmbeddedLemma, fallback: PartOfSpeech) -> Par
         .unwrap_or(fallback)
 }
 
-pub fn find_base_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) -> Option<String> {
+pub fn collect_bases_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
     // The empty ending first: a form that carries no case suffix has
     // its own stem as the map key (2sg imperative `sano`), and
     // stripping every suffix in turn without ever probing the whole
@@ -987,6 +1067,9 @@ pub fn find_base_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) -> O
             );
         }
         for base in candidates {
+            if out.iter().any(|seen| seen == base) {
+                continue;
+            }
             // O(1) hash lookup, not a scan over the whole lexicon: the
             // verify runs once per candidate base and a linear scan made
             // the gate cost the same as the engine walk it exists to
@@ -1014,18 +1097,25 @@ pub fn find_base_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) -> O
                 if verbose {
                     println!("      gate 4: verify {base:?} inflects to {word:?} (hit)");
                 }
-                return Some(base.to_string());
+                out.push(base.to_string());
             }
         }
     }
-    if verbose {
+    if verbose && out.is_empty() {
         println!("      gate 4: no stem match + verify");
     }
-    None
+    out
+}
+
+pub fn find_base_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) -> Option<String> {
+    collect_bases_via_stem_map(word, pos, verbose)
+        .into_iter()
+        .next()
 }
 
 /// Verb counterpart of [`find_base_via_stem_map`].
-pub fn find_base_via_verb_stem_map(word: &str, verbose: bool) -> Option<String> {
+pub fn collect_bases_via_verb_stem_map(word: &str, verbose: bool) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
     // The negation fusions (`enkä`, `ettet`, ...) are stem-map keys the
     // engine cannot reproduce -- it does not inflect the auxiliary's
     // clitics -- so the `inflect_all` verify below is skipped for them.
@@ -1071,11 +1161,15 @@ pub fn find_base_via_verb_stem_map(word: &str, verbose: bool) -> Option<String> 
                 );
             }
             for base in candidates {
+                if out.iter().any(|seen| seen == base) {
+                    continue;
+                }
                 if trust {
                     if verbose {
                         println!("      gate 4b: trusted stem-map key {cand:?} -> {base:?}");
                     }
-                    return Some(base.to_string());
+                    out.push(base.to_string());
+                    continue;
                 }
                 let mut hit = false;
                 for lemma in crate::kotus::sanalista().by_word(base) {
@@ -1100,15 +1194,21 @@ pub fn find_base_via_verb_stem_map(word: &str, verbose: bool) -> Option<String> 
                              {word:?} (hit)"
                         );
                     }
-                    return Some(base.to_string());
+                    out.push(base.to_string());
                 }
             }
         }
     }
-    if verbose {
+    if verbose && out.is_empty() {
         println!("      gate 4b: no stem match + verify");
     }
-    None
+    out
+}
+
+pub fn find_base_via_verb_stem_map(word: &str, verbose: bool) -> Option<String> {
+    collect_bases_via_verb_stem_map(word, verbose)
+        .into_iter()
+        .next()
 }
 
 /// Resolve a noun stem that a possessive was stripped from, by asking
@@ -1236,6 +1336,60 @@ mod tests {
     fn unknown_word() {
         let r = check_normal("xyzzy", false);
         assert_eq!(r, NormalizedOutcome::Unknown);
+    }
+
+    /// The engine's ranked answer is the reverse index's answer on the
+    /// fixture words. `paloin` is included deliberately: phase 1 reaches
+    /// `paloa` even though the single-gate answer is `pala`.
+    #[test]
+    fn ranked_engine_answer_matches_lookup() {
+        for (word, want) in [
+            ("aavistamattoman", "aavistaa"),
+            ("ahdistuneen", "ahdistua"),
+            ("heränneen", "herätä"),
+            ("paloin", "paloa"),
+            ("aamuista", "aamu"),
+            ("vireissä", "viri"),
+        ] {
+            assert_eq!(
+                check_normal_bases(word).first().map(String::as_str),
+                Some(want),
+                "{word}"
+            );
+        }
+    }
+
+    /// `--all` is the full list, not just the single answer: `paloin` is a
+    /// form of all five lemmas the index names.
+    #[test]
+    fn all_bases_keeps_every_base() {
+        let bases = check_normal_bases("paloin");
+        for want in ["paloa", "palko", "palo", "pala", "palaa"] {
+            assert!(bases.iter().any(|base| base == want), "{want} missing");
+        }
+    }
+
+    /// The full check path ranks the engine and the stem-map union, so it
+    /// names the same first base the full index does on the fixture words.
+    /// `paloin`/`vireissä` are the gate-4 cases: the noun and verb maps are
+    /// separate gates, and the full path ranks their union.
+    #[test]
+    fn the_full_path_names_the_lookup_base() {
+        for (word, want) in [
+            ("aavistamattoman", "aavistaa"),
+            ("ahdistuneen", "ahdistua"),
+            ("heränneen", "herätä"),
+            ("paloin", "paloa"),
+            ("aamuista", "aamu"),
+            ("vireissä", "viri"),
+        ] {
+            match check_normal(word, false) {
+                NormalizedOutcome::Inflected { base, .. } => {
+                    assert_eq!(base, want, "{word}")
+                }
+                other => panic!("{word}: expected Inflected, got {other:?}"),
+            }
+        }
     }
 
     /// `check_normal_fast` keeps every cheap gate: a direct lemma and

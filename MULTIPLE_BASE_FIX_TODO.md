@@ -437,33 +437,35 @@ but returns them in index (sanalista) order, and `check_normal` uses
 `find_any_base_with`, which short-circuits on the first match. Neither applies
 the rank key:
 
-- [ ] Rank `BasesReport::bases` before `check::classify` turns it into
-      `CheckOutcome::Inflected`; the first base should be the same one
-      `lookup` names. The recognition-only report has classes but not the
-      per-form readings, so either switch the homonym fallback to
-      `find_bases_with` (measure the cost) or rank on classes/POS only.
-- [ ] Add `find_best_base_with` for `check_normal` (or a bounded variant) that
-      collects the phase-1 head/tail matches (median bucket 3) and applies the
-      same rank key, then falls back to the current first-match behaviour for
-      the expensive prefix walks. Keep the per-keystroke cost bounded; measure
-      against `tools/test_performance.py`.
-- [ ] Make `check_normal` and `check` agree with `lookup` on the first base for
-      the same word, or document why they cannot (the fast path has no index).
-- [ ] Add `check_normal --all` so a caller can see every base; keep
-      `check_fast` single-answer for the wasm.
-- [ ] Tests: `aavistamattoman`, `ahdistuneen`, `heränneen`, `paloin`,
+- [x] Rank `BasesReport::bases` before `check::classify` turns it into
+      `CheckOutcome::Inflected`; the first base is now the same one `lookup`
+      names on the engine path. The recognition-only report has classes but not
+      the per-form readings, so this ranks on classes and POS (the
+      noun-over-derived-adjective rule and `ClassPrior`).
+- [x] Add `find_best_base_with` for `check_normal`: it collects the phase-1
+      head/tail matches, ranks them with the same class prior, and keeps the
+      first-match order for the expensive prefix walks. The full path also
+      ranks the union of the noun and verb stem maps (gate 4), so `paloin`
+      and `vireissä` name the verb/noun base `lookup` names. The fast path
+      keeps the first-hit stem-map order; see the limit below.
+- [x] Make `check_normal` agree with `lookup` on the first base for the
+      fixture words (the full path; the fast variant is a documented hint).
+- [x] Add `check_normal --all` (library: `check_normal_bases`) so a caller can
+      see every base; `check_fast` stays single-answer for the wasm.
+- [x] Tests: `aavistamattoman`, `ahdistuneen`, `heränneen`, `paloin`,
       `aamuista`, `vireissä`.
 
 Acceptance: the CLI reports the same first base as `lookup` for the fixture
 words; the wasm fast path stays within its performance budget.
 
-**Known limit, recorded 2026-11-04.** `check_normal` answers from the
-precomputed lemma/form/stem gates, not from `FormBuilder`; it cannot apply the
-full rank key without building the reverse index. The two paths can therefore
-name different first bases (`lookup` may name `elää`, `check_normal` `elävä`),
-and both can be right for a genuinely ambiguous surface. `lookup --explain` is
-the full answer; `check_normal`'s single base is a fast hint. This is a
-documented limit, not a defect to fix by making one path imitate the other.
+**Known limit, recorded 2026-11-04.** The *fast* variant
+(`check_normal_fast`, the wasm's per-keystroke path) still answers from the
+first precomputed gate that hits and cannot afford the ranked bucket or the
+other stem map. It can therefore name a different first base than `lookup`
+(`paloin` -> `pala`, `vireissä` -> `vire`), and both are right for a genuinely
+ambiguous surface. The full `check_normal` and `check_normal --all` are the
+diagnostic answers; the fast single base is a hint. This is a documented
+limit, not a defect to fix by making the hot path imitate the full index.
 
 ### Phase 4 — optional frequency or context  *(separate decision)*
 

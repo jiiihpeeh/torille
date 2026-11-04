@@ -10,33 +10,48 @@
 //! and any future binding share the same behaviour.
 //!
 //! Usage:
-//!   check_normal [-v|--verbose] [--fast] WORD [WORD...]
+//!   check_normal [-v|--verbose] [--fast] [--all] WORD [WORD...]
 //!
 //! `--fast` runs `check_normal_fast`, the variant the web demo's
 //! per-textarea path uses (the cheap gates without the engine gate).
+//! `--all` prints every base the engine can prove, ranked like `lookup`
+//! instead of the single per-keystroke answer.
 
 use std::process::ExitCode;
 
-use torille::expand::check_normal::{NormalizedOutcome, check_normal, check_normal_fast};
+use torille::expand::check_normal::{
+    NormalizedOutcome, check_normal, check_normal_bases, check_normal_fast,
+};
 
 fn main() -> ExitCode {
     let raw: Vec<String> = std::env::args().skip(1).collect();
     let mut verbose = false;
     let mut fast = false;
+    let mut all = false;
     let mut words = Vec::new();
     for arg in raw {
         match arg.as_str() {
             "-v" | "--verbose" => verbose = true,
             "--fast" => fast = true,
+            "--all" => all = true,
             _ => words.push(arg),
         }
     }
     if words.is_empty() {
-        eprintln!("usage: check_normal [-v|--verbose] [--fast] WORD [WORD...]");
+        eprintln!("usage: check_normal [-v|--verbose] [--fast] [--all] WORD [WORD...]");
         return ExitCode::from(2);
     }
 
     for word in &words {
+        if all {
+            let bases = check_normal_bases(word);
+            if bases.is_empty() {
+                println!("{word}: unknown");
+            } else {
+                println!("{word}: forms of {}", bases.join(", "));
+            }
+            continue;
+        }
         let outcome = if fast {
             check_normal_fast(word, verbose)
         } else {

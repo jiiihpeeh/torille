@@ -32,7 +32,7 @@ use std::sync::OnceLock;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::expand::clitic::strip_clitic;
-use crate::expand::{LexiconIndex, inflect_all};
+use crate::expand::{ClassPrior, LexiconIndex, inflect_all};
 use crate::kotus::{EmbeddedLemma, Lemma, sanalista};
 use crate::spec::Catalogues;
 use crate::tags::{Form, PartOfSpeech};
@@ -138,6 +138,7 @@ pub fn find_bases_with<'a>(
     find_bases_with_inner(
         lexicon, cat, word, /* with_clitic_phase */ true, /* keep_form */ None,
         /* collect_neighbours */ true, /* recognition_only */ false,
+        /* all_phases */ false,
     )
 }
 
@@ -165,6 +166,31 @@ where
         Some(&keep_form),
         /* collect_neighbours */ true,
         /* recognition_only */ false,
+        /* all_phases */ false,
+    )
+}
+
+/// Every base the walks can prove, not just the first phase that hits.
+///
+/// [`find_bases_with`] stops once a phase finds a base; this diagnostic
+/// variant runs phases 2-4 as well, so `check_normal --all` can show the later
+/// walks' bases (`vireissä` reaches `viri` only in the prefix walk). It keeps
+/// no generated-form payload and no neighbours, so the added cost is the
+/// verification of each phase's candidates.
+pub fn find_all_bases_with<'a>(
+    lexicon: &'a [Lemma<'a>],
+    cat: &Catalogues,
+    word: &str,
+) -> BasesReport<'a> {
+    find_bases_with_inner(
+        lexicon,
+        cat,
+        word,
+        /* with_clitic_phase */ true,
+        Some(&|_| false),
+        /* collect_neighbours */ false,
+        /* recognition_only */ false,
+        /* all_phases */ true,
     )
 }
 
@@ -183,6 +209,7 @@ pub(crate) fn find_bases_for_check<'a>(
         Some(&|_| false),
         /* collect_neighbours */ false,
         /* recognition_only */ true,
+        /* all_phases */ false,
     )
 }
 
@@ -358,6 +385,114 @@ fn shares_first_two(lemma: &str, word: &str) -> bool {
         // A one-character lemma has only one character to share.
         _ => true,
     }
+}
+
+/// The lexicon row for `word`, if the lexicon contains it.
+///
+/// The callers that rank a small set of names against [`ClassPrior`] need the
+/// `Lemma` (its classes and part of speech), not just the embedded row.
+pub fn lemma_by_word<'a>(lexicon: &'a [Lemma<'a>], word: &str) -> Option<&'a Lemma<'a>> {
+    lemma_index(lexicon, word).map(|idx| &lexicon[idx])
+}
+
+/// Ranks base lemmas the way the reverse index does, without building it.
+///
+/// The reverse index ranks with the generation confidence first, then the
+/// noun-over-derived-adjective rule, then the class prior. The bounded walks
+/// here do not keep the per-form confidence, so they use the remaining two
+/// keys: confidence is a property of how the form was attached and every walk
+/// has already verified the surface; the class prior and the derivation rule
+/// are what choose between genuine homonyms.
+///
+/// This is deliberately a stable sort: the walk's own order is the final tie
+/// breaker, so a caller that ranks the same set twice gets the same answer and
+/// the sanalista's order still shows through where the evidence is equal.
+pub fn rank_lemma_bases<'a>(bases: Vec<&'a Lemma<'a>>, prior: &ClassPrior) -> Vec<&'a Lemma<'a>> {
+    let mut scored: Vec<(bool, usize, &'a Lemma<'a>)> = bases
+        .iter()
+        .map(|lemma| {
+            (
+                lemma_is_derived_adjective(lemma, &bases),
+                prior.score(&lemma.inflections),
+                *lemma,
+            )
+        })
+        .collect();
+    scored.sort_by_key(|(derived, score, _)| (*derived, std::cmp::Reverse(*score)));
+    scored.into_iter().map(|(_, _, lemma)| lemma).collect()
+}
+
+/// The [`FormBuilder::is_derived_adjective`](crate::expand::FormBuilder) rule
+/// for a bare lemma: an adjective whose `-inen`/`-nen` source is another base
+/// of the same word and is a noun.
+fn lemma_is_derived_adjective(lemma: &Lemma, bases: &[&Lemma]) -> bool {
+    if !PartOfSpeech::parse_all(lemma.part_of_speech).contains(&PartOfSpeech::Adjective) {
+        return false;
+    }
+    let reverse = crate::derivation::reverse(lemma.word);
+    let mut sources: Vec<&str> = reverse
+        .iter()
+        .map(|reverse| reverse.source.as_str())
+        .collect();
+    if let Some(direct) = lemma.word.strip_suffix("inen") {
+        sources.push(direct);
+    }
+    if let Some(direct) = lemma.word.strip_suffix("nen") {
+        sources.push(direct);
+    }
+    sources.iter().any(|source| {
+        bases.iter().any(|other| {
+            other.word != lemma.word
+                && *source == other.word
+                && PartOfSpeech::parse_all(other.part_of_speech).contains(&PartOfSpeech::Noun)
+        })
+    })
+}
+
+/// The one base to name for a check, without the full reverse index.
+///
+/// Phase 1 (heads + tails) is cheap and is where almost every form lands, so
+/// its candidates are collected in full and ranked with [`rank_lemma_bases`].
+/// When it misses, the bounded prefix walks keep their existing first-match
+/// behaviour: they are the expensive path and a single answer is all the
+/// per-keystroke check needs.
+pub fn find_best_base_with<'a>(
+    lexicon: &'a [Lemma<'a>],
+    cat: &Catalogues,
+    word: &str,
+    prior: &ClassPrior,
+) -> Vec<&'a Lemma<'a>> {
+    // The cheap exact answers, mirroring `find_any_base_with`.
+    if let Some(idx) = lemma_index(lexicon, word) {
+        return vec![&lexicon[idx]];
+    }
+    if let Some(base) = crate::expand::negation::negation_base(word)
+        && let Some(idx) = lemma_index(lexicon, base)
+    {
+        return vec![&lexicon[idx]];
+    }
+    if let Some(base) = crate::expand::connegative::base(word)
+        && let Some(idx) = lemma_index(lexicon, base)
+    {
+        return vec![&lexicon[idx]];
+    }
+
+    let index = LexiconIndex::new(lexicon);
+    let mut candidates: Vec<&Lemma<'a>> = Vec::new();
+    let mut seen: BTreeSet<*const Lemma<'a>> = BTreeSet::new();
+    for lemma in index.heads_of(word).into_iter().chain(index.tails_of(word)) {
+        if seen.insert(lemma as *const _) && lemma_emit(cat, lemma, word, PartOfSpeech::Noun, true)
+        {
+            candidates.push(lemma);
+        }
+    }
+    if !candidates.is_empty() {
+        return rank_lemma_bases(candidates, prior);
+    }
+
+    // Phase 1.5 and the prefix walks: first match, as before. Re-running the
+    // cheap phase-1 probes costs a handful of inflections, not the walk.
+    find_any_base_with(lexicon, cat, word)
 }
 
 pub fn find_any_base_with<'a>(
@@ -619,6 +754,7 @@ fn prefix_candidates<'a>(lexicon: &'a [Lemma<'a>], prefix: &str) -> Vec<&'a Lemm
 /// itself (so a stacked-clitic word like `siellähänkin` peels one layer at
 /// a time and terminates) and exposed for callers that want the raw
 /// prefix-walk result without the clitic fallback.
+#[allow(clippy::too_many_arguments)] // the flags are the phase switches
 fn find_bases_with_inner<'a>(
     lexicon: &'a [Lemma<'a>],
     cat: &Catalogues,
@@ -627,6 +763,7 @@ fn find_bases_with_inner<'a>(
     keep_form: Option<&(dyn Fn(&str) -> bool + Sync)>,
     collect_neighbours: bool,
     recognition_only: bool,
+    all_phases: bool,
 ) -> BasesReport<'a> {
     let index = LexiconIndex::new(lexicon);
     let pos = PartOfSpeech::Noun;
@@ -806,7 +943,7 @@ fn find_bases_with_inner<'a>(
     }
 
     // Phase 2: prefix-3 walk.
-    if bases.is_empty() {
+    if all_phases || bases.is_empty() {
         run_prefix_walk(
             lexicon,
             &word_lc,
@@ -825,7 +962,7 @@ fn find_bases_with_inner<'a>(
     }
 
     // Phase 3: prefix-2 walk.
-    if bases.is_empty() {
+    if all_phases || bases.is_empty() {
         run_prefix_walk(
             lexicon,
             &word_lc,
@@ -844,7 +981,7 @@ fn find_bases_with_inner<'a>(
     }
 
     // Phase 4: short-lemma scan.
-    if bases.is_empty() {
+    if all_phases || bases.is_empty() {
         for lemma in short_lemma_run(lexicon) {
             if !shares_first_two(lemma.word, &word_lc) {
                 continue;
@@ -889,7 +1026,7 @@ fn find_bases_with_inner<'a>(
     // already and a clitic-stripped host would just be the same lemma
     // counted twice.
     if with_clitic_phase
-        && bases.is_empty()
+        && (all_phases || bases.is_empty())
         && let Some((host, clitic)) = strip_clitic(word)
     {
         // Skip recursing into a host that is itself a clitic; that
@@ -904,6 +1041,7 @@ fn find_bases_with_inner<'a>(
             keep_form,
             collect_neighbours,
             recognition_only,
+            all_phases,
         );
         if !inner.bases.is_empty() || !inner.direct.is_empty() {
             // The host is a known form. The original is too, with

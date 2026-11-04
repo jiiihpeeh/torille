@@ -44,7 +44,9 @@
 //!   Insert/delete keyboard adjacencies (`koiaa` -> `koira`, missing `r`)
 //!   are not yet modelled.
 
-use crate::expand::{BasesReport, find_bases_for_check};
+use std::sync::OnceLock;
+
+use crate::expand::{BasesReport, ClassPrior, find_bases_for_check, rank_lemma_bases};
 
 mod candidates;
 mod casing;
@@ -155,19 +157,26 @@ fn classify(report: BasesReport<'static>) -> CheckOutcome {
         return CheckOutcome::Lemma;
     }
     if !report.bases.is_empty() {
-        let lemmas: Vec<&'static str> = report
-            .bases
+        // The recognition walk keeps the bases in its own phase order. Rank
+        // them the way the reverse index does, on the evidence the walk has:
+        // the noun-over-derived-adjective rule and the class prior. Without
+        // this, `heränneen` names the participle `herännyt` while `lookup`
+        // names `herätä`, and the two check paths disagree about the same
+        // word.
+        let lemmas: Vec<&'static str> = rank_lemma_bases(report.bases, class_prior())
             .into_iter()
-            .map(|l| -> &'static str {
-                // The lexicon lives in a `OnceLock` over leaked rows, so every
-                // entry's `word` is already `&'static str`. The signature says
-                // so, which is why no `transmute` is needed here.
-                l.word
-            })
+            .map(|l| l.word)
             .collect();
         return CheckOutcome::Inflected(lemmas);
     }
     CheckOutcome::Unknown
+}
+
+/// The class prior the recognition walk ranks with, built once from the same
+/// leaked lexicon the walk reads.
+fn class_prior() -> &'static ClassPrior {
+    static PRIOR: OnceLock<ClassPrior> = OnceLock::new();
+    PRIOR.get_or_init(|| ClassPrior::of(lexicon()))
 }
 
 // Pull in `sanalista` to keep the lib link alive when suggest is built
@@ -460,6 +469,28 @@ mod tests {
         // Not in the lexicon at all.
         assert!(matches!(check("xyzzy"), CheckOutcome::Unknown));
         assert!(matches!(check(""), CheckOutcome::Unknown));
+    }
+
+    /// When the engine reports several bases, `classify` names the same first
+    /// one the full index does. The fast unambiguous-base shortcut is separate:
+    /// it names the one row it found, which is why `check_normal`'s documented
+    /// fast-path limit also applies here.
+    #[test]
+    fn classify_ranks_the_engine_bases_like_lookup() {
+        for (word, want) in [
+            ("aavistamattoman", "aavistaa"),
+            ("ahdistuneen", "ahdistua"),
+            ("heränneen", "herätä"),
+            ("aamuista", "aamu"),
+        ] {
+            let report = find_bases_for_check(lexicon(), catalogue(), word);
+            match classify(report) {
+                CheckOutcome::Inflected(bases) => {
+                    assert_eq!(bases.first().copied(), Some(want), "{word}: {bases:?}")
+                }
+                other => panic!("{word}: expected Inflected, got {other:?}"),
+            }
+        }
     }
 
     /// A sanalista row the build script rejects must not be reachable as a
