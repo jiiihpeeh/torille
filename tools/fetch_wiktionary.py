@@ -20,6 +20,7 @@ comitative plural (a stem awaiting its possessive). A `-` where the table had
 no primary form.
 """
 
+import csv
 import json
 import os
 import re
@@ -186,6 +187,22 @@ def appendix_title(word: str) -> str:
 
 
 def model_words(path: str) -> dict[int, str]:
+    """Read one model word per class.
+
+    `data/catalogue.csv` is the distributed source: the slot-0 (singular
+    nominative) form is the class's model word. The older Kotus text file is
+    still accepted for a local checkout, one `class` line followed by the word.
+    """
+    if path.endswith(".csv"):
+        words: dict[int, str] = {}
+        with open(path, encoding="utf-8") as f:
+            reader = csv.DictReader(f, delimiter="\t")
+            for row in reader:
+                if row.get("slot") != "0":
+                    continue
+                class_no = int(row["class"])
+                words.setdefault(class_no, row["form"])
+        return words
     words = {}
     cls = None
     for line in open(path, encoding="utf-8"):
@@ -201,7 +218,7 @@ def model_words(path: str) -> dict[int, str]:
 
 
 def main(argv: list[str]) -> int:
-    path = argv[1] if len(argv) > 1 else "data/kotus-tyypit.txt"
+    path = argv[1] if len(argv) > 1 else "data/catalogue.csv"
     words = model_words(path)
 
     blocks = [HEADER]

@@ -98,17 +98,21 @@ docs/                 harness.md, lexicon.md, morfologia.yaml, hyphenation.md
 
 ## How it works
 
-### The two data files (embedded, no runtime files)
+### The two data sources (embedded, no runtime files)
 
 - `data/nykysuomensanalista.csv` — 104k lemmas, tab-separated:
   `lemma  homonymy  part_of_speech  inflection_info`. The class column carries
   `9`, `9*B` (class + gradation), `9, 50` (two classes), `(21)` (parenthesised).
-- `data/kotus-tyypit.txt` — the paradigm catalogue. Each class is a number and
-  a model word followed by **8 forms in fixed order**: singular nominative,
-  genitive, partitive, illative, then the same four plural. Case and number are
-  read off a slot's **position**, not a label.
+- `data/catalogue.csv` — the paradigm templates, generated from the
+  Omorfi/Voikko oracles by `tools/build_catalogue_csv.py`. Each class maps to
+  **8 slots in fixed order**: singular nominative, genitive, partitive,
+  illative, then the same four plural. Case and number are read off a slot's
+  **position**, not a label. The original Kotus `kotus-tyypit.txt` document is
+  local-only, gitignored, and read by neither the build nor the runtime.
 
-Both are `include_str!`'d (`lib.rs`), so the shipped crate needs no data files.
+The sanalista is `include_str!`'d (`lib.rs`); the catalogue is compiled to
+`data/precomputed/catalogue.bin` by `build.rs` and embedded with
+`include_bytes!`, so the shipped crate needs no data files.
 
 `data/precomputed/{derived_{by_form,nominal,modifiers},pronoun_forms}.bin` are
 the exception to the build-script writers below: those tables are built with the

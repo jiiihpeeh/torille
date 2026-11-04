@@ -10,6 +10,11 @@
 __pycache__/
 *.pyc
 
+# Local-only Kotus reference document. The engine and codegen read
+# data/catalogue.csv, which is generated from the Omorfi/Voikko oracles; this
+# file is kept on developer machines for provenance but is not distributed.
+data/kotus-tyypit.txt
+
 # Generated noun lexicon and examples. Rebuild with
 #   python3 tools/build_nomine_lexicon.py -o data/kotus_nomines.sqlite
 data/kotus_nomines.sqlite
