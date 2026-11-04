@@ -105,6 +105,12 @@
   // it and we cannot reach the page's CSS.
   const OVERLAY_CSS = `
     :host { all: initial; }
+    .mirror {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
     .overlay {
       position: absolute;
       pointer-events: none;
@@ -506,9 +512,18 @@
     style.textContent = OVERLAY_CSS;
     shadow.appendChild(style);
 
+    // Clip only the text mirror to the textarea's box. The mirror is
+    // translated upwards when the textarea scrolls; without this wrapper
+    // the underlines for scrolled-out lines leak above the textarea and
+    // paint over the page. The suggestion popup stays a direct child of
+    // the host so it can still extend below/outside the input.
+    const mirror = document.createElement('div');
+    mirror.className = 'mirror';
+    shadow.appendChild(mirror);
+
     const overlay = document.createElement('div');
     overlay.className = 'overlay';
-    shadow.appendChild(overlay);
+    mirror.appendChild(overlay);
 
     const popup = document.createElement('div');
     popup.className = 'suggestions';
@@ -573,6 +588,13 @@
       };
     }
 
+    // The overlay's base inset inside the host. `syncBox` computes it
+    // from the border widths; the scroll handler must use the same value,
+    // not `clientLeft`/`clientTop`, which Firefox reports inconsistently
+    // for `<input>` (it includes the padding, unlike a `<textarea>`).
+    let overlayInsetLeft = 0;
+    let overlayInsetTop = 0;
+
     function syncBox(): void {
       const cs = getComputedStyle(el);
       // Set the font / text properties individually (not the shorthand)
@@ -610,10 +632,38 @@
       // effective width as the textarea's text area because both
       // share the same padding.
       overlay.style.boxSizing = 'border-box';
-      overlay.style.left = (el.clientLeft || 0) + 'px';
-      overlay.style.top = (el.clientTop || 0) + 'px';
-      overlay.style.width = (el.clientWidth || 0) + 'px';
-      overlay.style.height = (el.clientHeight || 0) + 'px';
+
+      // Firefox's `clientLeft`/`clientWidth` mean different things for a
+      // replaced `<input>` than for a `<textarea>`: on an input they are
+      // the content box and its padding-inclusive inset, while a textarea
+      // reports the padding box (minus a scrollbar). Taking `clientLeft`
+      // as the overlay's border-box inset therefore pushed input text one
+      // padding-width to the right (`Layout edge cases`).
+      //
+      // Anchor the overlay at the element's border box and give it the
+      // padding box. Its own padding then matches the input's padding,
+      // and `box-sizing: border-box` leaves the same content width. Keep
+      // the textarea path on `clientWidth`/`clientHeight` so a reserved
+      // vertical scrollbar still narrows the mirror.
+      const borderLeft = parseFloat(cs.borderLeftWidth) || 0;
+      const borderTop = parseFloat(cs.borderTopWidth) || 0;
+      const borderRight = parseFloat(cs.borderRightWidth) || 0;
+      const borderBottom = parseFloat(cs.borderBottomWidth) || 0;
+      overlayInsetLeft = borderLeft;
+      overlayInsetTop = borderTop;
+      const isTextarea = el.tagName === 'TEXTAREA';
+      overlay.style.left = overlayInsetLeft + 'px';
+      overlay.style.top = overlayInsetTop + 'px';
+      overlay.style.width = (
+        isTextarea
+          ? (el.clientWidth || r.width - borderLeft - borderRight)
+          : r.width - borderLeft - borderRight
+      ) + 'px';
+      overlay.style.height = (
+        isTextarea
+          ? (el.clientHeight || r.height - borderTop - borderBottom)
+          : r.height - borderTop - borderBottom
+      ) + 'px';
     }
     syncBox();
 
@@ -836,10 +886,10 @@
       // The overlay has overflow: hidden, so its own scrollTop is
       // ignored. We instead shift the overlay up by the textarea's
       // scrollTop so the visible portion of the overlay text lines
-      // up with the visible portion of the textarea. The host's
+      // up with the visible portion of the textarea. The mirror's
       // overflow: hidden clips the off-screen part.
-      overlay.style.top = ((el.clientTop || 0) - input.scrollTop) + 'px';
-      overlay.style.left = ((el.clientLeft || 0) - input.scrollLeft) + 'px';
+      overlay.style.top = (overlayInsetTop - input.scrollTop) + 'px';
+      overlay.style.left = (overlayInsetLeft - input.scrollLeft) + 'px';
     });
     window.addEventListener('scroll', syncBox, { passive: true });
     window.addEventListener('resize', syncBox);

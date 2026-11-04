@@ -366,6 +366,21 @@ Kymmenes rivi.`}
             }}
           />
         </Card>
+        <Card label="Input with a datalist dropdown">
+          <input type="text" list="torille-test-words" value="koirra xyzzy" />
+          <datalist id="torille-test-words">
+            <option value="koira" />
+            <option value="talo" />
+            <option value="kirjoitusvirhe" />
+          </datalist>
+        </Card>
+        <Card label="select dropdown (must be ignored)">
+          <select>
+            <option>kirjoitusvirhee</option>
+            <option>taloo</option>
+            <option>koirra</option>
+          </select>
+        </Card>
         <Card label="Scrolled textarea">
           <AutoTextarea
             class="tall"
