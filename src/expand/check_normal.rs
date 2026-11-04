@@ -144,7 +144,8 @@ pub const ENDINGS: &[&str] = &[
 /// case-final vowel doubles before the `n` (`vaatteita` + `an` =
 /// `vaatteitaan`, `itselle` + `en` = `itselleen`, `itsellä` + `än` =
 /// `itsellään`). The `a`/`ä`/`e` variants are here.
-const POSSESSIVE_SUFFIXES: &[&str] = &["nsa", "nsä", "nne", "mme", "si", "ni", "an", "än", "en"];
+pub(crate) const POSSESSIVE_SUFFIXES: &[&str] =
+    &["nsa", "nsä", "nne", "mme", "si", "ni", "an", "än", "en"];
 
 pub const VERB_ENDINGS: &[&str] = &[
     // Long personal (conditional + potential)

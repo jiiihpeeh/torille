@@ -46,6 +46,25 @@ pub fn lemma(word: &str) -> Option<&'static str> {
 /// adjective). The caller merges this list with the common-word readings; the
 /// engine does not pick one meaning for it.
 pub fn lemmas(word: &str) -> Vec<&'static str> {
+    let direct = surface_lemmas(word);
+    if !direct.is_empty() {
+        return direct;
+    }
+    // A clitic or possessive on a name (`Annakin`, `Annani`) still names the
+    // same lemma; the proper-name table holds the bare cases only.
+    let mut current = word.to_string();
+    while let Some(host) = next_host(&current) {
+        let found = surface_lemmas(&host);
+        if !found.is_empty() {
+            return found;
+        }
+        current = host;
+    }
+    Vec::new()
+}
+
+/// The lemmas of a surface with no clitic/possessive stripping.
+fn surface_lemmas(word: &str) -> Vec<&'static str> {
     let mut out: Vec<&'static str> = PROPER_NAME_LEMMAS.bases(word).collect();
     let lower = word.to_lowercase();
     if lower != word {
@@ -58,16 +77,45 @@ pub fn lemmas(word: &str) -> Vec<&'static str> {
     out
 }
 
-/// True if `word` is a known Finnish proper-name form.
-///
-/// The callers on the hot path already lowercase, so the first attempt is
-/// allocation-free; a mixed-case caller pays one `to_lowercase`.
-pub fn contains(word: &str) -> bool {
+/// One post-inflectional suffix off `word`, or `None`.
+fn next_host(word: &str) -> Option<String> {
+    if let Some((host, _clitic)) = crate::expand::clitic::strip_clitic(word) {
+        return Some(host);
+    }
+    crate::expand::check_normal::POSSESSIVE_SUFFIXES
+        .iter()
+        .find_map(|suffix| {
+            word.strip_suffix(suffix)
+                .filter(|host| !host.is_empty())
+                .map(str::to_string)
+        })
+}
+
+fn surface_contains(word: &str) -> bool {
     if PROPER_NAMES.contains(word) || PROPER_NAME_LEMMAS.contains(word) {
         return true;
     }
     let lower = word.to_lowercase();
     lower != word && (PROPER_NAMES.contains(&lower) || PROPER_NAME_LEMMAS.contains(&lower))
+}
+
+/// True if `word` is a known Finnish proper-name form, including a clitic or
+/// possessive on a known name (`Annakin`, `Tolpankin`, `Annani`).
+///
+/// The callers on the hot path already lowercase, so the first attempt is
+/// allocation-free; a mixed-case caller pays one `to_lowercase`.
+pub fn contains(word: &str) -> bool {
+    if surface_contains(word) {
+        return true;
+    }
+    let mut current = word.to_string();
+    while let Some(host) = next_host(&current) {
+        if surface_contains(&host) {
+            return true;
+        }
+        current = host;
+    }
+    false
 }
 
 /// True if `word` is a known name form **and starts with a capital**.
@@ -154,6 +202,22 @@ mod tests {
             "Jeesuksen",
             "Jeesukselle",
         ] {
+            assert!(contains_capitalised(word), "{word} should be a name");
+        }
+    }
+
+    #[test]
+    fn a_house_name_that_collides_with_a_common_noun_resolves() {
+        // `tolppa` is the common noun "pole"; `Tolppa` is the house name in
+        // the book (`Tolpan Anna`). The curated forms keep the capital.
+        for word in ["Tolppa", "Tolpan", "Tolppaa", "Tolpassa"] {
+            assert!(contains_capitalised(word), "{word} should be a name");
+        }
+    }
+
+    #[test]
+    fn clitics_and_possessives_on_names_resolve() {
+        for word in ["Annakin", "Annani", "Annansa", "Tolpankin", "Matin"] {
             assert!(contains_capitalised(word), "{word} should be a name");
         }
     }

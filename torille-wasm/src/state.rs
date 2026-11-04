@@ -521,6 +521,39 @@ mod tests {
     }
 
     #[test]
+    fn clitics_on_names_keep_the_capital() {
+        // A clitic on a name (`-kin`) is still the name; the proper-name
+        // table holds the bare case form.
+        let mut st = TextAreaState::new();
+        let hits = st.find_misspells("Siinä Annakin nauroi ja Tolpankin tuli.");
+        assert!(
+            !hits.iter().any(|h| h.word == "Annakin"),
+            "Annakin must be accepted: {hits:?}"
+        );
+        assert!(
+            !hits.iter().any(|h| h.word == "Tolpankin"),
+            "Tolpankin must be accepted: {hits:?}"
+        );
+    }
+
+    #[test]
+    fn a_house_name_colliding_with_a_common_noun_is_accepted() {
+        // `Tolppa` is the house name in the book; `tolppa` is the common
+        // noun "pole". The curated proper-name forms keep `Tolpan Anna`.
+        let mut st = TextAreaState::new();
+        let hits = st
+            .find_misspells("Poliisien kynkässä astui Tolpan Anna, tukka oli hajallaan harteilla.");
+        assert!(
+            !hits.iter().any(|h| h.word == "Tolpan"),
+            "Tolpan must be accepted: {hits:?}"
+        );
+        assert!(
+            !hits.iter().any(|h| h.word == "Anna"),
+            "Anna must be accepted: {hits:?}"
+        );
+    }
+
+    #[test]
     fn dialogue_dash_keeps_the_next_capital() {
         // The book text uses `.‑‑` between the period and the next
         // utterance. The dash is not a separate sentence in the tokeniser,
