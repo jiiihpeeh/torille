@@ -40,8 +40,8 @@ step('compiling TypeScript');
 execFileSync('node', [tsc, '-p', tsconfig], { stdio: 'inherit' });
 
 // 2. options.html is hand-written; tsc only handles JS/TS so copy it
-//    next to the compiled options.js. The manifest.json also goes
-//    verbatim into the package root.
+//    next to the compiled options.js. The manifest template is copied
+//    into the package root as `manifest.json`.
 step('copying options.html');
 await mkdir(path.join(dist, 'options'), { recursive: true });
 await copyFile(
@@ -49,9 +49,9 @@ await copyFile(
   path.join(dist, 'options', 'options.html'),
 );
 
-step('copying manifest.json');
+step('copying manifest.template.json -> manifest.json');
 await copyFile(
-  path.join(__dirname, 'manifest.json'),
+  path.join(__dirname, 'manifest.template.json'),
   path.join(dist, 'manifest.json'),
 );
 
