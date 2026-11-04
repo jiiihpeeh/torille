@@ -207,7 +207,7 @@ def check_class(
     findings: list[Finding] = []
     skipped = 0
     for lemma in lemmas:
-        rows = harness.audit(lemma, cells)
+        rows = harness.audit(lemma, cells, cls)
         if not rows:
             skipped += 1
             continue

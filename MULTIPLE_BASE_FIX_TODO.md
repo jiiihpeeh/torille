@@ -335,9 +335,13 @@ python3 tools/report_multiple_bases.py reports/recall5.tsv
 - [x] `lymfa` is listed `9, 10`; Wiktionary gives Kotus type 9/kala and the
       oracle confirms `lymfoitta`/`lymfoissa` while `lymfitta` is only
       `engine`. The class-10 reading is suppressed for this lemma, the same
-      way the dual 72/74 verbs are. The class-9 report's `lymfa` rows are gone;
-      its remaining `taata` rows are a noun/verb attribution question, not a
-      class-9 stem bug.
+      way the dual 72/74 verbs are. The class-9 report's `lymfa` rows are gone.
+- [x] `taata` is a class-73 verb and a class-9 noun. The class report was
+      reading the verb homonym's forms as if they were noun cells
+      (`taanneitta`), so a correct noun class looked illegal. `report_by_class`
+      now passes the reported class through, and `_audit_lexicon` filters the
+      expected and generated forms by `base.class`. The class-9 report at
+      `-n 100` is now 0 illegal.
 - [x] `karhi` has two declensions: type 5 (`karhit`, `karheja`) and type 7
       (`karhet`, `karhen`, `karhissa`). The oracle confirms the type-7 plural
       obliques and the type-5 nominative/partitive plural, but the type-5

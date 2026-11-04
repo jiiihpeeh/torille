@@ -1242,9 +1242,19 @@ class Harness:
         num_name = {"SG": "singular", "PL": "plural"}
         inv_num = {v: k for k, v in num_name.items()}
 
+        # A lemma can be two homonym rows in different classes (`taata` is a
+        # class-73 verb and a class-9 noun). A class report must read only the
+        # rows of the class it is reporting, or the verb's participle cells
+        # (`taanneitta`) look like missing noun forms.
+        class_filter = ""
+        params: list[str] = [lemma]
+        if klass:
+            class_filter = " AND b.class=?"
+            params.append(klass)
         rows = self.lexicon.execute(
-            "SELECT form, [case], number, possessive FROM forms "
-            "WHERE lemma=? AND ok='both'", (lemma,)).fetchall()
+            "SELECT f.form, f.[case], f.number, f.possessive"
+            " FROM forms f JOIN base b USING(lemma, homonym)"
+            f" WHERE f.lemma=? AND f.ok='both'{class_filter}", params).fetchall()
         if not rows:
             # A word with no confirmed form is a skip (`no confirmed form`).
             return []
@@ -1265,8 +1275,10 @@ class Harness:
         # Every form Omorfi so much as generated, whatever `ok`, so the
         # precision pass can tell "Omorfi asserts it but Voikko does not" from
         # "Omorfi never produced it".
+        all_params: list[str] = [lemma] + ([klass] if klass else [])
         all_forms = {r[0] for r in self.lexicon.execute(
-            "SELECT form FROM forms WHERE lemma=?", (lemma,))}
+            "SELECT f.form FROM forms f JOIN base b USING(lemma, homonym)"
+            f" WHERE f.lemma=?{class_filter}", all_params)}
 
         def cell_key(place: Cell) -> tuple[str, str, str]:
             return (CASE_NAMES[place.case], num_name[place.number],
