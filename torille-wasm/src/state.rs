@@ -521,6 +521,27 @@ mod tests {
     }
 
     #[test]
+    fn dialogue_dash_keeps_the_next_capital() {
+        // The book text uses `.‑‑` between the period and the next
+        // utterance. The dash is not a separate sentence in the tokeniser,
+        // but it must still open one: `Kuulkaa`/`Hyvästi` are sentence-
+        // initial capitals, not mid-sentence case errors.
+        let mut st = TextAreaState::new();
+        let hits = st.find_misspells(
+            "»Ei todellakaan hätä ole tämän näköinen.--Kuulkaa, istukaa nyt vähän.",
+        );
+        assert!(
+            !hits.iter().any(|h| h.word == "Kuulkaa"),
+            "Kuulkaa must be accepted: {hits:?}"
+        );
+        let hits = st.find_misspells("joka olet mainio kirjamies.--Hyvästi vain.»");
+        assert!(
+            !hits.iter().any(|h| h.word == "Hyvästi"),
+            "Hyvästi must be accepted: {hits:?}"
+        );
+    }
+
+    #[test]
     fn religious_proper_names_keep_their_capital() {
         // `Jumala` and `Jeesus` are common-noun rows in the sanalista and
         // proper names in a religious text; the curated proper-name forms

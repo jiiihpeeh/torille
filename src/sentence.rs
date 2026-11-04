@@ -65,19 +65,24 @@ pub fn separator_ends_sentence(token: &Token) -> bool {
     if token.text.contains('\n') {
         return true;
     }
-    let last = token.text.chars().rev().find(|c| !c.is_whitespace());
-    matches!(
-        last,
-        Some('.')
-            | Some('!')
-            | Some('?')
-            | Some(':')
-            | Some('»')
-            | Some('«')
-            | Some('"')
-            | Some('“')
-            | Some('”')
-    )
+    let trimmed = token.text.trim();
+    if trimmed.is_empty() {
+        return false;
+    }
+    // A closing quote is a boundary on its own, and so is a separator that
+    // ends with one (`?»`, `!»`).
+    let last = trimmed.chars().last();
+    if matches!(last, Some('»' | '«' | '"' | '“' | '”')) {
+        return true;
+    }
+    // Dialogue dashes may follow the terminal punctuation (`.--Kuulkaa`)
+    // or stand alone (`-- Kuulkaa`). Strip them, then look for the real
+    // terminal mark. A run of only dashes is a dialogue turn of its own.
+    let core = trimmed.trim_end_matches(['-', '–', '—']);
+    if core.is_empty() {
+        return trimmed.chars().any(|c| ['-', '–', '—'].contains(&c));
+    }
+    matches!(core.chars().last(), Some('.') | Some('!') | Some('?') | Some(':'))
 }
 
 /// Whether a separator contains a newline. A newline is a paragraph/line
@@ -415,6 +420,32 @@ mod tests {
         let comma = tokens.iter().find(|t| !t.is_word()).unwrap();
         assert!(!separator_ends_sentence(comma));
         assert!(!separator_breaks_line(comma));
+    }
+
+    /// A dialogue dash may follow the period (`.--Kuulkaa`) or stand alone
+    /// (`-- Kuulkaa`). Both open a new utterance, so the capital is
+    /// sentence-initial, not a mid-sentence case error.
+    #[test]
+    fn dialogue_dashes_open_a_sentence() {
+        for text in [
+            "»Ei todellakaan hätä ole tämän näköinen.--Kuulkaa, istukaa.",
+            "joka olet mainio kirjamies.--Hyvästi vain.»",
+            "-- Kuulkaa nyt.",
+            "»Niin.--Kuulkaa, Nikkilä.»",
+        ] {
+            let tokens = tokenise(text);
+            let ctx = analyze(&tokens);
+            let first_after_dash = tokens
+                .iter()
+                .zip(&ctx)
+                .find(|(token, _)| token.text == "Kuulkaa" || token.text == "Hyvästi")
+                .unwrap_or_else(|| panic!("no test word in {text:?}"));
+            assert!(
+                first_after_dash.1.sentence_start,
+                "{:?} should start a sentence in {text:?}",
+                first_after_dash.0.text
+            );
+        }
     }
 
     #[test]
