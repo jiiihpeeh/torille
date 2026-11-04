@@ -496,7 +496,8 @@ Not green: `test_illegal_evidence.py` reports seven stale evidence rules
 rules, `lemma-32d-ien`, `lemma-18-pii`). The same result
 reproduces with the pre-harness tools from `04434b2`, so this is an existing
 evidence-baseline refresh, not a regression from the multiple-base work. It
-must be refreshed before claiming an all-green merge gate.
+must be refreshed before claiming an all-green merge gate; the work is scoped
+in `EVIDENCE_REFRESH_TODO.md`.
 
 - `cargo test --release --workspace`; `cargo clippy --all-targets -- -D warnings`.
 - `python3 tools/test_reverse_lookup_recall.py reports/recall7.tsv`:
