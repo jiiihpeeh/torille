@@ -19,6 +19,8 @@ use super::utility::{Builder, Decl, Ending, cell, nominal_tags, plain, rare};
 
 pub const CLASS: &str = "15";
 
+include!("class_15_long_partitive.rs");
+
 /// Inflect a class-15 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     let mut b = Builder::new(lemma, possessives);
@@ -27,6 +29,12 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     pstem.pop(); // drop the final a/ä: apea -> ape
     let last = stem.chars().last().unwrap();
     let (sg, pl) = (Number::Singular, Number::Plural);
+    let long_partitive = cell(Case::Partitive, sg, stem, ["ta", "tä"], true);
+    let long_partitive = if LONG_PARTITIVE.binary_search(&lemma).is_ok() {
+        long_partitive
+    } else {
+        long_partitive.as_rare()
+    };
 
     b.decline(
         &Decl::new(vec![
@@ -34,8 +42,9 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
             cell(Case::Nominative, sg, stem, ["", ""], false).on_stem(),
             cell(Case::Genitive, sg, stem, ["n", "n"], false).on_stem(),
             cell(Case::Partitive, sg, stem, ["a", "ä"], true),
-            // A heavy `-ea` word also takes the long partitive -ta (korkeata).
-            cell(Case::Partitive, sg, stem, ["ta", "tä"], true),
+            // The long partitive -ta is plain only for the lemmas the
+            // reference confirms (korkeata); the rest keep it rare.
+            long_partitive,
             cell(Case::Essive, sg, stem, ["na", "nä"], true),
             cell(Case::Translative, sg, stem, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
             cell(Case::Inessive, sg, stem, ["ssa", "ssä"], true),
@@ -119,4 +128,14 @@ mod tests {
             "short at {short}, comitative at {comitative}"
         );
     }
+    /// `ankea` confirms the long partitive, `vihreä` does not; the latter
+    /// must keep `vihreätä` accepted but repaired.
+    #[test]
+    fn the_long_partitive_is_plain_only_where_confirmed() {
+        let ankea = inflect("ankea", true);
+        assert!(ankea.iter().any(|f| f.word == "ankeata" && f.plain()));
+        let vihrea = inflect("vihreä", true);
+        assert!(!vihrea.iter().any(|f| f.word == "vihreätä" && f.plain()));
+    }
+
 }

@@ -26,7 +26,7 @@ pub const CLASS: &str = "99";
 /// words whose forms belong in the reverse index; indexing the guesses would
 /// add thousands of forms the reference confirms for none.
 pub fn has_real_paradigm(lemma: &str) -> bool {
-    matches!(lemma, "seesam" | "tenä" | "ainut")
+    matches!(lemma, "seesam" | "tenä" | "ainut" | "viisi" | "pommi")
 }
 
 /// Class-99 words that do not inflect at all: indeclinable adverbs, particles
@@ -200,6 +200,15 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     if lemma == "ainut" {
         return super::class_43::inflect(lemma, possessives);
     }
+    // `viisi` and `pommi` have a real class row beside their class-99 marker
+    // (27 numeral and 5 noun). The class-99 i-loan grid invented
+    // `viiseittä`/`pommeja`; delegate to the real class instead.
+    if lemma == "viisi" {
+        return super::class_27::inflect(lemma, possessives);
+    }
+    if lemma == "pommi" {
+        return super::class_5::inflect(lemma, possessives);
+    }
     if lemma == "tenä" {
         // Wiktionary: "Sana taipuu vain harvoissa sijoissa" -- only the
         // nominative and a few oblique/plural forms. Live Voikko confirms
@@ -259,6 +268,18 @@ mod tests {
             !words.iter().any(|f| *f == "ainutia"),
             "the i-loan partitive must not be offered"
         );
+    }
+
+    /// `viisi` and `pommi` are class-99 marked but have a real class row.
+    /// The i-loan grid must not invent `viiseittä` or `pommeja`.
+    #[test]
+    fn a_class_99_word_with_a_real_class_delegates() {
+        let viisi = inflect("viisi", true);
+        assert!(viisi.iter().any(|f| f.word == "viisittä" && f.plain()));
+        assert!(!viisi.iter().any(|f| f.word == "viiseittä" && f.plain()));
+        let pommi = inflect("pommi", true);
+        assert!(pommi.iter().any(|f| f.word == "pommien" && f.plain()));
+        assert!(!pommi.iter().any(|f| f.word == "pommeiden" && f.plain()));
     }
 
     #[test]

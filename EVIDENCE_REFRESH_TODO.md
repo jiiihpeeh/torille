@@ -19,8 +19,8 @@ baseline refresh rather than a regression from `MULTIPLE_BASE_FIX_TODO.md`.
 
 After removing the six stale rules, fixing `kyy`, filtering multi-class
 reports, and adding the dual-class `appi`/`vyyhti` evidence, the gate now
-reports **0 stale rules and 125 illegal rows with no evidence rule** (down
-from 440). The default report has 572 illegal rows.
+reports **0 stale rules and 50 illegal rows with no evidence rule** (down
+from 440). The default report has 497 illegal rows.
 
 ## Current rule disposition
 
@@ -55,19 +55,17 @@ rule be extended, with a `source` and `note` for `kyy`.
 
 ## Remaining unmatched rows after the first pass
 
-The 125 unmatched rows from the n=5 gate cluster on:
+The 50 unmatched rows from the n=5 gate cluster on:
 
 | class | rows | lemmas |
 |---|---:|---|
-| `99` | 40 | `viisi`, `pommi` |
-| `15` | 35 | `vihreä`, `kauhea`, `makea`, `korkea`, `pehmeä` |
 | `50` | 26 | `villikaniini`, `kevytsinko` |
 | `22` | 23 | `nougat`, `parfait`, `gourmet` |
 | `49` | 1 | `autere` |
 
-`appi`, `lahti`, `vyyhti` and `kuori` are no longer in the list: multi-class
-reports now read only the reported class, and the `appi`/`vyyhti` evidence
-rules cover their dual paradigms with Wiktionary sources.
+`viisi`/`pommi` (class 99) and the class-15 adjectives are fixed: the class-99
+delegations now use class 27/5, and the class-15 long partitive is plain only
+for the 131 lemmas the oracle confirms.
 
 These remaining rows are precision defects in possessive/plural stems, not
 evidence gaps. The larger `-n 100` class-18 report also shows 884 illegal rows
@@ -98,9 +96,9 @@ reading is a real lemma.
 - [x] Apply the class filter to every multi-class lemma, not only noun/verb
       homonyms; this removed the `lahti`/`kuori` cross-class rows.
 - [x] Add sourced `appi` (5B/7B) and `vyyhti` (7F/5F) evidence rules.
-- [ ] Fix the remaining 125 rows: class 99 (`viisi`, `pommi`), class 15
-      adjectives, class 50 compounds, class 22 loans, and `autere`; then re-run
-      the n=5 gate.
+- [ ] Fix the remaining 50 rows: class 50 compounds (`villikaniini`,
+      `kevytsinko`), class 22 loans (`nougat`, `parfait`, `gourmet`) and
+      `autere`; then re-run the n=5 gate.
 - [ ] Re-run `python3 tools/test_illegal_evidence.py`; it must exit 0, with
       every illegal row matching exactly one rule and no stale rules.
 - [ ] Update `data/oracle_exceptions.json`'s `about`/version if the rule count
