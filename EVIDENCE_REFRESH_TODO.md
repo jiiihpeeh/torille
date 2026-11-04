@@ -71,6 +71,23 @@ These remaining rows are precision defects in possessive/plural stems, not
 evidence gaps. The larger `-n 100` class-18 report also shows 884 illegal rows
 outside the n=5 gate sample, so fixing only the gate's sample is not enough.
 
+The two class-50 rows are compounds whose modifiers are already fixed by the
+engine (`expand/compound.rs` splits and inflects the head only):
+
+* `villikaniini` = `villi` + `kaniini`. The head's class-6 `kaniini` confirms
+  both `kaniinien` and `kaniineiden`; the compound reference confirms only
+  `villikaniinien`. This is a compound-specific restriction on the head's
+  e-plural, not a prefix inflection.
+* `kevytsinko` = `kevyt` + `sinko`. The head `sinko` alone confirms the weak
+  `singo-` plural locals, but the compound reference expects the strong
+  `sinko-` (`kevytsinkoilta`). This is a head-gradation difference inside a
+  compound, not a prefix inflection.
+
+Do not add a prefix rule for either: the split is already correct. Decide
+whether the compound head uses a restricted head paradigm (i-plural only /
+strong grade) or whether the compound oracle is the incomplete side, and add a
+sourced evidence rule only after that decision.
+
 `appi` needs a decision, not a blanket rule. The oracle confirms the 7B
 father-in-law plural (`apet`, `appia`, `apissa`, `apitta`); the 5B engine emits
 `apit`/`appeja`, which the oracle does not list, and the 7B engine emits both
