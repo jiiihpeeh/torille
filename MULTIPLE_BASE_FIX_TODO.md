@@ -493,7 +493,7 @@ warnings`, `test_binding_agrees_with_binary.py` (23/23),
 
 Not green: `test_illegal_evidence.py` reports seven stale evidence rules
 (`34c-nom-possessive-genitive-stem`, the four plural-only 33d/33j/41c/41i
-rules, `lemma-32d-ien`, `lemma-18-pii`, and `lemma-41e-havas`). The same result
+rules, `lemma-32d-ien`, `lemma-18-pii`). The same result
 reproduces with the pre-harness tools from `04434b2`, so this is an existing
 evidence-baseline refresh, not a regression from the multiple-base work. It
 must be refreshed before claiming an all-green merge gate.
