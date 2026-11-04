@@ -70,9 +70,10 @@ pub fn separator_ends_sentence(token: &Token) -> bool {
         return false;
     }
     // A closing quote is a boundary on its own, and so is a separator that
-    // ends with one (`?»`, `!»`).
+    // ends with one (`?»`, `!»`). An opening bracket starts a parenthetical
+    // or editorial note whose first word is capitalised (`[Tämä tapaus ...`).
     let last = trimmed.chars().last();
-    if matches!(last, Some('»' | '«' | '"' | '“' | '”')) {
+    if matches!(last, Some('»' | '«' | '"' | '“' | '”' | '[' | '(' | '{')) {
         return true;
     }
     // Dialogue dashes may follow the terminal punctuation (`.--Kuulkaa`)
@@ -82,7 +83,10 @@ pub fn separator_ends_sentence(token: &Token) -> bool {
     if core.is_empty() {
         return trimmed.chars().any(|c| ['-', '–', '—'].contains(&c));
     }
-    matches!(core.chars().last(), Some('.') | Some('!') | Some('?') | Some(':'))
+    matches!(
+        core.chars().last(),
+        Some('.') | Some('!') | Some('?') | Some(':')
+    )
 }
 
 /// Whether a separator contains a newline. A newline is a paragraph/line
@@ -420,6 +424,29 @@ mod tests {
         let comma = tokens.iter().find(|t| !t.is_word()).unwrap();
         assert!(!separator_ends_sentence(comma));
         assert!(!separator_breaks_line(comma));
+    }
+
+    /// An opening bracket starts a parenthetical or editorial note; the
+    /// capital inside it is sentence-initial.
+    #[test]
+    fn opening_brackets_start_a_sentence() {
+        for text in [
+            "[Tämä tapaus löytyy kerrottuna.",
+            "(Tämä on toinen.",
+            "{Tämä",
+        ] {
+            let tokens = tokenise(text);
+            let ctx = analyze(&tokens);
+            let first = tokens
+                .iter()
+                .zip(&ctx)
+                .find(|(token, _)| token.text == "Tämä")
+                .unwrap_or_else(|| panic!("no Tämä in {text:?}"));
+            assert!(
+                first.1.sentence_start,
+                "Tämä should start a sentence in {text:?}"
+            );
+        }
     }
 
     /// A dialogue dash may follow the period (`.--Kuulkaa`) or stand alone

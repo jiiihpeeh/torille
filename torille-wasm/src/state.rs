@@ -609,6 +609,18 @@ mod tests {
     }
 
     #[test]
+    fn an_editorial_bracket_keeps_the_capital() {
+        let mut st = TextAreaState::new();
+        let hits = st.find_misspells(
+            "uppiniskaisen vangin veriin. [Tämä tapaus löytyy kerrottuna D.A.:n teoksesta.",
+        );
+        assert!(
+            !hits.iter().any(|h| h.word == "Tämä"),
+            "Tämä must be accepted: {hits:?}"
+        );
+    }
+
+    #[test]
     fn dialogue_dash_keeps_the_next_capital() {
         // The book text uses `.‑‑` between the period and the next
         // utterance. The dash is not a separate sentence in the tokeniser,
