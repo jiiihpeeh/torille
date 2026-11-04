@@ -234,6 +234,15 @@ pub fn inflect(
 /// Generates every form of `lemma`, with the lexicon to hand for compound
 /// heads. `possessives` says whether the word's class takes possessive
 /// suffixes -- a noun does, an adjective or participle does not.
+/// Dual-class nouns whose second reading the reference rejects.
+///
+/// `lymfa` is listed as `9, 10`; the nominal oracle confirms the class-9
+/// o-plural (`lymfoitta`, `lymfoissa`) and marks the class-10 readings
+/// (`lymfitta`) only `engine`. The two classes share a stem, so suppressing
+/// the class-10 reading before either engine runs is the same fix the dual
+/// 72/74 verbs use.
+const CLASS_9_WINS: &[&str] = &["lymfa"];
+
 pub fn inflect_in(
     lemma: &str,
     inflection: Inflection,
@@ -260,6 +269,9 @@ pub fn inflect_in(
     // module can emit it; the module alone cannot do this because an empty
     // module result leaves the heuristic's forms in place.
     if verbs::suppresses_reading(lemma, inflection.class) {
+        return out;
+    }
+    if inflection.class == 10 && CLASS_9_WINS.contains(&lemma) {
         return out;
     }
     // The catalogue model drives the heuristic engine. Some classes have no
@@ -2374,6 +2386,29 @@ mod tests {
     /// one reading is real. `oieta` is the class-72 `vanheta` type (`oikenee`),
     /// `aueta` the class-74 `katketa` type (`aukeaa`); the other paradigm's
     /// forms are not words.
+    /// `lymfa` is `9, 10`; only the class-9 o-plural is confirmed. The
+    /// class-10 `lymfitta` is the engine's own output and must not be a plain
+    /// form.
+    #[test]
+    fn a_dual_9_10_noun_uses_only_its_real_reading() {
+        let cat = cat();
+        let mut inflections: Vec<Inflection> = Vec::new();
+        for row in crate::kotus::sanalista().by_word("lymfa") {
+            inflections.extend(row.inflections());
+        }
+        let got = inflect_all(
+            "lymfa",
+            &inflections,
+            &cat,
+            None,
+            PartOfSpeech::Noun,
+            true,
+        );
+        let words: Vec<&str> = got.iter().map(|f| f.word.as_str()).collect();
+        assert!(words.contains(&"lymfoitta"), "class-9 abessive missing");
+        assert!(!words.contains(&"lymfitta"), "class-10 abessive still emitted");
+    }
+
     #[test]
     fn a_dual_72_74_lemma_uses_only_its_real_reading() {
         let cat = cat();

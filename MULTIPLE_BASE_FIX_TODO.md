@@ -332,6 +332,12 @@ python3 tools/report_multiple_bases.py reports/recall5.tsv
       `vietnameita`. The alternants are now rare for this word rather than
       plain; the class-6 report's `vietnam` rows are gone (the class still has
       other unconfirmed alternants, e.g. `sähköpunktuuri` and `neuroni`).
+- [x] `lymfa` is listed `9, 10`; Wiktionary gives Kotus type 9/kala and the
+      oracle confirms `lymfoitta`/`lymfoissa` while `lymfitta` is only
+      `engine`. The class-10 reading is suppressed for this lemma, the same
+      way the dual 72/74 verbs are. The class-9 report's `lymfa` rows are gone;
+      its remaining `taata` rows are a noun/verb attribution question, not a
+      class-9 stem bug.
 - [ ] For each row that stays, record the disposition in the commit message
       (and, if the set is stable, a short table in this file). Do not add the
       whole oracle to the engine.
