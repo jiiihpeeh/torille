@@ -521,6 +521,20 @@ mod tests {
     }
 
     #[test]
+    fn a_region_that_collides_with_a_common_noun_is_accepted() {
+        // `pohjanmaa` is a common noun; `Pohjanmaa` is the region, and the
+        // book has it capitalised mid-sentence 979 times.
+        let mut st = TextAreaState::new();
+        let hits = st.find_misspells(
+            "Mutta sepä kumma, että Pohjanmaan kansa, joka on muuten niin älykästä.",
+        );
+        assert!(
+            !hits.iter().any(|h| h.word == "Pohjanmaan"),
+            "Pohjanmaan must be accepted: {hits:?}"
+        );
+    }
+
+    #[test]
     fn the_postposition_kuulten_is_accepted() {
         // `hänen kuultensa` = "in his hearing"; the postposition and its
         // possessive forms are a closed lexical exception, not a `kuulla`

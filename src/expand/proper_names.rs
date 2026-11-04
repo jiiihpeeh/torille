@@ -223,6 +223,14 @@ mod tests {
     }
 
     #[test]
+    fn a_region_that_collides_with_a_common_noun_resolves() {
+        // `pohjanmaa` is also a common noun; `Pohjanmaa` is the region.
+        for word in ["Pohjanmaa", "Pohjanmaan", "Pohjanmaassa", "Pohjanmaalle"] {
+            assert!(contains_capitalised(word), "{word} should be a name");
+        }
+    }
+
+    #[test]
     fn english_words_are_not_names() {
         for word in ["this", "the", "xyzzy"] {
             assert!(!contains(word), "{word} should not be a name");
