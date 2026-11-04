@@ -712,7 +712,11 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
     //     `talo`; ordering it last keeps the common reading. Names are
     //     accepted, never suggested.
     if crate::expand::proper_names::contains_capitalised(word) {
-        return Some(lower);
+        return Some(
+            crate::expand::proper_names::lemma(word)
+                .unwrap_or(&lower)
+                .to_string(),
+        );
     }
 
     // 4. Compound detection. Finnish compounds have their head

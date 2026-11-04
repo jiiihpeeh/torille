@@ -432,19 +432,40 @@ pub fn check_normal_fast(word: &str, verbose: bool) -> NormalizedOutcome {
 /// back to the single outcome's base, so the two views cannot contradict each
 /// other about whether the word is known.
 pub fn check_normal_bases(word: &str) -> Vec<String> {
-    let report = find_all_bases_with(lex(), cat(), word);
-    let ranked = rank_lemma_bases(report.bases, class_prior());
-    if !ranked.is_empty() {
-        return ranked
-            .into_iter()
-            .map(|lemma| lemma.word.to_string())
-            .collect();
+    let mut names: Vec<String> = Vec::new();
+    let mut push = |name: &str| {
+        if !names.iter().any(|seen| seen == name) {
+            names.push(name.to_string());
+        }
+    };
+    // The surface as typed, then its lowercase common-word reading when the
+    // two differ. `Mainen` is the adjective `mainen` and the genitive of the
+    // state `Maine`; the common word is the first reading by policy.
+    for lemma in rank_lemma_bases(find_all_bases_with(lex(), cat(), word).bases, class_prior()) {
+        push(lemma.word);
     }
-    match check_normal(word, false) {
-        NormalizedOutcome::Lemma => vec![word.to_string()],
-        NormalizedOutcome::Inflected { base, .. } => vec![base],
-        NormalizedOutcome::Unknown => Vec::new(),
+    let lower = word.to_lowercase();
+    if lower != word {
+        for lemma in rank_lemma_bases(
+            find_all_bases_with(lex(), cat(), &lower).bases,
+            class_prior(),
+        ) {
+            push(lemma.word);
+        }
     }
+    // Proper names are their own readings, not a fallback: `Maine` is both the
+    // state and the common noun `maine`.
+    for name in crate::expand::proper_names::lemmas(word) {
+        push(name);
+    }
+    if names.is_empty() {
+        return match check_normal(word, false) {
+            NormalizedOutcome::Lemma => vec![word.to_string()],
+            NormalizedOutcome::Inflected { base, .. } => vec![base],
+            NormalizedOutcome::Unknown => Vec::new(),
+        };
+    }
+    names
 }
 
 thread_local! {
@@ -833,7 +854,9 @@ fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> Normalized
             println!("    gate 4b2: proper name");
         }
         return NormalizedOutcome::Inflected {
-            base: word.to_lowercase(),
+            base: crate::expand::proper_names::lemma(word)
+                .map(str::to_string)
+                .unwrap_or_else(|| word.to_lowercase()),
             gate: "proper name",
         };
     }
@@ -1369,8 +1392,38 @@ mod tests {
         }
     }
 
-    /// The full check path ranks the engine and the stem-map union, so it
-    /// names the same first base the full index does on the fixture words.
+    /// `--all` keeps the common and proper readings of a capitalised name:
+    /// `Mainen` is the adjective `mainen` and the genitive of the state
+    /// `Maine`; `Maine` is the common noun `maine` and the state.
+    #[test]
+    fn a_capitalised_name_keeps_both_readings() {
+        let mainen = check_normal_bases("Mainen");
+        assert!(mainen.iter().any(|base| base == "mainen"), "{mainen:?}");
+        assert!(mainen.iter().any(|base| base == "Maine"), "{mainen:?}");
+        let maine = check_normal_bases("Maine");
+        assert!(maine.iter().any(|base| base == "maine"), "{maine:?}");
+        assert!(maine.iter().any(|base| base == "Maine"), "{maine:?}");
+    }
+
+    /// The class-8 (nalle) state paradigm is singular-only: the proper-name
+    /// data has genitive `Mainen`, partitive `Mainea`, illative `Maineen`, and
+    /// no plural (`Maineja` is not a state form).
+    #[test]
+    fn maine_state_has_the_nalle_singular_forms() {
+        for want in [
+            "Maine", "Mainen", "Mainea", "Maineen", "Mainessa", "Mainesta",
+        ] {
+            assert!(
+                crate::expand::proper_names::lemmas(want).contains(&"Maine"),
+                "{want} is not a form of Maine"
+            );
+        }
+        assert!(
+            !crate::expand::proper_names::lemmas("Maineja").contains(&"Maine"),
+            "the state is singular-only"
+        );
+    }
+
     /// `paloin`/`vireissä` are the gate-4 cases: the noun and verb maps are
     /// separate gates, and the full path ranks their union.
     #[test]
@@ -1659,7 +1712,7 @@ mod tests {
             ("purkautumismuotoja", "muoto"),
             ("rakastettavaisuus", "rakastettavaisuus"),
             ("rakastettavaisuutta", "rakastettavaisuus"),
-            ("Väinämöinen", "väinämöinen"),
+            ("Väinämöinen", "Väinämöinen"),
             ("saksilla", "sakset"),
             ("tungeskeleva", "tungeskella"),
             ("hölynpölyä", "pöly"),

@@ -79,7 +79,12 @@ pub fn check_fast(word: &str, proper_nouns: &HashSet<String>) -> Option<CheckOut
         }
         // No common-word analysis: a known proper name is still a word.
         if crate::expand::proper_names::contains_capitalised(word) {
-            return Some(CheckOutcome::Lemma);
+            return Some(match crate::expand::proper_names::lemma(word) {
+                Some(base) if !base.eq_ignore_ascii_case(word) => {
+                    CheckOutcome::Inflected(vec![base])
+                }
+                _ => CheckOutcome::Lemma,
+            });
         }
         return None;
     }

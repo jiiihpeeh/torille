@@ -56,7 +56,17 @@ fn main() -> ExitCode {
                 }
                 torille::compound::Analysis::Unknown => {
                     // The engine's fast path knows derived verbs and
-                    // comitative forms the compound splitter does not.
+                    // comitative forms the compound splitter does not, and it
+                    // can name more than one meaning (`Mainen` is the adjective
+                    // `mainen` and the genitive of the state `Maine`).
+                    let meanings = match torille::suggest::check(word) {
+                        torille::suggest::CheckOutcome::Inflected(bases) => bases,
+                        _ => Vec::new(),
+                    };
+                    if !meanings.is_empty() {
+                        println!("{word}: known word ({})", meanings.join(", "));
+                        continue;
+                    }
                     if let Some(base) = torille::suggest::is_known_word(word) {
                         println!("{word}: known word ({base})");
                         continue;

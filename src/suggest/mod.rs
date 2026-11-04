@@ -101,6 +101,11 @@ impl CheckOutcome {
 /// prefix-3 / prefix-2 walks, and the short-lemma scan), and stops short
 /// of compound analysis -- see the module doc.
 pub fn check(word: &str) -> CheckOutcome {
+    with_proper_name_readings(check_common(word), word)
+}
+
+/// The common-word answer, before the proper-name readings are merged in.
+fn check_common(word: &str) -> CheckOutcome {
     if word.is_empty() {
         return CheckOutcome::Unknown;
     }
@@ -150,6 +155,50 @@ pub fn check(word: &str) -> CheckOutcome {
         return CheckOutcome::Unknown;
     }
     classify(report)
+}
+
+/// Merge the proper-name readings into a common-word outcome.
+///
+/// A capitalised surface can be both a common word and a name (`Maine` the
+/// state and `maine` the reputation, `Mainen` the adjective and the state's
+/// genitive). The common word stays first; the names are additional readings,
+/// not a fallback that only fires when the common gates miss.
+fn with_proper_name_readings(outcome: CheckOutcome, word: &str) -> CheckOutcome {
+    // A lowercase common word is not a name reading, even when a surname has
+    // the same spelling: `talo` is the house, not the surname `Talo`.
+    if !word.chars().next().is_some_and(char::is_uppercase) {
+        return outcome;
+    }
+    let names = crate::expand::proper_names::lemmas(word);
+    if names.is_empty() {
+        return outcome;
+    }
+    match outcome {
+        CheckOutcome::Inflected(mut bases) => {
+            for name in names {
+                if !bases.contains(&name) {
+                    bases.push(name);
+                }
+            }
+            CheckOutcome::Inflected(bases)
+        }
+        CheckOutcome::Lemma => {
+            let lower = word.to_lowercase();
+            match crate::kotus::sanalista().by_word(&lower).next() {
+                Some(row) => {
+                    let mut bases = vec![row.word()];
+                    for name in names {
+                        if !bases.contains(&name) {
+                            bases.push(name);
+                        }
+                    }
+                    CheckOutcome::Inflected(bases)
+                }
+                None => CheckOutcome::Lemma,
+            }
+        }
+        CheckOutcome::Unknown => CheckOutcome::Inflected(names),
+    }
 }
 
 fn classify(report: BasesReport<'static>) -> CheckOutcome {
@@ -469,6 +518,26 @@ mod tests {
         // Not in the lexicon at all.
         assert!(matches!(check("xyzzy"), CheckOutcome::Unknown));
         assert!(matches!(check(""), CheckOutcome::Unknown));
+    }
+
+    /// A capitalised surface can be both a common word and a proper name.
+    /// The common reading stays first; the name is an additional reading.
+    #[test]
+    fn a_capitalised_name_keeps_both_readings() {
+        match check("Mainen") {
+            CheckOutcome::Inflected(bases) => {
+                assert!(bases.contains(&"mainen"), "{bases:?}");
+                assert!(bases.contains(&"Maine"), "{bases:?}");
+            }
+            other => panic!("expected Inflected, got {other:?}"),
+        }
+        match check("Maine") {
+            CheckOutcome::Inflected(bases) => {
+                assert!(bases.contains(&"maine"), "{bases:?}");
+                assert!(bases.contains(&"Maine"), "{bases:?}");
+            }
+            other => panic!("expected Inflected, got {other:?}"),
+        }
     }
 
     /// When the engine reports several bases, `classify` names the same first
@@ -1511,8 +1580,8 @@ mod tests {
             // Proper place names are accepted capitalised through the
             // embedded Wikidata/Omorfi set; the `-lainen` derivative then
             // reuses that name.
-            ("Lassila", "lassila"),
-            ("Lassilassa", "lassilassa"),
+            ("Lassila", "Lassila"),
+            ("Lassilassa", "Lassila"),
             ("lassilalainen", "lassilalainen"),
         ] {
             assert_eq!(is_known_word(word).as_deref(), Some(base), "{word}");

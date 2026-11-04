@@ -142,6 +142,57 @@ pub(super) fn emit_proper_names(csv_path: &Path, blob_path: &Path) {
     emit_huffman_set(blob_path, &keys);
 }
 
+/// Emit `data/proper_name_forms.csv` (`form<TAB>name`) as a front-coded
+/// `form -> name` map.
+///
+/// [`emit_proper_names`] keeps only the surface set because the typing path
+/// only needs "is this a name?". A caller that wants the lemma behind the
+/// surface (`Mainen` -> `Maine`, `Helsingin` -> `Helsinki`) needs the value,
+/// so this companion blob keeps it. Keys are lowercased like the set; the
+/// values keep the source's capitalisation.
+pub(super) fn emit_proper_name_lemmas(csv_path: &Path, blob_path: &Path) {
+    if !csv_path.exists() && blob_path.exists() {
+        eprintln!(
+            "build.rs: {} missing but {} present -- reusing",
+            csv_path.display(),
+            blob_path.display(),
+        );
+        return;
+    }
+    let csv = fs::read_to_string(csv_path).unwrap_or_else(|e| {
+        panic!(
+            "build.rs: could not read {}: {e}; \
+             run `python3 tools/build_proper_name_forms.py` first",
+            csv_path.display(),
+        )
+    });
+    let mut entries: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for line in csv.lines() {
+        let Some((form, name)) = line.split_once('\t') else {
+            continue;
+        };
+        let form = form.trim();
+        let name = name.trim();
+        if form.is_empty() || name.is_empty() || form.contains('\0') || name.contains('\0') {
+            continue;
+        }
+        let values = entries.entry(form.to_lowercase()).or_default();
+        if !values.iter().any(|seen| seen == name) {
+            values.push(name.to_string());
+        }
+    }
+    for values in entries.values_mut() {
+        values.sort_unstable();
+    }
+    let entries: Vec<(String, Vec<String>)> = entries.into_iter().collect();
+    eprintln!(
+        "build.rs: {}: {} proper-name form -> lemma entries",
+        csv_path.display(),
+        entries.len(),
+    );
+    write_front_coded_map(blob_path, &entries);
+}
+
 /// Write a sorted key list as a front-coded `SST2` set blob.
 fn emit_front_coded_keys(blob_path: &Path, keys: &[String]) {
     // Front-code: one full key per `RESTART`-record block, then

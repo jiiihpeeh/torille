@@ -32,7 +32,8 @@ mod sanalista;
 mod front_coded;
 
 use front_coded::{
-    emit_front_coded_set, emit_proper_names, emit_stem_map, write_front_coded_map,
+    emit_front_coded_set, emit_proper_name_lemmas, emit_proper_names, emit_stem_map,
+    write_front_coded_map,
 };
 use sanalista::{generate, push_blob_string};
 
@@ -80,6 +81,7 @@ fn main() {
     let proper_csv = Path::new(&manifest).join("data/proper_name_forms.csv");
     println!("cargo:rerun-if-changed={}", proper_csv.display());
     emit_proper_names(&proper_csv, &precomputed.join("proper_names.bin"));
+    emit_proper_name_lemmas(&proper_csv, &precomputed.join("proper_name_lemmas.bin"));
 
     // Stem maps: `(stem, bases)` pairs from
     // `data/stem_to_base_map.csv` (nouns) and

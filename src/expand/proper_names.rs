@@ -12,6 +12,7 @@
 //! as corrections.
 
 use crate::expand::huffman_set::HuffmanSet;
+use crate::expand::static_table::StemMap;
 
 /// Lowercase name forms, built by `build.rs` from
 /// `data/proper_name_forms.csv`.
@@ -19,6 +20,43 @@ pub static PROPER_NAMES: HuffmanSet = HuffmanSet::new(include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/data/precomputed/proper_names.bin",
 )));
+
+/// `form -> name` for the same source, so a caller can name the lemma behind
+/// an inflected form (`mainen` -> `Maine`, `helsingin` -> `Helsinki`).
+static PROPER_NAME_LEMMAS: StemMap = StemMap::new(include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/data/precomputed/proper_name_lemmas.bin",
+)));
+
+/// The proper-name lemma a form belongs to, preserving the source's
+/// capitalisation (`Mainen` -> `Maine`).
+///
+/// The form is matched case-insensitively: the typing path lowercases, while a
+/// sentence-initial caller passes the capitalised spelling. A form that maps
+/// to several names (`Maine` is both the US state and a given name) returns
+/// the first in sorted order; the engine does not model name senses.
+pub fn lemma(word: &str) -> Option<&'static str> {
+    lemmas(word).into_iter().next()
+}
+
+/// Every proper-name lemma a form belongs to, preserving capitalisation.
+///
+/// A surface can be several names (`Maine` is both a state and a given name),
+/// and it is also often a common word (`maine` = reputation, `mainen` =
+/// adjective). The caller merges this list with the common-word readings; the
+/// engine does not pick one meaning for it.
+pub fn lemmas(word: &str) -> Vec<&'static str> {
+    let mut out: Vec<&'static str> = PROPER_NAME_LEMMAS.bases(word).collect();
+    let lower = word.to_lowercase();
+    if lower != word {
+        for name in PROPER_NAME_LEMMAS.bases(&lower) {
+            if !out.contains(&name) {
+                out.push(name);
+            }
+        }
+    }
+    out
+}
 
 /// True if `word` is a known Finnish proper-name form.
 ///
