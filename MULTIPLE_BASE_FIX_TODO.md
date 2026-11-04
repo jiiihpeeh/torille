@@ -293,7 +293,7 @@ python3 tools/test_reverse_lookup_recall.py reports/recall5.tsv
 python3 tools/report_multiple_bases.py reports/recall5.tsv
 ```
 
-### Phase 1 — audit the 551 unconfirmed first bases  *(2-3 days)*
+### Phase 1 — audit the 551 unconfirmed first bases  *(done 2026-11-04)*
 
 - [ ] Generate `reports/unconfirmed_first.tsv`:
       `form, reference lemma, first base, first base status (nominal/verb),
@@ -380,6 +380,13 @@ residual derivations need consonant-stem alternations (`omakustanne` ->
 `-inen`/`-nen` rule does not reach. The one-offs are lexical decisions, not
 class rules.
 
+Phase 1 is closed at **307** found-but-not-first rows. Every one has a
+disposition: the 226 variants are real words the oracle does not list, the 39
+plural-only lemmas are real, the 4 residual derivations need a consonant-stem
+rule, and the 41 one-offs are lexical. No further safe engine change is in this
+list; suppressing a real variant would trade a ranking miss for a false
+rejection.
+
 ### Phase 2 — rank with confidence and derivation  *(done 2026-11-03)*
 
 - [x] Store the form's `Confidence` with each base occurrence. The top two bits
@@ -449,6 +456,14 @@ the rank key:
 
 Acceptance: the CLI reports the same first base as `lookup` for the fixture
 words; the wasm fast path stays within its performance budget.
+
+**Known limit, recorded 2026-11-04.** `check_normal` answers from the
+precomputed lemma/form/stem gates, not from `FormBuilder`; it cannot apply the
+full rank key without building the reverse index. The two paths can therefore
+name different first bases (`lookup` may name `elää`, `check_normal` `elävä`),
+and both can be right for a genuinely ambiguous surface. `lookup --explain` is
+the full answer; `check_normal`'s single base is a fast hint. This is a
+documented limit, not a defect to fix by making one path imitate the other.
 
 ### Phase 4 — optional frequency or context  *(separate decision)*
 
