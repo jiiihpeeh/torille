@@ -684,31 +684,66 @@
     syncBox();
 
     let focused: string | null = null;
+    let focusedEl: HTMLElement | null = null;
 
     function closePopup(): void {
       popup.style.display = 'none';
       popup.textContent = '';
       focused = null;
+      focusedEl = null;
       el.removeAttribute('data-torille-focused');
+    }
+
+    // Put the popup under the clicked word, not merely somewhere inside
+    // the field. The old code clamped `left` to the *host* width with a
+    // hard-coded 220px guess, which moved the popup left of the word
+    // whenever the misspelling was towards the right edge. Anchor it to
+    // the word's rect and then clamp only to the viewport, using the
+    // popup's measured width/height.
+    function positionPopup(): void {
+      const anchor = focusedEl;
+      if (!anchor || popup.style.display === 'none') return;
+      const hostRect = host.getBoundingClientRect();
+      const missRect = anchor.getBoundingClientRect();
+      const margin = 8;
+
+      popup.style.left = (missRect.left - hostRect.left) + 'px';
+      popup.style.top = (missRect.bottom - hostRect.top + 2) + 'px';
+      const popupRect = popup.getBoundingClientRect();
+
+      let left = missRect.left - hostRect.left;
+      const maxLeft =
+        window.innerWidth - margin - popupRect.width - hostRect.left;
+      left = Math.max(margin - hostRect.left, Math.min(left, maxLeft));
+
+      let top = missRect.bottom - hostRect.top + 2;
+      if (popupRect.bottom > window.innerHeight - margin) {
+        // Flip above the word when there is no room below.
+        top = missRect.top - hostRect.top - popupRect.height - 2;
+      }
+      const minTop = margin - hostRect.top;
+      const maxTop =
+        window.innerHeight - margin - popupRect.height - hostRect.top;
+      top = Math.max(minTop, Math.min(top, Math.max(minTop, maxTop)));
+
+      popup.style.left = left + 'px';
+      popup.style.top = top + 'px';
     }
 
     function openPopup(misspellEl: HTMLElement, word: string,
                      start: number, end: number): void {
       focused = word;
+      focusedEl = misspellEl;
       el.setAttribute('data-torille-focused', word);
       popup.textContent = '';
       popup.style.display = 'block';
 
-      // Position just below the focused misspelling.
+      // A provisional position until `fillPopup` has measured the real
+      // content and calls `positionPopup` again.
       const hostRect = host.getBoundingClientRect();
       const missRect = misspellEl.getBoundingClientRect();
-      let left = missRect.left - hostRect.left;
-      let top = missRect.bottom - hostRect.top + 2;
-      if (left + 220 > hostRect.width) {
-        left = Math.max(0, missRect.right - hostRect.left - 220);
-      }
-      popup.style.left = left + 'px';
-      popup.style.top = top + 'px';
+      popup.style.left = (missRect.left - hostRect.left) + 'px';
+      popup.style.top = (missRect.bottom - hostRect.top + 2) + 'px';
 
       // Suggestions are read from `lastHits` -- the wasm-side render
       // already produced them, so the popup click doesn't need a
@@ -741,6 +776,7 @@
         empty.className = 'empty';
         empty.textContent = 'ei ehdotuksia';
         popup.appendChild(empty);
+        positionPopup();
         return;
       }
       let picked = 0;
@@ -757,6 +793,7 @@
         picked++;
         popup.appendChild(btn);
       }
+      positionPopup();
     }
 
     /**
