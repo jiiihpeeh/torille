@@ -327,6 +327,11 @@ python3 tools/report_multiple_bases.py reports/recall5.tsv
       `engine`. Removing the exception fixed the audit row and 17 missing
       reference pairs; the `5*C` report at `-n 100` is now 0 illegal, 0 missing,
       0 not-plain, 0 mistagged.
+- [x] `vietnam` is class 6 but Wiktionary gives Kotus type 5 and the oracle
+      confirms `vietnamien`/`vietnameja`, not `vietnameiden`/`vietnameitten`/
+      `vietnameita`. The alternants are now rare for this word rather than
+      plain; the class-6 report's `vietnam` rows are gone (the class still has
+      other unconfirmed alternants, e.g. `sähköpunktuuri` and `neuroni`).
 - [ ] For each row that stays, record the disposition in the commit message
       (and, if the set is stable, a short table in this file). Do not add the
       whole oracle to the engine.

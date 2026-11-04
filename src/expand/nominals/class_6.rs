@@ -14,6 +14,14 @@ use crate::tags::{Form, Number};
 
 pub const CLASS: &str = "6";
 
+/// Class-6 words whose reference does not confirm the `-iden`/`-itten`/`-ita`
+/// alternants. `vietnam` is the language name: Wiktionary gives Kotus type 5
+/// and the oracle confirms `vietnamien`/`vietnameja`, but the class-6
+/// `vietnameiden` family exists only as `engine` output. Marking the
+/// alternants rare keeps them accepted for the class without offering them as
+/// plain forms of this word.
+const NO_I_PLURAL: &[&str] = &["vietnam"];
+
 /// Inflect a base-class-6 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     // Class 6 also carries plural-only `-i` nouns such as `kekkerit`,
@@ -21,7 +29,12 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     // nominative, so build the paradigm from the dropped-`t` base and keep
     // only the plural cells: `kekkereitä`, not `kekkeri` or `kekkeritn`.
     if let Some(base) = lemma.strip_suffix('t') {
-        let mut forms = build_i_loans(base, possessives, loanword_harmony(base), IPlural::All);
+        let ipl = if NO_I_PLURAL.contains(&lemma) {
+            IPlural::None
+        } else {
+            IPlural::All
+        };
+        let mut forms = build_i_loans(base, possessives, loanword_harmony(base), ipl);
         forms.retain(|form| {
             form.readings
                 .iter()
@@ -29,7 +42,12 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
         });
         return forms;
     }
-    build_i_loans(lemma, possessives, loanword_harmony(lemma), IPlural::All)
+    let ipl = if NO_I_PLURAL.contains(&lemma) {
+        IPlural::None
+    } else {
+        IPlural::All
+    };
+    build_i_loans(lemma, possessives, loanword_harmony(lemma), ipl)
 }
 
 #[cfg(test)]
@@ -76,4 +94,24 @@ mod tests {
         assert!(!w.contains(&"kekkeri".to_string()));
         assert!(!w.contains(&"kekkeritn".to_string()));
     }
+    /// `vietnam` is a class-6 loanword but the reference confirms only the
+    /// i-stem plural (`vietnamien`, `vietnameja`), not `vietnameiden`/
+    /// `vietnameitten`/`vietnameita`. Those alternants stay accepted but not
+    /// plain.
+    #[test]
+    fn vietnam_keeps_the_i_plural_plain_and_the_e_plural_rare() {
+        let forms = inflect("vietnam", true);
+        let find = |word: &str| {
+            forms
+                .iter()
+                .find(|form| form.word == word)
+                .unwrap_or_else(|| panic!("{word} missing"))
+        };
+        assert!(find("vietnamien").plain());
+        assert!(find("vietnameja").plain());
+        assert!(!find("vietnameiden").plain());
+        assert!(!find("vietnameitten").plain());
+        assert!(!find("vietnameita").plain());
+    }
+
 }
