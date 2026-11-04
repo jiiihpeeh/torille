@@ -652,8 +652,7 @@
       overlayInsetLeft = borderLeft;
       overlayInsetTop = borderTop;
       const isTextarea = el.tagName === 'TEXTAREA';
-      overlay.style.left = overlayInsetLeft + 'px';
-      overlay.style.top = overlayInsetTop + 'px';
+      positionOverlay();
       overlay.style.width = (
         isTextarea
           ? (el.clientWidth || r.width - borderLeft - borderRight)
@@ -665,6 +664,17 @@
           : r.height - borderTop - borderBottom
       ) + 'px';
     }
+
+    // The mirror follows the input's own scroll offset as well as its
+    // border. `syncBox` runs on window scroll/resize and must not undo the
+    // textarea's internal scroll: without the subtraction, a page scroll
+    // reset the mirror to the first line while the textarea stayed
+    // scrolled down, leaving every underline on the wrong word.
+    function positionOverlay(): void {
+      overlay.style.left = (overlayInsetLeft - input.scrollLeft) + 'px';
+      overlay.style.top = (overlayInsetTop - input.scrollTop) + 'px';
+    }
+
     syncBox();
 
     let focused: string | null = null;
@@ -888,8 +898,7 @@
       // scrollTop so the visible portion of the overlay text lines
       // up with the visible portion of the textarea. The mirror's
       // overflow: hidden clips the off-screen part.
-      overlay.style.top = (overlayInsetTop - input.scrollTop) + 'px';
-      overlay.style.left = (overlayInsetLeft - input.scrollLeft) + 'px';
+      positionOverlay();
     });
     window.addEventListener('scroll', syncBox, { passive: true });
     window.addEventListener('resize', syncBox);
