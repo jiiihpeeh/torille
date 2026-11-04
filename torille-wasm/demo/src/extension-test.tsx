@@ -360,6 +360,18 @@ Kymmenes rivi.`}
         <Card label="Auto-growing textarea">
           <AutoTextarea rows={1} value="kirjoitusvirhee taloo" />
         </Card>
+        <Card label="YouTube-like search input (40px, line-height 24)">
+          <input
+            type="search"
+            value="youtube search bar"
+            style={{
+              height: '40px',
+              'line-height': '24px',
+              padding: '2px 6px',
+              'border-radius': '20px',
+            }}
+          />
+        </Card>
         <Card label="Tall single-line input (centered text)">
           <input
             type="search"
