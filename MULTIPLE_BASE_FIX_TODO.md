@@ -351,8 +351,25 @@ python3 tools/report_multiple_bases.py reports/recall5.tsv
 Acceptance: every row in the original 551 has a disposition; A rows lower the
 count by fixing forms, and B/C rows are documented rather than hidden. The
 interjection, confidence, dual-class, `5*C`, derivation and `karhi` fixes
-already take it to 310 found-but-not-first; the rest stay on the list until they are classified. A fixed form must not
-regress recall (the reference pair may still be found through another base).
+already take it to 310 found-but-not-first. A fixed form must not regress
+recall (the reference pair may still be found through another base).
+
+The remaining 310 triage as:
+
+| disposition | rows | groups |
+|---|---:|---|
+| real variant / oracle gap | 226 | `kat`, `gin`, `led`, `chat`, `kimrööki`, `taido`, `gnu`, `raukki`, `puola`, `ori`, `lieri`, `sani`, `live`, `hepo`, `peljätä` |
+| plural-only lemma | 39 | `hipat`, `kokkarit`, `siskokset` |
+| residual derivation | 4 | `omakustanteinen`, `vahakankainen` |
+| one-off | 41 | `kalvakas`, `kymmen`, `tee`, `valastaa`, `ketään`, ... |
+
+The 226 variants are real words the oracle does not list (or lists only under a
+different lemma); suppressing them would reject real words. The plural-only
+lemmas are real but their reference base is the singular lemma. The four
+residual derivations need consonant-stem alternations (`omakustanne` ->
+`omakustanteinen`, `vahakangas` -> `vahakankainen`), which the current
+`-inen`/`-nen` rule does not reach. The one-offs are lexical decisions, not
+class rules.
 
 ### Phase 2 — rank with confidence and derivation  *(done 2026-11-03)*
 
