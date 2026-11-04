@@ -73,7 +73,10 @@ pub fn separator_ends_sentence(token: &Token) -> bool {
     // ends with one (`?»`, `!»`). An opening bracket starts a parenthetical
     // or editorial note whose first word is capitalised (`[Tämä tapaus ...`).
     let last = trimmed.chars().last();
-    if matches!(last, Some('»' | '«' | '"' | '“' | '”' | '[' | '(' | '{')) {
+    if matches!(
+        last,
+        Some('»' | '«' | '"' | '“' | '”' | '[' | '(' | '{' | ')' | ']' | '}')
+    ) {
         return true;
     }
     // Dialogue dashes may follow the terminal punctuation (`.--Kuulkaa`)
@@ -445,6 +448,25 @@ mod tests {
             assert!(
                 first.1.sentence_start,
                 "Tämä should start a sentence in {text:?}"
+            );
+        }
+    }
+
+    /// A closing bracket is a boundary too: `(Ajatuksissaan:) Sinun` starts a
+    /// new sentence after the parenthetical.
+    #[test]
+    fn closing_brackets_start_a_sentence() {
+        for text in [") Sinun", "] Sinun", "} Sinun"] {
+            let tokens = tokenise(text);
+            let ctx = analyze(&tokens);
+            let first = tokens
+                .iter()
+                .zip(&ctx)
+                .find(|(token, _)| token.text == "Sinun")
+                .unwrap_or_else(|| panic!("no Sinun in {text:?}"));
+            assert!(
+                first.1.sentence_start,
+                "Sinun should start a sentence in {text:?}"
             );
         }
     }

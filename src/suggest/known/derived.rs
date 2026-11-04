@@ -300,6 +300,43 @@ pub(super) fn derived_inen_degree_base(word: &str) -> Option<String> {
     None
 }
 
+/// The positive behind a comparative or comparative-adverb surface whose
+/// positive is a verb participle (`selittävä` -> `selittävämpi`,
+/// `selittävämmin`) rather than an adjective lemma.
+///
+/// `ADJ_DEGREES` only carries sanalista adjectives. The participle is a verb
+/// form, so the class-16 comparative is built here after the reconstructed
+/// positive passes the fast gates.
+pub(super) fn derived_comparative_base(word: &str) -> Option<String> {
+    use crate::expand::inflect_all;
+    use crate::kotus::{Gradation, Inflection};
+
+    // `-mmin` is the comparative adverb (the instructive plural of the
+    // comparative); `-mpi` is its nominative. Both leave the positive
+    // participle as the prefix.
+    let positive = ["mmin", "mpi"].iter().find_map(|suffix| {
+        word.strip_suffix(suffix)
+            .filter(|positive| positive.chars().count() >= 4)
+    })?;
+    is_known_word_with_compound(positive, false)?;
+    let nominal = format!("{positive}mpi");
+    let forms = inflect_all(
+        &nominal,
+        &[Inflection {
+            class: 16,
+            gradation: Gradation::from_letter('H'),
+        }],
+        catalogue(),
+        None,
+        PartOfSpeech::Adjective,
+        false,
+    );
+    forms
+        .iter()
+        .any(|form| form.word == word)
+        .then(|| positive.to_string())
+}
+
 /// The superlative degree a surface form belongs to, if the reconstructed
 /// nominative is itself a known word and class 36 really emits the surface.
 ///

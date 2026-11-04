@@ -26,8 +26,8 @@ pub(crate) use stems::is_content_head;
 
 use compound::{detect_compound, hyphenated_base};
 use derived::{
-    bound_suffix_compound_base, derived_action_us_base, derived_hko_base, derived_inen_degree_base,
-    derived_sti_base, derived_superlative_base,
+    bound_suffix_compound_base, derived_action_us_base, derived_comparative_base, derived_hko_base,
+    derived_inen_degree_base, derived_sti_base, derived_superlative_base,
 };
 use stems::{
     find_base_via_stem_map_static, find_base_via_stem_map_static_possessive,
@@ -682,6 +682,12 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
     //      tabulated in `ADJ_DEGREES`, so the class-36 paradigm is built
     //      here after the reconstructed nominative passes the fast gates.
     if let Some(base) = derived_superlative_base(&lower) {
+        return Some(base);
+    }
+    // 3e3b. A comparative of a participle: `selittävä` -> `selittävämpi`,
+    //       `selittävämmin`. The positive is a verb form, not an adjective
+    //       lemma, so `ADJ_DEGREES` does not carry it.
+    if let Some(base) = derived_comparative_base(&lower) {
         return Some(base);
     }
 

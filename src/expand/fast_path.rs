@@ -136,6 +136,10 @@ const ACCEPTED: &[(&str, &str)] = &[
     ("tikkaita", "tikkaat"),
     ("tikkaitten", "tikkaat"),
     ("tiuskasi", "tiuskata"),
+    // The older comitative `tynnyrineen` (standard `tynnyreineen`); the
+    // compound forms `tervatynnyrineen` and `vesitynnyrineen` reach it as
+    // the head.
+    ("tynnyrineen", "tynnyri"),
     ("unhotusta", "unhotus"),
     ("uupuneemmaksi", "uupua"),
     ("vaikken", "vaikka"),
@@ -251,6 +255,7 @@ mod tests {
             ("kuulten", "kuulten"),
             ("kuultensa", "kuulten"),
             ("kuulteni", "kuulten"),
+            ("tynnyrineen", "tynnyri"),
             ("niinkauan", "niin"),
             ("nyrpistyksessä", "nyrpistys"),
             ("senjälkeen", "sen"),

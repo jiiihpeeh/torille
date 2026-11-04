@@ -609,6 +609,54 @@ mod tests {
     }
 
     #[test]
+    fn an_elided_compound_is_flagged_and_suggested() {
+        // `riisryyni` is missing the linking `i`; the checker should flag it
+        // and the suggestion pool should offer the standard spelling.
+        let mut st = TextAreaState::new();
+        let hits = st.find_misspells("keitetään riisryynipuuroa.");
+        assert!(
+            hits.iter().any(|h| h.word == "riisryynipuuroa"),
+            "the elided compound must be flagged: {hits:?}"
+        );
+        let suggestions = st.suggest_for("riisryynipuuroa", 5, 2);
+        assert!(
+            suggestions.iter().any(|w| w.starts_with("riisiryyni")),
+            "expected the standard spelling, got {suggestions:?}"
+        );
+        let suggestions = st.suggest_for("riisiniryynipuuro", 5, 2);
+        assert!(
+            suggestions.iter().any(|w| w.starts_with("riisiryyni")),
+            "expected the standard spelling, got {suggestions:?}"
+        );
+    }
+
+    #[test]
+    fn the_older_comitative_tynnyrineen_is_accepted() {
+        let mut st = TextAreaState::new();
+        for text in [
+            "tuolla oven päällä tynnyrineen ja pulloineen!",
+            "myymälät köysineen, tervatynnyrineen",
+            "ajaa retuuttaa vesitynnyrineen pitkin koluisia",
+        ] {
+            let hits = st.find_misspells(text);
+            assert!(
+                !hits.iter().any(|h| h.word.contains("tynnyrineen")),
+                "{text}: {hits:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_capital_after_a_closing_bracket_is_accepted() {
+        let mut st = TextAreaState::new();
+        let hits = st.find_misspells("(Ajatuksissaan:) Sinun mielestäsi olisi niin.");
+        assert!(
+            !hits.iter().any(|h| h.word == "Sinun"),
+            "Sinun must be accepted: {hits:?}"
+        );
+    }
+
+    #[test]
     fn an_editorial_bracket_keeps_the_capital() {
         let mut st = TextAreaState::new();
         let hits = st.find_misspells(
