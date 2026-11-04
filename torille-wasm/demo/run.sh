@@ -25,6 +25,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WASM_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 WASM_PKG="${WASM_DIR}/pkg"
 DIST_MAIN="${SCRIPT_DIR}/dist/main.js"
+DIST_EXT="${SCRIPT_DIR}/dist/extension-test.js"
 
 # True when something the demo depends on is newer than the last build.
 # The engine (`src/`, the root `Cargo.toml`) and the generated stem maps
@@ -43,7 +44,8 @@ wasm_needs_build() {
 
 demo_needs_build() {
   [ ! -f "${DIST_MAIN}" ] && return 0
-  [ -n "$(find "${SCRIPT_DIR}/src" "${SCRIPT_DIR}/index.html" \
+  [ ! -f "${DIST_EXT}" ] && return 0
+  [ -n "$(find "${SCRIPT_DIR}/src" "${SCRIPT_DIR}/index.html" "${SCRIPT_DIR}/extension-test.html" \
                      "${SCRIPT_DIR}/build.mjs" \
         -newer "${DIST_MAIN}" \
         -print -quit 2>/dev/null)" ] && return 0

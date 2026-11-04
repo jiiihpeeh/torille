@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<title>torille extension iframe test</title>
+<style>
+  body {
+    margin: 0;
+    padding: .9rem;
+    font: 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  textarea, input {
+    width: 100%;
+    padding: .5rem .6rem;
+    border: 1px solid #d0d0d8;
+    border-radius: 6px;
+    font: inherit;
+  }
+  textarea { min-height: 4.5em; resize: vertical; }
+  .editable {
+    min-height: 4.5em;
+    padding: .5rem .6rem;
+    border: 1px solid #d0d0d8;
+    border-radius: 6px;
+  }
+</style>
+</head>
+<body>
+  <textarea>Iframen kirjoitusvirhee taloo koirra xyzzy.</textarea>
+  <p><input type="text" value="iframen taloo"></p>
+  <div class="editable" contenteditable="true">iframen koirra xyzzy</div>
+</body>
+</html>

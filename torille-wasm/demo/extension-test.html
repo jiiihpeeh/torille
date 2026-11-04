@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>torille extension — manual test page</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --line: #d0d0d8;
+    --muted: #666;
+    --accent: #07c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --line: #3a3a44; --muted: #aaa; --accent: #6cf; }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    padding: 2rem 1.25rem 6rem;
+    max-width: 980px;
+    font: 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { margin-top: 0; }
+  h2 {
+    margin-top: 2.2rem;
+    padding-bottom: .3rem;
+    border-bottom: 1px solid var(--line);
+  }
+  p, li { max-width: 72ch; }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  code { font-size: .92em; }
+
+  .note {
+    border-left: 4px solid var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    padding: .6rem .9rem;
+    margin: 1rem 0;
+  }
+  .muted { color: var(--muted); }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin: .8rem 0 1.2rem;
+  }
+  button {
+    font: inherit;
+    padding: .4rem .7rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: Canvas;
+    color: CanvasText;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: .8rem;
+    min-width: 0;
+  }
+  .card > label,
+  .field > label {
+    display: block;
+    margin-bottom: .3rem;
+    font-weight: 600;
+    font-size: .9em;
+  }
+
+  textarea,
+  input[type="text"],
+  input[type="search"],
+  input[type="email"],
+  input[type="url"],
+  input:not([type]) {
+    width: 100%;
+    padding: .55rem .65rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: Canvas;
+    color: CanvasText;
+    font: inherit;
+  }
+  textarea { min-height: 5.5em; resize: vertical; }
+  textarea.tall { min-height: 12em; }
+
+  .editable {
+    min-height: 5.5em;
+    padding: .55rem .65rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: Canvas;
+    line-height: inherit;
+  }
+  .editable:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+  .flex-row {
+    display: flex;
+    gap: .5rem;
+    align-items: flex-start;
+  }
+  .flex-row > input { flex: 1 1 auto; }
+  .flex-row > button { flex: 0 0 auto; }
+
+  .inline-field {
+    display: inline-flex;
+    gap: .4rem;
+    align-items: center;
+    padding: .25rem .4rem;
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+  }
+  .inline-field input { width: 14em; }
+
+  .status {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    margin: 2rem -1.25rem -6rem;
+    padding: .7rem 1.25rem;
+    border-top: 1px solid var(--line);
+    background: color-mix(in srgb, Canvas 88%, transparent);
+    backdrop-filter: blur(8px);
+    font-size: .9em;
+  }
+  .status strong { color: var(--accent); }
+  .status span { margin-right: 1.2rem; white-space: nowrap; }
+
+  #log {
+    max-height: 12em;
+    overflow: auto;
+    padding: .6rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: color-mix(in srgb, Canvas 92%, CanvasText 8%);
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+
+  .shadow-host {
+    display: block;
+    padding: .5rem;
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module" src="/dist/extension-test.js"></script>
+</body>
+</html>

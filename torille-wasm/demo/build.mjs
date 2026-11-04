@@ -98,6 +98,7 @@ const wasmExternalPlugin = {
 const buildOptions = {
   entryPoints: [
     pathResolveAbs(__dirname, 'src/main.tsx'),
+    pathResolveAbs(__dirname, 'src/extension-test.tsx'),
     pathResolveAbs(__dirname, 'src/spell-worker.ts'),
     pathResolveAbs(__dirname, 'src/suggestion-worker.ts'),
   ],
@@ -124,7 +125,7 @@ if (isWatch) {
   console.log('watching src/ for changes (Ctrl-C to stop)');
 } else {
   const result = await esbuild.build(buildOptions);
-  console.log(`\nwrote dist/main.js, dist/spell-worker.js, dist/torille_wasm_bg.wasm`);
+  console.log(`\nwrote dist/main.js, dist/extension-test.js, dist/spell-worker.js, dist/torille_wasm_bg.wasm`);
   if (result.metafile) {
     for (const [file, info] of Object.entries(result.metafile.outputs)) {
       console.log(`  ${file}  ${info.bytes} bytes`);

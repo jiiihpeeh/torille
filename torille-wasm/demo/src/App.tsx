@@ -122,6 +122,11 @@ export function App() {
           </Show>
         </button>
       </h1>
+      <p class="extension-note">
+        Testing the browser extension? Open the{' '}
+        <a href="extension-test.html">manual extension test page</a> — it has
+        static, dynamic, contenteditable and iframe fields.
+      </p>
       <Show when={useExtension()}>
         <p
           class={
