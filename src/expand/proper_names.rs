@@ -63,11 +63,11 @@ pub fn lemmas(word: &str) -> Vec<&'static str> {
 /// The callers on the hot path already lowercase, so the first attempt is
 /// allocation-free; a mixed-case caller pays one `to_lowercase`.
 pub fn contains(word: &str) -> bool {
-    if PROPER_NAMES.contains(word) {
+    if PROPER_NAMES.contains(word) || PROPER_NAME_LEMMAS.contains(word) {
         return true;
     }
     let lower = word.to_lowercase();
-    lower != word && PROPER_NAMES.contains(&lower)
+    lower != word && (PROPER_NAMES.contains(&lower) || PROPER_NAME_LEMMAS.contains(&lower))
 }
 
 /// True if `word` is a known name form **and starts with a capital**.
@@ -141,6 +141,20 @@ mod tests {
             "Mymmeliä",
         ] {
             assert!(contains(word), "{word} should be a known name form");
+        }
+    }
+
+    #[test]
+    fn religious_names_and_their_cases_resolve() {
+        for word in [
+            "Jumala",
+            "Jumalan",
+            "Jumalalla",
+            "Jeesus",
+            "Jeesuksen",
+            "Jeesukselle",
+        ] {
+            assert!(contains_capitalised(word), "{word} should be a name");
         }
     }
 

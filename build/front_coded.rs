@@ -150,7 +150,7 @@ pub(super) fn emit_proper_names(csv_path: &Path, blob_path: &Path) {
 /// surface (`Mainen` -> `Maine`, `Helsingin` -> `Helsinki`) needs the value,
 /// so this companion blob keeps it. Keys are lowercased like the set; the
 /// values keep the source's capitalisation.
-pub(super) fn emit_proper_name_lemmas(csv_path: &Path, blob_path: &Path) {
+pub(super) fn emit_proper_name_lemmas(csv_path: &Path, extra_path: &Path, blob_path: &Path) {
     if !csv_path.exists() && blob_path.exists() {
         eprintln!(
             "build.rs: {} missing but {} present -- reusing",
@@ -179,6 +179,23 @@ pub(super) fn emit_proper_name_lemmas(csv_path: &Path, blob_path: &Path) {
         let values = entries.entry(form.to_lowercase()).or_default();
         if !values.iter().any(|seen| seen == name) {
             values.push(name.to_string());
+        }
+    }
+    if extra_path.exists() {
+        let extra = fs::read_to_string(extra_path).unwrap_or_default();
+        for line in extra.lines() {
+            let Some((form, name)) = line.split_once('\t') else {
+                continue;
+            };
+            let form = form.trim();
+            let name = name.trim();
+            if form.is_empty() || name.is_empty() || form.contains('\0') || name.contains('\0') {
+                continue;
+            }
+            let values = entries.entry(form.to_lowercase()).or_default();
+            if !values.iter().any(|seen| seen == name) {
+                values.push(name.to_string());
+            }
         }
     }
     for values in entries.values_mut() {

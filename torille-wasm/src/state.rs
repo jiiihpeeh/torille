@@ -521,6 +521,23 @@ mod tests {
     }
 
     #[test]
+    fn religious_proper_names_keep_their_capital() {
+        // `Jumala` and `Jeesus` are common-noun rows in the sanalista and
+        // proper names in a religious text; the curated proper-name forms
+        // keep the capital from being a mid-sentence case error.
+        let mut st = TextAreaState::new();
+        let hits = st.find_misspells("Lähdin Jumalalla ja rukoilin Jeesukselle.");
+        assert!(
+            !hits.iter().any(|h| h.word == "Jumalalla"),
+            "Jumalalla must be accepted: {hits:?}"
+        );
+        assert!(
+            !hits.iter().any(|h| h.word == "Jeesukselle"),
+            "Jeesukselle must be accepted: {hits:?}"
+        );
+    }
+
+    #[test]
     fn proper_names_keep_their_capital_and_lowercase_is_flagged() {
         let mut st = TextAreaState::new();
         let hits = st.find_misspells("Helsinki on kaupunki. Helsinki on iso.");

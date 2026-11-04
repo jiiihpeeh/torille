@@ -79,9 +79,15 @@ fn main() {
     // Proper names: Wikidata supplies the lemmas, Omorfi the singular cases.
     // The fast path accepts these forms; they are never suggested.
     let proper_csv = Path::new(&manifest).join("data/proper_name_forms.csv");
+    let proper_extra = Path::new(&manifest).join("data/proper_name_forms_extra.csv");
     println!("cargo:rerun-if-changed={}", proper_csv.display());
+    println!("cargo:rerun-if-changed={}", proper_extra.display());
     emit_proper_names(&proper_csv, &precomputed.join("proper_names.bin"));
-    emit_proper_name_lemmas(&proper_csv, &precomputed.join("proper_name_lemmas.bin"));
+    emit_proper_name_lemmas(
+        &proper_csv,
+        &proper_extra,
+        &precomputed.join("proper_name_lemmas.bin"),
+    );
 
     // Stem maps: `(stem, bases)` pairs from
     // `data/stem_to_base_map.csv` (nouns) and
