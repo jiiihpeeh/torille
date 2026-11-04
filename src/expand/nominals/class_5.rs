@@ -25,7 +25,7 @@
 #![allow(dead_code)]
 
 use crate::kotus::{Gradation, Grade};
-use crate::tags::{Case, Form, Number, PartOfSpeech};
+use crate::tags::{Case, Confidence, Form, Number, PartOfSpeech};
 
 use super::harmony::loanword_harmony;
 use super::utility::{
@@ -165,13 +165,34 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
         ));
         return out;
     }
-    build_i_loans_with_nom_base(
+    let mut forms = build_i_loans_with_nom_base(
         lemma,
         possessives,
         loanword_harmony(lemma),
         i_plural(lemma),
         nom_base.as_deref(),
-    )
+    );
+    // `karhi` has two dictionary declensions: type 5 (`karhit`, `karheja`)
+    // and type 7 (`karhet`, `karhen`, `karhissa`). The reference confirms the
+    // type-7 plural obliques and the type-5 nominative/partitive plural, but
+    // the type-5 plural obliques (`karheissa`, `karheita`, ...) exist only as
+    // `engine` output. Keep them accepted; do not make them the plain reading
+    // where `karhea`/`karhe` also explains the surface.
+    if lemma == "karhi" {
+        for form in &mut forms {
+            let plural_oblique = form.readings.iter().any(|reading| {
+                reading.number == Some(Number::Plural)
+                    && !matches!(
+                        reading.case,
+                        Some(Case::Nominative | Case::Partitive)
+                    )
+            });
+            if plural_oblique {
+                form.confidence = form.confidence.min(Confidence::Repaired);
+            }
+        }
+    }
+    forms
 }
 
 /// The graded class-5 subtypes (5*A..5*J). A graded class-5 word is a base-5
@@ -561,4 +582,24 @@ mod tests {
         assert!(!ws.contains(&"anakoluuttin"), "strong non-word offered: {ws:?}");
         assert!(!ws.contains(&"anakoluuttissa"), "strong non-word offered: {ws:?}");
     }
+    /// `karhi` has a type-5 and a type-7 declension. The type-5 plural
+    /// obliques (`karheissa`, `karheita`) are engine-only; the type-5
+    /// nominative/partitive plural (`karhit`, `karheja`) are confirmed and stay
+    /// plain.
+    #[test]
+    fn karhi_keeps_its_unconfirmed_type_5_plurals_rare() {
+        let forms = inflect("karhi", true);
+        let find = |word: &str| {
+            forms
+                .iter()
+                .find(|form| form.word == word)
+                .unwrap_or_else(|| panic!("{word} missing"))
+        };
+        assert!(find("karhit").plain());
+        assert!(find("karheja").plain());
+        assert!(!find("karheissa").plain());
+        assert!(!find("karheita").plain());
+        assert!(!find("karheiden").plain());
+    }
+
 }
