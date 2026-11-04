@@ -1224,8 +1224,19 @@ class Harness:
         Omorfi never reached the cell" to tell apart from "not a word", so such
         a form is `unsupported` rather than `confirmed`.
         """
+        # Only a noun/verb homonym needs the class filter. `taata` is a
+        # class-73 verb and a class-9 noun; the noun report must not read the
+        # verb's forms. A lemma with two nominal classes (`karhi` 5 and 7)
+        # keeps the old full-paradigm read, so the class evidence rules do not
+        # lose their rows.
+        pos_rows = self.lexicon.execute(
+            "SELECT part_of_speech FROM base WHERE lemma=?", (lemma,)
+        ).fetchall()
+        has_verb = any("verbi" in p for (p,) in pos_rows)
+        has_noun = any("substantiivi" in p for (p,) in pos_rows)
+        effective_klass = klass if has_verb and has_noun else None
         try:
-            forms = self.torille_forms(lemma, klass)
+            forms = self.torille_forms(lemma, effective_klass)
         except (ValueError, subprocess.CalledProcessError):
             return []
         by_word: dict[str, list[TorilleForm]] = {}
@@ -1248,9 +1259,9 @@ class Harness:
         # (`taanneitta`) look like missing noun forms.
         class_filter = ""
         params: list[str] = [lemma]
-        if klass:
+        if effective_klass:
             class_filter = " AND b.class=?"
-            params.append(klass)
+            params.append(effective_klass)
         rows = self.lexicon.execute(
             "SELECT f.form, f.[case], f.number, f.possessive"
             " FROM forms f JOIN base b USING(lemma, homonym)"
@@ -1275,7 +1286,7 @@ class Harness:
         # Every form Omorfi so much as generated, whatever `ok`, so the
         # precision pass can tell "Omorfi asserts it but Voikko does not" from
         # "Omorfi never produced it".
-        all_params: list[str] = [lemma] + ([klass] if klass else [])
+        all_params: list[str] = [lemma] + ([effective_klass] if effective_klass else [])
         all_forms = {r[0] for r in self.lexicon.execute(
             "SELECT f.form FROM forms f JOIN base b USING(lemma, homonym)"
             f" WHERE f.lemma=?{class_filter}", all_params)}

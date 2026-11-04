@@ -485,6 +485,19 @@ Only if exact-first ranking must improve beyond what morphology can justify:
 
 ## Tests and gates
 
+### Gate status (2026-11-04)
+
+Green: `cargo test --release --workspace`, `cargo clippy --all-targets -- -D
+warnings`, `test_binding_agrees_with_binary.py` (23/23),
+`test_reverse_lookup_recall.py` (99.89% recall), `test_experimental_features.py`.
+
+Not green: `test_illegal_evidence.py` reports seven stale evidence rules
+(`34c-nom-possessive-genitive-stem`, the four plural-only 33d/33j/41c/41i
+rules, `lemma-32d-ien`, `lemma-18-pii`, and `lemma-41e-havas`). The same result
+reproduces with the pre-harness tools from `04434b2`, so this is an existing
+evidence-baseline refresh, not a regression from the multiple-base work. It
+must be refreshed before claiming an all-green merge gate.
+
 - `cargo test --release --workspace`; `cargo clippy --all-targets -- -D warnings`.
 - `python3 tools/test_reverse_lookup_recall.py reports/recall7.tsv`:
   recall floor stays **99.8%**; `len_ok` must stay 100%.

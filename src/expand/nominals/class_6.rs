@@ -31,12 +31,7 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     // nominative, so build the paradigm from the dropped-`t` base and keep
     // only the plural cells: `kekkereitä`, not `kekkeri` or `kekkeritn`.
     if let Some(base) = lemma.strip_suffix('t') {
-        let mut forms = build_i_loans(
-            base,
-            possessives,
-            loanword_harmony(base),
-            i_plural(lemma),
-        );
+        let mut forms = build_i_loans(base, possessives, loanword_harmony(base), i_plural(lemma));
         forms.retain(|form| {
             form.readings
                 .iter()
@@ -126,5 +121,4 @@ mod tests {
         assert!(!find("appenzellereitten").plain());
         assert!(find("appenzellereita").plain());
     }
-
 }
