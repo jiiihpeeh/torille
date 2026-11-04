@@ -17,6 +17,11 @@ Current result (2026-11-04): **7 stale rules**, 751 illegal rows, 155 missing,
 `04434b2`, before the class-report filtering change, so this is an existing
 baseline refresh rather than a regression from `MULTIPLE_BASE_FIX_TODO.md`.
 
+After removing the six stale rules and fixing `kyy`, the gate now reports
+**0 stale rules but 440 illegal rows with no evidence rule**. The removal was
+correct, but it exposed the real remaining precision work: the default report
+still has 745 illegal rows, and most are not covered by any rule.
+
 ## Current rule disposition
 
 | rule | class | current report | disposition |
@@ -48,19 +53,41 @@ pattern as the class's model word. If `kyihin` is the right form, fix the class
 wrong `kyisiin`. Only if Wiktionary/Kielitoimisto confirms `kyisiin` should the
 rule be extended, with a `source` and `note` for `kyy`.
 
+## Remaining unmatched rows after the first pass
+
+The 440 unmatched rows from the n=5 gate cluster on a few classes:
+
+| class | rows | lemmas |
+|---|---:|---|
+| `7*F` | 142 | `lahti`, `vyyhti` |
+| `5*B` | 71 | `appi` |
+| `7*B` | 71 | `appi` |
+| `26` | 71 | `kuori` |
+| `15` | 35 | `vihreä`, `kauhea`, `makea`, `korkea`, `pehmeä` |
+| `50` | 26 | `villikaniini`, `kevytsinko` |
+| `22` | 23 | `nougat`, `parfait`, `gourmet` |
+| `49` | 1 | `autere` |
+
+These are precision defects in possessive/plural stems, not evidence gaps. A
+rule should not be added until the class engine is checked: `appi` has both a
+`5*B` and a `7*B` row, and the engine emits the same `apeitta` for both while
+the oracle confirms `apitta`; `lahti`/`vyyhti` and `kuori` have the same shape
+of plural-possessive disagreement. The larger `-n 100` class-18 report also
+shows 884 illegal rows outside the n=5 gate sample, so fixing only the gate's
+sample is not enough.
+
 ## Tasks
 
-- [ ] Run `python3 tools/report_by_class.py -n 5 -j 8 -o reports/noun-classes-current.json`
+- [x] Run `python3 tools/report_by_class.py -n 5 -j 8 -o reports/noun-classes-current.json`
       and confirm the totals above.
-- [ ] Remove the six stale rules listed above from
+- [x] Remove the six stale rules listed above from
       `data/oracle_exceptions.json`.
-- [ ] Triage `kyy` class 18:
-      - [ ] check the class-18 model / `kyy` against Wiktionary and
-            `data/kotus_tyypit.txt`;
-      - [ ] if the engine is wrong, fix `src/expand/nominals/class_18.rs` and
-            add a class-18 test;
-      - [ ] if the oracle is wrong, replace `lemma-18-pii` with a `kyy` rule
-            that carries a source and note.
+- [x] Triage `kyy` class 18: the class-17 `isiin` alternant was plain for
+      `kyy`; it is now rare (`kyisiin` remains accepted, not plain). The
+      `lemma-18-pii` rule is therefore removed too.
+- [ ] Fix the unmatched class defects above, starting with the shared
+      possessive/plural-stem pattern in `appi` / `lahti` / `vyyhti` / `kuori`;
+      then re-run the n=5 gate.
 - [ ] Re-run `python3 tools/test_illegal_evidence.py`; it must exit 0, with
       every illegal row matching exactly one rule and no stale rules.
 - [ ] Update `data/oracle_exceptions.json`'s `about`/version if the rule count

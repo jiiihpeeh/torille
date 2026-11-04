@@ -62,7 +62,7 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     // words (`ehtoisiin`) but not for the `-i` words that reach here from class
     // 18 (`aamunkoi` has only `aamunkoihin`), so it is repaired there.
     let isiin = cell(Case::Illative, pl, &pstem, "isiin", false).on_ending("isii");
-    let isiin = if stem.ends_with('i') || lemma == "pelakuu" {
+    let isiin = if stem.ends_with('i') || SHORT_H.contains(&lemma) {
         isiin.as_rare()
     } else {
         isiin
@@ -150,6 +150,12 @@ mod tests {
         for good in ["kyyt", "kyitä", "kyihin", "kyiden", "kyissä"] {
             assert!(w.contains(&good.to_string()), "kyy is missing {good}");
         }
+        let forms = inflect("kyy", true);
+        let isiin = forms
+            .iter()
+            .find(|form| form.word == "kyisiin")
+            .expect("kyisiin is generated");
+        assert!(!isiin.plain(), "kyisiin must not be plain for kyy");
     }
 
     #[test]

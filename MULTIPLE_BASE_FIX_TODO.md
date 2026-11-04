@@ -491,11 +491,10 @@ Green: `cargo test --release --workspace`, `cargo clippy --all-targets -- -D
 warnings`, `test_binding_agrees_with_binary.py` (23/23),
 `test_reverse_lookup_recall.py` (99.89% recall), `test_experimental_features.py`.
 
-Not green: `test_illegal_evidence.py` reports seven stale evidence rules
-(`34c-nom-possessive-genitive-stem`, the four plural-only 33d/33j/41c/41i
-rules, `lemma-32d-ien`, `lemma-18-pii`). The same result
-reproduces with the pre-harness tools from `04434b2`, so this is an existing
-evidence-baseline refresh, not a regression from the multiple-base work. It
+Not green: `test_illegal_evidence.py` now has **0 stale rules** after the
+evidence refresh, but still reports **440 illegal rows with no evidence rule**
+in the n=5 report. Those are class-level precision defects (`appi`, `lahti`,
+`vyyhti`, `kuori`, ...), tracked in `EVIDENCE_REFRESH_TODO.md`. It
 must be refreshed before claiming an all-green merge gate; the work is scoped
 in `EVIDENCE_REFRESH_TODO.md`.
 

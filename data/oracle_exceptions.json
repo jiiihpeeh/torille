@@ -3,46 +3,6 @@
   "about": "Curated evidence for cells where the materialised noun oracle disagrees with the engine and an external authority settles it. This is not dictionary data: each rule names the source. Loaded by tools/illegal_evidence.py and gated by tools/test_illegal_evidence.py.",
   "rules": [
     {
-      "id": "34c-nom-possessive-genitive-stem",
-      "classes": ["34*C"],
-      "cell": {"case": "NOM", "possessive": "*"},
-      "predicate": "oblique-stem",
-      "source": "https://en.wiktionary.org/wiki/levoton",
-      "note": "the privative -ton/-tön nominative possessive is built on the genitive -ttoma- stem (levottomani, not levotonni)"
-    },
-    {
-      "id": "plural-only-33d-short-imet",
-      "classes": ["33*D"],
-      "cell": {"number": "PL"},
-      "predicate": "shorter-than-expected",
-      "source": "https://en.wiktionary.org/wiki/n%C3%A4kimet",
-      "note": "the short -imet plural forms (näkimissä, näkimittä) are the real ones; the oracle's long -kem- spellings are not"
-    },
-    {
-      "id": "plural-only-33j-short-imet",
-      "classes": ["33*J"],
-      "cell": {"number": "PL"},
-      "predicate": "shorter-than-expected",
-      "source": "https://en.wiktionary.org/wiki/antimet",
-      "note": "the short -imet plural forms (antimissa, antimitta) are the real ones; the oracle's long -em- spellings are not"
-    },
-    {
-      "id": "plural-only-41c-short-aat",
-      "classes": ["41*C"],
-      "cell": {"number": "PL"},
-      "predicate": "shorter-than-expected",
-      "source": "https://en.wiktionary.org/wiki/rattaat",
-      "note": "rattaat has the short plural rattaissa/rattaitta, not the oracle's rattaaissa/rattaaitta"
-    },
-    {
-      "id": "plural-only-41i-short-aat",
-      "classes": ["41*I"],
-      "cell": {"number": "PL"},
-      "predicate": "shorter-than-expected",
-      "source": "https://en.wiktionary.org/wiki/maltaat",
-      "note": "maltaat has the short plural maltaissa/maltaitta, not the oracle's maltaaissa/maltaaitta"
-    },
-    {
       "id": "plural-only-6-short-imet",
       "classes": ["6"],
       "cell": {"number": "PL"},
@@ -188,22 +148,6 @@
       "sample": 20,
       "source": "https://fi.wiktionary.org/wiki/live",
       "note": "the 48-E noun is the dialectal lipeä with genitive lipeen; the oracle's livenne belongs to the separate class-8 loanword homonym"
-    },
-    {
-      "id": "lemma-32d-ien",
-      "classes": ["32*D"],
-      "lemmas": ["ien"],
-      "predicate": "lemma",
-      "source": "https://en.wiktionary.org/wiki/ien",
-      "note": "ien is an irregular iken-/ien- paradigm; the engine's ikenittä family is the one Wiktionary gives"
-    },
-    {
-      "id": "lemma-18-pii",
-      "classes": ["18"],
-      "lemmas": ["pii", "tii", "pe-tsai"],
-      "predicate": "lemma",
-      "source": "https://en.wiktionary.org/wiki/pii",
-      "note": "pii and its class-18 neighbours have the illative piihin; the oracle's piihan/piihen are not the only reading"
     },
     {
       "id": "lemma-49d-saen",
