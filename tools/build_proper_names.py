@@ -355,6 +355,36 @@ PLACE_COMPONENTS = [
     ("Labrador", "place"),
 ]
 
+#: Finnish historical provinces and the current regions whose names predate
+#: or overlap the `maakunta` division (`Satakunta`, `Uusimaa`, `Ahvenanmaa`).
+#: The Q193512 query covers the current regions; this keeps the historical
+#: names even when Wikidata's class has changed.
+FINNISH_REGIONS = [
+    ("Ahvenanmaa", "place"),
+    ("Varsinais-Suomi", "place"),
+    ("Satakunta", "place"),
+    ("Kanta-Häme", "place"),
+    ("Pirkanmaa", "place"),
+    ("Päijät-Häme", "place"),
+    ("Kymenlaakso", "place"),
+    ("Etelä-Karjala", "place"),
+    ("Etelä-Savo", "place"),
+    ("Pohjois-Savo", "place"),
+    ("Pohjois-Karjala", "place"),
+    ("Keski-Suomi", "place"),
+    ("Etelä-Pohjanmaa", "place"),
+    ("Pohjanmaa", "place"),
+    ("Keski-Pohjanmaa", "place"),
+    ("Pohjois-Pohjanmaa", "place"),
+    ("Kainuu", "place"),
+    ("Lappi", "place"),
+    ("Uusimaa", "place"),
+    ("Itä-Uusimaa", "place"),
+    ("Häme", "place"),
+    ("Savo", "place"),
+    ("Karjala", "place"),
+]
+
 #: Notable geographic features whose Finnish label is missing from the
 #: class query, or whose class is administrative rather than physical.
 GEO_ALIASES = [
@@ -638,6 +668,16 @@ QUERIES: list[tuple[str, str]] = [
     (
         """SELECT DISTINCT ?name WHERE {
              ?x wdt:P31/wdt:P279* wd:Q10864048 .
+             ?x rdfs:label ?name . FILTER(LANG(?name) = "fi")
+           }""",
+        "place",
+    ),
+    # Finnish regions (`maakunnat`). They are first-level divisions but are
+    # not under the generic Q10864048 class, so `Ahvenanmaa`, `Uusimaa` and
+    # `Pirkanmaa` were missing from the name table.
+    (
+        """SELECT DISTINCT ?name WHERE {
+             ?x wdt:P31 wd:Q193512 .
              ?x rdfs:label ?name . FILTER(LANG(?name) = "fi")
            }""",
         "place",
@@ -935,6 +975,9 @@ def main() -> int:
         seen.setdefault(name, kind)
 
     for name, kind in PLACE_COMPONENTS:
+        seen.setdefault(name, kind)
+
+    for name, kind in FINNISH_REGIONS:
         seen.setdefault(name, kind)
 
     # Function words are never names; drop them after all sources (including

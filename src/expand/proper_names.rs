@@ -231,6 +231,27 @@ mod tests {
     }
 
     #[test]
+    fn finnish_regions_resolve() {
+        for word in [
+            "Ahvenanmaa",
+            "Ahvenanmaalla",
+            "Uusimaa",
+            "Uudenmaan",
+            "Pirkanmaa",
+            "Pirkanmaan",
+            "Varsinais-Suomi",
+            "Varsinais-Suomen",
+            "Kanta-Häme",
+            "Kanta-Hämeen",
+            "Kainuu",
+            "Kainuun",
+            "Itä-Uusimaa",
+        ] {
+            assert!(contains_capitalised(word), "{word} should be a name");
+        }
+    }
+
+    #[test]
     fn english_words_are_not_names() {
         for word in ["this", "the", "xyzzy"] {
             assert!(!contains(word), "{word} should not be a name");

@@ -521,6 +521,26 @@ mod tests {
     }
 
     #[test]
+    fn finnish_regions_keep_their_capital() {
+        let mut st = TextAreaState::new();
+        let hits = st.find_misspells(
+            "Matkustimme Ahvenanmaalla, Uudenmaan kautta Varsinais-Suomeen ja Kainuun kautta Lappiin.",
+        );
+        for word in [
+            "Ahvenanmaalla",
+            "Uudenmaan",
+            "Varsinais-Suomeen",
+            "Kainuun",
+            "Lappiin",
+        ] {
+            assert!(
+                !hits.iter().any(|h| h.word == word),
+                "{word} must be accepted: {hits:?}"
+            );
+        }
+    }
+
+    #[test]
     fn a_region_that_collides_with_a_common_noun_is_accepted() {
         // `pohjanmaa` is a common noun; `Pohjanmaa` is the region, and the
         // book has it capitalised mid-sentence 979 times.
