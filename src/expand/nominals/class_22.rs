@@ -24,7 +24,7 @@ pub const CLASS: &str = "22";
 
 /// Inflect a class-22 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
-    let mut out = build_i_loans(lemma, possessives, front(lemma), IPlural::None);
+    let mut out = build_i_loans(lemma, possessives, front(lemma), IPlural::NONE);
     out.extend(apostrophe(lemma, possessives));
     // The plain external illatives (`nougathen`, `nougathan`) beside the
     // forms above.

@@ -83,6 +83,7 @@ Profiling and one-off probes:
 ```bash
 cargo run --release -p torille-tools --bin gen_derived   # derived tables (blobs)
 python3 tools/build_oi_plural_lemmas.py                  # class-10 -oi- plural set
+python3 tools/build_class6_i_plural.py                   # class-6 -iden/-itten/-ita mask
 ```
 
 `gen_derived` writes `data/precomputed/derived_{by_form,nominal,modifiers}.bin`

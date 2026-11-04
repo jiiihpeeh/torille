@@ -14,13 +14,15 @@ use crate::tags::{Form, Number};
 
 pub const CLASS: &str = "6";
 
-/// Class-6 words whose reference does not confirm the `-iden`/`-itten`/`-ita`
-/// alternants. `vietnam` is the language name: Wiktionary gives Kotus type 5
-/// and the oracle confirms `vietnamien`/`vietnameja`, but the class-6
-/// `vietnameiden` family exists only as `engine` output. Marking the
-/// alternants rare keeps them accepted for the class without offering them as
-/// plain forms of this word.
-const NO_I_PLURAL: &[&str] = &["vietnam"];
+include!("class_6_i_plural.rs");
+
+/// The per-lemma `-iden`/`-itten`/`-ita` confirmation.
+fn i_plural(lemma: &str) -> IPlural {
+    match I_PLURAL.binary_search_by_key(&lemma, |(word, _)| *word) {
+        Ok(at) => IPlural::from_mask(I_PLURAL[at].1),
+        Err(_) => IPlural::NONE,
+    }
+}
 
 /// Inflect a base-class-6 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
@@ -29,12 +31,12 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     // nominative, so build the paradigm from the dropped-`t` base and keep
     // only the plural cells: `kekkereitä`, not `kekkeri` or `kekkeritn`.
     if let Some(base) = lemma.strip_suffix('t') {
-        let ipl = if NO_I_PLURAL.contains(&lemma) {
-            IPlural::None
-        } else {
-            IPlural::All
-        };
-        let mut forms = build_i_loans(base, possessives, loanword_harmony(base), ipl);
+        let mut forms = build_i_loans(
+            base,
+            possessives,
+            loanword_harmony(base),
+            i_plural(lemma),
+        );
         forms.retain(|form| {
             form.readings
                 .iter()
@@ -42,12 +44,7 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
         });
         return forms;
     }
-    let ipl = if NO_I_PLURAL.contains(&lemma) {
-        IPlural::None
-    } else {
-        IPlural::All
-    };
-    build_i_loans(lemma, possessives, loanword_harmony(lemma), ipl)
+    build_i_loans(lemma, possessives, loanword_harmony(lemma), i_plural(lemma))
 }
 
 #[cfg(test)]
@@ -112,6 +109,22 @@ mod tests {
         assert!(!find("vietnameiden").plain());
         assert!(!find("vietnameitten").plain());
         assert!(!find("vietnameita").plain());
+    }
+
+    /// A partial mask marks only the alternants the reference confirms.
+    /// `appenzeller` has `-iden` and `-ita` but not `-itten`.
+    #[test]
+    fn a_partial_i_plural_marks_only_the_confirmed_alternants() {
+        let forms = inflect("appenzeller", true);
+        let find = |word: &str| {
+            forms
+                .iter()
+                .find(|form| form.word == word)
+                .unwrap_or_else(|| panic!("{word} missing"))
+        };
+        assert!(find("appenzellereiden").plain());
+        assert!(!find("appenzellereitten").plain());
+        assert!(find("appenzellereita").plain());
     }
 
 }

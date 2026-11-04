@@ -92,9 +92,9 @@ const I_PLURAL: &[&str] = &[
 /// The `-i`-plural policy for a base-class-5 word.
 fn i_plural(lemma: &str) -> IPlural {
     if I_PLURAL.contains(&lemma) {
-        IPlural::All
+        IPlural::ALL
     } else {
-        IPlural::None
+        IPlural::NONE
     }
 }
 

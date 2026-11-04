@@ -233,7 +233,7 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
         lemma,
         possessives,
         front(lemma),
-        IPlural::All,
+        IPlural::ALL,
     ));
     let mut seen = std::collections::HashSet::new();
     out.retain(|f| seen.insert(f.word.clone()));

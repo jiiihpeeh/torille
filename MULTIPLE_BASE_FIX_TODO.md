@@ -344,6 +344,11 @@ python3 tools/report_multiple_bases.py reports/recall5.tsv
       plural obliques (`karheissa`, `karheita`, `karheiden`, ...) are only
       `engine`. Those forms stay accepted as `Repaired`, so `karhea`/`karhe`
       wins the plain reading. This removed all 18 `karhi` audit rows.
+- [x] Class 6 normally confirms `-iden`/`-itten`/`-ita` as a set, but many
+      loanwords confirm only some or none. `build_class6_i_plural.py` reads the
+      nominal oracle into `class_6_i_plural.rs`, a 981-lemma mask; `akryyli` is
+      7, `appenzeller` is 5, `vietnam` is absent (none). The class-6 report at
+      `-n 100` is now 0 illegal, 0 not-plain, 0 missing, 0 mistagged.
 - [ ] For each row that stays, record the disposition in the commit message
       (and, if the set is stable, a short table in this file). Do not add the
       whole oracle to the engine.
@@ -351,7 +356,7 @@ python3 tools/report_multiple_bases.py reports/recall5.tsv
 Acceptance: every row in the original 551 has a disposition; A rows lower the
 count by fixing forms, and B/C rows are documented rather than hidden. The
 interjection, confidence, dual-class, `5*C`, derivation and `karhi` fixes
-already take it to 310 found-but-not-first. A fixed form must not regress
+already take it to 307 found-but-not-first. A fixed form must not regress
 recall (the reference pair may still be found through another base).
 
 The remaining 310 triage as:
@@ -399,11 +404,11 @@ Measured after the interjection, confidence, dual 72/74 and `5*C` fixes
 
 | metric | before | after |
 |---|---:|---:|
-| exact first | 624,807 / 97.49% | 625,051 / **97.53%** |
-| first base confirmed (all rows) | 638,058 / 99.56% | 638,319 / **99.60%** |
-| first base confirmed (found rows) | 637,958 / 99.66% | 638,219 / **99.70%** |
-| first base one-authority (all) | 639,699 / 99.82% | 639,957 / **99.86%** |
-| unconfirmed found-but-not-first | 551 | **310** |
+| exact first | 624,807 / 97.49% | 625,054 / **97.53%** |
+| first base confirmed (all rows) | 638,058 / 99.56% | 638,322 / **99.60%** |
+| first base confirmed (found rows) | 637,958 / 99.66% | 638,222 / **99.70%** |
+| first base one-authority (all) | 639,699 / 99.82% | 639,960 / **99.86%** |
+| unconfirmed found-but-not-first | 551 | **307** |
 | ambiguous pairs | 37,073 / 5.78% | 37,042 / 5.78% |
 
 The narrow rule is net positive: `aamu`/`aamuinen` and the other noun ->
@@ -487,7 +492,7 @@ Only if exact-first ranking must improve beyond what morphology can justify:
   `one_authority_first` >= **99.86%** (99.95% over found rows); no regression.
 - exact-first >= **97.53%**; further gains must come from derivation,
   frequency or context, not from a POS rule.
-- `unconfirmed_first` <= **310** found-but-not-first, with every remaining row
+- `unconfirmed_first` <= **307** found-but-not-first, with every remaining row
   disposed of in the report; the 606 not-found rows are recall work.
 - ambiguity rate stays around **5.8%**; it is not a target. A drop is allowed
   only when an analysis is proven spurious.

@@ -815,35 +815,45 @@ pub fn e_stem(istem: &str) -> String {
 
 /// Which of the `-i`-plural alternants (`-iden`/`-itten`/`-ita`) a word really
 /// confirms, deciding whether they are offered as plain corrections or as
-/// repaired guesses. Class 6 (`aateli`) confirms all three; most class-5
-/// loanwords confirm none; `fitness`/`refleksi` sit in between.
+/// repaired guesses. Class 6 is per-lemma; class 5 is all-or-none.
 #[derive(Clone, Copy, PartialEq)]
-pub enum IPlural {
-    /// None confirmed -- all three alternants are offered only as repaired.
-    None,
-    /// All three are confirmed (the class-5 `-i`-plural loans, the class-6
-    /// family, and class 99).
-    ///
-    /// There is no middle state: `IdenIta` used to stand for "`-iden`/`-ita`
-    /// confirmed, `-itten` not", on the strength of `fitness`. The reference
-    /// has `fitnessitten` too, and of the 26 class-5 words that attest the
-    /// `-i`-plural every one attests all three. So the alternants come as a
-    /// set -- a word either takes the whole `-iden`/`-itten`/`-ita` group or
-    /// none of it -- and the two-state policy says exactly that.
-    All,
+pub struct IPlural {
+    iden: bool,
+    itten: bool,
+    ita: bool,
 }
 
 impl IPlural {
-    /// Whether the `-iden` and `-ita` alternants surface plainly.
-    fn iden_plain(self) -> bool {
-        matches!(self, IPlural::All)
+    pub const NONE: Self = Self {
+        iden: false,
+        itten: false,
+        ita: false,
+    };
+    pub const ALL: Self = Self {
+        iden: true,
+        itten: true,
+        ita: true,
+    };
+
+    /// A mask with bit 1 = `-iden`, bit 2 = `-itten`, bit 4 = `-ita`.
+    pub fn from_mask(mask: u8) -> Self {
+        Self {
+            iden: mask & 1 != 0,
+            itten: mask & 2 != 0,
+            ita: mask & 4 != 0,
+        }
     }
-    /// Whether the `-itten` alternant surfaces plainly.
+
+    fn iden_plain(self) -> bool {
+        self.iden
+    }
     fn itten_plain(self) -> bool {
-        matches!(self, IPlural::All)
+        self.itten
+    }
+    fn ita_plain(self) -> bool {
+        self.ita
     }
 }
-
 /// The shared paradigm of the non-gradating loanword `-i` nouns (classes 5/6):
 /// the singular is the `i`-stem plus each ending (the illative doubling the
 /// `i`), and the plural grows from the `e`-stem with the full alternation --
@@ -894,7 +904,7 @@ pub fn build_i_loans_with_nom_base(
         itten.as_rare()
     };
     let ita = cell(Case::Partitive, pl, &estem, ["ita", "itä"], true);
-    let ita = if ipl.iden_plain() { ita } else { ita.as_rare() };
+    let ita = if ipl.ita_plain() { ita } else { ita.as_rare() };
 
     b.decline(
         &Decl::new(vec![
