@@ -672,7 +672,7 @@ fn tens_forms(
 /// Finnish degrees are derivational, not inflectional: the sanalista
 /// lists only 44 `-mpi` lemmas, so `suurempi`, `kauniimpi` and
 /// `kaunein` belong to no lemma the engine can find. Omorfi derives them
-/// (`tools/build_adj_degrees.py`); the engine emits the two paradigms
+/// (`tools/build/build_adj_degrees.py`); the engine emits the two paradigms
 /// off the positive, so `find_bases` recognises `suuremman` as a form of
 /// `suuri`.
 ///

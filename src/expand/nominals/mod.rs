@@ -1,6 +1,6 @@
 //! Generated per-class inflection rules.
 //!
-//! Produced by tools/extract_class_rules.py --rust from the noun
+//! Produced by tools/build/extract_class_rules.py --rust from the noun
 //! lexicon. do not edit by hand; regenerate.
 #![allow(dead_code)]
 

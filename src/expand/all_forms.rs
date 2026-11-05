@@ -2,7 +2,7 @@
 //! [`StaticSet`].
 //!
 //! Build-time codegen: `build.rs` reads `data/all_forms.csv` (a
-//! dump from `tools/build_all_forms_csv.py` walking every lemma's
+//! dump from `tools/build/build_all_forms_csv.py` walking every lemma's
 //! full paradigm) and emits a sorted, front-coded set blob containing
 //! the most commonly-typed surface forms -- every bare lemma
 //! (nominative singular, no possessive) plus every genitive

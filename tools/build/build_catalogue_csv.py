@@ -31,7 +31,7 @@ No Kotus taivutus document is read. `data/nykysuomensanalista.csv` is not read
 either; a class with no rule falls back to the oracle's own members.
 
 Usage:
-    python3 tools/build_catalogue_csv.py
+    python3 tools/build/build_catalogue_csv.py
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ import sys
 from pathlib import Path
 from typing import Iterator
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2]
 NOUN_DB = REPO / "data" / "kotus_nomines.sqlite"
 VERB_DB = REPO / "data" / "kotus_verbit.sqlite"
 RULES = REPO / "rules"

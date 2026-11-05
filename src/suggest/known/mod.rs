@@ -264,7 +264,7 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
     // 1a'. The bare verb connegatives (`syöne`, `ajatelko`), which the
     //      engine emits only inside the phrase (`en syöne`). A form ->
     //      lemma table derived from the oracle's own phrases
-    //      (`tools/build_verb_lexicon.py`).
+    //      (`tools/build/build_verb_lexicon.py`).
     if let Some(base) = crate::expand::connegative::base(&lower) {
         return Some(base.to_string());
     }
@@ -518,7 +518,7 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
     // 3c. Participle case stripper. The bare present/past/agent
     //     participle (`muistava`, `tiennyt`, `lukema`) is in the
     //     verb stem map as a stem → base entry (see
-    //     `tools/build_verb_stem_to_base_map.py`). The
+    //     `tools/build/build_verb_stem_to_base_map.py`). The
     //     participle inflects like an adjective (`muistava`
     //     → gen `muistavan`, part `muistavaa`, iness
     //     `muistavassa`, allat `muistavalle`, ...), so we peel

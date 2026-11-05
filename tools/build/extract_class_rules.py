@@ -26,9 +26,9 @@ the stem is not always the lemma: `sukka` is `sukka` in the strong grade and
 cell with no example in the database is reported rather than invented.
 
 Usage:
-    python3 tools/extract_class_rules.py -c 1            # class 1
-    python3 tools/extract_class_rules.py -c all          # every numeric class
-    python3 tools/extract_class_rules.py -c all --check  # also re-derive and compare
+    python3 tools/build/extract_class_rules.py -c 1            # class 1
+    python3 tools/build/extract_class_rules.py -c all          # every numeric class
+    python3 tools/build/extract_class_rules.py -c all --check  # also re-derive and compare
 """
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2]
 DEFAULT_LEXICON = REPO / "data" / "kotus_nomines.sqlite"
 RULES = REPO / "rules"
 
@@ -264,7 +264,7 @@ def emit_rust(cls: str, model: str, stem: str, cells: dict) -> str:
     """
     head = (
         f"//! Inflection rule for class {cls}, generated from the noun lexicon.\n"
-        "//! Regenerate with:  python3 tools/extract_class_rules.py --rust\n"
+        "//! Regenerate with:  python3 tools/build/extract_class_rules.py --rust\n"
         "//! do not edit by hand; the database is the source of truth.\n"
         "#![allow(unused_imports)]\n\n"
         "use crate::tags::{Case, Confidence, Form, Number, Possessive, Tags};\n\n"
@@ -592,7 +592,7 @@ def main(argv: list[str] | None = None) -> int:
             dedent("""\
             //! Generated per-class inflection rules.
             //!
-            //! Produced by tools/extract_class_rules.py --rust from the noun
+            //! Produced by tools/build/extract_class_rules.py --rust from the noun
             //! lexicon. do not edit by hand; regenerate.
             #![allow(dead_code)]
 

@@ -26,7 +26,7 @@ inflection bug is fixed, its old, invented surfaces cannot survive in the map.
 is the historical source, but a database built with `--engine` also contains
 engine-generated rows, so it is not an independent authority.
 
-`--source hybrid` (also the default) uses the oracle as a *candidate* set and
+`--source hybrid` uses the oracle as a *candidate* set and
 keeps only entries the current engine can still produce -- or whose base is not
 a sanalista lemma at all (productive derivations and classless compounds the
 oracle enrichment supplied). This removes stale keys such as
@@ -41,16 +41,16 @@ Outputs:
   data/stem_to_base_map.csv     -- one row per `(stem, base)` pair
 
 Usage:
-  python3 tools/build_stem_to_base_map.py
-  python3 tools/build_stem_to_base_map.py --source engine
-  python3 tools/build_stem_to_base_map.py --source oracle --db data/kotus_nomines.sqlite
+  python3 tools/build/build_stem_to_base_map.py
+  python3 tools/build/build_stem_to_base_map.py --source engine
+  python3 tools/build/build_stem_to_base_map.py --source oracle --db data/kotus_nomines.sqlite
 """
 import argparse
 import sqlite3
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2]
 SANALISTA = REPO / "data" / "nykysuomensanalista.csv"
 DB = REPO / "data" / "kotus_nomines.sqlite"
 OUT = REPO / "data" / "stem_to_base_map.csv"
@@ -235,9 +235,9 @@ def main(argv: list[str]) -> int:
     p.add_argument(
         "--source",
         choices=("hybrid", "engine", "oracle"),
-        default="hybrid",
-        help="candidate source (default: hybrid -- oracle candidates filtered "
-             "by the current engine, which removes stale invented keys)",
+        default="engine",
+        help="candidate source (default: engine -- no database needed; "
+             "hybrid/oracle read the Kotus oracle)",
     )
     p.add_argument("--db", type=Path, default=DB, help=f"oracle (default: {DB})")
     p.add_argument("--out", type=Path, default=OUT, help=f"output (default: {OUT})")

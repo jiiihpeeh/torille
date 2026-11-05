@@ -26,7 +26,7 @@
 //! 4. **Noun stem hashmap** -- a [`StemMap`] keyed on the
 //!    stem (`ves` -> `[vesi]`), built from
 //!    `data/stem_to_base_map.csv` via
-//!    [`tools/build_stem_to_base_map.py`]. For each known
+//!    [`tools/build/build_stem_to_base_map.py`]. For each known
 //!    Finnish case ending, strip and look the stem up; verify
 //!    by re-inflecting the candidate base and checking if the
 //!    original form is in the result.
@@ -53,7 +53,7 @@
 //! shortcuts in `is_known_word`" rule is honored -- every match
 //! comes from the engine's actual inflect output.
 //!
-//! [`tools/build_stem_to_base_map.py`]: ../../tools/build_stem_to_base_map.py
+//! [`tools/build/build_stem_to_base_map.py`]: ../../tools/build/build_stem_to_base_map.py
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -81,7 +81,7 @@ use crate::tags::PartOfSpeech;
 // ---------------------------------------------------------------------------
 
 /// Noun stem map: built by
-/// [`tools/build_stem_to_base_map.py`] from the kotus noun oracle.
+/// [`tools/build/build_stem_to_base_map.py`] from the kotus noun oracle.
 /// ~683 k unique stems, ~1500 multi-base. The blob is checked in at
 /// `maps/stem_map_noun.bin`; the build script overwrites it
 /// on CSV change.
@@ -104,15 +104,15 @@ pub static STEM_BUCKETS_VERB: StemMap = StemMap::new(include_bytes!(concat!(
 // (noun builder) and `PERSONAL_ENDINGS`/`INFINITIVE_ENDINGS`/
 // `PARTICIPLE_ENDINGS`/`PASSIVE_PERSONAL_ENDINGS`/
 // `PASSIVE_PARTICIPLE_ENDINGS` (verb builder) tables in
-// `tools/build_stem_to_base_map.py` and
-// `tools/build_verb_stem_to_base_map.py`. If a case ending is
+// `tools/build/build_stem_to_base_map.py` and
+// `tools/build/build_verb_stem_to_base_map.py`. If a case ending is
 // added there, add the matching strip suffix here so the runtime
 // lookup can recover the stem.
 // ---------------------------------------------------------------------------
 
 pub const ENDINGS: &[&str] = &[
     // Plural `-i-` case shapes, mirroring `ENDINGS_BY_CASE_NUMBER` in
-    // `tools/build_stem_to_base_map.py`. The stem they strip to is the
+    // `tools/build/build_stem_to_base_map.py`. The stem they strip to is the
     // singular stem (`ajoilta` -> `ajo`); without them only the
     // `-lta`/`-sta` tail is removed and the residue `ajoi` is not a
     // key, so every plural oblique was missed.
@@ -597,7 +597,7 @@ fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> Normalized
     //
     // A few `-ksi` adverbs take a possessive (`kylliksi` ->
     // `kylliksenne`), which no rule derives and Omorfi cannot generate;
-    // the confirmed set is embedded (`tools/build_adverbi_forms.py`).
+    // the confirmed set is embedded (`tools/build/build_adverbi_forms.py`).
     if let Some(base) = adverb::ADVERBS.bases(word).next() {
         if verbose {
             println!("    gate 1b: adverb {word:?} -> {base}");

@@ -17,15 +17,15 @@ separation marks engine-enriched rows as `both`, so that source can bake a
 stale engine bug into the fast set; use it only with a clean oracle.
 
 Usage:
-  python3 tools/build_all_forms_csv.py
-  python3 tools/build_all_forms_csv.py --source oracle
+  python3 tools/build/build_all_forms_csv.py
+  python3 tools/build/build_all_forms_csv.py --source oracle
 """
 import argparse
 import sqlite3
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2]
 DB = REPO / "data" / "kotus_nomines.sqlite"
 OUT = REPO / "data" / "all_forms.csv"
 SANALISTA = REPO / "data" / "nykysuomensanalista.csv"

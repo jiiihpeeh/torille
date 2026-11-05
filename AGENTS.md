@@ -104,7 +104,7 @@ docs/                 harness.md, lexicon.md, morfologia.yaml, hyphenation.md
   `lemma  homonymy  part_of_speech  inflection_info`. The class column carries
   `9`, `9*B` (class + gradation), `9, 50` (two classes), `(21)` (parenthesised).
 - `data/catalogue.csv` — the paradigm templates, generated from the
-  Omorfi/Voikko oracles by `tools/build_catalogue_csv.py`. Each class maps to
+  Omorfi/Voikko oracles by `tools/build/build_catalogue_csv.py`. Each class maps to
   **8 slots in fixed order**: singular nominative, genitive, partitive,
   illative, then the same four plural. Case and number are read off a slot's
   **position**, not a label. The original Kotus `kotus-tyypit.txt` document is
@@ -128,7 +128,7 @@ drift.
 `maps/oi_plural_lemmas.bin` is the one oracle-derived table: the
 class-10 lemmas whose `ok='both'` paradigm has the alternative `-oi-` plural
 (`ampuja` -> `ampujoita`). It is lexical, not derivable (`alkaja` is class 10
-and has no such plural), so `tools/build_oi_plural_lemmas.py` reads it off the
+and has no such plural), so `tools/build/build_oi_plural_lemmas.py` reads it off the
 rebuilt oracle and writes the sorted set that `expand/nominals/class_10.rs`
 embeds.
 
@@ -351,7 +351,7 @@ is gitignored and generated.
   is not relicensed by the tool, but do not copy the GPL oracle-harness code
   into the engine or a binding.
 - **Do not hand-edit generated files.** `expand/nominals/` is produced by
-  `tools/extract_class_rules.py --rust`; `src/expand/nominals/mod.rs` says so at
+  `tools/build/extract_class_rules.py --rust`; `src/expand/nominals/mod.rs` says so at
   the top. Regenerate, or fix `grammar/` / `expand/inflect.rs`. Generated-module
   lint noise is scoped with one `#[allow(...)]` on `mod nominals;` in
   `expand/mod.rs`; hand-written code is warning-free.
@@ -422,7 +422,7 @@ is gitignored and generated.
 |---|---|
 | a case/stem/gradation rule for a class | `src/grammar/noun.rs`, `src/grammar/verb.rs`, `src/grammar/stem.rs` |
 | a class whose model can't stand in | `src/grammar/irregular.rs` |
-| the per-class generated engines | regenerate via `tools/extract_class_rules.py`; edit `src/expand/nominals/` |
+| the per-class generated engines | regenerate via `tools/build/extract_class_rules.py`; edit `src/expand/nominals/` |
 | slot/stem arithmetic, spellings | `src/expand/inflect.rs`, `src/expand/align.rs`, `src/expand/slot.rs` |
 | suggestion ranking | `src/suggest/candidates.rs` |
 | edit distance / keyboard tie-break | `src/suggest/levenshtein.rs` |

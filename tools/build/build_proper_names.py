@@ -18,8 +18,8 @@ punctuation, at least 2 characters, first letter upper-case. This excludes
 multi-word names (the tokeniser would split them anyway) and odd labels.
 
 Usage:
-    python3 tools/build_proper_names.py
-    python3 tools/build_proper_names.py --out /tmp/names.csv --dry-run
+    python3 tools/build/build_proper_names.py
+    python3 tools/build/build_proper_names.py --out /tmp/names.csv --dry-run
 """
 
 from __future__ import annotations
@@ -33,7 +33,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2]
 OUT = REPO / "data" / "proper_names.csv"
 
 #: QLever's Wikidata index: the same graph as WDQS, but the name joins that

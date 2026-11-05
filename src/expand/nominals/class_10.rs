@@ -48,7 +48,7 @@ const NO_ESSIVE_SG_DOUBLE: &[&str] = &["sopa", "lonka", "punka"];
 /// Class-10 lemmas whose reference paradigm confirms the alternative
 /// `-oi-`/`-öi-` plural (`ampuja` -> `ampujoita`, `ampujoiden`). The subset is
 /// lexical -- `alkaja` has no such plural and is the same class -- so it is
-/// read from the reference (`tools/build_oi_plural_lemmas.py`) rather than
+/// read from the reference (`tools/build/build_oi_plural_lemmas.py`) rather than
 /// derived.
 static OI_PLURAL_LEMMAS: OnceLock<Blob> = OnceLock::new();
 

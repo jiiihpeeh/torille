@@ -10,7 +10,7 @@ for the rest it is a repaired guess.
 
 Usage:
 
-    python3 tools/build_class15_long_partitive.py
+    python3 tools/build/build_class15_long_partitive.py
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from __future__ import annotations
 import os
 import sqlite3
 
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DB = os.path.join(REPO, "data", "kotus_nomines.sqlite")
 OUT = os.path.join(
     REPO, "src", "expand", "nominals", "class_15_long_partitive.rs"
@@ -41,7 +41,7 @@ def main() -> int:
     lines = [
         "// SPDX-License-Identifier: MIT OR Apache-2.0",
         "// Class-15 lemmas that confirm the long partitive -ta/-tä, generated",
-        "// by tools/build_class15_long_partitive.py from the nominal oracle.",
+        "// by tools/build/build_class15_long_partitive.py from the nominal oracle.",
         "// Do not edit.",
         "",
         "/// Sorted; use `binary_search`.",

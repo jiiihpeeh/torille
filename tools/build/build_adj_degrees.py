@@ -21,7 +21,7 @@ A cell that Omorfi does not derive is left empty; a row with both empty is
 dropped.
 
 Usage:
-    python3 tools/build_adj_degrees.py
+    python3 tools/build/build_adj_degrees.py
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ import argparse
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2]
 OUT = REPO / "data" / "adj_degrees.csv"
 
 

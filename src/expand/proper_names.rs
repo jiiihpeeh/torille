@@ -1,8 +1,8 @@
 //! Finnish proper names from Wikidata + Omorfi.
 //!
-//! `tools/build_proper_names.py` fetches the lemmas from Wikidata (Finnish
+//! `tools/build/build_proper_names.py` fetches the lemmas from Wikidata (Finnish
 //! municipalities, cities, towns, villages, rivers, and the given/family
-//! names of Finnish citizens). `tools/build_proper_name_forms.py` expands each
+//! names of Finnish citizens). `tools/build/build_proper_name_forms.py` expands each
 //! lemma to its singular cases with Omorfi.
 //!
 //! The result is a lowercase set: the typing path only needs to know that a

@@ -14,7 +14,7 @@ can be picked up without re-reading the diff.
   local `harmonize` closures in the generated class files
   (`class_50.rs:61`, `class_49D.rs:61`, `class_49G.rs:61`, `class_51.rs`)
   are a generator-internal pattern from
-  `tools/extract_class_rules.py:321,324` and are out of scope for this
+  `tools/build/extract_class_rules.py:321,324` and are out of scope for this
   cleanup. Decision recorded: don't reintroduce a public `harmonize`
   alias at the crate root.
 

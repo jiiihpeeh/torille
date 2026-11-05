@@ -41,7 +41,7 @@ pub(crate) fn emit_front_coded_set(csv_path: &Path, blob_path: &Path) {
         Ok(s) => s,
         Err(e) => panic!(
             "build.rs: could not read {}: {e}; \
-             run `python3 tools/build_all_forms_csv.py` first",
+             run `python3 tools/build/build_all_forms_csv.py` first",
             csv_path.display(),
         ),
     };
@@ -118,7 +118,7 @@ pub(crate) fn emit_proper_names(csv_path: &Path, blob_path: &Path) {
     let csv = fs::read_to_string(csv_path).unwrap_or_else(|e| {
         panic!(
             "build.rs: could not read {}: {e}; \
-             run `python3 tools/build_proper_name_forms.py` first",
+             run `python3 tools/build/build_proper_name_forms.py` first",
             csv_path.display(),
         )
     });
@@ -162,7 +162,7 @@ pub(crate) fn emit_proper_name_lemmas(csv_path: &Path, extra_path: &Path, blob_p
     let csv = fs::read_to_string(csv_path).unwrap_or_else(|e| {
         panic!(
             "build.rs: could not read {}: {e}; \
-             run `python3 tools/build_proper_name_forms.py` first",
+             run `python3 tools/build/build_proper_name_forms.py` first",
             csv_path.display(),
         )
     });

@@ -10,7 +10,7 @@
 //! The declension here is the twelve ordinary cases plus the instructive and
 //! the comitative. The comitative is plural-only and number-invariant, so it is
 //! not a cell of the `(case, number)` grid the nominal engine walks; the verb
-//! reference did not list it until `tools/build_verb_lexicon.py` added it from
+//! reference did not list it until `tools/build/build_verb_lexicon.py` added it from
 //! Omorfi, and this engine builds it on the plural oblique stem (the `-ttu`
 //! participle's own [`Decl::comitative_stem`] excepted, since its plural is
 //! mixed). Neither oracle tags an accusative, which is syncretic with the

@@ -75,16 +75,16 @@ analyse; `--no-engine` leaves an oracle-only build.
 ## Usage
 
     # the whole thing (about 1380 cells per verb)
-    python3 tools/build_verb_lexicon.py
+    python3 tools/build/build_verb_lexicon.py
 
     # a fast smoke build: 30 verbs per class, synthetic grid only
-    python3 tools/build_verb_lexicon.py -n 30 --possessives none --compounds none
+    python3 tools/build/build_verb_lexicon.py -n 30 --possessives none --compounds none
 
     # the bare synthetic grid, every verb, on four cores
-    python3 tools/build_verb_lexicon.py --possessives none -j 4
+    python3 tools/build/build_verb_lexicon.py --possessives none -j 4
 
     # one Kotus type
-    python3 tools/build_verb_lexicon.py --classes 61
+    python3 tools/build/build_verb_lexicon.py --classes 61
 
 ## Parallelism
 
@@ -116,7 +116,7 @@ import time
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from omorfi_harness import (  # noqa: E402
     BOUNDARY_MARKER,

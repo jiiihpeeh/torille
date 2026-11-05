@@ -146,7 +146,7 @@ impl Catalogues {
     ///
     /// The Kotus taivutustyypit document is neither embedded nor
     /// parsed, at build time or run time; the templates come from the
-    /// Omorfi/Voikko oracles via `tools/build_catalogue_csv.py`.
+    /// Omorfi/Voikko oracles via `tools/build/build_catalogue_csv.py`.
     /// Decoding the blob is a handful of reads and string copies over
     /// ~75 short entries, no line-based parse. Parsed once and cached
     /// for the process.

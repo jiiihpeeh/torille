@@ -11,7 +11,7 @@
 //!
 //! Neither is a form of a verb paradigm the engine can generate, and both
 //! sets are closed. They are recorded in the verb database (the
-//! `connectives` table, `tools/build_verb_lexicon.py`) and embedded
+//! `connectives` table, `tools/build/build_verb_lexicon.py`) and embedded
 //! by `build.rs` from `data/verb_connectives.csv` as a form -> lemma map,
 //! which is what this module reads. The `-kä` glue itself stays a rule:
 //! a clitic-stacked form the table does not list (`enkäkö`) still peels
@@ -23,7 +23,7 @@ mod table {
     use crate::expand::static_table::StemMap;
 
     /// Negation fusions and finite auxiliaries: form -> lemma, recorded by
-    /// `tools/build_verb_lexicon.py`.
+    /// `tools/build/build_verb_lexicon.py`.
     pub static CONNECTIVES: StemMap = StemMap::new(include_bytes!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/maps/connectives.bin",

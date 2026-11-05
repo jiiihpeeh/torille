@@ -19,7 +19,7 @@ Output (tab-separated):
     ...
 
 Usage:
-    python3 tools/build_adverbi_forms.py
+    python3 tools/build/build_adverbi_forms.py
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ import argparse
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2]
 SANALISTA = REPO / "data" / "nykysuomensanalista.csv"
 OUT = REPO / "data" / "adverbit.csv"
 

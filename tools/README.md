@@ -75,11 +75,14 @@ Profiling and one-off probes:
 
 ### Data generators
 
+The artifact generators live in [`build/`](build/README.md), with the
+from-scratch order and the engine-vs-oracle split. In short:
+
 ```bash
+python3 tools/build/build_all_forms_csv.py      # engine
+python3 tools/build/build_stem_to_base_map.py   # engine
 cargo run --release -p torille-tools --bin gen_derived   # derived tables (blobs)
-python3 tools/build_oi_plural_lemmas.py                  # class-10 -oi- plural set
-python3 tools/build_class6_i_plural.py                   # class-6 -iden/-itten/-ita mask
-python3 tools/build_class15_long_partitive.py            # class-15 long partitive set
+python3 tools/build/build_oi_plural_lemmas.py   # class-10 -oi- plural set (oracle)
 ```
 
 `gen_derived` writes `maps/derived_{by_form,nominal,modifiers}.bin`
@@ -119,13 +122,13 @@ uses live Omorfi+Voikko.
 
 The remaining scripts fall into four groups:
 
-- **Lexicon builders** — `build_*`, `add_*`, `apply_all_derivations.py`,
-  `extract_class_rules.py`. `build_nomine_lexicon.py` and
+- **Lexicon/builders** — `build/*` (`build_*`, `extract_class_rules.py`),
+  `add_*`, `apply_all_derivations.py`. `build_nomine_lexicon.py` and
   `build_verb_lexicon.py` now include the engine enrichment, the comitative and
   negative-mood verb cells, and the connectives/connegatives tables that used
   to be separate update/fill scripts.
-- **Generated tables** — `build_stem_to_base_map.py --source
-  engine|hybrid|oracle` and `build_all_forms_csv.py --source engine|oracle`.
+- **Generated tables** — `build/build_stem_to_base_map.py --source
+  engine|hybrid|oracle` and `build/build_all_forms_csv.py --source engine|oracle`.
   `engine` (the default for both) asks the current binding, so a fixed
   inflection bug cannot leave its old invented forms in a checked-in blob.
   `hybrid` keeps oracle rows only where the current engine still produces

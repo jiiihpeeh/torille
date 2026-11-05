@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT OR Apache-2.0
 """Build `data/verb_stem_to_base_map.csv`: a (stem, base) table for
-verb forms. Companion to `tools/build_stem_to_base_map.py` (the
+verb forms. Companion to `tools/build/build_stem_to_base_map.py` (the
 noun one); same shape, same downstream consumer (`tools/build.rs`
 embeds both as compile-time sorted slices).
 
@@ -37,7 +37,7 @@ Outputs:
   data/verb_stem_to_base_map.csv   -- one (stem, base) row per form.
 
 Usage:
-  python3 tools/build_verb_stem_to_base_map.py
+  python3 tools/build/build_verb_stem_to_base_map.py
 """
 from __future__ import annotations
 
@@ -419,7 +419,7 @@ def main() -> int:
             written += 1
 
         # The negation fusions (`enkä`, `ettet`, `ellette`, ...), read from
-        # the `connectives` table `tools/build_verb_lexicon.py`
+        # the `connectives` table `tools/build/build_verb_lexicon.py`
         # creates. The engine does not generate them either, so the runtime
         # trusts the row without the verify, exactly as for the finite
         # forms above. An older DB without the table contributes nothing.
