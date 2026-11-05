@@ -20,6 +20,7 @@ const emptyEl = document.getElementById('empty') as HTMLDivElement;
 const form = document.getElementById('add') as HTMLFormElement;
 const input = document.getElementById('host') as HTMLInputElement;
 const debugEl = document.getElementById('debug') as HTMLInputElement;
+const searchboxesEl = document.getElementById('searchboxes') as HTMLInputElement;
 
 const api: typeof browser = (typeof browser !== 'undefined') ? browser : chrome;
 
@@ -93,8 +94,27 @@ form.addEventListener('submit', async (e: Event) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────
-// §3  Debug toggle
+// §3  Search-box and debug toggles
 // ───────────────────────────────────────────────────────────────────────
+
+const SEARCH_KEY = 'torille-searchboxes';
+
+const readSearchboxes = async (): Promise<boolean> => {
+  const cur = await api.storage.local.get(SEARCH_KEY);
+  return cur[SEARCH_KEY] === true;
+};
+const writeSearchboxes = async (on: boolean): Promise<void> => {
+  await api.storage.local.set({ [SEARCH_KEY]: !!on });
+};
+
+function renderSearchboxes(checked: boolean): void {
+  searchboxesEl.checked = !!checked;
+}
+
+searchboxesEl.addEventListener('change', async () => {
+  await writeSearchboxes(searchboxesEl.checked);
+  dbg('searchboxes toggle ->', searchboxesEl.checked);
+});
 
 const DEBUG_KEY = 'torille-debug';
 
@@ -132,15 +152,24 @@ api.storage.onChanged.addListener((changes, area) => {
     renderDebug(!!changes[DEBUG_KEY].newValue);
     dbg('storage.onChanged debug ->', changes[DEBUG_KEY].newValue);
   }
+  if (changes[SEARCH_KEY]) {
+    renderSearchboxes(!!changes[SEARCH_KEY].newValue);
+    dbg('storage.onChanged searchboxes ->', changes[SEARCH_KEY].newValue);
+  }
 });
 
 // ───────────────────────────────────────────────────────────────────────
 // §5  Bootstrap
 // ───────────────────────────────────────────────────────────────────────
 
-Promise.all([readBlacklist(), readDebug()]).then(([list, debugOn]) => {
-  renderBlacklist(list);
-  renderDebug(debugOn);
-  dbg('loaded', { size: list.length, debug: debugOn });
-});
+Promise.all([readBlacklist(), readDebug(), readSearchboxes()]).then(
+  ([list, debugOn, searchboxesOn]) => {
+    renderBlacklist(list);
+    renderDebug(debugOn);
+    renderSearchboxes(searchboxesOn);
+    dbg('loaded', {
+      size: list.length, debug: debugOn, searchboxes: searchboxesOn,
+    });
+  },
+);
 })();

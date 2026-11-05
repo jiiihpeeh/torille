@@ -65,7 +65,32 @@
     'input:not([type])',
     '[contenteditable="true"]',
     '[contenteditable=""]',
+    '[role="searchbox"]',
   ].join(', ');
+
+  // Search boxes are opt-in. People type URLs, product codes, names and
+  // half-remembered queries into them, all of which look like
+  // misspellings. The options page stores `torille-searchboxes`; the
+  // default (missing key) is off.
+  function isSearchField(el: HTMLElement): boolean {
+    if (el.getAttribute('role') === 'searchbox') return true;
+    if (!(el instanceof HTMLInputElement)) return false;
+    if (el.type === 'search' || el.getAttribute('inputmode') === 'search') {
+      return true;
+    }
+    const id = el.id.toLowerCase();
+    const name = el.name.toLowerCase();
+    if (id === 'q' || name === 'q') return true;
+    if (/(^|[-_])search($|[-_])/.test(id) || /(^|[-_])search($|[-_])/.test(name)) {
+      return true;
+    }
+    const hint = (
+      el.getAttribute('placeholder')
+      || el.getAttribute('aria-label')
+      || ''
+    ).toLowerCase();
+    return /\b(search|haku|etsi)\b/.test(hint);
+  }
 
   // When debug logging is on, the overlay's text is also rendered with
   // a low-opacity color so the user can visually verify the alignment
@@ -420,18 +445,32 @@
       async analyzeTextAsync(
         text: string, max: number, gen: number,
       ): Promise<R_AnalyzeHit[] | null> {
-        const idx = await stateIdx();
+        const ask = async (idx: number): Promise<R_AnalyzeTextResponse | null> => {
+          // The proper-noun update is fired ahead of analyze so the
+          // wasm has the latest text in hand. analyze-text awaits in
+          // the same render, so the renderer's wall-clock cost is
+          // still one round-trip.
+          api.runtime.sendMessage({
+            type: 'torille:update-state', idx, text,
+          } as R_UpdateState).catch(() => {});
+          return send<R_AnalyzeTextResponse>({
+            type: 'torille:analyze-text', inputId, gen, idx, text, max,
+          });
+        };
+
+        let idx = await stateIdx();
         if (idx === null) return null;
-        // The proper-noun update is fired ahead of analyze so the
-        // wasm has the latest text in hand. analyze-text awaits in
-        // the same render, so the renderer's wall-clock cost is
-        // still one round-trip.
-        api.runtime.sendMessage({
-          type: 'torille:update-state', idx, text,
-        } as R_UpdateState).catch(() => {});
-        const r = await send<R_AnalyzeTextResponse>({
-          type: 'torille:analyze-text', inputId, gen, idx, text, max,
-        });
+        let r = await ask(idx);
+        if (r && r.inputId === inputId && r.stateValid === false) {
+          // The wasm worker restarted and lost every per-textbox slot.
+          // Allocate a fresh one and retry once; otherwise the render
+          // sees an empty hit list and the underlines silently vanish.
+          o.dbg('content', 'state stale; recreating', { inputId, idx });
+          stateIdxP = null;
+          idx = await stateIdx();
+          if (idx === null) return null;
+          r = await ask(idx);
+        }
         if (!r || !Array.isArray(r.hits)) return null;
         if (r.inputId !== inputId) return null;
         return r.hits;
@@ -477,7 +516,7 @@
     describeInput: typeof describeInput;
   }): { host: HTMLElement; overlay: HTMLElement;
          initialRender: () => void; setVisible: (visible: boolean) => void;
-         setDebug: (on: boolean) => void } {
+         setDebug: (on: boolean) => void; destroy: () => void } {
     if (opts.el.isContentEditable) {
       return createContentEditableOverlay(opts);
     }
@@ -493,7 +532,7 @@
     describeInput: typeof describeInput;
   }): { host: HTMLElement; overlay: HTMLElement;
          initialRender: () => void; setVisible: (visible: boolean) => void;
-         setDebug: (on: boolean) => void } {
+         setDebug: (on: boolean) => void; destroy: () => void } {
     const { el, workerClient, dbg, describeInput } = opts;
     const input = el as HTMLInputElement | HTMLTextAreaElement;
 
@@ -957,15 +996,31 @@
       }, 150);
     }
 
-    input.addEventListener('input', scheduleRender);
-    input.addEventListener('scroll', () => {
+    let destroyed = false;
+    let resizeObserver: ResizeObserver | null = null;
+
+    function onInputScroll(): void {
       // The overlay has overflow: hidden, so its own scrollTop is
       // ignored. We instead shift the overlay up by the textarea's
       // scrollTop so the visible portion of the overlay text lines
       // up with the visible portion of the textarea. The mirror's
       // overflow: hidden clips the off-screen part.
       positionOverlay();
-    });
+    }
+
+    // Click outside the popup closes it. Composed-path check so we
+    // see through the shadow boundary.
+    function onDocumentMouseDown(e: Event): void {
+      if (focused === null) return;
+      const path = e.composedPath();
+      if (path.includes(popup)) return;
+      if (path.some((n) => (n as HTMLElement).classList &&
+                         (n as HTMLElement).classList.contains('misspell'))) return;
+      closePopup();
+    }
+
+    input.addEventListener('input', scheduleRender);
+    input.addEventListener('scroll', onInputScroll);
     window.addEventListener('scroll', syncBox, { passive: true });
     window.addEventListener('resize', syncBox);
 
@@ -973,27 +1028,20 @@
     // window resize: auto-grow via JS, CSS-driven reflow, font-load,
     // etc. Watch the element directly so the host stays glued to it.
     if (typeof ResizeObserver !== 'undefined') {
-      new ResizeObserver(() => syncBox()).observe(el);
+      resizeObserver = new ResizeObserver(() => syncBox());
+      resizeObserver.observe(el);
     }
     // Web fonts can swap the rendered font long after our initial
     // syncBox(). Re-sync once the document reports all fonts loaded.
     if (typeof document.fonts !== 'undefined' && document.fonts.ready) {
       document.fonts.ready.then(() => {
+        if (destroyed) return;
         dbg('content', 'fonts.ready:resync');
         syncBox();
       }).catch(() => {});
     }
 
-    // Click outside the popup closes it. Composed-path check so we
-    // see through the shadow boundary.
-    document.addEventListener('mousedown', (e: Event) => {
-      if (focused === null) return;
-      const path = e.composedPath();
-      if (path.includes(popup)) return;
-      if (path.some((n) => (n as HTMLElement).classList &&
-                         (n as HTMLElement).classList.contains('misspell'))) return;
-      closePopup();
-    }, true);
+    document.addEventListener('mousedown', onDocumentMouseDown, true);
 
     return {
       host,
@@ -1012,6 +1060,25 @@
         }
       },
       setDebug(on: boolean) { workerClient.setDebug(on); },
+      destroy() {
+        if (destroyed) return;
+        destroyed = true;
+        if (pendingRender) {
+          clearTimeout(pendingRender);
+          pendingRender = null;
+        }
+        closePopup();
+        restoreNativeSpellcheck(el, nativeAttrs);
+        input.removeEventListener('input', scheduleRender);
+        input.removeEventListener('scroll', onInputScroll);
+        window.removeEventListener('scroll', syncBox);
+        window.removeEventListener('resize', syncBox);
+        document.removeEventListener('mousedown', onDocumentMouseDown, true);
+        resizeObserver?.disconnect();
+        resizeObserver = null;
+        workerClient.tearDownState();
+        host.remove();
+      },
     };
   }
 
@@ -1032,7 +1099,7 @@
     describeInput: typeof describeInput;
   }): { host: HTMLElement; overlay: HTMLElement;
          initialRender: () => void; setVisible: (visible: boolean) => void;
-         setDebug: (on: boolean) => void } {
+         setDebug: (on: boolean) => void; destroy: () => void } {
     const { el, workerClient, dbg, describeInput } = opts;
     const host = document.createElement('div');
     host.className = 'torille-ce-host';
@@ -1278,7 +1345,7 @@
     // Click hit-test: the CSS Highlight pseudo-element can't receive
     // events, so when the user clicks the contenteditable we look up
     // which misspell Region's bounding rects contain the click point.
-    el.addEventListener('click', (e: MouseEvent) => {
+    function onEditorClick(e: MouseEvent): void {
       if (misspellRegions.size === 0) return;
       const x = e.clientX, y = e.clientY;
       for (const ms of misspellRegions.values()) {
@@ -1291,7 +1358,8 @@
           }
         }
       }
-    });
+    }
+    el.addEventListener('click', onEditorClick);
 
     function openPopupAtWord(word: string, range: Range): void {
       const rect = range.getBoundingClientRect();
@@ -1360,21 +1428,24 @@
     // user's complaint about "activates at random times". An `input`
     // event is enough: typing, paste, delete, IME compose-finalise all
     // fire it.
-    document.addEventListener('input', (e: Event) => {
+    function onDocumentInput(e: Event): void {
       if (e.target === el || (e.target instanceof Node && el.contains(e.target))) {
         dbg('content', 'input:hit', { target: (e.target as Node).nodeName });
         scheduleCheck();
         if (HIGHLIGHTS_SUPPORTED) void renderMisspellHighlights();
       }
-    }, true);
+    }
 
     // Close popup on click outside.
-    document.addEventListener('mousedown', (e: Event) => {
+    function onDocumentMouseDown(e: Event): void {
       if (host.style.display === 'none') return;
       if (e.composedPath().includes(host)) return;
       dbg('content', 'click-outside:close');
       closePopup();
-    }, true);
+    }
+
+    document.addEventListener('input', onDocumentInput, true);
+    document.addEventListener('mousedown', onDocumentMouseDown, true);
 
     return {
       host,
@@ -1391,6 +1462,15 @@
         }
       },
       setDebug(on: boolean) { workerClient.setDebug(on); },
+      destroy() {
+        closePopup();
+        restoreNativeSpellcheck(el, nativeAttrs);
+        el.removeEventListener('click', onEditorClick);
+        document.removeEventListener('input', onDocumentInput, true);
+        document.removeEventListener('mousedown', onDocumentMouseDown, true);
+        workerClient.tearDownState();
+        host.remove();
+      },
     };
   }
 
@@ -1511,9 +1591,11 @@
     dbg: typeof dbg;
     describeInput: typeof describeInput;
     isSiteBlacklisted: () => boolean;
+    shouldAttach: (el: HTMLElement) => boolean;
     attachFn: (el: HTMLElement) => ReturnType<typeof createOverlay> | null;
-  }): { attach: (el: HTMLElement) => void; scan: (root: ParentNode) => void;
-             attached: Set<HTMLElement> } {
+    detachFn: (el: HTMLElement) => void;
+  }): { attach: (el: HTMLElement) => void; detach: (el: HTMLElement) => void;
+             scan: (root: ParentNode) => void; attached: Set<HTMLElement> } {
     const { attachFn } = opts;
     const attached = new Set<HTMLElement>();
 
@@ -1523,9 +1605,18 @@
         opts.dbg('content', 'skip (blacklisted)', describeInput(el));
         return;
       }
+      if (!opts.shouldAttach(el)) {
+        opts.dbg('content', 'skip (option)', describeInput(el));
+        return;
+      }
       const overlay = attachFn(el);
       if (!overlay) return;
       attached.add(el);
+    }
+
+    function detach(el: HTMLElement): void {
+      if (!attached.delete(el)) return;
+      opts.detachFn(el);
     }
 
     function scan(root: ParentNode): void {
@@ -1558,7 +1649,7 @@
       subtree: true,
     });
 
-    return { attach, scan, attached };
+    return { attach, detach, scan, attached };
   }
 
   // ─────────────────────────────────────────────────────────────────────
@@ -1571,6 +1662,10 @@
   // Page-scoped, monotonic across the lifetime of this content
   // script -- the scanner calls `nextInputId()` once per `attach`.
   let nextInputId = 1;
+
+  // Opt-in: search boxes are skipped unless the options page enables
+  // `torille-searchboxes`. Missing key means off.
+  let checkSearchboxes = false;
 
   const perInput = new Map<HTMLElement, ReturnType<typeof createOverlay>>();
 
@@ -1591,6 +1686,13 @@
     dbg,
     describeInput,
     isSiteBlacklisted: () => blacklist.isSiteBlacklisted(),
+    shouldAttach: (el) => checkSearchboxes || !isSearchField(el),
+    detachFn: (el) => {
+      perInput.get(el)?.destroy();
+      perInput.delete(el);
+      pendingVisibility.delete(el);
+      dbg('input:detach', { which: describeInput(el) });
+    },
     attachFn: (el) => {
       // One worker client per overlay, so each textarea's batch
       // messages carry their own `inputId`. The factory is cheap
@@ -1619,6 +1721,23 @@
       return overlay;
     },
   });
+
+  function refreshSearchFields(): void {
+    if (checkSearchboxes) {
+      scanner.scan(document);
+      return;
+    }
+    for (const el of Array.from(perInput.keys())) {
+      if (isSearchField(el)) scanner.detach(el);
+    }
+  }
+
+  async function loadSearchSetting(): Promise<void> {
+    const cur = await api.storage.local.get('torille-searchboxes');
+    checkSearchboxes = cur['torille-searchboxes'] === true;
+    dbg('content', 'searchboxes setting ->', checkSearchboxes);
+    refreshSearchFields();
+  }
 
   const blacklist = createBlacklist({
     dbg,
@@ -1652,6 +1771,12 @@
         const first = perInput.values().next().value;
         if (first) first.setDebug(on);
       }
+      if (area === 'local' && changes['torille-searchboxes']) {
+        checkSearchboxes = changes['torille-searchboxes'].newValue === true;
+        dbg('content', 'storage.onChanged torille-searchboxes ->',
+            checkSearchboxes);
+        refreshSearchFields();
+      }
     });
   }
 
@@ -1659,4 +1784,5 @@
   // (only if the host isn't blacklisted). MutationObserver covers
   // anything that mounts later.
   blacklist.load();
+  void loadSearchSetting();
 })();

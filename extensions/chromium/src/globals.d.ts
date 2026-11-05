@@ -171,6 +171,8 @@ declare type R_AnalyzeTextResponse = {
   inputId: number;
   gen: number;
   hits: R_AnalyzeHit[];
+  /** False when the wasm worker no longer has this textarea's slot. */
+  stateValid?: boolean;
 };
 declare type R_SuggestWithStateResponse = { suggestions: string[] };
 declare type R_ContentMessageResponse =

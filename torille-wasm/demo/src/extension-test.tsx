@@ -256,6 +256,13 @@ function App() {
         Password and number fields should be left alone.
       </div>
 
+      <div class="note">
+        <strong>Search fields are off by default.</strong> Enable{' '}
+        <em>Tarkasta hakukentät</em> in the extension's options page to check
+        search boxes such as <code>input type=search</code>, YouTube's search
+        bar, and fields whose name or placeholder says “search”.
+      </div>
+
       <div class="toolbar">
         <button type="button" onClick={() => withDebug(true)}>
           Enable debug log + reload
@@ -298,7 +305,7 @@ Kymmenes rivi.`}
         <Card label="input type=text">
           <input type="text" value="kirjoitusvirhee taloo" />
         </Card>
-        <Card label="input type=search">
+        <Card label="input type=search (enable search fields)">
           <input type="search" value="koirra xyzzy" />
         </Card>
         <Card label="input type=email">
@@ -360,7 +367,7 @@ Kymmenes rivi.`}
         <Card label="Auto-growing textarea">
           <AutoTextarea rows={1} value="kirjoitusvirhee taloo" />
         </Card>
-        <Card label="YouTube-like search input (40px, line-height 24)">
+        <Card label="YouTube-like search input (enable search fields)">
           <input
             type="search"
             value="youtube search bar"
@@ -372,7 +379,7 @@ Kymmenes rivi.`}
             }}
           />
         </Card>
-        <Card label="Tall single-line input (centered text)">
+        <Card label="Tall search input (enable search fields)">
           <input
             type="search"
             value="size limit for firefox extensions"

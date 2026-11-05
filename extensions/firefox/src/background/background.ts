@@ -108,6 +108,7 @@ type SpellResponse =
       id: number;
       type: 'analyze-text';
       hits: { word: string; start: number; end: number; suggestions: string[] }[];
+      stateValid?: boolean;
     }
   | { id: number; type: 'suggest-with-state'; suggestions: string[] }
   // Fire-and-forget ops (destroy/clear/update-state, debug) resolve
@@ -665,6 +666,7 @@ api.runtime.onMessage.addListener((message: unknown) => {
           inputId: m.inputId,
           gen: m.gen,
           hits: r.hits,
+          stateValid: r.stateValid,
         };
       } catch (e) {
         dbg('background', 'analyze-text route error', String(e));

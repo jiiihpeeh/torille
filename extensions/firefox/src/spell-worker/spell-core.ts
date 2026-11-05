@@ -142,7 +142,7 @@ export type CoreResponse =
   | { type: 'check-batch'; inputId: number; ok: (boolean | null)[] }
   | { type: 'suggest-batch'; inputId: number; results: string[][] }
   | { type: 'create-state'; idx: number }
-  | { type: 'analyze-text'; hits: AnalyzeHit[] }
+  | { type: 'analyze-text'; hits: AnalyzeHit[]; stateValid: boolean }
   | { type: 'suggest-with-state'; suggestions: string[] };
 
 // ───────────────────────────────────────────────────────────────────────
@@ -293,6 +293,14 @@ function handleUpdateState(
 function handleAnalyzeText(
   msg: Extract<R_WorkerInbound, { type: 'analyze-text' }>,
 ): CoreResponse {
+  // The background may have restarted (event-page suspension, a request
+  // timeout that tore the worker down, an extension reload), losing every
+  // per-textbox slot. Report that instead of returning an empty hit list,
+  // which the content script would otherwise render as "no misspellings".
+  if (!bg.text_area_state_exists(msg.idx)) {
+    dbg('core', 'analyze-text:stale-state', { idx: msg.idx });
+    return { type: 'analyze-text', hits: [], stateValid: false };
+  }
   // First pass only: ranges, no suggestions. `analyze_text` would run
   // the suggestion ranker for every misspelling on every keystroke
   // (~5–9 s on a short sentence). Suggestions are fetched on click
@@ -315,7 +323,7 @@ function handleAnalyzeText(
   }
   dbg('core', 'analyze-text',
       { idx: msg.idx, len: msg.text.length, hits: hits.length });
-  return { type: 'analyze-text', hits };
+  return { type: 'analyze-text', hits, stateValid: true };
 }
 
 function handleSuggestWithState(

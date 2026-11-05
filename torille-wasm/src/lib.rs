@@ -460,6 +460,16 @@ pub fn create_text_area_state() -> u32 {
     alloc_slot(&mut s)
 }
 
+/// Whether the state handle still names a live slot. A background
+/// worker restart (or a timeout that tears the worker down) loses every
+/// state; callers use this to notice a stale index and allocate a fresh
+/// one instead of silently analysing an empty state.
+#[wasm_bindgen]
+pub fn text_area_state_exists(idx: u32) -> bool {
+    let s = states().lock().expect("states mutex poisoned");
+    matches!(s.get(idx as usize), Some(Some(_)))
+}
+
 /// Drop the state at `idx`. Out-of-bounds / already-destroyed
 /// indices are silently ignored -- callers may not know whether
 /// the worker is on its first lifetime.

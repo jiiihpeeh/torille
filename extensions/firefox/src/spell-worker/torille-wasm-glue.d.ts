@@ -27,6 +27,7 @@ declare module '*/torille_wasm_bg.js' {
   }[];
 
   export function create_text_area_state(): number;
+  export function text_area_state_exists(idx: number): boolean;
   export function destroy_text_area_state(idx: number): void;
   export function clear_state(idx: number): void;
   export function update_state_from_text(idx: number, text: string): void;
