@@ -19,7 +19,7 @@ use crate::{human_bytes, write_varint};
 ///
 /// The completed blob is decoded back key-for-key before it is written; a
 /// builder/reader mismatch is a build error, not a runtime one.
-pub(super) fn emit_huffman_set(blob_path: &Path, keys: &[String]) {
+pub(crate) fn emit_huffman_set(blob_path: &Path, keys: &[String]) {
     const RESTART: usize = 16;
     const MAX_CODE_LEN: usize = 12;
     const HEADER: usize = 40;

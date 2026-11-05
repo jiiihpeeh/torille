@@ -20,22 +20,23 @@
 //! fresh `cargo build` only `include_bytes!`s it. `cargo:rerun-if-changed`
 //! keeps it in step with the data file.
 
-use std::collections::BTreeMap;
-use std::fs;
 use std::path::Path;
 
-#[path = "build/huffman.rs"]
-mod huffman;
-#[path = "build/sanalista.rs"]
-mod sanalista;
-#[path = "build/front_coded.rs"]
-mod front_coded;
+// A build script's `mod` declarations resolve next to `build.rs`, not in
+// `build/`, so the two writer trees are reached with `#[path]`.
+#[path = "build/map_builders/mod.rs"]
+mod map_builders;
+#[path = "build/csv_builders/mod.rs"]
+mod csv_builders;
 
-use front_coded::{
-    emit_front_coded_set, emit_proper_name_lemmas, emit_proper_names, emit_stem_map,
-    write_front_coded_map,
+use csv_builders::catalogue::emit_catalogue;
+use csv_builders::sanalista::generate;
+use csv_builders::string_map::{
+    emit_adj_degrees, emit_adverbi, emit_connegatives, emit_connectives,
 };
-use sanalista::{generate, push_blob_string};
+use map_builders::front_coded::{
+    emit_front_coded_set, emit_proper_name_lemmas, emit_proper_names, emit_stem_map,
+};
 
 #[path = "src/rejected.rs"]
 mod rejected;
@@ -146,230 +147,6 @@ fn main() {
     emit_connectives(&connectives_csv, &precomputed.join("connectives.bin"));
 }
 
-/// Emit a tab-separated CSV as a front-coded `StaticMap` blob.
-///
-/// `key_col` and `value_cols` are zero-based; the first CSV row is a header.
-/// The first row for a key wins. A row whose requested values are all empty
-/// is dropped (an adjective with no derived degree, for example).
-fn emit_string_map(
-    csv_path: &Path,
-    blob_path: &Path,
-    label: &str,
-    tool: &str,
-    key_col: usize,
-    value_cols: &[usize],
-) {
-    if !csv_path.exists() && blob_path.exists() {
-        eprintln!(
-            "build.rs: {} missing but {} present -- reusing",
-            csv_path.display(),
-            blob_path.display(),
-        );
-        return;
-    }
-    let csv = fs::read_to_string(csv_path).unwrap_or_else(|e| {
-        panic!(
-            "build.rs: could not read {}: {e}; \
-             run `python3 tools/{tool}` first",
-            csv_path.display(),
-        )
-    });
-    let mut map: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    for line in csv.lines().skip(1) {
-        let cols: Vec<&str> = line.split('\t').collect();
-        let Some(key) = cols.get(key_col).map(|s| s.trim()) else {
-            continue;
-        };
-        if key.is_empty() || key.contains('\0') || map.contains_key(key) {
-            continue;
-        }
-        let values: Vec<String> = value_cols
-            .iter()
-            .map(|&c| {
-                cols.get(c)
-                    .map(|s| s.trim().to_string())
-                    .unwrap_or_default()
-            })
-            .collect();
-        if values.iter().all(String::is_empty) {
-            continue;
-        }
-        map.insert(key.to_string(), values);
-    }
-    let entries: Vec<(String, Vec<String>)> = map.into_iter().collect();
-    eprintln!(
-        "build.rs: {label}: {} keys from {} rows",
-        entries.len(),
-        csv.lines().count().saturating_sub(1),
-    );
-    write_front_coded_map(blob_path, &entries);
-}
-
-/// Emit `data/verb_connegatives.csv` as a `form -> lemma` map.
-///
-/// The CSV is `surface<TAB>base<TAB>mood<TAB>voice`, with a header.
-fn emit_connegatives(csv_path: &Path, blob_path: &Path) {
-    emit_string_map(
-        csv_path,
-        blob_path,
-        "connegatives",
-        "build_verb_lexicon.py",
-        0,
-        &[1],
-    );
-}
-
-/// Emit `data/verb_connectives.csv` as a `form -> lemma` map.
-///
-/// The CSV is `surface<TAB>base<TAB>kind`, with a header.
-fn emit_connectives(csv_path: &Path, blob_path: &Path) {
-    emit_string_map(
-        csv_path,
-        blob_path,
-        "connectives",
-        "build_verb_lexicon.py",
-        0,
-        &[1],
-    );
-}
-
-/// Emit `data/adverbit.csv` as a `form -> lemma` map.
-///
-/// The CSV is `lemma<TAB>form`, so the key is the second column.
-fn emit_adverbi(csv_path: &Path, blob_path: &Path) {
-    emit_string_map(
-        csv_path,
-        blob_path,
-        "adverbit",
-        "build_adverbi_forms.py",
-        1,
-        &[0],
-    );
-}
-
-/// Emit `data/adj_degrees.csv` as `positive -> (comparative, superlative)`.
-///
-/// Both degree cells are stored even when one is empty, so the runtime can
-/// read the pair positionally.
-fn emit_adj_degrees(csv_path: &Path, blob_path: &Path) {
-    emit_string_map(
-        csv_path,
-        blob_path,
-        "adj_degrees",
-        "build_adj_degrees.py",
-        0,
-        &[1, 2],
-    );
-}
-
-/// Emit the paradigm catalogue as a binary blob from `data/catalogue.csv`.
-///
-/// CSV layout (tab-separated, one row per form):
-///
-/// ```text
-/// class  slot  form  optional
-/// 9      0     kala  0
-/// 9      5     kalojen 0
-/// 9      5     kalain  1
-/// ```
-///
-/// For each `(class, slot)` the first row is the model form, the rows after it
-/// are alternants, and `optional` marks an alternant the oracle half-confirms.
-/// The blob format is read back by [`crate::spec::Catalogues::from_bytes`]
-/// (documented there).
-///
-/// **Reuse path**: if the CSV is missing but the blob is present, skip -- the
-/// same contract as the stem maps and `all_forms`, so a clone without the
-/// generator's output still builds.
-fn emit_catalogue(csv_path: &Path, blob_path: &Path) {
-    if !csv_path.exists() && blob_path.exists() {
-        eprintln!(
-            "build.rs: {} missing but precomputed blob present -- reusing",
-            csv_path.display(),
-        );
-        return;
-    }
-    let csv = fs::read_to_string(csv_path).unwrap_or_else(|e| {
-        panic!(
-            "build.rs: could not read {}: {e}; \
-             run `python3 tools/build_catalogue_csv.py` first",
-            csv_path.display(),
-        )
-    });
-
-    // class -> slot -> (model + alternants in order, optional set).
-    let mut classes: BTreeMap<u16, BTreeMap<u16, Vec<(String, bool)>>> = BTreeMap::new();
-    let mut rows = 0usize;
-    for line in csv.lines().skip(1) {
-        if line.trim().is_empty() {
-            continue;
-        }
-        let mut f = line.split('\t');
-        let (Some(class), Some(slot), Some(form), Some(optional)) =
-            (f.next(), f.next(), f.next(), f.next())
-        else {
-            continue;
-        };
-        let Some(class) = class.trim().parse::<u16>().ok() else {
-            continue;
-        };
-        let Some(slot) = slot.trim().parse::<u16>().ok() else {
-            continue;
-        };
-        if form.is_empty() || form.contains('\0') {
-            continue;
-        }
-        classes
-            .entry(class)
-            .or_default()
-            .entry(slot)
-            .or_default()
-            .push((form.to_string(), optional.trim() == "1"));
-        rows += 1;
-    }
-    assert!(!classes.is_empty(), "catalogue.csv parsed to no classes");
-
-    // Serialise: header + body (records) + string blob.
-    let mut strings: Vec<u8> = Vec::new();
-    let mut body: Vec<u8> = Vec::new();
-    body.extend_from_slice(&(classes.len() as u32).to_le_bytes());
-    for (class, slots) in &classes {
-        body.extend_from_slice(&class.to_le_bytes());
-        body.extend_from_slice(&(slots.len() as u32).to_le_bytes());
-        for forms in slots.values() {
-            let Some((model, rest)) = forms.split_first() else {
-                continue;
-            };
-            push_blob_string(&mut strings, &mut body, &model.0);
-            body.extend_from_slice(&(rest.len() as u32).to_le_bytes());
-            for (form, _) in rest {
-                push_blob_string(&mut strings, &mut body, form);
-            }
-            let optional = rest.iter().filter(|(_, o)| *o).count();
-            body.extend_from_slice(&(optional as u32).to_le_bytes());
-            for (form, o) in rest {
-                if *o {
-                    push_blob_string(&mut strings, &mut body, form);
-                }
-            }
-        }
-    }
-
-    let mut out = Vec::with_capacity(16 + body.len() + strings.len());
-    out.extend_from_slice(b"TCAT");
-    out.extend_from_slice(&1u32.to_le_bytes());
-    out.extend_from_slice(&(body.len() as u32).to_le_bytes());
-    out.extend_from_slice(&(strings.len() as u32).to_le_bytes());
-    out.extend_from_slice(&body);
-    out.extend_from_slice(&strings);
-    fs::write(blob_path, &out).unwrap_or_else(|e| panic!("{}: {e}", blob_path.display()));
-    eprintln!(
-        "build.rs: catalogue: {} classes, {} CSV rows -> {} blob",
-        classes.len(),
-        rows,
-        human_bytes(out.len()),
-    );
-}
 
 /// Append `v` as LEB128 to `out`.
 fn write_varint(mut v: u32, out: &mut Vec<u8>) {

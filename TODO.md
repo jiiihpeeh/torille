@@ -1617,7 +1617,7 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
 
 - [ ] **Clean the stale oracle artefacts out of `all_forms.csv`**
   The generated file still carries old engine mistakes such as `molemmaaa`
-  from `molemmat`; `build/front_coded.rs` filters only the known plural-only
+  from `molemmat`; `build/map_builders/front_coded.rs` filters only the known plural-only
   `...tn` rows. Find where the stale rows enter the oracle, regenerate or filter
   them at the source, and add a regression so a bad engine snapshot cannot
   silently become part of the fast form set again.

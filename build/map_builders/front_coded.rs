@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
-use crate::huffman::emit_huffman_set;
+use crate::map_builders::huffman::emit_huffman_set;
 use crate::{human_bytes, write_varint};
 
 /// Emit the compile-time form subset as a front-coded set blob.
@@ -27,7 +27,7 @@ use crate::{human_bytes, write_varint};
 /// **Reuse path**: if `blob_path` already exists and the CSV is *missing*,
 /// skip the read-and-emit entirely -- a fresh build on a clone without the
 /// CSV reuses the committed precomputed blob.
-pub(super) fn emit_front_coded_set(csv_path: &Path, blob_path: &Path) {
+pub(crate) fn emit_front_coded_set(csv_path: &Path, blob_path: &Path) {
     if !csv_path.exists() && blob_path.exists() {
         eprintln!(
             "build.rs: {} missing but {} present -- reusing",
@@ -105,7 +105,7 @@ pub(super) fn emit_front_coded_set(csv_path: &Path, blob_path: &Path) {
 /// enough. Keys are lowercased because the fast path lowercases before
 /// probing. The set is front-coded and entropy-coded (`HST1`); see
 /// [`emit_huffman_set`].
-pub(super) fn emit_proper_names(csv_path: &Path, blob_path: &Path) {
+pub(crate) fn emit_proper_names(csv_path: &Path, blob_path: &Path) {
     if !csv_path.exists() && blob_path.exists() {
         eprintln!(
             "build.rs: {} missing but {} present -- reusing",
@@ -150,7 +150,7 @@ pub(super) fn emit_proper_names(csv_path: &Path, blob_path: &Path) {
 /// surface (`Mainen` -> `Maine`, `Helsingin` -> `Helsinki`) needs the value,
 /// so this companion blob keeps it. Keys are lowercased like the set; the
 /// values keep the source's capitalisation.
-pub(super) fn emit_proper_name_lemmas(csv_path: &Path, extra_path: &Path, blob_path: &Path) {
+pub(crate) fn emit_proper_name_lemmas(csv_path: &Path, extra_path: &Path, blob_path: &Path) {
     if !csv_path.exists() && blob_path.exists() {
         eprintln!(
             "build.rs: {} missing but {} present -- reusing",
@@ -284,7 +284,7 @@ fn emit_front_coded_keys(blob_path: &Path, keys: &[String]) {
 /// bucket the bases, and emit the front-coded stem-map blob.
 ///
 /// **Reuse path**: if the CSV is missing but the blob is present, skip.
-pub(super) fn emit_stem_map(csv_path: &Path, blob_path: &Path) {
+pub(crate) fn emit_stem_map(csv_path: &Path, blob_path: &Path) {
     if !csv_path.exists() && blob_path.exists() {
         eprintln!(
             "build.rs: {} missing but precomputed present -- reusing",
@@ -340,7 +340,7 @@ pub(super) fn emit_stem_map(csv_path: &Path, blob_path: &Path) {
 /// table, front-coded keys, one u32 id per key (or an overflow pointer for
 /// multi-value keys), a deduplicated string pool, and an offset table. Used
 /// for the stem maps and the small form -> lemma/degree maps.
-pub(super) fn write_front_coded_map(blob_path: &Path, entries: &[(String, Vec<String>)]) {
+pub(crate) fn write_front_coded_map(blob_path: &Path, entries: &[(String, Vec<String>)]) {
     // Keys: front-coded, one full key per `RESTART`-record block.
     const RESTART: usize = 16;
     let mut keys: Vec<u8> = Vec::new();

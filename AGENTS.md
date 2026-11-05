@@ -134,9 +134,12 @@ embeds.
 ### Build-time codegen (`build.rs` + `build/`)
 
 Parsing the 2.8 MB sanalista at every process start costs ~31 ms and ~420k
-allocations. `build.rs` is the driver; `build/sanalista.rs` parses and writes
-the lexicon blob, `build/front_coded.rs` writes the set/map blobs, and
-`build/huffman.rs` writes the `HST1` proper-name set. It emits
+allocations. `build.rs` is the driver; its writers live under `build/` in two
+trees: `build/csv_builders/` reads the committed CSVs (`sanalista.rs` for the
+lexicon blob, `catalogue.rs` for the paradigm catalogue, `string_map.rs` for
+the small lexical side tables) and `build/map_builders/` writes the compact
+set/map blobs (`front_coded.rs` for sets/maps, `huffman.rs` for the `HST1`
+proper-name set). It emits
 `data/precomputed/sanalista.bin`: 8-byte per-row records (headword,
 length, POS code, inflection start), the headword strings, `u16`
 inflections, small POS/homonym side tables, and the two sorted orders
@@ -432,7 +435,7 @@ is gitignored and generated.
 | edit distance / keyboard tie-break | `src/suggest/levenshtein.rs` |
 | "which lemma is this a form of" | `src/expand/find_bases.rs`, `src/expand/lexicon_index.rs` |
 | the reverse index / class prior | `src/expand/build.rs` |
-| compile-time blob writers | `build.rs`, `build/*.rs` |
+| compile-time blob writers | `build.rs`, `build/csv_builders/`, `build/map_builders/` |
 | a new verb/noun class engine | `src/expand/verbs/`, `src/expand/nominals*/`, then `dispatch` + `AUTHORITATIVE_CLASSES` |
 | the grammar reading model | `src/tags.rs` |
 | hyphenation patterns/policy | `src/hyphenation/`, `data/hyphenation/` |

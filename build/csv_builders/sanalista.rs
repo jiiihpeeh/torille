@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 
 /// Write `s` into the string blob and its `(offset, length)` into `body`,
 /// matching `spec::Catalogues::from_bytes`.
-pub(super) fn push_blob_string(strings: &mut Vec<u8>, body: &mut Vec<u8>, s: &str) {
+pub(crate) fn push_blob_string(strings: &mut Vec<u8>, body: &mut Vec<u8>, s: &str) {
     let offset = strings.len() as u32;
     strings.extend_from_slice(s.as_bytes());
     body.extend_from_slice(&offset.to_le_bytes());
@@ -17,7 +17,7 @@ pub(super) fn push_blob_string(strings: &mut Vec<u8>, body: &mut Vec<u8>, s: &st
 /// Pack the per-row records, headword strings, inflections, POS table,
 /// homonym side map, and the two sorted orders into one binary blob. See the
 /// layout diagram in [`generate`].
-pub(super) fn build_sanalista_blob(rows: &[Row<'_>], order: &[u32]) -> Vec<u8> {
+pub(crate) fn build_sanalista_blob(rows: &[Row<'_>], order: &[u32]) -> Vec<u8> {
     let n = rows.len();
 
     // POS is one of ~50 strings ("substantiivi", "adjektiivi, substantiivi",
@@ -208,7 +208,7 @@ pub(super) fn build_sanalista_blob(rows: &[Row<'_>], order: &[u32]) -> Vec<u8> {
 /// `FIELDS: [(&str, &str, &str); 104743]` and the per-headword phf
 /// index were both removed once the sorted `WORD_ORDER` section could
 /// serve `by_word` directly.
-pub(super) fn generate(text: &str) -> Vec<u8> {
+pub(crate) fn generate(text: &str) -> Vec<u8> {
     let rows = parse_rows(text);
     assert!(!rows.is_empty(), "the sanalista parsed to no rows");
 
@@ -222,14 +222,14 @@ pub(super) fn generate(text: &str) -> Vec<u8> {
 /// All row indices sorted by their word, ascending. Used by
 /// `build_sanalista_blob` to emit the WORD_ORDER section, which
 /// `kotus::Sanalista::by_word` binary-searches.
-pub(super) fn sorted_word_order(rows: &[Row<'_>]) -> Vec<u32> {
+pub(crate) fn sorted_word_order(rows: &[Row<'_>]) -> Vec<u32> {
     let mut order: Vec<u32> = (0..rows.len() as u32).collect();
     order.sort_by(|&a, &b| rows[a as usize].word.cmp(rows[b as usize].word));
     order
 }
 
 /// One sanalista row, as borrowed slices of the source text.
-pub(super) struct Row<'a> {
+pub(crate) struct Row<'a> {
     word: &'a str,
     homonymy: &'a str,
     pos: &'a str,
@@ -242,7 +242,7 @@ pub(super) struct Row<'a> {
 /// This mirrors `kotus::parse_sanalista` exactly -- same skip rules, same
 /// inflection grammar -- because the generated tables and that function must
 /// agree, or the embedded lexicon would differ from the parsed one.
-pub(super) fn parse_rows(text: &str) -> Vec<Row<'_>> {
+pub(crate) fn parse_rows(text: &str) -> Vec<Row<'_>> {
     let mut out = Vec::new();
     for (n, line) in text.lines().enumerate() {
         if n == 0 || line.trim().is_empty() {

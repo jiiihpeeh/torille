@@ -140,6 +140,11 @@ documented 0.05 bonus. The engine cleanup itself did not change ranking.
       `build/sanalista.rs`, `build/front_coded.rs` and `build/huffman.rs`.
       They are reached with `#[path = "build/…"]` because a build-script
       module would otherwise resolve in the repo root, not `build/`.
+- [x] Group the writers by what they read and write: `build/csv_builders/`
+      (`sanalista`, `catalogue`, `string_map`) and `build/map_builders/`
+      (`front_coded`, `huffman`). `build.rs` keeps only the driver and the
+      shared `write_varint` / `human_bytes` helpers. The emitted blobs are
+      byte-for-byte unchanged.
 - [x] **Did not split** `src/grammar/noun.rs` or `src/grammar/verb.rs`:
       TODO A/B/C are still open and the harness is the guard.
 - [x] Post-P5 follow-up: `src/suggest/known.rs` and
