@@ -311,7 +311,7 @@ static PRONOUN_MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::ne
 
 const PRONOUN_FORMS_BIN: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/data/precomputed/pronoun_forms.bin"
+    "/build/computed_maps/pronoun_forms.bin"
 ));
 
 /// The pronoun lemma `word` is a form of, if any.

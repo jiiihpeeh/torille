@@ -114,9 +114,9 @@ The sanalista is `include_str!`'d (`lib.rs`); the catalogue is compiled to
 `data/precomputed/catalogue.bin` by `build.rs` and embedded with
 `include_bytes!`, so the shipped crate needs no data files.
 
-`data/precomputed/{derived_{by_form,nominal,modifiers},pronoun_forms}.bin` are
-the exception to the build-script writers below: those tables are built with the
-engine (`expand::derived::compute`,
+`build/computed_maps/{derived_{by_form,nominal,modifiers},pronoun_forms}.bin`
+are the exception to the build-script writers below: those tables are built with
+the engine (`expand::derived::compute`,
 `expand::check_normal::compute_pronoun_forms`), which a build script cannot
 call. Their shared `DER1` writer is `build/computed_maps/table.rs`; run
 `cargo run --release -p torille-tools --bin gen_derived` after a `RULES`,
@@ -140,8 +140,9 @@ trees: `build/csv_builders/` reads the committed CSVs (`sanalista.rs` for the
 lexicon blob, `catalogue.rs` for the paradigm catalogue, `string_map.rs` for
 the small lexical side tables) and `build/map_builders/` writes the compact
 set/map blobs (`front_coded.rs` for sets/maps, `huffman.rs` for the `HST1`
-proper-name set). A third tree, `build/computed_maps/`, holds the writer for
-the blobs a build script cannot compute (`gen_derived`'s tables). It emits
+proper-name set). A third tree, `build/computed_maps/`, holds both the writer
+and the embedded blobs a build script cannot compute (`gen_derived`'s tables).
+It emits
 `data/precomputed/sanalista.bin`: 8-byte per-row records (headword,
 length, POS code, inflection start), the headword strings, `u16`
 inflections, small POS/homonym side tables, and the two sorted orders

@@ -82,8 +82,8 @@ python3 tools/build_class6_i_plural.py                   # class-6 -iden/-itten/
 python3 tools/build_class15_long_partitive.py            # class-15 long partitive set
 ```
 
-`gen_derived` writes `data/precomputed/derived_{by_form,nominal,modifiers}.bin`
-and `data/precomputed/pronoun_forms.bin`, and is the one generator that must run
+`gen_derived` writes `build/computed_maps/derived_{by_form,nominal,modifiers}.bin`
+and `build/computed_maps/pronoun_forms.bin`, and is the one generator that must run
 with the engine, because the tables are built by `expand::derived::compute` and
 `expand::check_normal::compute_pronoun_forms`. Commit the blobs;
 `expand::derived::tests::the_blobs_match_compute` and

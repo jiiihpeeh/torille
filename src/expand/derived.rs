@@ -1044,7 +1044,7 @@ const RULES: &[Rule] = &[
 /// The derived tables, as computed from the sanalista.
 ///
 /// The runtime does not call [`compute`]: it reads the blobs the `gen_derived`
-/// tool writes from this (`data/precomputed/derived_*.bin`). The type stays
+/// tool writes from this (`build/computed_maps/derived_*.bin`). The type stays
 /// public so that tool can build them, and [`compute`] stays public so the
 /// blobs can be regenerated after a `RULES` or sanalista change.
 #[derive(Default)]
@@ -1312,15 +1312,15 @@ static MODIFIERS: OnceLock<Blob> = OnceLock::new();
 
 const BY_FORM_BIN: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/data/precomputed/derived_by_form.bin"
+    "/build/computed_maps/derived_by_form.bin"
 ));
 const NOMINAL_BIN: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/data/precomputed/derived_nominal.bin"
+    "/build/computed_maps/derived_nominal.bin"
 ));
 const MODIFIERS_BIN: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/data/precomputed/derived_modifiers.bin"
+    "/build/computed_maps/derived_modifiers.bin"
 ));
 
 /// The derived lemma a surface belongs to.
