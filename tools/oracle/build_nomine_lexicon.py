@@ -82,9 +82,9 @@ parsed as JSON it costs about 7 GB of resident memory before it can answer a
 single question, against 12 GB of RAM on this machine.
 
 Usage:
-    python3 tools/build/build_nomine_lexicon.py --classes 27   # sqlite, subset, to stdout file
-    python3 tools/build/build_nomine_lexicon.py -f csv -n 1 -o data/kotus_nomines_example.csv
-    python3 tools/build/build_nomine_lexicon.py -o data/kotus_nomines.sqlite -j 4
+    python3 tools/oracle/build_nomine_lexicon.py --classes 27   # sqlite, subset, to stdout file
+    python3 tools/oracle/build_nomine_lexicon.py -f csv -n 1 -o data/kotus_nomines_example.csv
+    python3 tools/oracle/build_nomine_lexicon.py -o data/kotus_nomines.sqlite -j 4
 
 `-n` limits the lemmas per class (default: all of them). `--classes` chooses
 `all` (146 values, the class string exactly as torille reads it, so `9` and
@@ -930,7 +930,7 @@ def main(argv: list[str] | None = None) -> int:
     meta = {
         "description": "every confirmed form of every classed noun, with its "
                        "grammatical classification",
-        "generated_by": "tools/build/build_nomine_lexicon.py",
+        "generated_by": "tools/oracle/build_nomine_lexicon.py",
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "source": "data/nykysuomensanalista.csv",
         "oracles": {

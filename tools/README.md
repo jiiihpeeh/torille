@@ -75,14 +75,15 @@ Profiling and one-off probes:
 
 ### Data generators
 
-The artifact generators live in [`build/`](build/README.md), with the
-from-scratch order and the engine-vs-oracle split. In short:
+The engine-driven artifact generators live in [`build/`](build/README.md);
+the oracle/reference generators that refresh the committed lexical tables
+live in [`oracle/`](oracle/README.md). In short:
 
 ```bash
 python3 tools/build/build_all_forms_csv.py      # engine
 python3 tools/build/build_stem_to_base_map.py   # engine
 cargo run --release -p torille-tools --bin gen_derived   # derived tables (blobs)
-python3 tools/build/build_oi_plural_lemmas.py   # class-10 -oi- plural set (oracle)
+python3 tools/oracle/build_oi_plural_lemmas.py   # class-10 -oi- plural set (oracle)
 ```
 
 `gen_derived` writes `maps/derived_{by_form,nominal,modifiers}.bin`
@@ -122,8 +123,9 @@ uses live Omorfi+Voikko.
 
 The remaining scripts fall into four groups:
 
-- **Lexicon/builders** — `build/*` (`build_*`, `extract_class_rules.py`),
-  `add_*`, `apply_all_derivations.py`. `build_nomine_lexicon.py` and
+- **Lexicon/builders** — `build/*` (engine-driven) and `oracle/*`
+  (sqlite/Omorfi/Voikko reference generators), `add_*`,
+  `apply_all_derivations.py`. `build_nomine_lexicon.py` and
   `build_verb_lexicon.py` now include the engine enrichment, the comitative and
   negative-mood verb cells, and the connectives/connegatives tables that used
   to be separate update/fill scripts.

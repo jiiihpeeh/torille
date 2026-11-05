@@ -75,16 +75,16 @@ analyse; `--no-engine` leaves an oracle-only build.
 ## Usage
 
     # the whole thing (about 1380 cells per verb)
-    python3 tools/build/build_verb_lexicon.py
+    python3 tools/oracle/build_verb_lexicon.py
 
     # a fast smoke build: 30 verbs per class, synthetic grid only
-    python3 tools/build/build_verb_lexicon.py -n 30 --possessives none --compounds none
+    python3 tools/oracle/build_verb_lexicon.py -n 30 --possessives none --compounds none
 
     # the bare synthetic grid, every verb, on four cores
-    python3 tools/build/build_verb_lexicon.py --possessives none -j 4
+    python3 tools/oracle/build_verb_lexicon.py --possessives none -j 4
 
     # one Kotus type
-    python3 tools/build/build_verb_lexicon.py --classes 61
+    python3 tools/oracle/build_verb_lexicon.py --classes 61
 
 ## Parallelism
 

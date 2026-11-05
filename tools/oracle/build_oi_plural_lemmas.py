@@ -14,7 +14,7 @@ The output is a sorted `DER1` set (see `src/expand/blob.rs`), read by
 `src/expand/nominals/class_10.rs`. Regenerate after rebuilding
 `data/kotus_nomines.sqlite`:
 
-    python3 tools/build/build_oi_plural_lemmas.py
+    python3 tools/oracle/build_oi_plural_lemmas.py
 """
 
 from __future__ import annotations

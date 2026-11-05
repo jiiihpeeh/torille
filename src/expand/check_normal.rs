@@ -597,7 +597,7 @@ fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> Normalized
     //
     // A few `-ksi` adverbs take a possessive (`kylliksi` ->
     // `kylliksenne`), which no rule derives and Omorfi cannot generate;
-    // the confirmed set is embedded (`tools/build/build_adverbi_forms.py`).
+    // the confirmed set is embedded (`tools/oracle/build_adverbi_forms.py`).
     if let Some(base) = adverb::ADVERBS.bases(word).next() {
         if verbose {
             println!("    gate 1b: adverb {word:?} -> {base}");

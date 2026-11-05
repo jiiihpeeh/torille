@@ -1,6 +1,6 @@
 # The noun lexicon (`data/kotus_nomines.sqlite`)
 
-`tools/build/build_nomine_lexicon.py` builds a **materialised paradigm** for every
+`tools/oracle/build_nomine_lexicon.py` builds a **materialised paradigm** for every
 classed noun-like word: `data/kotus_nomines.sqlite`. It is the answer to the
 oracle question the [verification harness](harness.md) asks of Omorfi and
 Voikko every time it runs, written down once, so the same verdict can be read
@@ -62,7 +62,7 @@ grid alone is ~0.7 GB.
 ## Building it
 
 ```bash
-python3 tools/build/build_nomine_lexicon.py -o data/kotus_nomines.sqlite
+python3 tools/oracle/build_nomine_lexicon.py -o data/kotus_nomines.sqlite
 ```
 
 Defaults to sqlite, over the nominal parts of speech
@@ -195,7 +195,7 @@ versions change:
 
 ```bash
 rm -f data/kotus_nomines.sqlite   # a partial file would be read as complete
-python3 tools/build/build_nomine_lexicon.py -o data/kotus_nomines.sqlite -j 4
+python3 tools/oracle/build_nomine_lexicon.py -o data/kotus_nomines.sqlite -j 4
 ```
 
 The file is a generated artifact; if it is committed, the `.base` convention,

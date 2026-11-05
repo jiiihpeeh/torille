@@ -748,7 +748,7 @@ distance, not a heuristic.
       string and tags. Gradation can change length by at most one; widen the
       window by one for gradating stems.
 - [ ] Thread the same rule through the generated per-class engines via
-      `tools/build/extract_class_rules.py` (do **not** hand-edit
+      `tools/oracle/extract_class_rules.py` (do **not** hand-edit
       `src/expand/nominals/` or `src/expand/verbs/`).
 - [ ] The handwritten verb engines get the same predicate at their slot
       emission points.
@@ -999,7 +999,7 @@ in this tree.
   never suggested; `tests/catalogue.rs` pins this. Performance work must not
   widen the suggestible set to make a benchmark look good.
 - **Do not hand-edit generated per-class files.** Change
-  `tools/build/extract_class_rules.py` or `grammar/` and regenerate.
+  `tools/oracle/extract_class_rules.py` or `grammar/` and regenerate.
 - **Length windows need a gradation margin.** A strong/weak pair can differ by
   one character; widen by one at each end.
 - **Wasm is single-threaded.** A host win from `walk_head1`'s threads may not

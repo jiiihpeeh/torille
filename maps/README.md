@@ -24,7 +24,7 @@ so change the generator and rerun it in the same commit.
 | `adverbit.bin` | `build.rs` → `build/csv_builders/string_map.rs` | `src/expand/check_normal.rs` | `-ksi` adverbs and their possessives |
 | `connegatives.bin` | `build.rs` → `build/csv_builders/string_map.rs` | `src/expand/connegative.rs` | bare potential/imperative connegatives |
 | `connectives.bin` | `build.rs` → `build/csv_builders/string_map.rs` | `src/expand/negation.rs` | negation fusions and finite auxiliaries |
-| `oi_plural_lemmas.bin` | `python3 tools/build/build_oi_plural_lemmas.py` | `src/expand/nominals/class_10.rs` | class-10 lemmas with the alternative `-oi-` plural (lexical, read off the Omorfi oracle) |
+| `oi_plural_lemmas.bin` | `python3 tools/oracle/build_oi_plural_lemmas.py` | `src/expand/nominals/class_10.rs` | class-10 lemmas with the alternative `-oi-` plural (lexical, read off the Omorfi oracle) |
 | `derived_by_form.bin` | `gen_derived` → `tools/src/der1.rs` | `src/expand/derived.rs` | derived surface → derived lemma |
 | `derived_nominal.bin` | `gen_derived` → `tools/src/der1.rs` | `src/expand/derived.rs` | derived nominal set |
 | `derived_modifiers.bin` | `gen_derived` → `tools/src/der1.rs` | `src/expand/derived.rs` | derived modifier set |
@@ -50,7 +50,7 @@ cargo run --release -p torille-tools --bin gen_derived
 The oracle-derived table needs the materialised Kotus database:
 
 ```bash
-python3 tools/build/build_oi_plural_lemmas.py
+python3 tools/oracle/build_oi_plural_lemmas.py
 ```
 
 After regenerating, run the drift checks:

@@ -10,7 +10,7 @@ for the rest it is a repaired guess.
 
 Usage:
 
-    python3 tools/build/build_class15_long_partitive.py
+    python3 tools/oracle/build_class15_long_partitive.py
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ def main() -> int:
     lines = [
         "// SPDX-License-Identifier: MIT OR Apache-2.0",
         "// Class-15 lemmas that confirm the long partitive -ta/-tä, generated",
-        "// by tools/build/build_class15_long_partitive.py from the nominal oracle.",
+        "// by tools/oracle/build_class15_long_partitive.py from the nominal oracle.",
         "// Do not edit.",
         "",
         "/// Sorted; use `binary_search`.",

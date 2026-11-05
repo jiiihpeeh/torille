@@ -1,73 +1,40 @@
-# tools/build — artifact generators
+# tools/build — the engine-driven build tools
 
-Scripts that write the committed build inputs and generated sources. They are
-not part of the shipped crate; run them only when a source of truth changes
-(the sanalista, an oracle, a `RULES` change) and commit the output in the same
-change.
-
-The **build itself never needs these tools or a database**. `cargo build` reads
-the committed `maps/*.bin`, the committed CSVs under `data/`, and generates the
-rest with `build.rs`; the blobs are embedded with `include_bytes!`.
-
-Most generators now read the **engine** (the `torille` Python binding) rather
-than an oracle database. The exceptions are listed at the end: those tables
-record lexical facts the engine cannot derive, so they still need their
-original source and are best treated as frozen reference data.
-
-## From-scratch order
-
-Run from the repository root.
+Scripts that regenerate the committed build inputs and blobs from **the
+project itself**: the `torille` Python binding and the committed source
+tables. A ground-up build needs no Omorfi/Voikko database and no sqlite
+oracle.
 
 ```bash
-# 1. regenerated from the Kotus sources / the engine
-python3 tools/build/build_catalogue_csv.py
-python3 tools/build/build_all_forms_csv.py        # default --source engine
-python3 tools/build/build_stem_to_base_map.py     # --source engine
+# from the repository root
+python3 tools/build/build_all_forms_csv.py        # -> data/all_forms.csv (local dump)
+python3 tools/build/build_stem_to_base_map.py     # -> data/stem_to_base_map.csv
 python3 tools/build/build_verb_stem_to_base_map.py
 python3 tools/build/build_adj_degrees.py
-python3 tools/build/build_adverbi_forms.py
-python3 tools/build/build_proper_names.py
-python3 tools/build/build_proper_name_forms.py
-
-# 2. engine-computed blobs
-cargo run --release -p torille-tools --bin gen_derived
-
-# 3. generated Rust sources
-python3 tools/build/extract_class_rules.py --rust
-python3 tools/build/build_class6_i_plural.py
-python3 tools/build/build_class15_long_partitive.py
-python3 tools/build/build_oi_plural_lemmas.py
+cargo run --release -p torille-tools --bin gen_derived   # -> maps/derived_*.bin
 ```
 
-Then `cargo build -p torille` turns the CSVs into `maps/*.bin` and the tests
-check the derived blobs (`the_blobs_match_compute`,
-`the_pronoun_blob_matches_compute`).
+`cargo build -p torille` then turns the CSVs into `maps/*.bin` and embeds
+them. `build_proper_names.py` is the one network fetch here (Wikidata); its
+output `data/proper_names.csv` is committed.
 
-The measured distance between the committed tables and engine output, and
-the plan to close it, is [FIX_GENGAPS.md](../../FIX_GENGAPS.md).
+The tables that record lexical facts the engine cannot derive — the
+catalogue, the noun/verb oracle databases, the proper-name cases, the
+`-oi-` plural set, the class-6/15 exception sets and the per-class rule
+extraction — are preserved under [`../oracle/`](../oracle/README.md). They
+are reference generators, not part of a ground-up build.
 
-## Engine vs oracle
+## Verification
 
-| generator | source |
-|---|---|
-| `build_all_forms_csv.py` | engine (`--source engine` is the default) |
-| `build_stem_to_base_map.py` | engine, plus oracle candidates in `hybrid` |
-| `build_verb_stem_to_base_map.py` | engine (binding), plus the committed connective table |
-| `build_adj_degrees.py` | engine (binding) |
-| `build_adverbi_forms.py` | Voikko |
-| `build_catalogue_csv.py` | noun/verb oracle databases |
-| `build_nomine_lexicon.py` | Omorfi + Voikko (builds the noun oracle) |
-| `build_verb_lexicon.py` | Omorfi + Voikko (builds the verb oracle and the connective/connegative tables) |
-| `build_proper_names.py` | Wikidata dump / CSV (network) |
-| `build_proper_name_forms.py` | Omorfi |
-| `build_oi_plural_lemmas.py` | noun oracle (lexical; not derivable) |
-| `build_class6_i_plural.py` | noun oracle (lexical exception set) |
-| `build_class15_long_partitive.py` | noun oracle (lexical exception set) |
-| `extract_class_rules.py` | noun oracle (writes `rules/` and `src/expand/nominals/`) |
+`compare_engine_outputs.py` regenerates engine output and compares it with
+the committed tables (and, for `all_forms`, decodes the `SST2` blob). It is
+the gate for the work in `FIX_GENGAPS.md`:
 
-The last five are reference tables, not engine output: they exist precisely
-because the engine does not derive those forms. Regenerating them from the
-engine would delete the facts they encode.
+```bash
+python3 tools/build/compare_engine_outputs.py --strict
+python3 tools/build/compare_engine_outputs.py --artifact stem_map_verb
+```
 
-`gen_derived` is the one Rust generator and is not in this directory; it lives
-in `tools/src/bin/gen_derived.rs` because it links the engine.
+Known oracle/lexical tables and their provenance are listed in
+`FIX_GENGAPS.md` (G6). The build path here is engine-only; nothing in this
+directory reads a sqlite database.

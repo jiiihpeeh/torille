@@ -19,7 +19,7 @@ Output (tab-separated):
     ...
 
 Usage:
-    python3 tools/build/build_adverbi_forms.py
+    python3 tools/oracle/build_adverbi_forms.py
 """
 
 from __future__ import annotations

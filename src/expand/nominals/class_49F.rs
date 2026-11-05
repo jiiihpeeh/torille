@@ -1,5 +1,5 @@
 //! Inflection rule for class 49*F, generated from the noun lexicon.
-//! Regenerate with:  python3 tools/build/extract_class_rules.py --rust
+//! Regenerate with:  python3 tools/oracle/extract_class_rules.py --rust
 //! do not edit by hand; the database is the source of truth.
 #![allow(unused_imports)]
 

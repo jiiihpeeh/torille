@@ -20,7 +20,7 @@
 //! `[MOOD=IMPV][NEG=CON]` is `puhuko`), so `en puhuisi`, `en puhune` and
 //! `älä puhu` / `älköön puhuko` are emitted here alongside the passive ones
 //! (`ei puhuttaisi`, `ei puhuttane`, `älköön puhuttako`). See
-//! `tools/build/build_verb_lexicon.py`, which puts them in the lexicon.
+//! `tools/oracle/build_verb_lexicon.py`, which puts them in the lexicon.
 
 use crate::tags::{Mood, Number, Person, Polarity, Tense, Voice};
 

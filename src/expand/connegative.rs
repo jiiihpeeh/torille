@@ -7,7 +7,7 @@
 //! separately, so the reverse lookup has to accept the bare one.
 //!
 //! The set is derived from the oracle's own attested phrases by
-//! `tools/build/build_verb_lexicon.py` and embedded by `build.rs` from
+//! `tools/oracle/build_verb_lexicon.py` and embedded by `build.rs` from
 //! `data/verb_connegatives.csv`, the same way the adverb and
 //! adjective-degree tables are. Only the potential and the imperative
 //! are listed: the indicative present is the 2sg imperative, the
@@ -19,7 +19,7 @@ mod table {
     use crate::expand::static_table::StemMap;
 
     /// Bare verb connegatives: form -> lemma, derived by
-    /// `tools/build/build_verb_lexicon.py`.
+    /// `tools/oracle/build_verb_lexicon.py`.
     pub static CONNEGATIVES: StemMap = StemMap::new(include_bytes!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/maps/connegatives.bin",

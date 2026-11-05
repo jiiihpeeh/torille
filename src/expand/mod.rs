@@ -37,7 +37,7 @@ mod sound;
 pub(super) mod split;
 
 // The generated, per-class nominal rules. See the `generated-nominals`
-// feature and tools/build/extract_class_rules.py --rust. `nominals::dispatch`
+// feature and tools/oracle/extract_class_rules.py --rust. `nominals::dispatch`
 // routes a sanalista class to the module that implements its paradigm.
 #[cfg(feature = "generated-nominals")]
 #[allow(

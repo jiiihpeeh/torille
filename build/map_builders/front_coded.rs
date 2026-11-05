@@ -123,7 +123,7 @@ pub(crate) fn emit_proper_names(csv_path: &Path, blob_path: &Path) {
     let csv = fs::read_to_string(csv_path).unwrap_or_else(|e| {
         panic!(
             "build.rs: could not read {}: {e}; \
-             run `python3 tools/build/build_proper_name_forms.py` first",
+             run `python3 tools/oracle/build_proper_name_forms.py` first",
             csv_path.display(),
         )
     });
@@ -167,7 +167,7 @@ pub(crate) fn emit_proper_name_lemmas(csv_path: &Path, extra_path: &Path, blob_p
     let csv = fs::read_to_string(csv_path).unwrap_or_else(|e| {
         panic!(
             "build.rs: could not read {}: {e}; \
-             run `python3 tools/build/build_proper_name_forms.py` first",
+             run `python3 tools/oracle/build_proper_name_forms.py` first",
             csv_path.display(),
         )
     });

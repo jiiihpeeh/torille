@@ -19,7 +19,7 @@
 //! `data/catalogue.csv` must already exist so the build has a blob to run
 //! against. Seed it once from the Omorfi/Voikko oracle:
 //!
-//!     python3 tools/build/build_catalogue_csv.py
+//!     python3 tools/oracle/build_catalogue_csv.py
 //!
 //! Then refine, rebuilding the blob between passes, until the CSV stops
 //! changing (one or two passes):

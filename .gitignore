@@ -16,7 +16,7 @@ __pycache__/
 data/kotus-tyypit.txt
 
 # Generated noun lexicon and examples. Rebuild with
-#   python3 tools/build/build_nomine_lexicon.py -o data/kotus_nomines.sqlite
+#   python3 tools/oracle/build_nomine_lexicon.py -o data/kotus_nomines.sqlite
 data/kotus_nomines.sqlite
 data/kotus_nomines.new.sqlite
 data/kotus_nomines.old.sqlite
@@ -25,7 +25,7 @@ data/kotus_nomines_example.*
 data/kotus_nomines.json
 
 # Generated verb lexicon. Rebuild with
-#   python3 tools/build/build_verb_lexicon.py -o data/kotus_verbit.sqlite
+#   python3 tools/oracle/build_verb_lexicon.py -o data/kotus_verbit.sqlite
 data/kotus_verbit.sqlite
 data/kotus_verbit.sqlite.progress
 

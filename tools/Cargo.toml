@@ -42,7 +42,7 @@ path = "src/bin/check.rs"
 [[bin]]
 # Refine `data/catalogue.csv` from the engine's own output, so the embedded
 # paradigm templates are self-consistent. Seed with
-# `python3 tools/build/build_catalogue_csv.py`, then run this and `cargo build` in
+# `python3 tools/oracle/build_catalogue_csv.py`, then run this and `cargo build` in
 # a loop until the CSV stops changing.
 name = "build_catalogue"
 path = "src/bin/build_catalogue.rs"

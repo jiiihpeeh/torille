@@ -13,8 +13,8 @@ The readme/docs are explicit that proper names are accepted, never suggested;
 the form table is a fast-path accept list, not a lemma source.
 
 Usage:
-    python3 tools/build/build_proper_name_forms.py
-    python3 tools/build/build_proper_name_forms.py --limit 100 --dry-run
+    python3 tools/oracle/build_proper_name_forms.py
+    python3 tools/oracle/build_proper_name_forms.py --limit 100 --dry-run
 """
 
 from __future__ import annotations

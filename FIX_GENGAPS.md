@@ -405,6 +405,12 @@ separate project once the harness baselines are stable.
 oracle reference tools (not part of the ground-up build), and
 `build_catalogue` + the drift report are the engine-side gate.
 
+**Status 2026-11-05 — frozen.** `tools/oracle/build_catalogue_csv.py` and
+`tools/oracle/extract_class_rules.py` now live under `tools/oracle/` with the
+other reference generators. `data/catalogue.csv` and `rules/` stay committed;
+the engine-side `build_catalogue` binary remains available for refinement.
+`tools/build/` reads no sqlite database.
+
 ---
 
 ## G6 — lexical exception tables cannot be derived
@@ -433,6 +439,12 @@ forms. Regenerating them from the engine would erase the facts:
 **Exit.** The README and comparison allow-list name every frozen table and
 its provenance, so "engine-only" is a precise claim: *all non-lexical tables
 are engine-generated; the lexical tables are committed reference data.*
+
+**Status 2026-11-05 — frozen.** The reference generators moved to
+`tools/oracle/` (with a README naming each table, its source and its output)
+and `tools/build/README.md` states that the build path needs no database.
+`data/` keeps its own license terms; the generators stay GPL where they drive
+Omorfi/Voikko.
 
 ---
 
@@ -510,6 +522,6 @@ generators, which move to `tools/oracle/`.
 - [x] G3 verb map engine-only; closed negation/connective table kept
 - [x] G3 verb stem map regenerated from the engine (370 587 pairs, 0 bases lost)
 - [x] G4 `all_forms` blob regenerated from the engine (87 105 keys, 0 lost)
-- [ ] G5 catalogue frozen + drift report
-- [ ] G6 lexical tables documented as frozen reference data
-- [ ] `tools/build/README.md` says "engine-only" without an asterisk
+- [x] G5 catalogue/rule generators documented under `tools/oracle/`
+- [x] G6 lexical tables documented as frozen reference data
+- [x] `tools/build/README.md` says "engine-only" without an asterisk

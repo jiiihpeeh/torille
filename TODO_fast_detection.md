@@ -126,7 +126,7 @@ Status: **open** · **wip** · **done**.
    strings (`en syöne`, `älkää ajatelko`), never bare, and the oracle --
    like the class-76 test -- attests the indicative ones bare (`syö`,
    `syönyt`) but the potential/imperative only inside the phrases.
-   **done**: `tools/build/build_verb_lexicon.py` derives the bare forms
+   **done**: `tools/oracle/build_verb_lexicon.py` derives the bare forms
    from the attested phrases, records them in the DB
    (`polarity='connegative'`) and in `data/verb_connegatives.csv`, and
    `build.rs` embeds them for the fast path and the engine. The engine
@@ -218,7 +218,7 @@ Status: **open** · **wip** · **done**.
     and `notkistella` are frequentatives of `paistaa` / `notkistaa`
     (`-ele-`); Voikko knows them, Omorfi does not, and neither was in the
     sanalista. **done** for these two: the lemmas are added as class 67,
-    and `tools/build/build_verb_lexicon.py --engine` adds the finite forms of every
+    and `tools/oracle/build_verb_lexicon.py --engine` adds the finite forms of every
     sanalista verb the Omorfi-built verb oracle lacks (274 lemmas, 8 004
     rows) with `ok='both'`, so the verb stem map carries their finite
     stems (`paisteli` → `paistella`) and the fast path resolves them.

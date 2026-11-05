@@ -77,7 +77,7 @@ score assertion now allows the documented 0.05 bonus. The engine cleanup itself 
       `pub mod nominals_refactored;`, and `mod verbs;` in
       `src/expand/mod.rs`. `dead_code` stays as the per-file inner allow so
       the two do not conflict.
-      Long term, teach `tools/build/extract_class_rules.py --rust` to emit these and
+      Long term, teach `tools/oracle/extract_class_rules.py --rust` to emit these and
       drop the 454 per-file `#![allow(dead_code)]` attributes.
 - [x] `cargo clippy -p torille --all-targets -- -D warnings` now passes.
       Enable it in CI. `cargo check -p torille --all-targets` is warning-free.
@@ -195,7 +195,7 @@ Public paths are unchanged (`suggest::*`, `expand::derived_*`,
   hand-formatted. If the formatting churn is unwanted, revert it separately
   from the logical fixes.
 - The generated-module `#[allow]` is deliberately broad (`clippy::all`). The
-  sustainable fix is in `tools/build/extract_class_rules.py --rust`; until then the
+  sustainable fix is in `tools/oracle/extract_class_rules.py --rust`; until then the
   allow is scoped to `expand::{nominals, verbs}` and does not hide anything in
   hand-written code.
 - The two-tree retirement removed the old tree's duplicate `mod tests`; the

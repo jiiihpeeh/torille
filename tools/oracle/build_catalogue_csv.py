@@ -31,7 +31,7 @@ No Kotus taivutus document is read. `data/nykysuomensanalista.csv` is not read
 either; a class with no rule falls back to the oracle's own members.
 
 Usage:
-    python3 tools/build/build_catalogue_csv.py
+    python3 tools/oracle/build_catalogue_csv.py
 """
 
 from __future__ import annotations
