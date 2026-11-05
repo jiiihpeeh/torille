@@ -35,7 +35,7 @@ pub(crate) fn emit_string_map(
     let csv = fs::read_to_string(csv_path).unwrap_or_else(|e| {
         panic!(
             "build.rs: could not read {}: {e}; \
-             run `python3 tools/{tool}` first",
+             run `{tool}` first",
             csv_path.display(),
         )
     });
@@ -78,7 +78,7 @@ pub(crate) fn emit_connegatives(csv_path: &Path, blob_path: &Path) {
         csv_path,
         blob_path,
         "connegatives",
-        "build/build_verb_lexicon.py",
+        "python3 tools/oracle/build_verb_lexicon.py",
         0,
         &[1],
     );
@@ -92,7 +92,7 @@ pub(crate) fn emit_connectives(csv_path: &Path, blob_path: &Path) {
         csv_path,
         blob_path,
         "connectives",
-        "build/build_verb_lexicon.py",
+        "python3 tools/oracle/build_verb_lexicon.py",
         0,
         &[1],
     );
@@ -106,7 +106,7 @@ pub(crate) fn emit_adverbi(csv_path: &Path, blob_path: &Path) {
         csv_path,
         blob_path,
         "adverbit",
-        "build/build_adverbi_forms.py",
+        "python3 tools/oracle/build_adverbi_forms.py",
         1,
         &[0],
     );
@@ -121,7 +121,7 @@ pub(crate) fn emit_adj_degrees(csv_path: &Path, blob_path: &Path) {
         csv_path,
         blob_path,
         "adj_degrees",
-        "build/build_adj_degrees.py",
+        "cargo run --release -p torille-tools --bin gen_adj_degrees",
         0,
         &[1, 2],
     );

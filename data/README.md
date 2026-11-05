@@ -21,7 +21,7 @@ engine's MIT/Apache-2.0 license.
 
 | file | producer | used by |
 |---|---|---|
-| `adj_degrees.csv` | `tools/build/build_adj_degrees.py` | `maps/adj_degrees.bin` |
+| `adj_degrees.csv` | `gen_adj_degrees` (Rust bin) | `maps/adj_degrees.bin` |
 | `stem_to_base_map.csv` | `tools/build/build_stem_to_base_map.py` | `maps/stem_map_noun.bin` |
 | `verb_stem_to_base_map.csv` | `tools/build/build_verb_stem_to_base_map.py` | `maps/stem_map_verb.bin` |
 

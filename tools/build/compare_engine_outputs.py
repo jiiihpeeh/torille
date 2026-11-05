@@ -59,8 +59,30 @@ BASELINE = {
 
 
 def run(builder: str, *args: str) -> None:
+    """Run a Python builder under `tools/build/` or `tools/oracle/`."""
     subprocess.run(
         [sys.executable, str(BUILD / builder), *args],
+        check=True,
+        cwd=REPO,
+    )
+
+
+def run_bin(bin: str, out: Path) -> None:
+    """Run a Rust generator from the tools crate."""
+    subprocess.run(
+        [
+            "cargo",
+            "run",
+            "--quiet",
+            "--release",
+            "-p",
+            "torille-tools",
+            "--bin",
+            bin,
+            "--",
+            "--out",
+            str(out),
+        ],
         check=True,
         cwd=REPO,
     )
@@ -183,7 +205,7 @@ def engine_form_subset(csv_path: Path) -> set[str]:
 
 def compare_all_forms(tmp: Path, strict: bool) -> bool:
     engine_csv = tmp / "all_forms_engine.csv"
-    run("build_all_forms_csv.py", "--out", str(engine_csv))
+    run_bin("gen_all_forms", engine_csv)
     committed_csv = REPO / "data" / "all_forms.csv"
     if committed_csv.exists():
         old = engine_form_subset(committed_csv)
@@ -256,7 +278,7 @@ def compare_stem_map_verb(tmp: Path, strict: bool) -> bool:
 
 def compare_adj_degrees(tmp: Path, strict: bool) -> bool:
     engine_csv = tmp / "adj_degrees_engine.csv"
-    run("build_adj_degrees.py", "--out", str(engine_csv))
+    run_bin("gen_adj_degrees", engine_csv)
     old_comp, old_sup = degree_cells(REPO / "data" / "adj_degrees.csv")
     new_comp, new_sup = degree_cells(engine_csv)
     ok = report(

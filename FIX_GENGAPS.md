@@ -33,15 +33,16 @@ splitter instead. See G1 for the residual modifier gaps.
 Reproduce with:
 
 ```bash
-python3 tools/build/build_all_forms_csv.py --out /tmp/all_forms_engine.csv
+cargo run --release -p torille-tools --bin gen_all_forms -- \
+        --out /tmp/all_forms_engine.csv
 python3 tools/build/build_stem_to_base_map.py --source engine \
         --out /tmp/stem_map_noun_engine.csv
 ```
 
-The verb and adjective comparisons were generated from the same algorithms as
-`tools/build/build_verb_stem_to_base_map.py` and
-`tools/build/build_adj_degrees.py`, but those two still read sqlite/Omorfi.
-Adding the comparison as a committed script is G0.
+The verb map comparison was generated from the same algorithm as
+`tools/build/build_verb_stem_to_base_map.py`, which then still read sqlite.
+The degree comparison now runs `gen_adj_degrees`. Adding the comparison as a
+committed script is G0.
 
 ## Priority
 
@@ -455,8 +456,7 @@ Not a gap. Engine output is a strict superset:
 - comparatives: 4 859 shared, 0 lost, +956;
 - superlatives: 1 934 shared, 0 lost, +3 817.
 
-**Fix.** Replace `build_adj_degrees.py`'s Omorfi/Voikko body with the engine
-loop already prototyped:
+**Fix.** `gen_adj_degrees` (Rust bin) implements the engine loop:
 
 ```python
 nom = [f.word for f in engine.inflect(lemma)

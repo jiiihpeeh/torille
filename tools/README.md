@@ -80,7 +80,7 @@ the oracle/reference generators that refresh the committed lexical tables
 live in [`oracle/`](oracle/README.md). In short:
 
 ```bash
-python3 tools/build/build_all_forms_csv.py      # engine
+cargo run --release -p torille-tools --bin gen_all_forms   # engine
 python3 tools/build/build_stem_to_base_map.py   # engine
 cargo run --release -p torille-tools --bin gen_derived   # derived tables (blobs)
 python3 tools/oracle/build_oi_plural_lemmas.py   # class-10 -oi- plural set (oracle)
@@ -129,7 +129,8 @@ The remaining scripts fall into four groups:
   negative-mood verb cells, and the connectives/connegatives tables that used
   to be separate update/fill scripts.
 - **Generated tables** — `build/build_stem_to_base_map.py --source
-  engine|hybrid|oracle` and `build/build_all_forms_csv.py --source engine|oracle`.
+  engine|hybrid|oracle`; `gen_all_forms` and `gen_adj_degrees` are Rust bins
+  in `tools/src/bin/`.
   `engine` (the default for both) asks the current binding, so a fixed
   inflection bug cannot leave its old invented forms in a checked-in blob.
   `hybrid` keeps oracle rows only where the current engine still produces

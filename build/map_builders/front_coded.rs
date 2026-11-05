@@ -41,7 +41,7 @@ pub(crate) fn emit_front_coded_set(csv_path: &Path, blob_path: &Path) {
         Ok(s) => s,
         Err(e) => panic!(
             "build.rs: could not read {}: {e}; \
-             run `python3 tools/build/build_all_forms_csv.py` first",
+             run `cargo run --release -p torille-tools --bin gen_all_forms` first",
             csv_path.display(),
         ),
     };

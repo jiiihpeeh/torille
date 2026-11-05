@@ -30,7 +30,7 @@ clone build without a Python environment.
 
 | file | producer |
 |---|---|
-| `adj_degrees.csv` | `tools/build/build_adj_degrees.py` |
+| `adj_degrees.csv` | `gen_adj_degrees` (Rust bin) |
 | `stem_to_base_map.csv` | `tools/build/build_stem_to_base_map.py` |
 | `verb_stem_to_base_map.csv` | `tools/build/build_verb_stem_to_base_map.py` |
 | `verb_connegatives.csv`, `verb_connectives.csv` | oracle/reference tables (frozen) |
