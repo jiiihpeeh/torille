@@ -17,17 +17,18 @@ Engine outputs were written to `/tmp` and diffed against the committed file:
 | artifact | committed | engine | shared | lost | new |
 |---|---:|---:|---:|---:|---:|
 | `all_forms.csv` unique surfaces | 4 856 961 | 6 441 884 | 4 844 254 | 12 707 | 1 597 630 |
-| noun stem-map bases | 83 307 | 32 115 | — | 51 196 ¹ | 4 |
+| noun stem-map bases (after G1) | 32 115 | 32 115 | — | 0 | 0 |
 | verb stem-map bases | 10 022 | 10 033 | — | 6 | 17 |
 | verb stem-map `(stem, base)` pairs | 195 803 | 237 424 | 150 704 | 45 099 | 86 720 |
 | adjective comparatives | 4 859 | 5 815 | 4 859 | **0** | +956 |
 | adjective superlatives | 1 934 | 5 751 | 1 934 | **0** | +3 817 |
 
-¹ Most of the 51 196 are classless whole-compound bases, which the engine
-resolves through the compound head instead of emitting as map bases
-(`raitiotiellä` -> `tie`, not `raitiotie`). Measured behavioural loss after
-that is 461 bases: 406 classless compounds whose modifier is not a free
-lemma, plus 57 non-nominal rows (`OK`, `aiemmin`, ...). See G1.
+Before G1 the committed map was the hybrid (oracle) output: 83 307 bases and
+528 629 pairs. The 51 196 "lost" bases were classless whole compounds, which
+must not be map bases at all: they resolve through their compound head
+(`raitiotiellä` -> `tie`, not `raitiotie`). G1 switched the map to the
+engine-only 32 115 classed bases; the classless citations are reached by the
+splitter instead. See G1 for the residual modifier gaps.
 
 Reproduce with:
 
@@ -153,9 +154,14 @@ content-head tests stay green.
   own head (`ruumis` -> `ruumiin`, `avomeri` -> `avomeren`), restricted to
   a nominal base.
 
-Measured effect: 406 -> **59** lost classless bases. The remaining 59 are
-the subjects of G1c–G1e. All 874 lib tests pass, including the three
-content-head tests.
+Measured effect: 406 -> **59** lost classless *map bases*, and the map is
+now generated from the engine (32 115 classed bases, 244 740 pairs, no
+oracle). Classless citations are no longer bases: `check_normal` resolves
+them through the head, which is what the user-visible contract asks for
+(`binaarijärjestelmässä` -> `järjestelmä`, not `ässä`). Two hybrid-era test
+expectations moved with it (`ilkialastomina` -> `alaston`,
+`savupatsasten` -> `patsas`). All 874 lib tests and the workspace suite
+pass.
 
 ### G1b — the 57 classed losses
 
@@ -429,7 +435,6 @@ generators, which move to `tools/oracle/`.
 - [ ] G1c `9*(D)` parenthesised gradation and `5*F` parsing
 - [ ] G1d numeral hundreds/tens
 - [ ] G1e nested modifier compounds
-- [ ] G1 noun stem map regenerated from the engine
 - [ ] G1b 57 classed losses encoded as explained allow-list
 - [ ] G2 eight class-100 rows resolved
 - [ ] G3 negation/connectives emitted by the engine

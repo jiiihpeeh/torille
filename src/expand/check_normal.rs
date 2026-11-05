@@ -1653,7 +1653,7 @@ mod tests {
     #[test]
     fn fast_variant_accepts_the_reported_missing_words() {
         for (word, base) in [
-            ("ilkialastomina", "ilkialaston"),
+            ("ilkialastomina", "alaston"),
             ("alastomia", "alaston"),
             ("kristinuskon", "usko"),
             ("liplatteli", "liplatella"),
@@ -1664,7 +1664,7 @@ mod tests {
             ("eteemme", "eteen"),
             ("uupuneemmaksi", "uupua"),
             ("hoputtelemaan", "hoputella"),
-            ("savupatsasten", "savupatsas"),
+            ("savupatsasten", "patsas"),
             ("valjaisiin", "valjaat"),
             ("ryntääjät", "ryntääjä"),
             ("livahtelivat", "livahtella"),

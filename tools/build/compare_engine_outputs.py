@@ -51,7 +51,7 @@ BASELINE = {
     "all_forms": 12_707,
     # Classed nominal bases the engine cannot produce. Classless compounds
     # are not counted: they resolve through their head, not as map bases.
-    "stem_map_noun_classed": 57,
+    "stem_map_noun_classed": 0,
     "adj_degrees": 0,
 }
 
