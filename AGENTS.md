@@ -27,6 +27,8 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
 - `PLAN.md` / `PLAN_REFACTOR.md` — the stem refactor and its outcome.
 - `FIX_GENGAPS.md` — engine gaps that still force a map generator onto the
   Kotus/Omorfi sqlite, with the measured baseline and the fix order.
+- `DATA_CLEANUP_PLAN.md` — what in `data/` is source, committed build input,
+  frozen reference data, or local-only, and the deletion phases.
 - `PLAN_COMPOUND.md` — the compound engine: what the spec asks for, what
   already exists, and the phases for the inflection-mode/compound-kind model.
 

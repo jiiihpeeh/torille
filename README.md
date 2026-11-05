@@ -568,4 +568,6 @@ currently pass — the known defects are in
   actually happened when it ran.
 - [FIX_GENGAPS.md](FIX_GENGAPS.md) — what still keeps a map generator on an
   oracle, with measurements, fixes and exit criteria.
+- [DATA_CLEANUP_PLAN.md](DATA_CLEANUP_PLAN.md) — the `data/` inventory and the
+  phases for removing redundant local artifacts.
 - [TODO.md](TODO.md) — known gaps, ordered by user-facing impact.
