@@ -2230,6 +2230,25 @@ mod tests {
         }
     }
 
+    /// `nahka` is `9*(D)`: the parenthesised gradation is the standard one
+    /// (`nahan`). `sanalista_overrides` replaces the expression, so the
+    /// grader's weak stem is what the paradigm uses.
+    #[test]
+    fn an_optional_gradation_override_emits_the_standard_form() {
+        let cat = cat();
+        let inflections: Vec<_> = crate::kotus::sanalista()
+            .by_word("nahka")
+            .next()
+            .expect("nahka is in the lexicon")
+            .inflections()
+            .collect();
+        let forms = inflect_all("nahka", &inflections, &cat, None, PartOfSpeech::Noun, true);
+        assert!(
+            forms.iter().any(|f| f.word == "nahan"),
+            "nahka does not inflect to nahan"
+        );
+    }
+
     /// A sanalista class-100 row names no declension type. A few have a
     /// neighbouring class that describes their paradigm exactly; those are
     /// remapped at parse time (`sanalista_overrides`), so they inflect like

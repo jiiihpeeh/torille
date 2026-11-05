@@ -256,16 +256,11 @@ pub(crate) fn parse_rows(text: &str) -> Vec<Row<'_>> {
         }
         let homonymy = f.next().unwrap_or("").trim();
         let pos = f.next().unwrap_or("").trim();
-        let inflections = parse_inflections(f.next().unwrap_or("").trim());
-        // Mirrors `kotus::parse_sanalista`: a class-100 row may name a
-        // neighbouring class in `sanalista_overrides`.
-        let inflections = if inflections.iter().all(|c| (*c >> 8) == 100) {
-            match crate::sanalista_overrides::class_for(word) {
-                Some(class) => parse_inflections(class),
-                None => inflections,
-            }
-        } else {
-            inflections
+        // Mirrors `kotus::parse_sanalista`: a row may have its class
+        // expression corrected in `sanalista_overrides`.
+        let inflections = match crate::sanalista_overrides::class_for(word) {
+            Some(class) => parse_inflections(class),
+            None => parse_inflections(f.next().unwrap_or("").trim()),
         };
         out.push(Row {
             word,
@@ -299,6 +294,7 @@ fn parse_inflections(field: &str) -> Vec<u32> {
         })
         .collect()
 }
+
 
 /// Mirrors `kotus::parse_single`, returning the packed `u32` instead.
 fn parse_single(item: &str) -> Option<u32> {

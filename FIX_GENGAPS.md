@@ -171,20 +171,19 @@ class 51), and parenthesised classes (`OK` `(18)`, `mezzopiano` `(1)`). They
 are not nominal paradigms and are correctly absent from a *noun* stem map.
 Encode them as an explicit allow-list with the reason.
 
-### G1c — two gradation defects
+### G1c — optional gradation and the rejected `viti` — **done**
 
-`nahanluonti` / `nahanmuokkaus` / `nahanvalmistus` and `vitilumi` /
-`vitivalkea` still fail because the engine cannot produce the modifier at all:
+- `nahka` is `9*(D)`. The parenthesised gradation is the standard one
+  (`nahan`; Voikko and Omorfi both confirm it), but the parser's documented
+  rule drops a parenthesised gradation when the unbracketed class is there
+  (`8*(C)` is genuinely optional). `src/sanalista_overrides.rs` now carries
+  the correction `nahka -> 9*D`, applied by both parsers; `nahanluonti`
+  inflects, and a test pins `nahan`.
+- `viti` is `5*F`, but the row is already rejected outright in
+  `src/rejected.rs`. `vitilumi`/`vitivalkea` are therefore intentionally
+  unknown, not a gradation gap; no parser change is warranted.
 
-- `nahka` is listed as `9*(D)`; `./target/debug/inflect nahka` emits
-  `nahkan`, not the standard `nahan`. The parenthesised gradation is not
-  applied.
-- `viti` is `5*F`; `inflect viti` emits nothing. `F` is not a gradation
-  letter the parser accepts.
-
-Fix in `src/kotus.rs` / `src/gradation.rs` / `src/grammar` gradation parsing (the parenthesised
-class form and the `F` letter), then the existing modifier probe finds both.
-These are engine bugs, not splitter gaps.
+The classless-bases loss list drops by the three `nahan*` compounds.
 
 ### G1d — numeral compounds
 
@@ -450,7 +449,7 @@ generators, which move to `tools/oracle/`.
 - [x] G7 degree table regenerated from the engine
 - [x] G1 compound-modifier coverage (`agraari`, `ampuma-`, `ruumiin`,
       `avomeren`); 406 -> 59 losses, 874 tests green
-- [ ] G1c `9*(D)` parenthesised gradation and `5*F` parsing
+- [x] G1c `9*(D)` parenthesised gradation (`nahka` override); `viti` stays rejected
 - [ ] G1d numeral hundreds/tens
 - [ ] G1e nested modifier compounds
 - [ ] G1b 57 classed losses encoded as explained allow-list
