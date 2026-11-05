@@ -3,7 +3,7 @@
 //!
 //! The derived and pronoun tables are computed with the engine, which a build
 //! script cannot call, so they are written by the `gen_derived` tool and
-//! committed under `data/precomputed/`. At run time the bytes are the embedded
+//! committed under `maps/`. At run time the bytes are the embedded
 //! blob and a lookup is a binary search over the key offsets; nothing is
 //! parsed or allocated.
 //!

@@ -474,7 +474,7 @@ Only if exact-first ranking must improve beyond what morphology can justify:
 - **Frequency prior**: rank by log lemma frequency within the same reading
   kind/confidence tier. Requires a permissively licensed frequency list
   (MIT/CC-compatible, attributed) and a precomputed blob, like
-  `data/precomputed/oi_plural_lemmas.bin`. Do not derive it from the GPL
+  `maps/oi_plural_lemmas.bin`. Do not derive it from the GPL
   oracle.
 - **Context resolver**: use `sentence`/`syntax` to choose between a nominal
   and a verb reading from the clause. This is the linguistically correct fix

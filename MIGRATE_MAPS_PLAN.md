@@ -57,7 +57,7 @@ homonyms and misses.
 - `build.rs`: replace `emit_form_set` (phf) with `emit_front_coded_set`:
   same CSV predicate (nominative singular + genitive singular, no
   possessive), `BTreeSet` dedup/sort, front-code, write
-  `data/precomputed/all_forms.bin`.
+  `maps/all_forms.bin`.
 - `src/expand/all_forms.rs`: `FORM_SET` becomes `StaticSet` over
   `include_bytes!("all_forms.bin")`; `form_set()` returns `&StaticSet`.
   `torille-wasm/src/lib.rs` keeps using `.len()` in `warm_form_set`.

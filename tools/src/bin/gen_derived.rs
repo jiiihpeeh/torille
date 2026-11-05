@@ -4,7 +4,7 @@
 //! `src/expand/derived.rs` embeds three sorted blobs:
 //! `derived_by_form.bin` (surface -> derived lemma), `derived_nominal.bin` and
 //! `derived_modifiers.bin`. They are built here once and committed under
-//! `build/computed_maps/` because computing them at start-up
+//! `maps/` because computing them at start-up
 //! costs ~85 ms: the 55 flagged sanalista rows inflect to 42 532 surfaces.
 //!
 //! Run after a sanalista or `RULES` change:
@@ -12,16 +12,11 @@
 //!     cargo run --release -p torille-tools --bin gen_derived
 //!
 //! The format is described on `Blob` in `src/expand/blob.rs`; the writer is
-//! `build/computed_maps/table.rs`, shared with the other blob writers.
+//! `maps/table.rs`, shared with the other blob writers.
 
 use std::path::Path;
 
-// The DER1 table writer lives with the other blob writers under `build/`,
-// next to the format reader's documentation (`src/expand/blob.rs`).
-#[path = "../../../build/computed_maps/mod.rs"]
-mod computed_maps;
-
-use computed_maps::table::write_table;
+use torille_tools::der1::write_table;
 
 fn main() {
     let computed = torille::expand::derived::compute();
@@ -29,21 +24,21 @@ fn main() {
     let mut by_form: Vec<(String, &'static str)> = computed.by_form.into_iter().collect();
     by_form.sort_by(|a, b| a.0.cmp(&b.0));
     write_table(
-        Path::new("build/computed_maps/derived_by_form.bin"),
+        Path::new("maps/derived_by_form.bin"),
         by_form.iter().map(|(surface, lemma)| (surface.as_str(), Some(*lemma))),
     );
 
     let mut nominal: Vec<&str> = computed.nominal.iter().map(String::as_str).collect();
     nominal.sort_unstable();
     write_table(
-        Path::new("build/computed_maps/derived_nominal.bin"),
+        Path::new("maps/derived_nominal.bin"),
         nominal.iter().map(|word| (*word, None)),
     );
 
     let mut modifiers: Vec<&str> = computed.modifiers.iter().map(String::as_str).collect();
     modifiers.sort_unstable();
     write_table(
-        Path::new("build/computed_maps/derived_modifiers.bin"),
+        Path::new("maps/derived_modifiers.bin"),
         modifiers.iter().map(|word| (*word, None)),
     );
 
@@ -55,7 +50,7 @@ fn main() {
             .collect();
     pronouns.sort_by(|a, b| a.0.cmp(&b.0));
     write_table(
-        Path::new("build/computed_maps/pronoun_forms.bin"),
+        Path::new("maps/pronoun_forms.bin"),
         pronouns
             .iter()
             .map(|(surface, lemma)| (surface.as_str(), Some(*lemma))),

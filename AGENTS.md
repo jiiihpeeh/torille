@@ -111,21 +111,21 @@ docs/                 harness.md, lexicon.md, morfologia.yaml, hyphenation.md
   local-only, gitignored, and read by neither the build nor the runtime.
 
 The sanalista is `include_str!`'d (`lib.rs`); the catalogue is compiled to
-`data/precomputed/catalogue.bin` by `build.rs` and embedded with
+`maps/catalogue.bin` by `build.rs` and embedded with
 `include_bytes!`, so the shipped crate needs no data files.
 
-`build/computed_maps/{derived_{by_form,nominal,modifiers},pronoun_forms}.bin`
-are the exception to the build-script writers below: those tables are built with
-the engine (`expand::derived::compute`,
+`maps/{derived_{by_form,nominal,modifiers},pronoun_forms}.bin` are the
+exception to the build-script writers below: those tables are built with the
+engine (`expand::derived::compute`,
 `expand::check_normal::compute_pronoun_forms`), which a build script cannot
-call. Their shared `DER1` writer is `build/computed_maps/table.rs`; run
+call. Their `DER1` writer is `tools/src/der1.rs`; run
 `cargo run --release -p torille-tools --bin gen_derived` after a `RULES`,
 sanalista or pronoun/class change and commit the blobs;
 `expand::derived::tests::the_blobs_match_compute` and
 `expand::check_normal::tests::the_pronoun_blob_matches_compute` fail if they
 drift.
 
-`data/precomputed/oi_plural_lemmas.bin` is the one oracle-derived table: the
+`maps/oi_plural_lemmas.bin` is the one oracle-derived table: the
 class-10 lemmas whose `ok='both'` paradigm has the alternative `-oi-` plural
 (`ampuja` -> `ampujoita`). It is lexical, not derivable (`alkaja` is class 10
 and has no such plural), so `tools/build_oi_plural_lemmas.py` reads it off the
@@ -140,10 +140,9 @@ trees: `build/csv_builders/` reads the committed CSVs (`sanalista.rs` for the
 lexicon blob, `catalogue.rs` for the paradigm catalogue, `string_map.rs` for
 the small lexical side tables) and `build/map_builders/` writes the compact
 set/map blobs (`front_coded.rs` for sets/maps, `huffman.rs` for the `HST1`
-proper-name set). A third tree, `build/computed_maps/`, holds both the writer
-and the embedded blobs a build script cannot compute (`gen_derived`'s tables).
-It emits
-`data/precomputed/sanalista.bin`: 8-byte per-row records (headword,
+proper-name set). Every blob they emit lands in the top-level `maps/`, the
+single source for the embedded binary maps; `gen_derived` writes its
+engine-computed tables there too. It emits `maps/sanalista.bin`: 8-byte per-row records (headword,
 length, POS code, inflection start), the headword strings, `u16`
 inflections, small POS/homonym side tables, and the two sorted orders
 (`WORD_ORDER` by word, `TAIL_ORDER` by reversed word). **Nothing here is
@@ -429,7 +428,7 @@ is gitignored and generated.
 | edit distance / keyboard tie-break | `src/suggest/levenshtein.rs` |
 | "which lemma is this a form of" | `src/expand/find_bases.rs`, `src/expand/lexicon_index.rs` |
 | the reverse index / class prior | `src/expand/build.rs` |
-| compile-time blob writers | `build.rs`, `build/csv_builders/`, `build/map_builders/`, `build/computed_maps/` |
+| compile-time blob writers | `build.rs`, `build/csv_builders/`, `build/map_builders/`; blobs live in `maps/` |
 | a new verb/noun class engine | `src/expand/verbs/`, `src/expand/nominals*/`, then `dispatch` + `AUTHORITATIVE_CLASSES` |
 | the grammar reading model | `src/tags.rs` |
 | hyphenation patterns/policy | `src/hyphenation/`, `data/hyphenation/` |

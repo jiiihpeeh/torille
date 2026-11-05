@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! The `DER1` sorted key/value table writer.
 //!
 //! Layout (little-endian), matching the reader in `src/expand/blob.rs`:

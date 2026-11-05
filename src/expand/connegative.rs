@@ -22,7 +22,7 @@ mod table {
     /// `tools/build_verb_lexicon.py`.
     pub static CONNEGATIVES: StemMap = StemMap::new(include_bytes!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/data/precomputed/connegatives.bin",
+        "/maps/connegatives.bin",
     )));
 }
 

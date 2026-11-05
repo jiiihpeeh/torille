@@ -155,7 +155,7 @@ impl Catalogues {
         EMBEDDED.get_or_init(|| {
             Self::from_bytes(include_bytes!(concat!(
                 env!("CARGO_MANIFEST_DIR"),
-                "/data/precomputed/catalogue.bin",
+                "/maps/catalogue.bin",
             )))
         })
     }

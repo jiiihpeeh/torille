@@ -1,6 +1,6 @@
 //! Writers that turn the committed source data into the embedded binary
 //! blobs. Every module here reads a file (CSV, TSV or a raw text grid) and
-//! writes a compact `data/precomputed/*.bin`.
+//! writes a compact `maps/*.bin`.
 //!
 //! The blob formats are read back by the engine: see `src/map_reader.rs`,
 //! `src/expand/static_table.rs` and `src/spec.rs`. Keep this tree free of

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 """Build `data/all_forms.csv`, the compile-time form subset.
 
-The lib's `build.rs` reads this CSV and emits `data/precomputed/all_forms.bin`
+The lib's `build.rs` reads this CSV and emits `maps/all_forms.bin`
 -- a front-coded set of bare lemmas and genitive-singular forms, the forms the
 typing path checks first. The set must contain only forms the engine actually
 recognises as *its own* current output.

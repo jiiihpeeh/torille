@@ -54,7 +54,7 @@ static OI_PLURAL_LEMMAS: OnceLock<Blob> = OnceLock::new();
 
 const OI_PLURAL_LEMMAS_BIN: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/data/precomputed/oi_plural_lemmas.bin"
+    "/maps/oi_plural_lemmas.bin"
 ));
 
 fn takes_oi_plural(lemma: &str) -> bool {

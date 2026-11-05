@@ -105,7 +105,7 @@ refactor should change zero `Form`s.
   training.
 - No statistical/neural sentence splitter in this plan.
 - No new dictionary source. Proper-name decisions keep using
-  `data/precomputed/proper_names.bin` and the learned `proper_nouns`
+  `maps/proper_names.bin` and the learned `proper_nouns`
   set.
 - No change to `suggest()` matching semantics; only the returned
   surface case (already implemented in `suggest/casing.rs`) and the

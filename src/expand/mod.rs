@@ -80,7 +80,7 @@ mod degrees {
     /// empty string, so the two cells stay positional.
     pub static ADJ_DEGREES: StemMap = StemMap::new(include_bytes!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/data/precomputed/adj_degrees.bin",
+        "/maps/adj_degrees.bin",
     )));
 }
 

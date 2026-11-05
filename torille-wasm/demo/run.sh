@@ -29,14 +29,14 @@ DIST_EXT="${SCRIPT_DIR}/dist/extension-test.js"
 
 # True when something the demo depends on is newer than the last build.
 # The engine (`src/`, the root `Cargo.toml`) and the generated stem maps
-# (`data/precomputed/`) are part of the wasm, not just `torille-wasm/src`
+# (`maps/`) are part of the wasm, not just `torille-wasm/src`
 # -- checking only the latter meant an engine change left a stale wasm
 # and the demo kept the old spell-checker.
 wasm_needs_build() {
   [ ! -f "${WASM_PKG}/torille_wasm_bg.wasm" ] && return 0
   [ -n "$(find "${WASM_DIR}/src" "${WASM_DIR}/Cargo.toml" \
                      "${WASM_DIR}/../src" "${WASM_DIR}/../Cargo.toml" \
-                     "${WASM_DIR}/../data/precomputed" \
+                     "${WASM_DIR}/../maps" \
         -newer "${WASM_PKG}/torille_wasm_bg.wasm" \
         -print -quit 2>/dev/null)" ] && return 0
   return 1

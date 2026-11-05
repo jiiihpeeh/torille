@@ -8,6 +8,8 @@
 
 use torille::kotus::{Gradation, Inflection, Lemma as LemmaRe};
 
+pub mod der1;
+
 use torille::spec::Catalogues;
 use torille::tags::PartOfSpeech;
 

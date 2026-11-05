@@ -1,6 +1,6 @@
 //! Shared readers for the embedded binary maps.
 //!
-//! `data/precomputed/` holds two blob shapes, both embedded with
+//! `maps/` holds two blob shapes, both embedded with
 //! `include_bytes!` and read in place (no parse, no startup allocation):
 //!
 //! * the **sanalista** blob (`sanalista.bin`): a 48-byte header of explicit

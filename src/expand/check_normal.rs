@@ -83,20 +83,20 @@ use crate::tags::PartOfSpeech;
 /// Noun stem map: built by
 /// [`tools/build_stem_to_base_map.py`] from the kotus noun oracle.
 /// ~683 k unique stems, ~1500 multi-base. The blob is checked in at
-/// `data/precomputed/stem_map_noun.bin`; the build script overwrites it
+/// `maps/stem_map_noun.bin`; the build script overwrites it
 /// on CSV change.
 pub static STEM_BUCKETS_NOUN: StemMap = StemMap::new(include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/data/precomputed/stem_map_noun.bin",
+    "/maps/stem_map_noun.bin",
 )));
 
 /// Verb counterpart: `data/verb_stem_to_base_map.csv`. ~268 k unique
 /// stems: finite personal + infinitive + active participle forms, the
 /// passive impersonal forms, and the non-finite case-stems. Same
-/// `data/precomputed/` layout.
+/// `maps/` layout.
 pub static STEM_BUCKETS_VERB: StemMap = StemMap::new(include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/data/precomputed/stem_map_verb.bin",
+    "/maps/stem_map_verb.bin",
 )));
 
 // ---------------------------------------------------------------------------
@@ -263,7 +263,7 @@ mod adverb {
 
     pub static ADVERBS: StemMap = StemMap::new(include_bytes!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/data/precomputed/adverbit.bin",
+        "/maps/adverbit.bin",
     )));
 }
 
@@ -311,7 +311,7 @@ static PRONOUN_MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::ne
 
 const PRONOUN_FORMS_BIN: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/build/computed_maps/pronoun_forms.bin"
+    "/maps/pronoun_forms.bin"
 ));
 
 /// The pronoun lemma `word` is a form of, if any.

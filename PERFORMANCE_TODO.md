@@ -57,7 +57,7 @@ It was two tables built by materialising the whole lexicon:
 
 - `pronoun_forms()` scanned all 104k lemma rows to find the 32 class-101
   lemmas, then inflected them (395 surfaces). The table is now a committed blob
-  (`build/computed_maps/pronoun_forms.bin`, 7.5 KB) written by `gen_derived` from
+  (`maps/pronoun_forms.bin`, 7.5 KB) written by `gen_derived` from
   `expand::check_normal::compute_pronoun_forms`; the runtime reads it into a map
   once. The 104k-row scan is gone.
 - `lemma_set()` called `kotus::lemmas()`, which allocates an `Inflection` vector
@@ -174,9 +174,9 @@ wasm is one thread and still paid the whole build. The tables are now
 **committed blobs**: `tools/src/bin/gen_derived.rs` runs
 `expand::derived::compute()` and writes
 
-- `build/computed_maps/derived_by_form.bin` — 38 211 surfaces -> lemma, 1.4 MB,
-- `build/computed_maps/derived_nominal.bin` — 8 389 surfaces, 159 KB,
-- `build/computed_maps/derived_modifiers.bin` — 9 stems, 163 B.
+- `maps/derived_by_form.bin` — 38 211 surfaces -> lemma, 1.4 MB,
+- `maps/derived_nominal.bin` — 8 389 surfaces, 159 KB,
+- `maps/derived_modifiers.bin` — 9 stems, 163 B.
 
 `src/expand/derived.rs` reads them with a sorted-offset blob and a binary
 search (`Blob` in that file); there is no build at run time and no per-lookup

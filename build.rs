@@ -7,7 +7,7 @@
 //!
 //! What is emitted:
 //!
-//! * one binary blob (`data/precomputed/sanalista.bin`) holding the
+//! * one binary blob (`maps/sanalista.bin`) holding the
 //!   per-row records, the packed strings, the inflections as a flat `u32`
 //!   array (class in the high 16 bits, gradation code in the low 8), and
 //!   `WORD_ORDER` / `TAIL_ORDER` (row indices sorted by headword and by
@@ -49,12 +49,12 @@ fn main() {
     let text = std::fs::read_to_string(&data).unwrap_or_else(|e| panic!("{}: {e}", data.display()));
     let blob = generate(&text);
 
-    // The indexed lexicon is written to `data/precomputed/` in the crate
+    // The indexed lexicon is written to `maps/` in the crate
     // root rather than `OUT_DIR`, so a fresh `cargo build` (or one from
     // CI) just `include_bytes!`s the same file again -- no 1-2 min regen
     // unless the sanalista changes. `cargo:rerun-if-changed` keeps it in
     // step with `nykysuomensanalista.csv`.
-    let precomputed = Path::new(&manifest).join("data/precomputed");
+    let precomputed = Path::new(&manifest).join("maps");
     std::fs::create_dir_all(&precomputed)
         .unwrap_or_else(|e| panic!("create_dir_all {}: {e}", precomputed.display()));
     let blob_path = precomputed.join("sanalista.bin");

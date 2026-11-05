@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT OR Apache-2.0
-"""Write `data/precomputed/oi_plural_lemmas.bin`: the class-10 words whose
+"""Write `maps/oi_plural_lemmas.bin`: the class-10 words whose
 reference paradigm confirms the alternative `-oi-` plural.
 
 Class 10's plural stem changes the final `a`/`ä` to `i` (`koira` -> `koiri`,

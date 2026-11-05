@@ -26,7 +26,7 @@ mod table {
     /// `tools/build_verb_lexicon.py`.
     pub static CONNECTIVES: StemMap = StemMap::new(include_bytes!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/data/precomputed/connectives.bin",
+        "/maps/connectives.bin",
     )));
 }
 
