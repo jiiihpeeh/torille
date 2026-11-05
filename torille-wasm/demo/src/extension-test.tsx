@@ -414,10 +414,9 @@ Kymmenes rivi.`}
             <option>koirra</option>
           </select>
         </Card>
-        <Card label="Scrolled textarea">
-          <AutoTextarea
-            class="tall"
-            value={`Rivi 1.
+        <Card label="Scrolled textarea (fixed height)">
+          <textarea class="tall" style={{ height: '180px', overflow: 'auto' }}>
+            {`Rivi 1.
 Rivi 2.
 Rivi 3.
 Rivi 4.
@@ -428,8 +427,11 @@ Rivi 8.
 Rivi 9.
 Rivi 10 — kirjoitusvirhee.
 Rivi 11.
-Rivi 12.`}
-          />
+Rivi 12 — taloo ja koirra.
+Rivi 13.
+Rivi 14.
+Rivi 15.`}
+          </textarea>
         </Card>
       </div>
 
