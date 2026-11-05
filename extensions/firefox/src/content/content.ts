@@ -703,11 +703,11 @@
           ? (el.clientWidth || r.width - borderLeft - borderRight)
           : r.width - borderLeft - borderRight
       ) + 'px';
-      const boxHeight =
-        isTextarea
-          ? (el.clientHeight || r.height - borderTop - borderBottom)
-          : r.height - borderTop - borderBottom;
-      overlay.style.height = boxHeight + 'px';
+      if (isTextarea) {
+        syncOverlayHeight();
+      } else {
+        overlay.style.height = (r.height - borderTop - borderBottom) + 'px';
+      }
 
       // A single-line `<input>` centres its one line box inside the
       // content box, while the mirror stacks lines from the top. When the
@@ -741,6 +741,17 @@
     function positionOverlay(): void {
       overlay.style.left = (overlayInsetLeft - input.scrollLeft) + 'px';
       overlay.style.top = (overlayInsetTop - input.scrollTop) + 'px';
+    }
+
+    // A textarea's mirror must contain the *whole* text, not just the
+    // visible height: the overlay itself has `overflow: hidden`, so a
+    // fixed clientHeight clipped every line past the first screen and the
+    // last words never received underlines. The mirror wrapper clips to
+    // the textarea box; the overlay is scrolled inside it.
+    function syncOverlayHeight(): void {
+      if (el.tagName !== 'TEXTAREA') return;
+      overlay.style.height =
+        Math.max(el.clientHeight || 0, el.scrollHeight || 0) + 'px';
     }
 
     syncBox();
@@ -978,6 +989,11 @@
             { textarea: text, overlay: overlayText,
               lenDiff: overlayText.length - text.length });
       }
+      // The text may have grown taller than the textarea's viewport.
+      // Resize the mirror before the next paint so scrolled-to lines keep
+      // their underlines.
+      syncOverlayHeight();
+
       dbg('content', 'render:done',
           { gen: myGen, regions: regions.length, misspellings: misspellCount,
             hits: hits?.length ?? 0 });
