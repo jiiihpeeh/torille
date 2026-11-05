@@ -17,17 +17,13 @@ data/kotus-tyypit.txt
 
 # Generated noun lexicon and examples. Rebuild with
 #   python3 tools/oracle/build_nomine_lexicon.py -o data/kotus_nomines.sqlite
-data/kotus_nomines.sqlite
-data/kotus_nomines.new.sqlite
-data/kotus_nomines.old.sqlite
+data/kotus_nomines*.sqlite*
 data/kotus_nomines_example.*
-# The original hand-written sketch, superseded by the generated lexicon
 data/kotus_nomines.json
 
 # Generated verb lexicon. Rebuild with
 #   python3 tools/oracle/build_verb_lexicon.py -o data/kotus_verbit.sqlite
-data/kotus_verbit.sqlite
-data/kotus_verbit.sqlite.progress
+data/kotus_verbit.sqlite*
 
 # Firefox extension: build artefacts, dependencies, the demo's wasm artifacts
 extensions/firefox/node_modules/
@@ -62,7 +58,7 @@ extensions/chromium/torille_wasm_bg.wasm
 
 # Large generated artifacts (local only)
 data/all_forms.csv
-data/kotus_nomines.sqlite.bak2
+data/wiktionary_finnish_morph.jsonl
 
 # Ad-hoc wasm demo probes and the compiled protocol module. The probes and the
 # two-panel smoke are local debugging aids (the smoke needs puppeteer-core and
