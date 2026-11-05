@@ -40,6 +40,8 @@ use map_builders::front_coded::{
 
 #[path = "src/rejected.rs"]
 mod rejected;
+#[path = "src/sanalista_overrides.rs"]
+mod sanalista_overrides;
 
 fn main() {
     let manifest = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR");

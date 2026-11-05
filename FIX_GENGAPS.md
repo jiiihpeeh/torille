@@ -242,6 +242,24 @@ real class (`hälyttää` 53*C, `kehottaa` 53*C, `kuulostaa` 53).
 verb map loses no base except the connectives handled in G3; the affected
 `inflect` outputs have tests.
 
+**Status 2026-11-05 — done.**
+
+- `src/sanalista_overrides.rs` names a class for the two rows that are real
+  verbs with a neighbouring paradigm: `hälyyttää` `53*C` (like `hälyttää`)
+  and `rationoida` `62` (the `-oida` class). The remap is applied by both
+  the runtime parser and the build-script parser, so `parse_sanalista` and
+  the embedded blob still agree.
+- The other six are rejected in `src/rejected.rs`: `hälyytys`,
+  `kehoittaa`, `kuullostaa`, `vaakita`, `verytellä`, `veryttely`. Voikko
+  rejects all six and Omorfi marks them non-standard or `GUESS=UNKNOWN`;
+  leaving them accepted would also hide the standard spelling from the
+  suggester.
+- `inflect hälyyttää` emits 1 254 forms, `rationoida` 1 247;
+  `maps/sanalista.bin` is regenerated. A test pins both paradigms and the
+  six rejections.
+- The verb stem map is still the oracle output (G3); once it moves to the
+  engine, these two bases are no longer lost.
+
 ---
 
 ## G3 — negation and connective stems are hand-written
@@ -436,7 +454,7 @@ generators, which move to `tools/oracle/`.
 - [ ] G1d numeral hundreds/tens
 - [ ] G1e nested modifier compounds
 - [ ] G1b 57 classed losses encoded as explained allow-list
-- [ ] G2 eight class-100 rows resolved
+- [x] G2 eight class-100 rows resolved (2 remapped, 6 rejected)
 - [ ] G3 negation/connectives emitted by the engine
 - [ ] G3 verb stem map regenerated without the tool post-pass
 - [ ] G4 lost `all_forms` surfaces audited; table regenerated

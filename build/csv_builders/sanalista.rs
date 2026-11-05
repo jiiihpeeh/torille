@@ -254,11 +254,24 @@ pub(crate) fn parse_rows(text: &str) -> Vec<Row<'_>> {
         if word.is_empty() || crate::rejected::contains(word) {
             continue;
         }
+        let homonymy = f.next().unwrap_or("").trim();
+        let pos = f.next().unwrap_or("").trim();
+        let inflections = parse_inflections(f.next().unwrap_or("").trim());
+        // Mirrors `kotus::parse_sanalista`: a class-100 row may name a
+        // neighbouring class in `sanalista_overrides`.
+        let inflections = if inflections.iter().all(|c| (*c >> 8) == 100) {
+            match crate::sanalista_overrides::class_for(word) {
+                Some(class) => parse_inflections(class),
+                None => inflections,
+            }
+        } else {
+            inflections
+        };
         out.push(Row {
             word,
-            homonymy: f.next().unwrap_or("").trim(),
-            pos: f.next().unwrap_or("").trim(),
-            inflections: parse_inflections(f.next().unwrap_or("").trim()),
+            homonymy,
+            pos,
+            inflections,
         });
     }
     out

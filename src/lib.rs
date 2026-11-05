@@ -18,6 +18,7 @@ pub mod kotus;
 mod map_reader;
 pub mod pronoun;
 mod rejected;
+mod sanalista_overrides;
 pub mod sentence;
 pub mod spec;
 pub mod suggest;

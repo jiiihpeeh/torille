@@ -119,9 +119,15 @@ def report(
 
 
 def compare_all_forms(tmp: Path, strict: bool) -> bool:
+    old = REPO / "data" / "all_forms.csv"
+    if not old.exists():
+        # `data/all_forms.csv` is a local, gitignored dump; the committed
+        # artifact is `maps/all_forms.bin`. Without the dump there is nothing
+        # to diff against, so tell the caller and move on (FIX_GENGAPS G4).
+        print("all_forms: data/all_forms.csv absent; skipping (blob is tracked)")
+        return True
     engine_csv = tmp / "all_forms_engine.csv"
     run("build_all_forms_csv.py", "--out", str(engine_csv))
-    old = REPO / "data" / "all_forms.csv"
     ok = report(
         "all_forms (unique surfaces)",
         forms(old),

@@ -265,11 +265,25 @@ pub fn parse_sanalista(text: &str) -> Vec<Lemma<'_>> {
         if word.is_empty() || crate::rejected::contains(word) {
             continue;
         }
+        let homonymy = f.next().unwrap_or("").trim();
+        let part_of_speech = f.next().unwrap_or("").trim();
+        let inflections = parse_inflections(f.next().unwrap_or("").trim());
+        // A class-100 row has no type of its own; a few have a neighbouring
+        // class that describes their paradigm exactly. See
+        // `sanalista_overrides`.
+        let inflections = if inflections.iter().all(|i| i.class == 100) {
+            match crate::sanalista_overrides::class_for(word) {
+                Some(class) => parse_inflections(class),
+                None => inflections,
+            }
+        } else {
+            inflections
+        };
         out.push(Lemma {
             word,
-            homonymy: f.next().unwrap_or("").trim(),
-            part_of_speech: f.next().unwrap_or("").trim(),
-            inflections: parse_inflections(f.next().unwrap_or("").trim()),
+            homonymy,
+            part_of_speech,
+            inflections,
         });
     }
     out

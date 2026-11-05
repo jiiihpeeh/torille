@@ -2230,6 +2230,44 @@ mod tests {
         }
     }
 
+    /// A sanalista class-100 row names no declension type. A few have a
+    /// neighbouring class that describes their paradigm exactly; those are
+    /// remapped at parse time (`sanalista_overrides`), so they inflect like
+    /// any other member of the class. The rest stay classless or are
+    /// rejected outright.
+    #[test]
+    fn a_class_100_row_with_a_named_neighbouring_class_inflects() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista();
+        for (word, want) in [
+            // `hälyyttää` declines like `hälyttää` (53*C): `hälyytän`.
+            ("hälyyttää", "hälyytän"),
+            // `rationoida` is an `-oida` verb (62): `rationoin`.
+            ("rationoida", "rationoin"),
+        ] {
+            let inflections: Vec<_> = lexicon
+                .by_word(word)
+                .next()
+                .unwrap_or_else(|| panic!("{word} missing from the lexicon"))
+                .inflections()
+                .collect();
+            let forms = inflect_all(word, &inflections, &cat, None, PartOfSpeech::Verb, false);
+            assert!(
+                forms.iter().any(|f| f.word == want),
+                "{word} does not inflect to {want}"
+            );
+        }
+        // The six non-words/variant spellings are rejected, not remapped.
+        for word in [
+            "hälyytys", "kehoittaa", "kuullostaa", "vaakita", "verytellä", "veryttely",
+        ] {
+            assert!(
+                lexicon.by_word(word).next().is_none(),
+                "{word} should be rejected"
+            );
+        }
+    }
+
     /// A classless compound's modifier may be a derived or combining form
     /// that is not itself a lemma. The split is still the head's paradigm.
     #[test]

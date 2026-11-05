@@ -18,6 +18,16 @@ pub(crate) const LEMMAS: &[&str] = &[
     // for it, and the English/Finnish Wiktionary entry has only the Swedish
     // verb section.
     "vinka",
+    // Class-100 rows that are variant spellings or non-words, not a paradigm.
+    // Voikko rejects all six and Omorfi either marks them non-standard or
+    // guesses `UNKNOWN`; accepting them would also hide the standard
+    // spelling from the suggester (`kehoittaa` -> `kehottaa`).
+    "hälyytys", // `hälytys` (39)
+    "kehoittaa", // `kehottaa` (53*C)
+    "kuullostaa", // `kuulostaa` (53)
+    "vaakita",   // no standard lemma; Omorfi GUESS=UNKNOWN
+    "verytellä", // `venytellä` (67*C)
+    "veryttely", // `venyttely`
 ];
 
 /// Whether a sanalista lemma is rejected.
