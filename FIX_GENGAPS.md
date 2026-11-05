@@ -353,6 +353,27 @@ and adds 1 597 630. Losses include `aatelitonmme`, `aatelitonni`,
 `data/all_forms.csv` is committed with the audit report; `cargo test` and the
 harness gates pass.
 
+**Status 2026-11-05 — done.**
+
+`data/all_forms.csv` is a local, gitignored dump; the committed artifact is
+`maps/all_forms.bin`. `compare_engine_outputs.py` now decodes the `SST2`
+blob and compares the *subset* `build.rs` keeps, not the whole dump.
+
+The audit over the old blob found 205 lost keys, 29 of them Voikko-confirmed:
+
+- plural-only citations (`atulat`, `kihlat`, `markkinat`, `isovanhemmat`):
+  the engine tags them nominative **plural**, while the builder only kept
+  nominative singular. Keep the citation when `form == lemma` in the
+  nominative plural. Fixed in `build/map_builders/front_coded.rs`.
+- derived `-inen`/`-minen` genitives (`kuulumisen`, `kalvosulkeisen`):
+  they are not lemmas, so the fast subset does not carry them; the slow
+  check still resolves them. Accepted.
+- `nahkan`: an accepted variant beside the standard `nahan`; the `nahka`
+  override keeps the standard one. Accepted.
+
+The blob is regenerated from the engine (87 105 keys) and the comparison is
+0 lost / 0 new. `BASELINE["all_forms"]` is now 0.
+
 ---
 
 ## G5 — catalogue and class rules are still oracle-seeded
@@ -488,7 +509,7 @@ generators, which move to `tools/oracle/`.
 - [x] G2 eight class-100 rows resolved (2 remapped, 6 rejected)
 - [x] G3 verb map engine-only; closed negation/connective table kept
 - [x] G3 verb stem map regenerated from the engine (370 587 pairs, 0 bases lost)
-- [ ] G4 lost `all_forms` surfaces audited; table regenerated
+- [x] G4 `all_forms` blob regenerated from the engine (87 105 keys, 0 lost)
 - [ ] G5 catalogue frozen + drift report
 - [ ] G6 lexical tables documented as frozen reference data
 - [ ] `tools/build/README.md` says "engine-only" without an asterisk

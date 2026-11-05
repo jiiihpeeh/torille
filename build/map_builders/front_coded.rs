@@ -81,8 +81,13 @@ pub(crate) fn emit_front_coded_set(csv_path: &Path, blob_path: &Path) {
         if !possessive.is_empty() {
             continue;
         }
+        // A plural-only lemma (`atulat`, `kihlat`) has its citation in the
+        // nominative plural, not the singular; the engine tags it that way,
+        // so keep the form when it is the lemma itself.
+        let citation_plural = case == "nominative" && number == "plural" && form == lemma;
         let include = (case == "nominative" && number == "singular")
-            || (case == "genitive" && number == "singular");
+            || (case == "genitive" && number == "singular")
+            || citation_plural;
         if !include {
             continue;
         }

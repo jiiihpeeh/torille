@@ -49,7 +49,7 @@ SANALISTA = REPO / "data" / "nykysuomensanalista.csv"
 #: that grows means a new regression; a number that shrinks should be edited
 #: down here in the commit that closes the gap.
 BASELINE = {
-    "all_forms": 12_707,
+    "all_forms": 0,
     # Classed nominal bases the engine cannot produce. Classless compounds
     # are not counted: they resolve through their head, not as map bases.
     "stem_map_noun_classed": 0,
@@ -120,29 +120,89 @@ def report(
     return True
 
 
+def decode_front_coded_set(path: Path) -> set[str]:
+    """Decode an `SST2` front-coded set blob into its keys."""
+    blob = path.read_bytes()
+    if blob[:4] != b"SST2":
+        raise ValueError(f"{path}: not an SST2 set blob")
+    count = int.from_bytes(blob[4:8], "little")
+    keys_off = int.from_bytes(blob[16:20], "little")
+
+    def varint(at: int) -> tuple[int, int]:
+        value = 0
+        shift = 0
+        while True:
+            byte = blob[at]
+            at += 1
+            value |= (byte & 0x7F) << shift
+            if byte & 0x80 == 0:
+                return value, at
+            shift += 7
+
+    out: set[str] = set()
+    at = keys_off
+    prev = b""
+    for _ in range(count):
+        common, at = varint(at)
+        suffix_len, at = varint(at)
+        key = prev[:common] + blob[at : at + suffix_len]
+        at += suffix_len
+        prev = key
+        out.add(key.decode("utf-8"))
+    return out
+
+
+def engine_form_subset(csv_path: Path) -> set[str]:
+    """The subset `build.rs` keeps: lemma + genitive singular, no possessive."""
+    out: set[str] = set()
+    for line in csv_path.read_text(encoding="utf-8").splitlines():
+        if not line:
+            continue
+        cols = line.split("\t")
+        if len(cols) < 5:
+            continue
+        form, lemma, case, number, possessive = cols[:5]
+        if possessive:
+            continue
+        citation_plural = (
+            case == "nominative" and number == "plural" and form == lemma
+        )
+        if not (
+            (case == "nominative" and number == "singular")
+            or (case == "genitive" and number == "singular")
+            or citation_plural
+        ):
+            continue
+        # The class-1 plural-only bogus genitive (`housutn`).
+        if case == "genitive" and number == "singular" and lemma.endswith("t"):
+            if form == lemma + "n":
+                continue
+        out.add(form)
+    return out
+
+
 def compare_all_forms(tmp: Path, strict: bool) -> bool:
-    old = REPO / "data" / "all_forms.csv"
-    if not old.exists():
-        # `data/all_forms.csv` is a local, gitignored dump; the committed
-        # artifact is `maps/all_forms.bin`. Without the dump there is nothing
-        # to diff against, so tell the caller and move on (FIX_GENGAPS G4).
-        print("all_forms: data/all_forms.csv absent; skipping (blob is tracked)")
-        return True
     engine_csv = tmp / "all_forms_engine.csv"
     run("build_all_forms_csv.py", "--out", str(engine_csv))
+    committed_csv = REPO / "data" / "all_forms.csv"
+    if committed_csv.exists():
+        old = engine_form_subset(committed_csv)
+        rows = len(lines(committed_csv))
+    else:
+        # The committed artifact is the blob; decode the subset it holds.
+        old = decode_front_coded_set(REPO / "maps" / "all_forms.bin")
+        rows = 0
+    new = engine_form_subset(engine_csv)
     ok = report(
-        "all_forms (unique surfaces)",
-        forms(old),
-        forms(engine_csv),
+        "all_forms (blob subset)",
+        old,
+        new,
         strict,
         BASELINE["all_forms"],
     )
-    print(
-        f"all_forms (rows): committed={len(lines(old))} "
-        f"engine={len(lines(engine_csv))}"
-    )
+    if rows:
+        print(f"all_forms (rows): committed={rows} engine={len(lines(engine_csv))}")
     return ok
-
 
 def degree_cells(path: Path) -> tuple[set[tuple[str, str]], set[tuple[str, str]]]:
     """`(positive, comparative)` and `(positive, superlative)` pairs."""

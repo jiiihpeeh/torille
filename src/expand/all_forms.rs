@@ -6,7 +6,8 @@
 //! full paradigm) and emits a sorted, front-coded set blob containing
 //! the most commonly-typed surface forms -- every bare lemma
 //! (nominative singular, no possessive) plus every genitive
-//! singular (no possessive). That's ~280 k unique forms.
+//! singular (no possessive), plus the citation of a plural-only lemma.
+//! That's ~87 k unique forms.
 //!
 //! The same set as a `phf::Set` literal was ~10 MB of source and
 //! duplicated every key as a `&'static str`; the blob front-codes the
