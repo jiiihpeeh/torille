@@ -15,6 +15,7 @@ for the artifacts that already have an engine path:
 
 * `all_forms.csv`            — by unique surface and by row
 * `stem_to_base_map.csv`     — by `(stem, base)` and by distinct base
+* `verb_stem_to_base_map.csv` — same, for the verb map
 * `adj_degrees.csv`          — by degree cell (comparative, superlative)
 
 Lost bases are bucketed from `data/nykysuomensanalista.csv` so a classless
@@ -53,6 +54,7 @@ BASELINE = {
     # are not counted: they resolve through their head, not as map bases.
     "stem_map_noun_classed": 0,
     "adj_degrees": 0,
+    "verb_stem_map_bases": 0,
 }
 
 
@@ -158,6 +160,40 @@ def degree_cells(path: Path) -> tuple[set[tuple[str, str]], set[tuple[str, str]]
     return comp, sup
 
 
+def compare_stem_map_verb(tmp: Path, strict: bool) -> bool:
+    engine_csv = tmp / "stem_map_verb_engine.csv"
+    run(
+        "build_verb_stem_to_base_map.py",
+        "--source",
+        "engine",
+        "--out",
+        str(engine_csv),
+    )
+    old = pairs(REPO / "data" / "verb_stem_to_base_map.csv")
+    new = pairs(engine_csv)
+    print(
+        f"stem_map_verb (pairs): committed={len(old)} engine={len(new)} "
+        f"shared={len(old & new)} lost={len(old - new)} new={len(new - old)}"
+    )
+    old_bases = {b for _, b in old}
+    new_bases = {b for _, b in new}
+    lost = sorted(old_bases - new_bases)
+    print(
+        f"stem_map_verb (bases): committed={len(old_bases)} "
+        f"engine={len(new_bases)} lost={len(lost)} new={len(new_bases - old_bases)}"
+    )
+    for base in lost[:5]:
+        print(f"  lost base: {base}")
+    if strict and len(lost) > BASELINE["verb_stem_map_bases"]:
+        print(
+            f"  FAIL: {len(lost)} bases lost, baseline is "
+            f"{BASELINE['verb_stem_map_bases']}",
+            file=sys.stderr,
+        )
+        return False
+    return True
+
+
 def compare_adj_degrees(tmp: Path, strict: bool) -> bool:
     engine_csv = tmp / "adj_degrees_engine.csv"
     run("build_adj_degrees.py", "--out", str(engine_csv))
@@ -245,7 +281,13 @@ def main(argv: list[str]) -> int:
     )
     ap.add_argument(
         "--artifact",
-        choices=("all", "all_forms", "stem_map_noun", "adj_degrees"),
+        choices=(
+            "all",
+            "all_forms",
+            "stem_map_noun",
+            "stem_map_verb",
+            "adj_degrees",
+        ),
         default="all",
     )
     ap.add_argument(
@@ -279,6 +321,8 @@ def main(argv: list[str]) -> int:
         ok &= compare_all_forms(tmp, args.strict)
     if args.artifact in ("all", "stem_map_noun"):
         ok &= compare_stem_map_noun(tmp, args.strict)
+    if args.artifact in ("all", "stem_map_verb"):
+        ok &= compare_stem_map_verb(tmp, args.strict)
     if args.artifact in ("all", "adj_degrees"):
         ok &= compare_adj_degrees(tmp, args.strict)
 

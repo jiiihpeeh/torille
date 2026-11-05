@@ -302,6 +302,25 @@ emit as single-word forms; the fusions live in `data/verb_connectives.csv`
 **Exit.** Engine-only verb map contains the negation and fusion bases without
 a tool-side hard-coded list; the `check_normal` gate accepts the finite forms.
 
+**Status 2026-11-05 — verb map switched; closed table kept.**
+
+`build_verb_stem_to_base_map.py` now defaults to `--source engine` and reads
+the forms from the binding; `--source oracle` remains as the historical
+reference. With the class-100 fix, base coverage is complete: 0 verb bases
+lost, 17 new (`lie`, `lienee`, `palpatella`, ...). The map grows from
+195 803 to 370 587 `(stem, base)` pairs because the engine labels the 1st
+infinitive and the 3rd-infinitive genitive the same way; both bare stems are
+emitted (`ampua` -> `amp`, `ampuman` -> `ampuman`), which the modifier probe
+needs.
+
+The six finite negation auxiliaries and the fused connectives remain a
+closed table: the engine has no negation-verb paradigm (`Engine.inflect("ei")`
+returns the noun reading), and the fusions come from the committed
+`data/verb_connectives.csv`. That table is lexical reference data, not an
+oracle; emitting it through `expand::negation` remains a small follow-up but
+is not needed for an engine-only map. The map is regenerated and the
+workspace suite passes.
+
 ---
 
 ## G4 — audit the 12 707 lost `all_forms` surfaces
@@ -467,8 +486,8 @@ generators, which move to `tools/oracle/`.
 - [x] G1e nested modifiers resolve through the head (no map gap)
 - [ ] G1b 57 classed losses encoded as explained allow-list
 - [x] G2 eight class-100 rows resolved (2 remapped, 6 rejected)
-- [ ] G3 negation/connectives emitted by the engine
-- [ ] G3 verb stem map regenerated without the tool post-pass
+- [x] G3 verb map engine-only; closed negation/connective table kept
+- [x] G3 verb stem map regenerated from the engine (370 587 pairs, 0 bases lost)
 - [ ] G4 lost `all_forms` surfaces audited; table regenerated
 - [ ] G5 catalogue frozen + drift report
 - [ ] G6 lexical tables documented as frozen reference data

@@ -31,21 +31,28 @@ Scope:
     inflect as a single word, and their stems would be ambiguous.
 
 Inputs:
-  data/kotus_verbit.sqlite
+  the `torille` Python binding (default), or
+  data/kotus_verbit.sqlite with `--source oracle`
+  data/verb_connectives.csv        -- negation fusions, a committed table
 
 Outputs:
   data/verb_stem_to_base_map.csv   -- one (stem, base) row per form.
 
 Usage:
   python3 tools/build/build_verb_stem_to_base_map.py
+  python3 tools/build/build_verb_stem_to_base_map.py --source oracle
 """
 from __future__ import annotations
 
+import argparse
 import sqlite3
 import sys
+from pathlib import Path
 
-DB = "data/kotus_verbit.sqlite"
-OUT = "data/verb_stem_to_base_map.csv"
+REPO = Path(__file__).resolve().parents[2]
+DB = REPO / "data" / "kotus_verbit.sqlite"
+CONNECTIVES = REPO / "data" / "verb_connectives.csv"
+OUT = REPO / "data" / "verb_stem_to_base_map.csv"
 
 # Forms both Omorfi AND Voikko accept are the base; **plus** the
 # Omorfi-only participles. Voikko lemmatises a participle to the
@@ -302,9 +309,8 @@ def stems_of(row: tuple) -> list[str] | None:
     return out or None
 
 
-def main() -> int:
-    con = sqlite3.connect(DB)
-    cur = con.cursor()
+def _oracle_rows(cur):
+    """The historical oracle query, kept for `--source oracle`."""
     cur.execute(
         "SELECT form, voice, mood, tense, person, number, "
         'infinitive, participle, possessive, polarity, lemma, "case" '
@@ -313,6 +319,86 @@ def main() -> int:
         "AND number = 'singular')))",
         (OK_FILTER,),
     )
+    return cur
+
+
+def from_engine():
+    """Yield `(form, voice, mood, tense, person, number, infinitive,
+    participle, possessive, polarity, lemma, case)` from the engine.
+
+    The engine exposes the reading as named fields, so this is the same tuple
+    shape the oracle query produced; the stem strippers below are unchanged.
+    """
+    from torille import Engine
+
+    engine = Engine()
+    person_name = {
+        "first_person": "first",
+        "second_person": "second",
+        "third_person": "third",
+    }
+    for lemma, _class in engine.words("verbi"):
+        try:
+            forms = engine.inflect(lemma)
+        except (ValueError, RuntimeError):
+            continue
+        for f in forms:
+            tags = f.tags
+            infinitive = "inf" if "infinitive" in tags else ""
+            # A 3sg present form has no mood token in the engine's reading;
+            # the oracle column said `indicative`.
+            mood = f.mood or ("indicative" if (f.person and f.tense) else "")
+            participle = ""
+            if not infinitive and f.case is not None and f.mood is None:
+                participle = f"{(f.tense or 'present')} {f.voice or 'active'}"
+            yield (
+                f.word,
+                f.voice or "",
+                mood,
+                f.tense or "",
+                person_name.get(f.person or "", f.person or ""),
+                f.number or "",
+                infinitive,
+                participle,
+                f.possessive or "",
+                "negative" if f.negative else "",
+                lemma,
+                f.case or "",
+            )
+
+
+def connectives_from_csv() -> list[tuple[str, str]]:
+    """The committed negation fusions, `(surface, base)`."""
+    rows: list[tuple[str, str]] = []
+    with open(CONNECTIVES, encoding="utf-8") as fh:
+        next(fh, None)  # header
+        for line in fh:
+            cols = line.rstrip("\n").split("\t")
+            if len(cols) >= 2 and cols[0]:
+                rows.append((cols[0], cols[1]))
+    return rows
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument(
+        "--source",
+        choices=("engine", "oracle"),
+        default="engine",
+        help="read the forms from the current engine (default) or the "
+             "materialised Kotus verb oracle",
+    )
+    ap.add_argument("--out", type=Path, default=OUT, help=f"output (default: {OUT})")
+    args = ap.parse_args()
+
+    if args.source == "engine":
+        rows = from_engine()
+        connectives = connectives_from_csv()
+    else:
+        con = sqlite3.connect(f"file:{DB}?mode=ro", uri=True)
+        cur = con.cursor()
+        rows = _oracle_rows(cur)
+        connectives = connectives_from_csv()
     written = 0
     skipped = 0
     seen: set[tuple[str, str]] = set()
@@ -332,7 +418,7 @@ def main() -> int:
         lines.append(f"{stem}\t{lemma}\n")
         written += 1
 
-    for row in cur:
+    for row in rows:
         (form, voice, mood, tense, person, number, infinitive,
          participle, possessive, polarity, lemma, case) = row
 
@@ -360,7 +446,16 @@ def main() -> int:
         if participle or infinitive:
             if possessive:
                 continue
-            kind = participle or f"inf:{infinitive}"
+            if infinitive and not participle and number == "singular" and case in ("", "nominative"):
+                # The engine tags the 1st infinitive (`ampua`) and the 3rd
+                # infinitive genitive (`ampuman`) the same way: infinitive
+                # marker, no case, singular. They are different stems the
+                # modifier probe needs (`ampuma-ase` uses `ampuman`), so
+                # emit each one's bare stem instead of keeping only the
+                # shortest per kind.
+                emit(strip_stem_vowels(form), lemma)
+                continue
+            kind = participle or f"inf:{infinitive}:{case}"
             key = (lemma, kind)
             if key not in bare_nonshort or len(form) < len(bare_nonshort[key]):
                 bare_nonshort[key] = form
@@ -393,7 +488,7 @@ def main() -> int:
     for (lemma, _kind), bare in bare_nonshort.items():
         emit(strip_stem_vowels(bare), lemma)
 
-    with open(OUT, "w", encoding="utf-8") as f:
+    with open(args.out, "w", encoding="utf-8") as f:
         f.writelines(lines)
 
         # Negation verb. The kotus verb oracle doesn't carry
@@ -418,17 +513,10 @@ def main() -> int:
             f.write(f"{surface}\tei\n")
             written += 1
 
-        # The negation fusions (`enkä`, `ettet`, `ellette`, ...), read from
-        # the `connectives` table `tools/build/build_verb_lexicon.py`
-        # creates. The engine does not generate them either, so the runtime
-        # trusts the row without the verify, exactly as for the finite
-        # forms above. An older DB without the table contributes nothing.
-        try:
-            connectives = cur.execute(
-                "SELECT surface, base FROM connectives"
-            ).fetchall()
-        except sqlite3.OperationalError:
-            connectives = []
+        # The negation fusions (`enkä`, `ettet`, `ellette`, ...) come from
+        # the committed `data/verb_connectives.csv`. The engine does not
+        # generate them either, so the runtime trusts the row without the
+        # verify, exactly as for the finite forms above.
         for surface, base in connectives:
             k = (surface, base)
             if k in seen:
@@ -438,7 +526,7 @@ def main() -> int:
             written += 1
 
     print(
-        f"wrote {OUT} ({written} unique (stem, base) pairs, "
+        f"wrote {args.out} ({written} unique (stem, base) pairs, "
         f"{skipped} rows skipped)",
         file=sys.stderr,
     )
