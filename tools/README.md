@@ -15,8 +15,8 @@ The GPL bridge and everything that imports it:
 check_nouns_with_omorfi.py    check_nouns_with_voikko.py
 check_verbs_with_voikko.py    check_word_against_omorfi.py
 check_hyphenation_against_voikko.py
-build_adj_degrees.py          build_adverbi_forms.py
-build_nomine_lexicon.py       build_proper_name_forms.py
+build_adverbi_forms.py        build_nomine_lexicon.py
+build_proper_name_forms.py
 build_verb_lexicon.py         check_all_derivations.py
 apply_all_derivations.py      audit_all.py
 classify_lemma.py

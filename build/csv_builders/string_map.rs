@@ -78,7 +78,7 @@ pub(crate) fn emit_connegatives(csv_path: &Path, blob_path: &Path) {
         csv_path,
         blob_path,
         "connegatives",
-        "build_verb_lexicon.py",
+        "build/build_verb_lexicon.py",
         0,
         &[1],
     );
@@ -92,7 +92,7 @@ pub(crate) fn emit_connectives(csv_path: &Path, blob_path: &Path) {
         csv_path,
         blob_path,
         "connectives",
-        "build_verb_lexicon.py",
+        "build/build_verb_lexicon.py",
         0,
         &[1],
     );
@@ -106,7 +106,7 @@ pub(crate) fn emit_adverbi(csv_path: &Path, blob_path: &Path) {
         csv_path,
         blob_path,
         "adverbit",
-        "build_adverbi_forms.py",
+        "build/build_adverbi_forms.py",
         1,
         &[0],
     );
@@ -121,7 +121,7 @@ pub(crate) fn emit_adj_degrees(csv_path: &Path, blob_path: &Path) {
         csv_path,
         blob_path,
         "adj_degrees",
-        "build_adj_degrees.py",
+        "build/build_adj_degrees.py",
         0,
         &[1, 2],
     );

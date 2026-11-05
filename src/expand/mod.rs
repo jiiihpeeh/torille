@@ -72,7 +72,7 @@ pub use crate::tags::Form as Generated;
 
 mod degrees {
     //! Adjective degrees: positive -> (comparative, superlative)
-    //! nominatives, derived by Omorfi and embedded by `build.rs`. See
+    //! nominatives, derived by the engine and embedded by `build.rs`. See
     //! [`degree_forms`].
     use crate::expand::static_table::StemMap;
 

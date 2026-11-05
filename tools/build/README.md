@@ -53,7 +53,7 @@ the plan to close it, is [FIX_GENGAPS.md](../../FIX_GENGAPS.md).
 | `build_all_forms_csv.py` | engine (`--source engine` is the default) |
 | `build_stem_to_base_map.py` | engine, plus oracle candidates in `hybrid` |
 | `build_verb_stem_to_base_map.py` | Kotus verb oracle (`data/kotus_verbit.sqlite`) |
-| `build_adj_degrees.py` | Omorfi + Voikko |
+| `build_adj_degrees.py` | engine (binding) |
 | `build_adverbi_forms.py` | Voikko |
 | `build_catalogue_csv.py` | noun/verb oracle databases |
 | `build_nomine_lexicon.py` | Omorfi + Voikko (builds the noun oracle) |

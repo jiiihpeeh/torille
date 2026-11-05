@@ -118,7 +118,7 @@ fn main() {
     emit_catalogue(&catalogue_csv, &precomputed.join("catalogue.bin"));
 
     // Adjective degrees: `positive -> (comparative, superlative)`
-    // nominatives, derived by Omorfi. The engine emits these two
+    // nominatives, derived by the engine. The engine emits these two
     // paradigms from the positive so the derivation is available to
     // `inflect`/`find_bases` and the stem-map verify.
     let degrees_csv = Path::new(&manifest).join("data/adj_degrees.csv");

@@ -17,11 +17,17 @@ Engine outputs were written to `/tmp` and diffed against the committed file:
 | artifact | committed | engine | shared | lost | new |
 |---|---:|---:|---:|---:|---:|
 | `all_forms.csv` unique surfaces | 4 856 961 | 6 441 884 | 4 844 254 | 12 707 | 1 597 630 |
-| noun stem-map bases | 83 307 | 32 115 | — | **51 196** | 4 |
+| noun stem-map bases | 83 307 | 32 115 | — | 51 196 ¹ | 4 |
 | verb stem-map bases | 10 022 | 10 033 | — | 6 | 17 |
 | verb stem-map `(stem, base)` pairs | 195 803 | 237 424 | 150 704 | 45 099 | 86 720 |
 | adjective comparatives | 4 859 | 5 815 | 4 859 | **0** | +956 |
 | adjective superlatives | 1 934 | 5 751 | 1 934 | **0** | +3 817 |
+
+¹ Most of the 51 196 are classless whole-compound bases, which the engine
+resolves through the compound head instead of emitting as map bases
+(`raitiotiellä` -> `tie`, not `raitiotie`). Measured behavioural loss after
+that is 461 bases: 406 classless compounds whose modifier is not a free
+lemma, plus 57 non-nominal rows (`OK`, `aiemmin`, ...). See G1.
 
 Reproduce with:
 
@@ -41,7 +47,7 @@ Adding the comparison as a committed script is G0.
 | gap | impact | risk to fix | priority |
 |---|---|---|---|
 | G0 comparison script | makes every later gap measurable | low | P0 |
-| G1 classless lemmas in `Engine.inflect` | 51 139 of 51 196 lost noun bases | medium | P0 |
+| G1 compound-modifier coverage | 406 classless compounds + 57 non-nominal rows | medium | P1 |
 | G2 class-100 verbs | 2 lost verb bases, 8 lemmas with no paradigm | low | P1 |
 | G3 negation/connective stems | 4 hard-coded verb bases | medium | P1 |
 | G4 `all_forms` stale-form audit | 12 707 surfaces, fast-path correctness | medium | P2 |
@@ -70,61 +76,76 @@ gap.
     cannot produce is not in an explicit allow-list (the lexical tables and
     known engine gaps below).
 - Keep the allow-list in the script and make every entry name its gap
-  (`G1:classless`, `G2:class-100`, `G6:lexical`).
+  (`G1:compound-modifier`, `G2:class-100`, `G6:lexical`).
 
 **Exit.** `python3 tools/build/compare_engine_outputs.py` reproduces the
 baseline table and fails when a new regression appears.
 
 ---
 
-## G1 — classless lemmas must inflect through the binding
+## G1 — classless compounds resolve through the head, not as map bases
 
-**Symptom.** An engine-only noun stem map covers 32 115 bases; the committed
-hybrid map covers 83 307. All 51 196 lost bases are sanalista rows, and
-51 139 of them are classless compounds (`mahonginruskea`,
-`differentiaaliyhtälö`, `älykortti`, `äänestyspaikka`).
+**First finding (corrected).** `Engine.inflect` already inflects classless
+lemmas through `expand::inflect_all`: `mahonginruskea` returns 353 forms,
+`älykortti` 161. An earlier draft blamed the binding for the 51 196 missing
+bases; that was wrong. The builder filters classless lemmas out of the engine
+source on purpose.
 
-**Root cause.** `src/expand/mod.rs::inflect_all` already handles classless
-rows: a compound inflects by its head (`compound_head_forms`), a classless
-`-inen` adjective as class 38, a classless verb by its verb head. The binding
-does not use it: `Engine::plan` (`bindings/src/lib.rs`) builds a plan from the
-lemma's sanalista classes, and a classless row contributes no `Inflection`, so
-`Engine.inflect` returns nothing.
+**Why they must stay out.** A classless compound's own surface must not be a
+stem-map base, or it shadows the content head:
 
-**Fix.**
+- `raitiotiellä` -> `raitiotie` instead of `tie`;
+- `kristinuskon` -> `kristinusko` instead of `usko`;
+- `kyrmyniskoja` -> `kyrmyniska` instead of `niska`.
 
-- In `bindings/src/lib.rs`, when the row has no usable class, fall back to
-  `torille::expand::inflect_all(lemma)` and map its `Form`s to `PyForm`s (the
-  same fields the normal path fills). Keep the explicit-class path unchanged.
-- Expose whether a fallback happened (`PyForm.confidence` already carries the
-  head's confidence) so tooling can distinguish engine-derived compound forms
-  from sanalista paradigms.
-- In `tools/build/build_stem_to_base_map.py`, include classless lemmas in the
-  engine source (the current `classed_lemmas` filter exists only because the
-  binding cannot inflect them). Keep the `hybrid` path as the oracle-backed
-  comparison until G1 closes.
-- Add binding tests: a classless noun compound, a classless `-inen`
-  adjective, and a classless verb (`aliarvioida`).
+Those are the exact assertions in
+`suggest::tests::reported_compounds_name_the_content_head`,
+`reported_standard_compound_and_degree_forms_are_known` and
+`check_normal::tests::fast_variant_accepts_the_reported_missing_words`.
+Including classless lemmas in the engine source fails all three.
 
-**Files.** `bindings/src/lib.rs`, `src/expand/mod.rs` (reuse, do not
-duplicate), `tools/build/build_stem_to_base_map.py`, `playground`/binding
-tests.
+**What is actually lost.** Run the engine over every lemma (classed *and*
+classless) and compare bases with the committed map: 461 lost.
 
-**Exit.** Engine-only noun stem-map bases ≥ 83 300; the residual losses are
-explained (see G1b); `cargo test --release --workspace` and
-`python3 tools/test_binding_agrees_with_binary.py` pass; the regenerated map
-passes `check_normal` and the class-report gate.
+- **406 classless compounds** whose modifier is not a free lemma:
+  `agraaripolitiikka` (`agraari` is not in the sanalista, `agraarinen` is),
+  `ampuma-ase`, `ampumahiihto`, `ammatinvalinnanohjaus`.
+- **57 classed rows** that are not nominal paradigms: `OK`, `aiemmin`,
+  `harvoin`, `hyvin`, `ja`, `ha`, `alias`, ... (adverbs, interjections,
+  postpositions; see G1b).
+
+Everything else resolves correctly under the engine-only classed map; verified
+with `check_normal --fast`:
+
+```text
+raitiotiellä   -> tie        älykortissa       -> kortti
+kristinuskon   -> usko       mahonginruskeaksi -> ruskea
+kyrmyniskoja   -> niska      ammatinvalinnanohjauksessa -> ohjaus
+agraaripolitiikassa -> unknown
+```
+
+**Fix.** Extend the compound splitter's modifier coverage, not the map:
+`compound::analyze` / `expand::compound_head_forms` should recognise a
+modifier that is a derived or bound form (`agraari` from `agraarinen`,
+`ampuma-` from `ampua`, hyphenated `ampuma-ala`). That closes the 406 for
+every member of the pattern, and the head base is still what the map reports.
+
+**Files.** `src/compound.rs`, `src/expand/compound.rs` (head/modifier split),
+`src/expand/mod.rs` (`compound_head_forms`), with class tests in
+`src/expand/mod.rs`.
+
+**Exit.** `check_normal --fast agraaripolitiikassa` (and the `ampuma-`,
+`ammatinvalinnan-` families) resolves to the content head; the engine-only
+noun map is accepted with the 57 classed rows allow-listed; all three
+content-head tests stay green.
 
 ### G1b — the 57 classed losses
 
-After classless rows, 57 bases remain: mostly `99` adverbs/interjections
-(`maanantaisin`, `aiemmin`, `pitkin`, `harvoin`), plus `piilevä` (class 10),
-`viti` (5*F), `puolikymmentä` (numeral class 51), and parenthesised classes
-(`OK` `(18)`, `mezzopiano` `(1)`). They are not nominal paradigms and are
-correctly absent from a *noun* stem map. Encode them as an explicit
-allow-list with the reason, not as a silent gap.
-
----
+Mostly `99` adverbs/interjections (`maanantaisin`, `aiemmin`, `pitkin`,
+`harvoin`), plus `piilevä` (class 10), `viti` (5*F), `puolikymmentä` (numeral
+class 51), and parenthesised classes (`OK` `(18)`, `mezzopiano` `(1)`). They
+are not nominal paradigms and are correctly absent from a *noun* stem map.
+Encode them as an explicit allow-list with the reason.
 
 ## G2 — class-100 verbs generate no forms
 
@@ -284,7 +305,7 @@ are engine-generated; the lexical tables are committed reference data.*
 
 ---
 
-## G7 — switch the degree generator (safe)
+## G7 — switch the degree generator (safe) — **done**
 
 Not a gap. Engine output is a strict superset:
 
@@ -308,13 +329,17 @@ Keep the adjective + pronoun lemma set (the `usea` note). Regenerate
 the productive degrees; `cargo test --release --workspace` passes; the
 harness shows no new `illegal` rows.
 
+**Status 2026-11-05.** Generator rewritten on the binding, table regenerated
+(5 819 rows, 0 comparatives and 0 superlatives lost, +956 / +3 817), blob
+rebuilt, 873 lib tests green.
+
 ---
 
 ## Order of work
 
 1. **G0** comparison tool (no behaviour change).
 2. **G7** degree generator (safe superset).
-3. **G1** classless binding fallback → regenerate the noun stem map.
+3. **G1** compound-modifier coverage (do not put classless bases in the map).
 4. **G2** class-100 rows → regenerate the verb map without its two losses.
 5. **G3** negation/connectives through the engine → drop the tool post-pass.
 6. **G4** `all_forms` audit → regenerate the fast form set.
@@ -342,9 +367,9 @@ generators, which move to `tools/oracle/`.
 
 ## Checklist
 
-- [ ] G0 comparison script committed and green on the baseline
-- [ ] G7 degree table regenerated from the engine
-- [ ] G1 classless `Engine.inflect` fallback + tests
+- [x] G0 comparison script committed and green on the baseline
+- [x] G7 degree table regenerated from the engine
+- [ ] G1 compound-modifier coverage (`agraari`, `ampuma-`, hyphenated)
 - [ ] G1 noun stem map regenerated from the engine
 - [ ] G1b 57 classed losses encoded as explained allow-list
 - [ ] G2 eight class-100 rows resolved
