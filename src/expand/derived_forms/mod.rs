@@ -446,6 +446,83 @@ pub(crate) fn modifier_is_known(modifier: &str) -> bool {
     {
         return true;
     }
+    // A `-nen` adjective's combining form drops the ending: `agraarinen` ->
+    // `agraari-` (`agraaripolitiikka`), `digitaalinen` -> `digitaali-`.
+    // Only when the modifier is not itself a known word or stem: `irstaisuu`
+    // must not split as `irstai` + `suu` through the derived adjective
+    // `irstainen`, and `kylmäveri` is a compound, not a combining form.
+    // A stem that is also the stem of a non-`-inen` adjective is that
+    // adjective's case stem, not a combining form: `irstai` belongs to
+    // `irstas` as well as to `irstainen`, so `irstaisuu` must not split as
+    // `irstai` + `suu`. A pure `-inen` stem (`agraari` -> `agraarinen`) is
+    // the lexical combining form we want.
+    let also_other_adjective = crate::expand::check_normal::STEM_BUCKETS_NOUN
+        .bases(bare)
+        .any(|base| {
+            !base.ends_with("nen")
+                && crate::kotus::sanalista()
+                    .by_word(base)
+                    .next()
+                    .is_some_and(|row| {
+                        PartOfSpeech::parse_all(row.part_of_speech())
+                            .contains(&PartOfSpeech::Adjective)
+                    })
+        });
+    if !also_other_adjective
+        && crate::suggest::is_known_word_fast(bare).is_none()
+        && crate::kotus::sanalista()
+            .by_word(&format!("{bare}nen"))
+            .next()
+            .is_some_and(|row| {
+                PartOfSpeech::parse_all(row.part_of_speech())
+                    .contains(&PartOfSpeech::Adjective)
+            })
+    {
+        return true;
+    }
+    // An `-eä`/`-ea` adjective's vowel stem drops the case vowel:
+    // `jähmeä` -> `jähme-` (`jähmepiste`). Reconstruct the citation and
+    // require a listed adjective, so an ordinary noun + `a` does not pass.
+    if bare.ends_with(['a', 'e', 'i', 'o', 'u', 'y', 'ä', 'ö']) {
+        for tail in ["ä", "a"] {
+            if crate::kotus::sanalista()
+                .by_word(&format!("{bare}{tail}"))
+            .next()
+                .is_some_and(|row| {
+                    PartOfSpeech::parse_all(row.part_of_speech())
+                        .contains(&PartOfSpeech::Adjective)
+                })
+            {
+                return true;
+            }
+        }
+    }
+    // A `-kko`/`-kkö` noun derived from a `-kas`/`-käs` adjective is a
+    // modifier: `kuivakas` -> `kuivakko-` (`kuivakkokasvi`).
+    for (suffix, adj) in [("kko", "kas"), ("kkö", "käs")] {
+        if let Some(stem) = bare.strip_suffix(suffix)
+            && !stem.is_empty()
+            && crate::kotus::sanalista()
+                .by_word(&format!("{stem}{adj}"))
+                .next()
+                .is_some_and(|row| {
+                    PartOfSpeech::parse_all(row.part_of_speech())
+                        .contains(&PartOfSpeech::Adjective)
+                })
+        {
+            return true;
+        }
+    }
+    // An agent participle's `-ma`/`-mä` stem is the first member of a
+    // compound (`ampuma-ase` from `ampua`, `hiomakone` from `hioa`,
+    // `hautomakone` from `hautoa`). The agent participle nominative is not
+    // in the verb stem map, but its genitive (`ampuman`) is, so probe that
+    // and let [`verb_stem_is_a_modifier`] check the base is a verb.
+    if (bare.ends_with("ma") || bare.ends_with("mä"))
+        && verb_stem_is_a_modifier(&format!("{bare}n"))
+    {
+        return true;
+    }
     // A compound modifier may itself be a numeral phrase whose tail is
     // fixed:
     //   * the tens -- `kaksikymmen` of `kaksikymmentä`, `kolmikymmen` of
@@ -482,6 +559,27 @@ pub(crate) fn modifier_is_known(modifier: &str) -> bool {
         return true;
     }
     if crate::expand::derived::is_modifier(bare) {
+        return true;
+    }
+    // A genitive modifier can itself be an inflected classless compound:
+    // `avomeren` (genitive of `avomeri`) in `avomerenliikenne`, `ruumiin`
+    // (genitive of `ruumis`) in `ruumiinavaus`, `työväen` in `työväenliike`.
+    // Its lemma is not a literal prefix of the modifier, so the probes above
+    // miss it; the bounded recogniser resolves it through the modifier's own
+    // head. Restricted to a final `n` so an ordinary stem cannot take this
+    // path, and to a nominal (not adjective) base.
+    if bare.ends_with('n')
+        && let Some(base) = crate::suggest::is_known_word_fast(bare)
+        && crate::kotus::sanalista()
+            .by_word(&base)
+            .next()
+            .is_some_and(|row| {
+                matches!(
+                    PartOfSpeech::inflecting_reading(row.part_of_speech()),
+                    PartOfSpeech::Noun | PartOfSpeech::Numeral | PartOfSpeech::Pronoun
+                )
+            })
+    {
         return true;
     }
     is_bound_prefix(bare)

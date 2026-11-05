@@ -2230,6 +2230,33 @@ mod tests {
         }
     }
 
+    /// A classless compound's modifier may be a derived or combining form
+    /// that is not itself a lemma. The split is still the head's paradigm.
+    #[test]
+    fn a_classless_compound_inflects_by_a_derived_modifier() {
+        let cat = cat();
+        for (word, want) in [
+            // `agraari` is the lexical `-inen` stem of `agraarinen`.
+            ("agraaripolitiikka", "agraaripolitiikan"),
+            // The genitive modifier is an inflected classless compound
+            // (`ruumis`); its lemma is not a prefix of `ruumiin`.
+            ("ruumiinavaus", "ruumiinavauksen"),
+            // The agent participle of `ampua`; the participle nominative is
+            // not in the verb stem map, but its genitive is.
+            ("ampuma-ase", "ampuma-aseen"),
+            // The vowel stem of the `-eä` adjective `jähmeä`.
+            ("jähmepiste", "jähmepisteen"),
+            // A `-kko` noun derived from the `-kas` adjective `kuivakas`.
+            ("kuivakkokasvi", "kuivakkokasvin"),
+        ] {
+            let forms = inflect_all(word, &[], &cat, None, PartOfSpeech::Noun, true);
+            assert!(
+                forms.iter().any(|f| f.word == want),
+                "{word} does not inflect to {want}"
+            );
+        }
+    }
+
     #[test]
     fn a_classless_compound_inflects_by_a_genitive_modifier_head() {
         // The modifier of a compound is very often the genitive singular

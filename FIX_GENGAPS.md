@@ -139,6 +139,24 @@ every member of the pattern, and the head base is still what the map reports.
 noun map is accepted with the 57 classed rows allow-listed; all three
 content-head tests stay green.
 
+**Status 2026-11-05.** The splitter now accepts five modifier patterns in
+`modifier_is_known`:
+
+- a `-inen` adjective's lexical stem, gated so an adjective case stem does
+  not qualify (`agraari` -> `agraarinen`, but `irstai` does not become a
+  modifier through `irstainen`/`irstas`);
+- an `-eä`/`-ea` adjective's vowel stem (`jähmeä` -> `jähme-`);
+- a `-kko`/`-kkö` noun from a `-kas`/`-käs` adjective (`kuivakas` ->
+  `kuivakko-`);
+- an agent participle's `-ma`/`-mä` stem (`ampua` -> `ampuma-`);
+- a genitive that is an inflected classless compound, resolved through its
+  own head (`ruumis` -> `ruumiin`, `avomeri` -> `avomeren`), restricted to
+  a nominal base.
+
+Measured effect: 406 -> **59** lost classless bases. The remaining 59 are
+the subjects of G1c–G1e. All 874 lib tests pass, including the three
+content-head tests.
+
 ### G1b — the 57 classed losses
 
 Mostly `99` adverbs/interjections (`maanantaisin`, `aiemmin`, `pitkin`,
@@ -146,6 +164,43 @@ Mostly `99` adverbs/interjections (`maanantaisin`, `aiemmin`, `pitkin`,
 class 51), and parenthesised classes (`OK` `(18)`, `mezzopiano` `(1)`). They
 are not nominal paradigms and are correctly absent from a *noun* stem map.
 Encode them as an explicit allow-list with the reason.
+
+### G1c — two gradation defects
+
+`nahanluonti` / `nahanmuokkaus` / `nahanvalmistus` and `vitilumi` /
+`vitivalkea` still fail because the engine cannot produce the modifier at all:
+
+- `nahka` is listed as `9*(D)`; `./target/debug/inflect nahka` emits
+  `nahkan`, not the standard `nahan`. The parenthesised gradation is not
+  applied.
+- `viti` is `5*F`; `inflect viti` emits nothing. `F` is not a gradation
+  letter the parser accepts.
+
+Fix in `src/kotus.rs` / `src/gradation.rs` / `src/grammar` gradation parsing (the parenthesised
+class form and the `F` letter), then the existing modifier probe finds both.
+These are engine bugs, not splitter gaps.
+
+### G1d — numeral compounds
+
+Seventeen of the 59 are hundreds/tens compounds: `kaksisataa`,
+`kahdeksansataa`, `parikymmentä`, `puolitoistasataa`, ... The ordinary
+head split cannot model them because both members inflect
+(`kahdensadan`) and the head of the citation is `sataa`, not the lemma
+`sata`. The numeral layer already handles `-toista`; hundreds need the
+same treatment.
+
+Fix in `src/expand/derived_forms/mod.rs` (`numeral_forms`) rather than as a
+splitter modifier.
+
+### G1e — nested modifier compounds
+
+The rest are compounds whose modifier is itself a compound:
+`kaksikamari-`, `kaksiväri-`, `monitoimi-`, `omatoimi-`, `punakylki-`,
+`konetahti-`, `jakomieli-`. Their oblique forms already resolve through
+the head in `check_normal` (verified), but the citation is not a map base.
+Extending the genitive-style recogniser to a nominal compound modifier would
+close them; do it only with a test per pattern, since the broad form of the
+rule previously accepted `teatterikuole` + `maa`.
 
 ## G2 — class-100 verbs generate no forms
 
@@ -369,7 +424,11 @@ generators, which move to `tools/oracle/`.
 
 - [x] G0 comparison script committed and green on the baseline
 - [x] G7 degree table regenerated from the engine
-- [ ] G1 compound-modifier coverage (`agraari`, `ampuma-`, hyphenated)
+- [x] G1 compound-modifier coverage (`agraari`, `ampuma-`, `ruumiin`,
+      `avomeren`); 406 -> 59 losses, 874 tests green
+- [ ] G1c `9*(D)` parenthesised gradation and `5*F` parsing
+- [ ] G1d numeral hundreds/tens
+- [ ] G1e nested modifier compounds
 - [ ] G1 noun stem map regenerated from the engine
 - [ ] G1b 57 classed losses encoded as explained allow-list
 - [ ] G2 eight class-100 rows resolved
