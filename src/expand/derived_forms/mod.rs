@@ -651,7 +651,9 @@ pub(super) fn numeral_forms(
     lexicon: Option<&LexiconIndex>,
 ) -> Vec<Generated> {
     let Some(prefix) = lemma.strip_suffix("toista").filter(|p| !p.is_empty()) else {
-        return tens_forms(lemma, cat, lexicon).unwrap_or_default();
+        return hundreds_forms(lemma, cat, lexicon)
+            .or_else(|| tens_forms(lemma, cat, lexicon))
+            .unwrap_or_default();
     };
     // The prefix must be a *numeral*: `kuusi` is also the spruce
     // (substantiivi, class 24), whose paradigm would give `kuusentoista`.
@@ -676,6 +678,97 @@ pub(super) fn numeral_forms(
         );
     }
     out
+}
+
+/// The hundreds (`kaksisataa` = 200), or `None` when `lemma` is not one.
+///
+/// Same composition as [`tens_forms`]: both members inflect together
+/// (`kahdensadan`, `kahtasataa`), except in the nominative, where the first
+/// member is nominative and `sata` is partitive singular (`kaksi` +
+/// `sataa`). The prefix must be a numeral lemma; a classless numeral prefix
+/// (`kahdeksantoista`) is inflected through [`numeral_forms`] itself.
+fn hundreds_forms(
+    lemma: &str,
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+) -> Option<Vec<Generated>> {
+    let prefix = lemma.strip_suffix("sataa").filter(|p| !p.is_empty())?;
+    let prefix_row = crate::kotus::sanalista()
+        .by_word(prefix)
+        .find(|row| row.part_of_speech().contains("numeraali"))?;
+    let sata_row = crate::kotus::sanalista().by_word("sata").next()?;
+    let prefix_inflections: Vec<Inflection> = prefix_row.inflections().collect();
+    let sata_inflections: Vec<Inflection> = sata_row.inflections().collect();
+    if sata_inflections.is_empty() {
+        return None;
+    }
+    let mut out = Vec::new();
+    for case in Case::ALL {
+        let head_case = if case == Case::Nominative {
+            Case::Partitive
+        } else {
+            case
+        };
+        let head_want = Tags {
+            case: Some(head_case),
+            number: Some(Number::Singular),
+            ..Tags::UNKNOWN
+        };
+        let heads = forms_of(
+            "sata",
+            &sata_inflections,
+            cat,
+            lexicon,
+            &head_want,
+            PartOfSpeech::Numeral,
+            false,
+        );
+        let firsts: Vec<Generated> = if case == Case::Nominative {
+            vec![Generated::new(
+                prefix_row.word().to_string(),
+                Tags {
+                    part_of_speech: Some(PartOfSpeech::Numeral),
+                    case: Some(Case::Nominative),
+                    number: Some(Number::Singular),
+                    ..Tags::UNKNOWN
+                },
+            )]
+        } else if !prefix_inflections.is_empty() {
+            let want = Tags {
+                case: Some(case),
+                number: Some(Number::Singular),
+                ..Tags::UNKNOWN
+            };
+            forms_of(
+                prefix,
+                &prefix_inflections,
+                cat,
+                lexicon,
+                &want,
+                PartOfSpeech::Numeral,
+                false,
+            )
+        } else {
+            // A classless numeral prefix (`kahdeksantoista`): its forms come
+            // from the numeral layer, not a catalogue.
+            inflect_all(prefix, &[], cat, lexicon, PartOfSpeech::Numeral, false)
+                .into_iter()
+                .filter(|f| {
+                    let t = f.union();
+                    t.case == Some(case) && t.number == Some(Number::Singular)
+                })
+                .collect()
+        };
+        for head in &heads {
+            for first in &firsts {
+                out.push(
+                    Generated::new(format!("{}{}", first.word, head.word), first.union())
+                        .with(Confidence::Repaired),
+                );
+            }
+        }
+    }
+    Some(out)
 }
 
 /// The tens (`kaksikymmentä` = 20), or `None` when `lemma` is not one.

@@ -2230,6 +2230,21 @@ mod tests {
         }
     }
 
+    /// A numeral hundred inflects both members: `kaksisataa` is `kaksi` +
+    /// `sata`, with the first in the case and the head in the same case
+    /// (`kahdensadan`), except nominative (`kaksi` + `sataa`).
+    #[test]
+    fn a_numeral_hundred_inflects_both_members() {
+        let cat = cat();
+        let forms = inflect_all("kaksisataa", &[], &cat, None, PartOfSpeech::Numeral, false);
+        for want in ["kaksisataa", "kahdensadan", "kahtasataa"] {
+            assert!(
+                forms.iter().any(|f| f.word == want),
+                "kaksisataa does not inflect to {want}"
+            );
+        }
+    }
+
     /// `nahka` is `9*(D)`: the parenthesised gradation is the standard one
     /// (`nahan`). `sanalista_overrides` replaces the expression, so the
     /// grader's weak stem is what the paradigm uses.

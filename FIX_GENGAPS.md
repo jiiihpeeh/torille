@@ -191,21 +191,34 @@ Seventeen of the 59 are hundreds/tens compounds: `kaksisataa`,
 `kahdeksansataa`, `parikymmentä`, `puolitoistasataa`, ... The ordinary
 head split cannot model them because both members inflect
 (`kahdensadan`) and the head of the citation is `sataa`, not the lemma
-`sata`. The numeral layer already handles `-toista`; hundreds need the
-same treatment.
+`sata`.
 
-Fix in `src/expand/derived_forms/mod.rs` (`numeral_forms`) rather than as a
-splitter modifier.
+**Status 2026-11-05.** `numeral_forms` now has `hundreds_forms`, the
+counterpart of `tens_forms`: a numeral prefix plus `sata`, both in the
+case, with the nominative reading `kaksi` + `sataa`:
 
-### G1e — nested modifier compounds
+```text
+kaksisataa  kahdensadan  kahtasataa  kahdessasadassa
+```
+
+It also handles a classless numeral prefix (`kahdeksantoistasataa` via
+`kahdeksantoista`). Special quantity prefixes (`pari`, `puolen`, `toista`,
+`puolitoista`) still return no `Engine.inflect` paradigm, but their
+inflected surfaces resolve through the compound gate
+(`parinkymmenen` -> `kymmenen`, `puolentoistasadan` -> `sata`), so the
+checker accepts them; extending the numeral layer to those is optional.
+
+The hundreds test pins `kaksisataa`, `kahdensadan`, `kahtasataa`.
+
+### G1e — nested modifier compounds — no map gap
 
 The rest are compounds whose modifier is itself a compound:
 `kaksikamari-`, `kaksiväri-`, `monitoimi-`, `omatoimi-`, `punakylki-`,
-`konetahti-`, `jakomieli-`. Their oblique forms already resolve through
-the head in `check_normal` (verified), but the citation is not a map base.
-Extending the genitive-style recogniser to a nominal compound modifier would
-close them; do it only with a test per pattern, since the broad form of the
-rule previously accepted `teatterikuole` + `maa`.
+`konetahti-`, `jakomieli-`. With the engine-only map these are not bases;
+their citations are in the lemma set and their obliques resolve through
+the head (`monitoimikoneen` -> `monitoimikone`, `punakylkirastaan` ->
+`rasta`). Nothing is lost at the checker level. They stay out of the
+comparison allow-list because they are not map bases by design.
 
 ## G2 — class-100 verbs generate no forms
 
@@ -450,8 +463,8 @@ generators, which move to `tools/oracle/`.
 - [x] G1 compound-modifier coverage (`agraari`, `ampuma-`, `ruumiin`,
       `avomeren`); 406 -> 59 losses, 874 tests green
 - [x] G1c `9*(D)` parenthesised gradation (`nahka` override); `viti` stays rejected
-- [ ] G1d numeral hundreds/tens
-- [ ] G1e nested modifier compounds
+- [x] G1d numeral hundreds (`hundreds_forms`); special prefixes resolve via the head
+- [x] G1e nested modifiers resolve through the head (no map gap)
 - [ ] G1b 57 classed losses encoded as explained allow-list
 - [x] G2 eight class-100 rows resolved (2 remapped, 6 rejected)
 - [ ] G3 negation/connectives emitted by the engine
