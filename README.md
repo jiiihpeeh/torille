@@ -111,6 +111,7 @@ torille/
 
   docs/harness.md       how the verification works, in detail
   PLAN.md               the plan behind the current refactor, and its outcome
+  FIX_GENGAPS.md        engine gaps that block engine-only map generation
   TODO.md               known gaps, ordered by user-facing impact
 ```
 
@@ -565,4 +566,6 @@ currently pass — the known defects are in
   exceptions.
 - [PLAN.md](PLAN.md) — the genitive-anchored class stem refactor, and what
   actually happened when it ran.
+- [FIX_GENGAPS.md](FIX_GENGAPS.md) — what still keeps a map generator on an
+  oracle, with measurements, fixes and exit criteria.
 - [TODO.md](TODO.md) — known gaps, ordered by user-facing impact.

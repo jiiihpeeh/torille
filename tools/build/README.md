@@ -43,6 +43,9 @@ Then `cargo build -p torille` turns the CSVs into `maps/*.bin` and the tests
 check the derived blobs (`the_blobs_match_compute`,
 `the_pronoun_blob_matches_compute`).
 
+The measured distance between the committed tables and engine output, and
+the plan to close it, is [FIX_GENGAPS.md](../../FIX_GENGAPS.md).
+
 ## Engine vs oracle
 
 | generator | source |
