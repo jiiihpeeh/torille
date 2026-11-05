@@ -118,8 +118,9 @@ The sanalista is `include_str!`'d (`lib.rs`); the catalogue is compiled to
 the exception to the build-script writers below: those tables are built with the
 engine (`expand::derived::compute`,
 `expand::check_normal::compute_pronoun_forms`), which a build script cannot
-call. Run `cargo run --release -p torille-tools --bin gen_derived` after a
-`RULES`, sanalista or pronoun/class change and commit the blobs;
+call. Their shared `DER1` writer is `build/computed_maps/table.rs`; run
+`cargo run --release -p torille-tools --bin gen_derived` after a `RULES`,
+sanalista or pronoun/class change and commit the blobs;
 `expand::derived::tests::the_blobs_match_compute` and
 `expand::check_normal::tests::the_pronoun_blob_matches_compute` fail if they
 drift.
@@ -139,7 +140,8 @@ trees: `build/csv_builders/` reads the committed CSVs (`sanalista.rs` for the
 lexicon blob, `catalogue.rs` for the paradigm catalogue, `string_map.rs` for
 the small lexical side tables) and `build/map_builders/` writes the compact
 set/map blobs (`front_coded.rs` for sets/maps, `huffman.rs` for the `HST1`
-proper-name set). It emits
+proper-name set). A third tree, `build/computed_maps/`, holds the writer for
+the blobs a build script cannot compute (`gen_derived`'s tables). It emits
 `data/precomputed/sanalista.bin`: 8-byte per-row records (headword,
 length, POS code, inflection start), the headword strings, `u16`
 inflections, small POS/homonym side tables, and the two sorted orders
@@ -426,7 +428,7 @@ is gitignored and generated.
 | edit distance / keyboard tie-break | `src/suggest/levenshtein.rs` |
 | "which lemma is this a form of" | `src/expand/find_bases.rs`, `src/expand/lexicon_index.rs` |
 | the reverse index / class prior | `src/expand/build.rs` |
-| compile-time blob writers | `build.rs`, `build/csv_builders/`, `build/map_builders/` |
+| compile-time blob writers | `build.rs`, `build/csv_builders/`, `build/map_builders/`, `build/computed_maps/` |
 | a new verb/noun class engine | `src/expand/verbs/`, `src/expand/nominals*/`, then `dispatch` + `AUTHORITATIVE_CLASSES` |
 | the grammar reading model | `src/tags.rs` |
 | hyphenation patterns/policy | `src/hyphenation/`, `data/hyphenation/` |
