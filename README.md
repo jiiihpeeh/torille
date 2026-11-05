@@ -485,7 +485,6 @@ cargo clippy --all-targets -- -D warnings
 cargo test --release --workspace
 python3 tools/test_binding_agrees_with_binary.py
 python3 tools/test_reverse_lookup_recall.py
-python3 tools/test_experimental_features.py
 ```
 
 The first two have one trap each, and both have bitten: `cargo test` at the
@@ -570,4 +569,6 @@ currently pass — the known defects are in
   oracle, with measurements, fixes and exit criteria.
 - [DATA_CLEANUP_PLAN.md](DATA_CLEANUP_PLAN.md) — the `data/` inventory and the
   phases for removing redundant local artifacts.
+- [data/README.md](data/README.md) — what each file in `data/` is and what
+  regenerates it.
 - [TODO.md](TODO.md) — known gaps, ordered by user-facing impact.

@@ -92,8 +92,7 @@ plain only for the 131 lemmas the oracle confirms.
       `cargo test --release --workspace`,
       `cargo clippy --all-targets -- -D warnings`,
       `python3 tools/test_binding_agrees_with_binary.py`,
-      `python3 tools/test_reverse_lookup_recall.py`,
-      `python3 tools/test_experimental_features.py`.
+      `python3 tools/test_reverse_lookup_recall.py`.
 
 ## Acceptance
 

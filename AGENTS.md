@@ -29,6 +29,7 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
   Kotus/Omorfi sqlite, with the measured baseline and the fix order.
 - `DATA_CLEANUP_PLAN.md` — what in `data/` is source, committed build input,
   frozen reference data, or local-only, and the deletion phases.
+- `data/README.md` — the per-file inventory of `data/` and each producer.
 - `PLAN_COMPOUND.md` — the compound engine: what the spec asks for, what
   already exists, and the phases for the inflection-mode/compound-kind model.
 
@@ -308,7 +309,6 @@ cargo clippy --all-targets -- -D warnings
 cargo test --release --workspace
 python3 tools/test_binding_agrees_with_binary.py
 python3 tools/test_reverse_lookup_recall.py
-python3 tools/test_experimental_features.py
 python3 tools/test_illegal_evidence.py
 ```
 

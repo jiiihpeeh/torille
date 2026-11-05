@@ -18,6 +18,8 @@ cargo run --release -p torille-tools --bin gen_derived   # -> maps/derived_*.bin
 them. `build_proper_names.py` is the one network fetch here (Wikidata); its
 output `data/proper_names.csv` is committed.
 
+The per-file inventory of `data/` is [`../../data/README.md`](../../data/README.md).
+
 The tables that record lexical facts the engine cannot derive — the
 catalogue, the noun/verb oracle databases, the proper-name cases, the
 `-oi-` plural set, the class-6/15 exception sets and the per-class rule

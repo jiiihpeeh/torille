@@ -491,8 +491,8 @@ Only if exact-first ranking must improve beyond what morphology can justify:
 
 Green: `cargo test --release --workspace`, `cargo clippy --all-targets -- -D
 warnings`, `test_binding_agrees_with_binary.py` (23/23),
-`test_reverse_lookup_recall.py` (99.89% recall), `test_experimental_features.py`,
-and `test_illegal_evidence.py` (0 stale rules; every illegal row explained by
+`test_reverse_lookup_recall.py` (99.89% recall) and
+`test_illegal_evidence.py` (0 stale rules; every illegal row explained by
 one of 46 sourced rules). The class-50 compound, class-22 loan and `autere`
 rows were closed in the class engines or with sourced evidence; see
 `EVIDENCE_REFRESH_TODO.md`.

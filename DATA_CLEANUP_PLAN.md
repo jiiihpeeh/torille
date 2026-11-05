@@ -104,14 +104,36 @@ rebuild on demand with `tools/oracle/build_*_lexicon.py`.
    the docs for no functional gain. Do it later if the flat directory keeps
    growing.
 
+## Status 2026-11-05
+
+Executed with the recommended decisions (keep one live oracle each, delete
+the Wiktionary dump/index/db, remove the reranker leftovers, keep the flat
+directory):
+
+- D1: deleted `kotus_nomines.old.sqlite` and `kotus_nomines.sqlite.bak2`
+  (~4.6 GB).
+- D2: deleted the Wiktionary dump, index and db (~776 MB).
+- D3: deleted `kotus_nomines_example.*`, `kotus_nomines.json` and the two
+  experimental sanalista copies (~13 MB).
+- D4: removed `data/tags_layout.json`, `tools/test_experimental_features.py`
+  and the tracked `wiktionary_finnish_morph.jsonl`; the dead gate references
+  are gone from AGENTS/README/tools docs.
+- D5: `.gitignore` now covers the whole families (`data/kotus_nomines*.sqlite*`,
+  `data/kotus_verbit.sqlite*`, `data/fiwiktionary*`, the morph JSONL).
+- D6: added `data/README.md`.
+
+`data/` is 12 GB -> **6.1 GB**; `git status --ignored data` lists only
+`kotus_nomines.sqlite`, `kotus_verbit.sqlite` and `kotus-tyypit.txt`.
+D7 verification and D8 commits follow.
+
 ## Phases
 
 ### D0 — guardrails (no deletion)
 
-- [ ] Record `git ls-files data` and the current comparison baseline
+- [x] Record `git ls-files data` and the current comparison baseline
       (`python3 tools/build/compare_engine_outputs.py --strict`).
-- [ ] Confirm `cargo test --release --workspace` is green.
-- [ ] If any local database is deleted, note the exact `tools/oracle/`
+- [x] Confirm `cargo test --release --workspace` is green.
+- [x] If any local database is deleted, note the exact `tools/oracle/`
       command that rebuilds it.
 
 ### D1 — delete superseded oracle copies
@@ -152,7 +174,7 @@ Frees ~13 MB. The example CSV is only the docstring's `-n 1` demo; rerun
 
 ### D4 — remove the reranker leftovers
 
-- [ ] `git rm data/tags_layout.json tools/test_experimental_features.py`
+- [x] `git rm data/tags_layout.json tools/test_experimental_features.py`
       (and any stale `tools/train/__pycache__` locally).
 - [ ] Decide on `data/wiktionary_finnish_morph.jsonl` (decision 4); if the
       fetcher owns it, add `data/wiktionary_finnish_morph.jsonl` to
@@ -179,10 +201,10 @@ artifacts (the two live oracle databases and `kotus-tyypit.txt`).
 
 ### D6 — document `data/`
 
-- [ ] Add `data/README.md` with the classification from this plan: source /
+- [x] Add `data/README.md` with the classification from this plan: source /
       committed generated / frozen reference / local-only, one row per file,
       the producer or origin, and the regeneration command.
-- [ ] Point `AGENTS.md` and `tools/build/README.md` at it instead of repeating
+- [x] Point `AGENTS.md` and `tools/build/README.md` at it instead of repeating
       the inventory.
 
 ### D7 — verification

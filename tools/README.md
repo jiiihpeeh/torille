@@ -112,7 +112,6 @@ python3 tools/show_illegals.py --refresh
 python3 tools/test_binding_agrees_with_binary.py
 python3 tools/test_reverse_lookup_recall.py
 python3 tools/report_multiple_bases.py reports/recall5.tsv
-python3 tools/test_experimental_features.py
 ```
 
 `show_illegals.py` fingerprints the engine, data, harness and installed binding
