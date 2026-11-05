@@ -111,8 +111,8 @@ fn main() -> ExitCode {
     // word, not how many. This used to be `iters * words.len()`, which
     // divided µs/call and candidates/call by 5 (the array length) and
     // claimed five times as many calls as were made. That is why
-    // `profile_hot` reported ~130 ms/query for a workload `rerank_bench`
-    // measures at ~578 ms: same work, divisor five times too large.
+    // `profile_hot` reported ~130 ms/query for a workload the models
+    // measured at ~578 ms: same work, divisor five times too large.
     let n = iters;
     let full_secs = full.as_secs_f64();
     let find_secs = find.as_secs_f64();

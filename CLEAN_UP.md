@@ -31,9 +31,8 @@ After the first pass (P0–P2):
 | engine lib tests | 681 passed (old tree's duplicate tests removed) |
 
 `tests/candidate_generation.rs` was green after the P5 split; its old
-golden list (and `data/rerank/*.jsonl`) was regenerated for the
-keyboard-adjacency tie-break, and the score assertion now allows the
-documented 0.05 bonus. The engine cleanup itself did not change ranking.
+golden list was regenerated for the keyboard-adjacency tie-break, and the
+score assertion now allows the documented 0.05 bonus. The engine cleanup itself did not change ranking.
 
 ## P0 — debris and broken targets
 
@@ -169,7 +168,7 @@ documented 0.05 bonus. The engine cleanup itself did not change ranking.
 - [x] Add `rust-toolchain.toml` (pins 1.99.0, edition 2024, clippy + rustfmt).
 - [x] CI: `.github/workflows/ci.yml` runs `cargo check --workspace
       --all-targets`, the engine clippy gate, the lib tests, `catalogue` and
-      `candidate_generation` and `rerank_parity`. The Python harness is
+      `candidate_generation`. The Python harness is
       separate (needs Omorfi/Voikko/maturin).
 - [ ] `cargo fmt --check` is deliberately **not** a gate yet: generated
       modules are not rustfmt-clean, and `src/expand/mod.rs` /

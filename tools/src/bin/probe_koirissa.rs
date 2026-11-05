@@ -3,12 +3,9 @@
 //! inputs like `koirissa` (genitive plural of "koira" vs. inessive
 //! plural of "kori").
 //!
-//! This is a one-off probe, used during the Slice-3 evaluation to
-//! confirm the deterministic engine surfaces *both* interpretations
-//! before the neural reranker adds anything. The user's review
-//! specifically called out `koirissa → korissa` as the kind of case
-//! where the reranker should help; if the engine doesn't surface
-//! `korissa` for `koirissa`, no reranker can fix it.
+//! The probe exists to check whether the engine surfaces *both*
+//! interpretations before any later ranking layer runs: if it does not
+//! surface `korissa` for `koirissa`, nothing downstream can recover it.
 //!
 //! Run: cargo run --release -p torille-tools --bin probe_koirissa
 
@@ -20,10 +17,9 @@ fn main() {
         let sugs = suggest_detailed(word, 30, 4);
         for s in sugs.iter().take(20) {
             let src = match &s.source {
-                torille::rerank::SuggestionSource::DirectLemma => "direct_lemma",
-                torille::rerank::SuggestionSource::NeighbourLemma => "neighbour_lemma",
-                torille::rerank::SuggestionSource::GeneratedForm { .. } => "generated_form",
-                torille::rerank::SuggestionSource::MorphologyHypothesis { .. } => "morph_hyp",
+                torille::suggest::SuggestionSource::DirectLemma => "direct_lemma",
+                torille::suggest::SuggestionSource::NeighbourLemma => "neighbour_lemma",
+                torille::suggest::SuggestionSource::GeneratedForm { .. } => "generated_form",
             };
             println!(
                 "  ed={} src={:<14} lemma={:?} word={:?}",

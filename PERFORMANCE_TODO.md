@@ -672,7 +672,7 @@ Expected: `check("talossa")` and every ordinary inflected form drop from
 - [x] Make `lemma_emit` in `find_bases.rs` and the stem-map verifiers in
       `check_normal.rs` use it.
 - [x] Keep `inflect_all` unchanged for callers that need the paradigm
-      (`inflect` tool, reranker, tests).
+      (`inflect` tool, tests).
 
 Expected: gate 4/4b verification (`huomasi` 40 ms, `valentine` 150 ms) stops
 allocating a `Vec<Generated>` per candidate; 5–50× on the 1–10 ms tail.
@@ -717,8 +717,7 @@ correct base names for `äesteli`, `lyökämme`.
 `src/expand/find_bases.rs`, `src/expand/mod.rs`)
 
 - [ ] Add a `find_bases_near(..., max_distance)` path for `suggest` (or extend
-      `find_bases_with_form_filter`), leaving `find_bases_with` complete for
-      the reranker/tools. The near path applies the length window implied by
+      `find_bases_with_form_filter`), leaving `find_bases_with` complete for the tools. The near path applies the length window implied by
       `max_distance`: only surfaces with
       `|len(form) - len(input)| <= max_distance` can survive.
 - [ ] Add a filtered generation API (`inflect_all_filtered` / `FormSink`) so
@@ -1006,7 +1005,7 @@ in this tree.
 - **Wasm is single-threaded.** A host win from `walk_head1`'s threads may not
   exist in the extension. Always run the browser probes.
 - **Suggestion goldens may move.** Regenerate `tests/candidate_generation.rs`
-  and `data/rerank/*.jsonl` together, as AGENTS requires; do not hand-edit one.
+  when the ranking changes; do not hand-edit it.
 - **Memory.** The 1M-form blow-up is also a wasm heap problem (`Vec<Form>`,
   cloned readings). Cutting it reduces peak memory and OOM risk, not just
   latency.

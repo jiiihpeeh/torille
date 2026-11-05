@@ -42,9 +42,9 @@ use crate::tags::{Form, PartOfSpeech};
 ///
 /// `find_bases_with` already iterates every candidate lemma's full paradigm
 /// once, and `Form` carries the morphological readings and the generation
-/// confidence that the reranker wants. Earlier revisions threw that data
+/// confidence that callers may rank on. Earlier revisions threw that data
 /// away and only kept the surface string, which forced every consumer
-/// (`suggest`, future neural work) to re-inflect to recover it. [`SourcedForm`]
+/// (`suggest`, tools) to re-inflect to recover it. [`SourcedForm`]
 /// is the alternative: keep the lemma + the [`Form`] it emitted, so callers
 /// can rank on morphology without redoing the generation.
 pub struct SourcedForm<'a> {
@@ -85,7 +85,7 @@ pub struct BasesReport<'a> {
     pub neighbours: Vec<&'a Lemma<'a>>,
     /// Inflected forms generated during the head/tail/prefix walks, paired
     /// with the lemma that produced them. Retained so `suggest` can score
-    /// them against the input via Levenshtein and so the future reranker can
+    /// them against the input via Levenshtein and so callers can
     /// see the form's readings and generation confidence. Many misspellings
     /// are within one edit of a valid inflected form whose lemma is too far
     /// from the input for the lemma-only path to consider; e.g. "jooksee" ->
@@ -346,7 +346,7 @@ where
 /// sanalista carries homonyms. The inflect check accepts the word
 /// as soon as ANY base matches, so the short-circuit is correct
 /// for the yes/no question. Callers that need the full
-/// candidate set (the suggestion pool, the reranker) use
+/// candidate set (the suggestion pool) use
 /// [`find_bases_with`], which collects every match.
 ///
 /// **The returned base is "the first one we hit", not "the
@@ -1059,7 +1059,7 @@ fn find_bases_with_inner<'a>(
             // Forms: the clitic-stripped host's forms, paired with
             // their lemmas, are also valid forms of the original
             // (just cliticised). We re-emit them so callers that
-            // inspect `forms` (the reranker) see the
+            // inspect `forms` see the
             // morphological data without re-inflecting.
             //
             // The merge is keyed through a set rather than a
@@ -1078,8 +1078,8 @@ fn find_bases_with_inner<'a>(
             }
             // Quiet the unused-warning; `clitic` is the layered
             // information that the metadata side would carry
-            // once the reranker asks for it. For now it just
-            // documents the path the recognition took.
+            // once a caller asks for it. For now it just documents the
+            // path the recognition took.
             let _ = clitic;
         }
     }

@@ -50,12 +50,14 @@ use crate::expand::{BasesReport, ClassPrior, find_bases_for_check, rank_lemma_ba
 
 mod candidates;
 mod casing;
+mod detail;
 mod known;
 mod levenshtein;
 mod state;
 
-pub use candidates::{suggest, suggest_detailed, suggest_with_pipeline};
+pub use candidates::{suggest, suggest_detailed};
 pub use casing::case_is_valid;
+pub use detail::{Suggestion, SuggestionSource};
 pub(crate) use known::{
     is_content_head, is_known_compound_dp, is_known_compound_fast, is_known_short_compound,
 };
@@ -239,8 +241,6 @@ use crate::kotus::sanalista as _sanalista_keepalive;
 #[cfg(test)]
 mod tests {
     use std::collections::HashSet;
-
-    use crate::rerank::{Pipeline, SuggestionSource};
 
     use super::levenshtein::{KEYBOARD_ADJACENT_BONUS, is_keyboard_adjacent, keyboard_bonus};
     use super::*;
@@ -741,8 +741,7 @@ mod tests {
     }
 
     /// `suggest_detailed` annotates the `jooksee` case with the lemma the
-    /// engine actually used to produce `juoksee`. The morphologically-aware
-    /// path the reranker / hypothesiser consume.
+    /// engine actually used to produce `juoksee`.
     #[test]
     fn suggest_detailed_juoksee_carries_lemma() {
         let out = suggest_detailed("jooksee", 5, 2);
@@ -778,44 +777,6 @@ mod tests {
         assert!(suggest_detailed("", 5, 2).is_empty());
         assert!(suggest_detailed("talo", 0, 2).is_empty());
         assert!(suggest_detailed("xyzzy", 5, 0).is_empty());
-    }
-
-    /// `suggest_with_pipeline` with the default pipeline produces the same
-    /// candidate list as `suggest_detailed`. Slice-0 contract: the optional
-    /// hooks do nothing when the pipeline is disabled.
-    #[test]
-    fn suggest_with_pipeline_disabled_matches_detailed() {
-        let pipeline = Pipeline::disabled();
-        for word in ["taloo", "koirra", "jooksee", "puhtaan"] {
-            let detailed = suggest_detailed(word, 5, 2);
-            let with_pipeline = suggest_with_pipeline(word, 5, 2, &pipeline);
-            assert_eq!(
-                detailed.len(),
-                with_pipeline.len(),
-                "len differs for {word}: {} vs {}",
-                detailed.len(),
-                with_pipeline.len()
-            );
-            let words_detailed: Vec<&str> = detailed.iter().map(|s| s.word.as_str()).collect();
-            let words_pipeline: Vec<&str> = with_pipeline.iter().map(|s| s.word.as_str()).collect();
-            assert_eq!(
-                words_detailed, words_pipeline,
-                "word order differs for {word}"
-            );
-        }
-    }
-
-    /// `suggest_with_pipeline` does not run any neural component when the
-    /// pipeline is disabled. The slice-0 implementation short-circuits
-    /// before either hook is consulted.
-    #[test]
-    fn suggest_with_pipeline_disabled_skips_hooks() {
-        let pipeline = Pipeline::disabled();
-        assert!(!pipeline.reranker.enabled());
-        assert!(!pipeline.hypothesizer.enabled());
-        assert!(!pipeline.any_neural_enabled());
-        // And the call still works end-to-end.
-        let _ = suggest_with_pipeline("taloo", 5, 2, &pipeline);
     }
 
     /// `--lemma-set--`

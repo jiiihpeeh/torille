@@ -65,16 +65,11 @@ Corpus and code generation:
 | binary | purpose |
 |---|---|
 | `build_catalogue` | refine the catalogue CSV from the engine's own output |
-| `train_data` | build the corruption/inflection training splits |
-| `rerank_data` | build contrastive reranker candidates from the training splits |
-| `tags_dump` | emit the `Tags` layout used by the Python trainer |
 
 Profiling and one-off probes:
 
 | binary | purpose |
 |---|---|
-| `rerank` | the production reranker path, end to end |
-| `rerank_bench` | per-stage reranker latency |
 | `profile_hot` | phase timings for the per-keystroke path |
 | `probe_koirissa` | reproduce the `koirissa` / `korissa` candidate-pruning case |
 
@@ -139,28 +134,16 @@ The remaining scripts fall into four groups:
 - **Audits and reports** — `audit_*`, `walk_check.py`, `fingerprint_nouns.py`,
   `compound_recall.py`, `classify_lemma.py`, `report_by_class.py`,
   `report_multiple_bases.py`, `show_illegals.py`.
-- **Diagnostics** — `diag_*.py`, `csvtool.py`, `run_wordlist.py`,
-  `make_*.py`, `omorfi_harness.py`, `check_hyphenation_against_voikko.py`.
+- **Diagnostics** — `csvtool.py`, `run_wordlist.py`, `make_*.py`,
+  `omorfi_harness.py`, `check_hyphenation_against_voikko.py`.
 - **Corpus fetches** — `fetch_wiktionary.py`, `fetch_finnish_books.py`,
   `rebuild_book_catalog.py`.
-
-### Training
-
-`train/` is pure-numpy reranker training and evaluation. It reads the JSONL
-corpora under `data/rerank*` and writes reports under `data/rerank_v2*/`.
-`parallel_rerank.py` and `post_rerank.py` orchestrate the sharded runs.
-
-*Note:* the training corpus generation is expensive and the full
-`data/train/train.jsonl` is much larger than the committed `data/rerank/`
-split. When regenerating the committed corpus, use the same first 300/109
-source rows so the split sizes stay fixed (see `AGENTS.md`).
 
 ## Conventions
 
 - Run scripts from the repository root unless the script says otherwise.
 - Python bytecode (`__pycache__/`, `*.pyc`) is generated locally and ignored.
-- Output under `reports/` and the large `data/rerank_v2*` trees is generated,
-  ignored, and safe to delete.
+- Output under `reports/` is generated, ignored, and safe to delete.
 - Add a new Rust driver as `src/bin/<name>.rs` and declare it in
   `Cargo.toml`; Cargo would auto-discover it, but the explicit entry keeps the
   binary inventory readable.

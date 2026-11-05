@@ -62,61 +62,13 @@ name = "derive"
 path = "src/bin/derive.rs"
 
 [[bin]]
-# Build the training-data corpus for the optional neural reranker /
-# morphology hypothesiser. Reads the Kotus-inflected SQLite databases in
-# `data/`, applies realistic Finnish typo corruptions, validates that the
-# corrupted form is not itself a known Finnish word, and writes JSONL
-# splits under `data/train/`.
-name = "train_data"
-path = "src/bin/train_data.rs"
-
-[[bin]]
-# Read the Slice-2 JSONL splits and produce a contrastive reranker
-# training corpus: for each row, run `suggest_detailed(misspelled)`,
-# pick the candidate whose word equals the correct surface form as the
-# positive, and sample the closest-to-surface candidates as
-# negatives. Writes JSONL under `data/rerank/`. The output now carries
-# the Levenshtein edit script per candidate (sub/ins/del/trans/match
-# × position) via `levenshtein_with_ops`.
-name = "rerank_data"
-path = "src/bin/rerank_data.rs"
-
-[[bin]]
-# Emit the engine's Tags enum layout as JSON, so the trainer's
-# morphology one-hot block has the engine's enums as its single
-# source of truth (no parallel Python mappings to drift). Writes
-# data/tags_layout.json.
-name = "tags_dump"
-path = "src/bin/tags_dump.rs"
-
-[[bin]]
-# One-off probe: print the deterministic engine's candidate list for
-# ambiguous inputs (`koirissa`, `korissa`, etc.). Used during the
-# Slice-3 evaluation to confirm that the engine surfaces -- or fails
-# to surface -- the right candidates before any reranker adds
-# anything. Confirmed that `koirissa → korissa` is NOT in the
-# candidate list even at edit-distance 1, because the engine's
-# `find_bases_with` prunes by prefix and `kori` shares no prefix with
-# `koirissa`.
+# One-off probe: print the engine's candidate list for ambiguous
+# inputs (`koirissa`, `korissa`, etc.). Confirmed that
+# `koirissa → korissa` is NOT in the candidate list even at edit
+# distance 1, because `find_bases_with` prunes by prefix and `kori`
+# shares no prefix with `koirissa`.
 name = "probe_koirissa"
 path = "src/bin/probe_koirissa.rs"
-
-[[bin]]
-# Component-level latency of the Model-A reranking path: candidate
-# generation, feature extraction, MLP inference and total, swept over
-# candidate-list widths. Split into stages on purpose -- `score_batch`
-# fuses the last two, so timing only that would make "is the MLP
-# actually the bottleneck?" unanswerable.
-name = "rerank_bench"
-path = "src/bin/rerank_bench.rs"
-
-[[bin]]
-# The production Model-A path end to end, in Rust and with no Python
-# anywhere on it: engine candidates -> query features (once) -> one
-# batched matrix -> two matmuls -> ranking. Emits TSV so its output can
-# be diffed against the Python side without a JSON dependency here.
-name = "rerank"
-path = "src/bin/rerank.rs"
 
 [[bin]]
 # Phase-by-phase timing for the per-keystroke path. A small local

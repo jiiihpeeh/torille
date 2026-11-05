@@ -18,7 +18,6 @@ pub mod kotus;
 mod map_reader;
 pub mod pronoun;
 mod rejected;
-pub mod rerank;
 pub mod sentence;
 pub mod spec;
 pub mod suggest;
@@ -34,19 +33,7 @@ pub use kotus::Sanalista;
 pub use kotus::parse_sanalista;
 pub use kotus::read_sanalista;
 pub use kotus::sanalista;
-pub use rerank::Hypothesis;
-pub use rerank::HypothesisSource;
-pub use rerank::MorphologyHypothesizer;
-pub use rerank::NeuralConfig;
-pub use rerank::NoOpMorphologyHypothesizer;
-pub use rerank::NoOpReranker;
-pub use rerank::Pipeline;
-pub use rerank::PipelineConfig;
-pub use rerank::Reranker;
-pub use rerank::Suggestion;
-pub use rerank::SuggestionSource;
-pub use rerank::{default_reranker, load_pipeline, realize_hypothesis};
-pub use suggest::{suggest, EditOp, levenshtein_with_ops};
+pub use suggest::{EditOp, Suggestion, SuggestionSource, levenshtein_with_ops, suggest};
 
 /// Whether a character is one of the Finnish vowels.
 ///

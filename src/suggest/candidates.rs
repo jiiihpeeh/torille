@@ -1,11 +1,10 @@
-//! Candidate generation and ranking: `suggest`, `suggest_detailed` and the
-//! pipeline entry point.
+//! Candidate generation and ranking: `suggest` and `suggest_detailed`.
 //!
 //! Split out of `suggest/mod.rs`; the public functions are re-exported from
 //! `suggest` so their paths do not change.
 
+use super::detail::{Suggestion, SuggestionSource};
 use crate::expand::{find_any_base_with, find_bases_with_form_filter};
-use crate::rerank::{Pipeline, Suggestion, SuggestionSource};
 use crate::tags::Confidence;
 
 use super::casing::match_case;
@@ -141,9 +140,8 @@ fn repaired_plural_genitive(word: &str) -> Option<String> {
 /// This is a thin wrapper over [`suggest_detailed`] that throws away every
 /// [`Suggestion`] field except the surface word. The hunspell-compatible C
 /// API in `wrapper/` and the existing tool `tools/src/bin/suggest_correct`
-/// both call this. New callers should reach for [`suggest_detailed`] (or
-/// [`suggest_with_pipeline`]) so they can read the morphology / source
-/// metadata.
+/// both call this. New callers should reach for [`suggest_detailed`] so
+/// they can read the morphology / source metadata.
 pub fn suggest(word: &str, max_n: usize, max_distance: usize) -> Vec<String> {
     suggest_detailed(word, max_n, max_distance)
         .into_iter()
@@ -151,20 +149,16 @@ pub fn suggest(word: &str, max_n: usize, max_distance: usize) -> Vec<String> {
         .collect()
 }
 
-/// The detailed spelling pipeline without the optional neural / morphology
-/// hooks.
+/// The detailed spelling pipeline.
 ///
 /// Returns up to `max_n` [`Suggestion`]s, each within `max_distance`
 /// Levenshtein units of `word`. The candidate set is the same one
 /// [`suggest`] uses -- every lemma that shares a head, tail, or short
 /// prefix with `word`, plus every inflected form generated during the
-/// head/tail/prefix walks. The metadata each [`Suggestion`] carries is
-/// what the optional reranker and morphology hypothesiser (slice 1+) will
-/// consume.
+/// head/tail/prefix walks.
 ///
-/// Ordering matches [`suggest`] for slice 0 -- Levenshtein ascending,
-/// alphabetical tie-break. Callers that want the optional hooks should
-/// reach for [`suggest_with_pipeline`] instead.
+/// Ordering matches [`suggest`] -- Levenshtein ascending, alphabetical
+/// tie-break.
 pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Suggestion> {
     if word.is_empty() || max_n == 0 {
         return Vec::new();
@@ -316,7 +310,7 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     //
     // Insert order matches the existing `suggest` (which sorted
     // alphabetically, then dedup'd keeping the first occurrence). Each
-    // Suggestion carries its source so the reranker can read it.
+    // Keep the candidate source on the Suggestion record.
     let mut candidates: Vec<Suggestion> = Vec::with_capacity(
         report.bases.len() + report.neighbours.len() + report.direct.len() + report.forms.len(),
     );
@@ -612,8 +606,8 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
         candidates.insert(0, candidate);
     }
 
-    // Stamp the rank onto each Suggestion so the reranker / benchmark
-    // can diff pre- and post-rerank orderings.
+    // Stamp the deterministic rank onto each Suggestion so tools can
+    // explain the ordering.
     for (i, c) in candidates.iter_mut().enumerate() {
         c.original_rank = i;
     }
@@ -770,48 +764,4 @@ fn deletion_corrections(word: &str) -> Vec<String> {
         }
     }
     out
-}
-
-/// The full spelling pipeline including the [`Pipeline`]'s reranker and
-/// morphology hypothesiser hooks.
-///
-/// Slice 0: with the default [`Pipeline::disabled`] this is byte-identical
-/// to [`suggest_detailed`] for the determinable ordering of returned words,
-/// because the reranker is a no-op and the hypothesiser produces zero
-/// hypotheses. Slices 1+ swap the no-op components for real ones; this
-/// function's signature is stable across that transition.
-///
-/// `context_tokens` is the slice of surrounding tokens. Slice 0 ignores it;
-/// slice 3+ uses it as a feature. Empty is the right value to pass today.
-pub fn suggest_with_pipeline(
-    word: &str,
-    max_n: usize,
-    max_distance: usize,
-    pipeline: &Pipeline,
-) -> Vec<Suggestion> {
-    // Step 1: deterministic candidates. Same input, same output as
-    // `suggest_detailed`.
-    let mut suggestions = suggest_detailed(word, max_n, max_distance);
-
-    // Step 2: reranker. No-op is identity; a future heuristic or MLP
-    // reranker may reorder or drop suggestions here.
-    if pipeline.reranker.enabled() {
-        suggestions = pipeline.reranker.rerank(word, &[], suggestions);
-    }
-
-    // Step 3: morphology hypothesiser. Slice 0 has no real implementation
-    // -- the no-op returns zero hypotheses, so this branch is dead code
-    // today. Slice 1 wires `realize_hypothesis` (from `crate::rerank`)
-    // against a cached `FormBuilder` and `Catalogues`. The dead branch
-    // is left in place deliberately so slice 1's diff is a one-line edit.
-    if pipeline.hypothesizer.enabled() {
-        let hypotheses = pipeline.hypothesizer.hypothesize(word, &[]);
-        for h in hypotheses.into_iter().take(pipeline.config.max_hypotheses) {
-            // slice 1: let s = crate::rerank::realize_hypothesis(&h, &builder, &cat);
-            // slice 1: if let Some(s) = s { suggestions.push(s); }
-            let _ = h;
-        }
-    }
-
-    suggestions
 }

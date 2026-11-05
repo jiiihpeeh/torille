@@ -17,7 +17,7 @@ back to compound analysis. Every form carries a grammatical reading and a
 
 Deeper docs (read these when the topic comes up, do not duplicate them):
 
-- `README.md` — the full narrative, tools, reranker slices, measured numbers.
+- `README.md` — the full narrative, tools and measured numbers.
 - `docs/harness.md` — the Omorfi + Voikko verification harness, finding kinds,
   and the current known defects (A/B/C/D).
 - `docs/lexicon.md` — the materialised noun lexicon used as the harness oracle.
@@ -265,16 +265,6 @@ legitimately case-less.
   final sort is: `edit_distance` asc → `existing_score` desc → word asc.
 - `suggest_with_state` is the per-textarea wasm entry point.
 
-### Reranker (`rerank/`) — scaffolding, off by default
-
-An optional two-role neural layer. `Pipeline::disabled()` / `NeuralConfig`
-defaults are off, so with no model loaded behaviour is byte-identical to plain
-`suggest`. Contract: a broken or missing model must **never** make the engine
-unusable — it falls back to the deterministic ranking. `mlp.rs` is the Model-A
-forward pass (raw logits, query features computed once, no per-candidate
-allocation); it mirrors `tools/train/model.py` and is pinned by
-`tools/train/parity_test.py`. Training is pure numpy; see README.
-
 ### Other layers
 
 `gradation.rs` (strong↔weak consonant alternation), `harmony.rs` +
@@ -292,7 +282,8 @@ ComponentInflection, Explanation, Action}`;
 `parse_sanalista`, `read_sanalista`, `Sanalista`, `Lemma`, `Inflection`;
 `Tags`, `Form`, `Confidence`; `sentence::{analyze, spans, Analyzer, TokenContext,
 SentenceSpan}`; `syntax::{analyze, SyntaxAnalysis, Clause, TokenSyntax,
-SyntacticRole, RoleConfidence}`; the `rerank` traits/types.
+SyntacticRole, RoleConfidence}`; `Suggestion` / `SuggestionSource` under
+`suggest`.
 
 ## Build, test, lint
 
@@ -445,13 +436,9 @@ is gitignored and generated.
 ## Current known state
 
 - The workspace builds and the test suite is green. The
-  `tests/candidate_generation.rs` golden list and `data/rerank/*.jsonl` were
-  regenerated together after the keyboard-adjacency tie-break (`b08be1e`)
-  moved `koiraa` and `talo`; the test now also allows the documented 0.05
-  `existing_score` bonus. The corpus was regenerated from the same first
-  300/109 source rows, so the split sizes stay 300/109 and the truncated
-  final dev line is gone. Keep the golden list and corpus regenerating
-  together.
+  `tests/candidate_generation.rs` golden list was regenerated after the
+  keyboard-adjacency tie-break (`b08be1e`) moved `koiraa` and `talo`; the
+  test now also allows the documented 0.05 `existing_score` bonus.
 - The morphology engine has known correctness gaps (recall ~70%, a large
   `illegal` count from stems built on the wrong stem). These are tracked defects,
   not the build status; read `TODO.md` and `docs/harness.md` before touching
