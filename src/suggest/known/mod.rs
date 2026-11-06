@@ -483,9 +483,9 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
     //
     // 3a. Direct stem probe. The verb oracle records
     //     third-person-singular present indicative with an empty
-    //     personal ending (`build_verb_stem_to_base_map.py:62`,
-    //     `PERSONAL_ENDINGS[("indicative","present","third",
-    //     "singular")] = [""]`), which means the surface form
+    //     personal ending (`gen_stem_map_verb.rs`, `personal_endings`
+    //     for indicative/present/third/singular = `[""]`), which means
+    //     the surface form
     //     is *also* the verb stem. The CSV consequently emits
     //     `nousee -> nousta`, `lukee -> lukea`, `istuu ->
     //     istua`, `juoksee -> juosta`, `menee -> mennae`, etc.,
@@ -518,7 +518,7 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
     // 3c. Participle case stripper. The bare present/past/agent
     //     participle (`muistava`, `tiennyt`, `lukema`) is in the
     //     verb stem map as a stem → base entry (see
-    //     `tools/build/build_verb_stem_to_base_map.py`). The
+    //     `gen_stem_map_verb`). The
     //     participle inflects like an adjective (`muistava`
     //     → gen `muistavan`, part `muistavaa`, iness
     //     `muistavassa`, allat `muistavalle`, ...), so we peel

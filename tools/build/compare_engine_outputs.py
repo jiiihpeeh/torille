@@ -244,13 +244,7 @@ def degree_cells(path: Path) -> tuple[set[tuple[str, str]], set[tuple[str, str]]
 
 def compare_stem_map_verb(tmp: Path, strict: bool) -> bool:
     engine_csv = tmp / "stem_map_verb_engine.csv"
-    run(
-        "build_verb_stem_to_base_map.py",
-        "--source",
-        "engine",
-        "--out",
-        str(engine_csv),
-    )
+    run_bin("gen_stem_map_verb", engine_csv)
     old = pairs(REPO / "data" / "verb_stem_to_base_map.csv")
     new = pairs(engine_csv)
     print(

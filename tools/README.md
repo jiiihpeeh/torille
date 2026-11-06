@@ -128,9 +128,9 @@ The remaining scripts fall into four groups:
   `build_verb_lexicon.py` now include the engine enrichment, the comitative and
   negative-mood verb cells, and the connectives/connegatives tables that used
   to be separate update/fill scripts.
-- **Generated tables** — `gen_all_forms`, `gen_adj_degrees` and
-  `gen_stem_map_noun` are Rust bins in `tools/src/bin/`; the verb map is
-  still `build/build_verb_stem_to_base_map.py`.
+- **Generated tables** — `gen_all_forms`, `gen_adj_degrees`,
+  `gen_stem_map_noun` and `gen_stem_map_verb` are Rust bins in
+  `tools/src/bin/`.
   `engine` (the default for both) asks the current binding, so a fixed
   inflection bug cannot leave its old invented forms in a checked-in blob.
   `hybrid` keeps oracle rows only where the current engine still produces

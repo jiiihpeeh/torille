@@ -23,7 +23,7 @@ engine's MIT/Apache-2.0 license.
 |---|---|---|
 | `adj_degrees.csv` | `gen_adj_degrees` (Rust bin) | `maps/adj_degrees.bin` |
 | `stem_to_base_map.csv` | `gen_stem_map_noun` (Rust bin) | `maps/stem_map_noun.bin` |
-| `verb_stem_to_base_map.csv` | `tools/build/build_verb_stem_to_base_map.py` | `maps/stem_map_verb.bin` |
+| `verb_stem_to_base_map.csv` | `gen_stem_map_verb` (Rust bin) | `maps/stem_map_verb.bin` |
 
 Regenerate with the engine binding, then `cargo build -p torille`. Do not
 hand-edit; `tools/build/compare_engine_outputs.py --strict` is the check.

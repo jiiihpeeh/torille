@@ -303,7 +303,7 @@ pub(crate) fn emit_stem_map(csv_path: &Path, blob_path: &Path) {
              run `{}` first",
             csv_path.display(),
             if csv_path.ends_with("verb_stem_to_base_map.csv") {
-                "python3 tools/build/build_verb_stem_to_base_map.py"
+                "cargo run --release -p torille-tools --bin gen_stem_map_verb"
             } else {
                 "cargo run --release -p torille-tools --bin gen_stem_map_noun"
             }

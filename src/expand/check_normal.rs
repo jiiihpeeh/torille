@@ -97,12 +97,10 @@ pub static STEM_BUCKETS_VERB: StemMap = StemMap::new(include_bytes!(concat!(
 
 // ---------------------------------------------------------------------------
 // Endings lists. Must stay in sync with the `endings` table in
-// `tools/src/stem_key.rs` and with `PERSONAL_ENDINGS`/`INFINITIVE_ENDINGS`/
-// `PARTICIPLE_ENDINGS`/`PASSIVE_PERSONAL_ENDINGS`/
-// `PASSIVE_PARTICIPLE_ENDINGS` (verb builder) in
-// `tools/build/build_verb_stem_to_base_map.py`. If a case ending is
-// added there, add the matching strip suffix here so the runtime
-// lookup can recover the stem.
+// `tools/src/stem_key.rs` and with the verb endings in
+// `tools/src/bin/gen_stem_map_verb.rs`. If a case ending is added there,
+// add the matching strip suffix here so the runtime lookup can recover
+// the stem.
 // ---------------------------------------------------------------------------
 
 pub const ENDINGS: &[&str] = &[

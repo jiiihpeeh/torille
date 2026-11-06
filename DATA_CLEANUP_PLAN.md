@@ -32,7 +32,7 @@ clone build without a Python environment.
 |---|---|
 | `adj_degrees.csv` | `gen_adj_degrees` (Rust bin) |
 | `stem_to_base_map.csv` | `gen_stem_map_noun` (Rust bin) |
-| `verb_stem_to_base_map.csv` | `tools/build/build_verb_stem_to_base_map.py` |
+| `verb_stem_to_base_map.csv` | `gen_stem_map_verb` (Rust bin) |
 | `verb_connegatives.csv`, `verb_connectives.csv` | oracle/reference tables (frozen) |
 
 Also in `maps/`: `all_forms.bin`, `catalogue.bin`, `stem_map_*.bin`,

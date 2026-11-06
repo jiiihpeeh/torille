@@ -40,7 +40,7 @@ cargo run --release -p torille-tools --bin gen_stem_map_noun -- \
 ```
 
 The verb map comparison was generated from the same algorithm as
-`tools/build/build_verb_stem_to_base_map.py`, which then still read sqlite.
+`gen_stem_map_verb`, which then still read sqlite.
 The degree comparison now runs `gen_adj_degrees`. Adding the comparison as a
 committed script is G0.
 
@@ -298,14 +298,14 @@ emit as single-word forms; the fusions live in `data/verb_connectives.csv`
   committed lexical table, not an oracle dependency).
 
 **Files.** `src/expand/negation.rs`, `src/expand/verbs/`, the binding,
-`tools/build/build_verb_stem_to_base_map.py`.
+`gen_stem_map_verb`.
 
 **Exit.** Engine-only verb map contains the negation and fusion bases without
 a tool-side hard-coded list; the `check_normal` gate accepts the finite forms.
 
 **Status 2026-11-05 — verb map switched; closed table kept.**
 
-`build_verb_stem_to_base_map.py` now defaults to `--source engine` and reads
+`gen_stem_map_verb` now defaults to `--source engine` and reads
 the forms from the binding; `--source oracle` remains as the historical
 reference. With the class-100 fix, base coverage is complete: 0 verb bases
 lost, 17 new (`lie`, `lienee`, `palpatella`, ...). The map grows from
