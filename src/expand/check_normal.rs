@@ -1740,7 +1740,6 @@ mod tests {
             ("suurkaanin", "suurkaani"),
             ("helmettömiä", "helmetön"),
             ("sointuvinta", "sointuvin"),
-            ("yllinkyllin", "kyllin"),
             ("tilkitsijän", "tilkitsijä"),
             ("haltuunsa", "haltuun"),
             ("viittovan", "viittoa"),

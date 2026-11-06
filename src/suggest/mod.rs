@@ -1369,6 +1369,16 @@ mod tests {
             suggest("niinkuin", 8, 2).first().map(String::as_str),
             Some("niin kuin"),
         );
+        assert_eq!(is_known_word("yllinkyllin"), None);
+        assert_eq!(
+            suggest("yllinkyllin", 8, 2).first().map(String::as_str),
+            Some("yltäkyllin"),
+        );
+        assert_eq!(is_known_word("sentähden"), None);
+        assert_eq!(
+            suggest("sentähden", 8, 2).first().map(String::as_str),
+            Some("sen tähden"),
+        );
         assert!(!is_known_word("ennenin").is_some_and(|b| b == "ennen"));
     }
 

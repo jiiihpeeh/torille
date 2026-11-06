@@ -60,6 +60,10 @@ const REPORTED_CORRECTIONS: &[(&str, &str, &str)] = &[
     ("aivankuin", "aivan kuin", "aivan"),
     ("avainkuin", "aivan kuin", "aivan"),
     ("niinkuin", "niin kuin", "niin"),
+    ("yllinkyllin", "yltäkyllin", "yltäkyllin"),
+    // The fused archaic conjunction; modern Finnish uses the two-word
+    // `sen tähden` (and `sentään` is a different adverb).
+    ("sentähden", "sen tähden", "sen"),
     // `aivotus` is rejected as a variant; the standard noun is `aivoitus`,
     // whose genitive plural `aivoitusten` is the reported correction.
     ("aivotusten", "aivoitusten", "aivoitus"),
