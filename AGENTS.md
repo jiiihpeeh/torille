@@ -304,13 +304,15 @@ cargo test -p torille                   # engine only (lib + integration)
 The gates before a change lands (from README):
 
 ```bash
-cargo fmt --check
-cargo clippy --all-targets -- -D warnings
+cargo clippy --workspace --all-targets -- -D warnings
 cargo test --release --workspace
 python3 tools/test_binding_agrees_with_binary.py
 python3 tools/test_reverse_lookup_recall.py
+python3 tools/build/compare_engine_outputs.py --strict
 python3 tools/test_illegal_evidence.py
 ```
+
+`cargo fmt --check` is deliberately not a gate; see the traps below.
 
 `test_illegal_evidence.py` generates the raw (`--raw-illegal`) 5-lemma report,
 so it is slower than the other Python gates; it is the gate for the curated
