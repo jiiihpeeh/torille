@@ -47,7 +47,7 @@ PER_CLASS = ("first", "first", "front", "back", "first", "first")
 #
 # The one group so far is class 10's `-n` numerals, where the lemma carries the
 # genitive ending and the stem is the lemma without it (`kahdeksan` is
-# `kahdeksa` + `n`), which is the branch added in FIX_ME item 17. Both halves
+# `kahdeksa` + `n`), which is the class-28 singular-essive branch. Both halves
 # matter here: one without the other would let the two trees diverge on exactly
 # the shape that differs from every other lemma in the class.
 PINNED = {"10": ("kahdeksan", "seitsemän", "yhdeksän")}

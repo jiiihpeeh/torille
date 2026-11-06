@@ -63,7 +63,7 @@ DB = os.path.join(REPO, "data", "kotus_nomines.sqlite")
 #: fall.
 #:
 #: The 0.05 points of headroom above the floor is 313 pairs. The open defects
-#: FIX_ME costs out come to 965 pairs, more than that, so this gate still will
+#: the remaining costs come to 965 pairs, more than that, so this gate still will
 #: not catch them; it catches a *regression*, which is what it is for. Do not
 #: raise it to the measured figure without fixing something.
 RECALL_FLOOR = 0.998
