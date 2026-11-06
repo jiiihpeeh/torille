@@ -1361,7 +1361,7 @@ mod tests {
     #[test]
     fn reported_standard_compound_and_degree_forms_are_known() {
         for (word, base) in [
-            ("perehtyneempi", "perehtynyt"),
+            ("perehtyneempi", "perehtyä"),
             ("molemmille", "molemmat"),
             ("kyrmyniskoja", "niska"),
             ("housuntaskuissa", "tasku"),
