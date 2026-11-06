@@ -326,12 +326,12 @@ fn apply_word_exceptions(
     points: &mut Vec<HyphenationPoint>,
 ) {
     let lower = word.to_lowercase();
-    for &char_offset in exceptions.deny_offsets(&lower) {
+    for char_offset in exceptions.deny_offsets(&lower) {
         if let Some(byte) = char_to_byte(word, char_offset) {
             points.retain(|point| point.byte_offset != byte);
         }
     }
-    for &char_offset in exceptions.allow_offsets(&lower) {
+    for char_offset in exceptions.allow_offsets(&lower) {
         let Some(byte) = char_to_byte(word, char_offset) else {
             continue;
         };

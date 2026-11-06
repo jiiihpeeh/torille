@@ -55,8 +55,14 @@ fn main() {
     // a static trie; the binary has no pattern parser at run time.
     let tex = Path::new(&manifest).join("data/hyphenation/hyph-fi-x-school.tex");
     println!("cargo:rerun-if-changed={}", tex.display());
+    let exceptions = Path::new(&manifest).join("data/hyphenation/exceptions.csv");
+    println!("cargo:rerun-if-changed={}", exceptions.display());
     let out_dir = std::env::var("OUT_DIR").expect("OUT_DIR");
     hyphenation::emit(&tex, &Path::new(&out_dir).join("hyphenation_patterns.rs"));
+    hyphenation::emit_exceptions(
+        &exceptions,
+        &Path::new(&out_dir).join("hyphenation_exceptions.rs"),
+    );
 
     let text = std::fs::read_to_string(&data).unwrap_or_else(|e| panic!("{}: {e}", data.display()));
     let blob = generate(&text);
