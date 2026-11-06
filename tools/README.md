@@ -81,7 +81,7 @@ live in [`oracle/`](oracle/README.md). In short:
 
 ```bash
 cargo run --release -p torille-tools --bin gen_all_forms   # engine
-python3 tools/build/build_stem_to_base_map.py   # engine
+cargo run --release -p torille-tools --bin gen_stem_map_noun   # engine
 cargo run --release -p torille-tools --bin gen_derived   # derived tables (blobs)
 python3 tools/oracle/build_oi_plural_lemmas.py   # class-10 -oi- plural set (oracle)
 ```
@@ -128,9 +128,9 @@ The remaining scripts fall into four groups:
   `build_verb_lexicon.py` now include the engine enrichment, the comitative and
   negative-mood verb cells, and the connectives/connegatives tables that used
   to be separate update/fill scripts.
-- **Generated tables** — `build/build_stem_to_base_map.py --source
-  engine|hybrid|oracle`; `gen_all_forms` and `gen_adj_degrees` are Rust bins
-  in `tools/src/bin/`.
+- **Generated tables** — `gen_all_forms`, `gen_adj_degrees` and
+  `gen_stem_map_noun` are Rust bins in `tools/src/bin/`; the verb map is
+  still `build/build_verb_stem_to_base_map.py`.
   `engine` (the default for both) asks the current binding, so a fixed
   inflection bug cannot leave its old invented forms in a checked-in blob.
   `hybrid` keeps oracle rows only where the current engine still produces

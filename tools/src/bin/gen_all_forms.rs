@@ -16,10 +16,10 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::PathBuf;
 
-use torille::expand::{LexiconIndex, inflect_all};
+use torille::expand::LexiconIndex;
 use torille::kotus::{Lemma, lemmas, sanalista};
 use torille::spec::Catalogues;
-use torille::tags::{Confidence, PartOfSpeech, Polarity, Possessive};
+use torille::tags::{Confidence, Polarity, Possessive};
 
 const NOMINAL_POS: [&str; 4] = ["substantiivi", "adjektiivi", "numeraali", "pronomini"];
 
@@ -51,7 +51,7 @@ fn main() {
         if !seen_lemmas.insert(lemma.word) {
             continue;
         }
-        for form in inflect_word(lemma.word, catalogue, &index) {
+        for form in torille_tools::inflect_lemma(lemma.word, catalogue, &index) {
             let tags = form.union();
             if tags.polarity == Polarity::Negative || tags.clitic.is_some() {
                 continue;
@@ -114,25 +114,4 @@ fn possessive_name(p: Possessive) -> &'static str {
         Possessive::FirstPlural => "1pl",
         Possessive::SecondPlural => "2pl",
     }
-}
-
-/// The binding's `Engine.inflect` decision, reproduced without PyO3.
-fn inflect_word(
-    word: &str,
-    catalogue: &Catalogues,
-    index: &LexiconIndex<'_>,
-) -> Vec<torille::expand::Generated> {
-    let inflections = torille_tools::resolve_inflections(word);
-    let rows: Vec<_> = torille_tools::lookup(word).collect();
-    let noun_capable = rows
-        .iter()
-        .any(|row| PartOfSpeech::is_substantival(row.part_of_speech()));
-    let pos = if noun_capable {
-        PartOfSpeech::Noun
-    } else {
-        rows.first()
-            .map(|row| PartOfSpeech::inflecting_reading(row.part_of_speech()))
-            .unwrap_or(PartOfSpeech::Unknown)
-    };
-    inflect_all(word, &inflections, catalogue, Some(index), pos, noun_capable)
 }

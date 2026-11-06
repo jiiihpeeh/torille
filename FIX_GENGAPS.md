@@ -35,7 +35,7 @@ Reproduce with:
 ```bash
 cargo run --release -p torille-tools --bin gen_all_forms -- \
         --out /tmp/all_forms_engine.csv
-python3 tools/build/build_stem_to_base_map.py --source engine \
+cargo run --release -p torille-tools --bin gen_stem_map_noun -- \
         --out /tmp/stem_map_noun_engine.csv
 ```
 

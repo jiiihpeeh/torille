@@ -9,6 +9,7 @@
 use torille::kotus::{Gradation, Inflection, Lemma as LemmaRe};
 
 pub mod der1;
+pub mod stem_key;
 
 use torille::spec::Catalogues;
 use torille::tags::PartOfSpeech;
@@ -50,6 +51,31 @@ pub fn find_bases(word: &str) -> BasesReport<'static> {
     static LEXICON: OnceLock<Vec<LemmaRe<'static>>> = OnceLock::new();
     let lexicon = LEXICON.get_or_init(|| sanalista().to_lemmas());
     find_bases_with(lexicon, &catalogue(), word)
+}
+
+/// Inflect `word` exactly as the binding's `Engine.inflect` does.
+///
+/// The generator binaries need the same decision the Python binding makes:
+/// union every sanalista row's classes, take the noun reading when the word
+/// can be a noun, and offer possessive suffixes only then.
+pub fn inflect_lemma(
+    word: &str,
+    catalogue: &Catalogues,
+    index: &torille::expand::LexiconIndex<'_>,
+) -> Vec<torille::tags::Form> {
+    let inflections = resolve_inflections(word);
+    let rows: Vec<_> = lookup(word).collect();
+    let noun_capable = rows
+        .iter()
+        .any(|row| PartOfSpeech::is_substantival(row.part_of_speech()));
+    let pos = if noun_capable {
+        PartOfSpeech::Noun
+    } else {
+        rows.first()
+            .map(|row| PartOfSpeech::inflecting_reading(row.part_of_speech()))
+            .unwrap_or(PartOfSpeech::Unknown)
+    };
+    torille::expand::inflect_all(word, &inflections, catalogue, Some(index), pos, noun_capable)
 }
 
 /// Short-circuit version of [`find_bases`] for the inflect check.

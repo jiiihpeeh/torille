@@ -9,7 +9,7 @@ oracle.
 # from the repository root
 cargo run --release -p torille-tools --bin gen_all_forms   # -> data/all_forms.csv (local)
 cargo run --release -p torille-tools --bin gen_adj_degrees # -> data/adj_degrees.csv
-python3 tools/build/build_stem_to_base_map.py     # -> data/stem_to_base_map.csv
+cargo run --release -p torille-tools --bin gen_stem_map_noun   # -> data/stem_to_base_map.csv
 python3 tools/build/build_verb_stem_to_base_map.py
 cargo run --release -p torille-tools --bin gen_derived   # -> maps/derived_*.bin
 ```

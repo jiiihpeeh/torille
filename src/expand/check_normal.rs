@@ -25,8 +25,7 @@
 //!
 //! 4. **Noun stem hashmap** -- a [`StemMap`] keyed on the
 //!    stem (`ves` -> `[vesi]`), built from
-//!    `data/stem_to_base_map.csv` via
-//!    [`tools/build/build_stem_to_base_map.py`]. For each known
+//!    `data/stem_to_base_map.csv` via the `gen_stem_map_noun` bin. For each known
 //!    Finnish case ending, strip and look the stem up; verify
 //!    by re-inflecting the candidate base and checking if the
 //!    original form is in the result.
@@ -53,8 +52,6 @@
 //! shortcuts in `is_known_word`" rule is honored -- every match
 //! comes from the engine's actual inflect output.
 //!
-//! [`tools/build/build_stem_to_base_map.py`]: ../../tools/build/build_stem_to_base_map.py
-
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::OnceLock;
@@ -80,9 +77,8 @@ use crate::tags::PartOfSpeech;
 // [`crate::expand::static_table::StemMap`] for the format and reader.
 // ---------------------------------------------------------------------------
 
-/// Noun stem map: built by
-/// [`tools/build/build_stem_to_base_map.py`] from the kotus noun oracle.
-/// ~683 k unique stems, ~1500 multi-base. The blob is checked in at
+/// Noun stem map: built by `gen_stem_map_noun` from the engine.
+/// ~245 k `(stem, base)` pairs. The blob is checked in at
 /// `maps/stem_map_noun.bin`; the build script overwrites it
 /// on CSV change.
 pub static STEM_BUCKETS_NOUN: StemMap = StemMap::new(include_bytes!(concat!(
@@ -100,19 +96,18 @@ pub static STEM_BUCKETS_VERB: StemMap = StemMap::new(include_bytes!(concat!(
 )));
 
 // ---------------------------------------------------------------------------
-// Endings lists. Must stay in sync with the `ENDINGS_BY_CASE_NUMBER`
-// (noun builder) and `PERSONAL_ENDINGS`/`INFINITIVE_ENDINGS`/
+// Endings lists. Must stay in sync with the `endings` table in
+// `tools/src/stem_key.rs` and with `PERSONAL_ENDINGS`/`INFINITIVE_ENDINGS`/
 // `PARTICIPLE_ENDINGS`/`PASSIVE_PERSONAL_ENDINGS`/
-// `PASSIVE_PARTICIPLE_ENDINGS` (verb builder) tables in
-// `tools/build/build_stem_to_base_map.py` and
+// `PASSIVE_PARTICIPLE_ENDINGS` (verb builder) in
 // `tools/build/build_verb_stem_to_base_map.py`. If a case ending is
 // added there, add the matching strip suffix here so the runtime
 // lookup can recover the stem.
 // ---------------------------------------------------------------------------
 
 pub const ENDINGS: &[&str] = &[
-    // Plural `-i-` case shapes, mirroring `ENDINGS_BY_CASE_NUMBER` in
-    // `tools/build/build_stem_to_base_map.py`. The stem they strip to is the
+    // Plural `-i-` case shapes, mirroring `endings` in
+    // `tools/src/stem_key.rs`. The stem they strip to is the
     // singular stem (`ajoilta` -> `ajo`); without them only the
     // `-lta`/`-sta` tail is removed and the residue `ajoi` is not a
     // key, so every plural oblique was missed.

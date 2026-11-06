@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT OR Apache-2.0
 """Build `data/verb_stem_to_base_map.csv`: a (stem, base) table for
-verb forms. Companion to `tools/build/build_stem_to_base_map.py` (the
+verb forms. Companion to `gen_stem_map_noun` (the
 noun one); same shape, same downstream consumer (`tools/build.rs`
 embeds both as compile-time sorted slices).
 

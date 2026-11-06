@@ -300,13 +300,7 @@ def compare_adj_degrees(tmp: Path, strict: bool) -> bool:
 
 def compare_stem_map_noun(tmp: Path, strict: bool) -> bool:
     engine_csv = tmp / "stem_map_noun_engine.csv"
-    run(
-        "build_stem_to_base_map.py",
-        "--source",
-        "engine",
-        "--out",
-        str(engine_csv),
-    )
+    run_bin("gen_stem_map_noun", engine_csv)
     old = pairs(REPO / "data" / "stem_to_base_map.csv")
     new = pairs(engine_csv)
     print(

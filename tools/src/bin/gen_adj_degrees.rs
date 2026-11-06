@@ -16,10 +16,10 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::PathBuf;
 
-use torille::expand::{LexiconIndex, inflect_all};
+use torille::expand::LexiconIndex;
 use torille::kotus::{Lemma, lemmas, sanalista};
 use torille::spec::Catalogues;
-use torille::tags::{Case, Number, PartOfSpeech};
+use torille::tags::{Case, Number};
 
 fn main() {
     let mut out = PathBuf::from("data/adj_degrees.csv");
@@ -66,7 +66,7 @@ fn main() {
         if !seen.insert(lemma.word) {
             continue;
         }
-        let forms = inflect_word(lemma.word, catalogue, &index);
+        let forms = torille_tools::inflect_lemma(lemma.word, catalogue, &index);
         let mut nominatives: Vec<&str> = Vec::new();
         for form in &forms {
             let tags = form.union();
@@ -131,25 +131,4 @@ fn has_pos(lemma: &Lemma<'_>, pos: &str) -> bool {
 
 fn is_classed(lemma: &Lemma<'_>) -> bool {
     !lemma.inflections.is_empty()
-}
-
-/// The binding's `Engine.inflect` decision, reproduced without PyO3.
-fn inflect_word(
-    word: &str,
-    catalogue: &Catalogues,
-    index: &LexiconIndex<'_>,
-) -> Vec<torille::expand::Generated> {
-    let inflections = torille_tools::resolve_inflections(word);
-    let rows: Vec<_> = torille_tools::lookup(word).collect();
-    let noun_capable = rows
-        .iter()
-        .any(|row| PartOfSpeech::is_substantival(row.part_of_speech()));
-    let pos = if noun_capable {
-        PartOfSpeech::Noun
-    } else {
-        rows.first()
-            .map(|row| PartOfSpeech::inflecting_reading(row.part_of_speech()))
-            .unwrap_or(PartOfSpeech::Unknown)
-    };
-    inflect_all(word, &inflections, catalogue, Some(index), pos, noun_capable)
 }
