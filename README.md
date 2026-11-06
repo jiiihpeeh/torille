@@ -151,11 +151,14 @@ inventory is in [`tools/README.md`](tools/README.md).
 $ cargo run --release -q -p torille-tools --bin inflect -- talo
 talo  class 1  substantiivi
 
-## plain (121)
+## plain (160)
 talo                        plain    noun nominative singular
 taloa                       plain    noun partitive singular
 ...
 ```
+
+The transcript is abridged; the full paradigm has 160 plain forms, including
+the possessive and comitative columns.
 
 The three confidence sections are separate on purpose: suggestions, accepted
 forms, and merely tolerated forms. `lookup` builds the whole reverse index

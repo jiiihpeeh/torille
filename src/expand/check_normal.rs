@@ -264,6 +264,17 @@ fn cat() -> &'static Catalogues {
     Catalogues::embedded()
 }
 
+/// The lexicon grouped for the compound engine.
+///
+/// The stem-map verify re-inflects a candidate base. A class-50/51 compound
+/// needs the lexicon to find its parts; passing `None` made `kevytsoria`
+/// fail verification even though it is a form of `kevytsora`, and the gate
+/// then fell through to a coincidental head split (`sora`).
+fn lexicon_index() -> &'static crate::expand::LexiconIndex<'static> {
+    static INDEX: OnceLock<crate::expand::LexiconIndex<'static>> = OnceLock::new();
+    INDEX.get_or_init(|| crate::expand::LexiconIndex::new(lex()))
+}
+
 fn lex() -> &'static [Lemma<'static>] {
     crate::kotus::lemmas()
 }
@@ -1101,7 +1112,7 @@ pub fn collect_bases_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) 
                     lemma.word(),
                     &inflections,
                     cat(),
-                    None,
+                    Some(lexicon_index()),
                     lemma_pos(&lemma, pos),
                     false,
                     word,
@@ -1195,7 +1206,7 @@ pub fn collect_bases_via_verb_stem_map(word: &str, verbose: bool) -> Vec<String>
                         lemma.word(),
                         &inflections,
                         cat(),
-                        None,
+                        Some(lexicon_index()),
                         lemma_pos(&lemma, PartOfSpeech::Verb),
                         false,
                         word,
@@ -1243,7 +1254,7 @@ fn find_base_via_possessive_noun(stem: &str, possessive_word: &str) -> Option<St
                 lemma.word(),
                 &inflections,
                 cat(),
-                None,
+                Some(lexicon_index()),
                 lemma_pos(&lemma, PartOfSpeech::Noun),
                 /* possessives = */ true,
                 possessive_word,
@@ -1761,6 +1772,20 @@ mod tests {
                 }
                 other => panic!("{word}: expected Inflected, got {other:?}"),
             }
+        }
+    }
+
+    /// A class-50 compound's forms verify through the compound engine.
+    ///
+    /// The stem map contains `kevytsori -> kevytsora`, but the verify used
+    /// to re-inflect with `lexicon = None`, so a class-50 compound could not
+    /// be built and the gate fell through to a coincidental head split
+    /// (`kevytsoria` -> `sora`).
+    #[test]
+    fn a_class_50_compound_verifies_to_its_own_lemma() {
+        match check_normal_fast("kevytsoria", false) {
+            NormalizedOutcome::Inflected { base, .. } => assert_eq!(base, "kevytsora"),
+            other => panic!("kevytsoria: expected Inflected, got {other:?}"),
         }
     }
 
