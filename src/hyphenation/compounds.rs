@@ -317,8 +317,8 @@ fn is_head(word: &str) -> bool {
         && (sanalista().by_word(word).next().is_some()
             || crate::expand::all_forms::is_known_inflected_form(word)
             || crate::expand::check_normal::STEM_BUCKETS_NOUN.contains(word)
-            || crate::expand::fast_path::base(word).is_some()
             || crate::expand::derived::base(word).is_some()
+            || crate::expand::closed_spellings::base(word).is_some()
             || crate::expand::derived::is_nominal(word)
             || looks_like_inflected_host(word))
 }

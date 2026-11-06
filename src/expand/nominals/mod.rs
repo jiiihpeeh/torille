@@ -134,6 +134,7 @@ pub mod class_50;
 pub mod class_51;
 pub mod class_6;
 pub mod class_7;
+pub mod class_7A;
 pub mod class_7B;
 pub mod class_7D;
 pub mod class_7E;
@@ -290,6 +291,7 @@ const DISPATCH: &[(&str, fn(&str, bool) -> Vec<Form>)] = &[
     ("51", class_51::inflect),
     ("6", class_6::inflect),
     ("7", class_7::inflect),
+    ("7*A", class_7A::inflect),
     ("7*B", class_7B::inflect),
     ("7*D", class_7D::inflect),
     ("7*E", class_7E::inflect),
@@ -342,7 +344,7 @@ const AUTHORITATIVE_CLASSES: &[&str] = &[
     "1*I", "1*J", "1*K", "1*M", "2", "3", "4*A", "5",
     "5*A", "5*B", "5*C", "5*D", "5*E", "5*F", "5*G", "5*I", "5*J",
     "6", "7",
-    "7*B", "7*D", "7*E", "7*F", "7*G", "7*H", "7*L", "8",
+    "7*A", "7*B", "7*D", "7*E", "7*F", "7*G", "7*H", "7*L", "8",
     "8*A", "8*B", "8*(C)",
     "9",
     "9*A", "9*B", "9*C", "9*D", "9*E", "9*F", "9*G", "9*H", "9*I", "9*J", "9*K",

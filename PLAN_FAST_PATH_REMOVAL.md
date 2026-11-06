@@ -1,6 +1,16 @@
 # Removing the lexical supplement from the generic engine
 
-Status: **proposed** · owner: engine · target: delete `src/expand/fast_path.rs`
+Status: **executed** · `src/expand/fast_path.rs` is deleted.
+
+The 134-row table was reduced to a 44-row closed-spelling table in
+`src/expand/closed_spellings.rs`. Everything the generic engine, stem maps,
+compound analysis and derivation layer can now name directly was removed; the
+residual rows are fused function words (`ennenkuin`, `senjälkeen`, `kuulten`),
+a few proper-name/compound reverse-search gaps, and `perehtyneempi`. No row is
+a suffix rule or a class paradigm.
+
+The original plan below is kept as the record of the audit and the criteria
+used to decide what left the table.
 
 ## Why
 

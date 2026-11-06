@@ -24,6 +24,13 @@ pub const CLASS: &str = "16*H";
 
 /// Inflect a class 16*H comparative.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
+    // `molemmat` is the plural-only citation of the comparative `molempi`
+    // (Wiktionary: standard Finnish uses only the plural; singular only in
+    // compounds/colloquial speech, and the entry has no possessive forms).
+    // Reconstruct the singular comparative and keep its plural cells.
+    if lemma == "molemmat" {
+        return plural_only(inflect("molempi", false));
+    }
     // A `-t`-final lemma is a plural-only citation (`bileet`, `häät`):
     // decline the dropped-`t` base and keep only its plural cells.
     if let Some(base) = lemma.strip_suffix('t')
@@ -86,7 +93,10 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
         ]),
         |case, number, poss| nominal_tags(PartOfSpeech::Noun, case, number, poss),
     );
-    b.comitative(&wmi);
+    // The comitative is strong (`vanhempine`, `molempine`), not the weak
+    // grade the other plural obliques use. Wiktionary confirms it for both
+    // `vanhempi` and `molemmat`.
+    b.comitative(strong);
 
     // The short genitive plural is rare: generated, never offered as a plain
     // correction (vanhempain). It comes after the comitative in the live engine's
@@ -130,6 +140,52 @@ mod tests {
         assert!(w.contains(&"vanhemmaksi".to_string()));
         assert!(w.contains(&"vanhemmat".to_string()));
         assert!(w.contains(&"vanhemmiksi".to_string()));
+    }
+
+    /// Wiktionary `molemmat` (Kotus 16*H, plural only): the standard
+    /// language has no singular cells and no possessives, and the comitative
+    /// is `molempine`. The old `-t`-stripping branch declined `molemma` and
+    /// emitted `molemmaa`/`molemman`/`molemmine`.
+    #[test]
+    fn the_plural_only_quantifier_declines_from_molempi() {
+        let w = words("molemmat");
+        for expected in [
+            "molemmat",
+            "molempien",
+            "molempia",
+            "molempiin",
+            "molemmissa",
+            "molemmista",
+            "molemmilla",
+            "molemmilta",
+            "molemmille",
+            "molempina",
+            "molemmiksi",
+            "molemmitta",
+            "molemmin",
+            "molempine",
+        ] {
+            assert!(w.contains(&expected.to_string()), "missing {expected}");
+        }
+        assert!(!w.contains(&"molempi".to_string()), "no singular nominative");
+        assert!(!w.contains(&"molemmaa".to_string()), "no invented a-stem");
+        assert!(!w.contains(&"molemmine".to_string()), "comitative is strong");
+    }
+
+    /// Wiktionary `vanhempi` gives the strong comitative `vanhempine` and
+    /// `vanhempineni`, not the weak `vanhemmine`. The bare form belongs to
+    /// the adjective/no-possessive column; the owner forms stay in the
+    /// possessive column.
+    #[test]
+    fn the_comitative_is_strong() {
+        let bare: Vec<String> = inflect("vanhempi", false)
+            .into_iter()
+            .map(|f| f.word)
+            .collect();
+        assert!(bare.contains(&"vanhempine".to_string()));
+        let owned = words("vanhempi");
+        assert!(owned.contains(&"vanhempineni".to_string()));
+        assert!(!owned.contains(&"vanhemmine".to_string()));
     }
 
     /// The genitive crosses over the same way, and it is the cell the reference

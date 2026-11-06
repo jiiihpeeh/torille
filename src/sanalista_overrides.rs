@@ -29,6 +29,12 @@ pub(crate) const CLASS: &[(&str, &str)] = &[
     ("hälyyttää", "53*C"),
     ("rationoida", "62"),
     ("nahka", "9*D"),
+    // Wiktionary `kynkkä` (Kotus 10/koira, kk:k): the source row carries
+    // only the bare class, so the hand engine would keep the strong `kk`
+    // in `kynkän`. `käsikynkkä` is the same head (`käsi` + `kynkkä`) and
+    // was marked 99 only because Kotus had no separate compound entry.
+    ("kynkkä", "10*A"),
+    ("käsikynkkä", "10*A"),
 ];
 
 /// The class expression to use instead of the source expression, when one

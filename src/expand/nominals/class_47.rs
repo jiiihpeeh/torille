@@ -17,7 +17,7 @@ pub const CLASS: &str = "47";
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     let long = format!("{}ee", &lemma[..lemma.len() - 2]);
     let short = &long[..long.len() - 1];
-    a_stem_inflect(lemma, possessives, &long, short, false)
+    a_stem_inflect(lemma, possessives, &long, short, false, None)
 }
 
 #[cfg(test)]

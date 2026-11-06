@@ -6934,7 +6934,7 @@ elovalkea		substantiivi
 eloyhteisö		substantiivi		
 elpyä		verbi	52*E	
 elttaantua		verbi	52*J	ACTION_MINEN:38
-eltaantua		verbi	52*J	
+eltaantua		verbi	52*J	ACTION_MINEN:38
 elukka		substantiivi	14*A	
 elvistellä		verbi	67	
 elvistely		substantiivi	2	
@@ -15221,6 +15221,7 @@ huoripukki		substantiivi
 huoritella		verbi	67*C	
 huorittelu		substantiivi	2	
 huoruus		substantiivi	40	
+huosta		substantiivi	10	
 huostaan		postpositio, adverbi	99	
 huostaanotto		substantiivi		
 huostassa		postpositio, adverbi	99	
@@ -35966,6 +35967,7 @@ kynnysvalot		substantiivi
 kynnäs		substantiivi	41	
 kynnös		substantiivi	39	
 kynnöspelto		substantiivi		
+kynkkä		substantiivi	10	
 kynsi		substantiivi	28*J	
 kynsienhoito		substantiivi		
 kynsiharja		substantiivi		

@@ -216,11 +216,7 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
         return Some(base.to_string());
     }
 
-    // 1a'. Human-approved lexicalised / irregular surfaces. These are
-    //      closed spellings (two-word phrases written together, defective
-    //      plural paradigms, and compounds whose head is an inflected form),
-    //      not productive suffix rules.
-    if let Some(base) = crate::expand::fast_path::base(&lower) {
+    if let Some(base) = crate::expand::closed_spellings::base(&lower) {
         return Some(base.to_string());
     }
 

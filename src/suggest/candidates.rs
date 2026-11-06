@@ -54,6 +54,17 @@ const REPORTED_CORRECTIONS: &[(&str, &str, &str)] = &[
     // `kolautti`; the two-deletion repair is several edits behind unrelated
     // head-1 candidates and the walk costs seconds.
     ("kolahdutti", "kolautti", "kolauttaa"),
+    // `aivotus` is rejected as a variant; the standard noun is `aivoitus`,
+    // whose genitive plural `aivoitusten` is the reported correction.
+    ("aivotusten", "aivoitusten", "aivoitus"),
+    // Double-`t` variants of `eltaantua`; Wiktionary gives the single-`t`
+    // spelling and `eltaantuminen`.
+    ("elttaantuneen", "eltaantuneen", "eltaantua"),
+    ("elttaantuminen", "eltaantuminen", "eltaantua"),
+    // `pingoittaa` is a nonstandard alt form of `pingottaa`.
+    ("pingoittuivat", "pingottuivat", "pingottaa"),
+    // `rusoittaa` is not a standard lemma; Wiktionary gives `rusottaa`.
+    ("rusoittava", "rusottava", "rusottaa"),
 ];
 
 pub(super) fn reported_correction(word: &str) -> Option<(&'static str, &'static str)> {

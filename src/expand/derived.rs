@@ -1146,6 +1146,9 @@ pub fn compute() -> Computed {
             let Some(base) = fields.next().map(str::trim).filter(|w| !w.is_empty()) else {
                 continue;
             };
+            if crate::rejected::contains(base) {
+                continue;
+            }
             let _homonym = fields.next();
             let pos_name = fields.next().unwrap_or("").trim();
             let class_name = fields.next().unwrap_or("").trim();
@@ -1558,7 +1561,7 @@ mod tests {
             ("jauhoitus", "jauhoitus"),
             ("lehdetön", "lehdetön"),
             ("kimotus", "kimotus"),
-            ("elttaantuminen", "elttaantuminen"),
+            ("eltaantuminen", "eltaantuminen"),
             ("palmikoitsivat", "palmikoitsia"),
         ] {
             assert_eq!(base(word), Some(lemma), "{word}");

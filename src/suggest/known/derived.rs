@@ -244,7 +244,11 @@ pub(super) fn derived_hko_base(word: &str) -> Option<String> {
 /// `kauneimman` -> `kaunein`.
 fn superlative_candidates(word: &str) -> Vec<String> {
     let mut out = Vec::new();
-    for marker in ["imma", "imp"] {
+    // `imma`/`imp` cover the consonant stem (`kauneimman`,
+    // `kauneimpia`); `inta`/`intä` cover the partitive of the `-in`
+    // nominative stem (`sointuvinta` -> `sointuvin`, `kauneinta` ->
+    // `kaunein`).
+    for marker in ["imma", "imp", "inta", "intä"] {
         if let Some(pos) = word.rfind(marker) {
             let prefix = &word[..pos];
             if !prefix.is_empty() {
@@ -318,7 +322,16 @@ pub(super) fn derived_comparative_base(word: &str) -> Option<String> {
         word.strip_suffix(suffix)
             .filter(|positive| positive.chars().count() >= 4)
     })?;
-    is_known_word_with_compound(positive, false)?;
+    // A past-active participle takes `-neempi` on its `-nee-` stem:
+    // `perehtynyt` -> `perehtyneempi`, `väsynyt` -> `väsyneempi`. The
+    // stripped prefix (`perehtynee`) is not itself known, so reconstruct
+    // the `-nut`/`-nyt` positive when the plain prefix misses.
+    let positive = positive
+        .strip_suffix("nee")
+        .into_iter()
+        .flat_map(|stem| [format!("{stem}nyt"), format!("{stem}nut")])
+        .chain(std::iter::once(positive.to_string()))
+        .find(|candidate| is_known_word_with_compound(candidate, false).is_some())?;
     let nominal = format!("{positive}mpi");
     let forms = inflect_all(
         &nominal,

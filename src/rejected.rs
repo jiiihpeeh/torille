@@ -28,6 +28,14 @@ pub(crate) const LEMMAS: &[&str] = &[
     "vaakita",   // no standard lemma; Omorfi GUESS=UNKNOWN
     "verytellä", // `venytellä` (67*C)
     "veryttely", // `venyttely`
+    // `aivotus` is an archaic/dialectal variant; Wiktionary's standard
+    // Finnish entry is `aivoitus` (Kotus 39, `aivoitusten`). Accepting the
+    // variant hides the standard spelling from the suggester (`aivotusten`).
+    "aivotus",
+    // `elttaantua` is a double-`t` variant; Wiktionary's Finnish entry is
+    // `eltaantua` (and `eltaantuminen`). Keeping the variant would hide the
+    // standard spelling from the suggester.
+    "elttaantua",
 ];
 
 /// Whether a sanalista lemma is rejected.

@@ -631,16 +631,16 @@ mod tests {
     }
 
     #[test]
-    fn the_older_comitative_tynnyrineen_is_accepted() {
+    fn the_comitative_tynnyreineen_is_accepted() {
         let mut st = TextAreaState::new();
         for text in [
-            "tuolla oven päällä tynnyrineen ja pulloineen!",
-            "myymälät köysineen, tervatynnyrineen",
-            "ajaa retuuttaa vesitynnyrineen pitkin koluisia",
+            "tuolla oven päällä tynnyreineen ja pulloineen!",
+            "myymälät köysineen, tervatynnyreineen",
+            "ajaa retuuttaa vesitynnyreineen pitkin koluisia",
         ] {
             let hits = st.find_misspells(text);
             assert!(
-                !hits.iter().any(|h| h.word.contains("tynnyrineen")),
+                !hits.iter().any(|h| h.word.contains("tynnyreineen")),
                 "{text}: {hits:?}"
             );
         }

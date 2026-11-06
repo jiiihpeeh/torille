@@ -109,7 +109,7 @@ pub fn inflect_with(lemma: &str, base: &str, possessives: bool) -> Vec<Form> {
         (format!("{base}ee"), format!("{base}e")) // askar -> askaree / askare
     };
     // The double-`e` oblique paradigm ...
-    let mut out = a_stem_inflect(lemma, possessives, &long, &short, false);
+    let mut out = a_stem_inflect(lemma, possessives, &long, &short, false, None);
     // ... plus the single-`e` cells, which the catalogue spells on the base
     // (askelen, askelet, askelien) and which the dedup below lets the first
     // pass's forms win where the two agree.

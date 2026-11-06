@@ -14,6 +14,7 @@
 
 #![allow(dead_code)]
 
+use crate::kotus::{Gradation, Grade};
 use crate::tags::{Case, Form, Number, PartOfSpeech};
 
 use super::utility::{Builder, Decl, cell, nominal_tags, plain};
@@ -29,6 +30,7 @@ pub fn a_stem_inflect(
     long: &str,
     short: &str,
     sten_plural: bool,
+    grad: Option<Gradation>,
 ) -> Vec<Form> {
     // A plural-only lemma (`tikkaat`, `valjaat`) arrives through both the
     // plain class and the graded 41* subtypes. Derive the long/short stems
@@ -96,7 +98,12 @@ pub fn a_stem_inflect(
         // `asukkasten`), `eväs` -> `evästen`. Plural-only lemmas keep the
         // short stem the rest of their paradigm uses.
         let sten_stem = if plural_only {
-            short.to_string()
+            // `tikkaat` -> short `tikka`, but the rare `-sten` form sits on
+            // the *singular* stem `tika` (`tikas` + `-ten`): undo the
+            // gradation the plural stem carries. `valjaat`, a plain 41 word,
+            // has no gradation and keeps `valjasten`.
+            grad.map(|g| g.apply(short, Grade::Weak))
+                .unwrap_or_else(|| short.to_string())
         } else {
             base_stem(lemma)
         };
@@ -162,7 +169,7 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
             Some(c) if "aäeiouyö".contains(c) => &long[..long.len() - c.len_utf8()],
             _ => long,
         };
-        let mut forms = a_stem_inflect(lemma, possessives, long, short, true);
+        let mut forms = a_stem_inflect(lemma, possessives, long, short, true, None);
         forms.retain(|form| {
             form.readings
                 .iter()
@@ -172,7 +179,7 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     }
     let short = base_stem(lemma);
     let long = long_stem(&short);
-    a_stem_inflect(lemma, possessives, &long, &short, true)
+    a_stem_inflect(lemma, possessives, &long, &short, true, None)
 }
 
 /// The non-plural-only `-as`/`-ät` grid. Class 44 (`kevät`) is a singular
@@ -181,7 +188,7 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
 pub fn inflect_singular(lemma: &str, possessives: bool) -> Vec<Form> {
     let short = base_stem(lemma);
     let long = long_stem(&short);
-    a_stem_inflect(lemma, possessives, &long, &short, false)
+    a_stem_inflect(lemma, possessives, &long, &short, false, None)
 }
 
 #[cfg(test)]

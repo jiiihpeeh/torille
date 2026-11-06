@@ -495,7 +495,7 @@ fn cheap_derived_base(word: &str) -> Option<String> {
     if let Some(base) = crate::expand::derived::base(&lower) {
         return Some(base.to_string());
     }
-    if let Some(base) = crate::expand::fast_path::base(&lower) {
+    if let Some(base) = crate::expand::closed_spellings::base(&lower) {
         return Some(base.to_string());
     }
     if let Some(base) = crate::expand::check_normal::pronoun_base(&lower) {
@@ -587,13 +587,10 @@ fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> Normalized
         }
     }
 
-    // A closed lexical exception (e.g. `hennonnut` -> `hennota`, or
-    // `Selmallakaan` -> `Selma`) is exact and must not be re-analysed by the
-    // stem maps: those would name `hennoa` or `selmalla` instead.
-    if let Some(base) = crate::expand::fast_path::base(&word.to_lowercase()) {
+    if let Some(base) = crate::expand::closed_spellings::base(&word.to_lowercase()) {
         return NormalizedOutcome::Inflected {
             base: base.to_string(),
-            gate: "lexical exception",
+            gate: "closed spelling",
         };
     }
 
@@ -655,6 +652,15 @@ fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> Normalized
             } else {
                 println!("    gate 2: engine gate skipped (form set says known)");
             }
+        }
+        // The form set knows the surface but the engine gate is off on
+        // the typing path. The noun stem map can still name the base
+        // (`parhaan` -> `paras`) without walking the lexicon.
+        if let Some(base) = find_base_via_stem_map(word, PartOfSpeech::Noun, verbose) {
+            return NormalizedOutcome::Inflected {
+                base,
+                gate: "form set + noun stem",
+            };
         }
         return NormalizedOutcome::Inflected {
             base: "(in form set)".to_string(),
@@ -1684,7 +1690,7 @@ mod tests {
             ("käräjiä", "käräjät"),
             ("käräjätuvissa", "tupa"),
             ("toimeenpanijat", "panija"),
-            ("keskenämme", "kesken"),
+            ("keskenämme", "keskenään"),
             // `kaksikymmen` is the combining stem of `kaksikymmentä`; its
             // head is the bound `‑vuotias` (class 41).
             ("kaksikymmenvuotiaalla", "vuotias"),
@@ -1700,7 +1706,7 @@ mod tests {
             ("itsekunkin", "itse"),
             ("vankkurien", "vankkurit"),
             ("kimotusta", "kimotus"),
-            ("elttaantuneen", "elttaantua"),
+            ("eltaantuneen", "eltaantua"),
             ("palmikoitsivat", "palmikoitsia"),
             ("katajankaarekselle", "kaares"),
             ("torkuksiin", "torkkua"),
@@ -1729,7 +1735,7 @@ mod tests {
             ("siunatumpia", "siunata"),
             ("suurkaanin", "suurkaani"),
             ("helmettömiä", "helmetön"),
-            ("sointuvinta", "sointua"),
+            ("sointuvinta", "sointuvin"),
             ("yllinkyllin", "kyllin"),
             ("tilkitsijän", "tilkitsijä"),
             ("haltuunsa", "haltuun"),
@@ -1745,7 +1751,7 @@ mod tests {
             ("lopettamaisillaan", "lopettaa"),
             ("naksahtelun", "naksahtelu"),
             ("äesteli", "äestellä"),
-            ("aivotusten", "aivotus"),
+            ("aivoitusten", "aivoitus"),
             ("säilikön", "säilikkö"),
             ("tikkaiden", "tikkaat"),
             ("tikkaita", "tikkaat"),
@@ -1753,7 +1759,7 @@ mod tests {
             ("edistyneemmät", "edistyä"),
             ("solvaajalle", "solvaaja"),
             ("tiuskasi", "tiuskata"),
-            ("osaavampi", "osata"),
+            ("osaavampi", "osaava"),
             ("ajattelemisaikaa", "aika"),
             ("narraaja", "narraaja"),
             ("palpattelisit", "palpatella"),

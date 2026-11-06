@@ -573,6 +573,12 @@ mod tests {
             "videikseen",
             "vinka",
             "vinkaanne",
+            "aivotus",
+            "aivotusten",
+            "elttaantua",
+            "elttaantuneen",
+            "elttaantuminen",
+            "pingoittuivat",
         ] {
             assert!(
                 matches!(check(word), CheckOutcome::Unknown),
@@ -588,6 +594,24 @@ mod tests {
                 .iter()
                 .any(|candidate| candidate == "viti"),
             "a rejected row must not be suggested"
+        );
+        // The standard lemma is not rejected and is the curated correction
+        // for the variant's genitive plural.
+        assert!(
+            matches!(check("aivoitus"), CheckOutcome::Lemma),
+            "aivoitus must stay a lemma"
+        );
+        assert_eq!(
+            suggest("aivotusten", 8, 2).first().map(String::as_str),
+            Some("aivoitusten"),
+        );
+        assert_eq!(
+            suggest("elttaantuneen", 8, 2).first().map(String::as_str),
+            Some("eltaantuneen"),
+        );
+        assert_eq!(
+            suggest("pingoittuivat", 8, 2).first().map(String::as_str),
+            Some("pingottuivat"),
         );
     }
 

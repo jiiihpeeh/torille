@@ -12,7 +12,7 @@
 
 #![allow(dead_code)]
 
-use crate::tags::{Case, Confidence, Form, Number, PartOfSpeech};
+use crate::tags::{Case, Confidence, Form, Number, PartOfSpeech, Possessive};
 
 use super::utility::{Builder, Decl, IPlural, build_i_loans, cell, front, nominal_tags};
 
@@ -173,6 +173,63 @@ fn no_inflect(lemma: &str) -> bool {
 /// indeclinable ones only give the lemma.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     let sg = Number::Singular;
+    // `eteen` is a postposition/adverb, not an i-loan. Wiktionary's
+    // `fi-adv-poss` template gives exactly the bare `eteen` and the five
+    // owner forms `eteeni`, `eteesi`, `eteensä`, `eteemme`, `eteenne`;
+    // the shared i-loan grid used to invent `eteeneiden`, `eteenissä`, ...
+    if lemma == "keskenään" {
+        // Wiktionary `keskenään` (`fi-adv-poss`): the owner forms are
+        // `keskenäni`, `keskenäsi`, `keskenämme`, `keskenänne`, and the
+        // two third-person spellings `keskenään` / `keskenänsä`.
+        let mut out = Vec::new();
+        for (word, possessive) in [
+            ("keskenään", None),
+            ("keskenäni", Some(Possessive::FirstSingular)),
+            ("keskenäsi", Some(Possessive::SecondSingular)),
+            ("keskenämme", Some(Possessive::FirstPlural)),
+            ("keskenänne", Some(Possessive::SecondPlural)),
+            ("keskenänsä", Some(Possessive::Third)),
+        ] {
+            out.push(
+                Form::new(
+                    word.to_string(),
+                    nominal_tags(PartOfSpeech::Noun, Case::Nominative, sg, possessive),
+                )
+                .with(Confidence::Plain),
+            );
+        }
+        return out;
+    }
+    if lemma == "eteen" {
+        let mut out = vec![
+            Form::new(
+                lemma.to_string(),
+                nominal_tags(PartOfSpeech::Noun, Case::Nominative, sg, None),
+            )
+            .with(Confidence::Plain),
+        ];
+        for (suffix, possessive) in [
+            ("ni", Possessive::FirstSingular),
+            ("si", Possessive::SecondSingular),
+            ("nsä", Possessive::Third),
+            ("mme", Possessive::FirstPlural),
+            ("nne", Possessive::SecondPlural),
+        ] {
+            out.push(
+                Form::new(
+                    format!("etee{suffix}"),
+                    nominal_tags(
+                        PartOfSpeech::Noun,
+                        Case::Nominative,
+                        sg,
+                        Some(possessive),
+                    ),
+                )
+                .with(Confidence::Plain),
+            );
+        }
+        return out;
+    }
     let mut out = Vec::new();
     if no_inflect(lemma) {
         // A genuinely indeclinable word has no paradigm and no possessives:
@@ -336,6 +393,18 @@ mod tests {
                 .collect();
             assert_eq!(w, vec![lemma.to_string()], "{lemma}");
         }
+    }
+
+    /// Wiktionary `eteen` (postposition/adverb) gives the bare form and the
+    /// five owner forms; it is not an i-loan plural noun.
+    #[test]
+    fn eteen_takes_only_its_owner_forms() {
+        let w: Vec<String> = inflect("eteen", true).into_iter().map(|f| f.word).collect();
+        for good in ["eteen", "eteeni", "eteesi", "eteensä", "eteemme", "eteenne"] {
+            assert!(w.contains(&good.to_string()), "eteen is missing {good}");
+        }
+        assert_eq!(w.len(), 6, "eteen should have only its confirmed forms: {w:?}");
+        assert!(!w.iter().any(|f| f.contains("eteene")), "no i-loan forms: {w:?}");
     }
 
     #[test]
