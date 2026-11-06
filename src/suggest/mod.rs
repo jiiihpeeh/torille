@@ -1351,10 +1351,20 @@ mod tests {
     }
 
     #[test]
-    fn ennenkuin_is_accepted_as_a_lexicalised_spelling() {
-        // The fast path accepts the closed spelling and names `ennen`; the
-        // class-99 engine still must not fabricate i-loan forms from it.
-        assert_eq!(is_known_word("ennenkuin").as_deref(), Some("ennen"));
+    fn ennenkuin_is_a_misspelling_of_the_two_word_phrase() {
+        assert_eq!(is_known_word("ennenkuin"), None);
+        assert_eq!(
+            suggest("ennenkuin", 8, 2).first().map(String::as_str),
+            Some("ennen kuin"),
+        );
+        assert_eq!(
+            suggest("aivankuin", 8, 2).first().map(String::as_str),
+            Some("aivan kuin"),
+        );
+        assert_eq!(
+            suggest("avainkuin", 8, 2).first().map(String::as_str),
+            Some("aivan kuin"),
+        );
         assert!(!is_known_word("ennenin").is_some_and(|b| b == "ennen"));
     }
 

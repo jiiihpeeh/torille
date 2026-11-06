@@ -54,6 +54,11 @@ const REPORTED_CORRECTIONS: &[(&str, &str, &str)] = &[
     // `kolautti`; the two-deletion repair is several edits behind unrelated
     // head-1 candidates and the walk costs seconds.
     ("kolahdutti", "kolautti", "kolauttaa"),
+    // Modern Finnish writes the conjunction as two words; the fused
+    // spelling is a misspelling, not a lexicalised alternative.
+    ("ennenkuin", "ennen kuin", "ennen"),
+    ("aivankuin", "aivan kuin", "aivan"),
+    ("avainkuin", "aivan kuin", "aivan"),
     // `aivotus` is rejected as a variant; the standard noun is `aivoitus`,
     // whose genitive plural `aivoitusten` is the reported correction.
     ("aivotusten", "aivoitusten", "aivoitus"),

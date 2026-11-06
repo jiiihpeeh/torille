@@ -187,6 +187,9 @@ fn is_known_word_with_compound(word: &str, allow_compound: bool) -> Option<Strin
 fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Option<String> {
     use crate::expand::check_normal::STEM_BUCKETS_NOUN;
     let lower = word.to_lowercase();
+    if crate::expand::closed_spellings::is_nonword(&lower) {
+        return None;
+    }
     let lex = lemma_set();
 
     // 1. Direct lemma probe.

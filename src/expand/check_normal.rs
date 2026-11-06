@@ -552,6 +552,10 @@ fn cheap_derived_base(word: &str) -> Option<String> {
 }
 
 fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> NormalizedOutcome {
+    if crate::expand::closed_spellings::is_nonword(word) {
+        return NormalizedOutcome::Unknown;
+    }
+
     // ── Gate 1: lemma + productive noun-case stripper ─────────────
     if verbose {
         println!("    gate 1: is_known_word({word:?})...");
