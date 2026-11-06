@@ -1365,6 +1365,10 @@ mod tests {
             suggest("avainkuin", 8, 2).first().map(String::as_str),
             Some("aivan kuin"),
         );
+        assert_eq!(
+            suggest("niinkuin", 8, 2).first().map(String::as_str),
+            Some("niin kuin"),
+        );
         assert!(!is_known_word("ennenin").is_some_and(|b| b == "ennen"));
     }
 

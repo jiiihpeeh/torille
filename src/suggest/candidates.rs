@@ -59,6 +59,7 @@ const REPORTED_CORRECTIONS: &[(&str, &str, &str)] = &[
     ("ennenkuin", "ennen kuin", "ennen"),
     ("aivankuin", "aivan kuin", "aivan"),
     ("avainkuin", "aivan kuin", "aivan"),
+    ("niinkuin", "niin kuin", "niin"),
     // `aivotus` is rejected as a variant; the standard noun is `aivoitus`,
     // whose genitive plural `aivoitusten` is the reported correction.
     ("aivotusten", "aivoitusten", "aivoitus"),

@@ -35,8 +35,7 @@ const CLOSED: &[(&str, &str)] = &[
     ("lopettamaisillaan", "lopettaa"),
     ("minkätähden", "minkä"),
     ("niinkauan", "niin"),
-    ("niinkuin", "niin"),
-    ("nyrpistyksessä", "nyrpistys"),
+    ("nyrpistyksessä", "nyrpistää"),
     ("perehtyneempi", "perehtyä"),
     ("pormestarinna", "pormestari"),
     ("rihvelitaulu", "taulu"),
@@ -60,7 +59,7 @@ const CLOSED: &[(&str, &str)] = &[
 /// Fused spellings that modern Finnish writes as two words. They are not
 /// accepted; the suggester offers the split form.
 pub fn is_nonword(word: &str) -> bool {
-    matches!(word, "ennenkuin" | "aivankuin" | "avainkuin")
+    matches!(word, "ennenkuin" | "aivankuin" | "avainkuin" | "niinkuin")
 }
 
 /// The accepted surface's base/head, if it is one of the closed spellings.
