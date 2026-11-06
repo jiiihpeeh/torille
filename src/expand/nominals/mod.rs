@@ -379,7 +379,7 @@ pub fn is_authoritative(class: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{class_1, dispatch};
-    use crate::tags::Confidence;
+    use crate::tags::{Confidence, Number};
 
     // The generated rule was read off the model word `äly`, so it
     // reproduces `äly`'s paradigm, and dispatch routes a class
@@ -406,6 +406,32 @@ mod tests {
         assert!(via.is_some(), "dispatch(\"1\", talo) should route");
         assert!(dispatch("9999", "talo", true).is_none());
         assert!(dispatch("27", "käsi", true).is_some());
+    }
+
+    /// A `-t`-final lemma is a plural-only citation, so the class engine
+    /// declines the dropped-`t` base and keeps only its plural cells.
+    #[test]
+    fn a_plural_only_t_lemma_keeps_only_plural_cells() {
+        for (class, lemma) in [
+            ("20", "bileet"),
+            ("3", "kapiot"),
+            ("2", "illatsut"),
+            ("18", "häät"),
+            ("5*G", "juomingit"),
+        ] {
+            let forms = dispatch(class, lemma, false).expect("routes");
+            assert!(!forms.is_empty(), "{lemma} produced no forms");
+            assert!(
+                forms
+                    .iter()
+                    .all(|form| form.union().number == Some(Number::Plural)),
+                "{lemma} produced a non-plural cell"
+            );
+            assert!(
+                forms.iter().any(|form| form.word == lemma),
+                "{lemma} is not its own nominative plural"
+            );
+        }
     }
 
     /// A two-character lemma keeps its nominative. The 16 two-character forms

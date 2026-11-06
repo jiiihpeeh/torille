@@ -18,12 +18,19 @@
 
 use crate::tags::{Case, Form, Number, PartOfSpeech};
 
-use super::utility::{Builder, Decl, cell, nominal_tags, plain};
+use super::utility::{Builder, Decl, cell, nominal_tags, plain, plural_only};
 
 pub const CLASS: &str = "20";
 
 /// Inflect a class-20 noun into every cell.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
+    // A `-t`-final lemma is a plural-only citation (`bileet`, `häät`):
+    // decline the dropped-`t` base and keep only its plural cells.
+    if let Some(base) = lemma.strip_suffix('t')
+        && !base.is_empty()
+    {
+        return plural_only(inflect(base, possessives));
+    }
     let mut b = Builder::new(lemma, possessives);
     let stem = lemma;
     // The plural drops one of the two final vowels: ateljee -> atelje.
@@ -116,6 +123,19 @@ mod tests {
     /// The long form of the class: the singular is the lemma, the partitive is
     /// the long `-ta`, and the plural has dropped a vowel and taken the
     /// `i`-plural. Every form here is one the sanalista records for `ateljee`.
+    #[test]
+    fn the_comitative_third_person_follows_the_stem_harmony() {
+        // `bileet` is front-harmony, so the full third-person comitative is
+        // `bileinensä`. The earlier hard-coded `-inensa` produced the
+        // back-harmony spelling for every word.
+        let forms = inflect("bileet", true);
+        assert!(forms.iter().any(|f| f.word == "bileinensä"));
+        assert!(!forms.iter().any(|f| f.word == "bileinensa"));
+        // A back-harmony word keeps the back spelling.
+        let forms = inflect("ateljee", true);
+        assert!(forms.iter().any(|f| f.word == "ateljeinensa"));
+    }
+
     #[test]
     fn ee_words() {
         let w = words("ateljee");

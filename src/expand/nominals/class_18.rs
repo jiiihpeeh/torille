@@ -21,7 +21,7 @@
 
 use crate::tags::{Case, Form, Number, PartOfSpeech};
 
-use super::utility::{Builder, Decl, cell, front, nominal_tags, plain};
+use super::utility::{Builder, Decl, cell, front, nominal_tags, plain, plural_only};
 
 #[cfg(test)]
 use crate::tags::Confidence;
@@ -56,6 +56,13 @@ const ILLATIVE: &[(&str, &str)] = &[
 
 /// Inflect a class-18 word.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
+    // A `-t`-final lemma is a plural-only citation (`bileet`, `häät`):
+    // decline the dropped-`t` base and keep only its plural cells.
+    if let Some(base) = lemma.strip_suffix('t')
+        && !base.is_empty()
+    {
+        return plural_only(inflect(base, possessives));
+    }
     // An abbreviation (all uppercase) takes `:` before every ending; a regular
     // short word (maa, aamunkoi, hai) inflects like class 17's long-vowel nouns.
     let is_abbrev = lemma.chars().all(|c| !c.is_lowercase());

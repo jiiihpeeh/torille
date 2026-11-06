@@ -1746,8 +1746,8 @@ mod tests {
         // Every word once, and the words themselves unchanged.
         let deduped = all("ahtaus", &[(40, None), (39, None)]);
         let naive = concatenated("ahtaus", &[(40, None), (39, None)]);
-        assert_eq!(deduped.len(), 160, "ahtaus should keep 160 words");
-        assert_eq!(naive.len(), 320, "concatenating should give 320 rows");
+        assert_eq!(deduped.len(), 159, "ahtaus should keep 159 words");
+        assert_eq!(naive.len(), 318, "concatenating should give 318 rows");
         let spelled: Vec<&str> = deduped.iter().map(|f| f.word.as_str()).collect();
         let mut sorted = spelled.clone();
         sorted.sort_unstable();
@@ -1774,7 +1774,7 @@ mod tests {
             forms.iter().map(|f| f.word.as_str()).collect()
         }
         assert_eq!(words(&deduped), words(&naive));
-        assert_eq!(words(&deduped).len(), 160);
+        assert_eq!(words(&deduped).len(), 159);
 
         // A word two classes spell the same but read differently keeps both
         // readings. This is the half of the defect that must not be swept up.

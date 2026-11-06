@@ -20,12 +20,19 @@
 
 use crate::tags::{Case, Form, Number, PartOfSpeech};
 
-use super::utility::{Builder, Decl, cell, doubled_stem, nominal_tags, plain};
+use super::utility::{Builder, Decl, cell, doubled_stem, nominal_tags, plain, plural_only};
 
 pub const CLASS: &str = "3";
 
 /// Inflect a class-3 noun (stem = the lemma, no gradation) into every cell.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
+    // A `-t`-final lemma is a plural-only citation (`bileet`, `häät`):
+    // decline the dropped-`t` base and keep only its plural cells.
+    if let Some(base) = lemma.strip_suffix('t')
+        && !base.is_empty()
+    {
+        return plural_only(inflect(base, possessives));
+    }
     let mut b = Builder::new(lemma, possessives);
     let stem = lemma;
     let (sg, pl) = (Number::Singular, Number::Plural);

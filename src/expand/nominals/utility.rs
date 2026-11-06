@@ -667,13 +667,16 @@ impl Builder {
     /// produced `koiriineen` instead of `koirine`, and class 23 produced
     /// `moniineen` for `monine`.
     ///
-    /// The bare form is a case form like any other and is offered whatever
-    /// `possessives` says; the owners are possessive suffixes, so they
-    /// follow it, the same as every other column here.
+    /// For a **noun** the comitative occurs only with a possessive suffix:
+    /// Wiktionary and Kielitoimisto both give it that way, and a bare
+    /// `taloine` is not a word (Voikko over-generates it). A word without
+    /// possessives -- an adjective or pronoun -- takes the bare comitative
+    /// instead: Wiktionary's `moni` lists `monine`, and an adjective such as
+    /// `pieni` supplies `pienine` to a noun's owner.
     pub fn comitative(&mut self, stem: &str) {
         let base = stem.strip_suffix('i').unwrap_or(stem);
-        self.push(Case::Comitative, Number::Plural, None, format!("{base}ine"));
         if !self.possessives {
+            self.push(Case::Comitative, Number::Plural, None, format!("{base}ine"));
             return;
         }
         for (suf, p) in [
@@ -690,8 +693,10 @@ impl Builder {
             );
         }
         // The third person has two accepted shapes: the contracted
-        // `-ineen` and the full `-inensa`.
-        for suffix in ["ineen", "inensa"] {
+        // `-ineen` and the full `-inensa`/`-inensä`, harmonised like every
+        // other suffix (`bileinensä`, not `bileinensa`).
+        let full_third = self.h("inensa", "inensä");
+        for suffix in ["ineen".to_string(), full_third] {
             self.push(
                 Case::Comitative,
                 Number::Plural,

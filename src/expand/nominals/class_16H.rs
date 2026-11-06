@@ -18,12 +18,19 @@
 use crate::kotus::{Gradation, Grade};
 use crate::tags::{Case, Form, Number, PartOfSpeech};
 
-use super::utility::{Builder, Decl, cell, doubled_stem, nominal_tags, plain, rare};
+use super::utility::{Builder, Decl, cell, doubled_stem, nominal_tags, plain, rare, plural_only};
 
 pub const CLASS: &str = "16*H";
 
 /// Inflect a class 16*H comparative.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
+    // A `-t`-final lemma is a plural-only citation (`bileet`, `häät`):
+    // decline the dropped-`t` base and keep only its plural cells.
+    if let Some(base) = lemma.strip_suffix('t')
+        && !base.is_empty()
+    {
+        return plural_only(inflect(base, possessives));
+    }
     let mut b = Builder::new(lemma, possessives);
     let strong = lemma;
     let grad = Gradation(8); // mp -> mm
