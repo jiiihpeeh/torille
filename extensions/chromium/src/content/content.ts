@@ -659,6 +659,14 @@
       overlay.style.writingMode = cs.writingMode;
       overlay.style.wordBreak = cs.wordBreak;
       overlay.style.overflowWrap = cs.overflowWrap;
+      // The page's textarea may disable wrapping (`wrap="off"` or an
+      // explicit `white-space: pre`). The overlay's stylesheet defaults to
+      // `pre-wrap`, which would re-wrap every line and put the underlines
+      // on the wrong rows. GitHub's read-only code textarea is the big
+      // case: it is `white-space: pre` and scrolls horizontally, so
+      // mirroring it with pre-wrap made the whole licence text one block
+      // of wrapped lines while the visible code stayed on 55 rows.
+      overlay.style.whiteSpace = cs.whiteSpace;
       overlay.style.hyphens = cs.hyphens;
       overlay.style.tabSize = cs.tabSize;
       overlay.style.fontVariant = cs.fontVariant;
@@ -698,11 +706,14 @@
       overlayInsetTop = borderTop;
       const isTextarea = el.tagName === 'TEXTAREA';
       positionOverlay();
-      overlay.style.width = (
-        isTextarea
-          ? (el.clientWidth || r.width - borderLeft - borderRight)
-          : r.width - borderLeft - borderRight
-      ) + 'px';
+      // A non-wrapping textarea scrolls horizontally instead of growing
+      // taller. Give the overlay the full scroll width so translating it
+      // by `scrollLeft` does not leave the rightmost underlines clipped
+      // by the overlay's own `overflow: hidden`.
+      const baseWidth = isTextarea
+        ? (el.clientWidth || r.width - borderLeft - borderRight)
+        : r.width - borderLeft - borderRight;
+      overlay.style.width = Math.max(baseWidth, input.scrollWidth || 0) + 'px';
       if (isTextarea) {
         syncOverlayHeight();
       } else {

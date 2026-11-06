@@ -485,6 +485,56 @@ try {
   if (ceAfter.ceContent.includes('taloo')) throw new Error('taloo still present after replace');
   if (!ceAfter.popupHidden) throw new Error('popup should hide after a suggestion is clicked');
 
+  // ----- non-wrapping textarea (GitHub's read-only code view) -------------
+  //
+  // GitHub mirrors a blob into an absolutely positioned textarea with
+  // `white-space: pre` and horizontal scrolling. The overlay used to
+  // hard-code `pre-wrap`, so the mirror re-wrapped the file while the
+  // visible code stayed on its own rows: every underline after the first
+  // line landed on the wrong line. Copy the textarea's white-space and
+  // let the overlay cover its whole scroll width.
+  await page.evaluate(() => {
+    const ta = document.createElement('textarea');
+    ta.id = 'pre-wrap';
+    ta.wrap = 'off';
+    ta.style.cssText = 'width:140px;height:60px;font:12px/20px monospace;'
+      + 'white-space:pre;overflow:auto hidden;padding:2px 20px;';
+    ta.value = 'taloo taloo taloo taloo taloo taloo taloo taloo taloo';
+    document.body.appendChild(ta);
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await page.waitForFunction(() => {
+    const ta = document.querySelector('#pre-wrap');
+    const ov = ta?.nextElementSibling?.shadowRoot?.querySelector('.overlay');
+    return ov && ov.textContent === ta.value
+      && ov.querySelectorAll('.misspell').length > 0;
+  }, { timeout: 5000 });
+  const preWrap = await page.evaluate(() => {
+    const ta = document.querySelector('#pre-wrap');
+    const ov = ta?.nextElementSibling?.shadowRoot?.querySelector('.overlay');
+    const tops = [...ov.querySelectorAll('.misspell')].map(
+      (s) => Math.round(s.getBoundingClientRect().top));
+    return {
+      whiteSpace: getComputedStyle(ov).whiteSpace,
+      overlayWidth: parseFloat(ov.style.width),
+      scrollWidth: ta.scrollWidth,
+      lineTops: [...new Set(tops)],
+    };
+  });
+  console.log('non-wrapping textarea:', JSON.stringify(preWrap));
+  if (preWrap.whiteSpace !== 'pre') {
+    throw new Error('overlay did not copy white-space: pre, got '
+      + JSON.stringify(preWrap.whiteSpace));
+  }
+  if (preWrap.overlayWidth < preWrap.scrollWidth) {
+    throw new Error('overlay width ' + preWrap.overlayWidth
+      + ' does not cover scrollWidth ' + preWrap.scrollWidth);
+  }
+  if (preWrap.lineTops.length !== 1) {
+    throw new Error('non-wrapping textarea wrapped in the overlay: line tops '
+      + JSON.stringify(preWrap.lineTops));
+  }
+
   await page.screenshot({ path: '/tmp/opencode/extension-e2e.png', fullPage: true });
 
   if (!initial.hostFound) throw new Error('overlay host not attached');
