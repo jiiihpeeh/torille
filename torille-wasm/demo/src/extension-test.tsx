@@ -414,6 +414,35 @@ Kymmenes rivi.`}
             <option>koirra</option>
           </select>
         </Card>
+        <Card label="GitHub-style code textarea (white-space: pre, scrolls sideways)">
+          <textarea
+            id="code-textarea"
+            wrap="off"
+            style={{
+              height: '180px',
+              overflow: 'auto hidden',
+              'white-space': 'pre',
+              'tab-size': '4',
+              font: '12px/20px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+              padding: '2px 70px 2px 92px',
+            }}
+          >
+            {`/* A long code line, like GitHub's read-only blob textarea: the field must scroll sideways, not wrap. */
+This line is deliberately long: kirjoitusvirhee talossa ja koirra juoksee, and every underline must stay on this row even when you scroll to the right. xyzzy taloo riisryynipuuro selittämmin.
+
+	- tab-indented line with taloo and xyzzy.
+		* nested tab-indented line with riisryynipuuro.
+
+Short line.
+
+Another long line keeps going and going: kirjoitusvirhee talossa, koirra juoksee, taloo, xyzzy, riisryynipuuro, selittämmin, and still more text to force a horizontal scrollbar.`}
+          </textarea>
+          <p class="muted">
+            GitHub renders blobs in a <code>white-space: pre</code> textarea
+            that scrolls horizontally. The underlines must stay on the same
+            rows and remain visible when the field is scrolled sideways.
+          </p>
+        </Card>
         <Card label="Scrolled textarea (fixed height)">
           <textarea class="tall" style={{ height: '180px', overflow: 'auto' }}>
             {`Rivi 1.
