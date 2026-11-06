@@ -15,7 +15,7 @@
 //!     cargo run --release -p torille-tools --bin gen_stem_map_verb
 //!     cargo build -p torille
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashSet};
 use std::fs;
 use std::path::PathBuf;
 
@@ -43,7 +43,7 @@ fn main() {
 
     let mut seen: HashSet<(String, String)> = HashSet::new();
     let mut lines: Vec<String> = Vec::new();
-    let mut bare: HashMap<(String, String), String> = HashMap::new();
+    let mut bare: BTreeMap<(String, String), String> = BTreeMap::new();
 
     for lemma in lemmas() {
         if !is_verb(lemma) || lemma.inflections.is_empty() {
