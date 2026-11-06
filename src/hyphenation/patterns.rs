@@ -9,6 +9,24 @@
 //! boundaries come from [`super::compounds`], and the Finnish policy in
 //! [`super::finnish`] decides what is typographically permitted.
 
+use std::cell::RefCell;
+
+/// Reusable buffers for one thread's pattern match.
+///
+/// Hyphenation is called on demand for many words; allocating the lowercased
+/// character list, the padded copy and the score vector per call dwarfed the
+/// trie walk. The buffers grow to the longest word seen and are reused.
+#[derive(Default)]
+struct Scratch {
+    chars: Vec<char>,
+    padded: Vec<char>,
+    scores: Vec<u8>,
+}
+
+thread_local! {
+    static SCRATCH: RefCell<Scratch> = RefCell::new(Scratch::default());
+}
+
 /// One trie node. A node that ends a pattern carries the pattern's score
 /// values for the gaps before, between and after its letters.
 pub(crate) struct Node {
@@ -31,58 +49,62 @@ impl PatternSet {
     /// This is the raw pattern result. Minimum fragments, vowel rules and
     /// compound boundaries are applied by the caller.
     pub(crate) fn break_chars(&self, word: &str) -> Vec<usize> {
-        let chars: Vec<char> = word
-            .chars()
-            .map(|c| c.to_lowercase().next().unwrap_or(c))
-            .collect();
-        let n = chars.len();
-        if n < 2 {
-            return Vec::new();
-        }
+        SCRATCH.with_borrow_mut(|scratch| {
+            scratch.chars.clear();
+            scratch.chars.extend(
+                word.chars()
+                    .map(|c| c.to_lowercase().next().unwrap_or(c)),
+            );
+            let n = scratch.chars.len();
+            if n < 2 {
+                return Vec::new();
+            }
 
-        // A dot on either side lets patterns anchor at the word edge.
-        let mut padded = Vec::with_capacity(n + 2);
-        padded.push('.');
-        padded.extend(chars.iter().copied());
-        padded.push('.');
+            // A dot on either side lets patterns anchor at the word edge.
+            scratch.padded.clear();
+            scratch.padded.push('.');
+            scratch.padded.extend_from_slice(&scratch.chars);
+            scratch.padded.push('.');
 
-        let mut scores = vec![0u8; padded.len() + 1];
-        for start in 0..padded.len() {
-            let mut node = 0usize;
-            let last = (start + LONGEST).min(padded.len());
-            for &c in &padded[start..last] {
-                let Some(next) = child(node, c) else {
-                    break;
-                };
-                node = next;
-                let values = NODES[node].values;
-                if values.is_empty() {
-                    continue;
-                }
-                for (offset, &value) in values.iter().enumerate() {
-                    let at = start + offset;
-                    if at < scores.len() {
-                        scores[at] = scores[at].max(value);
+            scratch.scores.clear();
+            scratch.scores.resize(scratch.padded.len() + 1, 0);
+            for start in 0..scratch.padded.len() {
+                let mut node = 0usize;
+                let last = (start + LONGEST).min(scratch.padded.len());
+                for &c in &scratch.padded[start..last] {
+                    let Some(next) = child(node, c) else {
+                        break;
+                    };
+                    node = next;
+                    let values = NODES[node].values;
+                    if values.is_empty() {
+                        continue;
+                    }
+                    for (offset, &value) in values.iter().enumerate() {
+                        let at = start + offset;
+                        if at < scratch.scores.len() {
+                            scratch.scores[at] = scratch.scores[at].max(value);
+                        }
                     }
                 }
             }
-        }
 
         // `padded` is '.' + word + '.'. A break after original character
         // `c` sits at padded gap `c + 2`; `c` runs from 0 to n - 2.
-        (0..n.saturating_sub(1))
-            .filter(|&c| scores[c + 2] % 2 == 1)
-            .map(|c| c + 1)
-            .collect()
+            (0..n.saturating_sub(1))
+                .filter(|&c| scratch.scores[c + 2] % 2 == 1)
+                .map(|c| c + 1)
+                .collect()
+        })
     }
 }
 
 fn child(node: usize, c: char) -> Option<usize> {
     NODES[node]
         .children
-        .iter()
-        .find(|(letter, _)| *letter == c)
-        .map(|(_, next)| usize::from(*next))
+        .binary_search_by_key(&c, |(letter, _)| *letter)
+        .ok()
+        .map(|at| usize::from(NODES[node].children[at].1))
 }
 
 /// The embedded Finnish pattern set.
