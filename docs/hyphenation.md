@@ -31,7 +31,9 @@ pattern-only analyzer, or user exceptions.
 
 1. **Patterns** (`src/hyphenation/patterns.rs`). The MIT-licensed Finnish
    school patterns from `hyph-utf8`, vendored at
-   `data/hyphenation/hyph-fi-x-school.tex`. They produce ordinary
+   `data/hyphenation/hyph-fi-x-school.tex`. `build.rs` parses the TeX at
+   build time into a static trie (`build/hyphenation.rs`), so the runtime
+   walks a generated `NODES` table with no parser. They produce ordinary
    Knuth–Liang candidates.
 2. **Compounds** (`src/hyphenation/compounds.rs`). `LexicalCompoundAnalyzer`
    partitions a recognised compound into components using the embedded
@@ -141,7 +143,7 @@ overlay.
 
 ## Tests
 
-- `src/hyphenation/*` unit tests: pattern parsing, offsets, exceptions,
+- `src/hyphenation/*` unit tests: the generated pattern table, offsets, exceptions,
   policy, compound partition.
 - `tests/hyphenation_fi.rs`: golden words and invariants over a sanalista
   sample (char boundaries, minimum fragments, strict ordering,

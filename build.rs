@@ -29,6 +29,9 @@ mod map_builders;
 #[path = "build/csv_builders/mod.rs"]
 mod csv_builders;
 
+#[path = "build/hyphenation.rs"]
+mod hyphenation;
+
 use csv_builders::catalogue::emit_catalogue;
 use csv_builders::sanalista::generate;
 use csv_builders::string_map::{
@@ -47,6 +50,13 @@ fn main() {
     let manifest = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR");
     let data = Path::new(&manifest).join("data/nykysuomensanalista.csv");
     println!("cargo:rerun-if-changed={}", data.display());
+
+    // Hyphenation patterns are vendored TeX. Parse them at build time into
+    // a static trie; the binary has no pattern parser at run time.
+    let tex = Path::new(&manifest).join("data/hyphenation/hyph-fi-x-school.tex");
+    println!("cargo:rerun-if-changed={}", tex.display());
+    let out_dir = std::env::var("OUT_DIR").expect("OUT_DIR");
+    hyphenation::emit(&tex, &Path::new(&out_dir).join("hyphenation_patterns.rs"));
 
     let text = std::fs::read_to_string(&data).unwrap_or_else(|e| panic!("{}: {e}", data.display()));
     let blob = generate(&text);
