@@ -32,7 +32,6 @@ const CLOSED: &[(&str, &str)] = &[
     ("kuultesi", "kuulten"),
     ("kävellytti", "kävellä"),
     ("loitommalla", "loitto"),
-    ("lopettamaisillaan", "lopettaa"),
     ("niinkauan", "niin"),
     ("nyrpistyksessä", "nyrpistää"),
     ("perehtyneempi", "perehtyä"),

@@ -87,6 +87,21 @@ fn main() {
 
             if !participle.is_empty() || infinitive {
                 if tags.possessive.is_some() {
+                    // The 5th infinitive (`-maisillaan`, `-maisillani`)
+                    // exists only with a possessive. Index the
+                    // possessive-stripped host so the fast gates can reach
+                    // it; the verify re-inflects the original surface.
+                    if infinitive
+                        && tags.case.is_none()
+                        && let Some(host) = strip_possessive(&form.word)
+                    {
+                        emit(
+                            &mut seen,
+                            &mut lines,
+                            strip_stem_vowels(&host),
+                            lemma.word,
+                        );
+                    }
                     continue;
                 }
                 if infinitive
@@ -343,8 +358,19 @@ fn case_stem(form: &str) -> String {
     }
 }
 
-fn strip_stem_vowels(stem: &str) -> Option<String> {
-    let trimmed = stem.trim_end_matches(['a', 'e', 'i', 'o', 'u', 'y', 'ä', 'ö']);
+/// The possessive suffix on a non-finite form, longest first. The short
+/// third person (`-an`/`-än`/`-en`) is the contracted `-nsa`/`-nsä`.
+fn strip_possessive(form: &str) -> Option<String> {
+    const SUFFIXES: &[&str] = &["nsa", "nsä", "nne", "mme", "si", "ni", "an", "än", "en"];
+    for suffix in SUFFIXES {
+        if form.chars().count() > suffix.chars().count() && form.ends_with(suffix) {
+            return Some(form[..form.len() - suffix.len()].to_string());
+        }
+    }
+    None
+}
+
+fn strip_stem_vowels(stem: &str) -> Option<String> {    let trimmed = stem.trim_end_matches(['a', 'e', 'i', 'o', 'u', 'y', 'ä', 'ö']);
     if trimmed.chars().count() >= 2 {
         Some(trimmed.to_string())
     } else {

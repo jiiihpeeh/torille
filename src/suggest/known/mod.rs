@@ -530,8 +530,14 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
     //     verb class-99 stem) routes via the noun path first.
     //     The noun-shapes-only `NOUN_LEMMA_PROBE_ENDINGS` list
     //     isn't relevant here -- this loop walks the full
-    //     `ENDINGS` table.
-    for ending in crate::expand::check_normal::ENDINGS {
+    //     `ENDINGS` table, plus the possessive suffixes so a
+    //     non-finite form's possessive (`lopettamaisillani`) can
+    //     strip to the stem the map stores.
+    for ending in crate::expand::check_normal::ENDINGS
+        .iter()
+        .copied()
+        .chain(crate::expand::check_normal::POSSESSIVE_SUFFIXES.iter().copied())
+    {
         if ending.is_empty() {
             continue;
         }

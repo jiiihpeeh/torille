@@ -1173,6 +1173,7 @@ pub fn collect_bases_via_verb_stem_map(word: &str, verbose: bool) -> Vec<String>
     for ending in endings
         .chain(VERB_ENDINGS.iter().copied())
         .chain(ENDINGS.iter().copied())
+        .chain(POSSESSIVE_SUFFIXES.iter().copied())
     {
         let Some(stem) = word.strip_suffix(ending) else {
             continue;
@@ -1752,6 +1753,7 @@ mod tests {
             ("lehdetön", "lehdetön"),
             ("kahdenkesken", "kesken"),
             ("lopettamaisillaan", "lopettaa"),
+            ("lopettamaisillani", "lopettaa"),
             ("naksahtelun", "naksahtelu"),
             ("äesteli", "äestellä"),
             ("aivoitusten", "aivoitus"),
