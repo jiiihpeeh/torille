@@ -291,10 +291,8 @@ const IRREGULAR: &[(&str, &[(Case, Number, &str, bool)])] = &[
             (Case::Translative, Number::Singular, "keneksi", true),
             (Case::Translative, Number::Plural, "keiksi", true),
             (Case::Inessive, Number::Singular, "kenessä", true),
-            (Case::Inessive, Number::Singular, "kessä", true),
             (Case::Inessive, Number::Plural, "keissä", true),
             (Case::Elative, Number::Singular, "kenestä", true),
-            (Case::Elative, Number::Singular, "kestä", true),
             (Case::Elative, Number::Plural, "keistä", true),
             (Case::Illative, Number::Singular, "kehen", true),
             (Case::Illative, Number::Singular, "keneen", true),
@@ -310,7 +308,6 @@ const IRREGULAR: &[(&str, &[(Case, Number, &str, bool)])] = &[
             (Case::Allative, Number::Plural, "keille", true),
             (Case::Abessive, Number::Singular, "kenettä", true),
             (Case::Abessive, Number::Plural, "keittä", true),
-            (Case::Instructive, Number::Plural, "kein", true),
         ],
     ),
     (
@@ -724,6 +721,15 @@ mod tests {
         }
         // The dialectal partitive is a real spelling too.
         assert!(words("kuka").contains(&"ketä".to_string()));
+        // Wiktionary's table has no `kessä`/`kestä`/`kein`; they are not
+        // standard forms of kuka even though Omorfi generates them.
+        let w = words("kuka");
+        for gone in ["kessä", "kestä", "kein"] {
+            assert!(
+                !w.contains(&gone.to_string()),
+                "kuka should not have {gone}"
+            );
+        }
     }
 
     #[test]
