@@ -1761,7 +1761,7 @@ mod tests {
             ("tikkaiden", "tikkaat"),
             ("tikkaita", "tikkaat"),
             ("tikasten", "tikkaat"),
-            ("edistyneemmät", "edistyä"),
+            ("edistyneemmät", "edistynyt"),
             ("solvaajalle", "solvaaja"),
             ("tiuskasi", "tiuskata"),
             ("osaavampi", "osaava"),

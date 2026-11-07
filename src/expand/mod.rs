@@ -1040,13 +1040,45 @@ mod tests {
         }
     }
 
+    /// A `-nut`/`-nyt` participle used as an adjective compares on its
+    /// `-e` stem: `edistynyt` -> `edistyneempi`/`edistynein`, like
+    /// `väsynyt`. The class-47 engine does not write degrees itself, so the
+    /// productive fallback in `degree_forms` is what must supply them.
+    #[test]
+    fn a_participle_adjective_derives_its_degree_paradigm() {
+        let cat = Catalogues::embedded();
+        let lemma = crate::kotus::sanalista()
+            .by_word("edistynyt")
+            .next()
+            .expect("edistynyt is in the sanalista");
+        let inflections: Vec<Inflection> = lemma.inflections().collect();
+        let got = inflect_all(
+            lemma.word(),
+            &inflections,
+            cat,
+            None,
+            PartOfSpeech::Adjective,
+            false,
+        );
+        for want in [
+            "edistyneempi",
+            "edistyneemmät",
+            "edistynein",
+            "edistyneimmät",
+        ] {
+            assert!(
+                got.iter().any(|f| f.word == want),
+                "the degree {want} is not derived"
+            );
+        }
+    }
+
     /// `usea` is a pronomini in the sanalista, but Omorfi derives its
     /// degree paradigm and the table carries the row. The superlative
     /// plural `useimmat` (the reported word) has to come from the same
     /// derivation the adjectives use, not a special case.
     #[test]
-    fn a_pronominal_quantifier_derives_its_degree_paradigm() {
-        let cat = Catalogues::embedded();
+    fn a_pronominal_quantifier_derives_its_degree_paradigm() {        let cat = Catalogues::embedded();
         let lemma = crate::kotus::sanalista()
             .by_word("usea")
             .next()

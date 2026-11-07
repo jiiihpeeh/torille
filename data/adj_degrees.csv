@@ -134,7 +134,6 @@ aloitteikas	aloitteikkaampi	aloitteikkain
 ‑aloitteinen	‑aloitteisempi	‑aloitteisin
 alokasmainen	alokasmaisempi	alokasmaisin
 alpakkainen	alpakkaisempi	alpakkaisin
-alpakkainen	alpakkaisempi	alpakkaisin
 alpiininen	alpiinisempi	alpiinisin
 altis	alttiimpi	alttein
 altruistinen	altruistisempi	altruistisin
@@ -436,6 +435,7 @@ dystooppinen	dystooppisempi	dystooppisin
 edellinen	edellisempi	edellisin
 edestakainen	edestakaisempi	edestakaisin
 edistyksellinen	edistyksellisempi	edistyksellisin
+edistynyt	edistyneempi	edistynein
 edullinen	edullisempi	edullisin
 edustava	edustavampi	edustavin
 edusteinen	edusteisempi	edusteisin
@@ -500,6 +500,7 @@ elohopeamainen	elohopeamaisempi	elohopeamaisin
 eloisa	eloisampi	eloisin
 elollinen	elollisempi	elollisin
 eloton	elottomampi	elottomin
+elähtänyt	elähtäneempi	elähtänein
 eläimellinen	eläimellisempi	eläimellisin
 elämyksellinen	elämyksellisempi	elämyksellisin
 elämänkatsomuksellinen	elämänkatsomuksellisempi	elämänkatsomuksellisin
@@ -1116,6 +1117,7 @@ hölmö	hölmömpi	hölmöin
 höntti	höntimpi	höntein
 höperö	höperömpi	höperöin
 höppänä	höppänämpi	
+höpsähtänyt	höpsähtäneempi	höpsähtänein
 höpsö	höpsömpi	höpsöin
 höveli	hövelimpi	hövelein
 höyheninen	höyhenisempi	höyhenisin
@@ -1168,7 +1170,6 @@ ilmaton	ilmattomampi	ilmattomin
 ilmava	ilmavampi	ilmavin
 ilmeetön	ilmeettömämpi	ilmeettömin
 ilmeikäs	ilmeikkäämpi	ilmeikkäin
-ilmeinen	ilmeisempi	ilmeisin
 ilmeinen	ilmeisempi	ilmeisin
 ilmetty	ilmetympi	ilmetyin
 ilmiömäinen	ilmiömäisempi	ilmiömäisin
@@ -1505,7 +1506,6 @@ kammottava	kammottavampi	kammottavin
 kanadalainen	kanadalaisempi	kanadalaisin
 kanamainen	kanamaisempi	kanamaisin
 kankainen	kankaisempi	kankaisin
-kankainen	kankaisempi	kankaisin
 kankea	kankeampi	kankein
 kannakselainen	kannakselaisempi	kannakselaisin
 kannallinen	kannallisempi	kannallisin
@@ -1522,7 +1522,6 @@ kansallinen	kansallisempi	kansallisin
 ‑kantainen	‑kantaisempi	‑kantaisin
 kantamaton	kantamattomampi	kantamattomin
 ‑kantinen	‑kantisempi	‑kantisin
-kantoinen	kantoisempi	kantoisin
 kantoinen	kantoisempi	kantoisin
 kaoottinen	kaoottisempi	kaoottisin
 kapea	kapeampi	kapein
@@ -1811,7 +1810,6 @@ kirpakka	kirpakampi
 kirpeä	kirpeämpi	kirpein
 kirroottinen	kirroottisempi	kirroottisin
 kirurginen	kirurgisempi	kirurgisin
-‑kiskoinen	‑kiskoisempi	‑kiskoisin
 ‑kiskoinen	‑kiskoisempi	‑kiskoisin
 kissamainen	kissamaisempi	kissamaisin
 kiteetön	kiteettömämpi	kiteettömin
@@ -2129,7 +2127,6 @@ kuulematon	kuulemattomampi	kuulemattomin
 kuuliainen	kuuliaisempi	kuuliaisin
 kuuloinen	kuuloisempi	kuuloisin
 kuultava	kuultavampi	kuultavin
-kuultava	kuultavampi	kuultavin
 kuulu	kuulumpi	kuuluin
 kuuluisa	kuuluisampi	kuuluisin
 kuulumaton	kuulumattomampi	kuulumattomin
@@ -2287,8 +2284,6 @@ lajikas	lajikkaampi	lajikkain
 ‑lajinen	‑lajisempi	‑lajisin
 lakiasäätävä	lakiasäätävämpi	lakiasäätävin
 ‑lakinen	‑lakisempi	‑lakisin
-‑lakinen	‑lakisempi	‑lakisin
-lakkaamaton	lakkaamattomampi	lakkaamattomin
 lakkaamaton	lakkaamattomampi	lakkaamattomin
 ‑lakkinen	‑lakkisempi	‑lakkisin
 lakoinen	lakoisempi	lakoisin
@@ -2584,7 +2579,6 @@ maalauksellinen	maalauksellisempi	maalauksellisin
 maalinen	maalisempi	maalisin
 ‑maalinen	‑maalisempi	‑maalisin
 maaliskuinen	maaliskuisempi	maaliskuisin
-maaliton	maalittomampi	maalittomin
 maaliton	maalittomampi	maalittomin
 maallinen	maallisempi	maallisin
 maanantainen	maanantaisempi	maanantaisin
@@ -4000,7 +3994,6 @@ rintava	rintavampi	rintavin
 ripeä	ripeämpi	ripein
 rippikoulunkäymätön	rippikoulunkäymättömämpi	rippikoulunkäymättömin
 ripsinen	ripsisempi	ripsisin
-ripsinen	ripsisempi	ripsisin
 ripulinen	ripulisempi	ripulisin
 risa	risempi	risin
 risainen	risaisempi	risaisin
@@ -4188,7 +4181,6 @@ sardoninen	sardonisempi	sardonisin
 ‑sarjainen	‑sarjaisempi	‑sarjaisin
 sarjallinen	sarjallisempi	sarjallisin
 sarjoittainen	sarjoittaisempi	sarjoittaisin
-sarkainen	sarkaisempi	sarkaisin
 sarkainen	sarkaisempi	sarkaisin
 sarkastinen	sarkastisempi	sarkastisin
 sarvekas	sarvekkaampi	sarvekkain
@@ -4553,7 +4545,6 @@ sumumainen	sumumaisempi	sumumaisin
 sunnuntainen	sunnuntaisempi	sunnuntaisin
 suojaamaton	suojaamattomampi	suojaamattomin
 suojaeristetty	suojaeristetympi	suojaeristetyin
-suojainen	suojaisempi	suojaisin
 suojainen	suojaisempi	suojaisin
 suojaisa	suojaisampi	suojaisin
 suojaton	suojattomampi	suojattomin
@@ -5235,6 +5226,7 @@ upotteinen	upotteisempi	upotteisin
 uppoamaton	uppoamattomampi	uppoamattomin
 uraauurtava	uraauurtavampi	uraauurtavin
 uralilainen	uralilaisempi	uralilaisin
+urasuuntautunut	urasuuntautuneempi	urasuuntautunein
 urbaani	urbaanimpi	urbaanein
 urbaaninen	urbaanisempi	urbaanisin
 urhea	urheampi	urhein
@@ -5722,7 +5714,6 @@ yksikotinen	yksikotisempi	yksikotisin
 yksiköllinen	yksiköllisempi	yksiköllisin
 yksilappeinen	yksilappeisempi	yksilappeisin
 yksilevyinen	yksilevyisempi	yksilevyisin
-yksilevyinen	yksilevyisempi	yksilevyisin
 yksilöittäinen	yksilöittäisempi	yksilöittäisin
 yksilöllinen	yksilöllisempi	yksilöllisin
 yksinäinen	yksinäisempi	yksinäisin
@@ -5748,6 +5739,7 @@ yliedustettu	yliedustetumpi	yliedustetuin
 ylihuolehtiva	ylihuolehtivampi	ylihuolehtivin
 ylijäämäinen	ylijäämäisempi	ylijäämäisin
 ylikansoitettu	ylikansoitetumpi	ylikansoitetuin
+ylikasvanut	ylikasvaneempi	ylikasvanein
 ylikiihottunut	ylikiihottuneempi	ylikiihottunein
 ylikoulutettu	ylikoulutetumpi	ylikoulutetuin
 ylikukkinut	ylikukkineempi	ylikukkinein

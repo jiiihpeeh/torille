@@ -925,6 +925,27 @@ pub(super) fn degree_forms(
             break;
         }
     }
+    // A `-nut`/`-nyt` participle used as an adjective compares on its `-e`
+    // stem: `edistynyt` -> `edistyneempi`/`edistynein`, exactly like
+    // `väsynyt` and `kehittynyt`. Class 47 is the `-nut`/`-nyt` type, and
+    // the adjective gate keeps the rule off the non-comparing participles
+    // and off other `-ut`/`-yt` adjectives (`ohut` compares as `ohuempi`).
+    if (comparative.is_none() || superlative.is_none())
+        && (lemma.ends_with("nut") || lemma.ends_with("nyt"))
+        && let Some(base) = lemma.get(..lemma.len() - 2)
+        && !base.is_empty()
+        && crate::kotus::sanalista().by_word(lemma).next().is_some_and(|row| {
+            crate::tags::PartOfSpeech::parse_all(row.part_of_speech())
+                .contains(&PartOfSpeech::Adjective)
+                && row
+                    .inflections()
+                    .any(|inflection| inflection.class == 47)
+        })
+    {
+        let stem = format!("{base}e");
+        comparative.get_or_insert_with(|| format!("{stem}empi"));
+        superlative.get_or_insert_with(|| format!("{stem}in"));
+    }
     let mut out: Vec<Generated> = Vec::new();
     // The comparative is class `16*H`: its `-mpi` gradates to `-mm-`
     // (`helpompi` -> `helpomman`), and without the `H` the weak cells

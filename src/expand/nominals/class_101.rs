@@ -277,38 +277,40 @@ const IRREGULAR: &[(&str, &[(Case, Number, &str, bool)])] = &[
         "kuka",
         &[
             (Case::Nominative, Number::Singular, "kuka", true),
-            (Case::Nominative, Number::Plural, "ketkä", false),
-            (Case::Genitive, Number::Singular, "kenen", false),
-            (Case::Genitive, Number::Plural, "keiden", false),
-            (Case::Genitive, Number::Plural, "keitten", false),
-            (Case::Partitive, Number::Singular, "ketä", false),
-            (Case::Partitive, Number::Plural, "keitä", false),
-            (Case::Essive, Number::Singular, "kenenä", false),
-            (Case::Essive, Number::Singular, "kenä", false),
-            (Case::Essive, Number::Plural, "keinä", false),
-            (Case::Translative, Number::Singular, "keneksi", false),
-            (Case::Translative, Number::Plural, "keiksi", false),
-            (Case::Inessive, Number::Singular, "kenessä", false),
-            (Case::Inessive, Number::Singular, "kessä", false),
-            (Case::Inessive, Number::Plural, "keissä", false),
-            (Case::Elative, Number::Singular, "kenestä", false),
-            (Case::Elative, Number::Singular, "kestä", false),
-            (Case::Elative, Number::Plural, "keistä", false),
-            (Case::Illative, Number::Singular, "kehen", false),
-            (Case::Illative, Number::Singular, "keneen", false),
-            (Case::Illative, Number::Plural, "keihin", false),
-            (Case::Adessive, Number::Singular, "kellä", false),
-            (Case::Adessive, Number::Singular, "kenellä", false),
-            (Case::Adessive, Number::Plural, "keillä", false),
-            (Case::Ablative, Number::Singular, "keltä", false),
-            (Case::Ablative, Number::Singular, "keneltä", false),
-            (Case::Ablative, Number::Plural, "keiltä", false),
-            (Case::Allative, Number::Singular, "kelle", false),
-            (Case::Allative, Number::Singular, "kenelle", false),
-            (Case::Allative, Number::Plural, "keille", false),
-            (Case::Abessive, Number::Singular, "kenettä", false),
-            (Case::Abessive, Number::Plural, "keittä", false),
-            (Case::Instructive, Number::Plural, "kein", false),
+            (Case::Nominative, Number::Plural, "ketkä", true),
+            (Case::Genitive, Number::Singular, "kenen", true),
+            (Case::Genitive, Number::Plural, "keiden", true),
+            (Case::Genitive, Number::Plural, "keitten", true),
+            (Case::Partitive, Number::Singular, "ketä", true),
+            (Case::Partitive, Number::Plural, "keitä", true),
+            (Case::Accusative, Number::Singular, "kenet", true),
+            (Case::Accusative, Number::Plural, "ketkä", true),
+            (Case::Essive, Number::Singular, "kenenä", true),
+            (Case::Essive, Number::Singular, "kenä", true),
+            (Case::Essive, Number::Plural, "keinä", true),
+            (Case::Translative, Number::Singular, "keneksi", true),
+            (Case::Translative, Number::Plural, "keiksi", true),
+            (Case::Inessive, Number::Singular, "kenessä", true),
+            (Case::Inessive, Number::Singular, "kessä", true),
+            (Case::Inessive, Number::Plural, "keissä", true),
+            (Case::Elative, Number::Singular, "kenestä", true),
+            (Case::Elative, Number::Singular, "kestä", true),
+            (Case::Elative, Number::Plural, "keistä", true),
+            (Case::Illative, Number::Singular, "kehen", true),
+            (Case::Illative, Number::Singular, "keneen", true),
+            (Case::Illative, Number::Plural, "keihin", true),
+            (Case::Adessive, Number::Singular, "kellä", true),
+            (Case::Adessive, Number::Singular, "kenellä", true),
+            (Case::Adessive, Number::Plural, "keillä", true),
+            (Case::Ablative, Number::Singular, "keltä", true),
+            (Case::Ablative, Number::Singular, "keneltä", true),
+            (Case::Ablative, Number::Plural, "keiltä", true),
+            (Case::Allative, Number::Singular, "kelle", true),
+            (Case::Allative, Number::Singular, "kenelle", true),
+            (Case::Allative, Number::Plural, "keille", true),
+            (Case::Abessive, Number::Singular, "kenettä", true),
+            (Case::Abessive, Number::Plural, "keittä", true),
+            (Case::Instructive, Number::Plural, "kein", true),
         ],
     ),
     (
@@ -707,6 +709,21 @@ mod tests {
         let p = plain("jokin");
         assert!(p.contains(&"jotain".to_string()));
         assert!(!p.contains(&"jotakin".to_string()));
+    }
+
+    #[test]
+    fn kuka_has_the_modern_suppletive_paradigm() {
+        let p = plain("kuka");
+        for want in [
+            "kuka", "kenen", "ketä", "kenet", "kenessä", "kenestä", "keneen", "kehen",
+            "kenellä", "kellä", "keneltä", "keltä", "kenelle", "kelle", "kenenä", "kenä",
+            "keneksi", "kenettä", "ketkä", "keiden", "keitten", "keitä", "keissä", "keistä",
+            "keihin", "keillä", "keiltä", "keille", "keinä", "keiksi", "keittä",
+        ] {
+            assert!(p.contains(&want.to_string()), "kuka should offer {want}");
+        }
+        // The dialectal partitive is a real spelling too.
+        assert!(words("kuka").contains(&"ketä".to_string()));
     }
 
     #[test]
