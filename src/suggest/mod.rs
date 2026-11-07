@@ -1351,6 +1351,24 @@ mod tests {
     }
 
     #[test]
+    fn kehoittaa_forms_are_illegal_and_suggest_kehottaa() {
+        for (wrong, right) in [
+            ("kehoittaa", "kehottaa"),
+            ("kehoitan", "kehotan"),
+            ("kehoitti", "kehotti"),
+            ("kehoittavasti", "kehottavasti"),
+            ("kehoitus", "kehotus"),
+        ] {
+            assert!(matches!(check(wrong), CheckOutcome::Unknown), "{wrong} is not a word");
+            assert_eq!(
+                suggest(wrong, 5, 2).first().map(String::as_str),
+                Some(right),
+                "{wrong}"
+            );
+        }
+    }
+
+    #[test]
     fn ennenkuin_is_a_misspelling_of_the_two_word_phrase() {
         assert_eq!(is_known_word("ennenkuin"), None);
         assert_eq!(

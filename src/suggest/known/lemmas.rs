@@ -34,7 +34,7 @@ pub fn suggest_over_lemmas(word: &str, max_n: usize, max_distance: usize) -> Vec
     // popup uses this lemma-only path too, so it must see the same curated
     // pair (`alottanutkaan` -> `aloittanutkaan`) as the full ranker.
     if let Some((right, _lemma)) = crate::suggest::candidates::reported_correction(&lower) {
-        return vec![match_case(word, right)];
+        return vec![match_case(word, &right)];
     }
     let word_chars_len = lower.chars().count();
     let cap = max_distance.saturating_add(1);

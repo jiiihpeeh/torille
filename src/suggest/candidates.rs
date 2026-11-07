@@ -64,6 +64,7 @@ const REPORTED_CORRECTIONS: &[(&str, &str, &str)] = &[
     // The fused archaic conjunction; modern Finnish uses the two-word
     // `sen tähden` (and `sentään` is a different adverb).
     ("sentähden", "sen tähden", "sen"),
+    ("minkätähden", "minkä tähden", "minkä"),
     // `aivotus` is rejected as a variant; the standard noun is `aivoitus`,
     // whose genitive plural `aivoitusten` is the reported correction.
     ("aivotusten", "aivoitusten", "aivoitus"),
@@ -77,11 +78,17 @@ const REPORTED_CORRECTIONS: &[(&str, &str, &str)] = &[
     ("rusoittava", "rusottava", "rusottaa"),
 ];
 
-pub(super) fn reported_correction(word: &str) -> Option<(&'static str, &'static str)> {
+pub(super) fn reported_correction(word: &str) -> Option<(String, String)> {
+    // Every form of the rejected `kehoittaa` variant maps to the standard
+    // `kehottaa` family by dropping the intrusive `i`:
+    // `kehoitan` -> `kehotan`, `kehoittavasti` -> `kehottavasti`.
+    if let Some(rest) = word.strip_prefix("kehoit") {
+        return Some((format!("kehot{rest}"), "kehottaa".to_string()));
+    }
     REPORTED_CORRECTIONS
         .iter()
         .find(|(wrong, _, _)| *wrong == word)
-        .map(|(_, right, lemma)| (*right, *lemma))
+        .map(|(_, right, lemma)| (right.to_string(), lemma.to_string()))
 }
 
 /// The modern form of an archaic plural genitive with a third-person
@@ -205,13 +212,13 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
         // Its distance is still the true one: a consumer reading
         // `Suggestion::edit_distance` must not be told that a four-edit repair
         // is an exact match.
-        let edit_distance = levenshtein(&word, right, usize::MAX);
+        let edit_distance = levenshtein(&word, &right, usize::MAX);
         return apply_input_case(
             original,
             vec![Suggestion {
-                word: right.to_string(),
+                word: right.clone(),
                 edit_distance,
-                lemma: Some(lemma.to_string()),
+                lemma: Some(lemma.clone()),
                 source: SuggestionSource::GeneratedForm {
                     lemma: lemma.to_string(),
                 },
@@ -506,11 +513,11 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
         && !candidates.iter().any(|c| c.word == right)
     {
         candidates.push(Suggestion {
-            word: right.to_string(),
-            edit_distance: levenshtein(&word, right, usize::MAX),
-            lemma: Some(lemma.to_string()),
+            word: right.clone(),
+            edit_distance: levenshtein(&word, &right, usize::MAX),
+            lemma: Some(lemma.clone()),
             source: SuggestionSource::GeneratedForm {
-                lemma: lemma.to_string(),
+                lemma: lemma.clone(),
             },
             readings: Vec::new(),
             confidence: Confidence::Plain,
@@ -533,7 +540,7 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
         // participle. Keep it in the pool regardless of the caller's
         // distance budget; the explicit table is the license. Its
         // `edit_distance` is still the real distance.
-        let curated = correction == Some(c.word.as_str());
+        let curated = correction.as_deref() == Some(c.word.as_str());
         let d = if curated {
             levenshtein(&word, &c.word, usize::MAX)
         } else {
@@ -552,14 +559,14 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
                 score += DOUBLED_LETTER_BONUS;
             }
         }
-        if correction == Some(c.word.as_str()) {
+        if correction.as_deref() == Some(c.word.as_str()) {
             // Rank the known repair ahead of unrelated candidates at the
             // same distance without pretending it is a shorter edit.
             score += 0.5;
         }
         c.existing_score = score;
     }
-    candidates.retain(|c| c.edit_distance <= max_distance || correction == Some(c.word.as_str()));
+    candidates.retain(|c| c.edit_distance <= max_distance || correction.as_deref() == Some(c.word.as_str()));
 
     // Last resort: a compound typo (`todistelukykynnsä`) has no lemma
     // neighbourhood close enough to surface its correction, because the

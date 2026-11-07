@@ -2293,7 +2293,7 @@ mod tests {
         }
         // The six non-words/variant spellings are rejected, not remapped.
         for word in [
-            "hälyytys", "kehoittaa", "kuullostaa", "vaakita", "verytellä", "veryttely",
+            "hälyytys", "kuullostaa", "vaakita", "verytellä", "veryttely",
         ] {
             assert!(
                 lexicon.by_word(word).next().is_none(),

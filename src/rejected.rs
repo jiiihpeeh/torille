@@ -19,11 +19,10 @@ pub(crate) const LEMMAS: &[&str] = &[
     // verb section.
     "vinka",
     // Class-100 rows that are variant spellings or non-words, not a paradigm.
-    // Voikko rejects all six and Omorfi either marks them non-standard or
+    // Voikko rejects them and Omorfi either marks them non-standard or
     // guesses `UNKNOWN`; accepting them would also hide the standard
-    // spelling from the suggester (`kehoittaa` -> `kehottaa`).
+    // spelling from the suggester.
     "hälyytys", // `hälytys` (39)
-    "kehoittaa", // `kehottaa` (53*C)
     "kuullostaa", // `kuulostaa` (53)
     "vaakita",   // no standard lemma; Omorfi GUESS=UNKNOWN
     "verytellä", // `venytellä` (67*C)
