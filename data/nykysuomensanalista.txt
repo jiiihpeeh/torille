@@ -94013,6 +94013,7 @@ uupumaton		adjektiivi	34*C
 uupumattomasti		adverbi	99
 uupumattomuus		substantiivi	40
 uupumus		substantiivi	39
+uupunut		adjektiivi	47
 uuras		adjektiivi	41
 uurastaa		verbi	53
 uurastaja		substantiivi	10

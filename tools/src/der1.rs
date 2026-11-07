@@ -56,5 +56,5 @@ pub fn write_table<'a>(path: &Path, rows: impl Iterator<Item = (&'a str, Option<
             out.extend_from_slice(value.as_bytes());
         }
     }
-    std::fs::write(path, &out).unwrap_or_else(|exc| panic!("{}: {exc}", path.display()));
+    crate::gzip::write(path, &out);
 }

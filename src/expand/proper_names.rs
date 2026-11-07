@@ -17,16 +17,16 @@ use crate::expand::static_table::StemMap;
 /// Lowercase name forms, built by `build.rs` from
 /// `data/proper_name_forms.csv`.
 pub static PROPER_NAMES: HuffmanSet = HuffmanSet::new(include_bytes!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/maps/proper_names.bin",
-)));
+        env!("OUT_DIR"),
+        "/proper_names.bin",
+    )));
 
 /// `form -> name` for the same source, so a caller can name the lemma behind
 /// an inflected form (`mainen` -> `Maine`, `helsingin` -> `Helsinki`).
 static PROPER_NAME_LEMMAS: StemMap = StemMap::new(include_bytes!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/maps/proper_name_lemmas.bin",
-)));
+        env!("OUT_DIR"),
+        "/proper_name_lemmas.bin",
+    )));
 
 /// The proper-name lemma a form belongs to, preserving the source's
 /// capitalisation (`Mainen` -> `Maine`).

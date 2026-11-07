@@ -79,21 +79,21 @@ use crate::tags::PartOfSpeech;
 
 /// Noun stem map: built by `gen_stem_map_noun` from the engine.
 /// ~245 k `(stem, base)` pairs. The blob is checked in at
-/// `maps/stem_map_noun.bin`; the build script overwrites it
+/// `maps/stem_map_noun.bin.gz`; the build script overwrites it
 /// on CSV change.
 pub static STEM_BUCKETS_NOUN: StemMap = StemMap::new(include_bytes!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/maps/stem_map_noun.bin",
-)));
+        env!("OUT_DIR"),
+        "/stem_map_noun.bin",
+    )));
 
 /// Verb counterpart: `data/verb_stem_to_base_map.csv`. ~268 k unique
 /// stems: finite personal + infinitive + active participle forms, the
 /// passive impersonal forms, and the non-finite case-stems. Same
 /// `maps/` layout.
 pub static STEM_BUCKETS_VERB: StemMap = StemMap::new(include_bytes!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/maps/stem_map_verb.bin",
-)));
+        env!("OUT_DIR"),
+        "/stem_map_verb.bin",
+    )));
 
 // ---------------------------------------------------------------------------
 // Endings lists. Must stay in sync with the `endings` table in
@@ -255,8 +255,8 @@ mod adverb {
     use crate::expand::static_table::StemMap;
 
     pub static ADVERBS: StemMap = StemMap::new(include_bytes!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/maps/adverbit.bin",
+        env!("OUT_DIR"),
+        "/adverbit.bin",
     )));
 }
 
@@ -314,8 +314,8 @@ static PRONOUN_FORMS: OnceLock<Blob> = OnceLock::new();
 static PRONOUN_MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
 
 const PRONOUN_FORMS_BIN: &[u8] = include_bytes!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/maps/pronoun_forms.bin"
+    env!("OUT_DIR"),
+    "/pronoun_forms.bin",
 ));
 
 /// The pronoun lemma `word` is a form of, if any.
@@ -1677,7 +1677,7 @@ mod tests {
             ("kaihotonta", "kaihoton"),
             ("puvuton", "puvuton"),
             ("eteemme", "eteen"),
-            ("uupuneemmaksi", "uupua"),
+            ("uupuneemmaksi", "uupunut"),
             ("hoputtelemaan", "hoputella"),
             ("savupatsasten", "patsas"),
             ("valjaisiin", "valjaat"),

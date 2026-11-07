@@ -1314,16 +1314,16 @@ static NOMINAL: OnceLock<Blob> = OnceLock::new();
 static MODIFIERS: OnceLock<Blob> = OnceLock::new();
 
 const BY_FORM_BIN: &[u8] = include_bytes!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/maps/derived_by_form.bin"
+    env!("OUT_DIR"),
+    "/derived_by_form.bin",
 ));
 const NOMINAL_BIN: &[u8] = include_bytes!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/maps/derived_nominal.bin"
+    env!("OUT_DIR"),
+    "/derived_nominal.bin",
 ));
 const MODIFIERS_BIN: &[u8] = include_bytes!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/maps/derived_modifiers.bin"
+    env!("OUT_DIR"),
+    "/derived_modifiers.bin",
 ));
 
 /// The derived lemma a surface belongs to.

@@ -24,21 +24,21 @@ fn main() {
     let mut by_form: Vec<(String, &'static str)> = computed.by_form.into_iter().collect();
     by_form.sort_by(|a, b| a.0.cmp(&b.0));
     write_table(
-        Path::new("maps/derived_by_form.bin"),
+        Path::new("maps/derived_by_form.bin.gz"),
         by_form.iter().map(|(surface, lemma)| (surface.as_str(), Some(*lemma))),
     );
 
     let mut nominal: Vec<&str> = computed.nominal.iter().map(String::as_str).collect();
     nominal.sort_unstable();
     write_table(
-        Path::new("maps/derived_nominal.bin"),
+        Path::new("maps/derived_nominal.bin.gz"),
         nominal.iter().map(|word| (*word, None)),
     );
 
     let mut modifiers: Vec<&str> = computed.modifiers.iter().map(String::as_str).collect();
     modifiers.sort_unstable();
     write_table(
-        Path::new("maps/derived_modifiers.bin"),
+        Path::new("maps/derived_modifiers.bin.gz"),
         modifiers.iter().map(|word| (*word, None)),
     );
 
@@ -50,7 +50,7 @@ fn main() {
             .collect();
     pronouns.sort_by(|a, b| a.0.cmp(&b.0));
     write_table(
-        Path::new("maps/pronoun_forms.bin"),
+        Path::new("maps/pronoun_forms.bin.gz"),
         pronouns
             .iter()
             .map(|(surface, lemma)| (surface.as_str(), Some(*lemma))),

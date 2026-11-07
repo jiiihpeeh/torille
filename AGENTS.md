@@ -116,10 +116,10 @@ docs/                 harness.md, lexicon.md, morfologia.yaml, hyphenation.md
   local-only, gitignored, and read by neither the build nor the runtime.
 
 The sanalista is `include_str!`'d (`lib.rs`); the catalogue is compiled to
-`maps/catalogue.bin` by `build.rs` and embedded with
+`maps/catalogue.bin.gz` by `build.rs` and embedded with
 `include_bytes!`, so the shipped crate needs no data files.
 
-`maps/{derived_{by_form,nominal,modifiers},pronoun_forms}.bin` are the
+`maps/{derived_{by_form,nominal,modifiers},pronoun_forms}.bin.gz` are the
 exception to the build-script writers below: those tables are built with the
 engine (`expand::derived::compute`,
 `expand::check_normal::compute_pronoun_forms`), which a build script cannot
@@ -130,7 +130,7 @@ sanalista or pronoun/class change and commit the blobs;
 `expand::check_normal::tests::the_pronoun_blob_matches_compute` fail if they
 drift.
 
-`maps/oi_plural_lemmas.bin` is the one oracle-derived table: the
+`maps/oi_plural_lemmas.bin.gz` is the one oracle-derived table: the
 class-10 lemmas whose `ok='both'` paradigm has the alternative `-oi-` plural
 (`ampuja` -> `ampujoita`). It is lexical, not derivable (`alkaja` is class 10
 and has no such plural), so `tools/oracle/build_oi_plural_lemmas.py` reads it off the
@@ -147,7 +147,7 @@ the small lexical side tables) and `build/map_builders/` writes the compact
 set/map blobs (`front_coded.rs` for sets/maps, `huffman.rs` for the `HST1`
 proper-name set). Every blob they emit lands in the top-level `maps/`, the
 single source for the embedded binary maps; `gen_derived` writes its
-engine-computed tables there too. It emits `maps/sanalista.bin`: 8-byte per-row records (headword,
+engine-computed tables there too. It emits `maps/sanalista.bin.gz`: 8-byte per-row records (headword,
 length, POS code, inflection start), the headword strings, `u16`
 inflections, small POS/homonym side tables, and the two sorted orders
 (`WORD_ORDER` by word, `TAIL_ORDER` by reversed word). **Nothing here is

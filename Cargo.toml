@@ -36,6 +36,10 @@ index_version = "2"
 # the stem maps, the form subset, and the small `form -> lemma/degree` maps
 # (connegatives, adverbs, adjective degrees, negation fusions). No `phf`
 # runtime is needed.
+#
+# The committed `maps/*.bin.gz` are a tooling-only detail: `build.rs`
+# decompresses them into `OUT_DIR` and the engine embeds the plain bytes, so
+# the runtime and the wasm have no gzip dependency.
 
 [dev-dependencies]
 # Criterion is the standard Rust benchmark harness; it tracks per-iteration
@@ -55,7 +59,9 @@ harness = false
 
 [build-dependencies]
 # All generated tables are written as binary blobs, so the build script
-# needs no phf codegen.
+# needs no phf codegen. `flate2` writes those blobs gzip-compressed at the
+# maximum level.
+flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
 
 [profile.release]
 opt-level = 3

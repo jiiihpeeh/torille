@@ -79,6 +79,9 @@ path = "src/bin/profile_hot.rs"
 
 [dependencies]
 torille = { path = ".." }
+# The map writers gzip their output with the same best-level settings the
+# engine's `build.rs` uses.
+flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
 # `phf` runtime: the lib embeds phf literals (form set, stem maps, sanalista)
 # via `include!` from `OUT_DIR`. The tools crate re-exports the lib's API
 # surface, so the same runtime types are needed here. phf_codegen is *not*

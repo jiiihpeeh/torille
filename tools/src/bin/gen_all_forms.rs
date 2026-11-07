@@ -3,7 +3,7 @@
 //!
 //! The dump is the input to `build.rs`'s fast form subset (bare lemmas and
 //! genitive singulars). It is local and gitignored; the committed artifact is
-//! `maps/all_forms.bin`. Keeping the dump in step with the engine is what
+//! `maps/all_forms.bin.gz`. Keeping the dump in step with the engine is what
 //! stops a fixed inflection bug from leaving its old invented surfaces in the
 //! fast set.
 //!

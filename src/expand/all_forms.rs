@@ -27,14 +27,14 @@ use crate::expand::static_table::StaticSet;
 /// The embedded form subset. Built by `build.rs` from
 /// `data/all_forms.csv`.
 ///
-/// The blob is checked in at `maps/all_forms.bin` so a
+/// The blob is checked in at `maps/all_forms.bin.gz` so a
 /// fresh `cargo build` just `include_bytes!`s it; `build.rs`
 /// overwrites it on CSV change. A probe is a binary search over the
 /// front-coded keys (no phf table, no per-key literal).
 pub static FORM_SET: StaticSet = StaticSet::new(include_bytes!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/maps/all_forms.bin",
-)));
+        env!("OUT_DIR"),
+        "/all_forms.bin",
+    )));
 
 /// True if `word` is in the embedded form subset.
 pub fn is_known_inflected_form(word: &str) -> bool {

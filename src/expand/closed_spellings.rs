@@ -40,7 +40,6 @@ const CLOSED: &[(&str, &str)] = &[
     ("suurkaanin", "suurkaani"),
     ("tienpuoleen", "tie"),
     ("unhotusta", "unhotus"),
-    ("uupuneemmaksi", "uupua"),
     ("ventovieraita", "vieras"),
     ("yhtäkaikki", "kaikki"),
     ("ylhäältäpäin", "ylhäältä"),

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT OR Apache-2.0
-"""Write `maps/oi_plural_lemmas.bin`: the class-10 words whose
+"""Write `maps/oi_plural_lemmas.bin.gz`: the class-10 words whose
 reference paradigm confirms the alternative `-oi-` plural.
 
 Class 10's plural stem changes the final `a`/`ä` to `i` (`koira` -> `koiri`,
@@ -19,6 +19,7 @@ The output is a sorted `DER1` set (see `src/expand/blob.rs`), read by
 
 from __future__ import annotations
 
+import gzip
 import sqlite3
 import struct
 import sys
@@ -26,7 +27,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 DB = REPO / "data" / "kotus_nomines.sqlite"
-OUT = REPO / "maps" / "oi_plural_lemmas.bin"
+OUT = REPO / "maps" / "oi_plural_lemmas.bin.gz"
 
 
 def oi_stem(lemma: str) -> str | None:
@@ -63,8 +64,10 @@ def main() -> int:
     out += struct.pack(f"<{len(offsets)}I", *offsets)
     out += key_bytes
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_bytes(bytes(out))
-    print(f"{OUT.relative_to(REPO)}: {len(keys)} lemmas, {len(out)} bytes")
+    OUT.write_bytes(gzip.compress(bytes(out), compresslevel=9, mtime=0))
+    print(
+        f"{OUT.relative_to(REPO)}: {len(keys)} lemmas, {len(out)} bytes uncompressed"
+    )
     return 0
 
 

@@ -78,8 +78,8 @@ mod degrees {
     /// `positive -> [comparative, superlative]`. An absent degree is an
     /// empty string, so the two cells stay positional.
     pub static ADJ_DEGREES: StemMap = StemMap::new(include_bytes!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/maps/adj_degrees.bin",
+        env!("OUT_DIR"),
+        "/adj_degrees.bin",
     )));
 }
 
@@ -1065,6 +1065,32 @@ mod tests {
             "edistyneemmät",
             "edistynein",
             "edistyneimmät",
+        ] {
+            assert!(
+                got.iter().any(|f| f.word == want),
+                "the degree {want} is not derived"
+            );
+        }
+
+        // The same rule covers the participle adjectives Kotus omits.
+        let lemma = crate::kotus::sanalista()
+            .by_word("uupunut")
+            .next()
+            .expect("uupunut is in the sanalista");
+        let inflections: Vec<Inflection> = lemma.inflections().collect();
+        let got = inflect_all(
+            lemma.word(),
+            &inflections,
+            cat,
+            None,
+            PartOfSpeech::Adjective,
+            false,
+        );
+        for want in [
+            "uupuneempi",
+            "uupuneemmaksi",
+            "uupunein",
+            "uupuneimmat",
         ] {
             assert!(
                 got.iter().any(|f| f.word == want),

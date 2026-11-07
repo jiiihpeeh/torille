@@ -25,8 +25,8 @@ mod table {
     /// Negation fusions and finite auxiliaries: form -> lemma, recorded by
     /// `tools/oracle/build_verb_lexicon.py`.
     pub static CONNECTIVES: StemMap = StemMap::new(include_bytes!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/maps/connectives.bin",
+        env!("OUT_DIR"),
+        "/connectives.bin",
     )));
 }
 

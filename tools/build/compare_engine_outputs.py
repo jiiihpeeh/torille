@@ -35,6 +35,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import gzip
 import shutil
 import subprocess
 import sys
@@ -144,7 +145,7 @@ def report(
 
 def decode_front_coded_set(path: Path) -> set[str]:
     """Decode an `SST2` front-coded set blob into its keys."""
-    blob = path.read_bytes()
+    blob = gzip.decompress(path.read_bytes()) if path.suffix == ".gz" else path.read_bytes()
     if blob[:4] != b"SST2":
         raise ValueError(f"{path}: not an SST2 set blob")
     count = int.from_bytes(blob[4:8], "little")
@@ -212,7 +213,7 @@ def compare_all_forms(tmp: Path, strict: bool) -> bool:
         rows = len(lines(committed_csv))
     else:
         # The committed artifact is the blob; decode the subset it holds.
-        old = decode_front_coded_set(REPO / "maps" / "all_forms.bin")
+        old = decode_front_coded_set(REPO / "maps" / "all_forms.bin.gz")
         rows = 0
     new = engine_form_subset(engine_csv)
     ok = report(

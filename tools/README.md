@@ -87,7 +87,7 @@ python3 tools/oracle/build_oi_plural_lemmas.py   # class-10 -oi- plural set (ora
 ```
 
 `gen_derived` writes `maps/derived_{by_form,nominal,modifiers}.bin`
-and `maps/pronoun_forms.bin`, and is the one generator that must run
+and `maps/pronoun_forms.bin.gz`, and is the one generator that must run
 with the engine, because the tables are built by `expand::derived::compute` and
 `expand::check_normal::compute_pronoun_forms`. Commit the blobs;
 `expand::derived::tests::the_blobs_match_compute` and

@@ -154,8 +154,8 @@ impl Catalogues {
         static EMBEDDED: std::sync::OnceLock<Catalogues> = std::sync::OnceLock::new();
         EMBEDDED.get_or_init(|| {
             Self::from_bytes(include_bytes!(concat!(
-                env!("CARGO_MANIFEST_DIR"),
-                "/maps/catalogue.bin",
+                env!("OUT_DIR"),
+                "/catalogue.bin",
             )))
         })
     }

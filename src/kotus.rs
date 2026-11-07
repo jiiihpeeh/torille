@@ -310,9 +310,10 @@ pub fn read_sanalista(path: impl AsRef<Path>) -> std::io::Result<String> {
 mod generated {
     //! The lexicon as `build.rs` precomputed it. See the crate's `build.rs`.
     //!
-    //! One artefact is committed to `maps/`: `sanalista.bin`, the
+    //! One artefact is committed to `maps/`: `sanalista.bin.gz`, the
     //! record blob (per-row records, headword strings, inflections, POS table,
-    //! homonym side map, `WORD_ORDER`, `TAIL_ORDER`). Embedded here as `BLOB`.
+    //! homonym side map, `WORD_ORDER`, `TAIL_ORDER`), gzip-compressed and
+    //! decompressed once on first access by [`blob`].
     //!
     //! The blob's section layout (see `build.rs` for the canonical diagram):
     //!
@@ -333,8 +334,8 @@ mod generated {
     //!   [..]                    TAIL_ORDER (u32 array, N)
     //! ```
     pub static BLOB: &[u8] = include_bytes!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/maps/sanalista.bin",
+        env!("OUT_DIR"),
+        "/sanalista.bin",
     ));
 }
 
@@ -517,7 +518,7 @@ impl EmbeddedLemma {
 
 /// The embedded sanalista: the lexicon, parsed at build time.
 ///
-/// The string fields borrow from `maps/sanalista.bin`
+/// The string fields borrow from `maps/sanalista.bin.gz`
 /// (`include_bytes!`'d into `.rodata`), and the inflection codes
 /// live in the same blob. No data file at run time, no parse on
 /// the way there. The expensive part -- splitting 104 743 rows

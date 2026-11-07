@@ -18,7 +18,7 @@ keeps its own terms.
 | `build_catalogue_csv.py` | both oracle dbs | `data/catalogue.csv` |
 | `build_adverbi_forms.py` | Voikko | `data/adverbit.csv` |
 | `build_proper_name_forms.py` | Omorfi | `data/proper_name_forms.csv` |
-| `build_oi_plural_lemmas.py` | noun oracle | `maps/oi_plural_lemmas.bin` |
+| `build_oi_plural_lemmas.py` | noun oracle | `maps/oi_plural_lemmas.bin.gz` |
 | `build_class6_i_plural.py` | noun oracle | `src/expand/nominals/class_6_i_plural.rs` |
 | `build_class15_long_partitive.py` | noun oracle | `src/expand/nominals/class_15_long_partitive.rs` |
 | `extract_class_rules.py` | noun oracle | `rules/`, `src/expand/nominals/` |

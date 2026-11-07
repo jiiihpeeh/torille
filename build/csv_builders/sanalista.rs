@@ -169,7 +169,7 @@ pub(crate) fn build_sanalista_blob(rows: &[Row<'_>], order: &[u32]) -> Vec<u8> {
 }
 /// Parses the rows of `text` and builds the sanalista blob.
 ///
-/// **Blob layout** (`maps/sanalista.bin`):
+/// **Blob layout** (`maps/sanalista.bin.gz`):
 ///
 /// ```text
 ///   0  u32 magic "SAN2"

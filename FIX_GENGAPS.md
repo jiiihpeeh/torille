@@ -268,7 +268,7 @@ verb map loses no base except the connectives handled in G3; the affected
   leaving them accepted would also hide the standard spelling from the
   suggester.
 - `inflect hälyyttää` emits 1 254 forms, `rationoida` 1 247;
-  `maps/sanalista.bin` is regenerated. A test pins both paradigms and the
+  `maps/sanalista.bin.gz` is regenerated. A test pins both paradigms and the
   six rejections.
 - The verb stem map is still the oracle output (G3); once it moves to the
   engine, these two bases are no longer lost.
@@ -284,7 +284,7 @@ inflection engine.
 
 **Root cause.** The negation verb is a closed paradigm the engine does not
 emit as single-word forms; the fusions live in `data/verb_connectives.csv`
-(`maps/connectives.bin`).
+(`maps/connectives.bin.gz`).
 
 **Fix.**
 
@@ -357,7 +357,7 @@ harness gates pass.
 **Status 2026-11-05 — done.**
 
 `data/all_forms.csv` is a local, gitignored dump; the committed artifact is
-`maps/all_forms.bin`. `compare_engine_outputs.py` now decodes the `SST2`
+`maps/all_forms.bin.gz`. `compare_engine_outputs.py` now decodes the `SST2`
 blob and compares the *subset* `build.rs` keeps, not the whole dump.
 
 The audit over the old blob found 205 lost keys, 29 of them Voikko-confirmed:
@@ -421,7 +421,7 @@ forms. Regenerating them from the engine would erase the facts:
 
 | table | why it is lexical |
 |---|---|
-| `maps/oi_plural_lemmas.bin` | class-10 lemmas whose `ok='both'` paradigm has `-oi-` plurals; `alkaja` is the same class without one (`AGENTS.md`) |
+| `maps/oi_plural_lemmas.bin.gz` | class-10 lemmas whose `ok='both'` paradigm has `-oi-` plurals; `alkaja` is the same class without one (`AGENTS.md`) |
 | class-6 `-iden/-itten/-ita` mask | per-lemma exception to the class-6 plural |
 | class-15 long partitive set | per-lemma exception |
 | `data/adverbit.csv` | `-ksi` adverbs with possessive forms Omorfi does not generate and the engine does not derive |
@@ -466,7 +466,7 @@ superlative = next(w for w in nom if w.endswith("in") and w not in (lemma, compa
 ```
 
 Keep the adjective + pronoun lemma set (the `usea` note). Regenerate
-`data/adj_degrees.csv`, `maps/adj_degrees.bin` and the tests.
+`data/adj_degrees.csv`, `maps/adj_degrees.bin.gz` and the tests.
 
 **Exit.** `data/adj_degrees.csv` contains every previously committed cell plus
 the productive degrees; `cargo test --release --workspace` passes; the

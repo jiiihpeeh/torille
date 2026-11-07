@@ -21,9 +21,9 @@ engine's MIT/Apache-2.0 license.
 
 | file | producer | used by |
 |---|---|---|
-| `adj_degrees.csv` | `gen_adj_degrees` (Rust bin) | `maps/adj_degrees.bin` |
-| `stem_to_base_map.csv` | `gen_stem_map_noun` (Rust bin) | `maps/stem_map_noun.bin` |
-| `verb_stem_to_base_map.csv` | `gen_stem_map_verb` (Rust bin) | `maps/stem_map_verb.bin` |
+| `adj_degrees.csv` | `gen_adj_degrees` (Rust bin) | `maps/adj_degrees.bin.gz` |
+| `stem_to_base_map.csv` | `gen_stem_map_noun` (Rust bin) | `maps/stem_map_noun.bin.gz` |
+| `verb_stem_to_base_map.csv` | `gen_stem_map_verb` (Rust bin) | `maps/stem_map_verb.bin.gz` |
 
 Regenerate with the engine binding, then `cargo build -p torille`. Do not
 hand-edit; `tools/build/compare_engine_outputs.py --strict` is the check.
@@ -53,7 +53,7 @@ committed files are what a build uses.
 | `kotus-tyypit.txt` | Kotus reference document; must not be redistributed |
 
 `data/all_forms.csv` is a local dump (the committed artifact is
-`maps/all_forms.bin`) and is ignored too. `git status --ignored data` should
+`maps/all_forms.bin.gz`) and is ignored too. `git status --ignored data` should
 show only these files.
 
 ## What not to put here

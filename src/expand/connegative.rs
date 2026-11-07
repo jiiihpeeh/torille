@@ -21,8 +21,8 @@ mod table {
     /// Bare verb connegatives: form -> lemma, derived by
     /// `tools/oracle/build_verb_lexicon.py`.
     pub static CONNEGATIVES: StemMap = StemMap::new(include_bytes!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/maps/connegatives.bin",
+        env!("OUT_DIR"),
+        "/connegatives.bin",
     )));
 }
 
