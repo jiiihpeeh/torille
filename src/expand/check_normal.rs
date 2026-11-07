@@ -1744,7 +1744,7 @@ mod tests {
             ("tilkitsijän", "tilkitsijä"),
             ("haltuunsa", "haltuun"),
             ("viittovan", "viittoa"),
-            ("erkanivat", "erkaantua"),
+            ("erkanivat", "erkanee"),
             ("tuontuosta", "tuosta"),
             ("tuontuostakin", "tuosta"),
             ("raamatunlauseet", "lause"),

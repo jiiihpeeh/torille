@@ -107,6 +107,9 @@ use super::utility::strong_base_of;
 
 /// Inflect a class-72 verb into its whole paradigm.
 pub fn inflect(lemma: &str, gradation: Option<Gradation>) -> Vec<Form> {
+    if lemma == "erkanee" {
+        return inflect_erkanee();
+    }
     let base = base_of(lemma);
     let strong = strong_base_of(base, gradation);
     // The present and the past are the strong base with the type's own `ne`
@@ -136,4 +139,103 @@ pub fn inflect(lemma: &str, gradation: Option<Gradation>) -> Vec<Form> {
     s.p_cons = PassiveCons::Geminated;
     s.inf2_stem = format!("{base}te");
     paradigm(&s)
+}
+
+/// `erkanee` is the *Dictionary of Contemporary Finnish*'s headword for the
+/// defective `erata` ("to diverge"): the weak `era-` forms are nonstandard,
+/// so Kotus files the verb under the strong 3rd person. The erkane- stem
+/// supplies the finite active present, past, conditional, the imperative's
+/// second person, the 3rd-5th infinitives and the active participles; the
+/// missing cells are supplanted from `erkaantua`.
+///
+/// The whole paradigm is therefore one `Stems` with a hybrid set of stems:
+/// the present/past/conditional and the nominal non-finites on `erkane`/
+/// `erkan`, while the potential, imperative plurals, passive and 1st-2nd
+/// infinitives run on `erkaantu`/`erkaannu`. See the Wiktionary `erata`
+/// entry's manual conjugation table.
+fn inflect_erkanee() -> Vec<Form> {
+    let mut s = Stems::with_past("erkaantua", "erkane", "erkan", None);
+    // The conditional follows the past's `erkan` (`erkanisin`), not the
+    // present theme.
+    s.cond_stem = "erkan".to_string();
+    // The supplanted cells come from `erkaantua`: potential `erkaantunen`,
+    // past participle `erkaantunut`, imperative plurals `erkaantukaa`.
+    s.pot = Alt::n("erkaantu");
+    s.past_part = Alt::n("erkaantu");
+    s.imp_stem = "erkaantu".to_string();
+    s.p_theme = "erkaannu".to_string();
+    s.inf2_stem = "erkaantue".to_string();
+    paradigm(&s)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn has(lemma: &str, gradation: Option<Gradation>, word: &str) -> bool {
+        inflect(lemma, gradation)
+            .into_iter()
+            .any(|form| form.word == word)
+    }
+
+    #[test]
+    fn erkanee_is_the_defective_erata_paradigm() {
+        // Present/past/conditional on erkane-.
+        for want in [
+            "erkanen",
+            "erkanet",
+            "erkanee",
+            "erkanemme",
+            "erkanette",
+            "erkanevat",
+            "erkanin",
+            "erkanit",
+            "erkani",
+            "erkanimme",
+            "erkanitte",
+            "erkanivat",
+            "erkanisin",
+            "erkanisi",
+            "erkanisivat",
+            "erkane",
+            "erkanemassa",
+            "erkanemasta",
+            "erkanemaan",
+            "erkanemalla",
+            "erkanematta",
+            "erkaneman",
+            "erkaneminen",
+            "erkanemaisillaan",
+            "erkaneva",
+            "erkanema",
+            "erkanematon",
+        ] {
+            assert!(has("erkanee", None, want), "erkanee should have {want}");
+        }
+        // The missing cells are supplanted from erkaantua.
+        for want in [
+            "erkaantua",
+            "erkaantuessa",
+            "erkaantuen",
+            "erkaantunen",
+            "erkaantunee",
+            "erkaantukaamme",
+            "erkaantukaa",
+            "erkaantukoot",
+            "erkaannutaan",
+            "erkaannuttiin",
+            "erkaannuttaisiin",
+            "erkaannuttaneen",
+            "erkaannuttakoon",
+            "erkaantunut",
+            "erkaantuneet",
+            "erkaannuttu",
+            "erkaannuttava",
+        ] {
+            assert!(has("erkanee", None, want), "erkanee should have {want}");
+        }
+        // The class's ordinary `-ne-` present must not leak in.
+        assert!(!has("erkanee", None, "erkaneene"));
+        assert!(!has("erkanee", None, "erkaneenut"));
+    }
 }

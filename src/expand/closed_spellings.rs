@@ -15,7 +15,6 @@ const CLOSED: &[(&str, &str)] = &[
     ("alhaaltapäin", "alhaalta"),
     ("edeltäkäsin", "edeltä"),
     ("enemmittä", "enempi"),
-    ("erkanivat", "erkaantua"),
     ("hiljempaa", "hiljaa"),
     ("honkasien", "honkanen"),
     ("itsekunkin", "itse"),
