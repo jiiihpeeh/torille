@@ -1737,7 +1737,7 @@ mod tests {
             ("eteensä", "eteen"),
             ("tapasin", "tavata"),
             ("karitonta", "kariton"),
-            ("siunatumpia", "siunata"),
+            ("siunatumpia", "siunattu"),
             ("suurkaanin", "suurkaani"),
             ("helmettömiä", "helmetön"),
             ("sointuvinta", "sointuvin"),

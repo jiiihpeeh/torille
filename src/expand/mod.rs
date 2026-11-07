@@ -1073,6 +1073,33 @@ mod tests {
         }
     }
 
+    /// A `-ttu`/`-tty` passive participle used as an adjective compares on
+    /// the `-tu` stem: `siunattu` -> `siunatumpi`/`siunatuin`, like
+    /// `kirottu` and `haluttu`.
+    #[test]
+    fn a_ttu_participle_adjective_derives_its_degree_paradigm() {
+        let cat = Catalogues::embedded();
+        let lemma = crate::kotus::sanalista()
+            .by_word("siunattu")
+            .next()
+            .expect("siunattu is in the sanalista");
+        let inflections: Vec<Inflection> = lemma.inflections().collect();
+        let got = inflect_all(
+            lemma.word(),
+            &inflections,
+            cat,
+            None,
+            PartOfSpeech::Adjective,
+            false,
+        );
+        for want in ["siunatumpi", "siunatumpia", "siunatuin", "siunatuimmat"] {
+            assert!(
+                got.iter().any(|f| f.word == want),
+                "the degree {want} is not derived"
+            );
+        }
+    }
+
     /// `usea` is a pronomini in the sanalista, but Omorfi derives its
     /// degree paradigm and the table carries the row. The superlative
     /// plural `useimmat` (the reported word) has to come from the same

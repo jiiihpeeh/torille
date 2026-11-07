@@ -37,7 +37,6 @@ const CLOSED: &[(&str, &str)] = &[
     ("senjälkeen", "sen"),
     ("seuduitta", "seutu"),
     ("silloinkun", "silloin"),
-    ("siunatumpia", "siunata"),
     ("suurkaanin", "suurkaani"),
     ("tienpuoleen", "tie"),
     ("unhotusta", "unhotus"),
@@ -77,7 +76,6 @@ mod tests {
             ("kuulten", "kuulten"),
             ("loitommalla", "loitto"),
             ("selmallakaan", "selma"),
-            ("siunatumpia", "siunata"),
             ("ylhäältäpäin", "ylhäältä"),
         ] {
             assert_eq!(base(word), Some(expected), "{word}");

@@ -1904,6 +1904,7 @@ komplementaarinen	komplementaarisempi	komplementaarisin
 konditionaalinen	konditionaalisempi	konditionaalisin
 koneellinen	koneellisempi	koneellisin
 ‑koneinen	‑koneisempi	‑koneisin
+konekirjoitettu	konekirjoitetumpi	konekirjoitetuin
 konekoodinen	konekoodisempi	konekoodisin
 konemainen	konemaisempi	konemaisin
 konfutselainen	konfutselaisempi	konfutselaisin
@@ -2075,6 +2076,7 @@ kunnoton	kunnottomampi	kunnottomin
 kuohkea	kuohkeampi	kuohkein
 kuohuinen	kuohuisempi	kuohuisin
 kuolainen	kuolaisempi	kuolaisin
+kuolemaantuomittu	kuolemaantuomitumpi	kuolemaantuomituin
 kuolematon	kuolemattomampi	kuolemattomin
 kuolettava	kuolettavampi	kuolettavin
 kuolevainen	kuolevaisempi	kuolevaisin
@@ -2085,6 +2087,8 @@ kuomullinen	kuomullisempi	kuomullisin
 kuoppainen	kuoppaisempi	kuoppaisin
 ‑kuorinen	‑kuorisempi	‑kuorisin
 kuormitteinen	kuormitteisempi	kuormitteisin
+kuosiinkudottu	kuosiinkudotumpi	kuosiinkudotuin
+kuosiinneulottu	kuosiinneulotumpi	kuosiinneulotuin
 kuosikas	kuosikkaampi	kuosikkain
 kuosillinen	kuosillisempi	kuosillisin
 ‑kuosinen	‑kuosisempi	‑kuosisin
@@ -3777,6 +3781,7 @@ pätemätön	pätemättömämpi	pätemättömin
 pätevyinen	pätevyisempi	pätevyisin
 pätevä	pätevämpi	pätevin
 päällekkäinen	päällekkäisempi	päällekkäisin
+päälleliimattu	päälleliimatumpi	päälleliimatuin
 päällettäinen	päällettäisempi	päällettäisin
 päällimmäinen	päällimmäisempi	päällimmäisin
 päällinen	päällisempi	päällisin
@@ -4048,6 +4053,7 @@ rukiinen	rukiisempi	rukiisin
 ruma	rumempi	rumin
 runebergiläinen	runebergiläisempi	runebergiläisin
 ‑runkoinen	‑runkoisempi	‑runkoisin
+runko-ohjattu	runko-ohjatumpi	runko-ohjatuin
 runollinen	runollisempi	runollisin
 runoton	runottomampi	runottomin
 runsas	runsaampi	runsain
@@ -4377,6 +4383,7 @@ sitomaton	sitomattomampi	sitomattomin
 sitoutumaton	sitoutumattomampi	sitoutumattomin
 sitova	sitovampi	sitovin
 siunaamaton	siunaamattomampi	siunaamattomin
+siunattu	siunatumpi	siunatuin
 siunauksellinen	siunauksellisempi	siunauksellisin
 siveellinen	siveellisempi	siveellisin
 siveetön	siveettömämpi	siveettömin
@@ -4744,6 +4751,7 @@ taivaallinen	taivaallisempi	taivaallisin
 tajuamaton	tajuamattomampi	tajuamattomin
 tajuinen	tajuisempi	tajuisin
 tajuton	tajuttomampi	tajuttomin
+takaa-ajettu	takaa-ajetumpi	takaa-ajetuin
 takaaladattava	takaaladattavampi	takaaladattavin
 takainen	takaisempi	takaisin
 takakenoinen	takakenoisempi	takakenoisin
@@ -5178,6 +5186,7 @@ töhryinen	töhryisempi	töhryisin
 ‑töinen	‑töisempi	‑töisin
 tökerö	tökerömpi	tökeröin
 tönkkö	tönkömpi	tönköin
+tönkkösuolattu	tönkkösuolatumpi	tönkkösuolatuin
 töpö	töpömpi	töpöin
 törkeä	törkeämpi	törkein
 törkyinen	törkyisempi	törkyisin
@@ -5530,6 +5539,7 @@ viileä	viileämpi	viilein
 viimainen	viimaisempi	viimaisin
 viimeinen	viimeisempi	viimeisin
 viimeistelemätön	viimeistelemättömämpi	viimeistelemättömin
+viimemainittu	viimemainitumpi	viimemainituin
 viinainen	viinaisempi	viinaisin
 viinaton	viinattomampi	viinattomin
 viipymätön	viipymättömämpi	viipymättömin
@@ -5700,6 +5710,7 @@ väärtti	väärtimpi	väärtein
 väärä	väärempi	väärin
 yhdenlainen	yhdenlaisempi	yhdenlaisin
 yhdysvaltalainen	yhdysvaltalaisempi	yhdysvaltalaisin
+yhteenlaskettu	yhteenlasketumpi	yhteenlasketuin
 yhteinen	yhteisempi	yhteisin
 yhteismitaton	yhteismitattomampi	yhteismitattomin
 yhteisöllinen	yhteisöllisempi	yhteisöllisin
