@@ -1506,7 +1506,7 @@ pub fn paradigm(s: &Stems) -> Vec<Form> {
         conneg(Tense::Present, Mood::Potential, Voice::Passive),
     );
     b.push_rare(
-        format!("{p_mood}ko"),
+        format!("{p_mood}{}", b.h("ko", "kö")),
         conneg(Tense::Present, Mood::Imperative, Voice::Passive),
     );
 
@@ -1523,6 +1523,23 @@ pub fn paradigm(s: &Stems) -> Vec<Form> {
             Polarity::Affirmative,
         ),
     );
+    // Long first infinitive: the translative `-kse-` with a possessive
+    // suffix (`puhuakseni`, `puhuakseen`). It has no bare form; every cell
+    // is possessed, and the third person is the short `-kseen` or the long
+    // `-ksensa`/`-ksensä`.
+    b.possess_translative(format!("{}ks", s.lemma), |poss| {
+        let mut t = verb_tags(
+            None,
+            Some(Mood::Infinitive),
+            None,
+            Some(Number::Singular),
+            Some(Voice::Active),
+            Some(Case::Translative),
+            Polarity::Affirmative,
+        );
+        t.possessive = Some(poss);
+        t
+    });
     // 2nd: `inf2_stem`, usually the present stem's own `-e` stem, in the
     // inessive, with possessives, and the passive stem in the inessive bare
     // (`puhuttaessa`); the instructive is bare. Class 58's is the `i`-stem's
@@ -1747,6 +1764,21 @@ pub fn paradigm(s: &Stems) -> Vec<Form> {
         .as_ref()
         .map(|alt| format!("{}{}e", alt.stem, alt.lead));
     let imper_conneg = format!("{}{}", s.imp_stem, b.h("ko", "kö"));
+    // The reference also lists the potential and imperative connegatives as
+    // surfaces of their own (`vetäne`, `vetäkö`). They occur only after the
+    // negative auxiliary, so they are repaired like the passive connegatives
+    // and never offered as corrections. Class 76's primary potential stem is
+    // the one that collides with another word (`tienne` = `tie` + `-nne`), so
+    // its theme-stem alternant is the spelling a bare word may use.
+    let pot_surface = pot_conneg_alt.as_ref().unwrap_or(&pot_conneg);
+    b.push_rare(
+        pot_surface.clone(),
+        conneg(Tense::Present, Mood::Potential, Voice::Active),
+    );
+    b.push_rare(
+        imper_conneg.clone(),
+        conneg(Tense::Present, Mood::Imperative, Voice::Active),
+    );
     compound::emit(
         &mut b,
         &compound::Parts {

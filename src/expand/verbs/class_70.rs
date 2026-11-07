@@ -243,7 +243,10 @@ mod tests {
                     format!("{t}{u}"),
                     format!("{pm}isi"),
                     format!("{pm}ne"),
-                    format!("{pm}ko"),
+                    format!(
+                        "{pm}k{}",
+                        if a == 'ä' { "ö" } else { "o" }
+                    ),
                     format!("{t}{u}{a}"),
                     format!("{t}{u}{u}n"),
                     format!("{t}{u}n"),

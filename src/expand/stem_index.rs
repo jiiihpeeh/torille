@@ -51,7 +51,7 @@ use std::sync::OnceLock;
 use crate::expand::inflect_all;
 use crate::kotus::parse_sanalista;
 use crate::spec::Catalogues;
-use crate::tags::PartOfSpeech;
+use crate::tags::{Confidence, PartOfSpeech};
 
 /// Common Finnish case / number / clitic endings, longest first.
 ///
@@ -183,6 +183,11 @@ pub fn find_base_via_stem_index(
     lexicon: &[crate::kotus::Lemma],
 ) -> Option<String> {
     let idx = stem_index();
+    // A repaired form is only a fallback: `vedelle` is the plain allative of
+    // `vesi`, but it is also a repaired potential connegative of the verb
+    // `vedellä`, and the noun reading must win whichever candidate the hash
+    // set visits first.
+    let mut repaired: Option<String> = None;
     for ending in ENDINGS {
         let Some(stem) = word.strip_suffix(ending) else { continue };
         if stem.is_empty() { continue }
@@ -206,12 +211,18 @@ pub fn find_base_via_stem_index(
                 PartOfSpeech::Noun,
                 false,
             );
-            if forms.iter().any(|f| f.word == word) {
-                return Some(lemma.word.to_string());
+            for form in &forms {
+                if form.word != word {
+                    continue;
+                }
+                if form.confidence == Confidence::Plain {
+                    return Some(lemma.word.to_string());
+                }
+                repaired.get_or_insert_with(|| lemma.word.to_string());
             }
         }
     }
-    None
+    repaired
 }
 
 /// Rough upper bound for the (stem, lemma) pair count, used to

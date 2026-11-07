@@ -313,7 +313,7 @@ mod tests {
                     format!("{tt}{u}"),
                     format!("{pm}isi"),
                     format!("{pm}ne"),
-                    format!("{pm}ko"),
+                    format!("{pm}{}", if front(lemma) { "kö" } else { "ko" }),
                     // The `-tu` participle: geminated in the nominative and the
                     // cases that keep it, with a single `t` in the oblique.
                     format!("{tt}{u}{a}"),

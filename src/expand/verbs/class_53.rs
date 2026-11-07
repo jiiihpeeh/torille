@@ -118,6 +118,23 @@ mod tests {
     }
 
     #[test]
+    fn the_long_infinitive_and_connegatives_are_named() {
+        // `vetää` is `53*F` (t <-> d); the long first infinitive keeps the
+        // infinitive's own `t`, and the negative moods name their bare
+        // connegative as well as the phrase.
+        for want in [
+            "vetääkseni",
+            "vetääksemme",
+            "vetääkseen",
+            "vetääksensä",
+            "vetäne",
+            "vetäkö",
+        ] {
+            assert!(has_g("vetää", 'F', want), "vetää should have {want}");
+        }
+    }
+
+    #[test]
     fn finite_active() {
         for want in [
             "aakkostan",

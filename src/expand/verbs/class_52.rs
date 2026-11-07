@@ -108,6 +108,36 @@ mod tests {
     }
 
     #[test]
+    fn the_long_first_infinitive_is_a_possessed_translative() {
+        for form in [
+            "puhuakseni",
+            "puhuaksemme",
+            "puhuakseen",
+            "puhuaksensa",
+        ] {
+            assert!(has("puhua", form), "{form}");
+        }
+        for form in ["kysyäkseni", "kysyäkseen", "kysyäksensä"] {
+            assert!(has("kysyä", form), "{form}");
+        }
+    }
+
+    #[test]
+    fn passive_imperative_connegative_harmonises() {
+        assert!(has("puhua", "puhuttako"));
+        assert!(has("kysyä", "kysyttäkö"));
+        assert!(has("nyrpistyä", "nyrpistyttäkö"));
+    }
+
+    #[test]
+    fn the_negative_moods_also_name_their_connegative() {
+        assert!(has("nyrpistyä", "nyrpistyne"));
+        assert!(has("nyrpistyä", "nyrpistykö"));
+        assert!(has("puhua", "puhune"));
+        assert!(has("puhua", "puhuko"));
+    }
+
+    #[test]
     fn gradated_tytyy_has_f_alternation() {
         // The exception forces `täytyä` to gradation `F` (t <-> d).
         assert!(has("täytyä", "täytyi"));
