@@ -334,6 +334,52 @@ pub fn pronoun_base(word: &str) -> Option<&'static str> {
         .copied()
 }
 
+/// Every surface of an adverb with a possessive suffix, mapped to the adverb.
+///
+/// `keskenään` -> `keskenämme`, `keskenäni`, ... The class-99 adverb paradigm
+/// emits these, but the fast path cannot re-inflect every adverb; the map is
+/// the same bounded form as the pronoun table. `gen_derived` writes it.
+pub fn compute_adverb_possessive_forms() -> HashMap<String, &'static str> {
+    let mut map = HashMap::new();
+    for lemma in lex() {
+        if !lemma.inflections.iter().any(|i| i.class == 99) {
+            continue;
+        }
+        let readings = PartOfSpeech::parse_all(lemma.part_of_speech);
+        if !readings.contains(&PartOfSpeech::Adverb) {
+            continue;
+        }
+        for form in inflect_all(
+            lemma.word,
+            &lemma.inflections,
+            cat(),
+            None,
+            PartOfSpeech::Adverb,
+            false,
+        ) {
+            if form.union().possessive.is_some() {
+                map.entry(form.word).or_insert(lemma.word);
+            }
+        }
+    }
+    map
+}
+
+static ADVERB_POSSESSIVE: OnceLock<Blob> = OnceLock::new();
+
+const ADVERB_POSSESSIVE_BIN: &[u8] = include_bytes!(concat!(
+    env!("OUT_DIR"),
+    "/adverb_possessive.bin",
+));
+
+/// The adverb lemma a possessive form belongs to (`keskenämme` ->
+/// `keskenään`), if the table has it.
+pub fn adverb_possessive_base(word: &str) -> Option<&'static str> {
+    let blob = crate::expand::blob::cell(&ADVERB_POSSESSIVE, ADVERB_POSSESSIVE_BIN);
+    let index = blob.find(word)?;
+    Some(blob.value(index))
+}
+
 /// The lemma of a tabulated adverbial form (`torkuksissa` -> `torkku`).
 ///
 /// The table is the same one gate 1b probes; exposing it lets the compound
@@ -574,6 +620,12 @@ fn cheap_derived_base(word: &str) -> Option<String> {
     {
         return Some(base);
     }
+    // Any adjective/adverb degree surface (`enemmittä` from `enempi`,
+    // `loitommalla` from `loitto`, `hiljempaa` from `hiljaa`). The reverse
+    // map is generated from the engine's degree paradigms.
+    if let Some(base) = crate::expand::degree_base(&lower) {
+        return Some(base.to_string());
+    }
     crate::expand::derived_agent_base(&lower, cat(), None)
 }
 
@@ -621,6 +673,16 @@ fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> Normalized
         return NormalizedOutcome::Inflected {
             base: base.to_string(),
             gate: "closed spelling",
+        };
+    }
+
+    // A possessive on an adverb (`keskenämme` -> `keskenään`). The generic
+    // possessive stripper lands on `keskenä`, which is not a lemma, so the
+    // small generated form map names the adverb.
+    if let Some(base) = adverb_possessive_base(&word.to_lowercase()) {
+        return NormalizedOutcome::Inflected {
+            base: base.to_string(),
+            gate: "adverb possessive",
         };
     }
 
@@ -1330,6 +1392,9 @@ fn find_through_possessive(host: &str, verbose: bool) -> Option<(String, &'stati
         if let Some(base) = find_base_via_verb_stem_map(inner, verbose) {
             return Some((base, "possessive of verb"));
         }
+        if let Some(base) = crate::expand::degree_base(inner) {
+            return Some((base.to_string(), "possessive of degree"));
+        }
         if crate::kotus::sanalista().by_word(inner).next().is_some() {
             return Some((inner.to_string(), "possessive of lemma"));
         }
@@ -1361,6 +1426,26 @@ mod tests {
             blob.iter().count(),
             computed.len(),
             "the pronoun blob has a different size"
+        );
+    }
+
+    /// The committed possessive-adverb blob is the computation's own table.
+    #[test]
+    fn the_adverb_possessive_blob_matches_compute() {
+        let computed = compute_adverb_possessive_forms();
+        assert!(!computed.is_empty());
+        for (surface, lemma) in &computed {
+            assert_eq!(
+                adverb_possessive_base(surface),
+                Some(*lemma),
+                "{surface}"
+            );
+        }
+        let blob = crate::expand::blob::cell(&ADVERB_POSSESSIVE, ADVERB_POSSESSIVE_BIN);
+        assert_eq!(
+            blob.iter().count(),
+            computed.len(),
+            "the adverb-possessive blob has a different size"
         );
     }
 
@@ -1694,9 +1779,9 @@ mod tests {
     #[test]
     fn fast_variant_accepts_the_reported_missing_words() {
         for (word, base) in [
-            ("ilkialastomina", "alaston"),
+            ("ilkialastomina", "ilkialaston"),
             ("alastomia", "alaston"),
-            ("kristinuskon", "usko"),
+            ("kristinuskon", "kristinusko"),
             ("liplatteli", "liplatella"),
             ("töräytytteli", "töräytytellä"),
             ("aikaansaamiseksi", "aikaansaaminen"),
@@ -1705,7 +1790,7 @@ mod tests {
             ("eteemme", "eteen"),
             ("uupuneemmaksi", "uupunut"),
             ("hoputtelemaan", "hoputella"),
-            ("savupatsasten", "patsas"),
+            ("savupatsasten", "savupatsas"),
             ("valjaisiin", "valjaat"),
             ("ryntääjät", "ryntääjä"),
             ("livahtelivat", "livahtella"),
@@ -1719,8 +1804,8 @@ mod tests {
             ("huostaansa", "huosta"),
             ("ohimennessään", "mennä"),
             ("käräjiä", "käräjät"),
-            ("käräjätuvissa", "tupa"),
-            ("toimeenpanijat", "panija"),
+            ("käräjätuvissa", "käräjätupa"),
+            ("toimeenpanijat", "toimeenpanija"),
             ("keskenämme", "keskenään"),
             // `kaksikymmen` is the combining stem of `kaksikymmentä`; its
             // head is the bound `‑vuotias` (class 41).
@@ -1741,11 +1826,11 @@ mod tests {
             ("katajankaarekselle", "kaares"),
             ("torkuksiin", "torkkua"),
             ("puolitorkuksiin", "torkkua"),
-            ("toiviomatkan", "matka"),
-            ("toiviomatkalla", "matka"),
-            ("toivioretkellä", "retki"),
-            ("toivioretkiä", "retki"),
-            ("synnyinseudullaan", "seutu"),
+            ("toiviomatkan", "toiviomatka"),
+            ("toiviomatkalla", "toiviomatka"),
+            ("toivioretkellä", "toivioretki"),
+            ("toivioretkiä", "toivioretki"),
+            ("synnyinseudullaan", "synnyinseutu"),
             ("muistotonta", "muistoton"),
             ("sammalpäisten", "sammalpäinen"),
             ("pengermittäin", "pengertää"),
@@ -1756,7 +1841,7 @@ mod tests {
             ("Väinämöinen", "Väinämöinen"),
             ("saksilla", "sakset"),
             ("tungeskeleva", "tungeskella"),
-            ("hölynpölyä", "pöly"),
+            ("hölynpölyä", "hölynpöly"),
             ("mitattomien", "mitaton"),
             ("mittaamattomien", "mittaamaton"),
             ("eteensä", "eteen"),
@@ -1772,7 +1857,7 @@ mod tests {
             ("erkanivat", "erkanee"),
             ("tuontuosta", "tuosta"),
             ("tuontuostakin", "tuosta"),
-            ("raamatunlauseet", "lause"),
+            ("raamatunlauseet", "raamatunlause"),
             ("juhlatamineitaan", "tamineet"),
             ("lehdetön", "lehdetön"),
             ("kahdenkesken", "kesken"),

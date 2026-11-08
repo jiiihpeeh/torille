@@ -50,7 +50,7 @@ Read-only probes on the current tree (`inflect(base)`, `look_base`,
 
 ## Progress (2026-11-08)
 
-Removed from `CLOSED` (32 → 11 rows):
+Removed from `CLOSED` (32 → 6 rows):
 
 - [x] `edeltäkäsin`, `itsekunkin`, `niinkauan`, `senjälkeen`, `silloinkun`,
       `yhtäkaikki` — Kotus two-word spellings; moved to `is_nonword`.
@@ -75,6 +75,15 @@ Removed from `CLOSED` (32 → 11 rows):
 - [x] `ventovieraita` — `ventovieras` is `vento` + `vieras`; `vento` has no
       lemma row, so the compound layer now accepts it as an opaque bound
       modifier.
+- [x] `enemmittä`, `loitommalla` — generated reverse-degree map
+      (`maps/degree_forms.bin.gz`); `enempi` is covered as a comparative
+      lemma, `loitto` by a curated `adj_degrees_extra.csv` row.
+- [x] `hiljempaa` — curated `data/adverb_degrees.csv`, emitted by the engine
+      and included in the reverse-degree map.
+- [x] `keskenämme` — generated possessive-adverb map
+      (`maps/adverb_possessive.bin.gz`) from the class-99 paradigms.
+- [x] `suurkaanin` — fast compound naming now returns the whole classless
+      compound lemma (`suurkaani`, `raitiotie`) instead of its head.
 
 Kept after verification:
 
@@ -341,3 +350,121 @@ Additional checks:
 - [ ] Lowercase proper names stay rejected; capitalised forms still work.
 - [ ] No regression in `check_fast` latency, the harness gates, hyphenation, or
       suggestion ranking.
+
+## Infrastructure plan for the last five rows
+
+These five surfaces need shared fast-path infrastructure rather than another
+closed row. The design keeps generation in the engine, stores only a reverse
+map, and leaves the fast path bounded.
+
+### 1. A generated reverse-degree map
+
+Covers `enemmittä` (`enempi`), `loitommalla` (`loitto`) and, with the adverb
+table, `hiljempaa` (`hiljaa`).
+
+- [ ] Add a compute function in the library, e.g.
+      `expand::degrees::compute_degree_forms() -> HashMap<String, &'static str>`.
+      For every classed adjective lemma:
+  - take the comparative and superlative nominatives from `ADJ_DEGREES` plus
+    the productive `-inen`/`-kas`/`-nut`/`-ttu` fallbacks;
+  - inflect the comparative as class `16*H` and the superlative as class `36`;
+  - map each generated **case form** to the positive lemma.
+- [ ] Include comparative lemmas themselves: `enempi` is class `16*H` and is
+      its own lemma, so map all of its paradigm forms to `enempi`. This is the
+      `enemmittä` case; it is not in `ADJ_DEGREES`.
+- [ ] Write the table from `gen_derived` as `maps/degree_forms.bin.gz` using
+      the existing `DER1` writer (`torille_tools::der1::write_table`), the
+      same pattern as `pronoun_forms.bin.gz`.
+- [ ] Add the blob to the `REQUIRED`/decompress loop in `build.rs` and a
+      `the_blob_matches_compute` test in the module that owns the map.
+- [ ] Add a runtime `degree_base(word)` probe (binary search over the blob)
+      and call it in `cheap_derived_base` **after** the noun/verb stem maps
+      and **before** gate 4c's compound DP. That ordering keeps ordinary
+      noun/verb readings first and prevents the DP split from naming a
+      fragment.
+- [ ] Also consult the map from `find_through_possessive`, so a possessive
+      on a degree form (`loitommallani`) resolves without storing the whole
+      possessive column.
+- [ ] Size check: measure the blob and the wasm. If it exceeds the agreed
+      budget, switch from *all case forms* to a **stem map**: store the weak
+      stem of each degree cell (`enemmi`, `loitomma`, ...) and strip
+      `ENDINGS` before probing, as the noun/verb maps do. Start with the form
+      map; it is simpler and unambiguous.
+
+**Data gap for `loitto`:** en.wiktionary gives comparative `loitompi`, no
+superlative. Add `loitto` to `data/adj_degrees.csv`, but note that
+`gen_adj_degrees` regenerates the file from the engine and would drop a
+hand-added row. Add a small `data/adj_degrees_extra.csv` (merged by the
+generator) or an explicit override list before adding the row. Then the engine
+emits `loitommalla` from class 16 and the reverse map contains it.
+
+### 2. Adverb degree data
+
+Covers `hiljempaa` (`hiljaa`).
+
+- [ ] Add `data/adverb_degrees.csv` with
+      `lemma<TAB>comparative<TAB>superlative` and a source comment. Start with
+      `hiljaa<TAB>hiljempaa<TAB>` (en.wiktionary: comparative `hiljempaa`, no
+      superlative).
+- [ ] Emit it as a forward `StemMap` (like `ADJ_DEGREES`) and teach
+      `degree_forms` an adverb branch that emits the listed comparative as a
+      `Repaired` form of the adverb. This makes the full engine recognise it,
+      not only the fast probe.
+- [ ] Reuse the reverse-degree blob from item 1 for the fast path: the
+      compute function reads the adverb table too and maps `hiljempaa` to
+      `hiljaa`.
+- [ ] Treat the table as curated data (authority-checked), not as something
+      `gen_adj_degrees` can infer.
+
+### 3. Generated adverb-possessive map
+
+Covers `keskenämme` (`keskenään`).
+
+- [ ] Add `expand::check_normal::compute_adverb_possessive_forms()`, next to
+      `compute_pronoun_forms`. Inflect every adverb lemma whose paradigm emits
+      possessive forms (class 99: `keskenään` -> `keskenämme`, `keskenäni`,
+      ...) and map each possessive surface to its lemma.
+- [ ] Write `maps/adverb_possessive.bin.gz` from `gen_derived` (DER1
+      form -> lemma), add it to the `build.rs` loop and a compute-vs-blob
+      test.
+- [ ] Add `adverb_possessive_base(word)` and probe it in the fast path before
+      the generic possessive stripper. The generic stripper lands on
+      `keskenä`, which is not a lemma, so a dedicated form map is the
+      bounded answer.
+- [ ] Keep the map small: only forms whose `tags.possessive` is set and whose
+      part of speech is adverb.
+
+### 4. Full compound lemma naming in the fast path
+
+Covers `suurkaanin` (`suurkaani`; fast currently says `kaani`).
+
+- [ ] In the compound naming step (`is_known_compound_with` and the DP path),
+      after a split `left + right` resolves `right` to head lemma `H`, form
+      the candidate `L = left + H`. If `L` is a classless compound lemma in
+      the sanalista, return `L` instead of `H`.
+- [ ] Guard it: require the reconstructed lemma to exist, to be nominal, and
+      to have no inflection class (the Kotus classless-compound convention).
+      A regular compound (`taloilta` -> `ilta`) must still name `ilta`.
+- [ ] Reuse the reconstruction in both the general split and
+      `is_known_compound_dp`; the DP path is the one that currently names
+      `kaani` for long words.
+- [ ] Test `suurkaanin` on both paths, plus negative cases (`taloilta`,
+      `kirjahyllyssä`) to pin the head naming.
+- [ ] No new blob: this is a cheap suffix/prefix check on the existing lexicon
+      hash.
+
+### 5. Shared plumbing
+
+- [ ] New blobs use the existing `DER1` reader/writer and `build.rs`
+      decompression loop; do not add a second table format.
+- [ ] Put the runtime probes in `src/expand/degrees.rs` (degree forms) and
+      `src/expand/check_normal.rs` (adverb possessive), with the compute
+      functions public for `gen_derived` and the blob tests.
+- [ ] Regeneration order:
+      `gen_adj_degrees`, the adverb-degree/extra data, `gen_derived`,
+      `cargo build`, then `cargo run -p torille-maps -- publish`.
+- [ ] Gates: `cargo test --release --workspace`,
+      `cargo clippy --workspace --all-targets -- -D warnings`, the Python
+      harness gates, and a `check_fast` benchmark. Also record the wasm size
+      before/after (the reverse map is the only size risk).
+- [ ] After each item lands, delete the row and add a full/fast parity test.

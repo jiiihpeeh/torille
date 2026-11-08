@@ -1004,6 +1004,18 @@ pub(super) fn degree_forms(
             out.push(form.with(Confidence::Repaired));
         }
     }
+    // Adverb degrees are curated rather than derived: `hiljaa` has no
+    // positive paradigm to compare, but `hiljempaa` is its comparative.
+    for form in degrees::ADVERB_DEGREES.bases(lemma) {
+        if form.is_empty() {
+            continue;
+        }
+        let tags = Tags {
+            part_of_speech: Some(PartOfSpeech::Adverb),
+            ..Default::default()
+        };
+        out.push(Generated::new(form.to_string(), tags).with(Confidence::Repaired));
+    }
     out
 }
 

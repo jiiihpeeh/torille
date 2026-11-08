@@ -204,6 +204,9 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
     if let Some(base) = crate::expand::check_normal::adverb_base(&lower) {
         return Some(base.to_string());
     }
+    if let Some(base) = crate::expand::check_normal::adverb_possessive_base(&lower) {
+        return Some(base.to_string());
+    }
 
     // 1'. Hyphenated compound spelling. This is a writing rule, not a
     //     paradigm: `linja-auto` and `EU-maat` are compounds whose parts the
@@ -653,6 +656,12 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
     if let Some(base) = crate::expand::derived_agent_base(&lower, catalogue(), None) {
         return Some(base);
     }
+    // Reverse degree index: `enemmittä` -> `enempi`, `loitommalla` ->
+    // `loitto`, `hiljempaa` -> `hiljaa`.
+    if let Some(base) = crate::expand::degree_base(&lower) {
+        return Some(base.to_string());
+    }
+
     // Productive feminine `-tar`/`-tär`: `siivooja` -> `siivoojatar`.
     if let Some(base) = crate::expand::derived_tar_base(&lower, catalogue(), None) {
         return Some(base);

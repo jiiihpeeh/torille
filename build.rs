@@ -214,6 +214,15 @@ fn main() {
         emit_adj_degrees(&degrees_csv, raw)
     });
 
+    // Adverb degrees: the curated comparative/superlative of an adverb
+    // (`hiljaa` -> `hiljempaa`). Same shape as the adjective table; the
+    // engine cannot derive these from a positive paradigm.
+    let adverb_degrees_csv = Path::new(&manifest).join("data/adverb_degrees.csv");
+    println!("cargo:rerun-if-changed={}", adverb_degrees_csv.display());
+    emit_map(&out_dir, &precomputed, "adverb_degrees.bin", |raw| {
+        emit_adj_degrees(&adverb_degrees_csv, raw)
+    });
+
     // Adverbial forms: the `-ksi` adverbs' possessives (`kylliksi` ->
     // `kylliksenne`), which Omorfi cannot generate. A form -> lemma map.
     let adverbit_csv = Path::new(&manifest).join("data/adverbit.csv");
@@ -249,6 +258,8 @@ fn main() {
         "derived_nominal.bin",
         "derived_modifiers.bin",
         "pronoun_forms.bin",
+        "degree_forms.bin",
+        "adverb_possessive.bin",
         "oi_plural_lemmas.bin",
     ] {
         let gz = precomputed.join(format!("{name}.gz"));

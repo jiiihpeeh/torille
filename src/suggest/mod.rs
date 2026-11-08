@@ -424,17 +424,17 @@ mod tests {
     #[test]
     fn reported_compounds_name_the_content_head() {
         for (word, head) in [
-            ("harvainvallat", "valta"),
-            ("harvainvallassa", "valta"),
-            ("harvainvalloin", "valta"),
+            ("harvainvallat", "harvainvalta"),
+            ("harvainvallassa", "harvainvalta"),
+            ("harvainvalloin", "harvainvalta"),
             ("tähtientutkijat", "tutkija"),
             ("henkiruumiiseenne", "ruumis"),
             ("henkivartioväki", "väki"),
             ("henkivartioväen", "väki"),
             ("henkivartioväkeä", "väki"),
             ("lentokenttäbussi", "bussi"),
-            ("raitiotiellä", "tie"),
-            ("raitioteiden", "tie"),
+            ("raitiotiellä", "raitiotie"),
+            ("raitioteiden", "raitiotie"),
             ("liittoveljiensä", "veli"),
         ] {
             assert_eq!(
@@ -1406,8 +1406,8 @@ mod tests {
         for (word, base) in [
             ("perehtyneempi", "perehtynyt"),
             ("molemmille", "molemmat"),
-            ("kyrmyniskoja", "niska"),
-            ("housuntaskuissa", "tasku"),
+            ("kyrmyniskoja", "kyrmyniska"),
+            ("housuntaskuissa", "housuntasku"),
             ("herttaisinta", "herttainen"),
             ("pihtejä", "pihdit"),
         ] {

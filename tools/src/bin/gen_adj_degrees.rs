@@ -14,7 +14,7 @@
 
 use std::collections::HashSet;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use torille::expand::LexiconIndex;
 use torille::kotus::{Lemma, lemmas, sanalista};
@@ -96,6 +96,32 @@ fn main() {
     }
 
     let mut text = String::from("positive\tcomparative\tsuperlative\n");
+    // Curated rows that the engine cannot infer from the positive itself
+    // (`loitto` -> `loitompi`). They live in a separate source file so
+    // regenerating this table does not drop them.
+    let extra = Path::new("data/adj_degrees_extra.csv");
+    let mut extra_rows: Vec<(String, String, String)> = Vec::new();
+    if let Ok(text) = fs::read_to_string(extra) {
+        for line in text.lines().skip(1) {
+            let mut cols = line.split('\t');
+            let Some(positive) = cols.next().map(str::trim).filter(|w| !w.is_empty()) else {
+                continue;
+            };
+            let comparative = cols.next().unwrap_or("").trim();
+            let superlative = cols.next().unwrap_or("").trim();
+            extra_rows.push((
+                positive.to_string(),
+                comparative.to_string(),
+                superlative.to_string(),
+            ));
+        }
+    }
+    let engine_positive: HashSet<String> = rows.iter().map(|(p, _, _)| p.clone()).collect();
+    for row in &extra_rows {
+        if !engine_positive.contains(&row.0) {
+            rows.push(row.clone());
+        }
+    }
     for (positive, comparative, superlative) in &rows {
         text.push_str(positive);
         text.push('\t');

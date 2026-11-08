@@ -4,7 +4,7 @@
 use crate::tags::PartOfSpeech;
 
 use super::derived::bound_suffix_compound_base;
-use super::stems::{compound_head_from_lemma, is_content_head};
+use super::stems::{classless_compound_whole, compound_head_from_lemma, is_content_head};
 use super::{catalogue, is_known_word_no_compound, is_known_word_with_compound, lexicon};
 
 /// Recognise a compound without running the stem-map, derivation and verb
@@ -187,7 +187,25 @@ pub(crate) fn is_known_compound_dp(word: &str) -> Option<String> {
     if word.contains('-') || word.chars().count() < 6 {
         return None;
     }
-    segment_compound_dp(&word.to_lowercase())
+    let lower = word.to_lowercase();
+    let base = segment_compound_dp(&lower)?;
+    // Name the whole classless compound (`raitiotie`, `suurkaani`) instead
+    // of its head. The DP already established a modifier + head split; try
+    // the modifier boundaries from longest to shortest.
+    let chars = lower.chars().count();
+    for split in (3..chars).rev() {
+        let byte_split = lower
+            .char_indices()
+            .nth(split)
+            .map(|(index, _)| index)?;
+        let left = &lower[..byte_split];
+        if crate::expand::modifier_is_known(left)
+            && let Some(whole) = classless_compound_whole(left, &base)
+        {
+            return Some(whole);
+        }
+    }
+    Some(base)
 }
 
 fn is_known_compound_with(word: &str, engine_fallback: bool) -> Option<String> {

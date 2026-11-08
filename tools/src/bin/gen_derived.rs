@@ -56,11 +56,40 @@ fn main() {
             .map(|(surface, lemma)| (surface.as_str(), Some(*lemma))),
     );
 
+    // Reverse degree index: degree surface -> positive/adverb lemma. The
+    // fast path needs the inverse of `adj_degrees.csv`/`adverb_degrees.csv`.
+    let mut degree_forms: Vec<(String, &'static str)> = torille::expand::compute_degree_forms()
+        .into_iter()
+        .collect();
+    degree_forms.sort_by(|a, b| a.0.cmp(&b.0));
+    write_table(
+        Path::new("maps/degree_forms.bin.gz"),
+        degree_forms
+            .iter()
+            .map(|(surface, lemma)| (surface.as_str(), Some(*lemma))),
+    );
+
+    // Possessive adverbs: `keskenämme` -> `keskenään`. The class-99 paradigm
+    // makes the forms; the fast path needs the inverse.
+    let mut adverb_possessive: Vec<(String, &'static str)> =
+        torille::expand::check_normal::compute_adverb_possessive_forms()
+            .into_iter()
+            .collect();
+    adverb_possessive.sort_by(|a, b| a.0.cmp(&b.0));
+    write_table(
+        Path::new("maps/adverb_possessive.bin.gz"),
+        adverb_possessive
+            .iter()
+            .map(|(surface, lemma)| (surface.as_str(), Some(*lemma))),
+    );
+
     println!(
-        "derived: {} forms, {} nominal, {} modifiers; {} pronouns",
+        "derived: {} forms, {} nominal, {} modifiers; {} pronouns; {} degree forms; {} adverb possessives",
         by_form.len(),
         nominal.len(),
         modifiers.len(),
-        pronouns.len()
+        pronouns.len(),
+        degree_forms.len(),
+        adverb_possessive.len()
     );
 }

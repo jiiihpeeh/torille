@@ -81,6 +81,110 @@ mod degrees {
         env!("OUT_DIR"),
         "/adj_degrees.bin",
     )));
+
+    /// The same shape for adverbs: `hiljaa -> [hiljempaa, ""]`. These are
+    /// curated because an adverb has no positive paradigm to derive from.
+    pub static ADVERB_DEGREES: StemMap = StemMap::new(include_bytes!(concat!(
+        env!("OUT_DIR"),
+        "/adverb_degrees.bin",
+    )));
+}
+
+mod degree_index {
+    //! Reverse index of derived degree surfaces: `loitommalla` -> `loitto`,
+    //! `enemmittä` -> `enempi`, `hiljempaa` -> `hiljaa`.
+    //!
+    //! The forward degree tables are per positive; the fast path has only a
+    //! surface, so it needs the inverse. `gen_derived` writes the blob from
+    //! [`super::compute_degree_forms`]; the runtime is a binary search.
+
+    use std::sync::OnceLock;
+
+    pub(super) static DEGREE_FORMS: OnceLock<crate::expand::blob::Blob> = OnceLock::new();
+
+    pub(super) const DEGREE_FORMS_BIN: &[u8] = include_bytes!(concat!(
+        env!("OUT_DIR"),
+        "/degree_forms.bin",
+    ));
+
+    /// The positive/adverb lemma a degree surface belongs to, if any.
+    pub fn base(word: &str) -> Option<&'static str> {
+        let blob = crate::expand::blob::cell(&DEGREE_FORMS, DEGREE_FORMS_BIN);
+        let index = blob.find(word)?;
+        Some(blob.value(index))
+    }
+}
+
+pub use degree_index::base as degree_base;
+
+#[cfg(test)]
+mod degree_index_tests {
+    use super::*;
+
+    /// The committed degree blob is the computation's own table.
+    #[test]
+    fn the_degree_blob_matches_compute() {
+        let computed = compute_degree_forms();
+        let blob = crate::expand::blob::cell(
+            &degree_index::DEGREE_FORMS,
+            degree_index::DEGREE_FORMS_BIN,
+        );
+        assert_eq!(blob.iter().count(), computed.len());
+        for (surface, lemma) in &computed {
+            assert_eq!(degree_base(surface), Some(*lemma), "{surface}");
+        }
+    }
+}
+
+/// Every non-possessive surface of an adjective or adverb degree, mapped to
+/// its positive lemma.
+///
+/// `gen_derived` writes this as `maps/degree_forms.bin.gz`. The computation
+/// is engine-driven: it reuses [`derived_forms::degree_forms`] for adjectives
+/// (including the productive fallbacks and the curated `loitto` row) and the
+/// curated adverb table for `hiljaa`. Comparative lemmas (`enempi`, class
+/// `16*H`) are not degrees of another positive, so their own paradigms map
+/// back to the lemma.
+pub fn compute_degree_forms() -> std::collections::HashMap<String, &'static str> {
+    let cat = Catalogues::embedded();
+    let lemmas = crate::kotus::lemmas();
+    let index = LexiconIndex::new(lemmas);
+    let mut map = std::collections::HashMap::new();
+    for lemma in lemmas {
+        let readings = PartOfSpeech::parse_all(lemma.part_of_speech);
+        let is_adjective = readings.contains(&PartOfSpeech::Adjective);
+        let has_adverb_degree = degrees::ADVERB_DEGREES.contains(lemma.word);
+        if is_adjective || has_adverb_degree {
+            for form in derived_forms::degree_forms(lemma.word, cat, Some(&index)) {
+                if form.union().possessive.is_none() {
+                    map.entry(form.word).or_insert(lemma.word);
+                }
+            }
+        }
+        if lemma
+            .inflections
+            .iter()
+            .any(|inflection| inflection.class == 16 || inflection.class == 36)
+        {
+            let pos = readings
+                .first()
+                .copied()
+                .unwrap_or(PartOfSpeech::Adjective);
+            for form in inflect_all(
+                lemma.word,
+                &lemma.inflections,
+                cat,
+                Some(&index),
+                pos,
+                false,
+            ) {
+                if form.union().possessive.is_none() {
+                    map.entry(form.word).or_insert(lemma.word);
+                }
+            }
+        }
+    }
+    map
 }
 
 use crate::kotus::Inflection;

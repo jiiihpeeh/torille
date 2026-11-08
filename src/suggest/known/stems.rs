@@ -8,6 +8,16 @@ pub(crate) fn is_content_head(word: &str) -> bool {
     crate::compound::is_content_head(word)
 }
 
+
+/// The whole classless compound lemma `left + base`, if that is a listed
+/// compound. `suurkaani` is a classless row, so the base should be the whole
+/// word rather than its head `kaani`.
+pub(super) fn classless_compound_whole(left: &str, base: &str) -> Option<String> {
+    let whole = format!("{left}{base}");
+    let row = crate::kotus::sanalista().by_word(&whole).next()?;
+    row.inflections().next().is_none().then_some(whole)
+}
+
 /// The head a known classless compound lemma names, when the right half is
 /// ambiguous.
 ///
@@ -38,8 +48,14 @@ pub(super) fn compound_head_from_lemma(left: &str, right: &str) -> Option<String
     bases.sort();
     bases.dedup();
     for base in bases {
-        let whole = format!("{left}{base}");
-        if lexicon.by_word(&whole).next().is_some() {
+        if let Some(whole) = classless_compound_whole(left, &base) {
+            // A classless row is a compound whose head is `base`; name the
+            // whole lemma (`suurkaani`, `raitiotie`) rather than the head.
+            return Some(whole);
+        }
+        if lexicon.by_word(&format!("{left}{base}")).next().is_some() {
+            // A classed row is the head lemma itself and keeps the old
+            // answer.
             return Some(base);
         }
     }

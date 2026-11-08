@@ -22,6 +22,7 @@ engine's MIT/Apache-2.0 license.
 | file | producer | used by |
 |---|---|---|
 | `adj_degrees.csv` | `gen_adj_degrees` (Rust bin) | `maps/adj_degrees.bin.gz` |
+| `adj_degrees_extra.csv` | curated (en.wiktionary) | merged by `gen_adj_degrees` into `adj_degrees.csv` |
 | `stem_to_base_map.csv` | `gen_stem_map_noun` (Rust bin) | `maps/stem_map_noun.bin.gz` |
 | `verb_stem_to_base_map.csv` | `gen_stem_map_verb` (Rust bin) | `maps/stem_map_verb.bin.gz` |
 
@@ -38,6 +39,7 @@ committed files are what a build uses.
 |---|---|---|
 | `catalogue.csv` | `tools/oracle/build_catalogue_csv.py` | 8 paradigm slots per class; read by `spec.rs` |
 | `adverbit.csv` | `tools/oracle/build_adverbi_forms.py` | `-ksi` adverb possessives |
+| `adverb_degrees.csv` | curated (en.wiktionary) | `maps/adverb_degrees.bin.gz`; adverb comparatives such as `hiljaa -> hiljempaa` |
 | `proper_names.csv` | Wikidata | name source for the proper-name tables |
 | `proper_name_forms.csv`, `proper_name_forms_extra.csv` | `tools/oracle/build_proper_name_forms.py` + curated extras | singular cases of names |
 | `verb_connegatives.csv`, `verb_connectives.csv` | `tools/oracle/build_verb_lexicon.py` | connegatives and negation fusions |

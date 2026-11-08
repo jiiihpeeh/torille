@@ -17,12 +17,7 @@
 /// paradigm (en.wiktionary, `kuulla`).
 const CLOSED: &[(&str, &str)] = &[
     ("alhaaltapäin", "alhaalta"),
-    ("enemmittä", "enempi"),
-    ("hiljempaa", "hiljaa"),
-    ("keskenämme", "keskenään"),
-    ("loitommalla", "loitto"),
     ("pormestarinna", "pormestari"),
-    ("suurkaanin", "suurkaani"),
     ("tienpuoleen", "tienpuoli"),
     ("unhotusta", "unhotus"),
     ("ylhäältäpäin", "ylhäältä"),
@@ -76,8 +71,10 @@ mod tests {
     #[test]
     fn the_reported_surfaces_resolve() {
         for (word, expected) in [
-            ("loitommalla", "loitto"),
-                    ("ylhäältäpäin", "ylhäältä"),
+            ("alhaaltapäin", "alhaalta"),
+            ("tienpuoleen", "tienpuoli"),
+            ("unhotusta", "unhotus"),
+            ("ylhäältäpäin", "ylhäältä"),
             ("äkkipikaa", "pikaa"),
         ] {
             assert_eq!(base(word), Some(expected), "{word}");
@@ -186,6 +183,11 @@ mod tests {
             ("nyrpistyksessä", "nyrpistys"),
             ("seuduitta", "seutu"),
             ("kävelytti", "kävelyttää"),
+            ("enemmittä", "enempi"),
+            ("hiljempaa", "hiljaa"),
+            ("loitommalla", "loitto"),
+            ("keskenämme", "keskenään"),
+            ("suurkaanin", "suurkaani"),
         ] {
             assert_eq!(
                 base(check_normal(word, false)).as_deref(),
