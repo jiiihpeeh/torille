@@ -14,7 +14,12 @@ After regenerating them:
 tools/publish_maps.sh      # replace the `maps` branch with the current blobs
 ```
 
-`build.rs` decompresses the committed copies into `OUT_DIR`; the compiler
+`publish_maps.sh` writes one parentless commit and force-pushes it, so the
+branch always has exactly one commit with the current blobs. The previous
+commit becomes unreachable; GitLab prunes it during its next housekeeping
+(run the project's *Clean up* job to do it immediately).
+
+`build.rs` decompresses the fetched copies into `OUT_DIR`; the compiler
 embeds the plain bytes. The maps are the only generated artefacts treated
 this way — `data/*.csv` and `data/*.sqlite` have their own rules below.
 
