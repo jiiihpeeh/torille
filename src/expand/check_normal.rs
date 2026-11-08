@@ -64,7 +64,7 @@ use crate::expand::static_table::StemMap;
 use crate::expand::{
     ClassPrior, find_all_bases_with, find_best_base_with, lemma_by_word, rank_lemma_bases,
 };
-use crate::kotus::{Lemma, Sanalista};
+use crate::kotus::{Inflection, Lemma, Sanalista};
 use crate::spec::Catalogues;
 use crate::suggest::is_known_word;
 use crate::tags::PartOfSpeech;
@@ -380,6 +380,65 @@ pub fn adverb_possessive_base(word: &str) -> Option<&'static str> {
     Some(blob.value(index))
 }
 
+/// The curated `-nna`/`-nnä` feminine nouns.
+///
+/// The file is `feminine<TAB>base<TAB>class`. These are lexical/historical
+/// forms, not a suffix rule: `pormestarinna` is the wife of a `pormestari`,
+/// and `keisarinna` is already a sanalista lemma. The forms are inflected
+/// here with the given class so the fast path can name every case form.
+const FEMININE_NOUNS_CSV: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/data/feminine_nouns.csv"
+));
+
+/// Every surface of the curated `-nna` feminine nouns, mapped to the
+/// masculine base noun.
+pub fn compute_feminine_noun_forms() -> HashMap<String, String> {
+    let mut map = HashMap::new();
+    for line in FEMININE_NOUNS_CSV.lines().skip(1) {
+        let mut cols = line.split('\t');
+        let Some(feminine) = cols.next().map(str::trim).filter(|w| !w.is_empty()) else {
+            continue;
+        };
+        let Some(base) = cols.next().map(str::trim).filter(|w| !w.is_empty()) else {
+            continue;
+        };
+        let Some(class) = cols.next().and_then(|c| c.trim().parse::<u16>().ok()) else {
+            continue;
+        };
+        let (feminine, base) = (feminine.to_string(), base.to_string());
+        let forms = inflect_all(
+            &feminine,
+            &[Inflection {
+                class,
+                gradation: None,
+            }],
+            cat(),
+            None,
+            PartOfSpeech::Noun,
+            true,
+        );
+        for form in forms {
+            map.entry(form.word).or_insert_with(|| base.clone());
+        }
+    }
+    map
+}
+
+static FEMININE_NOUNS: OnceLock<Blob> = OnceLock::new();
+
+const FEMININE_NOUNS_BIN: &[u8] = include_bytes!(concat!(
+    env!("OUT_DIR"),
+    "/feminine_nouns.bin",
+));
+
+/// The masculine base of a curated `-nna` feminine form, if any.
+pub fn feminine_noun_base(word: &str) -> Option<&'static str> {
+    let blob = crate::expand::blob::cell(&FEMININE_NOUNS, FEMININE_NOUNS_BIN);
+    let index = blob.find(word)?;
+    Some(blob.value(index))
+}
+
 /// The lemma of a tabulated adverbial form (`torkuksissa` -> `torkku`).
 ///
 /// The table is the same one gate 1b probes; exposing it lets the compound
@@ -683,6 +742,15 @@ fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> Normalized
         return NormalizedOutcome::Inflected {
             base: base.to_string(),
             gate: "adverb possessive",
+        };
+    }
+
+    // A lexical `-nna` feminine (`pormestarinna`, `tohtorinna`). This is a
+    // family table, not a suffix rule; the base is the masculine noun.
+    if let Some(base) = feminine_noun_base(&word.to_lowercase()) {
+        return NormalizedOutcome::Inflected {
+            base: base.to_string(),
+            gate: "feminine noun",
         };
     }
 
@@ -1426,6 +1494,26 @@ mod tests {
             blob.iter().count(),
             computed.len(),
             "the pronoun blob has a different size"
+        );
+    }
+
+    /// The committed feminine-noun blob is the computation's own table.
+    #[test]
+    fn the_feminine_noun_blob_matches_compute() {
+        let computed = compute_feminine_noun_forms();
+        assert!(!computed.is_empty());
+        for (surface, base) in &computed {
+            assert_eq!(
+                feminine_noun_base(surface),
+                Some(base.as_str()),
+                "{surface}"
+            );
+        }
+        let blob = crate::expand::blob::cell(&FEMININE_NOUNS, FEMININE_NOUNS_BIN);
+        assert_eq!(
+            blob.iter().count(),
+            computed.len(),
+            "the feminine-noun blob has a different size"
         );
     }
 

@@ -207,6 +207,9 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
     if let Some(base) = crate::expand::check_normal::adverb_possessive_base(&lower) {
         return Some(base.to_string());
     }
+    if let Some(base) = crate::expand::check_normal::feminine_noun_base(&lower) {
+        return Some(base.to_string());
+    }
 
     // 1'. Hyphenated compound spelling. This is a writing rule, not a
     //     paradigm: `linja-auto` and `EU-maat` are compounds whose parts the

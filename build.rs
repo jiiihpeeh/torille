@@ -260,6 +260,7 @@ fn main() {
         "pronoun_forms.bin",
         "degree_forms.bin",
         "adverb_possessive.bin",
+        "feminine_nouns.bin",
         "oi_plural_lemmas.bin",
     ] {
         let gz = precomputed.join(format!("{name}.gz"));

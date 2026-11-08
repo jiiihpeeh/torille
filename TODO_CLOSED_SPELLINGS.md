@@ -1,6 +1,6 @@
 # TODO: shrink `closed_spellings::CLOSED`
 
-Status: **residue reached (32 → 6 rows)** · owner: — · created: 2026-11-08
+Status: **residue reached (32 → 5 rows)** · owner: — · created: 2026-11-08
 
 The closed-spelling table in `src/expand/closed_spellings.rs` has 32
 `(surface, base)` pairs. Most are not closed spellings: they are ordinary
@@ -50,7 +50,7 @@ Read-only probes on the current tree (`inflect(base)`, `look_base`,
 
 ## Progress (2026-11-08)
 
-Removed from `CLOSED` (32 → 6 rows):
+Removed from `CLOSED` (32 → 5 rows):
 
 - [x] `edeltäkäsin`, `itsekunkin`, `niinkauan`, `senjälkeen`, `silloinkun`,
       `yhtäkaikki` — Kotus two-word spellings; moved to `is_nonword`.
@@ -88,20 +88,15 @@ Removed from `CLOSED` (32 → 6 rows):
 Kept after verification:
 
 - `tienpuoleen` — Voikko analyses it as `tienpuoli`; restored to `CLOSED`.
-- `pormestarinna` — historical `-nna` feminine (wife of a titled man), a
-  different system from productive `-tar`/`-tär`; left in place until the
-  lexical family table/lemma lands (see the `-nna` section below).
 
 ## Final residue
 
-The six rows that remain are either genuine accepted fused spellings or
+The five rows that remain are either genuine accepted fused spellings or
 lexical forms whose base has no sanalista row:
 
 - `alhaaltapäin`, `ylhäältäpäin` — Kotus allows adverb/particle + `päin`
   written together.
 - `äkkipikaa` — lexical adverb (`suddenly`), not a productive suffix.
-- `pormestarinna` — historical `-nna` feminine, lexical; awaiting the
-  `-nna` family table (see the feminine section below).
 - `tienpuoleen` — base `tienpuoli` (compound, Voikko-confirmed) has no
   sanalista row.
 - `unhotusta` — base `unhotus` (action noun, Voikko-confirmed) has no
@@ -138,7 +133,7 @@ fix, then delete · **C** fast-path probe, then delete (engine already derives) 
 | `niinkauan` | `niin` | A | verify Kotus; two words |
 | `nyrpistyksessä` | `nyrpistää` | B | fix `-us` action noun `-kse-` |
 | `perehtyneempi` | `perehtyä` | B | fix comparative reconstruction |
-| `pormestarinna` | `pormestari` | B/D | `-nna` family or lexical lemma |
+| `pormestarinna` | `pormestari` | B/D | done: `feminine_nouns.csv` |
 | `selmallakaan` | `selma` | A | lowercase name; delete |
 | `senjälkeen` | `sen` | A | Kotus: `sen jälkeen` |
 | `seuduitta` | `seutu` | C | abessive plural ending/stem key |
@@ -269,16 +264,15 @@ it usually names the **wife of a titled man** (`pormestarinna`,
 one that also denotes a woman holding the office. These are old-fashioned and
 lexical. Do not add an `-nna` suffix stripper to `is_known_word`.
 
-- [ ] Audit the family against the sanalista and en.wiktionary/Kotus:
-      `keisarinna` is already a lemma; check `tohtorinna`, `rovastinna`,
-      `ruustinna`, `monarkinna`.
-- [ ] Prefer a small curated lexical table (`data/feminine_nouns.csv`,
-      form -> masculine base) embedded as a form map, or sanalista rows where
-      the authority lists them. Keep `pormestarinna -> pormestari`.
-- [ ] If a table is added, generate/embed it like `adverbit`/the closed
-      tables and probe it in the fast path; do not generalise to other `-nna`
-      words.
-- [ ] Remove the `pormestarinna` closed row once the table/lemma lands.
+- [x] Audit the family: `keisarinna`, `rovastinna` and `ruustinna` are
+      already sanalista lemmas; `pormestarinna`, `tohtorinna` and
+      `monarkinna` were missing.
+- [x] Added `data/feminine_nouns.csv` (`feminine`, `base`, `class`), embedded
+      as `maps/feminine_nouns.bin.gz` by `gen_derived`.
+- [x] Probed the map in the fast and full paths; `pormestarinna`,
+      `tohtorinna`, `monarkinna` and their case forms resolve to the masculine
+      base.
+- [x] Removed the `pormestarinna` closed row.
 
 ### Compound with an opaque modifier
 
@@ -301,7 +295,7 @@ lexical. Do not add an `-nna` suffix stripper to `is_known_word`.
 ## Phase 4 — shrink the accepted residue
 
 Likely residue: `alhaaltapäin`, `ylhäältäpäin`, `äkkipikaa`, plus any kept
-`pormestarinna` decision.
+`pormestarinna` decision (done).
 
 - [ ] Add a source comment to every surviving row.
 - [ ] Add the staleness test (`inflect(base)` must not emit the surface).
@@ -317,7 +311,7 @@ Likely residue: `alhaaltapäin`, `ylhäältäpäin`, `äkkipikaa`, plus any kept
 Data changes that need regeneration:
 
 - [ ] `data/nykysuomensanalista.csv` and `src/sanalista_overrides.rs` for any
-      added lemma (`unhotus`, `perehtynyt`, `pormestarinna`, `kävellyttää`,
+      added lemma (`unhotus`, `perehtynyt`, `kävellyttää`,
       `ventovieras`).
 - [ ] `data/adj_degrees.csv` for `loitto`/participle degrees.
 - [ ] `data/adverbit.csv` for `hiljaa`/`keskenään` families.
@@ -362,7 +356,7 @@ Additional checks:
 - [ ] `koneentapaisesti`: confirm the one-word compound reading.
 - [ ] `kävellytti`: typo of `kävelytti`, form of `kävellyttää`, or invalid?
 - [ ] `kuulten` family: productive non-finite or lexical/archaic?
-- [ ] `pormestarinna`: `-nna` family or single lexical item?
+- [x] `pormestarinna`: done via the lexical `-nna` family table.
 - [ ] `unhotusta`: archaic but valid (add lemma) or invalid (delete)?
 - [ ] `alhaaltapäin`: confirm the exact Kotus entry for the `alhaalta` case.
 

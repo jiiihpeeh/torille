@@ -295,7 +295,9 @@ rule**. Do not collapse them into a generic `-nen`/`-tar` stripper.
   Some, notably `keisarinna`, also denote a woman holding the position.
   These are lexical/historical, not a general productive suffix; when adding
   one, prefer a data/sanalista row or a small explicit family table over
-  teaching `is_known_word` an `-nna` suffix rule.
+  teaching `is_known_word` an `-nna` suffix rule. The current family table is
+  `data/feminine_nouns.csv` (`feminine`, `base`, `class`), embedded as
+  `maps/feminine_nouns.bin.gz` by `gen_derived`.
 - `-ska`/`-skä` (`professorska`, `pastorska`) and `-kko`/`-kkö`
   (`karjakko`) are further historical feminine formations, also lexical.
 - Most of these words are old-fashioned; modern Finnish normally uses the

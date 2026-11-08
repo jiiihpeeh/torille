@@ -27,6 +27,7 @@ pub const REQUIRED: &[&str] = &[
     "pronoun_forms.bin.gz",
     "degree_forms.bin.gz",
     "adverb_possessive.bin.gz",
+    "feminine_nouns.bin.gz",
     "oi_plural_lemmas.bin.gz",
 ];
 

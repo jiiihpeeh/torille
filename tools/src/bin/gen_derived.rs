@@ -83,13 +83,27 @@ fn main() {
             .map(|(surface, lemma)| (surface.as_str(), Some(*lemma))),
     );
 
+    // Lexical `-nna` feminines: every inflected surface -> masculine base.
+    let mut feminine_nouns: Vec<(String, String)> =
+        torille::expand::check_normal::compute_feminine_noun_forms()
+            .into_iter()
+            .collect();
+    feminine_nouns.sort_by(|a, b| a.0.cmp(&b.0));
+    write_table(
+        Path::new("maps/feminine_nouns.bin.gz"),
+        feminine_nouns
+            .iter()
+            .map(|(surface, base)| (surface.as_str(), Some(base.as_str()))),
+    );
+
     println!(
-        "derived: {} forms, {} nominal, {} modifiers; {} pronouns; {} degree forms; {} adverb possessives",
+        "derived: {} forms, {} nominal, {} modifiers; {} pronouns; {} degree forms; {} adverb possessives; {} feminine nouns",
         by_form.len(),
         nominal.len(),
         modifiers.len(),
         pronouns.len(),
         degree_forms.len(),
-        adverb_possessive.len()
+        adverb_possessive.len(),
+        feminine_nouns.len()
     );
 }

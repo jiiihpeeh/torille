@@ -19,9 +19,6 @@ const CLOSED: &[(&str, &str)] = &[
     // Kotus: an adverb/particle + `päin` may be written together
     // (`ylhäältä päin ~ ylhäältäpäin`); `alhaalta` follows the same rule.
     ("alhaaltapäin", "alhaalta"),
-    // Historical `-nna` feminine (wife of a titled man), lexical: see
-    // AGENTS.md, "Feminine derivation". Awaiting the family table.
-    ("pormestarinna", "pormestari"),
     // `tienpuoli` is the compound base (Voikko); it has no sanalista row.
     ("tienpuoleen", "tienpuoli"),
     // `unhotus` is the action-noun base (Voikko); it has no sanalista row.
@@ -195,6 +192,8 @@ mod tests {
             ("loitommalla", "loitto"),
             ("keskenämme", "keskenään"),
             ("suurkaanin", "suurkaani"),
+            ("pormestarinna", "pormestari"),
+            ("pormestarinnan", "pormestari"),
         ] {
             assert_eq!(
                 base(check_normal(word, false)).as_deref(),

@@ -40,6 +40,7 @@ committed files are what a build uses.
 | `catalogue.csv` | `tools/oracle/build_catalogue_csv.py` | 8 paradigm slots per class; read by `spec.rs` |
 | `adverbit.csv` | `tools/oracle/build_adverbi_forms.py` | `-ksi` adverb possessives |
 | `adverb_degrees.csv` | curated (en.wiktionary) | `maps/adverb_degrees.bin.gz`; adverb comparatives such as `hiljaa -> hiljempaa` |
+| `feminine_nouns.csv` | curated (Kotus/en.wiktionary) | `maps/feminine_nouns.bin.gz`; historical `-nna` feminines such as `pormestarinna -> pormestari` |
 | `proper_names.csv` | Wikidata | name source for the proper-name tables |
 | `proper_name_forms.csv`, `proper_name_forms_extra.csv` | `tools/oracle/build_proper_name_forms.py` + curated extras | singular cases of names |
 | `verb_connegatives.csv`, `verb_connectives.csv` | `tools/oracle/build_verb_lexicon.py` | connegatives and negation fusions |
