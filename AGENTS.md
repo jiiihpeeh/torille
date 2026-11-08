@@ -41,6 +41,7 @@ Cargo workspace, root package `torille`, members declared in `Cargo.toml`:
 |---|---|---|
 | `/` (`src/`) | `torille` | the engine — the only crate with the real logic |
 | `tools/` | `torille-tools` | CLI drivers + `tools/*.py` verification harness |
+| `tools/maps-sync/` | `torille-maps` | fetch/publish the orphan `maps` branch; also the root `build.rs` build-dependency |
 | `bindings/` | `torille-py` | PyO3 extension `torille` (used by the harness) |
 | `wrapper/` | `wrapper` | hunspell-shaped C ABI over `torille::suggest` |
 | `torille-wasm/` | `torille-wasm` | wasm-bindgen bindings + per-textarea state |
@@ -459,6 +460,7 @@ is gitignored and generated.
 | "which lemma is this a form of" | `src/expand/find_bases.rs`, `src/expand/lexicon_index.rs` |
 | the reverse index / class prior | `src/expand/build.rs` |
 | compile-time blob writers | `build.rs`, `build/csv_builders/`, `build/map_builders/`; blobs live in `maps/` |
+| fetch/publish the `maps` branch | `tools/maps-sync/` (`cargo run -p torille-maps -- status\|fetch\|publish`) |
 | a new verb/noun class engine | `src/expand/verbs/`, `src/expand/nominals*/`, then `dispatch` + `AUTHORITATIVE_CLASSES` |
 | the grammar reading model | `src/tags.rs` |
 | hyphenation patterns/policy | `src/hyphenation/`, `data/hyphenation/` |

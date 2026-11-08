@@ -46,6 +46,11 @@ binaries with:
 cargo build --release -p torille-tools
 ```
 
+The maps-branch helper is the exception: it lives in its own `torille-maps`
+crate (`tools/maps-sync/`) because it must run on a fresh clone, where
+`torille` itself cannot build until the maps are fetched. See
+[`../maps/README.md`](../maps/README.md).
+
 Everyday probes:
 
 | binary | purpose |

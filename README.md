@@ -94,9 +94,10 @@ torille/
   docs/                 harness.md, hyphenation.md, lexicon.md
 ```
 
-The root package is the library and the workspace root. `tools`, `bindings`,
-the wasm crates and the demo server are members, so one `cargo build` covers
-the Rust side. The library has no third-party dependencies: the lexicon and
+The root package is the library and the workspace root. `tools`,
+`tools/maps-sync` (the `torille-maps` maps-branch helper), `bindings`, the
+wasm crates and the demo server are members, so one `cargo build` covers the
+Rust side. The library has no third-party dependencies: the lexicon and
 the maps are embedded with `include_str!` / `include_bytes!`, so a consumer
 needs no data file at runtime.
 

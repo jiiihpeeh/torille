@@ -3,8 +3,9 @@
 **These files are not tracked on `master`.** They live on a single-commit
 orphan branch named `maps`, so the repository never accumulates old versions
 of the generated blobs. The first `cargo build` fetches them automatically when they are missing. The
-explicit forms (`status`, `fetch`, `publish`) are subcommands of the Rust
-`maps` tool:
+explicit forms (`status`, `fetch`, `publish`) are subcommands of the
+standalone `torille-maps` crate (`tools/maps-sync/`), which does not depend on
+the engine and therefore still builds on a fresh clone:
 
 ```bash
 cargo run -p torille-maps -- status
