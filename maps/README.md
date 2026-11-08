@@ -1,15 +1,34 @@
 # maps/ — the embedded binary maps
 
+**These files are not tracked on `master`.** They live on a single-commit
+orphan branch named `maps`, so the repository never accumulates old versions
+of the generated blobs. After cloning:
+
+```bash
+tools/fetch_maps.sh        # fetch origin/maps and unpack maps/*.bin.gz
+```
+
+After regenerating them:
+
+```bash
+tools/publish_maps.sh      # replace the `maps` branch with the current blobs
+```
+
+`build.rs` decompresses the committed copies into `OUT_DIR`; the compiler
+embeds the plain bytes. The maps are the only generated artefacts treated
+this way — `data/*.csv` and `data/*.sqlite` have their own rules below.
+
+
 Every `.bin.gz` file here is **tooling-level compression only**. The blobs
-are committed gzip-compressed at the maximum level to keep the repository
-small, but `build.rs` decompresses each one into `OUT_DIR` and the crate
-embeds the *plain* bytes with `include_bytes!`. The runtime and the wasm have
+are stored gzip-compressed at the maximum level, but `build.rs` decompresses
+each one into `OUT_DIR` and the crate embeds the *plain* bytes with
+`include_bytes!`. The runtime and the wasm have
 no gzip dependency and still read the maps in place: no runtime file
 discovery, no parsing, no allocation for the map itself.
 
 **Do not hand-edit these files.** Each one is regenerated from its source
 data; the table below names the producer. A stale blob is a correctness bug,
-so change the generator and rerun it in the same commit. Use
+so change the generator and rerun it, then `tools/publish_maps.sh`. Use
 `cargo run -p torille-tools --bin map_gz -- test maps/X.bin.gz` to inspect
 one, or `map_gz compress|decompress` for a manual round-trip.
 

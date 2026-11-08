@@ -292,9 +292,28 @@ SentenceSpan}`; `syntax::{analyze, SyntaxAnalysis, Clause, TokenSyntax,
 SyntacticRole, RoleConfidence}`; `Suggestion` / `SuggestionSource` under
 `suggest`.
 
+## The binary maps (`maps/`)
+
+The binary maps are generated artefacts. They are **not tracked on `master`**;
+the repository keeps them on a single-commit orphan branch literally named
+`maps`, which `tools/publish_maps.sh` force-pushes with the current
+`maps/*.bin.gz`. That is how the remote only ever holds the current versions:
+normal history never accumulates them.
+
+```bash
+tools/fetch_maps.sh             # after cloning: fetch + unpack maps/*.bin.gz
+tools/fetch_maps.sh --offline   # only verify they are present
+tools/publish_maps.sh           # replace the `maps` branch with the current blobs
+```
+
+`build.rs` packages them into `OUT_DIR` and `include_bytes!`s the plain bytes;
+compression is tooling-only. A fresh clone that skips `fetch_maps.sh` fails the
+build with a message naming that script.
+
 ## Build, test, lint
 
 ```bash
+tools/fetch_maps.sh                     # restore the binary maps (orphan `maps` branch)
 cargo build --workspace                 # all crates
 cargo build --release -p torille-tools  # the CLI drivers
 cargo test --release --workspace        # the whole suite

@@ -14,6 +14,7 @@ fall through to compound analysis and the productive derivation rules.
 ## Quick start
 
 ```bash
+tools/fetch_maps.sh             # restore the binary maps from the `maps` branch
 cargo build --workspace
 cargo test --release --workspace
 

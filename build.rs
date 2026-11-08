@@ -81,6 +81,27 @@ fn main() {
     std::fs::create_dir_all(&precomputed)
         .unwrap_or_else(|e| panic!("create_dir_all {}: {e}", precomputed.display()));
 
+    // These four tables are computed with the engine, so a build script cannot
+    // regenerate them. They live on the orphan `maps` branch; `master` tracks
+    // only `maps/README.md`. Fail with the fix rather than a cryptic
+    // `include_bytes!` error.
+    for required in [
+        "derived_by_form.bin.gz",
+        "derived_nominal.bin.gz",
+        "derived_modifiers.bin.gz",
+        "pronoun_forms.bin.gz",
+        "oi_plural_lemmas.bin.gz",
+    ] {
+        let path = precomputed.join(required);
+        assert!(
+            path.exists(),
+            "{} is missing: the binary maps live on the 'maps' branch; run \
+             `tools/fetch_maps.sh` (or `tools/fetch_maps.sh --offline` if you \
+             already have them)",
+            path.display(),
+        );
+    }
+
     let sanalista_raw = out_dir.join("sanalista.bin");
     std::fs::write(&sanalista_raw, &blob)
         .unwrap_or_else(|e| panic!("write {}: {e}", sanalista_raw.display()));

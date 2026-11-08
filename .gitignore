@@ -15,6 +15,12 @@ __pycache__/
 # file is kept on developer machines for provenance but is not distributed.
 data/kotus-tyypit.txt
 
+# Binary maps are generated artefacts. They live on the orphan `maps` branch
+# (tools/fetch_maps.sh restores them; tools/publish_maps.sh replaces it), never
+# in normal history, so the repository only ever holds the current versions.
+maps/*.bin.gz
+maps/*.bin
+
 # Generated noun lexicon and examples. Rebuild with
 #   python3 tools/oracle/build_nomine_lexicon.py -o data/kotus_nomines.sqlite
 data/kotus_nomines*.sqlite*
