@@ -13,43 +13,50 @@
 /// `(surface, base)` pairs. Sorted by `surface`.
 const CLOSED: &[(&str, &str)] = &[
     ("alhaaltapäin", "alhaalta"),
-    ("edeltäkäsin", "edeltä"),
     ("enemmittä", "enempi"),
     ("hiljempaa", "hiljaa"),
-    ("honkasien", "honkanen"),
-    ("itsekunkin", "itse"),
-    ("kehottavasti", "kehottaa"),
     ("keskenämme", "keskenään"),
-    ("koneentapaisesti", "tapaisesti"),
     ("kuultemme", "kuulten"),
     ("kuulten", "kuulten"),
     ("kuulteni", "kuulten"),
     ("kuultenne", "kuulten"),
     ("kuultensa", "kuulten"),
     ("kuultesi", "kuulten"),
-    ("kävellytti", "kävellä"),
     ("loitommalla", "loitto"),
-    ("niinkauan", "niin"),
-    ("nyrpistyksessä", "nyrpistää"),
-    ("perehtyneempi", "perehtyä"),
     ("pormestarinna", "pormestari"),
-    ("selmallakaan", "selma"),
-    ("senjälkeen", "sen"),
-    ("seuduitta", "seutu"),
-    ("silloinkun", "silloin"),
     ("suurkaanin", "suurkaani"),
-    ("tienpuoleen", "tie"),
+    ("tienpuoleen", "tienpuoli"),
     ("unhotusta", "unhotus"),
     ("ventovieraita", "vieras"),
-    ("yhtäkaikki", "kaikki"),
     ("ylhäältäpäin", "ylhäältä"),
     ("äkkipikaa", "pikaa"),
 ];
 
 /// Fused spellings that modern Finnish writes as two words. They are not
 /// accepted; the suggester offers the split form.
+///
+/// Kotus, *Yhdyssana vai ei: nurin päin vai nurinpäin?* (Kielitoimiston
+/// ohjepankki), gives `edeltä käsin`, `itse kunkin`, `sen tähden` family,
+/// `sitten kun` and `yhtä kaikki` as two words. The `niin kauan`,
+/// `silloin kun` and `tien puoleen` rows follow the same pronoun/particle +
+/// adverb/postposition rule.
 pub fn is_nonword(word: &str) -> bool {
-    matches!(word, "ennenkuin" | "aivankuin" | "avainkuin" | "niinkuin" | "yllinkyllin" | "sentähden" | "minkätähden") || word.starts_with("kehoit")
+    matches!(
+        word,
+        "aivankuin"
+            | "avainkuin"
+            | "edeltäkäsin"
+            | "ennenkuin"
+            | "itsekunkin"
+            | "minkätähden"
+            | "niinkauan"
+            | "niinkuin"
+            | "senjälkeen"
+            | "sentähden"
+            | "silloinkun"
+            | "yhtäkaikki"
+            | "yllinkyllin"
+    ) || word.starts_with("kehoit")
 }
 
 /// The accepted surface's base/head, if it is one of the closed spellings.
@@ -72,12 +79,86 @@ mod tests {
     #[test]
     fn the_reported_surfaces_resolve() {
         for (word, expected) in [
-            ("kuulten", "kuulten"),
             ("loitommalla", "loitto"),
-            ("selmallakaan", "selma"),
             ("ylhäältäpäin", "ylhäältä"),
+            ("äkkipikaa", "pikaa"),
         ] {
             assert_eq!(base(word), Some(expected), "{word}");
         }
+    }
+
+    /// Kotus writes these as two words, so the fused spelling is rejected and
+    /// no longer shadows the split form.
+    #[test]
+    fn two_word_spellings_are_rejected() {
+        for word in [
+            "edeltäkäsin",
+            "itsekunkin",
+            "niinkauan",
+            "senjälkeen",
+            "silloinkun",
+            "yhtäkaikki",
+        ] {
+            assert_eq!(base(word), None, "{word} must not be a closed spelling");
+            assert!(is_nonword(word), "{word} must be a nonword");
+        }
+    }
+
+    /// A lowercase proper-name form is not a closed spelling; the name gate
+    /// only accepts capitalised forms.
+    #[test]
+    fn lowercase_name_rows_are_gone() {
+        for word in ["honkasien", "selmallakaan"] {
+            assert_eq!(base(word), None);
+            assert!(!is_nonword(word), "{word} is a name, not a fused phrase");
+        }
+    }
+
+    /// Rows removed because the engine/derivation now derives them must still
+    /// resolve on both the full and the fast path.
+    #[test]
+    fn removed_engine_rows_resolve_on_both_paths() {
+        use crate::expand::check_normal::{NormalizedOutcome, check_normal, check_normal_fast};
+
+        fn base(outcome: NormalizedOutcome) -> Option<String> {
+            match outcome {
+                NormalizedOutcome::Inflected { base, .. } => Some(base),
+                _ => None,
+            }
+        }
+
+        for (word, expected) in [
+            ("kehottavasti", "kehottaa"),
+            ("koneentapaisesti", "koneentapainen"),
+            ("perehtyneempi", "perehtynyt"),
+            ("nyrpistyksessä", "nyrpistys"),
+            ("seuduitta", "seutu"),
+            ("kävelytti", "kävelyttää"),
+        ] {
+            assert_eq!(
+                base(check_normal(word, false)).as_deref(),
+                Some(expected),
+                "full path: {word}"
+            );
+            assert_eq!(
+                base(check_normal_fast(word, false)).as_deref(),
+                Some(expected),
+                "fast path: {word}"
+            );
+        }
+    }
+
+    /// `kävelyttää` is the causative; its past third person is `kävelytti`
+    /// (weak grade, one `l`). The double-`l` spelling is not a form of it.
+    #[test]
+    fn the_double_l_causative_is_not_a_word() {
+        use crate::expand::check_normal::{NormalizedOutcome, check_normal, check_normal_fast};
+        for outcome in [
+            check_normal("kävellytti", false),
+            check_normal_fast("kävellytti", false),
+        ] {
+            assert_eq!(outcome, NormalizedOutcome::Unknown);
+        }
+        assert_eq!(base("kävellytti"), None);
     }
 }

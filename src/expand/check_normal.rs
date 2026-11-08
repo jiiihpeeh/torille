@@ -114,7 +114,7 @@ pub const ENDINGS: &[&str] = &[
     // before `-ine` is the plural stem without its final i (`mon`,
     // `koir`, `talo`), which is already a stem-map key.
     "ine", // Longest first so the canonical split wins.
-    "isiin", "kaan", "kään", "seen", "hon", "hön", "jaa", "jää", "ihin", "issa", "istä", "illa",
+    "isiin", "kaan", "kään", "seen", "hon", "hön", "jaa", "jää", "ihin", "issa", "istä", "itta", "ittä", "illa",
     "iltä", "ille", "iksi", "tta", "ttä", "issa", "istä", "illa", "illä", "iltä", "ille", "ssa",
     "ssä", "sta", "stä", "lla", "llä", "lle", "lta", "ltä", "ksi", "han", "hän", "kin", "isi",
     "na", "nä", "ta", "tä", "ja", "jä", "en", "an", "än", "in", "on", "ön", "un", "yn",
@@ -545,6 +545,32 @@ fn cheap_derived_base(word: &str) -> Option<String> {
     // The `uu`/`yy` guard keeps the reverse derivation off ordinary words.
     if (lower.contains("uu") || lower.contains("yy"))
         && let Some(base) = crate::expand::derived_uus_base(&lower, cat(), None)
+    {
+        return Some(base);
+    }
+    // A `-sti` adverb is a derivation of an adjective or a participle:
+    // `kehottavasti` from the present-active participle `kehottava` of
+    // `kehottaa`. The compound segmenter otherwise claims the long surface
+    // as a compound (`ottava`) before the full non-compound stack runs, so
+    // name the derived adverb here, before gate 4c's DP split.
+    if lower.ends_with("sti")
+        && let Some(base) = crate::suggest::derived_sti_base(&lower)
+    {
+        return Some(base);
+    }
+    // A VERB -> NOUN `-us`/`-ys` action noun's oblique `-kse-` stem
+    // (`nyrpistyksessä` from `nyrpistys`, `nyrpistää`). Run it before gate
+    // 4c's compound DP, which would otherwise name `nyrpeissään`.
+    if (lower.contains("ks") || lower.ends_with("us") || lower.ends_with("ys"))
+        && let Some(base) = crate::suggest::derived_action_us_base(&lower)
+    {
+        return Some(base);
+    }
+    // A comparative of a past-active participle (`perehtyneempi`) or its
+    // instructive (`perehtyneemmin`). Name it before the compound DP, which
+    // otherwise splits the long surface and reports `ehtynyt`.
+    if (lower.ends_with("mpi") || lower.ends_with("mmin"))
+        && let Some(base) = crate::suggest::derived_comparative_base(&lower)
     {
         return Some(base);
     }
@@ -1708,7 +1734,6 @@ mod tests {
             ("kyynelettömät", "kyyneletön"),
             ("saunoitti", "saunoittaa"),
             ("talttumuksella", "talttumus"),
-            ("itsekunkin", "itse"),
             ("vankkurien", "vankkurit"),
             ("kimotusta", "kimotus"),
             ("eltaantuneen", "eltaantua"),
@@ -1748,7 +1773,6 @@ mod tests {
             ("tuontuosta", "tuosta"),
             ("tuontuostakin", "tuosta"),
             ("raamatunlauseet", "lause"),
-            ("silloinkun", "silloin"),
             ("juhlatamineitaan", "tamineet"),
             ("lehdetön", "lehdetön"),
             ("kahdenkesken", "kesken"),

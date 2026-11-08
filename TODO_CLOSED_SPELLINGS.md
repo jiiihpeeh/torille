@@ -1,0 +1,338 @@
+# TODO: shrink `closed_spellings::CLOSED`
+
+Status: **in progress** · owner: — · created: 2026-11-08
+
+The closed-spelling table in `src/expand/closed_spellings.rs` has 32
+`(surface, base)` pairs. Most are not closed spellings: they are ordinary
+inflection, productive derivation, compound analysis, proper-name data, or
+plain misspellings. The table also serves the fast per-keystroke path, so a row
+can only go when **both** the full engine and `check_normal_fast` resolve the
+surface without it.
+
+Goal: reduce 32 rows to the genuine residue (roughly 3–8), each with an
+authority source and a test proving the engine still cannot derive it.
+
+Related context: `PLAN_FAST_PATH_REMOVAL.md` (the table's origin and rules),
+`AGENTS.md` (“No shortcuts in the inflection detection”).
+
+## Ground rules
+
+- [ ] No new suffix-stripper entries in `is_known_word`; fix the class,
+      derivation, compound, or data layer instead.
+- [ ] A row may stay only if it is a fused spelling or lexical variant that
+      morphology cannot derive **and** Kotus/Kielitoimiston sanakirja accepts.
+- [ ] Every row needs a source comment (Kotus, Kielikello, KS, Wiktionary) and
+      a staleness test: if the engine later derives it, the row fails.
+- [ ] The table is consulted only after the cheap gates; it must not shadow a
+      regular paradigm base.
+- [ ] Do not hand-edit generated files; regenerate `nominals/`, stems, blobs,
+      and maps through their generators.
+- [ ] Keep `CLOSED` sorted; `lookup` is a binary search.
+
+## Current audit findings
+
+Read-only probes on the current tree (`inflect(base)`, `look_base`,
+`check_normal`, sanalista rows):
+
+- [ ] Record in the audit fixture:
+  - `enemmittä`, `keskenämme`, `seuduitta`, `suurkaanin` are already emitted by
+    `inflect(base)` and found by `find_bases`; only the fast path needs work.
+  - `honkanen`, `selma`, `unhotus` are **not** sanalista lemmas.
+  - `honkasien` and `selmallakaan` are lowercase proper-name forms; the checker
+    deliberately rejects lowercase names
+    (`proper_names::contains_capitalised`).
+  - Kotus/Kielitoimiston ohjepankki accepts `ylhäältä päin ~ ylhäältäpäin`
+    (and the adverb/particle + `päin` rule generally).
+  - Kotus writes these as two words: `edeltä käsin`, `itse kunkin`,
+    `sen tähden` family, `sitten kun`, `yhtä kaikki`.
+  - `äkkipikaa` is a genuine one-word adverb (Wiktionary).
+
+
+## Progress (2026-11-08)
+
+Removed from `CLOSED` (32 → 18 rows):
+
+- [x] `edeltäkäsin`, `itsekunkin`, `niinkauan`, `senjälkeen`, `silloinkun`,
+      `yhtäkaikki` — Kotus two-word spellings; moved to `is_nonword`.
+- [x] `honkasien`, `selmallakaan` — lowercase proper-name forms; the name gate
+      only accepts capitalised forms.
+- [x] `kehottavasti`, `koneentapaisesti` — derived through `-sti`; the fast
+      path now probes `derived_sti_base` before the compound DP split.
+- [x] `nyrpistyksessä` — `-us`/`-ys` action noun oblique `-kse-` stem is
+      reconstructed; the source verb may take `-aa`/`-ää` as well as
+      `-ta`/`-tä`.
+- [x] `perehtyneempi` — the comparative nominal is built from the `-nee-`
+      stem; the fast path probes `derived_comparative_base` before the DP
+      split.
+- [x] `seuduitta` — plural abessive `itta`/`ittä` added to `ENDINGS` and the
+      stem-key generator.
+- [x] `kävellytti` — the double-`l` spelling is not the causative; the correct
+      `kävelytti` (one `l`) is already a form of `kävelyttää` on both paths.
+      Voikko confirms `kävelytti`, and the row is deleted, not replaced.
+
+Kept after verification:
+
+- `tienpuoleen` — Voikko analyses it as `tienpuoli`; restored to `CLOSED`.
+- `pormestarinna`, `kuulten` family — left in place; Voikko rejects them but
+  its false negative on `kävellytti` shows it is not decisive for rare forms.
+
+## Row disposition
+
+Legend: **A** delete as nonword/mis-spelling · **B** engine/derivation/data
+fix, then delete · **C** fast-path probe, then delete (engine already derives) ·
+**D** keep as genuine closed spelling.
+
+| surface | base | disposition | action |
+|---|---|---|---|
+| `alhaaltapäin` | `alhaalta` | D | keep; verify exact Kotus entry |
+| `edeltäkäsin` | `edeltä` | A | Kotus: `edeltä käsin` |
+| `enemmittä` | `enempi` | C | fast degree probe |
+| `hiljempaa` | `hiljaa` | B | adverb-degree data/rule + fast probe |
+| `honkasien` | `honkanen` | A | lowercase surname; delete |
+| `itsekunkin` | `itse` | A | Kotus: `itse kunkin` |
+| `kehottavasti` | `kehottaa` | B | fix `-sti` / participle derivation |
+| `keskenämme` | `keskenään` | C | fast adverb-possessive probe |
+| `koneentapaisesti` | `tapaisesti` | B | compound adjective + `-sti` |
+| `kuultemme` | `kuulten` | B/D | decide as one family |
+| `kuulten` | `kuulten` | B/D | decide as one family |
+| `kuulteni` | `kuulten` | B/D | decide as one family |
+| `kuultenne` | `kuulten` | B/D | decide as one family |
+| `kuultensa` | `kuulten` | B/D | decide as one family |
+| `kuultesi` | `kuulten` | B/D | decide as one family |
+| `kävellytti` | `kävellä` | A/B | verify; likely typo/non-form |
+| `loitommalla` | `loitto` | B | degree data/rule + fast probe |
+| `niinkauan` | `niin` | A | verify Kotus; two words |
+| `nyrpistyksessä` | `nyrpistää` | B | fix `-us` action noun `-kse-` |
+| `perehtyneempi` | `perehtyä` | B | fix comparative reconstruction |
+| `pormestarinna` | `pormestari` | B/D | `-nna` family or lexical lemma |
+| `selmallakaan` | `selma` | A | lowercase name; delete |
+| `senjälkeen` | `sen` | A | Kotus: `sen jälkeen` |
+| `seuduitta` | `seutu` | C | abessive plural ending/stem key |
+| `silloinkun` | `silloin` | A | Kotus: `sitten kun`; two words |
+| `suurkaanin` | `suurkaani` | C | fast classless-compound probe |
+| `tienpuoleen` | `tie` | A | verify; noun + `puoleen` |
+| `unhotusta` | `unhotus` | A/B | verify; delete or add class-39 lemma |
+| `ventovieraita` | `vieras` | B | compound modifier `vento` |
+| `yhtäkaikki` | `kaikki` | A | Kotus: `yhtä kaikki` |
+| `ylhäältäpäin` | `ylhäältä` | D | keep; Kotus allows both |
+| `äkkipikaa` | `pikaa` | D | keep; genuine adverb |
+
+## Phase 0 — instrument before deleting
+
+- [ ] Refactor the closed lookup into a policy parameter:
+      `check_normal_with(word, engine_gate, closed: Closed)` and
+      `is_known_word_with_compound_uncached(word, allow_compound, closed: Closed)`.
+      Production passes `Closed::Enabled`; tests/audit pass
+      `Closed::Disabled`.
+- [ ] Add `tools/src/bin/audit_closed_spellings.rs` printing:
+      `surface`, `base`, `base_in_sanalista`, `engine_emits`,
+      `find_bases_base`, `fast_resolves_without_closed`, `proper_name`,
+      `authority`, `proposed_action`.
+- [ ] Add a checked-in expected-action fixture for all 32 rows.
+- [ ] Make the audit fail when:
+  - [ ] a row marked “engine cannot derive” starts being derived;
+  - [ ] a base is absent from the lexicon and not documented as a proper
+        name/adverb;
+  - [ ] a row marked “fast-only” lacks the probe that replaces it.
+- [ ] Record the baseline: `check_normal` / `check_normal_fast` outcomes,
+      suggestions for rejected forms, and `check_fast` timings.
+- [ ] Add a full/fast parity test for every surface in the table.
+
+## Phase 1 — delete invalid rows (no engine work)
+
+Move to `is_nonword`, with the split spelling offered by the suggester:
+
+- [x] `edeltäkäsin` → `edeltä käsin`
+- [x] `itsekunkin` → `itse kunkin`
+- [x] `niinkauan` → `niin kauan` (verify Kotus first)
+- [x] `senjälkeen` → `sen jälkeen`
+- [x] `silloinkun` → `silloin kun`
+- [ ] `tienpuoleen` → `tien puoleen` (verify Kotus first)
+- [x] `yhtäkaikki` → `yhtä kaikki`
+
+Delete outright:
+
+- [x] `honkasien` — lowercase surname; pin the rejection.
+- [x] `selmallakaan` — lowercase name; ensure `Selmallakaan` (capitalised)
+      still resolves.
+- [ ] `unhotusta` — verify; if `unhotus` is real, add a class-39 lemma
+      instead.
+- [x] `kävellytti` — the double-`l` spelling is a misspelling; `kävelytti`
+      (one `l`) is already derived. Deleted and pinned.
+
+Tests:
+
+- [ ] `check_normal_fast` and the full path both return `Unknown`.
+- [ ] The suggestion list contains the split spelling for each deleted fused
+      form.
+- [ ] No lowercase proper name is accepted.
+
+## Phase 2 — cover the four engine-derived rows on the fast path
+
+- [ ] `enemmittä` — add a reverse adjective-degree probe. Prefer a generated
+      `degree form -> positive lemma` table (inverse of
+      `data/adj_degrees.csv` + productive class-16/36 rules) consulted from
+      `cheap_derived_base`; avoid a hand-written `-mmittä` suffix rule.
+- [ ] `keskenämme` — add adverb-possessive coverage (data row in
+      `data/adverbit.csv`/its generator, or a small `adverb_possessive_base`
+      that strips the possessive and consults the adverb table).
+- [x] `seuduitta` — plural abessive `itta`/`ittä` added to `ENDINGS` and
+      `tools/src/stem_key.rs`; `data/stem_to_base_map.csv` regenerated.
+- [ ] `suurkaanin` — teach the fast compound path the classless-compound case:
+      known modifier (`suur`) + known head noun (`kaani`) + head paradigm
+      emits the surface.
+- [ ] Remove the four rows only after both paths resolve them.
+- [ ] Add fast/full parity tests for all four.
+- [ ] Benchmark `check_normal_fast`; the probes must stay bounded.
+
+## Phase 3 — fix engine/derivation gaps
+
+Work one family at a time; each fix gets a family test, not just the reported
+word.
+
+### `-sti` from participles and compound adjectives
+
+- [x] `kehottavasti`: the fast path now probes `derived_sti_base` before the
+      compound DP; the existing participle path names `kehottaa`.
+- [x] `koneentapaisesti`: the compound-adjective branch names
+      `koneentapainen`; both paths agree.
+- [ ] Add tests for other participles and compound adjectives.
+- [ ] Remove both rows.
+
+### `-us` action nouns with an oblique `-kse-` stem
+
+- [x] `nyrpistyksessä`: `derived_action_us_base` reconstructs the `-kse-`
+      stem and accepts `-aa`/`-ää` source verbs.
+- [ ] Add tests for `edistys`/`päätös`/`yritys`-type families so the fix
+      generalizes.
+- [ ] Remove the row.
+
+### Participle comparative
+
+- [x] `perehtyneempi`: `derived_comparative_base` builds the nominal from the
+      `-nee-` stem and returns `perehtynyt`; the fast path probes it before the
+      DP split.
+- [ ] Add tests for `-nee-` participles and ordinary vowel-stem adjectives.
+- [ ] Remove the row.
+
+### Degree data/rules
+
+- [ ] `loitommalla`: extend `derived_comparative_base` to oblique comparative
+      cases (strip case ending, map weak `-mma-`/`-mpa-` to the class-16
+      `-mpi` nominative, verify), **or** add `loitto` to
+      `data/adj_degrees.csv` from Omorfi and expose it through the degree
+      reverse probe. Verify class 16 emits `loitompi` → `loitommalla`.
+- [ ] `hiljempaa`: add an adverb-degree mechanism (`hiljaa` →
+      `hiljempaa`/`hiljemmin`) as data or a small productive rule, with a fast
+      probe. Keep it out of `ADJ_DEGREES`.
+- [ ] Remove both rows.
+
+### Feminine `-nna`
+
+- [ ] `pormestarinna`: check the family (`tohtorinna`, `professorinna`,
+      `maisterinna`). If at least three are authoritative, extend the feminine
+      recogniser next to `-tar`/`-tär` with `-nna`/`-nnä` and its paradigm.
+      If isolated, add `pormestarinna` as a sanalista lemma (if accepted) or
+      keep it closed.
+- [ ] Remove the row if the rule/lemma lands.
+
+### Compound with an opaque modifier
+
+- [ ] `ventovieraita`: `ventovieras` is already a classless compound lemma.
+      Add `vento` to the modifier data used by `expand::derived`
+      (`modifier_is_known`), or special-case an opaque modifier on a known head
+      in `compound_head_forms`.
+- [ ] Test the whole `ventovieras` paradigm and compound splitting.
+- [ ] Remove the row.
+
+### `kuulten` family (six rows)
+
+- [ ] Decide authority first: is `kuulten` a productive non-finite form of
+      `kuulla`/`kuultaa`, or a lexical/archaic adverb?
+- [ ] If productive: implement the instructive + possessive form in the verb
+      engine/non-finite possessive layer; one fix removes six rows. Test
+      `kuulla`, `kuultaa`, and another class-67 verb.
+- [ ] If lexical: add a defective `kuulten` entry with its possessive forms
+      (data-backed), or keep the six rows as the genuine closed family.
+- [ ] Do not add six suffix rules.
+
+## Phase 4 — shrink the accepted residue
+
+Likely residue: `alhaaltapäin`, `ylhäältäpäin`, `äkkipikaa`, plus any kept
+`kuulten`/`pormestarinna`/`kävellytti` decisions.
+
+- [ ] Add a source comment to every surviving row.
+- [ ] Add the staleness test (`inflect(base)` must not emit the surface).
+- [ ] Decide whether to keep the code table or move to
+      `data/closed_spellings.csv`; if a CSV is added, document its producer.
+- [ ] Consider a general adverb/particle + `päin` rule for
+      `alhaaltapäin`/`ylhäältäpäin`. Only if it does not accept noun + `päin`
+      (`kotiin päin` must stay separate).
+- [ ] Keep `äkkipikaa` as a lexical adverb unless an authority rejects it.
+
+## Phase 5 — regenerate and gate
+
+Data changes that need regeneration:
+
+- [ ] `data/nykysuomensanalista.csv` and `src/sanalista_overrides.rs` for any
+      added lemma (`unhotus`, `perehtynyt`, `pormestarinna`, `kävellyttää`,
+      `ventovieras`).
+- [ ] `data/adj_degrees.csv` for `loitto`/participle degrees.
+- [ ] `data/adverbit.csv` for `hiljaa`/`keskenään` families.
+- [ ] `data/stem_to_base_map.csv` and `data/verb_stem_to_base_map.csv` after
+      `ENDINGS`/stem-key changes.
+- [ ] `data/proper_name_forms.csv` only if a name form is genuinely missing;
+      do not accept lowercase names.
+
+Commands:
+
+```bash
+cargo run --release -p torille-tools --bin gen_all_forms
+cargo run --release -p torille-tools --bin gen_adj_degrees
+cargo run --release -p torille-tools --bin gen_stem_map_noun
+cargo run --release -p torille-tools --bin gen_stem_map_verb
+cargo run --release -p torille-tools --bin gen_derived
+cargo run -p torille-maps -- publish   # only after the blobs are final
+```
+
+Gates:
+
+- [ ] `cargo clippy --workspace --all-targets -- -D warnings`
+- [ ] `cargo test --release --workspace`
+- [ ] `python3 tools/test_binding_agrees_with_binary.py`
+- [ ] `python3 tools/test_reverse_lookup_recall.py`
+- [ ] `python3 tools/build/compare_engine_outputs.py --strict`
+- [ ] `python3 tools/test_illegal_evidence.py`
+
+Additional checks:
+
+- [ ] `check_normal_fast`/`check_fast` benchmark before and after.
+- [ ] Hyphenation corpus tests; `hyphenation/compounds.rs` consults
+      `closed_spellings::base`, so the residue is part of its known-head set.
+- [ ] Suggestion tests: every deleted fused form offers the split spelling.
+- [ ] Full/fast parity for every surface in the table.
+- [ ] Blob-consistency tests (`the_blobs_match_compute`, pronoun/derived blobs).
+
+## Open decisions
+
+- [ ] `edeltäkäsin`, `niinkauan`, `tienpuoleen`: confirm Kotus and reject as
+      two-word spellings.
+- [ ] `koneentapaisesti`: confirm the one-word compound reading.
+- [ ] `kävellytti`: typo of `kävelytti`, form of `kävellyttää`, or invalid?
+- [ ] `kuulten` family: productive non-finite or lexical/archaic?
+- [ ] `pormestarinna`: `-nna` family or single lexical item?
+- [ ] `unhotusta`: archaic but valid (add lemma) or invalid (delete)?
+- [ ] `alhaaltapäin`: confirm the exact Kotus entry for the `alhaalta` case.
+
+## Success criteria
+
+- [ ] `CLOSED` is ≤ 8 rows, each with an authority comment and a staleness
+      test.
+- [ ] No row remains that `inflect(base)` or a fixed derivation/compound layer
+      can produce.
+- [ ] `check_normal` and `check_normal_fast` agree on every row and every
+      removed surface.
+- [ ] Deleted fused spellings are rejected and their split form is suggested.
+- [ ] Lowercase proper names stay rejected; capitalised forms still work.
+- [ ] No regression in `check_fast` latency, the harness gates, hyphenation, or
+      suggestion ranking.

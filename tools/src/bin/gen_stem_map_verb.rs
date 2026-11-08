@@ -382,8 +382,8 @@ fn strip_stem_vowels(stem: &str) -> Option<String> {    let trimmed = stem.trim_
 /// sync with `ENDINGS` in `src/expand/check_normal.rs`; the longest match wins.
 const CASE_ENDINGS: &[&str] = &[
     "iltä", "ilta", "istä", "ista", "issä", "inä", "ina", "jen", "ten", "den", "siin", "isiin",
-    "kaan", "kään", "seen", "hon", "hön", "jaa", "jää", "ihin", "issa", "illä", "ille", "iksi",
-    "tta", "ttä", "ssa", "ssä", "sta", "stä", "lla", "llä", "lle", "lta", "ltä", "ksi", "han",
-    "hän", "kin", "isi", "na", "nä", "ta", "tä", "ja", "jä", "en", "an", "än", "in", "on", "ön",
-    "un", "yn", "a", "ä", "n", "t",
+    "itta", "ittä", "kaan", "kään", "seen", "hon", "hön", "jaa", "jää", "ihin", "issa", "illä",
+    "ille", "iksi", "tta", "ttä", "ssa", "ssä", "sta", "stä", "lla", "llä", "lle", "lta", "ltä",
+    "ksi", "han", "hän", "kin", "isi", "na", "nä", "ta", "tä", "ja", "jä", "en", "an", "än", "in",
+    "on", "ön", "un", "yn", "a", "ä", "n", "t",
 ];

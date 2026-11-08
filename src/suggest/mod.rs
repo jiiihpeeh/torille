@@ -59,7 +59,8 @@ pub use candidates::{suggest, suggest_detailed};
 pub use casing::case_is_valid;
 pub use detail::{Suggestion, SuggestionSource};
 pub(crate) use known::{
-    is_content_head, is_known_compound_dp, is_known_compound_fast, is_known_short_compound,
+    derived_action_us_base, derived_comparative_base, derived_sti_base, is_content_head,
+    is_known_compound_dp, is_known_compound_fast, is_known_short_compound,
 };
 pub use known::{
     is_known_word, is_known_word_fast, is_known_word_no_compound, is_lemma, suggest_over_lemmas,
@@ -1403,7 +1404,7 @@ mod tests {
     #[test]
     fn reported_standard_compound_and_degree_forms_are_known() {
         for (word, base) in [
-            ("perehtyneempi", "perehtyä"),
+            ("perehtyneempi", "perehtynyt"),
             ("molemmille", "molemmat"),
             ("kyrmyniskoja", "niska"),
             ("housuntaskuissa", "tasku"),

@@ -4,7 +4,7 @@ use crate::tags::PartOfSpeech;
 
 use super::{catalogue, is_known_word_with_compound};
 
-pub(super) fn derived_sti_base(word: &str) -> Option<String> {
+pub(crate) fn derived_sti_base(word: &str) -> Option<String> {
     let stripped = word.strip_suffix("sti")?;
     if stripped.chars().count() < 3 {
         return None;
@@ -124,7 +124,7 @@ pub(super) fn bound_suffix_compound_base(word: &str) -> Option<String> {
 /// verb source must be in the sanalista and the whole class-39 paradigm must
 /// emit the surface. That verification is what keeps ordinary `-us` nouns
 /// from being treated as derivations of an unrelated verb.
-pub(super) fn derived_action_us_base(word: &str) -> Option<String> {
+pub(crate) fn derived_action_us_base(word: &str) -> Option<String> {
     use crate::kotus::Inflection;
     let mut candidates = vec![word.to_string()];
     for ending in crate::expand::check_normal::ENDINGS {
@@ -135,6 +135,15 @@ pub(super) fn derived_action_us_base(word: &str) -> Option<String> {
             && !stem.is_empty()
         {
             candidates.push(stem.to_string());
+        }
+    }
+    // An `-us`/`-ys` noun's oblique stem is `-kse-`: `nyrpistys` ->
+    // `nyrpistyksen`, `nyrpistyksessä`. The case stripper leaves
+    // `nyrpistykse`, so put the nominative `-s` back before looking for the
+    // source verb.
+    for candidate in candidates.clone() {
+        if let Some(stem) = candidate.strip_suffix("kse") {
+            candidates.push(format!("{stem}s"));
         }
     }
     candidates.sort();
@@ -150,7 +159,11 @@ pub(super) fn derived_action_us_base(word: &str) -> Option<String> {
             continue;
         }
         let mut source_is_verb = false;
-        for suffix in ["ta", "tä"] {
+        // `hoilata` -> `hoilaus` takes the theme vowel plus `-ta`/`-tä`;
+        // `nyrpistää` -> `nyrpistys` and `edistää` -> `edistys` attach the
+        // suffix to a consonant stem, so the modal/infinitive vowel is the
+        // longer `-aa`/`-ää` spelling.
+        for suffix in ["ta", "tä", "aa", "ää"] {
             let verb = format!("{stem}{suffix}");
             let Some(row) = crate::kotus::sanalista().by_word(&verb).next() else {
                 continue;
@@ -311,28 +324,34 @@ pub(super) fn derived_inen_degree_base(word: &str) -> Option<String> {
 /// `ADJ_DEGREES` only carries sanalista adjectives. The participle is a verb
 /// form, so the class-16 comparative is built here after the reconstructed
 /// positive passes the fast gates.
-pub(super) fn derived_comparative_base(word: &str) -> Option<String> {
+pub(crate) fn derived_comparative_base(word: &str) -> Option<String> {
     use crate::expand::inflect_all;
     use crate::kotus::{Gradation, Inflection};
 
     // `-mmin` is the comparative adverb (the instructive plural of the
-    // comparative); `-mpi` is its nominative. Both leave the positive
-    // participle as the prefix.
-    let positive = ["mmin", "mpi"].iter().find_map(|suffix| {
+    // comparative); `-mpi` is its nominative. Both leave the comparative stem
+    // as the prefix.
+    let comparative = ["mmin", "mpi"].iter().find_map(|suffix| {
         word.strip_suffix(suffix)
-            .filter(|positive| positive.chars().count() >= 4)
+            .filter(|stem| stem.chars().count() >= 4)
     })?;
     // A past-active participle takes `-neempi` on its `-nee-` stem:
     // `perehtynyt` -> `perehtyneempi`, `väsynyt` -> `väsyneempi`. The
-    // stripped prefix (`perehtynee`) is not itself known, so reconstruct
-    // the `-nut`/`-nyt` positive when the plain prefix misses.
-    let positive = positive
-        .strip_suffix("nee")
-        .into_iter()
-        .flat_map(|stem| [format!("{stem}nyt"), format!("{stem}nut")])
-        .chain(std::iter::once(positive.to_string()))
-        .find(|candidate| is_known_word_with_compound(candidate, false).is_some())?;
-    let nominal = format!("{positive}mpi");
+    // stripped prefix (`perehtynee`) is not itself known, so reconstruct the
+    // `-nut`/`-nyt` positive when the plain prefix misses. The nominal must be
+    // built from that `-nee-` stem, not from the positive: appending `mpi` to
+    // `perehtynyt` gives the non-word `perehtynytmpi`.
+    let (positive, nominal_stem) = if let Some(stem) = comparative.strip_suffix("nee") {
+        let positive = [format!("{stem}nyt"), format!("{stem}nut")]
+            .into_iter()
+            .find(|candidate| is_known_word_with_compound(candidate, false).is_some())?;
+        (positive, format!("{stem}nee"))
+    } else {
+        let positive = comparative.to_string();
+        is_known_word_with_compound(&positive, false)?;
+        (positive.clone(), positive)
+    };
+    let nominal = format!("{nominal_stem}mpi");
     let forms = inflect_all(
         &nominal,
         &[Inflection {
@@ -379,4 +398,38 @@ pub(super) fn derived_superlative_base(word: &str) -> Option<String> {
         }
     }
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The comparative of a participle is built on its `-nee-` stem:
+    /// `perehtyneempi` -> `perehtyneempi`, and the base named is the
+    /// participle `perehtynyt`, not a non-word `perehtynytmpi`.
+    #[test]
+    fn a_participle_comparative_reconstructs_its_nee_stem() {
+        assert_eq!(
+            derived_comparative_base("perehtyneempi").as_deref(),
+            Some("perehtynyt")
+        );
+        assert_eq!(
+            derived_comparative_base("väsyneempi").as_deref(),
+            Some("väsynyt")
+        );
+    }
+
+    /// The oblique `-kse-` stem of an `-us`/`-ys` action noun resolves back to
+    /// the noun, and the noun back to its verb.
+    #[test]
+    fn an_action_noun_oblique_stem_resolves() {
+        assert_eq!(
+            derived_action_us_base("nyrpistyksessä").as_deref(),
+            Some("nyrpistys")
+        );
+        assert_eq!(
+            derived_action_us_base("nyrpistyksen").as_deref(),
+            Some("nyrpistys")
+        );
+    }
 }

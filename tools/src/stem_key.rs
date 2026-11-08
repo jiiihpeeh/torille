@@ -28,6 +28,8 @@ fn endings(case: Case, number: Number) -> Option<&'static [&'static str]> {
         (Case::Adessive, Number::Plural) => &["illä", "illa"],
         (Case::Ablative, Number::Singular) => &["ltä", "lta"],
         (Case::Ablative, Number::Plural) => &["iltä", "ilta"],
+        (Case::Abessive, Number::Singular) => &["tta", "ttä"],
+        (Case::Abessive, Number::Plural) => &["itta", "ittä"],
         (Case::Allative, Number::Singular) => &["lle"],
         (Case::Allative, Number::Plural) => &["ille"],
         (Case::Essive, Number::Singular) => &["nä", "na"],

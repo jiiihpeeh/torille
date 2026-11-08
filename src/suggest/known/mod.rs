@@ -25,9 +25,11 @@ pub(crate) use lemmas::{gradation_plural_alternate, s_less_host};
 pub(crate) use stems::is_content_head;
 
 use compound::{detect_compound, hyphenated_base};
+pub(crate) use derived::{derived_action_us_base, derived_comparative_base, derived_sti_base};
+
 use derived::{
-    bound_suffix_compound_base, derived_action_us_base, derived_comparative_base, derived_hko_base,
-    derived_inen_degree_base, derived_sti_base, derived_superlative_base,
+    bound_suffix_compound_base, derived_hko_base, derived_inen_degree_base,
+    derived_superlative_base,
 };
 use stems::{
     find_base_via_stem_map_static, find_base_via_stem_map_static_possessive,

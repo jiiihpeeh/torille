@@ -3,6 +3,9 @@
 A running list of gaps and known issues in the torille morphology engine,
 ordered by user-facing impact. Update as items are done.
 
+The closed-spelling table cleanup has its own checklist:
+[`TODO_CLOSED_SPELLINGS.md`](TODO_CLOSED_SPELLINGS.md).
+
 ## High priority
 
 Ordered by user-facing impact, which is not the same as gap size: an engine that
