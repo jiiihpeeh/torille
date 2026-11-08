@@ -54,7 +54,26 @@ pub fn missing(root: &Path) -> Vec<&'static str> {
 /// after the fetch succeeds, so a failed fetch leaves the working maps intact.
 pub fn fetch(root: &Path, remote: &str) -> Result<usize, String> {
     let refname = format!("refs/remotes/{remote}/maps");
-    git(root, &["fetch", "--force", remote, &format!("maps:{refname}")])?;
+    // A build run over a flaky link should not fail on one reset; retry the
+    // network step a couple of times before giving up.
+    let mut last = None;
+    for attempt in 0..3 {
+        match git(root, &["fetch", "--force", remote, &format!("maps:{refname}")]) {
+            Ok(_) => {
+                last = None;
+                break;
+            }
+            Err(err) => {
+                last = Some(err);
+                if attempt < 2 {
+                    std::thread::sleep(std::time::Duration::from_millis(750));
+                }
+            }
+        }
+    }
+    if let Some(err) = last {
+        return Err(err);
+    }
 
     let listing = git(root, &["ls-tree", "-r", "--name-only", &refname])?;
     let mut blobs: Vec<(String, String)> = Vec::new();
