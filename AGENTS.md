@@ -296,25 +296,30 @@ SyntacticRole, RoleConfidence}`; `Suggestion` / `SuggestionSource` under
 
 The binary maps are generated artefacts. They are **not tracked on `master`**;
 the repository keeps them on a single-commit orphan branch literally named
-`maps`, which `tools/publish_maps.sh` force-pushes with the current
+`maps`, which `cargo run -p torille-tools --bin maps -- publish` force-pushes with the current
 `maps/*.bin.gz`. That is how the remote only ever holds the current versions:
 normal history never accumulates them.
 
+The first `cargo build` fetches them automatically when they are missing
+(`build.rs` calls the same Rust helper as the `maps` bin). Explicit forms:
+
 ```bash
-tools/fetch_maps.sh             # after cloning: fetch + unpack maps/*.bin.gz
-tools/fetch_maps.sh --offline   # only verify they are present
-tools/publish_maps.sh           # replace the `maps` branch with the current blobs
+cargo run -p torille-tools --bin maps -- status
+cargo run -p torille-tools --bin maps -- fetch
+cargo run -p torille-tools --bin maps -- publish   # after regenerating
 ```
 
+Set `TORILLE_NO_FETCH=1` (or `CARGO_NET_OFFLINE=1`) to forbid the build-time
+fetch.
+
 `build.rs` packages them into `OUT_DIR` and `include_bytes!`s the plain bytes;
-compression is tooling-only. A fresh clone that skips `fetch_maps.sh` fails the
-build with a message naming that script.
+compression is tooling-only. A fresh clone whose fetch fails stops with a
+message naming the `maps fetch` command.
 
 ## Build, test, lint
 
 ```bash
-tools/fetch_maps.sh                     # restore the binary maps (orphan `maps` branch)
-cargo build --workspace                 # all crates
+cargo build --workspace                 # first build fetches the orphan `maps` branch
 cargo build --release -p torille-tools  # the CLI drivers
 cargo test --release --workspace        # the whole suite
 cargo test -p torille                   # engine only (lib + integration)

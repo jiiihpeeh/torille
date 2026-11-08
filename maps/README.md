@@ -2,19 +2,20 @@
 
 **These files are not tracked on `master`.** They live on a single-commit
 orphan branch named `maps`, so the repository never accumulates old versions
-of the generated blobs. After cloning:
+of the generated blobs. The first `cargo build` fetches them automatically when they are missing. The
+explicit forms (`status`, `fetch`, `publish`) are subcommands of the Rust
+`maps` tool:
 
 ```bash
-tools/fetch_maps.sh        # fetch origin/maps and unpack maps/*.bin.gz
+cargo run -p torille-tools --bin maps -- status
+cargo run -p torille-tools --bin maps -- fetch
+cargo run -p torille-tools --bin maps -- publish   # after regenerating
 ```
 
-After regenerating them:
+The fetch is cross-platform Rust (`git` commands, no shell). Set
+`TORILLE_NO_FETCH=1` or `CARGO_NET_OFFLINE=1` to forbid it.
 
-```bash
-tools/publish_maps.sh      # replace the `maps` branch with the current blobs
-```
-
-`publish_maps.sh` writes one parentless commit and force-pushes it, so the
+`maps publish` writes one parentless commit and force-pushes it, so the
 branch always has exactly one commit with the current blobs. The previous
 commit becomes unreachable; GitLab prunes it during its next housekeeping
 (run the project's *Clean up* job to do it immediately).
@@ -33,7 +34,7 @@ discovery, no parsing, no allocation for the map itself.
 
 **Do not hand-edit these files.** Each one is regenerated from its source
 data; the table below names the producer. A stale blob is a correctness bug,
-so change the generator and rerun it, then `tools/publish_maps.sh`. Use
+so change the generator and rerun it, then `cargo run -p torille-tools --bin maps -- publish`. Use
 `cargo run -p torille-tools --bin map_gz -- test maps/X.bin.gz` to inspect
 one, or `map_gz compress|decompress` for a manual round-trip.
 

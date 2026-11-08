@@ -35,6 +35,13 @@ mod hyphenation;
 #[path = "build/gzip.rs"]
 mod gzip;
 
+// Shared with `tools/src/bin/maps.rs`; std-only, so the build script and the
+// tools crate compile the same implementation. The build script only uses
+// `fetch`/`missing`; the rest serves the `maps` bin.
+#[allow(dead_code)]
+#[path = "tools/src/maps.rs"]
+mod maps;
+
 use csv_builders::catalogue::emit_catalogue;
 use csv_builders::sanalista::generate;
 use csv_builders::string_map::{
@@ -82,23 +89,37 @@ fn main() {
     std::fs::create_dir_all(&precomputed)
         .unwrap_or_else(|e| panic!("create_dir_all {}: {e}", precomputed.display()));
 
-    // These four tables are computed with the engine, so a build script cannot
+    // These tables are computed with the engine, so a build script cannot
     // regenerate them. They live on the orphan `maps` branch; `master` tracks
-    // only `maps/README.md`. Fail with the fix rather than a cryptic
-    // `include_bytes!` error.
-    for required in [
-        "derived_by_form.bin.gz",
-        "derived_nominal.bin.gz",
-        "derived_modifiers.bin.gz",
-        "pronoun_forms.bin.gz",
-        "oi_plural_lemmas.bin.gz",
-    ] {
+    // only `maps/README.md`. Fetch them on first build unless the user asked
+    // for an offline build.
+    let root = Path::new(&manifest);
+    if !maps::missing(root).is_empty() {
+        let offline = std::env::var_os("CARGO_NET_OFFLINE").is_some()
+            || std::env::var_os("TORILLE_NO_FETCH").is_some()
+            || std::env::var_os("DOCS_RS").is_some();
+        if offline {
+            eprintln!(
+                "build.rs: binary maps are missing and fetching is disabled \
+                 (CARGO_NET_OFFLINE/TORILLE_NO_FETCH/DOCS_RS)"
+            );
+        } else {
+            let remote = maps::remote();
+            match maps::fetch(root, &remote) {
+                Ok(count) => {
+                    eprintln!("build.rs: fetched {count} blobs from {remote}/maps")
+                }
+                Err(err) => eprintln!("build.rs: maps fetch failed: {err}"),
+            }
+        }
+    }
+    for required in maps::REQUIRED {
         let path = precomputed.join(required);
         assert!(
             path.exists(),
             "{} is missing: the binary maps live on the 'maps' branch; run \
-             `tools/fetch_maps.sh` (or `tools/fetch_maps.sh --offline` if you \
-             already have them)",
+             `cargo run -q -p torille-tools --bin maps -- fetch` (or unset \
+             TORILLE_NO_FETCH to let the build fetch them)",
             path.display(),
         );
     }
