@@ -17,6 +17,7 @@
 use std::path::Path;
 
 use torille_tools::der1::write_table;
+use torille_tools::front_coded::write_map;
 
 fn main() {
     let computed = torille::expand::derived::compute();
@@ -62,12 +63,11 @@ fn main() {
         .into_iter()
         .collect();
     degree_forms.sort_by(|a, b| a.0.cmp(&b.0));
-    write_table(
-        Path::new("maps/degree_forms.bin.gz"),
-        degree_forms
-            .iter()
-            .map(|(surface, lemma)| (surface.as_str(), Some(*lemma))),
-    );
+    let degree_entries: Vec<(String, Vec<String>)> = degree_forms
+        .iter()
+        .map(|(surface, lemma)| (surface.clone(), vec![(*lemma).to_string()]))
+        .collect();
+    write_map(Path::new("maps/degree_forms.bin.gz"), &degree_entries);
 
     // Possessive adverbs: `keskenämme` -> `keskenään`. The class-99 paradigm
     // makes the forms; the fast path needs the inverse.

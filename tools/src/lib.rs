@@ -9,6 +9,7 @@
 use torille::kotus::{Gradation, Inflection, Lemma as LemmaRe};
 
 pub mod der1;
+pub mod front_coded;
 pub mod gzip;
 pub mod stem_key;
 

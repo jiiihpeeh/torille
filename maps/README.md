@@ -95,7 +95,7 @@ one, or `map_gz compress|decompress` for a manual round-trip.
 | `derived_by_form.bin.gz` | `gen_derived` → `tools/src/der1.rs` | `src/expand/derived.rs` | derived surface → derived lemma |
 | `derived_nominal.bin.gz` | `gen_derived` → `tools/src/der1.rs` | `src/expand/derived.rs` | derived nominal set |
 | `derived_modifiers.bin.gz` | `gen_derived` → `tools/src/der1.rs` | `src/expand/derived.rs` | derived modifier set |
-| `degree_forms.bin.gz` | `gen_derived` | `src/expand/mod.rs` | reverse degree forms: surface -> positive/adverb lemma |
+| `degree_forms.bin.gz` | `gen_derived` | `src/expand/mod.rs` | front-coded reverse degree forms: surface -> positive/adverb lemma |
 | `adverb_possessive.bin.gz` | `gen_derived` | `src/expand/check_normal.rs` | possessive adverb surface -> lemma (`keskenämme` -> `keskenään`) |
 | `feminine_nouns.bin.gz` | `gen_derived` | `src/expand/check_normal.rs` | lexical `-nna` feminine surface -> masculine base (`pormestarinna` -> `pormestari`) |
 | `lexical_adverbs.bin.gz` | `build.rs` | `src/expand/check_normal.rs` | established one-word adverb -> base (`alhaaltapäin` -> `alhaalta`) |

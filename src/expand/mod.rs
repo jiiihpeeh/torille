@@ -96,22 +96,19 @@ mod degree_index {
     //!
     //! The forward degree tables are per positive; the fast path has only a
     //! surface, so it needs the inverse. `gen_derived` writes the blob from
-    //! [`super::compute_degree_forms`]; the runtime is a binary search.
+    //! [`super::compute_degree_forms`] in the front-coded `MST2` format; the
+    //! runtime is a binary search over the front-coded keys.
 
-    use std::sync::OnceLock;
+    use crate::expand::static_table::StemMap;
 
-    pub(super) static DEGREE_FORMS: OnceLock<crate::expand::blob::Blob> = OnceLock::new();
-
-    pub(super) const DEGREE_FORMS_BIN: &[u8] = include_bytes!(concat!(
+    pub(super) static DEGREE_FORMS: StemMap = StemMap::new(include_bytes!(concat!(
         env!("OUT_DIR"),
         "/degree_forms.bin",
-    ));
+    )));
 
     /// The positive/adverb lemma a degree surface belongs to, if any.
     pub fn base(word: &str) -> Option<&'static str> {
-        let blob = crate::expand::blob::cell(&DEGREE_FORMS, DEGREE_FORMS_BIN);
-        let index = blob.find(word)?;
-        Some(blob.value(index))
+        DEGREE_FORMS.bases(word).next()
     }
 }
 
@@ -125,11 +122,7 @@ mod degree_index_tests {
     #[test]
     fn the_degree_blob_matches_compute() {
         let computed = compute_degree_forms();
-        let blob = crate::expand::blob::cell(
-            &degree_index::DEGREE_FORMS,
-            degree_index::DEGREE_FORMS_BIN,
-        );
-        assert_eq!(blob.iter().count(), computed.len());
+        assert_eq!(degree_index::DEGREE_FORMS.len(), computed.len());
         for (surface, lemma) in &computed {
             assert_eq!(degree_base(surface), Some(*lemma), "{surface}");
         }
