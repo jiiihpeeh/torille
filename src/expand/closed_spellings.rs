@@ -11,17 +11,15 @@
 //! Keep sorted; lookup is a binary search.
 
 /// `(surface, base)` pairs. Sorted by `surface`.
+///
+/// The 2nd infinitive instructive of `kuulla` is `kuullen`; the class-67
+/// engine generates it, and the `kuulte-`/`kuulten` spellings are not in the
+/// paradigm (en.wiktionary, `kuulla`).
 const CLOSED: &[(&str, &str)] = &[
     ("alhaaltapäin", "alhaalta"),
     ("enemmittä", "enempi"),
     ("hiljempaa", "hiljaa"),
     ("keskenämme", "keskenään"),
-    ("kuultemme", "kuulten"),
-    ("kuulten", "kuulten"),
-    ("kuulteni", "kuulten"),
-    ("kuultenne", "kuulten"),
-    ("kuultensa", "kuulten"),
-    ("kuultesi", "kuulten"),
     ("loitommalla", "loitto"),
     ("pormestarinna", "pormestari"),
     ("suurkaanin", "suurkaani"),
@@ -80,10 +78,47 @@ mod tests {
     fn the_reported_surfaces_resolve() {
         for (word, expected) in [
             ("loitommalla", "loitto"),
-            ("ylhäältäpäin", "ylhäältä"),
+                    ("ylhäältäpäin", "ylhäältä"),
             ("äkkipikaa", "pikaa"),
         ] {
             assert_eq!(base(word), Some(expected), "{word}");
+        }
+    }
+
+    /// The 2nd-infinitive instructive is `kuullen`; the `kuulten`/`kuulte-`
+    /// spellings are not in the paradigm.
+    #[test]
+    fn the_second_infinitive_instructive_is_kuullen() {
+        use crate::expand::check_normal::{NormalizedOutcome, check_normal, check_normal_fast};
+
+        for outcome in [
+            check_normal("kuullen", false),
+            check_normal_fast("kuullen", false),
+        ] {
+            assert!(
+                matches!(outcome, NormalizedOutcome::Inflected { .. }),
+                "kuullen should resolve to kuulla"
+            );
+        }
+        for word in [
+            "kuulten",
+            "kuulteni",
+            "kuultesi",
+            "kuultemme",
+            "kuultenne",
+            "kuultensa",
+        ] {
+            assert_eq!(base(word), None, "{word}");
+            assert_eq!(
+                check_normal(word, false),
+                NormalizedOutcome::Unknown,
+                "full path: {word}"
+            );
+            assert_eq!(
+                check_normal_fast(word, false),
+                NormalizedOutcome::Unknown,
+                "fast path: {word}"
+            );
         }
     }
 

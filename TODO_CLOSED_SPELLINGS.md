@@ -50,7 +50,7 @@ Read-only probes on the current tree (`inflect(base)`, `look_base`,
 
 ## Progress (2026-11-08)
 
-Removed from `CLOSED` (32 → 18 rows):
+Removed from `CLOSED` (32 → 12 rows):
 
 - [x] `edeltäkäsin`, `itsekunkin`, `niinkauan`, `senjälkeen`, `silloinkun`,
       `yhtäkaikki` — Kotus two-word spellings; moved to `is_nonword`.
@@ -69,12 +69,16 @@ Removed from `CLOSED` (32 → 18 rows):
 - [x] `kävellytti` — the double-`l` spelling is not the causative; the correct
       `kävelytti` (one `l`) is already a form of `kävelyttää` on both paths.
       Voikko confirms `kävelytti`, and the row is deleted, not replaced.
+- [x] `kuulten`, `kuulteni`, `kuultesi`, `kuultemme`, `kuultenne`,
+      `kuultensa` — en.wiktionary's `kuulla` paradigm gives only the bare
+      instructive `kuullen`, which the class-67 engine already generates.
 
 Kept after verification:
 
 - `tienpuoleen` — Voikko analyses it as `tienpuoli`; restored to `CLOSED`.
-- `pormestarinna`, `kuulten` family — left in place; Voikko rejects them but
-  its false negative on `kävellytti` shows it is not decisive for rare forms.
+- `pormestarinna` — left in place; Voikko rejects it, but its false negative on
+  `kävellytti` (and the en.wiktionary authority for `kuulla`) shows a single
+  source is not decisive for rare forms.
 
 ## Row disposition
 
@@ -259,7 +263,7 @@ word.
 ## Phase 4 — shrink the accepted residue
 
 Likely residue: `alhaaltapäin`, `ylhäältäpäin`, `äkkipikaa`, plus any kept
-`kuulten`/`pormestarinna`/`kävellytti` decisions.
+`pormestarinna` decision.
 
 - [ ] Add a source comment to every surviving row.
 - [ ] Add the staleness test (`inflect(base)` must not emit the surface).
