@@ -385,6 +385,13 @@ pub(crate) fn modifier_is_known(modifier: &str) -> bool {
     if bare.is_empty() {
         return false;
     }
+    // Opaque bound modifiers that occur only inside a listed classless
+    // compound: `ventovieras` is `vento` + `vieras`, but `vento` has no row
+    // of its own. Keep the list lexical and short.
+    const OPAQUE_MODIFIERS: &[&str] = &["vento"];
+    if OPAQUE_MODIFIERS.contains(&bare) {
+        return true;
+    }
     if crate::kotus::sanalista().by_word(bare).next().is_some() {
         return true;
     }
@@ -998,4 +1005,17 @@ pub(super) fn degree_forms(
         }
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// `vento` has no lemma row, but it is the bound modifier of the listed
+    /// classless compound `ventovieras`.
+    #[test]
+    fn an_opaque_compound_modifier_is_known() {
+        assert!(modifier_is_known("vento"));
+        assert!(modifier_is_known("vieras"));
+    }
 }

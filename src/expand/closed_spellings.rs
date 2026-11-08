@@ -25,7 +25,6 @@ const CLOSED: &[(&str, &str)] = &[
     ("suurkaanin", "suurkaani"),
     ("tienpuoleen", "tienpuoli"),
     ("unhotusta", "unhotus"),
-    ("ventovieraita", "vieras"),
     ("ylhäältäpäin", "ylhäältä"),
     ("äkkipikaa", "pikaa"),
 ];
@@ -83,6 +82,24 @@ mod tests {
         ] {
             assert_eq!(base(word), Some(expected), "{word}");
         }
+    }
+
+    /// `ventovieraita` is a form of the classless compound `ventovieras`;
+    /// the modifier `vento` has no lemma row, so the compound layer needs
+    /// the opaque-modifier entry.
+    #[test]
+    fn an_opaque_compound_modifier_resolves() {
+        use crate::expand::check_normal::{NormalizedOutcome, check_normal, check_normal_fast};
+        for outcome in [
+            check_normal("ventovieraita", false),
+            check_normal_fast("ventovieraita", false),
+        ] {
+            assert!(
+                matches!(outcome, NormalizedOutcome::Inflected { .. }),
+                "ventovieraita should be a known compound form"
+            );
+        }
+        assert_eq!(base("ventovieraita"), None);
     }
 
     /// The 2nd-infinitive instructive is `kuullen`; the `kuulten`/`kuulte-`

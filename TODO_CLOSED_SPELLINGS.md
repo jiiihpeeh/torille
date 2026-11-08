@@ -50,7 +50,7 @@ Read-only probes on the current tree (`inflect(base)`, `look_base`,
 
 ## Progress (2026-11-08)
 
-Removed from `CLOSED` (32 → 12 rows):
+Removed from `CLOSED` (32 → 11 rows):
 
 - [x] `edeltäkäsin`, `itsekunkin`, `niinkauan`, `senjälkeen`, `silloinkun`,
       `yhtäkaikki` — Kotus two-word spellings; moved to `is_nonword`.
@@ -72,6 +72,9 @@ Removed from `CLOSED` (32 → 12 rows):
 - [x] `kuulten`, `kuulteni`, `kuultesi`, `kuultemme`, `kuultenne`,
       `kuultensa` — en.wiktionary's `kuulla` paradigm gives only the bare
       instructive `kuullen`, which the class-67 engine already generates.
+- [x] `ventovieraita` — `ventovieras` is `vento` + `vieras`; `vento` has no
+      lemma row, so the compound layer now accepts it as an opaque bound
+      modifier.
 
 Kept after verification:
 
@@ -242,12 +245,10 @@ word.
 
 ### Compound with an opaque modifier
 
-- [ ] `ventovieraita`: `ventovieras` is already a classless compound lemma.
-      Add `vento` to the modifier data used by `expand::derived`
-      (`modifier_is_known`), or special-case an opaque modifier on a known head
-      in `compound_head_forms`.
-- [ ] Test the whole `ventovieras` paradigm and compound splitting.
-- [ ] Remove the row.
+- [x] `ventovieraita`: `vento` added to the opaque-modifier list in
+      `modifier_is_known`; both paths resolve the form.
+- [x] Test the `ventovieras` compound form.
+- [x] Remove the row.
 
 ### `kuulten` family (six rows)
 
