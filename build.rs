@@ -41,7 +41,8 @@ use csv_builders::string_map::{
     emit_adj_degrees, emit_adverbi, emit_connegatives, emit_connectives,
 };
 use map_builders::front_coded::{
-    emit_front_coded_set, emit_proper_name_lemmas, emit_proper_names, emit_stem_map,
+    emit_empty_set, emit_front_coded_set, emit_proper_name_lemmas, emit_proper_names,
+    emit_stem_map,
 };
 
 #[path = "src/rejected.rs"]
@@ -116,9 +117,29 @@ fn main() {
     // (`find_bases_with`).
     let forms_csv = Path::new(&manifest).join("data/all_forms.csv");
     println!("cargo:rerun-if-changed={}", forms_csv.display());
-    emit_map(&out_dir, &precomputed, "all_forms.bin", |raw| {
-        emit_front_coded_set(&forms_csv, raw)
-    });
+    let forms_raw = out_dir.join("all_forms.bin");
+    let forms_gz = precomputed.join("all_forms.bin.gz");
+    if forms_csv.exists() {
+        emit_front_coded_set(&forms_csv, &forms_raw);
+    } else if forms_gz.exists() {
+        // A fresh clone has no `data/all_forms.csv` (it is generated), but
+        // the committed set is on the `maps` branch and was just fetched.
+        eprintln!(
+            "build.rs: {} missing -- reusing {}",
+            forms_csv.display(),
+            forms_gz.display(),
+        );
+        gzip::decompress_file(&forms_gz, &forms_raw);
+    } else {
+        // Bootstrap so `gen_all_forms` can be built and run.
+        eprintln!(
+            "build.rs: {} missing and no committed set -- emitting an empty form set; \
+             run `cargo run --release -p torille-tools --bin gen_all_forms`",
+            forms_csv.display(),
+        );
+        emit_empty_set(&forms_raw);
+    }
+    gzip::compress_file(&forms_raw, &forms_gz);
 
     // Proper names: Wikidata supplies the lemmas, Omorfi the singular cases.
     // The fast path accepts these forms; they are never suggested.
