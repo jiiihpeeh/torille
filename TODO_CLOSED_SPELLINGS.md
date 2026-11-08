@@ -88,9 +88,9 @@ Removed from `CLOSED` (32 → 6 rows):
 Kept after verification:
 
 - `tienpuoleen` — Voikko analyses it as `tienpuoli`; restored to `CLOSED`.
-- `pormestarinna` — left in place; Voikko rejects it, but its false negative on
-  `kävellytti` (and the en.wiktionary authority for `kuulla`) shows a single
-  source is not decisive for rare forms.
+- `pormestarinna` — historical `-nna` feminine (wife of a titled man), a
+  different system from productive `-tar`/`-tär`; left in place until the
+  lexical family table/lemma lands (see the `-nna` section below).
 
 ## Row disposition
 
@@ -243,14 +243,24 @@ word.
       probe. Keep it out of `ADJ_DEGREES`.
 - [ ] Remove both rows.
 
-### Feminine `-nna`
+### Feminine `-nna` (lexical, not a suffix rule)
 
-- [ ] `pormestarinna`: check the family (`tohtorinna`, `professorinna`,
-      `maisterinna`). If at least three are authoritative, extend the feminine
-      recogniser next to `-tar`/`-tär` with `-nna`/`-nnä` and its paradigm.
-      If isolated, add `pormestarinna` as a sanalista lemma (if accepted) or
-      keep it closed.
-- [ ] Remove the row if the rule/lemma lands.
+`-nna`/`-nnä` is a separate historical system from productive `-tar`/`-tär`:
+it usually names the **wife of a titled man** (`pormestarinna`,
+`tohtorinna`, `rovastinna`, `ruustinna`, `monarkinna`); `keisarinna` is the
+one that also denotes a woman holding the office. These are old-fashioned and
+lexical. Do not add an `-nna` suffix stripper to `is_known_word`.
+
+- [ ] Audit the family against the sanalista and en.wiktionary/Kotus:
+      `keisarinna` is already a lemma; check `tohtorinna`, `rovastinna`,
+      `ruustinna`, `monarkinna`.
+- [ ] Prefer a small curated lexical table (`data/feminine_nouns.csv`,
+      form -> masculine base) embedded as a form map, or sanalista rows where
+      the authority lists them. Keep `pormestarinna -> pormestari`.
+- [ ] If a table is added, generate/embed it like `adverbit`/the closed
+      tables and probe it in the fast path; do not generalise to other `-nna`
+      words.
+- [ ] Remove the `pormestarinna` closed row once the table/lemma lands.
 
 ### Compound with an opaque modifier
 

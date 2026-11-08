@@ -281,6 +281,31 @@ inflectional particles — no gradation), `derivation.rs` (new lexemes, not
 inflections), `compound.rs` (component analysis: `CompoundKind`, the per-part
 `ComponentInflection` mode, and `explain`), `pronoun.rs` (closed paradigm).
 
+### Feminine derivation
+
+Finnish has several historical feminine suffixes, and they are **not one
+rule**. Do not collapse them into a generic `-nen`/`-tar` stripper.
+
+- `-tar`/`-tär` is the productive feminine counterpart (`näyttelijätär`,
+  `laulajatar`, `ystävätär`). The recogniser is
+  `src/expand/derived_forms/agent.rs` (`derived_tar_base`): it takes the
+  source noun's weak stem and verifies the class `32*C` paradigm.
+- `-nna`/`-nnä` mostly forms the **wife of a titled man** (`keisarinna`,
+  `pormestarinna`, `tohtorinna`, `rovastinna`, `ruustinna`, `monarkinna`).
+  Some, notably `keisarinna`, also denote a woman holding the position.
+  These are lexical/historical, not a general productive suffix; when adding
+  one, prefer a data/sanalista row or a small explicit family table over
+  teaching `is_known_word` an `-nna` suffix rule.
+- `-ska`/`-skä` (`professorska`, `pastorska`) and `-kko`/`-kkö`
+  (`karjakko`) are further historical feminine formations, also lexical.
+- Most of these words are old-fashioned; modern Finnish normally uses the
+  gender-neutral title (`pormestari`, `tohtori`) or an explicit phrase
+  (`pormestarin puoliso`). `keisarinna` remains established.
+
+Keep the base noun as the reading (`pormestarinna` -> `pormestari`) and the
+feminine form as a derived/lexical noun; a `-tar` row and a `-nna` row are
+not the same paradigm.
+
 ## Public API (crate root)
 
 `check`, `suggest`, `suggest_detailed`, `levenshtein_with_ops`, `EditOp`;
@@ -470,6 +495,7 @@ is gitignored and generated.
 | compile-time blob writers | `build.rs`, `build/csv_builders/`, `build/map_builders/`; blobs live in `maps/` |
 | fetch/publish the `maps` branch | `tools/maps-sync/` (`cargo run -p torille-maps -- status\|fetch\|publish`) |
 | a new verb/noun class engine | `src/expand/verbs/`, `src/expand/nominals*/`, then `dispatch` + `AUTHORITATIVE_CLASSES` |
+| feminine derivations (`-tar`, `-nna`, `-ska`, `-kko`) | `src/expand/derived_forms/agent.rs` for productive `-tar`; lexical `-nna`/`-ska`/`-kko` as data, not a suffix stripper |
 | the grammar reading model | `src/tags.rs` |
 | hyphenation patterns/policy | `src/hyphenation/`, `data/hyphenation/` |
 | the wasm/browser surface | `torille-wasm/src/`, `extensions/firefox/`, `extensions/chromium/` |
