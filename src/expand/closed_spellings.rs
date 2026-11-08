@@ -1,11 +1,11 @@
 //! Closed spellings the engine does not derive.
 //!
-//! This is the small residual left after moving inflection, derivation,
-//! compounds and lexical adverb spellings to their own layers. Every row is
-//! an exact surface with a dictionary base; it is not a suffix rule and it
-//! does not decide inflection. A row belongs here only when the base has no
-//! sanalista lemma and no productive class or derivation behind it; reject
-//! typos instead of listing them.
+//! Closed spellings the engine does not derive.
+//!
+//! The table is currently empty: the last row (`tienpuoleen`) became a
+//! classless compound lemma (`tienpuoli`), so the engine derives the whole
+//! paradigm. It stays as the place for a future exact surface whose base has
+//! no sanalista lemma and no productive class or derivation behind it.
 //!
 //! Established one-word adverbs (`alhaaltapäin`, `ylhäältäpäin`,
 //! `äkkipikaa`) live in `data/lexical_adverbs.csv`, not here.
@@ -13,21 +13,15 @@
 //! Keep sorted; lookup is a binary search.
 
 /// `(surface, base)` pairs. Sorted by `surface`.
-const CLOSED: &[(&str, &str)] = &[
-    // `tienpuoli` is the compound base (Voikko); it has no sanalista row.
-    ("tienpuoleen", "tienpuoli"),
-    // `unhotus` is the action-noun base (Voikko); it has no sanalista row.
-    ("unhotusta", "unhotus"),
-];
+const CLOSED: &[(&str, &str)] = &[];
 
 /// Fused spellings that modern Finnish writes as two words. They are not
 /// accepted; the suggester offers the split form.
 ///
 /// Kotus, *Yhdyssana vai ei: nurin päin vai nurinpäin?* (Kielitoimiston
 /// ohjepankki), gives `edeltä käsin`, `itse kunkin`, `sen tähden` family,
-/// `sitten kun` and `yhtä kaikki` as two words. The `niin kauan`,
-/// `silloin kun` and `tien puoleen` rows follow the same pronoun/particle +
-/// adverb/postposition rule.
+/// `sitten kun` and `yhtä kaikki` as two words. The `niin kauan` and
+/// `silloin kun` rows follow the same pronoun/particle + adverb rule.
 pub fn is_nonword(word: &str) -> bool {
     matches!(
         word,
@@ -62,16 +56,6 @@ mod tests {
     #[test]
     fn the_table_is_sorted() {
         assert!(CLOSED.windows(2).all(|w| w[0].0 < w[1].0));
-    }
-
-    #[test]
-    fn the_reported_surfaces_resolve() {
-        for (word, expected) in [
-            ("tienpuoleen", "tienpuoli"),
-            ("unhotusta", "unhotus"),
-        ] {
-            assert_eq!(base(word), Some(expected), "{word}");
-        }
     }
 
     /// `ventovieraita` is a form of the classless compound `ventovieras`;
@@ -186,6 +170,7 @@ mod tests {
             ("alhaaltapäin", "alhaalta"),
             ("ylhäältäpäin", "ylhäältä"),
             ("äkkipikaa", "äkkipikaa"),
+            ("tienpuoleen", "tienpuoli"),
         ] {
             assert_eq!(
                 base(check_normal(word, false)).as_deref(),

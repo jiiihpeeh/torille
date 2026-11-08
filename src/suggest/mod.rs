@@ -580,6 +580,7 @@ mod tests {
             "elttaantuneen",
             "elttaantuminen",
             "pingoittuivat",
+            "unhotusta",
         ] {
             assert!(
                 matches!(check(word), CheckOutcome::Unknown),
@@ -613,6 +614,10 @@ mod tests {
         assert_eq!(
             suggest("pingoittuivat", 8, 2).first().map(String::as_str),
             Some("pingottuivat"),
+        );
+        assert_eq!(
+            suggest("unhotusta", 8, 2).first().map(String::as_str),
+            Some("unohdusta"),
         );
     }
 

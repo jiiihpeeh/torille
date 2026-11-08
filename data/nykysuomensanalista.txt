@@ -87262,6 +87262,7 @@ tienpenkka		substantiivi
 tienpinta		substantiivi	
 tienpito		substantiivi	
 tienpitäjä		substantiivi	
+tienpuoli		substantiivi	
 tienpuoleinen		adjektiivi	
 tienpäällyste		substantiivi	
 tienraivaaja		substantiivi	

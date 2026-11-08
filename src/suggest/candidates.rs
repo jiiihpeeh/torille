@@ -76,6 +76,9 @@ const REPORTED_CORRECTIONS: &[(&str, &str, &str)] = &[
     ("pingoittuivat", "pingottuivat", "pingottaa"),
     // `rusoittaa` is not a standard lemma; Wiktionary gives `rusottaa`.
     ("rusoittava", "rusottava", "rusottaa"),
+    // `unhotusta` is not a form of a `unhotus` lemma; the intended word is
+    // the partitive of `unohdus`.
+    ("unhotusta", "unohdusta", "unohdus"),
 ];
 
 pub(super) fn reported_correction(word: &str) -> Option<(String, String)> {

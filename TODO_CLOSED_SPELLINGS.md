@@ -1,6 +1,6 @@
 # TODO: shrink `closed_spellings::CLOSED`
 
-Status: **residue reached (32 → 2 rows)** · owner: — · created: 2026-11-08
+Status: **complete (32 → 0 rows)** · owner: — · created: 2026-11-08
 
 The closed-spelling table in `src/expand/closed_spellings.rs` has 32
 `(surface, base)` pairs. Most are not closed spellings: they are ordinary
@@ -50,7 +50,7 @@ Read-only probes on the current tree (`inflect(base)`, `look_base`,
 
 ## Progress (2026-11-08)
 
-Removed from `CLOSED` (32 → 2 rows):
+Removed from `CLOSED` (32 → 0 rows):
 
 - [x] `edeltäkäsin`, `itsekunkin`, `niinkauan`, `senjälkeen`, `silloinkun`,
       `yhtäkaikki` — Kotus two-word spellings; moved to `is_nonword`.
@@ -77,6 +77,10 @@ Removed from `CLOSED` (32 → 2 rows):
       modifier.
 - [x] `alhaaltapäin`, `ylhäältäpäin`, `äkkipikaa` — moved to the curated
       `data/lexical_adverbs.csv` table (exact lexical adverbs).
+- [x] `unhotusta` — rejected and curated to suggest `unohdusta`
+      (`unohdus`): the `unhotus` base is not a lemma.
+- [x] `tienpuoleen` — added `tienpuoli` as a classless compound lemma; the
+      engine now derives `tienpuoleen`, `tienpuolen`, `tienpuolella`, ...
 - [x] `enemmittä`, `loitommalla` — generated reverse-degree map
       (`maps/degree_forms.bin.gz`); `enempi` is covered as a comparative
       lemma, `loitto` by a curated `adj_degrees_extra.csv` row.
@@ -89,14 +93,12 @@ Removed from `CLOSED` (32 → 2 rows):
 
 Kept after verification:
 
-- `tienpuoleen` — Voikko analyses it as `tienpuoli`; restored to `CLOSED`.
 
 ## Final residue
 
-The two rows that remain are lexical bases that have no sanalista row:
-
-- `tienpuoleen` — base `tienpuoli` (compound, Voikko-confirmed).
-- `unhotusta` — base `unhotus` (action noun, Voikko-confirmed).
+The table is empty. `tienpuoleen` was the last row; `tienpuoli` is now a
+classless compound lemma in the sanalista, so the engine derives the whole
+paradigm and the fast compound path names the whole compound.
 
 The established one-word adverbs (`alhaaltapäin`, `ylhäältäpäin`,
 `äkkipikaa`) moved to `data/lexical_adverbs.csv`.
@@ -138,8 +140,8 @@ fix, then delete · **C** fast-path probe, then delete (engine already derives) 
 | `seuduitta` | `seutu` | C | abessive plural ending/stem key |
 | `silloinkun` | `silloin` | A | Kotus: `sitten kun`; two words |
 | `suurkaanin` | `suurkaani` | C | fast classless-compound probe |
-| `tienpuoleen` | `tie` | A | verify; noun + `puoleen` |
-| `unhotusta` | `unhotus` | A/B | verify; delete or add class-39 lemma |
+| `tienpuoleen` | `tienpuoli` | done | added `tienpuoli` as a classless compound lemma |
+| `unhotusta` | `unohdus` | A | done: curated correction to `unohdusta` |
 | `ventovieraita` | `vieras` | B | compound modifier `vento` |
 | `yhtäkaikki` | `kaikki` | A | Kotus: `yhtä kaikki` |
 | `ylhäältäpäin` | `ylhäältä` | D | keep; Kotus allows both |
@@ -175,7 +177,7 @@ Move to `is_nonword`, with the split spelling offered by the suggester:
 - [x] `niinkauan` → `niin kauan` (verify Kotus first)
 - [x] `senjälkeen` → `sen jälkeen`
 - [x] `silloinkun` → `silloin kun`
-- [ ] `tienpuoleen` → `tien puoleen` (verify Kotus first)
+- [x] `tienpuoleen` — resolved by adding `tienpuoli` as a classless compound lemma (not a two-word rejection).
 - [x] `yhtäkaikki` → `yhtä kaikki`
 
 Delete outright:
@@ -183,8 +185,8 @@ Delete outright:
 - [x] `honkasien` — lowercase surname; pin the rejection.
 - [x] `selmallakaan` — lowercase name; ensure `Selmallakaan` (capitalised)
       still resolves.
-- [ ] `unhotusta` — verify; if `unhotus` is real, add a class-39 lemma
-      instead.
+- [x] `unhotusta` — curated correction to `unohdusta` (`unohdus`); no
+      `unhotus` lemma.
 - [x] `kävellytti` — the double-`l` spelling is a misspelling; `kävelytti`
       (one `l`) is already derived. Deleted and pinned.
 
@@ -350,13 +352,13 @@ Additional checks:
 
 ## Open decisions
 
-- [ ] `edeltäkäsin`, `niinkauan`, `tienpuoleen`: confirm Kotus and reject as
-      two-word spellings.
+- [x] `edeltäkäsin`, `niinkauan`: confirm Kotus and reject as two-word
+      spellings; `tienpuoleen` is a valid compound (`tienpuoli`).
 - [ ] `koneentapaisesti`: confirm the one-word compound reading.
 - [ ] `kävellytti`: typo of `kävelytti`, form of `kävellyttää`, or invalid?
 - [ ] `kuulten` family: productive non-finite or lexical/archaic?
 - [x] `pormestarinna`: done via the lexical `-nna` family table.
-- [ ] `unhotusta`: archaic but valid (add lemma) or invalid (delete)?
+- [x] `unhotusta`: curated correction to `unohdusta`.
 - [ ] `alhaaltapäin`: confirm the exact Kotus entry for the `alhaalta` case.
 
 ## Success criteria
