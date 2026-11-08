@@ -301,17 +301,25 @@ the repository keeps them on a single-commit orphan branch literally named
 `maps/*.bin.gz`. That is how the remote only ever holds the current versions:
 normal history never accumulates them.
 
-The first `cargo build` fetches them automatically when they are missing
-(`build.rs` calls the same Rust helper as the `maps` bin). Explicit forms:
+The first `cargo build` fetches them automatically when they are missing.
+`tools/maps-sync/` (`torille-maps`) is a build-dependency of the root crate
+and has no `torille` dependency, so it compiles on a clone where the engine
+cannot. `build.rs` checks the five non-regenerable blobs (`REQUIRED` in
+`tools/maps-sync/src/lib.rs`); if any is absent it fetches the branch from
+`origin` (`MAPS_REMOTE` overrides), retrying the network step up to three
+times, and writes every `maps/*.bin.gz` on it. A failed fetch leaves existing
+blobs intact, and the build then stops with a message naming the explicit
+command. It runs with the root package's build script (`cargo build`,
+`cargo check`, `cargo test`, normally with `--workspace` or `-p torille`), not
+with `-p torille-maps`. Set `TORILLE_NO_FETCH=1`, `CARGO_NET_OFFLINE=1`, or
+`DOCS_RS=1` to forbid it. The full account is in `maps/README.md`. Explicit
+forms:
 
 ```bash
 cargo run -p torille-maps -- status
 cargo run -p torille-maps -- fetch
 cargo run -p torille-maps -- publish   # after regenerating
 ```
-
-Set `TORILLE_NO_FETCH=1` (or `CARGO_NET_OFFLINE=1`) to forbid the build-time
-fetch.
 
 `build.rs` packages them into `OUT_DIR` and `include_bytes!`s the plain bytes;
 compression is tooling-only. A fresh clone whose fetch fails stops with a

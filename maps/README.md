@@ -2,10 +2,11 @@
 
 **These files are not tracked on `master`.** They live on a single-commit
 orphan branch named `maps`, so the repository never accumulates old versions
-of the generated blobs. The first `cargo build` fetches them automatically when they are missing. The
-explicit forms (`status`, `fetch`, `publish`) are subcommands of the
-standalone `torille-maps` crate (`tools/maps-sync/`), which does not depend on
-the engine and therefore still builds on a fresh clone:
+of the generated blobs. The first `cargo build` fetches them automatically
+when they are missing. The explicit forms (`status`, `fetch`, `publish`) are
+subcommands of the standalone `torille-maps` crate (`tools/maps-sync/`),
+which does not depend on the engine and therefore still builds on a fresh
+clone:
 
 ```bash
 cargo run -p torille-maps -- status
@@ -13,8 +14,44 @@ cargo run -p torille-maps -- fetch
 cargo run -p torille-maps -- publish   # after regenerating
 ```
 
-The fetch is cross-platform Rust (`git` commands, no shell). Set
-`TORILLE_NO_FETCH=1` or `CARGO_NET_OFFLINE=1` to forbid it.
+## Automatic fetch on first build
+
+A fresh clone has no `maps/*.bin.gz`, and `torille` cannot compile without
+them. The root `build.rs` therefore fetches them on the first build:
+
+- `tools/maps-sync/` (`torille-maps`) is a **build-dependency**, so it
+  compiles before `torille` and works even though the engine cannot. The same
+  crate provides the `status`/`fetch`/`publish` CLI above.
+- `build.rs` checks the five blobs in `REQUIRED` (`derived_by_form`,
+  `derived_nominal`, `derived_modifiers`, `pronoun_forms`,
+  `oi_plural_lemmas`) — the ones the build cannot regenerate itself. If any
+  is missing it calls `fetch`.
+- `fetch` uses the clone's **`origin`** remote by default; `MAPS_REMOTE`
+  overrides the name. It runs `git fetch --force <remote> maps:<ref>` (where
+  `<ref>` is `refs/remotes/<remote>/maps`), retries that network step up to
+  three times (750 ms apart) for flaky links, then writes **every**
+  `maps/*.bin.gz` on the branch into the working tree — not just the five
+  required ones.
+- A failed fetch leaves already-present blobs untouched: files are written
+  only after the fetch and listing succeed.
+
+This runs when the root package's build script runs — `cargo build`,
+`cargo check`, `cargo test`, normally with `--workspace` or `-p torille`.
+`cargo run -p torille-maps -- fetch` does not trigger it (that crate does not
+depend on `torille`). If the build stops with
+
+```
+… is missing: the binary maps live on the 'maps' branch; run
+`cargo run -q -p torille-maps -- fetch` (or unset TORILLE_NO_FETCH …)
+```
+
+the automatic fetch was disabled or failed; run the explicit command.
+
+Set `TORILLE_NO_FETCH=1`, `CARGO_NET_OFFLINE=1`, or `DOCS_RS=1` to forbid the
+build-time fetch (an offline CI build, docs.rs). The build then requires the
+blobs to already be present. The fetch is cross-platform Rust
+(`std::process::Command` against `git`, argv only): no shell, `tar`, globbing,
+or platform-specific script — only a `git` executable is needed.
 
 `maps publish` writes one parentless commit and force-pushes it, so the
 branch always has exactly one commit with the current blobs. The previous

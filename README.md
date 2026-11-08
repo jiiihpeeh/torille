@@ -22,6 +22,11 @@ cargo run --release -p torille-tools --bin check -- talo
 cargo run --release -p torille-tools --bin hyphenate -- tietokoneohjelmointi
 ```
 
+The first build fetches `maps/*.bin.gz` from the orphan `maps` branch through
+the `torille-maps` build-dependency; see
+[`maps/README.md`](maps/README.md#automatic-fetch-on-first-build) for the
+remote, the offline switches, and what happens when the fetch fails.
+
 The wasm demo and the browser extensions are separate builds:
 
 ```bash
