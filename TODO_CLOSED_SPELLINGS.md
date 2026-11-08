@@ -1,6 +1,6 @@
 # TODO: shrink `closed_spellings::CLOSED`
 
-Status: **in progress** · owner: — · created: 2026-11-08
+Status: **residue reached (32 → 6 rows)** · owner: — · created: 2026-11-08
 
 The closed-spelling table in `src/expand/closed_spellings.rs` has 32
 `(surface, base)` pairs. Most are not closed spellings: they are ordinary
@@ -91,6 +91,24 @@ Kept after verification:
 - `pormestarinna` — historical `-nna` feminine (wife of a titled man), a
   different system from productive `-tar`/`-tär`; left in place until the
   lexical family table/lemma lands (see the `-nna` section below).
+
+## Final residue
+
+The six rows that remain are either genuine accepted fused spellings or
+lexical forms whose base has no sanalista row:
+
+- `alhaaltapäin`, `ylhäältäpäin` — Kotus allows adverb/particle + `päin`
+  written together.
+- `äkkipikaa` — lexical adverb (`suddenly`), not a productive suffix.
+- `pormestarinna` — historical `-nna` feminine, lexical; awaiting the
+  `-nna` family table (see the feminine section below).
+- `tienpuoleen` — base `tienpuoli` (compound, Voikko-confirmed) has no
+  sanalista row.
+- `unhotusta` — base `unhotus` (action noun, Voikko-confirmed) has no
+  sanalista row.
+
+Everything else was deleted by the phases above or moved to
+`is_nonword`/the derived/fast maps.
 
 ## Row disposition
 

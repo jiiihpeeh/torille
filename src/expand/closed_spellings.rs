@@ -16,11 +16,18 @@
 /// engine generates it, and the `kuulte-`/`kuulten` spellings are not in the
 /// paradigm (en.wiktionary, `kuulla`).
 const CLOSED: &[(&str, &str)] = &[
+    // Kotus: an adverb/particle + `päin` may be written together
+    // (`ylhäältä päin ~ ylhäältäpäin`); `alhaalta` follows the same rule.
     ("alhaaltapäin", "alhaalta"),
+    // Historical `-nna` feminine (wife of a titled man), lexical: see
+    // AGENTS.md, "Feminine derivation". Awaiting the family table.
     ("pormestarinna", "pormestari"),
+    // `tienpuoli` is the compound base (Voikko); it has no sanalista row.
     ("tienpuoleen", "tienpuoli"),
+    // `unhotus` is the action-noun base (Voikko); it has no sanalista row.
     ("unhotusta", "unhotus"),
     ("ylhäältäpäin", "ylhäältä"),
+    // A lexical adverb (`äkkipikaa` = suddenly), not a productive suffix.
     ("äkkipikaa", "pikaa"),
 ];
 
