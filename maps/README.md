@@ -7,9 +7,9 @@ explicit forms (`status`, `fetch`, `publish`) are subcommands of the Rust
 `maps` tool:
 
 ```bash
-cargo run -p torille-tools --bin maps -- status
-cargo run -p torille-tools --bin maps -- fetch
-cargo run -p torille-tools --bin maps -- publish   # after regenerating
+cargo run -p torille-maps -- status
+cargo run -p torille-maps -- fetch
+cargo run -p torille-maps -- publish   # after regenerating
 ```
 
 The fetch is cross-platform Rust (`git` commands, no shell). Set
@@ -34,7 +34,7 @@ discovery, no parsing, no allocation for the map itself.
 
 **Do not hand-edit these files.** Each one is regenerated from its source
 data; the table below names the producer. A stale blob is a correctness bug,
-so change the generator and rerun it, then `cargo run -p torille-tools --bin maps -- publish`. Use
+so change the generator and rerun it, then `cargo run -p torille-maps -- publish`. Use
 `cargo run -p torille-tools --bin map_gz -- test maps/X.bin.gz` to inspect
 one, or `map_gz compress|decompress` for a manual round-trip.
 

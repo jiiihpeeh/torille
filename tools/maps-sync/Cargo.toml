@@ -1,0 +1,9 @@
+[package]
+name = "torille-maps"
+version = "0.1.0"
+edition = "2024"
+description = "Fetch/publish the orphan maps branch for torille"
+license.workspace = true
+
+[lints]
+workspace = true

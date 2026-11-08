@@ -10,7 +10,6 @@ use torille::kotus::{Gradation, Inflection, Lemma as LemmaRe};
 
 pub mod der1;
 pub mod gzip;
-pub mod maps;
 pub mod stem_key;
 
 use torille::spec::Catalogues;

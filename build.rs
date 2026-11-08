@@ -35,12 +35,8 @@ mod hyphenation;
 #[path = "build/gzip.rs"]
 mod gzip;
 
-// Shared with `tools/src/bin/maps.rs`; std-only, so the build script and the
-// tools crate compile the same implementation. The build script only uses
-// `fetch`/`missing`; the rest serves the `maps` bin.
-#[allow(dead_code)]
-#[path = "tools/src/maps.rs"]
-mod maps;
+// The same std-only implementation the `torille-maps` CLI uses.
+use torille_maps as maps;
 
 use csv_builders::catalogue::emit_catalogue;
 use csv_builders::sanalista::generate;
@@ -118,7 +114,7 @@ fn main() {
         assert!(
             path.exists(),
             "{} is missing: the binary maps live on the 'maps' branch; run \
-             `cargo run -q -p torille-tools --bin maps -- fetch` (or unset \
+             `cargo run -q -p torille-maps -- fetch` (or unset \
              TORILLE_NO_FETCH to let the build fetch them)",
             path.display(),
         );

@@ -296,7 +296,7 @@ SyntacticRole, RoleConfidence}`; `Suggestion` / `SuggestionSource` under
 
 The binary maps are generated artefacts. They are **not tracked on `master`**;
 the repository keeps them on a single-commit orphan branch literally named
-`maps`, which `cargo run -p torille-tools --bin maps -- publish` force-pushes with the current
+`maps`, which `cargo run -p torille-maps -- publish` force-pushes with the current
 `maps/*.bin.gz`. That is how the remote only ever holds the current versions:
 normal history never accumulates them.
 
@@ -304,9 +304,9 @@ The first `cargo build` fetches them automatically when they are missing
 (`build.rs` calls the same Rust helper as the `maps` bin). Explicit forms:
 
 ```bash
-cargo run -p torille-tools --bin maps -- status
-cargo run -p torille-tools --bin maps -- fetch
-cargo run -p torille-tools --bin maps -- publish   # after regenerating
+cargo run -p torille-maps -- status
+cargo run -p torille-maps -- fetch
+cargo run -p torille-maps -- publish   # after regenerating
 ```
 
 Set `TORILLE_NO_FETCH=1` (or `CARGO_NET_OFFLINE=1`) to forbid the build-time

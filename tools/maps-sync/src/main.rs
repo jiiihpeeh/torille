@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-//! `maps` — inspect, fetch or publish the orphan `maps` branch.
+//! `torille-maps` — inspect, fetch or publish the orphan `maps` branch.
 //!
-//! The binary maps are generated artefacts on a single-commit orphan branch.
-//! `cargo build` fetches them automatically when they are missing; this tool
-//! is the explicit form and the only way to publish new ones.
+//! This crate does not depend on `torille`, so it builds on a fresh clone
+//! even when the maps (and therefore `torille`) cannot compile yet.
 //!
 //! Usage:
-//!   maps status
-//!   maps fetch
-//!   maps publish
+//!   cargo run -p torille-maps -- status
+//!   cargo run -p torille-maps -- fetch
+//!   cargo run -p torille-maps -- publish
 
 use std::process::ExitCode;
 
-use torille_tools::maps;
+use torille_maps as maps;
 
 fn main() -> ExitCode {
     let command = std::env::args().nth(1).unwrap_or_else(|| usage());
@@ -63,6 +62,6 @@ fn main() -> ExitCode {
 }
 
 fn usage() -> ! {
-    eprintln!("usage: maps <status|fetch|publish>");
+    eprintln!("usage: torille-maps <status|fetch|publish>");
     std::process::exit(2)
 }

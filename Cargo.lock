@@ -2201,6 +2201,7 @@ dependencies = [
  "criterion",
  "flate2",
  "serde_json",
+ "torille-maps",
 ]
 
 [[package]]
@@ -2210,6 +2211,10 @@ dependencies = [
  "brotli",
  "tiny_http",
 ]
+
+[[package]]
+name = "torille-maps"
+version = "0.1.0"
 
 [[package]]
 name = "torille-py"

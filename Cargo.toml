@@ -1,5 +1,5 @@
 [workspace]
-members = ["tools", "bindings", "wrapper", "torille-wasm", "torille-wasm-leptos", "demo-server"]
+members = ["tools", "tools/maps-sync", "bindings", "wrapper", "torille-wasm", "torille-wasm-leptos", "demo-server"]
 resolver = "2"
 
 [workspace.package]
@@ -62,6 +62,8 @@ harness = false
 # needs no phf codegen. `flate2` writes those blobs gzip-compressed at the
 # maximum level.
 flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
+# Fetch the orphan `maps` branch when the build runs without the blobs.
+torille-maps = { path = "tools/maps-sync" }
 
 [profile.release]
 opt-level = 3
