@@ -98,6 +98,7 @@ one, or `map_gz compress|decompress` for a manual round-trip.
 | `degree_forms.bin.gz` | `gen_derived` | `src/expand/mod.rs` | reverse degree forms: surface -> positive/adverb lemma |
 | `adverb_possessive.bin.gz` | `gen_derived` | `src/expand/check_normal.rs` | possessive adverb surface -> lemma (`keskenämme` -> `keskenään`) |
 | `feminine_nouns.bin.gz` | `gen_derived` | `src/expand/check_normal.rs` | lexical `-nna` feminine surface -> masculine base (`pormestarinna` -> `pormestari`) |
+| `lexical_adverbs.bin.gz` | `build.rs` | `src/expand/check_normal.rs` | established one-word adverb -> base (`alhaaltapäin` -> `alhaalta`) |
 | `pronoun_forms.bin.gz` | `gen_derived` → `tools/src/der1.rs` | `src/expand/check_normal.rs` | the closed pronoun paradigm |
 
 ## How to regenerate

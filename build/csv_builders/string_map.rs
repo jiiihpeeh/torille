@@ -112,6 +112,22 @@ pub(crate) fn emit_adverbi(csv_path: &Path, blob_path: &Path) {
     );
 }
 
+/// Emit `data/lexical_adverbs.csv` as an exact `surface -> base` map.
+///
+/// These are established one-word adverbs whose spelling is lexical, not a
+/// productive `päin`/compound join (`alhaaltapäin`, `ylhäältäpäin`,
+/// `äkkipikaa`). The CSV is `surface<TAB>base` with a header.
+pub(crate) fn emit_lexical_adverbs(csv_path: &Path, blob_path: &Path) {
+    emit_string_map(
+        csv_path,
+        blob_path,
+        "lexical adverbs",
+        "curated (Kotus/Kielikello)",
+        0,
+        &[1],
+    );
+}
+
 /// Emit `data/adj_degrees.csv` as `positive -> (comparative, superlative)`.
 ///
 /// Both degree cells are stored even when one is empty, so the runtime can

@@ -251,12 +251,18 @@ pub const VERB_ENDINGS: &[&str] = &[
 
 mod adverb {
     //! Tabulated adverbial forms (form -> lemma), built by `build.rs`
-    //! from `data/adverbit.csv`.
+    //! from `data/adverbit.csv`, and the curated lexical adverbs from
+    //! `data/lexical_adverbs.csv`.
     use crate::expand::static_table::StemMap;
 
     pub static ADVERBS: StemMap = StemMap::new(include_bytes!(concat!(
         env!("OUT_DIR"),
         "/adverbit.bin",
+    )));
+
+    pub static LEXICAL: StemMap = StemMap::new(include_bytes!(concat!(
+        env!("OUT_DIR"),
+        "/lexical_adverbs.bin",
     )));
 }
 
@@ -445,6 +451,12 @@ pub fn feminine_noun_base(word: &str) -> Option<&'static str> {
 /// detector treat an adverbial member as a known word.
 pub fn adverb_base(word: &str) -> Option<&'static str> {
     adverb::ADVERBS.bases(word).next()
+}
+
+/// The base of a curated lexical one-word adverb (`alhaaltapäin` ->
+/// `alhaalta`, `äkkipikaa` -> itself).
+pub fn lexical_adverb_base(word: &str) -> Option<&'static str> {
+    adverb::LEXICAL.bases(word).next()
 }
 
 // Re-export the embedded sanalista so callers can do their own
@@ -759,6 +771,12 @@ fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> Normalized
     // A few `-ksi` adverbs take a possessive (`kylliksi` ->
     // `kylliksenne`), which no rule derives and Omorfi cannot generate;
     // the confirmed set is embedded (`tools/oracle/build_adverbi_forms.py`).
+    if let Some(base) = lexical_adverb_base(&word.to_lowercase()) {
+        return NormalizedOutcome::Inflected {
+            base: base.to_string(),
+            gate: "lexical adverb",
+        };
+    }
     if let Some(base) = adverb::ADVERBS.bases(word).next() {
         if verbose {
             println!("    gate 1b: adverb {word:?} -> {base}");
@@ -1495,6 +1513,32 @@ mod tests {
             computed.len(),
             "the pronoun blob has a different size"
         );
+    }
+
+    /// The curated lexical adverbs resolve and keep their own bases.
+    #[test]
+    fn lexical_adverbs_resolve() {
+        for (word, base) in [
+            ("alhaaltapäin", "alhaalta"),
+            ("ylhäältäpäin", "ylhäältä"),
+            ("äkkipikaa", "äkkipikaa"),
+        ] {
+            assert_eq!(lexical_adverb_base(word), Some(base), "{word}");
+            assert!(
+                matches!(
+                    check_normal(word, false),
+                    NormalizedOutcome::Inflected { .. }
+                ),
+                "full path: {word}"
+            );
+            assert!(
+                matches!(
+                    check_normal_fast(word, false),
+                    NormalizedOutcome::Inflected { .. }
+                ),
+                "fast path: {word}"
+            );
+        }
     }
 
     /// The committed feminine-noun blob is the computation's own table.

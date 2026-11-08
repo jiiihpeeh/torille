@@ -308,6 +308,29 @@ Keep the base noun as the reading (`pormestarinna` -> `pormestari`) and the
 feminine form as a derived/lexical noun; a `-tar` row and a `-nna` row are
 not the same paradigm.
 
+### Compound adverbs and `päin`
+
+Finnish adverbial compounds are not one universal join rule. Keep three
+layers separate:
+
+1. **Exact lexical adverbs** — established one-word spellings that cannot be
+   derived by rule: `alhaaltapäin`, `ylhäältäpäin`, `äkkipikaa`. These live in
+   `data/lexical_adverbs.csv` (`surface`, `base`), embedded as
+   `maps/lexical_adverbs.bin.gz`; the fast path probes that table.
+2. **Productive genitive + `puoli` compounds** — `tienpuoli`,
+   `metsänpuoli`, `järvenpuoleinen`. The modifier is a noun genitive and the
+   head is `puoli` or a `puoli` derivative; a compound recognition must check
+   both the genitive and the boundary, not join every `puoli` occurrence.
+3. **Directional adverb + `päin`** — `alas päin ~ alaspäin`,
+   `ylhäältä päin ~ ylhäältäpäin`. Kotus allows the fused spelling only for
+   the adverb/particle type; with a noun or pronoun (`kotiin päin`,
+   `Helsinkiin päin`, `meillä päin`) the words stay apart. Do not implement a
+   universal `* + päin` joiner.
+
+An entry belongs in the lexical table only when it is an established spelling
+and the engine cannot name it productively. Do not add a general suffix rule
+for `päin` or `äkki-`.
+
 ## Public API (crate root)
 
 `check`, `suggest`, `suggest_detailed`, `levenshtein_with_ops`, `EditOp`;

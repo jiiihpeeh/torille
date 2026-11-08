@@ -1,31 +1,23 @@
 //! Closed spellings the engine does not derive.
 //!
-//! This is the small residual left after removing `fast_path.rs`. Every row
-//! is an exact surface with a dictionary base; it is not a suffix rule and
-//! it does not decide inflection. The table holds only fused function words
-//! (`senjälkeen`, `kuulten`) and a handful of reverse-search
-//! gaps where the engine generates the form but the bounded fast pass cannot
-//! name it yet. A row belongs here only when it has no productive class or
-//! derivation behind it; reject typos instead of listing them.
+//! This is the small residual left after moving inflection, derivation,
+//! compounds and lexical adverb spellings to their own layers. Every row is
+//! an exact surface with a dictionary base; it is not a suffix rule and it
+//! does not decide inflection. A row belongs here only when the base has no
+//! sanalista lemma and no productive class or derivation behind it; reject
+//! typos instead of listing them.
+//!
+//! Established one-word adverbs (`alhaaltapäin`, `ylhäältäpäin`,
+//! `äkkipikaa`) live in `data/lexical_adverbs.csv`, not here.
 //!
 //! Keep sorted; lookup is a binary search.
 
 /// `(surface, base)` pairs. Sorted by `surface`.
-///
-/// The 2nd infinitive instructive of `kuulla` is `kuullen`; the class-67
-/// engine generates it, and the `kuulte-`/`kuulten` spellings are not in the
-/// paradigm (en.wiktionary, `kuulla`).
 const CLOSED: &[(&str, &str)] = &[
-    // Kotus: an adverb/particle + `päin` may be written together
-    // (`ylhäältä päin ~ ylhäältäpäin`); `alhaalta` follows the same rule.
-    ("alhaaltapäin", "alhaalta"),
     // `tienpuoli` is the compound base (Voikko); it has no sanalista row.
     ("tienpuoleen", "tienpuoli"),
     // `unhotus` is the action-noun base (Voikko); it has no sanalista row.
     ("unhotusta", "unhotus"),
-    ("ylhäältäpäin", "ylhäältä"),
-    // A lexical adverb (`äkkipikaa` = suddenly), not a productive suffix.
-    ("äkkipikaa", "pikaa"),
 ];
 
 /// Fused spellings that modern Finnish writes as two words. They are not
@@ -75,11 +67,8 @@ mod tests {
     #[test]
     fn the_reported_surfaces_resolve() {
         for (word, expected) in [
-            ("alhaaltapäin", "alhaalta"),
             ("tienpuoleen", "tienpuoli"),
             ("unhotusta", "unhotus"),
-            ("ylhäältäpäin", "ylhäältä"),
-            ("äkkipikaa", "pikaa"),
         ] {
             assert_eq!(base(word), Some(expected), "{word}");
         }
@@ -194,6 +183,9 @@ mod tests {
             ("suurkaanin", "suurkaani"),
             ("pormestarinna", "pormestari"),
             ("pormestarinnan", "pormestari"),
+            ("alhaaltapäin", "alhaalta"),
+            ("ylhäältäpäin", "ylhäältä"),
+            ("äkkipikaa", "äkkipikaa"),
         ] {
             assert_eq!(
                 base(check_normal(word, false)).as_deref(),

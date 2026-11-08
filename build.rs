@@ -41,7 +41,7 @@ use torille_maps as maps;
 use csv_builders::catalogue::emit_catalogue;
 use csv_builders::sanalista::generate;
 use csv_builders::string_map::{
-    emit_adj_degrees, emit_adverbi, emit_connegatives, emit_connectives,
+    emit_adj_degrees, emit_adverbi, emit_connegatives, emit_connectives, emit_lexical_adverbs,
 };
 use map_builders::front_coded::{
     emit_empty_set, emit_front_coded_set, emit_proper_name_lemmas, emit_proper_names,
@@ -229,6 +229,14 @@ fn main() {
     println!("cargo:rerun-if-changed={}", adverbit_csv.display());
     emit_map(&out_dir, &precomputed, "adverbit.bin", |raw| {
         emit_adverbi(&adverbit_csv, raw)
+    });
+
+    // Lexical one-word adverbs whose spelling is not a productive join:
+    // `alhaaltapäin`, `ylhäältäpäin`, `äkkipikaa`. A form -> base table.
+    let lexical_adverbs_csv = Path::new(&manifest).join("data/lexical_adverbs.csv");
+    println!("cargo:rerun-if-changed={}", lexical_adverbs_csv.display());
+    emit_map(&out_dir, &precomputed, "lexical_adverbs.bin", |raw| {
+        emit_lexical_adverbs(&lexical_adverbs_csv, raw)
     });
 
     // Verb connegatives: the bare potential/imperative connegative

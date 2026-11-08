@@ -41,6 +41,7 @@ committed files are what a build uses.
 | `adverbit.csv` | `tools/oracle/build_adverbi_forms.py` | `-ksi` adverb possessives |
 | `adverb_degrees.csv` | curated (en.wiktionary) | `maps/adverb_degrees.bin.gz`; adverb comparatives such as `hiljaa -> hiljempaa` |
 | `feminine_nouns.csv` | curated (Kotus/en.wiktionary) | `maps/feminine_nouns.bin.gz`; historical `-nna` feminines such as `pormestarinna -> pormestari` |
+| `lexical_adverbs.csv` | curated (Kotus/Kielikello) | `maps/lexical_adverbs.bin.gz`; established one-word adverbs such as `alhaaltapäin`, `äkkipikaa` |
 | `proper_names.csv` | Wikidata | name source for the proper-name tables |
 | `proper_name_forms.csv`, `proper_name_forms_extra.csv` | `tools/oracle/build_proper_name_forms.py` + curated extras | singular cases of names |
 | `verb_connegatives.csv`, `verb_connectives.csv` | `tools/oracle/build_verb_lexicon.py` | connegatives and negation fusions |

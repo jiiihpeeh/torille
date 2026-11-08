@@ -204,6 +204,9 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
     if let Some(base) = crate::expand::check_normal::adverb_base(&lower) {
         return Some(base.to_string());
     }
+    if let Some(base) = crate::expand::check_normal::lexical_adverb_base(&lower) {
+        return Some(base.to_string());
+    }
     if let Some(base) = crate::expand::check_normal::adverb_possessive_base(&lower) {
         return Some(base.to_string());
     }

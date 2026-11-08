@@ -1,6 +1,6 @@
 # TODO: shrink `closed_spellings::CLOSED`
 
-Status: **residue reached (32 → 5 rows)** · owner: — · created: 2026-11-08
+Status: **residue reached (32 → 2 rows)** · owner: — · created: 2026-11-08
 
 The closed-spelling table in `src/expand/closed_spellings.rs` has 32
 `(surface, base)` pairs. Most are not closed spellings: they are ordinary
@@ -50,7 +50,7 @@ Read-only probes on the current tree (`inflect(base)`, `look_base`,
 
 ## Progress (2026-11-08)
 
-Removed from `CLOSED` (32 → 5 rows):
+Removed from `CLOSED` (32 → 2 rows):
 
 - [x] `edeltäkäsin`, `itsekunkin`, `niinkauan`, `senjälkeen`, `silloinkun`,
       `yhtäkaikki` — Kotus two-word spellings; moved to `is_nonword`.
@@ -75,6 +75,8 @@ Removed from `CLOSED` (32 → 5 rows):
 - [x] `ventovieraita` — `ventovieras` is `vento` + `vieras`; `vento` has no
       lemma row, so the compound layer now accepts it as an opaque bound
       modifier.
+- [x] `alhaaltapäin`, `ylhäältäpäin`, `äkkipikaa` — moved to the curated
+      `data/lexical_adverbs.csv` table (exact lexical adverbs).
 - [x] `enemmittä`, `loitommalla` — generated reverse-degree map
       (`maps/degree_forms.bin.gz`); `enempi` is covered as a comparative
       lemma, `loitto` by a curated `adj_degrees_extra.csv` row.
@@ -91,16 +93,13 @@ Kept after verification:
 
 ## Final residue
 
-The five rows that remain are either genuine accepted fused spellings or
-lexical forms whose base has no sanalista row:
+The two rows that remain are lexical bases that have no sanalista row:
 
-- `alhaaltapäin`, `ylhäältäpäin` — Kotus allows adverb/particle + `päin`
-  written together.
-- `äkkipikaa` — lexical adverb (`suddenly`), not a productive suffix.
-- `tienpuoleen` — base `tienpuoli` (compound, Voikko-confirmed) has no
-  sanalista row.
-- `unhotusta` — base `unhotus` (action noun, Voikko-confirmed) has no
-  sanalista row.
+- `tienpuoleen` — base `tienpuoli` (compound, Voikko-confirmed).
+- `unhotusta` — base `unhotus` (action noun, Voikko-confirmed).
+
+The established one-word adverbs (`alhaaltapäin`, `ylhäältäpäin`,
+`äkkipikaa`) moved to `data/lexical_adverbs.csv`.
 
 Everything else was deleted by the phases above or moved to
 `is_nonword`/the derived/fast maps.
