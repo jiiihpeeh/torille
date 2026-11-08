@@ -21,9 +21,17 @@ use crate::expand::lexicon_index::LexiconIndex;
 /// `siivoojatar`, `näyttelijä` -> `näyttelijätär`), and its inflected forms.
 ///
 /// `-tar` attaches to an agent noun or another noun and inflects as class
-/// 32*C (`siivoojattaren`). The source must be a known word; this is what
+/// 32*C (`siivoojattaren`). The source must be a known noun; this is what
 /// separates the productive derivation from the lexicalised `valtiatar`
 /// (which the sanalista lists directly).
+///
+/// The suffix does not always attach to the source's nominative: it takes
+/// the weak stem (`pappi` -> `papi-`, `henki` -> `henge-`, `aalto` ->
+/// `aallo-`, `neuvos` -> `neuvokse-`), and some nominatives lose a final
+/// `-s` (`kuningas` -> `kuningatar`, `ruhtinas` -> `ruhtinatar`). The noun
+/// stem map recovers those sources from the prefix, so `papitar`,
+/// `hengetär`, `aallotar` and `kuningatar` are derived and not merely read
+/// off a sanalista row.
 pub fn derived_tar_base(
     word: &str,
     cat: &Catalogues,
@@ -59,21 +67,19 @@ pub fn derived_tar_base(
         } else {
             continue;
         };
-        let source = &candidate[..candidate.len() - suffix.len()];
-        if source.is_empty() {
+        let prefix = &candidate[..candidate.len() - suffix.len()];
+        // `-tar` never attaches to a one-letter stem; keeping a floor also
+        // keeps the stem-map probe from matching short function words.
+        if prefix.chars().count() < 2 {
             continue;
         }
-        let harmonic = crate::harmony::pick_harmony(crate::harmony::front(source), "tar", "tär");
-        if suffix != harmonic {
-            continue;
-        }
-        // The source must be a noun; `-tar` on the conjunction `ja` would
-        // otherwise fabricate `jatar`, which then turns `valtijatar` into a
-        // compound.
-        let source_is_noun = crate::kotus::sanalista().by_word(source).any(|row| {
-            crate::tags::PartOfSpeech::parse_all(row.part_of_speech()).contains(&PartOfSpeech::Noun)
+        // At least one possible source has to agree on the suffix's harmony;
+        // the paradigm verify then runs once, not once per source. `pappi`
+        // is a back word, so `papitär` is rejected before any inflection.
+        let harmony_matches = tar_sources(prefix).iter().any(|source| {
+            suffix == crate::harmony::pick_harmony(crate::harmony::front(source), "tar", "tär")
         });
-        if !source_is_noun {
+        if !harmony_matches {
             continue;
         }
         let inflection = Inflection {
@@ -93,6 +99,46 @@ pub fn derived_tar_base(
         }
     }
     None
+}
+
+/// The noun lemmas a `-tar`/`-tär` prefix may belong to.
+///
+/// The prefix is the surface before the suffix, so it is not always a
+/// nominative. Three routes recover the source:
+///
+/// * the prefix itself is the lemma (`laulaja`, `sankari`, `ranska`);
+/// * it is the weak stem the suffix attached to, which the noun stem map
+///   maps back to the lemma (`papi` -> `pappi`, `henge` -> `henki`,
+///   `aallo` -> `aalto`, `neuvokse` -> `neuvos`);
+/// * the nominative ends in `-s`, which the suffix replaces rather than
+///   follows (`kuninga` + `s` -> `kuningas`, `ruhtina` + `s` -> `ruhtinas`).
+///
+/// Every candidate must be a noun in the lexicon; that is what keeps the
+/// rule from fabricating a feminine from a conjunction (`ja` -> `jatar`) or
+/// from any string that merely ends in the suffix.
+fn tar_sources(prefix: &str) -> Vec<String> {
+    let lexicon = crate::kotus::sanalista();
+    let is_noun = |word: &str| {
+        lexicon.by_word(word).any(|row| {
+            crate::tags::PartOfSpeech::parse_all(row.part_of_speech()).contains(&PartOfSpeech::Noun)
+        })
+    };
+    let mut out: Vec<String> = Vec::new();
+    if is_noun(prefix) {
+        out.push(prefix.to_string());
+    }
+    for base in crate::expand::check_normal::STEM_BUCKETS_NOUN.bases(prefix) {
+        if is_noun(base) {
+            out.push(base.to_string());
+        }
+    }
+    let with_s = format!("{prefix}s");
+    if is_noun(&with_s) {
+        out.push(with_s);
+    }
+    out.sort();
+    out.dedup();
+    out
 }
 
 pub fn derived_agent_base(
@@ -178,4 +224,162 @@ fn agent_candidates(word: &str) -> Vec<String> {
     out.sort();
     out.dedup();
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn tar_base(word: &str) -> Option<String> {
+        derived_tar_base(word, Catalogues::embedded(), None)
+    }
+
+    /// The established and productive `-tar`/`-tär` nouns from the word lists
+    /// in the Kotus/Kielikello material: professions, royalty, mythology and
+    /// nationality. Some are sanalista lemmas and some are not; the derived
+    /// layer must recognise both.
+    #[test]
+    fn established_and_productive_feminine_nouns_are_recognised() {
+        let words = [
+            // People, professions and occupations.
+            "näyttelijätär",
+            "laulajatar",
+            "kirjailijatar",
+            "opettajatar",
+            "myyjätär",
+            "juoksijatar",
+            "perijätär",
+            "rakastajatar",
+            "papitar",
+            "suojelijatar",
+            "kenraalitar",
+            "neuvoksetar",
+            "laamannitar",
+            // Royalty, nobility and authority.
+            "kuningatar",
+            "ruhtinatar",
+            "herttuatar",
+            "valtiatar",
+            "jumalatar",
+            // Relationships, myth and poetry.
+            "ystävätär",
+            "sankaritar",
+            "hengetär",
+            "haltijatar",
+            "onnetar",
+            "kohtalotar",
+            "pahatar",
+            "aallotar",
+            "kaunotar",
+            // Nationality and origin.
+            "saksatar",
+            "ranskatar",
+            "englantitar",
+            "kreikatar",
+            "italiatar",
+            "tanssijatar",
+            "urheilijatar",
+            "taiteilijatar",
+            "runoilijatar",
+            "tutkijatar",
+            "johtajatar",
+            "hallitsijatar",
+            "vartijatar",
+            "palvelijatar",
+            "voittajatar",
+            "kilpailijatar",
+            "seikkailijatar",
+        ];
+        let missing: Vec<&str> = words
+            .iter()
+            .copied()
+            .filter(|word| tar_base(word).is_none())
+            .collect();
+        assert!(
+            missing.is_empty(),
+            "unrecognised -tar/-tär nouns: {missing:?}"
+        );
+    }
+
+    /// The suffix attaches to the weak stem, not the nominative, and the
+    /// noun stem map is what recovers the lemma from it.
+    #[test]
+    fn weak_stems_recover_the_source_noun() {
+        for (prefix, source) in [
+            ("papi", "pappi"),
+            ("henge", "henki"),
+            ("onne", "onni"),
+            ("aallo", "aalto"),
+            ("neuvokse", "neuvos"),
+            ("kreika", "kreikka"),
+            ("englanni", "englanti"),
+            ("valtia", "valtias"),
+        ] {
+            let sources = tar_sources(prefix);
+            assert!(
+                sources.iter().any(|candidate| candidate == source),
+                "{prefix} should recover {source}, got {sources:?}"
+            );
+        }
+    }
+
+    /// A nominative ending in `-s` loses it before `-tar`: the prefix is one
+    /// letter short of the lemma, so the extra `s` route is what finds it.
+    #[test]
+    fn an_s_nominative_recovers_before_tar() {
+        for (prefix, source) in [
+            ("kuninga", "kuningas"),
+            ("ruhtina", "ruhtinas"),
+            ("valtia", "valtias"),
+        ] {
+            let sources = tar_sources(prefix);
+            assert!(
+                sources.iter().any(|candidate| candidate == source),
+                "{prefix} should recover {source}, got {sources:?}"
+            );
+        }
+    }
+
+    /// The inflected forms resolve to the derived nominative, so `check` and
+    /// `suggest` name the feminine noun rather than the surface.
+    #[test]
+    fn inflected_forms_resolve_to_the_nominative() {
+        for (surface, expected) in [
+            ("papittaren", "papitar"),
+            ("papitarta", "papitar"),
+            ("hengettären", "hengetär"),
+            ("aallottaren", "aallotar"),
+            ("neuvoksettaren", "neuvoksetar"),
+            ("kuningattaren", "kuningatar"),
+            ("ruhtinattaren", "ruhtinatar"),
+            ("sankarittaren", "sankaritar"),
+            ("laulajattaren", "laulajatar"),
+            ("opettajattaren", "opettajatar"),
+            ("näyttelijättären", "näyttelijätär"),
+            ("myyjättären", "myyjätär"),
+            ("ystävättären", "ystävätär"),
+        ] {
+            assert_eq!(
+                tar_base(surface).as_deref(),
+                Some(expected),
+                "{surface} should resolve to {expected}"
+            );
+        }
+    }
+
+    /// A non-noun host must not fabricate a feminine: `-tar` on the
+    /// conjunction `ja` is not `jatar`.
+    #[test]
+    fn a_non_noun_host_is_rejected() {
+        assert!(tar_base("jatar").is_none());
+        assert!(tar_base("jatarin").is_none());
+    }
+
+    /// The suffix's harmony is the source noun's, not the surface's: `pappi`
+    /// is a back word, so `papitär` is not a form of it.
+    #[test]
+    fn the_suffix_must_match_the_source_harmony() {
+        assert!(tar_base("papitär").is_none());
+        assert!(tar_base("hengetar").is_none());
+    }
 }
