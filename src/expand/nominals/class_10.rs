@@ -29,9 +29,9 @@ use std::sync::OnceLock;
 
 use crate::expand::blob::{Blob, cell as blob_cell};
 use crate::kotus::{Gradation, Grade};
-use crate::tags::{Case, Form, Number, PartOfSpeech};
+use crate::tags::{Case, Confidence, Form, Number, PartOfSpeech};
 
-use super::utility::{Builder, Decl, Ending, cell, nominal_tags, plain, rare};
+use super::utility::{Base, Builder, Cell, Decl, Ending, Entry, cell, nominal_tags, plain};
 
 pub const CLASS: &str = "10";
 
@@ -107,6 +107,27 @@ fn i_stem(stem: &str) -> String {
     s
 }
 
+/// The short `-in` genitive plural and its possessive column.
+///
+/// The bare form is `stem + in` (`äimäin`, `koirain`); the possessives hang
+/// off `stem + i` (`äimäini`, `koiraini`). Both are `Repaired`: the reference
+/// lists the cell as a rare alternant, so it is accepted but never offered as
+/// a plain correction.
+fn rare_genitive_plural(stem: &str) -> Entry {
+    Entry::Cell(Cell {
+        case: Case::Genitive,
+        number: Number::Plural,
+        stem: stem.to_string(),
+        ending: ["in", "in"].into(),
+        double3: false,
+        base: Base::On {
+            stem: format!("{stem}i"),
+            ending: ["", ""].into(),
+        },
+        confidence: Confidence::Repaired,
+    })
+}
+
 /// Inflect a class-10 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     // Class 10 also carries plural-only lemmas (`käräjät`, `bänät`): the
@@ -168,7 +189,7 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
         // The i-stem takes the truncated endings (it already ends in i).
         cell(Case::Genitive, pl, &istem, ["en", "en"], false).on_ending(["e", "e"]),
         // The short genitive plural is a guess, never offered: koirain.
-        rare(Case::Genitive, pl, stem, ["in", "in"]),
+        rare_genitive_plural(stem),
         cell(Case::Partitive, pl, &istem, ["a", "ä"], true),
         cell(Case::Essive, pl, &istem, ["na", "nä"], true),
         cell(Case::Translative, pl, &istem, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
@@ -273,7 +294,7 @@ pub fn inflect_graded_with(lemma: &str, possessives: bool, weak: &str) -> Vec<Fo
             // The archaic short genitive plural (`poikain`, `koirain`)
             // is confirmed by Omorfi/Voikko but marked archaic; accept it
             // without putting it in the suggestion set.
-            rare(Case::Genitive, pl, strong, ["in", "in"]),
+            rare_genitive_plural(strong),
             cell(Case::Partitive, pl, &i_strong, ["a", "ä"], true),
             cell(Case::Essive, pl, &i_strong, ["na", "nä"], true),
             cell(
@@ -552,6 +573,33 @@ mod tests {
             !words("suoja").iter().any(|f| f.starts_with("suojoi")),
             "suoja is omorfi-only, not a both row"
         );
+    }
+
+    /// The short `-in` genitive plural carries its possessive column too:
+    /// `äimäin` -> `äimäini`, `äimäisi`, `äimäimme`, `äimäinne`, `äimäinsä`.
+    /// The reference lists the cell as rare, so every form stays repaired.
+    #[test]
+    fn the_rare_genitive_plural_has_its_possessives() {
+        let expected = [
+            "äimäin",
+            "äimäini",
+            "äimäisi",
+            "äimäimme",
+            "äimäinne",
+            "äimäinsä",
+        ];
+        let forms = inflect("äimä", true);
+        for word in expected {
+            let form = forms
+                .iter()
+                .find(|form| form.word == word)
+                .unwrap_or_else(|| panic!("{word} missing"));
+            assert_eq!(
+                form.confidence,
+                Confidence::Repaired,
+                "{word} must stay repaired"
+            );
+        }
     }
 
     /// The doubled third-person essive singular is the one cell of the graded
