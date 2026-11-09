@@ -1066,6 +1066,8 @@
           span.className = 'misspell';
           span.textContent = slice;
           span.dataset.word = slice;
+          span.dataset.start = String(r.start);
+          span.dataset.end = String(r.end);
           if (uiSettings.popupTrigger === 'hover') {
             span.addEventListener('mouseenter', () => {
               openPopup(span, slice, r.start, r.end);
@@ -1140,7 +1142,41 @@
       closePopup();
     }
 
+    // If the page stacks its own editor above our shadow host (the
+    // torille demo puts its underlay at z-index 2), the click lands on the
+    // textarea, not on a `.misspell` span. Hit-test the overlay's spans by
+    // their client rects so the dropdown still opens at the same word.
+    function misspellAtPoint(x: number, y: number): HTMLElement | null {
+      for (const span of overlay.querySelectorAll<HTMLElement>('.misspell')) {
+        for (const rect of span.getClientRects()) {
+          if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+            return span;
+          }
+        }
+      }
+      return null;
+    }
+
+    function onInputMouseDown(event: Event): void {
+      const e = event as MouseEvent;
+      if (destroyed || e.button !== 0 || uiSettings.popupTrigger !== 'click') return;
+      const span = misspellAtPoint(e.clientX, e.clientY);
+      if (!span) {
+        dbg('content', 'input mousedown: no misspell at point ' + JSON.stringify(
+          { x: e.clientX, y: e.clientY, spans: overlay.querySelectorAll('.misspell').length }));
+        return;
+      }
+      const word = span.dataset.word ?? span.textContent ?? '';
+      const start = Number(span.dataset.start ?? '-1');
+      const end = Number(span.dataset.end ?? '-1');
+      if (!word || start < 0 || end < 0) return;
+      e.preventDefault();
+      dbg('content', 'input mousedown -> popup', { word, start, end });
+      openPopup(span, word, start, end);
+    }
+
     input.addEventListener('input', scheduleRender);
+    input.addEventListener('mousedown', onInputMouseDown, true);
     input.addEventListener('scroll', onInputScroll);
     window.addEventListener('scroll', syncBox, { passive: true });
     window.addEventListener('resize', syncBox);
@@ -1193,6 +1229,7 @@
         restoreNativeSpellcheck(el, nativeAttrs);
         input.removeEventListener('input', scheduleRender);
         input.removeEventListener('scroll', onInputScroll);
+        input.removeEventListener('mousedown', onInputMouseDown, true);
         window.removeEventListener('scroll', syncBox);
         window.removeEventListener('resize', syncBox);
         document.removeEventListener('mousedown', onDocumentMouseDown, true);
