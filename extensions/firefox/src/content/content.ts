@@ -654,7 +654,18 @@
     // but page chrome with a higher z-index now wins.
     el.parentNode!.insertBefore(host, el.nextSibling);
     host.style.position = 'absolute';
-    host.style.zIndex = 'auto';
+    // Sit just above the input's own stacking level. A plain `auto` is
+    // enough on most pages, but editors that stack an underlay/text
+    // layer (`z-index: 1/2`, as the torille demo does) would paint over
+    // the overlay and swallow the click. Stay below genuine page chrome:
+    // only the parent's positioned children are considered.
+    let stacking = 0;
+    for (const sibling of Array.from(el.parentElement?.children ?? [])) {
+      if (!(sibling instanceof HTMLElement) || sibling === host) continue;
+      const z = Number.parseInt(getComputedStyle(sibling).zIndex, 10);
+      if (Number.isFinite(z)) stacking = Math.max(stacking, z);
+    }
+    host.style.zIndex = String(stacking + 1);
     host.style.pointerEvents = 'none';
 
     // Mirror the textarea's box so the overlay text lines up.

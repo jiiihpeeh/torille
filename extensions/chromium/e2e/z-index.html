@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>torille z-index e2e</title>
+  <style>
+    body { font: 14px sans-serif; padding: 1em; max-width: 600px; }
+    .editor { position: relative; border: 1px solid #888; border-radius: 6px; background: white; }
+    .editor .underlay {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+      padding: 12px;
+      min-height: 6em;
+      font: 14px/1.5 monospace;
+      white-space: pre-wrap;
+    }
+    .editor textarea {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      margin: 0;
+      padding: 12px;
+      border: 0;
+      resize: none;
+      font: 14px/1.5 monospace;
+      color: transparent;
+      caret-color: black;
+      background: transparent;
+    }
+    #log { background: #f4f4f4; padding: 0.5em; margin-top: 1em; font-family: monospace; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>torille z-index e2e</h1>
+  <div class="editor">
+    <div class="underlay">talo taloo koirra xyzzy</div>
+    <textarea id="t">talo taloo koirra xyzzy</textarea>
+  </div>
+  <div id="log"></div>
+  <script src="./polyfill.js"></script>
+  <script src="../dist/content/content.js"></script>
+  <script src="./after-content.js"></script>
+</body>
+</html>
