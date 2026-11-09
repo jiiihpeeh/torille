@@ -1,0 +1,200 @@
+#!/usr/bin/env bash
+# Generate a systemd unit for the torille-wasm demo (`serve-demo`).
+#
+# `serve-demo` binds 127.0.0.1 only (demo-server/src/main.rs), so on a
+# public host it is meant to sit behind a reverse proxy (nginx, Caddy).
+# This script writes the unit that keeps the process alive and restarts
+# it after a rebuild; it does not touch the proxy configuration.
+#
+# Usage:
+#   ./generate_service.sh                    # write ./torille-demo.service
+#   ./generate_service.sh --print            # print the unit, write nothing
+#   ./generate_service.sh --build --install  # build, install, enable, (re)start
+#
+#   ./generate_service.sh --port 9000 --name torille-demo-test
+#   ./generate_service.sh --user www-data --group www-data --root /srv/torille
+#
+# Options:
+#   --name NAME     unit basename without ".service" (default: torille-demo)
+#   --user USER     account to run as (default: $SUDO_USER, else current user)
+#   --group GROUP   group to run as (default: the user's primary group)
+#   --root DIR      document root passed to serve-demo
+#                   (default: the directory holding this script)
+#   --port PORT     TCP port on 127.0.0.1 (default: 8765)
+#   --exec PATH     serve-demo binary
+#                   (default: <repo>/target/release/serve-demo)
+#   --out DIR       where the generated unit is written (default: current dir)
+#   --build         run `cargo build --release -p torille-demo-server` first
+#   --install       install into /etc/systemd/system, enable and restart
+#   --print         write the unit to stdout and exit (no file, no install)
+#   -h, --help      show this help
+#
+# Requires: bash, systemd on the target host. `--build` additionally needs
+# cargo; `--install` needs root (or sudo).
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+NAME="torille-demo"
+USER_NAME="${SUDO_USER:-$(id -un)}"
+GROUP=""
+ROOT="${SCRIPT_DIR}"
+PORT="8765"
+EXEC="${REPO_ROOT}/target/release/serve-demo"
+OUT_DIR="${PWD}"
+DO_BUILD=0
+DO_INSTALL=0
+DO_PRINT=0
+
+usage() {
+  sed -n '2,33p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+}
+
+die() {
+  echo "generate_service.sh: $*" >&2
+  exit 1
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --name)    [ $# -ge 2 ] || die "--name needs a value";    NAME="$2"; shift 2 ;;
+    --user)    [ $# -ge 2 ] || die "--user needs a value";    USER_NAME="$2"; shift 2 ;;
+    --group)   [ $# -ge 2 ] || die "--group needs a value";   GROUP="$2"; shift 2 ;;
+    --root)    [ $# -ge 2 ] || die "--root needs a value";    ROOT="$2"; shift 2 ;;
+    --port)    [ $# -ge 2 ] || die "--port needs a value";    PORT="$2"; shift 2 ;;
+    --exec)    [ $# -ge 2 ] || die "--exec needs a value";    EXEC="$2"; shift 2 ;;
+    --out)     [ $# -ge 2 ] || die "--out needs a value";     OUT_DIR="$2"; shift 2 ;;
+    --build)   DO_BUILD=1; shift ;;
+    --install) DO_INSTALL=1; shift ;;
+    --print)   DO_PRINT=1; shift ;;
+    -h|--help) usage; exit 0 ;;
+    *) die "unknown option '$1' (try --help)" ;;
+  esac
+done
+
+# Unit names are file names; keep them boring so systemd and the shell agree.
+case "${NAME}" in
+  ""|*/*|*" "*|*.service) die "--name must be a plain name without '/', spaces or '.service'" ;;
+esac
+
+# serve-demo parses --port with u16::from_str, so reject anything it cannot.
+case "${PORT}" in
+  ""|*[!0-9]*) die "--port must be a number, got '${PORT}'" ;;
+esac
+if [ "${PORT}" -lt 1 ] || [ "${PORT}" -gt 65535 ]; then
+  die "--port must be 1-65535, got '${PORT}'"
+fi
+
+# ExecStart is not run through a shell, so quote exactly once and refuse the
+# characters that would make the quoting ambiguous.
+for value in "${ROOT}" "${EXEC}"; do
+  case "${value}" in
+    *'"'*|*'$'*|*'`'*|*'\\'*) die "unsupported character in path '${value}'" ;;
+  esac
+done
+
+[ -d "${ROOT}" ] || die "--root '${ROOT}' is not a directory"
+ROOT="$(cd "${ROOT}" && pwd)"
+if [ ! -d "${OUT_DIR}" ]; then
+  die "--out '${OUT_DIR}' is not a directory"
+fi
+
+# Resolve the group from the account unless the caller pinned one. A unit
+# with an unknown user fails at start, which is a slow way to learn a typo.
+if [ -z "${GROUP}" ]; then
+  GROUP="$(id -gn "${USER_NAME}" 2>/dev/null || true)"
+fi
+if [ -z "${GROUP}" ]; then
+  echo "generate_service.sh: warning: cannot resolve user '${USER_NAME}' here;" \
+       "the unit may fail to start on the target host" >&2
+fi
+
+if [ "${DO_BUILD}" = "1" ]; then
+  if ! command -v cargo >/dev/null 2>&1; then
+    die "--build needs cargo on PATH"
+  fi
+  echo "==> Building serve-demo" >&2
+  (cd "${REPO_ROOT}" && cargo build --release -p torille-demo-server)
+fi
+
+if [ ! -x "${EXEC}" ]; then
+  echo "generate_service.sh: warning: '${EXEC}' is missing or not executable." \
+       "Run with --build, or build it with:" >&2
+  echo "  cargo build --release -p torille-demo-server" >&2
+fi
+
+unit_contents() {
+  cat <<EOF
+# Generated by torille-wasm/demo/generate_service.sh -- re-run the script
+# instead of editing this file. The demo server listens on 127.0.0.1:${PORT}
+# only; put a reverse proxy in front of it for public traffic.
+[Unit]
+Description=torille-wasm demo (serve-demo) on 127.0.0.1:${PORT}
+Documentation=https://gitlab.com/jiiihpeeh/torille
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=${USER_NAME}
+EOF
+  if [ -n "${GROUP}" ]; then
+    echo "Group=${GROUP}"
+  fi
+  cat <<EOF
+WorkingDirectory=${ROOT}
+ExecStart="${EXEC}" --root "${ROOT}" --port ${PORT}
+Restart=on-failure
+RestartSec=2
+
+# The demo serves static files and never writes: drop privileges and make
+# the rest of the filesystem read-only. Remove these four lines if the demo
+# root lives on a mount that ProtectSystem/ProtectHome would hide.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+
+[Install]
+WantedBy=multi-user.target
+EOF
+}
+
+if [ "${DO_PRINT}" = "1" ]; then
+  unit_contents
+  exit 0
+fi
+
+UNIT_FILE="${OUT_DIR}/${NAME}.service"
+unit_contents > "${UNIT_FILE}"
+echo "wrote ${UNIT_FILE}"
+
+if [ "${DO_INSTALL}" != "1" ]; then
+  echo ""
+  echo "Next steps on the target host:"
+  echo "  sudo install -m 0644 ${UNIT_FILE} /etc/systemd/system/${NAME}.service"
+  echo "  sudo systemctl daemon-reload"
+  echo "  sudo systemctl enable --now ${NAME}.service"
+  echo "  curl -I http://127.0.0.1:${PORT}/"
+  echo ""
+  echo "(or re-run this script with --install to do the first three)"
+fi
+
+if [ "${DO_INSTALL}" = "1" ]; then
+  SUDO=""
+  if [ "$(id -u)" -ne 0 ]; then
+    command -v sudo >/dev/null 2>&1 || die "--install needs root or sudo"
+    SUDO="sudo"
+  fi
+  DEST="/etc/systemd/system/${NAME}.service"
+  echo "==> Installing ${DEST}" >&2
+  ${SUDO} install -m 0644 "${UNIT_FILE}" "${DEST}"
+  ${SUDO} systemctl daemon-reload
+  ${SUDO} systemctl enable "${NAME}.service"
+  # restart (not enable --now) so an already-running unit picks up a new
+  # port/root; it starts a stopped unit too.
+  ${SUDO} systemctl restart "${NAME}.service"
+  ${SUDO} systemctl --no-pager --lines=0 status "${NAME}.service" || true
+fi
