@@ -48,6 +48,77 @@
 
   const api: typeof browser = (typeof browser !== 'undefined') ? browser : chrome;
 
+  // Appearance/popup settings come from the options page. CSS custom
+  // properties are set on :root so they inherit through every shadow root;
+  // no overlay has to rebuild its stylesheet when a colour changes.
+  const UI_SETTINGS = {
+    underlineStyle: 'torille-underline-style',
+    underlineColor: 'torille-underline-color',
+    suggestionsMax: 'torille-suggestions-max',
+    popupTrigger: 'torille-popup-trigger',
+    popupBg: 'torille-popup-bg',
+    popupFg: 'torille-popup-fg',
+    popupAccent: 'torille-popup-accent',
+    popupAccentFg: 'torille-popup-accent-fg',
+  } as const;
+
+  type UiSettings = {
+    underlineStyle: string;
+    underlineColor: string;
+    suggestionsMax: number;
+    popupTrigger: 'click' | 'hover';
+    popupBg: string;
+    popupFg: string;
+    popupAccent: string;
+    popupAccentFg: string;
+  };
+
+  const uiSettings: UiSettings = {
+    underlineStyle: 'wavy',
+    underlineColor: '#cc3333',
+    suggestionsMax: 8,
+    popupTrigger: 'click',
+    popupBg: '#ffffff',
+    popupFg: '#222222',
+    popupAccent: '#0077cc',
+    popupAccentFg: '#ffffff',
+  };
+
+  function applyUiSettings(): void {
+    const root = document.documentElement;
+    root.style.setProperty('--torille-underline-line',
+      uiSettings.underlineStyle === 'none' ? 'none' : 'underline');
+    root.style.setProperty('--torille-underline-style', uiSettings.underlineStyle);
+    root.style.setProperty('--torille-underline-color', uiSettings.underlineColor);
+    root.style.setProperty('--torille-popup-bg', uiSettings.popupBg);
+    root.style.setProperty('--torille-popup-fg', uiSettings.popupFg);
+    root.style.setProperty('--torille-popup-accent', uiSettings.popupAccent);
+    root.style.setProperty('--torille-popup-accent-fg', uiSettings.popupAccentFg);
+  }
+
+  async function loadUiSettings(): Promise<void> {
+    const cur = await api.storage.local.get(Object.values(UI_SETTINGS));
+    const style = String(cur[UI_SETTINGS.underlineStyle] ?? 'wavy');
+    const trigger = String(cur[UI_SETTINGS.popupTrigger] ?? 'click');
+    const max = Number(cur[UI_SETTINGS.suggestionsMax] ?? 8);
+    uiSettings.underlineStyle = ['wavy', 'solid', 'dashed', 'dotted', 'none'].includes(style)
+      ? style : 'wavy';
+    uiSettings.underlineColor = /^#[0-9a-f]{6}$/i.test(String(cur[UI_SETTINGS.underlineColor]))
+      ? String(cur[UI_SETTINGS.underlineColor]) : '#cc3333';
+    uiSettings.suggestionsMax = Number.isFinite(max)
+      ? Math.min(20, Math.max(3, Math.round(max))) : 8;
+    uiSettings.popupTrigger = trigger === 'hover' ? 'hover' : 'click';
+    uiSettings.popupBg = /^#[0-9a-f]{6}$/i.test(String(cur[UI_SETTINGS.popupBg]))
+      ? String(cur[UI_SETTINGS.popupBg]) : '#ffffff';
+    uiSettings.popupFg = /^#[0-9a-f]{6}$/i.test(String(cur[UI_SETTINGS.popupFg]))
+      ? String(cur[UI_SETTINGS.popupFg]) : '#222222';
+    uiSettings.popupAccent = /^#[0-9a-f]{6}$/i.test(String(cur[UI_SETTINGS.popupAccent]))
+      ? String(cur[UI_SETTINGS.popupAccent]) : '#0077cc';
+    uiSettings.popupAccentFg = /^#[0-9a-f]{6}$/i.test(String(cur[UI_SETTINGS.popupAccentFg]))
+      ? String(cur[UI_SETTINGS.popupAccentFg]) : '#ffffff';
+    applyUiSettings();
+  }
+
   // ─────────────────────────────────────────────────────────────────────
   // §2  Constants
   // ─────────────────────────────────────────────────────────────────────
@@ -118,7 +189,9 @@
     style.id = HIGHLIGHT_STYLE_ID;
     style.textContent = `
       ::highlight(torille-misspell) {
-        text-decoration: underline wavy #c33;
+        text-decoration-line: var(--torille-underline-line, underline);
+        text-decoration-style: var(--torille-underline-style, wavy);
+        text-decoration-color: var(--torille-underline-color, #c33);
         text-decoration-skip-ink: none;
         cursor: pointer;
       }
@@ -148,7 +221,9 @@
     }
     .token { display: inline; }
     .misspell {
-      text-decoration: underline wavy #c33;
+      text-decoration-line: var(--torille-underline-line, underline);
+      text-decoration-style: var(--torille-underline-style, wavy);
+      text-decoration-color: var(--torille-underline-color, #c33);
       text-decoration-skip-ink: none;
       pointer-events: auto;
       cursor: pointer;
@@ -156,13 +231,13 @@
     .suggestions {
       position: absolute;
       z-index: 2147483647;
-      background: white;
+      background: var(--torille-popup-bg, white);
       border: 1px solid #ccc;
       border-radius: 4px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.18);
       padding: 4px 0;
       font: 13px/1.4 -apple-system, system-ui, sans-serif;
-      color: #222;
+      color: var(--torille-popup-fg, #222);
       pointer-events: auto;
       min-width: 8em;
       max-width: 22em;
@@ -182,8 +257,8 @@
     }
     .suggestions button:hover,
     .suggestions button.focused {
-      background: #07c;
-      color: white;
+      background: var(--torille-popup-accent, #07c);
+      color: var(--torille-popup-accent-fg, white);
     }
     .suggestions .empty {
       padding: 5px 12px;
@@ -515,7 +590,8 @@
     dbg: typeof dbg;
     describeInput: typeof describeInput;
   }): { host: HTMLElement; overlay: HTMLElement;
-         initialRender: () => void; setVisible: (visible: boolean) => void;
+         initialRender: () => void; refresh: () => void;
+         setVisible: (visible: boolean) => void;
          setDebug: (on: boolean) => void; destroy: () => void } {
     if (opts.el.isContentEditable) {
       return createContentEditableOverlay(opts);
@@ -531,7 +607,8 @@
     dbg: typeof dbg;
     describeInput: typeof describeInput;
   }): { host: HTMLElement; overlay: HTMLElement;
-         initialRender: () => void; setVisible: (visible: boolean) => void;
+         initialRender: () => void; refresh: () => void;
+         setVisible: (visible: boolean) => void;
          setDebug: (on: boolean) => void; destroy: () => void } {
     const { el, workerClient, dbg, describeInput } = opts;
     const input = el as HTMLInputElement | HTMLTextAreaElement;
@@ -842,7 +919,7 @@
       }
       if (suggestions.length === 0) {
         // Fall back for the very-first-click-before-render race.
-        workerClient.suggestWithStateAsync(word, 8).then((fallback) => {
+        workerClient.suggestWithStateAsync(word, uiSettings.suggestionsMax).then((fallback) => {
           if (focused !== word) return;
           fillPopup(word, start, end, fallback);
         }).catch(() => { /* worker down -- popup shows nothing */ });
@@ -923,7 +1000,7 @@
       // call lazy-creates the state on first render. The hits carry
       // UTF-16 ranges into the original `text`, so the JS-side
       // tokenise step we used to do here is now redundant.
-      const hits = await workerClient.analyzeTextAsync(text, 8, myGen);
+      const hits = await workerClient.analyzeTextAsync(text, uiSettings.suggestionsMax, myGen);
       if (myGen !== renderGen) {
         dbg('content', 'render:stale', { gen: myGen, current: renderGen });
         return;
@@ -978,10 +1055,16 @@
           span.className = 'misspell';
           span.textContent = slice;
           span.dataset.word = slice;
-          span.addEventListener('mousedown', (e: Event) => {
-            e.preventDefault();
-            openPopup(span, slice, r.start, r.end);
-          });
+          if (uiSettings.popupTrigger === 'hover') {
+            span.addEventListener('mouseenter', () => {
+              openPopup(span, slice, r.start, r.end);
+            });
+          } else {
+            span.addEventListener('mousedown', (e: Event) => {
+              e.preventDefault();
+              openPopup(span, slice, r.start, r.end);
+            });
+          }
           overlay.appendChild(span);
         } else {
           const span = document.createElement('span');
@@ -1074,6 +1157,7 @@
       host,
       overlay,
       initialRender() { void render(); },
+      refresh() { scheduleRender(); },
       setVisible(visible: boolean) {
         host.style.display = visible ? '' : 'none';
         if (visible) {
@@ -1125,7 +1209,8 @@
     dbg: typeof dbg;
     describeInput: typeof describeInput;
   }): { host: HTMLElement; overlay: HTMLElement;
-         initialRender: () => void; setVisible: (visible: boolean) => void;
+         initialRender: () => void; refresh: () => void;
+         setVisible: (visible: boolean) => void;
          setDebug: (on: boolean) => void; destroy: () => void } {
     const { el, workerClient, dbg, describeInput } = opts;
     const host = document.createElement('div');
@@ -1264,7 +1349,7 @@
         closePopup();
         return;
       }
-      const suggestions = await workerClient.suggestWithStateAsync(info.word, 8);
+      const suggestions = await workerClient.suggestWithStateAsync(info.word, uiSettings.suggestionsMax);
       if (!suggestions.length) {
         dbg('content', 'checkCurrentWord:no-suggestions', { word: info.word });
         closePopup();
@@ -1478,6 +1563,9 @@
       host,
       overlay: host,
       initialRender() {
+        if (HIGHLIGHTS_SUPPORTED) void renderMisspellHighlights();
+      },
+      refresh() {
         if (HIGHLIGHTS_SUPPORTED) void renderMisspellHighlights();
       },
       setVisible(visible: boolean) {
@@ -1804,12 +1892,22 @@
             checkSearchboxes);
         refreshSearchFields();
       }
+      if (area === 'local'
+          && Object.values(UI_SETTINGS).some((key) => key in changes)) {
+        void loadUiSettings().then(() => {
+          dbg('content', 'storage.onChanged ui settings', uiSettings);
+          for (const [, overlay] of perInput) overlay.refresh();
+        });
+      }
     });
   }
 
   // Bootstrap. The blacklist load resolves and runs the first scan
   // (only if the host isn't blacklisted). MutationObserver covers
   // anything that mounts later.
-  blacklist.load();
-  void loadSearchSetting();
+  void (async () => {
+    await loadUiSettings();
+    blacklist.load();
+    void loadSearchSetting();
+  })();
 })();

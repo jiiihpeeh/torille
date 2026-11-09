@@ -21,6 +21,19 @@ Everything else is identical: the wasm worker, the content-script overlay,
 the per-host blacklist, the per-textbox toggle, the options page, the
 debug logging.
 
+## Settings
+
+Open the extension options page to tune the checker. Changes save
+automatically to `storage.local` and apply live to open tabs:
+
+- underline style (wavy/solid/dashed/dotted/none) and colour;
+- maximum number of suggestions;
+- open suggestions on click or hover;
+- popup background, text, and highlighted-suggestion colours.
+
+The same keys are read by the content script at startup and on
+`storage.onChanged`, so an options tab and a page being checked stay in sync.
+
 ## Install
 
 The `.xpi` analogue for Chrome is a directory. Build it first:

@@ -11,6 +11,19 @@ Unable to load script: moz-extension://…/content/content.js
 
 Use one of these instead:
 
+## Settings
+
+Open the extension options page to tune the checker. Changes save
+automatically to `storage.local` and apply live to open tabs:
+
+- underline style (wavy/solid/dashed/dotted/none) and colour;
+- maximum number of suggestions;
+- open suggestions on click or hover;
+- popup background, text, and highlighted-suggestion colours.
+
+The same keys are read by the content script at startup and on
+`storage.onChanged`, so an options tab and a page being checked stay in sync.
+
 ## Temporary add-on (development)
 
 ```bash

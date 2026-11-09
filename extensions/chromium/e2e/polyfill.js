@@ -267,6 +267,25 @@
     storage: {
       local: {
         get(key) {
+          // Match the WebExtensions shape: string, array of strings, object
+          // of defaults, or no argument (everything).
+          if (key === undefined || key === null) {
+            return Promise.resolve({ ...storageStore });
+          }
+          if (Array.isArray(key)) {
+            /** @type {Record<string, unknown>} */
+            const out = {};
+            for (const k of key) out[k] = storageStore[k];
+            return Promise.resolve(out);
+          }
+          if (typeof key === 'object') {
+            /** @type {Record<string, unknown>} */
+            const out = {};
+            for (const [k, fallback] of Object.entries(key)) {
+              out[k] = storageStore[k] === undefined ? fallback : storageStore[k];
+            }
+            return Promise.resolve(out);
+          }
           return Promise.resolve({ [key]: storageStore[key] });
         },
         set(obj) {
