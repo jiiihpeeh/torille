@@ -156,6 +156,8 @@
   .empty {
     color: var(--muted); font-style: italic; padding: 0.6rem 0 0.2rem;
   }
+
+  .settings-actions { margin-top: 0.8rem; display: flex; gap: 0.6rem; align-items: center; }
   .status {
     min-height: 1.3em; margin-top: 0.55rem;
     color: #15803d; font-size: 0.84rem;
@@ -233,6 +235,9 @@
         <label for="popup-accent-fg">Korostuksen teksti</label>
         <input type="color" id="popup-accent-fg" value="#ffffff">
       </div>
+    </div>
+    <div class="settings-actions">
+      <button type="button" id="reset-settings" class="ghost">Palauta oletusasetukset</button>
     </div>
     <div id="settings-status" class="status" role="status" aria-live="polite"></div>
   </section>

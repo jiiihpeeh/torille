@@ -55,6 +55,7 @@ const popupFgEl = document.getElementById('popup-fg') as HTMLInputElement;
 const popupAccentEl = document.getElementById('popup-accent') as HTMLInputElement;
 const popupAccentFgEl = document.getElementById('popup-accent-fg') as HTMLInputElement;
 const settingsStatusEl = document.getElementById('settings-status') as HTMLDivElement;
+const resetSettingsEl = document.getElementById('reset-settings') as HTMLButtonElement;
 
 const api: typeof browser = (typeof browser !== 'undefined') ? browser : chrome;
 
@@ -267,6 +268,13 @@ for (const el of [underlineStyleEl, suggestionsMaxEl, popupTriggerEl]) {
 for (const el of [underlineColorEl, popupBgEl, popupFgEl, popupAccentEl, popupAccentFgEl]) {
   el.addEventListener('input', () => { void saveSettings(); });
 }
+
+resetSettingsEl.addEventListener('click', async () => {
+  renderSettings({ ...DEFAULTS });
+  await saveSettings();
+  flashSaved('Oletusasetukset palautettu');
+  dbg('settings reset to defaults');
+});
 
 // ───────────────────────────────────────────────────────────────────────
 // §4  Storage event dispatch
