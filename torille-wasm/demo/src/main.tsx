@@ -7,10 +7,17 @@ import { render } from 'solid-js/web';
 import { App } from './App';
 import { ready, mountReadySignal } from './spell-client';
 
+// Injected by build.mjs from the brotli-compressed wasm sidecar size.
+declare const __TORILLE_WASM_BR_BYTES__: number;
+
 // Mount the wasm-ready promise on `window.__torille.ready`
 // before the worker boot so the probe can `await` it
 // without an import.
 mountReadySignal();
+
+function wasmSizeLabel(bytes: number): string {
+  return `${(bytes / 1_000_000).toFixed(1)} MB`;
+}
 
 function Loading() {
   return (
@@ -19,7 +26,8 @@ function Loading() {
         torille-wasm demo <small>loading wasm…</small>
       </h1>
       <p>
-        starting spell-check worker (10.5 MB wasm) — first load may take a moment.
+        starting spell-check worker ({wasmSizeLabel(__TORILLE_WASM_BR_BYTES__)}{' '}
+        brotli-compressed wasm) — first load may take a moment.
       </p>
     </>
   );

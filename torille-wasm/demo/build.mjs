@@ -95,44 +95,6 @@ const wasmExternalPlugin = {
   },
 };
 
-const buildOptions = {
-  entryPoints: [
-    pathResolveAbs(__dirname, 'src/main.tsx'),
-    pathResolveAbs(__dirname, 'src/extension-test.tsx'),
-    pathResolveAbs(__dirname, 'src/spell-worker.ts'),
-    pathResolveAbs(__dirname, 'src/suggestion-worker.ts'),
-  ],
-  bundle: true,
-  outdir: join(__dirname, 'dist'),
-  entryNames: '[name]',
-  format: 'esm',
-  target: 'es2022',
-  plugins: [solidPlugin(), wasmExternalPlugin],
-  sourcemap: !isRelease,
-  minify: isRelease,
-  metafile: true,
-  logLevel: 'info',
-  absWorkingDir: __dirname,
-};
-
-if (isWatch) {
-  // `context()` + `watch()` rebuilds on every src/ change. The
-  // dev server picks up the new dist/main.js on its next fetch.
-  // We do NOT re-copy the .wasm on every change -- it's the
-  // same artifact until `wasm-pack` reruns.
-  const ctx = await esbuild.context(buildOptions);
-  await ctx.watch();
-  console.log('watching src/ for changes (Ctrl-C to stop)');
-} else {
-  const result = await esbuild.build(buildOptions);
-  console.log(`\nwrote dist/main.js, dist/extension-test.js, dist/spell-worker.js, dist/torille_wasm_bg.wasm`);
-  if (result.metafile) {
-    for (const [file, info] of Object.entries(result.metafile.outputs)) {
-      console.log(`  ${file}  ${info.bytes} bytes`);
-    }
-  }
-}
-
 // Copy the wasm next to the bundles so the runtime fetch in
 // wasm-loader.ts resolves. Nothing else from pkg/ is needed: the
 // glue (`torille_wasm_bg.js`) is bundled into each worker by
@@ -168,7 +130,7 @@ async function precompressWasm() {
   ]);
   if (dstStat && dstStat.size > 0 && dstStat.mtimeMs >= srcStat.mtimeMs) {
     console.log(`  dist/torille_wasm_bg.wasm.br  ${dstStat.size} bytes (up to date)`);
-    return;
+    return dstStat.size;
   }
   const started = performance.now();
   const raw = await readFile(wasmSrc);
@@ -188,6 +150,51 @@ async function precompressWasm() {
     `  dist/torille_wasm_bg.wasm.br  ${compressed.length} bytes ` +
       `(${(compressed.length / raw.length * 100).toFixed(1)}% of ${raw.length}, ${seconds}s)`,
   );
+  return compressed.length;
 }
 
-await precompressWasm();
+const wasmBrBytes = await precompressWasm();
+
+const buildOptions = {
+  entryPoints: [
+    pathResolveAbs(__dirname, 'src/main.tsx'),
+    pathResolveAbs(__dirname, 'src/extension-test.tsx'),
+    pathResolveAbs(__dirname, 'src/spell-worker.ts'),
+    pathResolveAbs(__dirname, 'src/suggestion-worker.ts'),
+  ],
+  bundle: true,
+  outdir: join(__dirname, 'dist'),
+  entryNames: '[name]',
+  format: 'esm',
+  target: 'es2022',
+  plugins: [solidPlugin(), wasmExternalPlugin],
+  sourcemap: !isRelease,
+  minify: isRelease,
+  metafile: true,
+  logLevel: 'info',
+  absWorkingDir: __dirname,
+  // Expose the brotli-compressed wasm size to the loading splash so it
+  // reflects the bytes the browser actually downloads.
+  define: {
+    __TORILLE_WASM_BR_BYTES__: String(wasmBrBytes),
+  },
+};
+
+if (isWatch) {
+  // `context()` + `watch()` rebuilds on every src/ change. The
+  // dev server picks up the new dist/main.js on its next fetch.
+  // We do NOT re-copy the .wasm on every change -- it's the
+  // same artifact until `wasm-pack` reruns.
+  const ctx = await esbuild.context(buildOptions);
+  await ctx.watch();
+  console.log('watching src/ for changes (Ctrl-C to stop)');
+} else {
+  const result = await esbuild.build(buildOptions);
+  console.log(`\nwrote dist/main.js, dist/extension-test.js, dist/spell-worker.js, dist/torille_wasm_bg.wasm`);
+  if (result.metafile) {
+    for (const [file, info] of Object.entries(result.metafile.outputs)) {
+      console.log(`  ${file}  ${info.bytes} bytes`);
+    }
+  }
+}
+
