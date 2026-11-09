@@ -83,12 +83,28 @@ pub(crate) fn is_known_short_compound(word: &str) -> Option<String> {
         if !crate::expand::modifier_is_known(left) || !crate::compound::is_content_head(left) {
             continue;
         }
-        if crate::kotus::sanalista().by_word(right).next().is_none()
-            || !crate::compound::is_content_head(right)
-        {
+        // The head may be an inflected form, not just a lemma: `erämaan` is
+        // `erä` + `maan` (genitive of `maa`). Resolve it through the noun
+        // stem map; `is_known_word_no_compound` is too broad for this
+        // constant-time probe.
+        let base = crate::expand::check_normal::find_base_via_stem_map(
+            right,
+            crate::tags::PartOfSpeech::Noun,
+            false,
+        )
+        .or_else(|| {
+            crate::kotus::sanalista()
+                .by_word(right)
+                .next()
+                .map(|row| row.word().to_string())
+        });
+        let Some(base) = base else {
+            continue;
+        };
+        if !crate::compound::is_content_head(&base) {
             continue;
         }
-        return Some(right.to_string());
+        return classless_compound_whole(left, &base).or(Some(base));
     }
     None
 }

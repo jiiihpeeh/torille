@@ -79,6 +79,9 @@ const REPORTED_CORRECTIONS: &[(&str, &str, &str)] = &[
     // `unhotusta` is not a form of a `unhotus` lemma; the intended word is
     // the partitive of `unohdus`.
     ("unhotusta", "unohdusta", "unohdus"),
+    // `miksikäs` is not a licensed clitic form; the intended interrogative
+    // is `miksi`.
+    ("miksikäs", "miksi", "miksi"),
 ];
 
 pub(super) fn reported_correction(word: &str) -> Option<(String, String)> {

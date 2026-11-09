@@ -1239,6 +1239,9 @@ mod tests {
         // Six/seven-letter compounds are below `is_known_compound_fast`'s
         // length floor; `esi` is a bound modifier.
         assert_eq!(is_known_word_fast("esisana").as_deref(), Some("sana"));
+        // The head may be inflected: `erämaan` is `erä` + `maan` (genitive of
+        // `maa`), and the classless compound lemma is `erämaa`.
+        assert_eq!(is_known_word_fast("erämaan").as_deref(), Some("erämaa"));
         // A `-minen` action noun's compound stem is `-mis-`.
         assert!(is_known_word("edistämisvaroista").is_some());
         assert!(is_known_word_fast("edistämisvaroista").is_some());
@@ -1828,6 +1831,16 @@ mod tests {
         assert!(suggest("valtijatar", 5, 2).contains(&"valtiatar".to_string()));
         assert!(is_known_word("siivoojatar").is_some());
         assert!(is_known_word("valtijatar").is_none());
+    }
+
+    /// `miksikäs` is not a licensed clitic form; the curated answer is
+    /// `miksi`.
+    #[test]
+    fn miksikas_points_at_miksi() {
+        assert_eq!(
+            suggest("miksikäs", 5, 2).first().map(String::as_str),
+            Some("miksi")
+        );
     }
 
     /// `salamyhkää` is not a standard form; the curated answer is the adverb
