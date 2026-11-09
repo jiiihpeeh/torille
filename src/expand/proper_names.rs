@@ -216,6 +216,14 @@ mod tests {
     }
 
     #[test]
+    fn the_canary_islands_ellipsis_resolves() {
+        for word in ["Kanaria", "Kanarian", "Kanariaan", "Kanarialla"] {
+            assert!(contains_capitalised(word), "{word} should be a name");
+        }
+        assert!(!contains_capitalised("kanarian"));
+    }
+
+    #[test]
     fn clitics_and_possessives_on_names_resolve() {
         for word in ["Annakin", "Annani", "Annansa", "Tolpankin", "Matin"] {
             assert!(contains_capitalised(word), "{word} should be a name");

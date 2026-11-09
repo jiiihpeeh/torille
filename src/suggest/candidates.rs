@@ -26,6 +26,11 @@ fn apply_input_case(input: &str, mut suggestions: Vec<Suggestion>) -> Vec<Sugges
 /// specific typo than a same-distance substitution, so it wins the tie.
 const DOUBLED_LETTER_BONUS: f32 = 0.1;
 
+/// A `w` -> `v` modernisation is a writing-system correction, not a random
+/// one-letter typo, so it wins the tie against an unrelated equal-distance
+/// deletion (`waimo` -> `vaimo`, not `aimo`).
+const W_TO_V_BONUS: f32 = 0.1;
+
 /// Human-approved morphological corrections that edit distance alone cannot
 /// surface: the wrong surface is not a typo in spelling but a different
 /// inflection of the same verb, so it is several edits away and alphabetically
@@ -510,6 +515,26 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     // closed/hyphenated twin when the engine confirms it.
     push_hyphen_candidates(original, &word, max_distance, &mut candidates);
 
+    // Older Finnish prints `w` where modern orthography has `v`
+    // (`wesi`, `wähän`, `AJANWIETE`). The initial-letter change moves the
+    // word out of the `v` prefix walk, so the ordinary candidate pool
+    // cannot reach it. Add the all-`w`-to-`v` spelling when it is a known
+    // word; the final distance filter still bounds the edit budget.
+    if let Some(candidate) = w_to_v(&word)
+        && let Some(base) = is_known_word_fast(&candidate)
+    {
+        candidates.push(Suggestion {
+            word: candidate,
+            edit_distance: 0,
+            lemma: Some(base.clone()),
+            source: SuggestionSource::GeneratedForm { lemma: base },
+            readings: Vec::new(),
+            confidence: Confidence::Plain,
+            original_rank: 0,
+            existing_score: 0.0,
+        });
+    }
+
     // A reported wrong inflection the edit-distance pool can reach only at
     // distance 3 (`ahertelin` -> `ahersin`). Add it explicitly; it is licensed
     // by the table rather than the caller's distance budget, so it survives the
@@ -563,6 +588,9 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
             score += keyboard_bonus(&word, &c.word);
             if is_doubling_repair(&word, &c.word) {
                 score += DOUBLED_LETTER_BONUS;
+            }
+            if w_to_v(&word).as_deref() == Some(c.word.as_str()) {
+                score += W_TO_V_BONUS;
             }
         }
         if correction.as_deref() == Some(c.word.as_str()) {
@@ -774,6 +802,11 @@ fn has_adjacent_repeat(word: &str) -> bool {
         previous = Some(c);
     }
     false
+}
+
+/// The modern `v` spelling of an older `w` word, when it contains a `w`.
+fn w_to_v(word: &str) -> Option<String> {
+    word.contains('w').then(|| word.replace('w', "v"))
 }
 
 /// Every word one deletion away from `word`, in input order, without

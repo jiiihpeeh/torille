@@ -686,7 +686,7 @@ fn cheap_derived_base(word: &str) -> Option<String> {
     // A comparative of a past-active participle (`perehtyneempi`) or its
     // instructive (`perehtyneemmin`). Name it before the compound DP, which
     // otherwise splits the long surface and reports `ehtynyt`.
-    if (lower.ends_with("mpi") || lower.ends_with("mmin"))
+    if (lower.contains("mp") || lower.contains("mm"))
         && let Some(base) = crate::suggest::derived_comparative_base(&lower)
     {
         return Some(base);

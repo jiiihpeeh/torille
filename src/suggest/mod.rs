@@ -1833,6 +1833,29 @@ mod tests {
         assert!(is_known_word("valtijatar").is_none());
     }
 
+    /// Older Finnish prints `w` for modern `v`; the initial-letter change
+    /// is outside the `v` prefix walk, so it needs its own candidate.
+    #[test]
+    fn old_w_spellings_suggest_modern_v() {
+        for (old, modern) in [
+            ("wesi", "vesi"),
+            ("wähän", "vähän"),
+            ("waimo", "vaimo"),
+            ("wuosi", "vuosi"),
+            ("ajanwiete", "ajanviete"),
+        ] {
+            assert_eq!(
+                suggest(old, 5, 2).first().map(String::as_str),
+                Some(modern),
+                "{old}"
+            );
+        }
+        assert_eq!(
+            suggest("AJANWIETE", 5, 2).first().map(String::as_str),
+            Some("AJANVIETE")
+        );
+    }
+
     /// `miksikäs` is not a licensed clitic form; the curated answer is
     /// `miksi`.
     #[test]

@@ -329,12 +329,43 @@ pub(crate) fn derived_comparative_base(word: &str) -> Option<String> {
     use crate::kotus::{Gradation, Inflection};
 
     // `-mmin` is the comparative adverb (the instructive plural of the
-    // comparative); `-mpi` is its nominative. Both leave the comparative stem
-    // as the prefix.
-    let comparative = ["mmin", "mpi"].iter().find_map(|suffix| {
-        word.strip_suffix(suffix)
-            .filter(|stem| stem.chars().count() >= 4)
-    })?;
+    // comparative); `-mpi` is its nominative. Both leave the comparative
+    // prefix directly. An oblique case (`hehkuvampina`, `suuremmalla`) needs
+    // the case ending stripped first; the comparative stem then ends in `mp`
+    // or `mma`, from which the nominative prefix is the part before it.
+    let comparative = ["mmin", "mpi"]
+        .iter()
+        .find_map(|suffix| {
+            word.strip_suffix(suffix)
+                .filter(|stem| stem.chars().count() >= 4)
+                .map(str::to_string)
+        })
+        .or_else(|| {
+            use crate::expand::check_normal::ENDINGS;
+            for ending in ENDINGS.iter().copied().chain(std::iter::once("")) {
+                let stem = if ending.is_empty() {
+                    word
+                } else {
+                    let Some(stem) = word.strip_suffix(ending) else {
+                        continue;
+                    };
+                    stem
+                };
+                if stem.chars().count() < 4 {
+                    continue;
+                }
+                if let Some(prefix) = stem.strip_suffix("mpi") {
+                    return Some(prefix.to_string());
+                }
+                if let Some(prefix) = stem.strip_suffix("mp") {
+                    return Some(prefix.to_string());
+                }
+                if let Some(prefix) = stem.strip_suffix("mma") {
+                    return Some(prefix.to_string());
+                }
+            }
+            None
+        })?;
     // A past-active participle takes `-neempi` on its `-nee-` stem:
     // `perehtynyt` -> `perehtyneempi`, `väsynyt` -> `väsyneempi`. The
     // stripped prefix (`perehtynee`) is not itself known, so reconstruct the
@@ -417,6 +448,14 @@ mod tests {
             derived_comparative_base("väsyneempi").as_deref(),
             Some("väsynyt")
         );
+        // Oblique case forms of a participle comparative.
+        for word in ["hehkuvampina", "hehkuvampia", "hehkuvampien"] {
+            assert_eq!(
+                derived_comparative_base(word).as_deref(),
+                Some("hehkuva"),
+                "{word}"
+            );
+        }
     }
 
     /// The oblique `-kse-` stem of an `-us`/`-ys` action noun resolves back to

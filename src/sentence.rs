@@ -79,10 +79,13 @@ pub fn separator_ends_sentence(token: &Token) -> bool {
     ) {
         return true;
     }
-    // Dialogue dashes may follow the terminal punctuation (`.--Kuulkaa`)
-    // or stand alone (`-- Kuulkaa`). Strip them, then look for the real
-    // terminal mark. A run of only dashes is a dialogue turn of its own.
-    let core = trimmed.trim_end_matches(['-', '–', '—']);
+    // Dialogue dashes may follow the terminal punctuation (`.--Kuulkaa`,
+    // `! — Minulla`) or stand alone (`-- Kuulkaa`, `— — — Sinä`). Strip
+    // them *and the spaces around them*, then look for the real terminal
+    // mark. A run of only dashes is a dialogue turn of its own.
+    let core = trimmed.trim_end_matches(|c: char| {
+        c.is_whitespace() || matches!(c, '-' | '–' | '—')
+    });
     if core.is_empty() {
         return trimmed.chars().any(|c| ['-', '–', '—'].contains(&c));
     }
@@ -481,13 +484,15 @@ mod tests {
             "joka olet mainio kirjamies.--Hyvästi vain.»",
             "-- Kuulkaa nyt.",
             "»Niin.--Kuulkaa, Nikkilä.»",
+            "kukkii! — Minulla ei ole rikkautta.",
+            "tyynny... — — — Sinä saat minutkin itkemään.",
         ] {
             let tokens = tokenise(text);
             let ctx = analyze(&tokens);
             let first_after_dash = tokens
                 .iter()
                 .zip(&ctx)
-                .find(|(token, _)| token.text == "Kuulkaa" || token.text == "Hyvästi")
+                .find(|(token, _)| matches!(token.text.as_str(), "Kuulkaa" | "Hyvästi" | "Minulla" | "Sinä"))
                 .unwrap_or_else(|| panic!("no test word in {text:?}"));
             assert!(
                 first_after_dash.1.sentence_start,

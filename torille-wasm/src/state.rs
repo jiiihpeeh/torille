@@ -521,6 +521,21 @@ mod tests {
     }
 
     #[test]
+    fn a_spaced_dialogue_dash_still_opens_a_sentence() {
+        let mut st = TextAreaState::new();
+        for (text, word) in [
+            ("kukkii! — Minulla ei ole rikkautta.", "Minulla"),
+            ("tyynny... — — — Sinä saat minutkin itkemään.", "Sinä"),
+        ] {
+            let hits = st.find_misspells(text);
+            assert!(
+                !hits.iter().any(|h| h.word == word),
+                "{word} is sentence-initial after a spaced dash: {hits:?}"
+            );
+        }
+    }
+
+    #[test]
     fn finnish_regions_keep_their_capital() {
         let mut st = TextAreaState::new();
         let hits = st.find_misspells(
