@@ -28,8 +28,9 @@ Or, from either extension directory:
 npm run build
 ```
 
-The build compiles TypeScript, copies the wasm-pack output, and writes the
-loadable `dist/` directory (plus the zip/XPI).
+The build compiles TypeScript, bundles the Solid options page with esbuild,
+copies the wasm-pack output, and writes the loadable `dist/` directory
+(plus the zip/XPI).
 
 ## Load in Chromium
 

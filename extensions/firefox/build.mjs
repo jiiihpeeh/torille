@@ -12,6 +12,8 @@
 //   4. Zip dist/ into extensions/firefox/torille-firefox.xpi.
 
 import { copyFile, mkdir, readdir, rm } from 'node:fs/promises';
+import * as esbuild from 'esbuild';
+import { solidPlugin } from 'esbuild-plugin-solid';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
@@ -48,6 +50,17 @@ await copyFile(
   path.join(__dirname, 'options.html'),
   path.join(dist, 'options', 'options.html'),
 );
+
+step('bundling Solid options page');
+await esbuild.build({
+  entryPoints: [path.join(__dirname, 'src', 'options', 'index.tsx')],
+  outfile: path.join(dist, 'options', 'options.js'),
+  bundle: true,
+  format: 'esm',
+  target: 'es2020',
+  plugins: [solidPlugin()],
+  logLevel: 'info',
+});
 
 step('copying manifest.template.json -> manifest.json');
 await copyFile(
