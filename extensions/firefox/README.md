@@ -45,7 +45,10 @@ cd extensions/firefox
 npx web-ext run --source-dir dist
 ```
 
-After a rebuild, reload the add-on from `about:debugging` and refresh the page.
+After a rebuild, click **Reload** on the add-on in `about:debugging` and
+refresh the page you are testing. Open the settings from the add-on's
+**Preferences** / **Options** button. The extension also appears in the
+toolbar; pin it from the puzzle-piece menu if needed.
 
 ## Packaged build
 

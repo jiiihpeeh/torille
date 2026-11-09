@@ -45,11 +45,19 @@ node /home/j-p/torille/extensions/chromium/build.mjs
 That writes `/home/j-p/torille/extensions/chromium/dist/` (the loadable extension)
 and `/home/j-p/torille/extensions/chromium/torille-chromium.zip` (a share-as-zip form).
 
-Then:
+Then load it:
 
-1. Open `chrome://extensions` in the browser.
-3. Toggle **Developer mode** on (top right).
-4. Click **Load unpacked** and pick `dist/`.
+1. Open `chrome://extensions` (or `brave://extensions`,
+   `edge://extensions`, etc.).
+2. Toggle **Developer mode** on (top right).
+3. Click **Load unpacked**.
+4. Pick `/home/j-p/torille/extensions/chromium/dist/`.
+
+The extension appears in the toolbar; pin it from the puzzle-piece menu.
+After changing extension source, rebuild with `build.mjs` and click the
+**Reload** button on the extension card, then refresh the page you are
+testing. The options page opens from the extension card's **Details** →
+**Extension options**.
 
 ## Manifest validation
 
