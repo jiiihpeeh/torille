@@ -161,6 +161,15 @@
     color: #15803d; font-size: 0.84rem;
   }
   .status[data-error="1"] { color: var(--danger); }
+
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 0.5rem 1rem;
+    align-items: center; justify-content: space-between;
+    color: var(--muted); font-size: 0.82rem;
+    padding: 0.2rem 0.2rem 0;
+  }
+  .meta a { color: var(--accent); text-decoration: none; }
+  .meta a:hover { text-decoration: underline; }
   @media (max-width: 560px) {
     .row { grid-template-columns: 1fr; }
     .row > :last-child { justify-self: start; }
@@ -257,6 +266,14 @@
     <ul id="list"></ul>
     <div id="empty" class="empty" hidden>Blacklist on tyhjä.</div>
   </section>
+  <footer class="meta">
+    <span>torille — suomalainen oikeinkirjoitustarkistus</span>
+    <span>
+      <a href="https://gitlab.com/jiiihpeeh/torille" target="_blank" rel="noopener noreferrer">
+        Lähdekoodi GitLabissa
+      </a>
+    </span>
+  </footer>
 </div>
 <script src="./options.js"></script>
 </body>
