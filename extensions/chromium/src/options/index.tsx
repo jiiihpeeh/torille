@@ -301,7 +301,7 @@ function OptionsApp() {
             checked={settings().ignoreCodeBlocks}
             onChange={(e) => patch('ignoreCodeBlocks', e.currentTarget.checked)}
           />
-          <span>Ohita koodilohdat
+          <span>Ohita koodilohkot
             <small>Ohittaa <code>```</code>- ja <code>~~~</code>-merkinnöillä rajatut koodilohkot sekä HTML-elementtien <code>code</code>, <code>pre</code>, <code>kbd</code>, <code>samp</code>, <code>script</code> ja <code>style</code> sisällöt. Koodilohkot eivät myöskään vaikuta virkkeiden rajojen tunnistamiseen.</small>
           </span>
         </label>
