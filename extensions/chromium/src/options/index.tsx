@@ -13,6 +13,10 @@ type Settings = {
   popupFg: string;
   popupAccent: string;
   popupAccentFg: string;
+  ignoreCodeBlocks: boolean;
+  ignoreInlineCode: boolean;
+  ignoreBbcode: boolean;
+  ignoreCodeEditors: boolean;
 };
 
 const DEFAULTS: Settings = {
@@ -24,6 +28,10 @@ const DEFAULTS: Settings = {
   popupFg: '#222222',
   popupAccent: '#0077cc',
   popupAccentFg: '#ffffff',
+  ignoreCodeBlocks: true,
+  ignoreInlineCode: true,
+  ignoreBbcode: true,
+  ignoreCodeEditors: false,
 };
 
 const KEYS: Record<keyof Settings, string> = {
@@ -35,6 +43,10 @@ const KEYS: Record<keyof Settings, string> = {
   popupFg: 'torille-popup-fg',
   popupAccent: 'torille-popup-accent',
   popupAccentFg: 'torille-popup-accent-fg',
+  ignoreCodeBlocks: 'torille-ignore-code-blocks',
+  ignoreInlineCode: 'torille-ignore-inline-code',
+  ignoreBbcode: 'torille-ignore-bbcode',
+  ignoreCodeEditors: 'torille-ignore-code-editors',
 };
 
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -81,11 +93,15 @@ function readSettings(raw: Record<string, unknown>): Settings {
     popupFg: color('popupFg'),
     popupAccent: color('popupAccent'),
     popupAccentFg: color('popupAccentFg'),
+    ignoreCodeBlocks: raw[KEYS.ignoreCodeBlocks] !== false,
+    ignoreInlineCode: raw[KEYS.ignoreInlineCode] !== false,
+    ignoreBbcode: raw[KEYS.ignoreBbcode] !== false,
+    ignoreCodeEditors: raw[KEYS.ignoreCodeEditors] === true,
   };
 }
 
-function valuesOf(settings: Settings): Record<string, string | number> {
-  const out: Record<string, string | number> = {};
+function valuesOf(settings: Settings): Record<string, string | number | boolean> {
+  const out: Record<string, string | number | boolean> = {};
   for (const key of Object.keys(KEYS) as (keyof Settings)[]) {
     out[KEYS[key]] = settings[key];
   }
@@ -274,6 +290,50 @@ function OptionsApp() {
 
       <section class="card">
         <h2>Tarkastus</h2>
+        <label class="toggle">
+          <input
+            id="ignore-code-blocks"
+            type="checkbox"
+            checked={settings().ignoreCodeBlocks}
+            onChange={(e) => patch('ignoreCodeBlocks', e.currentTarget.checked)}
+          />
+          <span>Ohita koodilohdat
+            <small>Ei tarkista ```&nbsp;/&nbsp;~~~-lohkoja eikä HTML:n code-, pre-, kbd-, samp-, script- tai style-sisältöä. Koodi ei myöskään sekoita virkkeiden rajoja.</small>
+          </span>
+        </label>
+        <label class="toggle">
+          <input
+            id="ignore-inline-code"
+            type="checkbox"
+            checked={settings().ignoreInlineCode}
+            onChange={(e) => patch('ignoreInlineCode', e.currentTarget.checked)}
+          />
+          <span>Ohita rivinsisäinen koodi
+            <small>Ei tarkista rivin sisällä olevia `koodinpätkiä`.</small>
+          </span>
+        </label>
+        <label class="toggle">
+          <input
+            id="ignore-bbcode"
+            type="checkbox"
+            checked={settings().ignoreBbcode}
+            onChange={(e) => patch('ignoreBbcode', e.currentTarget.checked)}
+          />
+          <span>Ohita BBCode-merkinnät
+            <small>Koodi-, URL-, kuva-, sähköposti- ja media-sisällöt jätetään tarkastamatta. Lainaukset ja muotoilut (&nbsp;[quote], [b], [i]&nbsp;) tarkastetaan normaalisti.</small>
+          </span>
+        </label>
+        <label class="toggle">
+          <input
+            id="ignore-code-editors"
+            type="checkbox"
+            checked={settings().ignoreCodeEditors}
+            onChange={(e) => patch('ignoreCodeEditors', e.currentTarget.checked)}
+          />
+          <span>Ohita koodieditorit
+            <small>Ei liitä tarkistusta CodeMirror-, Monaco- tai Ace-kenttiin. Oletuksena pois.</small>
+          </span>
+        </label>
         <label class="toggle">
           <input
             id="searchboxes"

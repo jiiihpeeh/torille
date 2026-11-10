@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>torille code/BBCode ignore e2e</title>
+  <style>
+    body { font: 14px sans-serif; padding: 1em; max-width: 700px; }
+    textarea { width: 100%; height: 11em; font: 13px/1.4 monospace; }
+    #ce { border: 1px solid #888; padding: 0.5em; min-height: 4em; }
+    #ce pre { background: #f4f4f4; padding: 0.4em; }
+    #log { background: #f4f4f4; padding: 0.5em; margin-top: 1em; font-family: monospace; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>torille code/BBCode ignore e2e</h1>
+
+  <textarea id="t">Tama on taloo.
+```js
+const koirra = xyzzy;
+```
+[code]xyzzy koirra[/code]
+`koirra` ja loppu taloo.</textarea>
+
+  <div id="ce" contenteditable="true">Proosaa taloo.
+<pre><code>koirra xyzzy</code></pre>
+Lopuksi taloo.</div>
+
+  <div id="log"></div>
+  <script src="./polyfill.js"></script>
+  <script src="../dist/content/content.js"></script>
+  <script src="./after-content.js"></script>
+</body>
+</html>

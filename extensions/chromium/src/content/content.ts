@@ -23,6 +23,14 @@
 //   §8  Scanner + MutationObserver (scan, observe)
 //   §9  Bootstrap                  (wire the factories together)
 
+import {
+  computeIgnoredRanges,
+  isIgnored,
+  isInsideCodeDom,
+  maskIgnored,
+  type IgnoredRange,
+} from './ignore-ranges';
+
 (() => {
   'use strict';
 
@@ -60,6 +68,10 @@
     popupFg: 'torille-popup-fg',
     popupAccent: 'torille-popup-accent',
     popupAccentFg: 'torille-popup-accent-fg',
+    ignoreCodeBlocks: 'torille-ignore-code-blocks',
+    ignoreInlineCode: 'torille-ignore-inline-code',
+    ignoreBbcode: 'torille-ignore-bbcode',
+    ignoreCodeEditors: 'torille-ignore-code-editors',
   } as const;
 
   type UiSettings = {
@@ -71,6 +83,10 @@
     popupFg: string;
     popupAccent: string;
     popupAccentFg: string;
+    ignoreCodeBlocks: boolean;
+    ignoreInlineCode: boolean;
+    ignoreBbcode: boolean;
+    ignoreCodeEditors: boolean;
   };
 
   const uiSettings: UiSettings = {
@@ -82,6 +98,10 @@
     popupFg: '#222222',
     popupAccent: '#0077cc',
     popupAccentFg: '#ffffff',
+    ignoreCodeBlocks: true,
+    ignoreInlineCode: true,
+    ignoreBbcode: true,
+    ignoreCodeEditors: false,
   };
 
   function applyUiSettings(): void {
@@ -116,7 +136,39 @@
       ? String(cur[UI_SETTINGS.popupAccent]) : '#0077cc';
     uiSettings.popupAccentFg = /^#[0-9a-f]{6}$/i.test(String(cur[UI_SETTINGS.popupAccentFg]))
       ? String(cur[UI_SETTINGS.popupAccentFg]) : '#ffffff';
+    const bool = (key: string, fallback: boolean): boolean => {
+      const value = cur[key];
+      return typeof value === 'boolean' ? value : fallback;
+    };
+    uiSettings.ignoreCodeBlocks = bool(UI_SETTINGS.ignoreCodeBlocks, true);
+    uiSettings.ignoreInlineCode = bool(UI_SETTINGS.ignoreInlineCode, true);
+    uiSettings.ignoreBbcode = bool(UI_SETTINGS.ignoreBbcode, true);
+    uiSettings.ignoreCodeEditors = bool(UI_SETTINGS.ignoreCodeEditors, false);
     applyUiSettings();
+  }
+
+  /** Ignore ranges for the current content-script settings. */
+  function ignoredRangesFor(text: string): IgnoredRange[] {
+    return computeIgnoredRanges(text, {
+      codeBlocks: uiSettings.ignoreCodeBlocks,
+      inlineCode: uiSettings.ignoreInlineCode,
+      bbcode: uiSettings.ignoreBbcode,
+      html: uiSettings.ignoreCodeBlocks,
+    });
+  }
+
+  /** True when the field is a known whole-editor code surface. */
+  function isCodeEditorField(el: HTMLElement): boolean {
+    if (!uiSettings.ignoreCodeEditors) return false;
+    let n: HTMLElement | null = el;
+    for (let i = 0; n && i < 4; i++, n = n.parentElement) {
+      const cls = typeof n.className === 'string' ? n.className : '';
+      if (/\b(cm-editor|monaco-editor|CodeMirror|ace_editor)\b/.test(cls)) {
+        return true;
+      }
+      if (n.hasAttribute('data-code-editor')) return true;
+    }
+    return false;
   }
 
   // ─────────────────────────────────────────────────────────────────────
@@ -1006,23 +1058,35 @@
       const text = input.value;
       dbg('content', 'render:start', { gen: myGen, len: text.length });
 
+      // Code and markup must not influence sentence context or proper-
+      // noun learning, so send a masked copy to the engine. The mask is
+      // length-preserving, so every returned offset still points at the
+      // same character in the original live text.
+      const ignored = ignoredRangesFor(text);
+      const analyzed = maskIgnored(text, ignored);
+
       // One wasm round-trip per render, regardless of token count.
       // The workerClient handles the wasm-side slot internally; this
       // call lazy-creates the state on first render. The hits carry
       // UTF-16 ranges into the original `text`, so the JS-side
       // tokenise step we used to do here is now redundant.
-      const hits = await workerClient.analyzeTextAsync(text, uiSettings.suggestionsMax, myGen);
+      const rawHits = await workerClient.analyzeTextAsync(analyzed, uiSettings.suggestionsMax, myGen);
       if (myGen !== renderGen) {
         dbg('content', 'render:stale', { gen: myGen, current: renderGen });
         return;
       }
-      if (hits === null) {
+      if (rawHits === null) {
         // The checker could not answer. Keep the underlines from the
         // previous render rather than blanking the overlay or (worse)
         // painting the whole text red.
         dbg('content', 'render:unavailable', { gen: myGen });
         return;
       }
+      // Defensive post-filter: even if the engine or a future tokeniser
+      // returns a hit inside the mask, never underline it.
+      const hits = ignored.length === 0
+        ? rawHits
+        : rawHits.filter((h) => !isIgnored({ start: h.start, end: h.end }, ignored));
 
       // Only now drop the previous spans: clearing before the await
       // made every keystroke blink the underlines off and on.
@@ -1384,6 +1448,21 @@
         closePopup();
         return;
       }
+      if (isInsideCodeDom(info.node, el)) {
+        dbg('content', 'checkCurrentWord:in-code');
+        closePopup();
+        return;
+      }
+      const ignored = ignoredRangesFor(el.textContent ?? '');
+      if (ignored.length > 0) {
+        const at = textOffsetOf(info.node, info.start);
+        if (at !== null
+            && isIgnored({ start: at, end: at + info.word.length }, ignored)) {
+          dbg('content', 'checkCurrentWord:in-ignored-range');
+          closePopup();
+          return;
+        }
+      }
       dbg('content', 'checkCurrentWord:start', { word: info.word });
       const ok = await workerClient.checkFastAsync(info.word);
       if (ok === null) {
@@ -1433,6 +1512,22 @@
       positionPopup();
     }
 
+    // Inverse of `textNodeAt`: the global textContent offset for a
+    // (Text node, local offset) pair. Used to compare the caret against
+    // the text-range ignore mask.
+    function textOffsetOf(node: Text, localOffset: number): number | null {
+      let total = 0;
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      let n: Node | null;
+      while ((n = walker.nextNode())) {
+        const t = n as Text;
+        const len = (t.textContent ?? '').length;
+        if (t === node) return total + Math.min(localOffset, len);
+        total += len;
+      }
+      return null;
+    }
+
     // Map a global character offset (relative to textContent) into a
     // concrete (Text node, localOffset) pair inside the contenteditable.
     // Returns null if the offset is out of range. Walks text nodes in
@@ -1462,7 +1557,8 @@
     async function renderMisspellHighlights(): Promise<void> {
       if (!HIGHLIGHTS_SUPPORTED) return;
       const text = el.textContent ?? '';
-      const hits = await workerClient.analyzeTextAsync(text, 8, ++renderGen);
+      const ignored = ignoredRangesFor(text);
+      const hits = await workerClient.analyzeTextAsync(maskIgnored(text, ignored), 8, ++renderGen);
       if (hits === null) {
         dbg('content', 'highlight:unavailable');
         return; // keep the previous ranges
@@ -1470,9 +1566,17 @@
       const ranges: Range[] = [];
       misspellRegions.clear();
       for (const hit of hits) {
+        if (ignored.length > 0 && isIgnored({ start: hit.start, end: hit.end }, ignored)) {
+          continue;
+        }
         const start = textNodeAt(hit.start);
         const end = textNodeAt(hit.end);
         if (!start || !end) continue;
+        // Rich editors expose code as real DOM: skip any hit whose text
+        // node lives inside <code>/<pre>/<kbd>/<samp>/<script>/<style>.
+        if (isInsideCodeDom(start.node, el) || isInsideCodeDom(end.node, el)) {
+          continue;
+        }
         const range = document.createRange();
         try {
           range.setStart(start.node, start.offset);
@@ -1849,7 +1953,8 @@
     dbg,
     describeInput,
     isSiteBlacklisted: () => blacklist.isSiteBlacklisted(),
-    shouldAttach: (el) => checkSearchboxes || !isSearchField(el),
+    shouldAttach: (el) =>
+      !isCodeEditorField(el) && (checkSearchboxes || !isSearchField(el)),
     detachFn: (el) => {
       perInput.get(el)?.destroy();
       perInput.delete(el);
@@ -1944,7 +2049,11 @@
           && Object.values(UI_SETTINGS).some((key) => key in changes)) {
         void loadUiSettings().then(() => {
           dbg('content', 'storage.onChanged ui settings', uiSettings);
-          for (const [, overlay] of perInput) overlay.refresh();
+          for (const [el, overlay] of perInput) {
+            if (isCodeEditorField(el)) scanner.detach(el);
+            else overlay.refresh();
+          }
+          scanner.scan(document);
         });
       }
     });

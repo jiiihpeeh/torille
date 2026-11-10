@@ -41,6 +41,19 @@ await rm(dist, { recursive: true, force: true });
 step('compiling TypeScript');
 execFileSync('node', [tsc, '-p', tsconfig], { stdio: 'inherit' });
 
+// Content scripts cannot use ES module imports. Bundle the content
+// entry point (it imports the shared ignore-range module) into the
+// single classic script the manifest names.
+step('bundling content script');
+await esbuild.build({
+  entryPoints: [path.join(__dirname, 'src', 'content', 'content.ts')],
+  outfile: path.join(dist, 'content', 'content.js'),
+  bundle: true,
+  format: 'iife',
+  target: 'es2020',
+  logLevel: 'info',
+});
+
 // 2. options.html is hand-written; tsc only handles JS/TS so copy it
 //    next to the compiled options.js. The manifest template is copied
 //    into the package root as `manifest.json`.
