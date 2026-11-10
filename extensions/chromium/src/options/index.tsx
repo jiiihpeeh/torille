@@ -33,7 +33,7 @@ const DEFAULTS: Settings = {
   ignoreInlineCode: true,
   ignoreBbcode: true,
   ignoreUrls: true,
-  ignoreCodeEditors: false,
+  ignoreCodeEditors: true,
 };
 
 const KEYS: Record<keyof Settings, string> = {
@@ -100,7 +100,7 @@ function readSettings(raw: Record<string, unknown>): Settings {
     ignoreInlineCode: raw[KEYS.ignoreInlineCode] !== false,
     ignoreBbcode: raw[KEYS.ignoreBbcode] !== false,
     ignoreUrls: raw[KEYS.ignoreUrls] !== false,
-    ignoreCodeEditors: raw[KEYS.ignoreCodeEditors] === true,
+    ignoreCodeEditors: raw[KEYS.ignoreCodeEditors] !== false,
   };
 }
 
@@ -293,7 +293,7 @@ function OptionsApp() {
       </section>
 
       <section class="card">
-        <h2>Tarkastus</h2>
+        <h2>Tarkistuksen asetukset</h2>
         <label class="toggle">
           <input
             id="ignore-code-blocks"
@@ -302,7 +302,7 @@ function OptionsApp() {
             onChange={(e) => patch('ignoreCodeBlocks', e.currentTarget.checked)}
           />
           <span>Ohita koodilohdat
-            <small>Ei tarkista ```&nbsp;/&nbsp;~~~-lohkoja eikä HTML:n code-, pre-, kbd-, samp-, script- tai style-sisältöä. Koodi ei myöskään sekoita virkkeiden rajoja.</small>
+            <small>Ohittaa <code>```</code>- ja <code>~~~</code>-merkinnöillä rajatut koodilohkot sekä HTML-elementtien <code>code</code>, <code>pre</code>, <code>kbd</code>, <code>samp</code>, <code>script</code> ja <code>style</code> sisällöt. Koodilohkot eivät myöskään vaikuta virkkeiden rajojen tunnistamiseen.</small>
           </span>
         </label>
         <label class="toggle">
@@ -313,7 +313,7 @@ function OptionsApp() {
             onChange={(e) => patch('ignoreInlineCode', e.currentTarget.checked)}
           />
           <span>Ohita rivinsisäinen koodi
-            <small>Ei tarkista rivin sisällä olevia `koodinpätkiä`.</small>
+            <small>Ohittaa tekstin seassa olevat <code>koodinpätkät</code> eikä tarkista niiden sisältöä.</small>
           </span>
         </label>
         <label class="toggle">
@@ -324,7 +324,7 @@ function OptionsApp() {
             onChange={(e) => patch('ignoreBbcode', e.currentTarget.checked)}
           />
           <span>Ohita BBCode-merkinnät
-            <small>Koodi-, URL-, kuva-, sähköposti- ja media-sisällöt jätetään tarkastamatta. Lainaukset ja muotoilut (&nbsp;[quote], [b], [i]&nbsp;) tarkastetaan normaalisti.</small>
+            <small>Jättää koodi-, URL-, kuva-, sähköposti- ja mediasisällöt tarkistuksen ulkopuolelle. Lainaukset ja tekstin muotoilut, kuten <code>[quote]</code>, <code>[b]</code> ja <code>[i]</code>, tarkistetaan normaalisti.</small>
           </span>
         </label>
         <label class="toggle">
@@ -334,8 +334,8 @@ function OptionsApp() {
             checked={settings().ignoreUrls}
             onChange={(e) => patch('ignoreUrls', e.currentTarget.checked)}
           />
-          <span>Ohita verkko-osoitteet ja sähköpostit
-            <small>Ei tarkista osoitteita kuten https://example.fi/talo tai matti@example.fi. Myös www-osoitteet ja BBCoden URL-/sähköpostikentät ohitetaan.</small>
+          <span>Ohita verkko-osoitteet ja sähköpostiosoitteet
+            <small>Ei tarkista verkko-osoitteita tai sähköpostiosoitteita, kuten <code>https://example.fi/talo</code> tai <code>matti@example.fi</code>. Myös www-osoitteet sekä BBCode-merkintöjen URL- ja sähköpostikentät ohitetaan.</small>
           </span>
         </label>
         <label class="toggle">
@@ -346,7 +346,7 @@ function OptionsApp() {
             onChange={(e) => patch('ignoreCodeEditors', e.currentTarget.checked)}
           />
           <span>Ohita koodieditorit
-            <small>Ei liitä tarkistusta CodeMirror-, Monaco- tai Ace-kenttiin. Oletuksena pois.</small>
+            <small>Poistaa tarkistuksen käytöstä CodeMirror-, Monaco- ja Ace-koodieditoreissa. Oletuksena käytössä on ohitus.</small>
           </span>
         </label>
         <label class="toggle">
@@ -361,7 +361,7 @@ function OptionsApp() {
             }}
           />
           <span>Tarkasta hakukentät
-            <small>Oletuksena pois: hakukenttiin kirjoitetaan usein nimiä, osoitteita ja hakusanoja, joita sanakirja ei tunne.</small>
+            <small>Ottaa tarkistuksen käyttöön myös hakukentissä. Oletuksena pois käytöstä, sillä hakukentissä käytetään usein nimiä, osoitteita ja hakusanoja, joita sanakirja ei tunnista.</small>
           </span>
         </label>
         <label class="toggle">
@@ -375,8 +375,8 @@ function OptionsApp() {
               void api.storage.local.set({ 'torille-debug': on });
             }}
           />
-          <span>Debug-loki päälle
-            <small>Kirjoittaa konsoliin tiedot aktivoitavista kentistä, tarkistuspyynnöistä ja kontekstivalikon toiminnoista.</small>
+          <span>Ota debug-loki käyttöön
+            <small>Kirjaa selaimen konsoliin tietoja tunnistetuista tekstikentistä, tarkistuspyynnöistä ja kontekstivalikon toiminnoista.</small>
           </span>
         </label>
       </section>

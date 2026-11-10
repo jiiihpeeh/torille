@@ -112,7 +112,7 @@ Add to the Solid options page (`src/options/index.tsx`, both extensions):
 - [x] `torille-ignore-code-blocks` — default `true`
 - [x] `torille-ignore-bbcode` — default `true`
 - [x] `torille-ignore-inline-code` — default `true` (or fold into code-blocks)
-- [x] `torille-ignore-code-editors` — default `false`
+- [x] `torille-ignore-code-editors` — default `true` (options text says skipping is on by default)
 
 For each:
 

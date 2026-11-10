@@ -142,7 +142,7 @@ import {
     ignoreInlineCode: true,
     ignoreBbcode: true,
     ignoreUrls: true,
-    ignoreCodeEditors: false,
+    ignoreCodeEditors: true,
   };
 
   function applyUiSettings(): void {
@@ -185,7 +185,7 @@ import {
     uiSettings.ignoreInlineCode = bool(UI_SETTINGS.ignoreInlineCode, true);
     uiSettings.ignoreBbcode = bool(UI_SETTINGS.ignoreBbcode, true);
     uiSettings.ignoreUrls = bool(UI_SETTINGS.ignoreUrls, true);
-    uiSettings.ignoreCodeEditors = bool(UI_SETTINGS.ignoreCodeEditors, false);
+    uiSettings.ignoreCodeEditors = bool(UI_SETTINGS.ignoreCodeEditors, true);
     applyUiSettings();
   }
 
