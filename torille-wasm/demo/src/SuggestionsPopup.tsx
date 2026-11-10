@@ -19,7 +19,24 @@ export function SuggestionsPopup(props: SuggestionsPopupProps) {
   const [focused, setFocused] = createSignal(0);
 
   onMount(() => {
+    // Keep the dropdown inside a narrow phone viewport. The position
+    // comes from the misspelling's rect, so a word near the right or
+    // bottom edge would otherwise push the menu off-screen.
+    const parent = ref.offsetParent as HTMLElement | null;
+    const origin = parent?.getBoundingClientRect() ?? { left: 0, top: 0 };
+    const rect = ref.getBoundingClientRect();
+    const margin = 8;
+    if (rect.right > window.innerWidth - margin) {
+      ref.style.left = `${Math.max(margin, window.innerWidth - margin - rect.width) - origin.left}px`;
+    }
+    if (rect.bottom > window.innerHeight - margin) {
+      ref.style.top = `${Math.max(margin, window.innerHeight - margin - rect.height) - origin.top}px`;
+    }
+
     function onDocClick(e: MouseEvent) {
+      if (!ref.contains(e.target as Node)) props.onClose();
+    }
+    function onDocTouch(e: TouchEvent) {
       if (!ref.contains(e.target as Node)) props.onClose();
     }
     function onKey(e: KeyboardEvent) {
@@ -40,9 +57,11 @@ export function SuggestionsPopup(props: SuggestionsPopupProps) {
       }
     }
     document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('touchstart', onDocTouch, { passive: true });
     document.addEventListener('keydown', onKey);
     onCleanup(() => {
       document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('touchstart', onDocTouch);
       document.removeEventListener('keydown', onKey);
     });
   });
@@ -54,15 +73,24 @@ export function SuggestionsPopup(props: SuggestionsPopupProps) {
         fallback={<div class="empty">(no suggestions)</div>}
       >
         <For each={props.suggestions}>
-          {(s, i) => (
-            <button
-              class={i() === focused() ? 'focused' : ''}
-              onMouseDown={(e) => { e.preventDefault(); props.onPick(s); }}
-              onMouseEnter={() => setFocused(i())}
-            >
-              {s}
-            </button>
-          )}
+          {(s, i) => {
+            let chosen = false;
+            const choose = () => {
+              if (chosen) return;
+              chosen = true;
+              props.onPick(s);
+            };
+            return (
+              <button
+                class={i() === focused() ? 'focused' : ''}
+                onMouseDown={(e) => { e.preventDefault(); choose(); }}
+                onTouchEnd={(e) => { e.preventDefault(); choose(); }}
+                onMouseEnter={() => setFocused(i())}
+              >
+                {s}
+              </button>
+            );
+          }}
         </For>
       </Show>
     </div>

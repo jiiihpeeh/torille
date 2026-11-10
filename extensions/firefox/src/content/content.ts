@@ -54,6 +54,44 @@ import {
   }
   dbg('content', 'content.js loaded', { host: location.hostname });
 
+  /**
+   * Fire `fn` on a tap (touch/pen) but not on a scroll or drag.
+   * `touchend` is used rather than `click` so the popup can open
+   * immediately, and `preventDefault()` suppresses the synthetic mouse
+   * events that would otherwise open it a second time. Movement over
+   * ~12px is treated as a scroll and leaves the gesture alone.
+   */
+  function addTapHandler(
+    el: HTMLElement, fn: (x: number, y: number) => void,
+  ): void {
+    let tracking = false;
+    let sx = 0;
+    let sy = 0;
+    el.addEventListener('touchstart', (event: Event) => {
+      const e = event as TouchEvent;
+      if (e.touches.length !== 1) {
+        tracking = false;
+        return;
+      }
+      sx = e.touches[0].clientX;
+      sy = e.touches[0].clientY;
+      tracking = true;
+    }, { passive: true });
+    el.addEventListener('touchcancel', () => {
+      tracking = false;
+    }, { passive: true });
+    el.addEventListener('touchend', (event: Event) => {
+      if (!tracking) return;
+      tracking = false;
+      const e = event as TouchEvent;
+      const t = e.changedTouches[0];
+      if (!t) return;
+      if (Math.hypot(t.clientX - sx, t.clientY - sy) > 12) return;
+      e.preventDefault();
+      fn(t.clientX, t.clientY);
+    }, { passive: false });
+  }
+
   const api: typeof browser = (typeof browser !== 'undefined') ? browser : chrome;
 
   // Appearance/popup settings come from the options page. CSS custom
@@ -284,6 +322,8 @@ import {
       text-decoration-skip-ink: none;
       pointer-events: auto;
       cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     .suggestions {
       position: absolute;
@@ -311,6 +351,8 @@ import {
       cursor: pointer;
       font: inherit;
       color: inherit;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     .suggestions button:hover,
     .suggestions button.focused {
@@ -1013,11 +1055,18 @@ import {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.textContent = sug;
-        btn.addEventListener('mousedown', (e: Event) => {
-          e.preventDefault();
+        let chosen = false;
+        const choose = (): void => {
+          if (chosen) return;
+          chosen = true;
           replaceWordAt(start, end, sug);
           closePopup();
+        };
+        btn.addEventListener('mousedown', (e: Event) => {
+          e.preventDefault();
+          choose();
         });
+        addTapHandler(btn, choose);
         if (picked === 0) btn.classList.add('focused');
         picked++;
         popup.appendChild(btn);
@@ -1147,6 +1196,11 @@ import {
               openPopup(span, slice, r.start, r.end);
             });
           }
+          // Hover is meaningless on touch, so a tap always opens the
+          // dropdown regardless of the popup trigger setting.
+          addTapHandler(span, () => {
+            openPopup(span, slice, r.start, r.end);
+          });
           overlay.appendChild(span);
         } else {
           const span = document.createElement('span');
@@ -1226,26 +1280,35 @@ import {
       return null;
     }
 
-    function onInputMouseDown(event: Event): void {
-      const e = event as MouseEvent;
-      if (destroyed || e.button !== 0 || uiSettings.popupTrigger !== 'click') return;
-      const span = misspellAtPoint(e.clientX, e.clientY);
+    function openAtPoint(x: number, y: number): boolean {
+      const span = misspellAtPoint(x, y);
       if (!span) {
-        dbg('content', 'input mousedown: no misspell at point ' + JSON.stringify(
-          { x: e.clientX, y: e.clientY, spans: overlay.querySelectorAll('.misspell').length }));
-        return;
+        dbg('content', 'input tap: no misspell at point ' + JSON.stringify(
+          { x, y, spans: overlay.querySelectorAll('.misspell').length }));
+        return false;
       }
       const word = span.dataset.word ?? span.textContent ?? '';
       const start = Number(span.dataset.start ?? '-1');
       const end = Number(span.dataset.end ?? '-1');
-      if (!word || start < 0 || end < 0) return;
-      e.preventDefault();
-      dbg('content', 'input mousedown -> popup', { word, start, end });
+      if (!word || start < 0 || end < 0) return false;
+      dbg('content', 'input tap -> popup', { word, start, end });
       openPopup(span, word, start, end);
+      return true;
+    }
+
+    function onInputMouseDown(event: Event): void {
+      const e = event as MouseEvent;
+      if (destroyed || e.button !== 0 || uiSettings.popupTrigger !== 'click') return;
+      if (openAtPoint(e.clientX, e.clientY)) e.preventDefault();
     }
 
     input.addEventListener('input', scheduleRender);
     input.addEventListener('mousedown', onInputMouseDown, true);
+    // The overlay can sit under a page editor that stacks above us; on
+    // touch the tap lands on the input, so hit-test the mirror rects.
+    addTapHandler(input, (x, y) => {
+      if (!destroyed) openAtPoint(x, y);
+    });
     input.addEventListener('scroll', onInputScroll);
     window.addEventListener('scroll', syncBox, { passive: true });
     window.addEventListener('resize', syncBox);
@@ -1611,24 +1674,30 @@ import {
           { misspellings: ranges.length, totalChars: text.length });
     }
 
-    // Click hit-test: the CSS Highlight pseudo-element can't receive
-    // events, so when the user clicks the contenteditable we look up
-    // which misspell Region's bounding rects contain the click point.
-    function onEditorClick(e: MouseEvent): void {
-      if (misspellRegions.size === 0) return;
-      const x = e.clientX, y = e.clientY;
+    // Hit-test: the CSS Highlight pseudo-element can't receive events,
+    // so when the user clicks or taps the contenteditable we look up
+    // which misspell Region's bounding rects contain the point.
+    function openMisspellAtPoint(x: number, y: number): boolean {
+      if (misspellRegions.size === 0) return false;
       for (const ms of misspellRegions.values()) {
         for (const r of Array.from(ms.range.getClientRects())) {
           if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
-            dbg('content', 'click:on-misspell', { word: ms.word });
+            dbg('content', 'tap:on-misspell', { word: ms.word });
             openPopupAtWord(ms.word, ms.range);
-            e.preventDefault();
-            return;
+            return true;
           }
         }
       }
+      return false;
+    }
+
+    function onEditorClick(e: MouseEvent): void {
+      if (openMisspellAtPoint(e.clientX, e.clientY)) e.preventDefault();
     }
     el.addEventListener('click', onEditorClick);
+    addTapHandler(el, (x, y) => {
+      openMisspellAtPoint(x, y);
+    });
 
     function openPopupAtWord(word: string, range: Range): void {
       const rect = range.getBoundingClientRect();
@@ -1649,17 +1718,39 @@ import {
           btn.style.cursor = 'pointer';
           btn.style.font = 'inherit';
           btn.style.color = 'inherit';
-          btn.addEventListener('mousedown', (e: Event) => {
-            e.preventDefault();
+          btn.style.touchAction = 'manipulation';
+          let chosen = false;
+          const choose = (): void => {
+            if (chosen) return;
+            chosen = true;
             replaceRange(range, sug);
             closePopup();
             void renderMisspellHighlights();
+          };
+          btn.addEventListener('mousedown', (e: Event) => {
+            e.preventDefault();
+            choose();
           });
+          addTapHandler(btn, choose);
           host.appendChild(btn);
         }
         host.style.display = 'block';
-        host.style.left = (window.scrollX + rect.left) + 'px';
-        host.style.top = (window.scrollY + rect.bottom + 2) + 'px';
+        // Keep the dropdown on-screen on a narrow phone viewport.
+        const margin = 8;
+        const width = host.offsetWidth;
+        const height = host.offsetHeight;
+        let left = window.scrollX + rect.left;
+        let top = window.scrollY + rect.bottom + 2;
+        left = Math.max(
+          window.scrollX + margin,
+          Math.min(left, window.scrollX + window.innerWidth - margin - width),
+        );
+        if (rect.bottom + 2 + height > window.innerHeight - margin
+            && rect.top - height - 2 >= margin) {
+          top = window.scrollY + rect.top - height - 2;
+        }
+        host.style.left = left + 'px';
+        host.style.top = top + 'px';
       });
     }
 

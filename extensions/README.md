@@ -86,6 +86,9 @@ to open tabs.
 - Firefox e2e: `node extensions/firefox/e2e/run.mjs`.
 - Code/BBCode e2e: serve `extensions/chromium/` on `:8767`, then run
   `node extensions/chromium/e2e/code-blocks.mjs`.
+- Touch e2e: serve the extension directory, then run
+  `node extensions/chromium/e2e/touch.mjs` (Firefox: set
+  `TORILLE_PORT=8766` or run its own copy).
 - Unit tests: `npm test` in either extension directory (includes the
   ignore-range parser and Chromium/Firefox source-sync checks).
 

@@ -170,6 +170,7 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     padding: 4px 0;
     min-width: 8em;
+    max-width: calc(100vw - 16px);
     max-height: 12em;
     overflow-y: auto;
   }
@@ -182,6 +183,8 @@
     padding: 6px 12px;
     font: inherit;
     cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   .suggestions button:hover,
   .suggestions button.focused {
