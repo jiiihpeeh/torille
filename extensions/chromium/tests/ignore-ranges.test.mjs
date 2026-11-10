@@ -17,6 +17,7 @@ import {
   parseFencedCode,
   parseHtmlCode,
   parseInlineCode,
+  parseUrlsAndEmails,
 } from '../src/content/ignore-ranges.ts';
 
 const covered = (text, ranges, word) => {
@@ -153,6 +154,32 @@ test('script/style contents are ignored', () => {
 test('comparison signs in prose are not HTML tags', () => {
   const text = 'jos x < y ja z > w niin talo';
   assert.deepEqual(parseHtmlCode(text), []);
+});
+
+test('bare URLs are ignored, including Finnish paths', () => {
+  const text = 'katso https://example.fi/talo?q=koirra. sitten jatka';
+  const ranges = parseUrlsAndEmails(text);
+  assert.equal(covered(text, ranges, 'https://example.fi/talo?q=koirra'), true);
+  assert.equal(covered(text, ranges, 'katso'), false);
+  assert.equal(covered(text, ranges, 'jatka'), false);
+  // The sentence full stop stays prose.
+  assert.equal(isIgnored({ start: text.indexOf('. sitten'), end: text.indexOf('. sitten') + 1 }, ranges), false);
+});
+
+test('bare email addresses are ignored', () => {
+  const text = 'mailaa matti.koirra@example.fi tai talo@example.fi nyt';
+  const ranges = parseUrlsAndEmails(text);
+  assert.equal(covered(text, ranges, 'matti.koirra@example.fi'), true);
+  assert.equal(covered(text, ranges, 'talo@example.fi'), true);
+  assert.equal(covered(text, ranges, 'mailaa'), false);
+});
+
+test('www links and trailing parentheses', () => {
+  const text = 'www.example.fi/talo ja (https://example.fi/koirra)';
+  const ranges = parseUrlsAndEmails(text);
+  assert.equal(covered(text, ranges, 'www.example.fi/talo'), true);
+  assert.equal(covered(text, ranges, 'https://example.fi/koirra'), true);
+  assert.equal(isIgnored({ start: text.length - 1, end: text.length }, ranges), false);
 });
 
 test('adjacent and overlapping ranges coalesce', () => {

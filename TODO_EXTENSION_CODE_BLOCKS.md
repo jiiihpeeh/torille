@@ -79,6 +79,14 @@ Highlight) paths.
   - [x] mask contents of `code`, `pre`, `kbd`, `samp`, `script`, `style`
   - [x] keep anchor text (`<a>…</a>`) checkable
 
+## URLs and emails
+
+- [x] Bare `http(s)://`, `ftp://` and `www.` links are masked.
+- [x] Bare email addresses are masked, including non-ASCII local/domain parts.
+- [x] Trailing sentence punctuation stays prose.
+- [x] BBCode `[url]`/`[email]` payloads remain masked by the BBCode parser.
+- [x] New `torille-ignore-urls` toggle, default `true`.
+
 ## Phase 3 — contenteditable path
 
 - [x] `renderMisspellHighlights()`:

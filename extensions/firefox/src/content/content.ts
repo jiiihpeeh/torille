@@ -71,6 +71,7 @@ import {
     ignoreCodeBlocks: 'torille-ignore-code-blocks',
     ignoreInlineCode: 'torille-ignore-inline-code',
     ignoreBbcode: 'torille-ignore-bbcode',
+    ignoreUrls: 'torille-ignore-urls',
     ignoreCodeEditors: 'torille-ignore-code-editors',
   } as const;
 
@@ -86,6 +87,7 @@ import {
     ignoreCodeBlocks: boolean;
     ignoreInlineCode: boolean;
     ignoreBbcode: boolean;
+    ignoreUrls: boolean;
     ignoreCodeEditors: boolean;
   };
 
@@ -101,6 +103,7 @@ import {
     ignoreCodeBlocks: true,
     ignoreInlineCode: true,
     ignoreBbcode: true,
+    ignoreUrls: true,
     ignoreCodeEditors: false,
   };
 
@@ -143,6 +146,7 @@ import {
     uiSettings.ignoreCodeBlocks = bool(UI_SETTINGS.ignoreCodeBlocks, true);
     uiSettings.ignoreInlineCode = bool(UI_SETTINGS.ignoreInlineCode, true);
     uiSettings.ignoreBbcode = bool(UI_SETTINGS.ignoreBbcode, true);
+    uiSettings.ignoreUrls = bool(UI_SETTINGS.ignoreUrls, true);
     uiSettings.ignoreCodeEditors = bool(UI_SETTINGS.ignoreCodeEditors, false);
     applyUiSettings();
   }
@@ -154,6 +158,7 @@ import {
       inlineCode: uiSettings.ignoreInlineCode,
       bbcode: uiSettings.ignoreBbcode,
       html: uiSettings.ignoreCodeBlocks,
+      urlsAndEmails: uiSettings.ignoreUrls,
     });
   }
 

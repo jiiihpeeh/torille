@@ -22,6 +22,8 @@ export type IgnoreOptions = {
   bbcode?: boolean;
   /** Raw HTML tag syntax and code-like element contents. */
   html?: boolean;
+  /** Bare URLs and email addresses in prose. */
+  urlsAndEmails?: boolean;
 };
 
 const DEFAULT_OPTIONS: Required<IgnoreOptions> = {
@@ -29,6 +31,7 @@ const DEFAULT_OPTIONS: Required<IgnoreOptions> = {
   inlineCode: true,
   bbcode: true,
   html: true,
+  urlsAndEmails: true,
 };
 
 // BBCode whose *contents* are not prose. `[quote]`, `[b]`, `[list]` and
@@ -382,6 +385,38 @@ export function parseHtmlCode(text: string): IgnoredRange[] {
   return ranges;
 }
 
+/**
+ * Bare URLs and email addresses. Links are never Finnish prose, and the
+ * tokeniser would otherwise split `https://example.fi/talo` into words
+ * and underline the path. Trailing sentence punctuation is left out so
+ * the full stop after a link still belongs to the sentence.
+ */
+export function parseUrlsAndEmails(text: string): IgnoredRange[] {
+  if (!text.includes('://') && !text.includes('www.') && !text.includes('@')) {
+    return [];
+  }
+  const ranges: IgnoredRange[] = [];
+  const url = /\b(?:https?:\/\/|ftp:\/\/|www\.)[^\s<>"'`]+/gi;
+  let m: RegExpExecArray | null;
+  while ((m = url.exec(text)) !== null) {
+    let end = m.index + m[0].length;
+    // Drop sentence punctuation and an unmatched closing bracket.
+    while (end > m.index && /[.,;:!?]/.test(text[end - 1])) end--;
+    if (text[end - 1] === ')') {
+      const slice = text.slice(m.index, end);
+      const opens = (slice.match(/\(/g) ?? []).length;
+      const closes = (slice.match(/\)/g) ?? []).length;
+      if (closes > opens) end--;
+    }
+    if (end > m.index) ranges.push({ start: m.index, end });
+  }
+  const email = /[\p{L}\p{N}._%+-]+@[\p{L}\p{N}.-]+\.[\p{L}]{2,}/gu;
+  while ((m = email.exec(text)) !== null) {
+    ranges.push({ start: m.index, end: m.index + m[0].length });
+  }
+  return ranges;
+}
+
 /** Compute the merged ignore mask for a whole text. */
 export function computeIgnoredRanges(
   text: string, options: IgnoreOptions = {},
@@ -392,6 +427,7 @@ export function computeIgnoredRanges(
   if (opts.inlineCode) ranges.push(...parseInlineCode(text));
   if (opts.bbcode) ranges.push(...parseBbcode(text));
   if (opts.html) ranges.push(...parseHtmlCode(text));
+  if (opts.urlsAndEmails) ranges.push(...parseUrlsAndEmails(text));
   return mergeRanges(ranges);
 }
 

@@ -16,6 +16,7 @@ type Settings = {
   ignoreCodeBlocks: boolean;
   ignoreInlineCode: boolean;
   ignoreBbcode: boolean;
+  ignoreUrls: boolean;
   ignoreCodeEditors: boolean;
 };
 
@@ -31,6 +32,7 @@ const DEFAULTS: Settings = {
   ignoreCodeBlocks: true,
   ignoreInlineCode: true,
   ignoreBbcode: true,
+  ignoreUrls: true,
   ignoreCodeEditors: false,
 };
 
@@ -46,6 +48,7 @@ const KEYS: Record<keyof Settings, string> = {
   ignoreCodeBlocks: 'torille-ignore-code-blocks',
   ignoreInlineCode: 'torille-ignore-inline-code',
   ignoreBbcode: 'torille-ignore-bbcode',
+  ignoreUrls: 'torille-ignore-urls',
   ignoreCodeEditors: 'torille-ignore-code-editors',
 };
 
@@ -96,6 +99,7 @@ function readSettings(raw: Record<string, unknown>): Settings {
     ignoreCodeBlocks: raw[KEYS.ignoreCodeBlocks] !== false,
     ignoreInlineCode: raw[KEYS.ignoreInlineCode] !== false,
     ignoreBbcode: raw[KEYS.ignoreBbcode] !== false,
+    ignoreUrls: raw[KEYS.ignoreUrls] !== false,
     ignoreCodeEditors: raw[KEYS.ignoreCodeEditors] === true,
   };
 }
@@ -321,6 +325,17 @@ function OptionsApp() {
           />
           <span>Ohita BBCode-merkinnät
             <small>Koodi-, URL-, kuva-, sähköposti- ja media-sisällöt jätetään tarkastamatta. Lainaukset ja muotoilut (&nbsp;[quote], [b], [i]&nbsp;) tarkastetaan normaalisti.</small>
+          </span>
+        </label>
+        <label class="toggle">
+          <input
+            id="ignore-urls"
+            type="checkbox"
+            checked={settings().ignoreUrls}
+            onChange={(e) => patch('ignoreUrls', e.currentTarget.checked)}
+          />
+          <span>Ohita verkko-osoitteet ja sähköpostit
+            <small>Ei tarkista osoitteita kuten https://example.fi/talo tai matti@example.fi. Myös www-osoitteet ja BBCoden URL-/sähköpostikentät ohitetaan.</small>
           </span>
         </label>
         <label class="toggle">

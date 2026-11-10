@@ -63,8 +63,8 @@ Temporary add-ons last for the session. After a rebuild, click **Reload** on
 the add-on in `about:debugging` and refresh the page. **Preferences /
 Options** opens the settings page.
 
-The checker ignores fenced code, inline code, raw HTML code elements and
-BBCode payloads. Code is masked before it reaches the wasm, so it cannot
+The checker ignores fenced code, inline code, raw HTML code elements,
+BBCode payloads, bare URLs and email addresses. Code is masked before it reaches the wasm, so it cannot
 change sentence boundaries or the learned proper-noun set. The full
 implementation notes and follow-ups are in
 [`TODO_EXTENSION_CODE_BLOCKS.md`](../TODO_EXTENSION_CODE_BLOCKS.md).
@@ -73,8 +73,8 @@ implementation notes and follow-ups are in
 
 The options page controls the underline style and colour, the suggestion
 limit, click-vs-hover popup behaviour, and the popup colours. It also has
-the **Tarkastus** toggles for code blocks, inline code, BBCode and whole
-code editors. Changes save automatically to `storage.local` and apply live
+the **Tarkastus** toggles for code blocks, inline code, BBCode, URLs and
+whole code editors. Changes save automatically to `storage.local` and apply live
 to open tabs.
 
 ## Test pages
