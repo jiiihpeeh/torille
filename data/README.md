@@ -43,7 +43,7 @@ committed files are what a build uses.
 | `feminine_nouns.csv` | curated (Kotus/en.wiktionary) | `maps/feminine_nouns.bin.gz`; historical `-nna` feminines such as `pormestarinna -> pormestari` |
 | `lexical_adverbs.csv` | curated (Kotus/Kielikello) | `maps/lexical_adverbs.bin.gz`; established one-word adverbs such as `alhaaltapäin`, `äkkipikaa` |
 | `proper_names.csv` | Wikidata | name source for the proper-name tables |
-| `proper_name_forms.csv`, `proper_name_forms_extra.csv` | `tools/oracle/build_proper_name_forms.py` + curated extras | singular cases of names |
+| `proper_name_forms.csv`, `proper_name_forms_extra.csv` | `tools/oracle/build_proper_name_forms.py` + curated extras | singular cases of names: `form`, `name`, Omorfi case code |
 | `verb_connegatives.csv`, `verb_connectives.csv` | `tools/oracle/build_verb_lexicon.py` | connegatives and negation fusions |
 | `oracle_exceptions.json` | curated | evidence for the harness (`tools/test_illegal_evidence.py`) |
 | `wiktionary-taivutukset.txt` | Wiktionary | fetched paradigms used by `tests/catalogue.rs` |

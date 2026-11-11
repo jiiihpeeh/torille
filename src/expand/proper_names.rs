@@ -13,20 +13,29 @@
 
 use crate::expand::huffman_set::HuffmanSet;
 use crate::expand::static_table::StemMap;
+use crate::tags::Case;
 
 /// Lowercase name forms, built by `build.rs` from
 /// `data/proper_name_forms.csv`.
 pub static PROPER_NAMES: HuffmanSet = HuffmanSet::new(include_bytes!(concat!(
-        env!("OUT_DIR"),
-        "/proper_names.bin",
-    )));
+    env!("OUT_DIR"),
+    "/proper_names.bin",
+)));
 
 /// `form -> name` for the same source, so a caller can name the lemma behind
 /// an inflected form (`mainen` -> `Maine`, `helsingin` -> `Helsinki`).
 static PROPER_NAME_LEMMAS: StemMap = StemMap::new(include_bytes!(concat!(
-        env!("OUT_DIR"),
-        "/proper_name_lemmas.bin",
-    )));
+    env!("OUT_DIR"),
+    "/proper_name_lemmas.bin",
+)));
+
+/// `form -> case` for the same source, so a caller can give `Helsingissä` its
+/// inessive instead of inventing a nominative. The value is torille's case
+/// name; the generator records the Omorfi cell the form came from.
+static PROPER_NAME_CASES: StemMap = StemMap::new(include_bytes!(concat!(
+    env!("OUT_DIR"),
+    "/proper_name_cases.bin",
+)));
 
 /// The proper-name lemma a form belongs to, preserving the source's
 /// capitalisation (`Mainen` -> `Maine`).
@@ -61,6 +70,35 @@ pub fn lemmas(word: &str) -> Vec<&'static str> {
         current = host;
     }
     Vec::new()
+}
+
+/// The case of a name form, when the generator recorded one.
+///
+/// A clitic or possessive on a name (`Helsingissäkin`, `Liisalleni`) keeps
+/// the host's case. The table holds singular name cases only; a form it does
+/// not know (`Zorblax`) returns `None`, and the caller must not guess.
+pub fn case(word: &str) -> Option<Case> {
+    if let Some(case) = surface_case(word) {
+        return Some(case);
+    }
+    let mut current = word.to_string();
+    while let Some(host) = next_host(&current) {
+        if let Some(case) = surface_case(&host) {
+            return Some(case);
+        }
+        current = host;
+    }
+    None
+}
+
+fn surface_case(word: &str) -> Option<Case> {
+    let lower = word.to_lowercase();
+    for name in PROPER_NAME_CASES.bases(&lower) {
+        if let Some(case) = Case::ALL.into_iter().find(|case| case.name() == name) {
+            return Some(case);
+        }
+    }
+    None
 }
 
 /// The lemmas of a surface with no clitic/possessive stripping.
@@ -144,6 +182,26 @@ mod tests {
         ] {
             assert!(contains(word), "{word} should be a name");
         }
+    }
+
+    #[test]
+    fn name_forms_carry_their_case() {
+        assert_eq!(case("Helsingissä"), Some(Case::Inessive));
+        assert_eq!(case("Helsingin"), Some(Case::Genitive));
+        assert_eq!(case("Liisalle"), Some(Case::Allative));
+        assert_eq!(case("Liisa"), Some(Case::Nominative));
+    }
+
+    #[test]
+    fn a_clitic_keeps_the_name_case() {
+        assert_eq!(case("Helsingissäkin"), Some(Case::Inessive));
+        assert_eq!(case("Liisallekin"), Some(Case::Allative));
+    }
+
+    #[test]
+    fn an_unknown_surface_has_no_guessed_case() {
+        assert_eq!(case("Zorblax"), None);
+        assert_eq!(case("Zorblaxissa"), None);
     }
 
     #[test]

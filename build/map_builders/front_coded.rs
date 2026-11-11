@@ -128,7 +128,7 @@ pub(crate) fn emit_front_coded_set(csv_path: &Path, blob_path: &Path) {
     emit_front_coded_keys(blob_path, &keys);
 }
 
-/// Emit `data/proper_name_forms.csv` (`form<TAB>name`) as a Huffman-coded
+/// Emit `data/proper_name_forms.csv` (`form<TAB>name<TAB>case`) as a Huffman-coded
 /// set of forms.
 ///
 /// Wikidata supplies the names, Omorfi the singular cases; the typing path
@@ -173,7 +173,7 @@ pub(crate) fn emit_proper_names(csv_path: &Path, blob_path: &Path) {
     emit_huffman_set(blob_path, &keys);
 }
 
-/// Emit `data/proper_name_forms.csv` (`form<TAB>name`) as a front-coded
+/// Emit `data/proper_name_forms.csv` (`form<TAB>name<TAB>case`) as a front-coded
 /// `form -> name` map.
 ///
 /// [`emit_proper_names`] keeps only the surface set because the typing path
@@ -199,33 +199,23 @@ pub(crate) fn emit_proper_name_lemmas(csv_path: &Path, extra_path: &Path, blob_p
     });
     let mut entries: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for line in csv.lines() {
-        let Some((form, name)) = line.split_once('\t') else {
+        let Some((form, name, _case)) = split_name_row(line) else {
             continue;
         };
-        let form = form.trim();
-        let name = name.trim();
-        if form.is_empty() || name.is_empty() || form.contains('\0') || name.contains('\0') {
-            continue;
-        }
         let values = entries.entry(form.to_lowercase()).or_default();
-        if !values.iter().any(|seen| seen == name) {
-            values.push(name.to_string());
+        if !values.iter().any(|seen| seen == &name) {
+            values.push(name);
         }
     }
     if extra_path.exists() {
         let extra = fs::read_to_string(extra_path).unwrap_or_default();
         for line in extra.lines() {
-            let Some((form, name)) = line.split_once('\t') else {
+            let Some((form, name, _case)) = split_name_row(line) else {
                 continue;
             };
-            let form = form.trim();
-            let name = name.trim();
-            if form.is_empty() || name.is_empty() || form.contains('\0') || name.contains('\0') {
-                continue;
-            }
             let values = entries.entry(form.to_lowercase()).or_default();
-            if !values.iter().any(|seen| seen == name) {
-                values.push(name.to_string());
+            if !values.iter().any(|seen| seen == &name) {
+                values.push(name);
             }
         }
     }
@@ -239,6 +229,103 @@ pub(crate) fn emit_proper_name_lemmas(csv_path: &Path, extra_path: &Path, blob_p
         entries.len(),
     );
     write_front_coded_map(blob_path, &entries);
+}
+
+/// Emit the `form -> case` map from the third column of
+/// `data/proper_name_forms.csv`.
+///
+/// The syntax layer needs the case a name surface is in (`Helsingissä` is
+/// inessive, `Liisalle` allative). Omorfi already generated the form for a
+/// named cell, so the generator writes the cell's case beside it. The case is
+/// stored as torille's case name, not Omorfi's code.
+pub(crate) fn emit_proper_name_cases(csv_path: &Path, extra_path: &Path, blob_path: &Path) {
+    if !csv_path.exists() && blob_path.exists() {
+        eprintln!(
+            "build.rs: {} missing but {} present -- reusing",
+            csv_path.display(),
+            blob_path.display(),
+        );
+        return;
+    }
+    let csv = fs::read_to_string(csv_path).unwrap_or_else(|e| {
+        panic!(
+            "build.rs: could not read {}: {e}; \
+             run `python3 tools/oracle/build_proper_name_forms.py` first",
+            csv_path.display(),
+        )
+    });
+    let mut entries: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for line in csv.lines() {
+        let Some((form, _name, case)) = split_name_row(line) else {
+            continue;
+        };
+        let Some(case) = case_name(&case) else {
+            continue;
+        };
+        let values = entries.entry(form.to_lowercase()).or_default();
+        if !values.iter().any(|seen| seen == case) {
+            values.push(case.to_string());
+        }
+    }
+    if extra_path.exists() {
+        let extra = fs::read_to_string(extra_path).unwrap_or_default();
+        for line in extra.lines() {
+            let Some((form, _name, case)) = split_name_row(line) else {
+                continue;
+            };
+            let Some(case) = case_name(&case) else {
+                continue;
+            };
+            let values = entries.entry(form.to_lowercase()).or_default();
+            if !values.iter().any(|seen| seen == case) {
+                values.push(case.to_string());
+            }
+        }
+    }
+    eprintln!(
+        "build.rs: {}: {} proper-name form -> case entries",
+        csv_path.display(),
+        entries.len(),
+    );
+    let entries: Vec<(String, Vec<String>)> = entries.into_iter().collect();
+    write_front_coded_map(blob_path, &entries);
+}
+
+/// Split a name row into `(form, name, case)`. The curated extras are the one
+/// place a row may have only two columns; its case is then empty.
+fn split_name_row(line: &str) -> Option<(String, String, String)> {
+    let mut fields = line.split('\t');
+    let form = fields.next()?.trim();
+    let name = fields.next()?.trim();
+    let case = fields.next().unwrap_or("").trim();
+    if form.is_empty() || name.is_empty() || form.contains('\0') || name.contains('\0') {
+        return None;
+    }
+    Some((form.to_string(), name.to_string(), case.to_string()))
+}
+
+/// Omorfi's case code to torille's case name. Unknown codes are dropped
+/// rather than guessed.
+fn case_name(code: &str) -> Option<&'static str> {
+    Some(match code {
+        "NOM" => "nominative",
+        "GEN" => "genitive",
+        "PAR" => "partitive",
+        "ILL" => "illative",
+        "INE" => "inessive",
+        "ELA" => "elative",
+        "ADE" => "adessive",
+        "ABL" => "ablative",
+        "ALL" => "allative",
+        "ESS" => "essive",
+        "TRA" => "translative",
+        "ABE" => "abessive",
+        "ACC" => "accusative",
+        "INS" => "instructive",
+        "COM" => "comitative",
+        "PRO" => "prolative",
+        _ => return None,
+    })
 }
 
 /// Write a sorted key list as a front-coded `SST2` set blob.

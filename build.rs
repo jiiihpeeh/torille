@@ -44,8 +44,8 @@ use csv_builders::string_map::{
     emit_adj_degrees, emit_adverbi, emit_connegatives, emit_connectives, emit_lexical_adverbs,
 };
 use map_builders::front_coded::{
-    emit_empty_set, emit_front_coded_set, emit_proper_name_lemmas, emit_proper_names,
-    emit_stem_map,
+    emit_empty_set, emit_front_coded_set, emit_proper_name_cases, emit_proper_name_lemmas,
+    emit_proper_names, emit_stem_map,
 };
 
 #[path = "src/rejected.rs"]
@@ -169,6 +169,9 @@ fn main() {
     });
     emit_map(&out_dir, &precomputed, "proper_name_lemmas.bin", |raw| {
         emit_proper_name_lemmas(&proper_csv, &proper_extra, raw)
+    });
+    emit_map(&out_dir, &precomputed, "proper_name_cases.bin", |raw| {
+        emit_proper_name_cases(&proper_csv, &proper_extra, raw)
     });
 
     // Stem maps: `(stem, bases)` pairs from

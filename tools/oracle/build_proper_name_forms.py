@@ -6,8 +6,10 @@ Wikidata supplies the nominative. Omorfi already has a `PROPN` lexicon and can
 generate the cases (`Helsinki` -> `Helsingin`, `Helsingissä`, ...), so each name
 is expanded to the cases a running Finnish text uses. Voikko is *not* used as a
 filter here: it covers fewer names than Wikidata, and a rejected form would
-silently drop a real name. The output is a `(form, name)` table, one row per
-unique surface form.
+silently drop a real name. The output is a `(form, name, case)` table, one row per
+unique surface form. The case is the Omorfi code (`NOM`, `INE`, ...); it lets
+the syntax layer give `Helsingissä` its inessive instead of guessing a
+nominative.
 
 The readme/docs are explicit that proper names are accepted, never suggested;
 the form table is a fast-path accept list, not a lemma source.
@@ -60,15 +62,28 @@ def main() -> int:
     # Hand-maintained forms for names Omorfi does not know (Moomins,
     # Kanteletar). They live in a separate file so a Wikidata/Omorfi
     # refresh cannot silently drop them.
-    forms: dict[str, str] = {}
+    # form -> (name, Omorfi case code). The code is empty for an extra form
+    # whose case the curated file does not state.
+    forms: dict[str, tuple[str, str]] = {}
+
+    def record(form: str, name: str, case: str = "") -> None:
+        key = form.lower()
+        current = forms.get(key)
+        if current is None:
+            forms[key] = (name, case)
+        elif not current[1] and case:
+            forms[key] = (current[0], case)
+
     extra = REPO / "data" / "proper_name_forms_extra.csv"
     if extra.exists():
         for line in extra.read_text(encoding="utf-8").splitlines():
-            if "\t" not in line:
+            parts = line.split("\t")
+            if len(parts) < 2:
                 continue
-            form, name = line.split("\t", 1)
+            form, name = parts[0], parts[1]
+            case = parts[2] if len(parts) > 2 else ""
             if form and name:
-                forms.setdefault(form.lower(), name)
+                record(form, name, case)
 
     harness = Harness("noun")
     cells = noun_cells(CASES, ["SG"], [""])
@@ -77,7 +92,7 @@ def main() -> int:
         # The nominative is always accepted, even for a name Omorfi has no
         # paradigm for. Everything is stored lowercase because the typing
         # path lowercases before probing.
-        forms.setdefault(name.lower(), name)
+        record(name, name, "NOM")
         got_any = False
         for cell in cells:
             generated = harness.generate(name, cell)
@@ -87,7 +102,7 @@ def main() -> int:
             for form in generated.split("/"):
                 form = form.replace("\u2019", "").strip()
                 if form:
-                    forms.setdefault(form.lower(), name)
+                    record(form, name, cell.case)
         if not got_any:
             skipped += 1
         if n % 2000 == 0:
@@ -99,13 +114,13 @@ def main() -> int:
         file=sys.stderr,
     )
     if args.dry_run:
-        for form, name in list(sorted(forms.items()))[:20]:
-            print(f"{form}\t{name}")
+        for form, (name, case) in list(sorted(forms.items()))[:20]:
+            print(f"{form}\t{name}\t{case}")
         return 0
 
     with open(args.out, "w", encoding="utf-8") as f:
-        for form, name in sorted(forms.items()):
-            f.write(f"{form}\t{name}\n")
+        for form, (name, case) in sorted(forms.items()):
+            f.write(f"{form}\t{name}\t{case}\n")
     print(f"wrote {args.out}", file=sys.stderr)
     return 0
 
