@@ -33,6 +33,9 @@ use crate::tokenise::Token;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SyntacticRole {
     Predicate,
+    /// A negation or tense auxiliary governed by the clause predicate
+    /// (`en` in `en syö`, `olen` in `olen lukenut`).
+    Auxiliary,
     Subject,
     Object,
     Adverbial,
@@ -48,6 +51,7 @@ impl SyntacticRole {
     pub fn name(self) -> &'static str {
         match self {
             SyntacticRole::Predicate => "predicate",
+            SyntacticRole::Auxiliary => "auxiliary",
             SyntacticRole::Subject => "subject",
             SyntacticRole::Object => "object",
             SyntacticRole::Adverbial => "adverbial",
@@ -738,6 +742,41 @@ fn is_infinitive(index: usize, out: &[TokenSyntax]) -> bool {
         .any(|reading| reading.mood == Some(Mood::Infinitive))
 }
 
+/// A past participle, the verb of a compound tense or a passive construction.
+///
+/// It has a case and past tense and is not an infinitive. The active form
+/// (`lukenut`, `tullut`) carries the compound tense with `olla` or the
+/// negative auxiliary; the passive form (`luettu`, `rakennettu`) makes the
+/// clause passive. A present participle (`mentävä`) is not one of these.
+fn is_past_participle(index: usize, out: &[TokenSyntax]) -> bool {
+    out[index].readings.iter().any(|reading| {
+        reading.part_of_speech == Some(PartOfSpeech::Verb)
+            && reading.tense == Some(crate::tags::Tense::Past)
+            && reading.case.is_some()
+            && reading.mood != Some(Mood::Infinitive)
+    })
+}
+
+/// Whether the verb readings of a token are passive.
+///
+/// A participle can carry a spurious passive homonym (`tullut` has active and
+/// passive readings), so one passive reading is not enough. If any verb
+/// reading is active, the token is treated as active; a genuinely passive
+/// form (`rakennettu`, `luettu`, `rakennettiin`) has no active reading.
+fn predicate_is_passive(index: usize, out: &[TokenSyntax]) -> bool {
+    let mut saw_verb = false;
+    for reading in &out[index].readings {
+        if reading.part_of_speech != Some(PartOfSpeech::Verb) {
+            continue;
+        }
+        saw_verb = true;
+        if reading.voice != Some(crate::tags::Voice::Passive) {
+            return false;
+        }
+    }
+    saw_verb
+}
+
 /// Split one sentence's words into clause-sized runs.
 ///
 /// This is deliberately conservative. A coordinating conjunction starts a
@@ -909,22 +948,49 @@ fn resolve_clause(
     let words: Vec<usize> = (clause.tokens.start..clause.tokens.end)
         .filter(|&index| tokens[index].is_word())
         .collect();
-    let Some(predicate) = choose_predicate(&words, out) else {
+    let Some(mut predicate) = choose_predicate(&words, out) else {
         return;
     };
+    // A compound predicate is an auxiliary plus a past participle: `olen
+    // lukenut`, `talo on rakennettu`, `eikö hän tullut`. The main verb is the
+    // participle; the auxiliary is linked to it. A present participle is not
+    // part of a compound tense (`Minun on mentävä` stays a necessity
+    // complement).
+    let mut compound_auxiliary: Option<usize> = None;
+    if is_negative_auxiliary(predicate, out) || out[predicate].lemma.as_deref() == Some("olla") {
+        let position = words
+            .iter()
+            .position(|&index| index == predicate)
+            .unwrap_or(0);
+        if let Some(participle) = words[position + 1..]
+            .iter()
+            .copied()
+            .find(|&index| is_past_participle(index, out))
+        {
+            compound_auxiliary = Some(predicate);
+            predicate = participle;
+        }
+    }
     clause.predicate = Some(predicate);
-    if out[predicate].role != SyntacticRole::Predicate {
+    if compound_auxiliary.is_some() {
+        // A participle is not finite on its own; the clause is correct only
+        // because the auxiliary carries the person and tense.
+        out[predicate].role = SyntacticRole::Predicate;
+        out[predicate].confidence = RoleConfidence::Weak;
+    } else if out[predicate].role != SyntacticRole::Predicate {
         out[predicate].role = SyntacticRole::Predicate;
         out[predicate].confidence = RoleConfidence::Likely;
     }
     // One clause has one predicate. A second finite reading that also has a
     // nominal reading (`kirjaa` is the imperative of `kirjata` and the
     // partitive of `kirja`) is re-read as the nominal it can be, so the
-    // object/subject pass can use it. Auxiliaries are not demoted: the
-    // negation auxiliary is phase 3's `Auxiliary`, and `olla`/participles are
-    // phase 3's compound predicate.
+    // object/subject pass can use it. Auxiliaries are not demoted; they are
+    // linked to the predicate below.
     for &index in &words {
-        if index == predicate || out[index].role != SyntacticRole::Predicate {
+        if index == predicate || Some(index) == compound_auxiliary {
+            continue;
+        }
+        if out[index].role != SyntacticRole::Predicate {
             continue;
         }
         let auxiliary = out[index]
@@ -940,6 +1006,16 @@ fn resolve_clause(
             out[index].confidence = RoleConfidence::Weak;
         }
     }
+    for &index in &words {
+        if index == predicate {
+            continue;
+        }
+        if is_negative_auxiliary(index, out) || Some(index) == compound_auxiliary {
+            out[index].role = SyntacticRole::Auxiliary;
+            out[index].confidence = RoleConfidence::Likely;
+            out[index].head = Some(predicate);
+        }
+    }
     let predicate_position = words
         .iter()
         .position(|&index| index == predicate)
@@ -947,10 +1023,7 @@ fn resolve_clause(
     let before = &words[..predicate_position];
     let after = &words[predicate_position + 1..];
 
-    let passive = out[predicate]
-        .readings
-        .iter()
-        .any(|reading| reading.voice == Some(crate::tags::Voice::Passive));
+    let passive = predicate_is_passive(predicate, out);
     // The negative auxiliary is the only thing that makes a clause negative.
     // A connegative main verb (`syö` in `en syö`) also carries a negative
     // polarity reading, but it does not negate an affirmative imperative
@@ -987,6 +1060,14 @@ fn resolve_clause(
             && !is_clause_marker(index, tokens, out)
     });
     let necessity = is_olla && genitive_before.is_some() && necessity_complement(after, out);
+    // The necessive verbs take the genitive subject the same way `on
+    // mentävä` does, but without `olla`: `Minun täytyy mennä`, `Hänen pitää
+    // mennä`. A closed set, not a valency guess.
+    let necessive = !is_olla
+        && matches!(
+            lemma.as_str(),
+            "täytyä" | "pitää" | "kannattaa" | "sopia" | "kuulua"
+        );
     let passive_construction = is_olla && !necessity && passive_participle_after(after, out);
 
     let mut subject = None;
@@ -998,7 +1079,7 @@ fn resolve_clause(
                     && has_case(&out[index], &[Case::Nominative, Case::Partitive])
                     && !is_clause_marker(index, tokens, out)
             });
-        } else if necessity {
+        } else if necessity || necessive {
             subject = genitive_before;
         }
         if subject.is_none() {
@@ -1160,12 +1241,11 @@ fn necessity_complement(after: &[usize], out: &[TokenSyntax]) -> bool {
 /// A passive participle after `olla`: `Talo on rakennettu`.
 fn passive_participle_after(after: &[usize], out: &[TokenSyntax]) -> bool {
     after.iter().any(|&index| {
-        out[index].readings.iter().any(|reading| {
-            reading.part_of_speech == Some(PartOfSpeech::Verb)
-                && reading.voice == Some(crate::tags::Voice::Passive)
-                && reading.case.is_some()
-                && reading.mood != Some(Mood::Infinitive)
-        })
+        predicate_is_passive(index, out)
+            && out[index]
+                .readings
+                .iter()
+                .any(|reading| reading.case.is_some() && reading.mood != Some(Mood::Infinitive))
     })
 }
 
@@ -1522,10 +1602,13 @@ mod tests {
     fn a_perfect_passive_has_no_subject_either() {
         let (tokens, analysis) = analyzed("Talo on rakennettu.");
         let talo = word_index(&tokens, "Talo");
+        let on = word_index(&tokens, "on");
         let rakennettu = word_index(&tokens, "rakennettu");
         assert_eq!(analysis.clauses[0].subject, None);
         assert_eq!(analysis.tokens[talo].role, SyntacticRole::Object);
-        assert_eq!(analysis.tokens[rakennettu].role, SyntacticRole::Complement);
+        assert_eq!(analysis.tokens[on].role, SyntacticRole::Auxiliary);
+        assert_eq!(analysis.tokens[on].head, Some(rakennettu));
+        assert_eq!(analysis.tokens[rakennettu].role, SyntacticRole::Predicate);
     }
 
     #[test]

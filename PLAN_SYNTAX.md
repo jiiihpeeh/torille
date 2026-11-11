@@ -1,6 +1,6 @@
 # PLAN_SYNTAX — making the advisory syntax layer trustworthy
 
-Status: audit and fixture complete; Phases 1–2 landed (S1, S3–S7; S2
+Status: audit and fixture complete; Phases 1–3 landed (S1, S3–S11; S2
 partial). Work happens on the `syntax` branch off `master`.
 
 The syntax layer (`src/syntax.rs`) is the second, on-demand layer over the
@@ -257,6 +257,12 @@ chosen, any other finite reading that also has a nominal reading is demoted to
 auxiliaries are deliberately excluded, so `En syö` still has two `Predicate`
 tokens until phase 3 adds `Auxiliary`.
 
+**Phase 3 landing.** `SyntacticRole::Auxiliary` exists. Every negative
+auxiliary in the clause is linked to the main predicate with
+`head = predicate`; so are the `olla` forms of a compound tense. `En syö`,
+`Sami ei syö`, `Älä syö`, `Eikö hän tullut` and `Olen lukenut` now have one
+`Predicate` token and the rest `Auxiliary`.
+
 **S9. `olla` + participle is always a complement.**
 `Olen lukenut kirjan.` produces `Olen` predicate, `lukenut` complement,
 `kirjan` unknown. In a compound tense the participle is part of the predicate,
@@ -272,6 +278,16 @@ Fix direction: classify the `olla` + participle construction by voice:
   handled).
 - anything else after `olla` -> copula complement (already handled).
 
+**Phase 3 landing.** An auxiliary plus a past participle folds into one
+predicate phrase. The participle (`lukenut`, `rakennettu`, `tullut`) is the
+clause predicate with `Auxiliary` linked to it. Active participles keep the
+object search (`Olen lukenut kirjan` -> `kirjan` object); passive participles
+select the logical object (`Talo on rakennettu` -> `Talo` object). A present
+participle is not folded, so `Minun on mentävä` keeps `on` as predicate and
+`mentävä` as complement. `passive` is decided from the whole verb reading set,
+not one passive homonym: `tullut` is active even though the engine also emits
+passive readings for the surface.
+
 **S10. Necessive/modal genitive subjects are missing.**
 `Minun täytyy mennä.` and `Hänen pitää mennä.` leave the genitive pronoun
 `Unknown`; `täytyy`/`pitää` get no subject, and the infinitive clause inherits
@@ -284,6 +300,11 @@ Prefer a small table in `syntax.rs`; do not teach the morphology engine a
 new case rule. Once the genitive is the subject, `share_clause_roles` gives it
 to the following infinitive clause (`lukea`, `mennä`) as it already does for
 `Sami haluaa syödä`.
+
+**Phase 3 landing.** `necessive` is a closed set (`täytyä`, `pitää`,
+`kannattaa`, `sopia`, `kuulua`); a genitive before that predicate is the
+subject. `Minun täytyy mennä` and `Hänen pitää mennä` now have a genitive
+subject and the infinitive clause shares it.
 
 **S11. The infinitive fallback can promote the wrong word.**
 `Onko sinulla kirjaa?` promotes `kirjaa` (verb `kirjata`, imperative) because
@@ -400,9 +421,10 @@ it in subject/object/complement/modifier selection. Reuse the existing
 `is_clause_marker` and extend it, rather than adding a second list.
 
 **S19. Clause and token API gaps.**
-`Clause` has `predicate`, `subject`, `object` but no `complement` or
-`adverbials`, even though tokens can carry those roles. `RoleConfidence::
-Certain` is never constructed. Decide before phase 4:
+`Auxiliary` now exists in the token stream (Phase 3). `Clause` has
+`predicate`, `subject`, `object` but no `complement` or `adverbials`, even
+though tokens can carry those roles. `RoleConfidence::Certain` is never
+constructed. Decide before phase 4:
 
 - add `Clause.complement: Option<usize>` and maybe `Clause.adverbials:
   Vec<usize>`; or
@@ -449,7 +471,7 @@ with a role-rule change.
       matches all of them, so an xfail cannot go stale.
 - [x] One `#[test]` per case (macro at the bottom of the runner), so the
       expensive morphology runs in parallel and a failure names the sentence.
-- [x] 34 cases: 21 pin behaviour that is already correct, 13 are
+- [x] 34 cases: 25 pin behaviour that is already correct, 9 are
       defect-marked gates for the remaining phases.
 - [x] `examples/syntax_probe.rs` remains the human view over a wider corpus,
       including sentences the fixture does not pin yet.
@@ -501,16 +523,22 @@ predicate; the second `tuli` is the **subject** with lemma `tuli` (noun),
 while the first `tuli` is the predicate with lemma `tulla`. A post-predicate
 nominative is a subject, but a partitive remains an object (`Luen kirjaa`).
 
-### Phase 3 — predicate and auxiliaries (S8–S11)
+### Phase 3 — predicate and auxiliaries (S8–S11) — landed
 
-- [ ] Add `Auxiliary` (preferred) or demote non-head predicate candidates.
-- [ ] Fold negative auxiliaries and `olla` compound tenses.
-- [ ] Necessive genitive subjects (`täytyä`, `pitää`, `kannattaa`, ...).
-- [ ] Harden the infinitive fallback.
+- [x] Add `SyntacticRole::Auxiliary`; negative auxiliaries and the `olla` of
+      a compound tense link to the main predicate with `head`.
+- [x] Fold negative auxiliaries and `olla` compound tenses. Active past
+      participles keep the object search; passive ones select the logical
+      object; present participles stay necessity complements.
+- [x] Necessive genitive subjects (`täytyä`, `pitää`, `kannattaa`, `sopia`,
+      `kuulua`).
+- [x] Harden the infinitive fallback: `onko` has a mood from its host, and a
+      connegative is not a finite predicate.
 
-Acceptance: `En syö puuroa.` has one predicate phrase; `Olen lukenut kirjan.`
-has `kirjan` as object; `Minun täytyy mennä.` has a genitive subject and an
-infinitive clause that shares it; `Eikö hän tullut?` has `hän` as subject.
+Acceptance (passing): `En syö puuroa.` has one predicate phrase; `Olen lukenut
+kirjan.` has `kirjan` as object; `Minun täytyy mennä.` has a genitive subject
+and an infinitive clause that shares it; `Eikö hän tullut?` has `hän` as
+subject. `Talo on rakennettu` gives `Talo` the logical-object role.
 
 ### Phase 4 — nominal roles (S12–S18)
 

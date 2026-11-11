@@ -68,8 +68,8 @@ fn main() {
                 let mut parts = Vec::new();
                 for r in &s.readings {
                     let mut part = format!(
-                        "{:?}/{:?}/{:?}/{:?}",
-                        r.part_of_speech, r.case, r.number, r.mood
+                        "{:?}/{:?}/{:?}/{:?}/{:?}",
+                        r.part_of_speech, r.case, r.number, r.mood, r.voice
                     );
                     if r.polarity != torille::tags::Polarity::Affirmative {
                         part.push_str(&format!("/{}", r.polarity.name()));

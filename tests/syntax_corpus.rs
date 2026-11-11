@@ -32,6 +32,7 @@ fn case_by_id<'a>(root: &'a Value, id: &str) -> &'a Value {
 fn role(name: &str) -> SyntacticRole {
     [
         SyntacticRole::Predicate,
+        SyntacticRole::Auxiliary,
         SyntacticRole::Subject,
         SyntacticRole::Object,
         SyntacticRole::Adverbial,

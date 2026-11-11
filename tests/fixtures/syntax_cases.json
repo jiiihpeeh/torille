@@ -55,7 +55,7 @@
       "sentence": "En syö puuroa.",
       "clauses": 1,
       "words": [
-        {"text": "En"},
+        {"text": "En", "role": "auxiliary", "head": 1},
         {"text": "syö", "role": "predicate", "confidence": "likely", "lemma": "syödä"},
         {"text": "puuroa", "role": "object", "confidence": "likely", "case": "partitive", "head": 1}
       ],
@@ -252,7 +252,7 @@
       "sentence": "Älä syö puuroa.",
       "clauses": 1,
       "words": [
-        {"text": "Älä", "case": null},
+        {"text": "Älä", "role": "auxiliary", "case": null, "head": 1},
         {"text": "syö", "role": "predicate", "confidence": "likely", "lemma": "syödä"},
         {"text": "puuroa", "role": "object", "confidence": "likely", "case": "partitive", "head": 1}
       ],
@@ -274,13 +274,12 @@
     },
     {
       "id": "negative_auxiliary",
-      "defect": "S8",
       "sentence": "Sami ei syö puuroa.",
       "clauses": 1,
       "predicate_tokens": 1,
       "words": [
         {"text": "Sami", "role": "subject", "case": "nominative"},
-        {"text": "ei"},
+        {"text": "ei", "role": "auxiliary", "head": 2},
         {"text": "syö", "role": "predicate", "lemma": "syödä"},
         {"text": "puuroa", "role": "object", "case": "partitive", "head": 2}
       ],
@@ -290,12 +289,11 @@
     },
     {
       "id": "perfect_tense",
-      "defect": "S9",
       "sentence": "Olen lukenut kirjan.",
       "clauses": 1,
       "predicate_tokens": 1,
       "words": [
-        {"text": "Olen"},
+        {"text": "Olen", "role": "auxiliary", "head": 1},
         {"text": "lukenut", "role": "predicate", "lemma": "lukea"},
         {"text": "kirjan", "role": "object", "confidence": "likely", "case": "genitive", "head": 1}
       ],
@@ -305,7 +303,6 @@
     },
     {
       "id": "necessive_modal",
-      "defect": "S10,S17",
       "sentence": "Minun täytyy mennä.",
       "clauses": 2,
       "words": [
@@ -481,12 +478,11 @@
     },
     {
       "id": "negative_clitic_question",
-      "defect": "S8,S9",
       "sentence": "Eikö hän tullut?",
       "clauses": 1,
       "predicate_tokens": 1,
       "words": [
-        {"text": "Eikö"},
+        {"text": "Eikö", "role": "auxiliary", "head": 2},
         {"text": "hän", "role": "subject", "confidence": "likely", "case": "nominative", "head": 2},
         {"text": "tullut", "role": "predicate", "confidence": "weak", "lemma": "tulla"}
       ],

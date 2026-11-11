@@ -193,7 +193,9 @@ pub fn hyphenate(
 /// ```
 ///
 /// Token indices in `predicate`, `subject`, `object`, and `head` refer to the
-/// `tokens` array; null means no such role or governor.
+/// `tokens` array; null means no such role or governor. `role` is one of
+/// `predicate`, `auxiliary`, `subject`, `object`, `adverbial`, `complement`,
+/// `modifier` or `unknown`.
 #[wasm_bindgen]
 pub fn analyze_syntax(text: &str) -> js_sys::Object {
     use js_sys::{Array, Object};
