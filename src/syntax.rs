@@ -547,26 +547,22 @@ fn classify(readings: &[Tags]) -> (SyntacticRole, RoleConfidence, Option<Case>) 
         return (SyntacticRole::Unknown, RoleConfidence::Weak, None);
     }
 
-    // An infinitive reading wins over a spurious finite reading: `syödä`
-    // is the infinitive of `syödä`, not a passive indicative. Grammar
-    // context, not morphology alone, decides a genuinely ambiguous form;
-    // phase 5 stays conservative.
-    if readings
-        .iter()
-        .any(|reading| reading.mood == Some(Mood::Infinitive))
-    {
-        return (SyntacticRole::Unknown, RoleConfidence::Weak, None);
-    }
-
     let finite = readings
         .iter()
         .filter(|reading| is_finite_predicate(reading))
         .count();
     if finite > 0 {
-        let confidence = if finite == readings.len() {
-            RoleConfidence::Likely
-        } else {
+        // An infinitive beside a finite reading (`pitää`, `näyttää`) is not
+        // an ambiguity: both readings are the same verb. A nominal beside a
+        // finite reading (`tuli` the fire, `kirjaa` the imperative) is one,
+        // so the role stays weak until context resolves it.
+        let competing_nominal = readings
+            .iter()
+            .any(|reading| is_nominal_pos(reading.part_of_speech));
+        let confidence = if competing_nominal {
             RoleConfidence::Weak
+        } else {
+            RoleConfidence::Likely
         };
         return (SyntacticRole::Predicate, confidence, None);
     }
@@ -605,10 +601,16 @@ fn classify(readings: &[Tags]) -> (SyntacticRole, RoleConfidence, Option<Case>) 
 fn is_finite_predicate(reading: &Tags) -> bool {
     match reading.part_of_speech {
         Some(PartOfSpeech::NegativeVerb) => true,
-        Some(PartOfSpeech::Verb) => matches!(
-            reading.mood,
-            Some(Mood::Indicative | Mood::Conditional | Mood::Imperative | Mood::Potential)
-        ),
+        // A single-token `Verb` reading with negative polarity is a
+        // connegative (`syö` in `en syö`, `mennä` in `ei mennä`), not a
+        // finite predicate. The finite negative is the auxiliary token.
+        Some(PartOfSpeech::Verb) => {
+            reading.polarity == Polarity::Affirmative
+                && matches!(
+                    reading.mood,
+                    Some(Mood::Indicative | Mood::Conditional | Mood::Imperative | Mood::Potential)
+                )
+        }
         _ => false,
     }
 }
@@ -707,14 +709,25 @@ fn best_case(syntax: &TokenSyntax, cases: &[Case]) -> Option<Case> {
     })
 }
 
-/// A finite predicate candidate, excluding a bare negative auxiliary when a
-/// main verb is also present.
+/// A finite predicate candidate, excluding the negative auxiliary.
+///
+/// `ei` is also a noun and `älä` has a class-99 noun reading, so "all readings
+/// are `NegativeVerb`" is not a reliable test. A token is the auxiliary when
+/// it has a `NegativeVerb` reading and no non-auxiliary finite reading; the
+/// main verb is what the clause predicate should point at.
+fn is_negative_auxiliary(index: usize, out: &[TokenSyntax]) -> bool {
+    out[index]
+        .readings
+        .iter()
+        .any(|reading| reading.part_of_speech == Some(PartOfSpeech::NegativeVerb))
+        && !out[index].readings.iter().any(|reading| {
+            reading.part_of_speech != Some(PartOfSpeech::NegativeVerb)
+                && is_finite_predicate(reading)
+        })
+}
+
 fn is_predicate_candidate(index: usize, out: &[TokenSyntax]) -> bool {
-    out[index].role == SyntacticRole::Predicate
-        && !out[index]
-            .readings
-            .iter()
-            .all(|reading| reading.part_of_speech == Some(PartOfSpeech::NegativeVerb))
+    out[index].role == SyntacticRole::Predicate && !is_negative_auxiliary(index, out)
 }
 
 /// An infinitive reading, which can head an infinitival clause.
@@ -736,7 +749,16 @@ fn segment_clause_words(words: &[usize], tokens: &[Token], out: &[TokenSyntax]) 
     let mut starts = vec![0usize];
     for position in 1..words.len() {
         let lower = tokens[words[position]].text.to_lowercase();
-        if is_subordinator(&lower) || is_relative(&lower) {
+        if is_relative_word(words[position], tokens, out) {
+            starts.push(position);
+            continue;
+        }
+        if is_subordinator(&lower) {
+            // `sekä ... että` coordinates two nominals; the `että` is not a
+            // clause opener when no predicate stands between the pair.
+            if lower == "että" && is_seka_etta(words, position, tokens, out) {
+                continue;
+            }
             starts.push(position);
             continue;
         }
@@ -790,15 +812,51 @@ fn is_subordinator(word: &str) -> bool {
     )
 }
 
-fn is_relative(word: &str) -> bool {
-    matches!(word, "joka" | "mikä" | "ken")
+/// The inflected forms of the relative pronouns. The engine resolves most of
+/// them to `joka`/`mikä`/`kuka`; the surface list covers the ones whose own
+/// lemma wins (`missä`, `mitä`) and keeps the check independent of the
+/// resolution's homonym ranking.
+const RELATIVE_SURFACES: &[&str] = &[
+    // joka
+    "joka", "jonka", "jota", "jossa", "josta", "johon", "jolla", "jolta", "jolle", "joina",
+    "joiksi", "joitta", "jotka", "joiden", "joita", "joissa", "joista", "joihin", "joilla",
+    "joilta", "joille", // mikä
+    "mikä", "minkä", "mitä", "missä", "mistä", "mihin", "millä", "miltä", "mille", "miksi",
+    "mitkä", // kuka / ken
+    "kuka", "kenen", "ketä", "kenessä", "kestä", "kehen", "kenellä", "keneltä", "kenelle", "ketkä",
+    "keiden", "keitä", "keissä", "keistä", "keihin", "keillä", "keiltä", "keille", "ken",
+];
+
+/// Whether this token is a relative pronoun, in any of its cases.
+fn is_relative_word(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
+    let lemma = out[index].lemma.as_deref().unwrap_or_default();
+    if matches!(lemma, "joka" | "mikä" | "ken" | "kuka") {
+        return true;
+    }
+    let lower = tokens[index].text.to_lowercase();
+    RELATIVE_SURFACES.contains(&lower.as_str())
+}
+
+/// `sekä ... että` without a predicate between them coordinates nominals, so
+/// the `että` must not open a clause.
+fn is_seka_etta(words: &[usize], position: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
+    for &index in words[..position].iter().rev() {
+        let lower = tokens[index].text.to_lowercase();
+        if lower == "sekä" {
+            return true;
+        }
+        if is_predicate_candidate(index, out) {
+            return false;
+        }
+    }
+    false
 }
 
 /// A function word that must not be mistaken for a subject or object merely
 /// because the lexicon also gives it a noun reading (`ja`, `kun`).
-fn is_clause_marker(index: usize, tokens: &[Token]) -> bool {
+fn is_clause_marker(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
     let lower = tokens[index].text.to_lowercase();
-    is_coordinating(&lower) || is_subordinator(&lower) || is_relative(&lower)
+    is_coordinating(&lower) || is_subordinator(&lower) || is_relative_word(index, tokens, out)
 }
 
 fn has_separator_between(tokens: &[Token], left: usize, right: usize, needle: char) -> bool {
@@ -829,6 +887,15 @@ fn choose_predicate(words: &[usize], out: &[TokenSyntax]) -> Option<usize> {
                 .iter()
                 .copied()
                 .find(|&index| is_infinitive(index, out))
+        })
+        // No main verb at all: keep the auxiliary as the predicate head so
+        // the clause still has one (`Eikö hän tullut?` until phase 3 folds
+        // the auxiliary and the participle into a predicate phrase).
+        .or_else(|| {
+            words
+                .iter()
+                .copied()
+                .find(|&index| out[index].role == SyntacticRole::Predicate)
         })
 }
 
@@ -895,6 +962,12 @@ fn resolve_clause(
             .any(|reading| reading.part_of_speech == Some(PartOfSpeech::NegativeVerb))
     });
     clause.negative = negative;
+    // In an imperative, a nominative after the verb is the object
+    // (`Syö puuro!`), never a post-predicate subject.
+    let imperative = out[predicate]
+        .readings
+        .iter()
+        .any(|reading| reading.mood == Some(Mood::Imperative) && is_finite_predicate(reading));
 
     let lemma = out[predicate].lemma.clone().unwrap_or_default();
     let is_olla = lemma == "olla";
@@ -911,7 +984,7 @@ fn resolve_clause(
         out[index].role == SyntacticRole::Unknown
             && is_nominal(&out[index])
             && has_case(&out[index], &[Case::Genitive])
-            && !is_clause_marker(index, tokens)
+            && !is_clause_marker(index, tokens, out)
     });
     let necessity = is_olla && genitive_before.is_some() && necessity_complement(after, out);
     let passive_construction = is_olla && !necessity && passive_participle_after(after, out);
@@ -923,7 +996,7 @@ fn resolve_clause(
                 out[index].role == SyntacticRole::Unknown
                     && is_nominal(&out[index])
                     && has_case(&out[index], &[Case::Nominative, Case::Partitive])
-                    && !is_clause_marker(index, tokens)
+                    && !is_clause_marker(index, tokens, out)
             });
         } else if necessity {
             subject = genitive_before;
@@ -943,7 +1016,7 @@ fn resolve_clause(
                         .is_some_and(|first| first.is_uppercase())
                     && is_nominal(&out[index])
                     && has_case(&out[index], &[Case::Nominative, Case::Partitive])
-                    && !is_clause_marker(index, tokens)
+                    && !is_clause_marker(index, tokens, out)
             });
         }
         if subject.is_none() {
@@ -951,9 +1024,22 @@ fn resolve_clause(
                 out[index].role == SyntacticRole::Unknown
                     && is_nominal(&out[index])
                     && has_case(&out[index], &[Case::Nominative])
-                    && !is_clause_marker(index, tokens)
+                    && !is_clause_marker(index, tokens, out)
             });
         }
+    }
+    // Finnish allows a subject after the predicate (`jossa roihusi tuli`).
+    // Only a nominative can be that subject here; a partitive after the
+    // predicate is the object of a negative/existential clause, and a
+    // genitive is the total object. This is what keeps `Luen kirjaa` an
+    // object while `roihusi tuli` gets its subject.
+    if subject.is_none() && !passive && !passive_construction && !imperative {
+        subject = after.iter().copied().find(|&index| {
+            out[index].role == SyntacticRole::Unknown
+                && is_nominal(&out[index])
+                && has_case(&out[index], &[Case::Nominative])
+                && !is_clause_marker(index, tokens, out)
+        });
     }
     if let Some(index) = subject {
         out[index].role = SyntacticRole::Subject;
@@ -985,7 +1071,7 @@ fn resolve_clause(
             out[index].role == SyntacticRole::Unknown
                 && is_nominal(&out[index])
                 && has_case(&out[index], object_cases)
-                && !is_clause_marker(index, tokens)
+                && !is_clause_marker(index, tokens, out)
         })
     } else if !is_olla && !is_change {
         after.iter().copied().find(|&index| {
@@ -993,7 +1079,7 @@ fn resolve_clause(
                 && out[index].role == SyntacticRole::Unknown
                 && is_nominal(&out[index])
                 && has_case(&out[index], object_cases)
-                && !is_clause_marker(index, tokens)
+                && !is_clause_marker(index, tokens, out)
         })
     } else {
         None
@@ -1026,7 +1112,7 @@ fn resolve_clause(
                 && out[index].role == SyntacticRole::Unknown
                 && is_nominal(&out[index])
                 && has_case(&out[index], complement_cases)
-                && !is_clause_marker(index, tokens)
+                && !is_clause_marker(index, tokens, out)
         });
         // A participle after `olla` is the complement too: `Minun on mentävä`,
         // `Talo on rakennettu`. It has a verb reading and a case, not a noun
@@ -1094,7 +1180,7 @@ fn mark_modifiers(
     for &index in words {
         if out[index].role != SyntacticRole::Unknown
             || !is_nominal(&out[index])
-            || is_clause_marker(index, tokens)
+            || is_clause_marker(index, tokens, out)
         {
             continue;
         }
@@ -1149,7 +1235,7 @@ fn mark_coordinated_objects(
             || out[index].role != SyntacticRole::Unknown
             || !is_nominal(&out[index])
             || !has_case(&out[index], object_cases)
-            || is_clause_marker(index, tokens)
+            || is_clause_marker(index, tokens, out)
         {
             continue;
         }
@@ -1180,7 +1266,7 @@ fn mark_coordinated_subjects(
             || out[index].role == SyntacticRole::Subject
             || !is_nominal(&out[index])
             || !has_case(&out[index], &[Case::Nominative])
-            || is_clause_marker(index, tokens)
+            || is_clause_marker(index, tokens, out)
         {
             continue;
         }
@@ -1205,7 +1291,12 @@ fn has_coordinator_between(tokens: &[Token], left: usize, right: usize) -> bool 
         .skip(left + 1)
         .take(right.saturating_sub(left + 1))
         .filter(|token| token.is_word())
-        .any(|token| is_coordinating(&token.text.to_lowercase()))
+        .any(|token| {
+            let lower = token.text.to_lowercase();
+            // The second half of `sekä ... että` coordinates the same slots
+            // as `ja`; the clause splitter already leaves that `että` alone.
+            is_coordinating(&lower) || lower == "että"
+        })
 }
 
 /// Share the subject of a coordinated or non-finite clause with the one before.

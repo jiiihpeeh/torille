@@ -1,7 +1,7 @@
 # PLAN_SYNTAX — making the advisory syntax layer trustworthy
 
-Status: audit and fixture complete; Phase 1 landed (S1, S3, S4; S2 partial).
-Work happens on the `syntax` branch off `master`.
+Status: audit and fixture complete; Phases 1–2 landed (S1, S3–S7; S2
+partial). Work happens on the `syntax` branch off `master`.
 
 The syntax layer (`src/syntax.rs`) is the second, on-demand layer over the
 morphology engine. It is **not** in the keystroke path; its only shipping
@@ -183,6 +183,15 @@ for the pronouns whose forms do not reach the base (`mitä`, `missä`). Keep
 the set in one function, `is_relative_word(index, out)`, and test every case
 form.
 
+**Phase 2 landing.** `is_relative_word` now checks the resolved lemma
+(`joka`/`mikä`/`ken`/`kuka`) and a closed set of inflected surfaces. The audit
+sentence splits into two clauses, and `Talo, jossa asun, on vanha` no longer
+folds the relative into the host. The contiguous-range limitation remains:
+`Mies, jonka näin, söi` yields three linear clauses, with `Mies` separated
+from its predicate (open question 2). A post-predicate **nominative** is now
+allowed to be the subject (`jossa roihusi tuli`), while a partitive after the
+predicate still belongs to the object (`Luen kirjaa`).
+
 **S6. `että` is both a subordinator and the second half of `sekä ... että`.**
 `Sekä Sami että Liisa tulivat.` splits at `että`, leaving `Sami` in a
 predicate-less clause and making `Liisa` the only subject. Fix direction: do
@@ -190,6 +199,12 @@ not start a clause at `että` when the clause already contains `sekä` before
 it (or when the previous word is a coordinated nominal and no finite verb
 precedes). Treat `joko ... tai` the same way; `joko`, `sekä` and the pair
 markers currently become subjects (`Joko` is subject in the audit).
+
+**Phase 2 landing.** `is_seka_etta` refuses the split when a `sekä` is in the
+clause and no predicate stands between the pair, and
+`has_coordinator_between` accepts that `että` so `Liisa` is a coordinated
+subject. `joko` became an adverb with S1, so it no longer competes for the
+subject role; `joko ... tai` was already one clause.
 
 **S7. Finite/infinitive ambiguity changes segmentation.**
 `classify` returns `Unknown` when **any** reading is an infinitive
@@ -207,6 +222,14 @@ finite readings, and let `choose_predicate` prefer the finite one when the
 clause already has a subject or the word is clause-initial. The
 infinitive-only fallback (`syntax.rs:760`) remains for genuinely non-finite
 clauses (`Haluan syödä`, `Sami haluaa syödä puuron`).
+
+**Phase 2 landing.** `classify` no longer discards finite readings when an
+infinitive also exists; the confidence is `Weak` only when a nominal reading
+competes (`tuli`), not when the competitor is the same verb (`pitää`,
+`näyttää`). `is_finite_predicate` no longer treats a single-token
+`Polarity::Negative` verb as finite — that reading is a connegative, not a
+negative clause. The segmentation and predicate splits now work for
+`Hänen pitää mennä` and `Haluan syödä`.
 
 ### P2 — predicate and auxiliary resolution
 
@@ -426,7 +449,7 @@ with a role-rule change.
       matches all of them, so an xfail cannot go stale.
 - [x] One `#[test]` per case (macro at the bottom of the runner), so the
       expensive morphology runs in parallel and a failure names the sentence.
-- [x] 34 cases: 18 pin behaviour that is already correct, 16 are
+- [x] 34 cases: 21 pin behaviour that is already correct, 13 are
       defect-marked gates for the remaining phases.
 - [x] `examples/syntax_probe.rs` remains the human view over a wider corpus,
       including sentences the fixture does not pin yet.
@@ -461,18 +484,22 @@ Acceptance now passing: `sentence_adverb` (`Eilen`), `subordinator_subject`
 `clitic_question` still needs the existential word order of S13, not the
 clitic rule.
 
-### Phase 2 — clause segmentation (S5–S7)
+### Phase 2 — clause segmentation (S5–S7) — landed
 
-- [ ] Segment on relative lemma and the closed inflected relative set.
-- [ ] Neutralise `sekä ... että` / `joko ... tai`.
-- [ ] Keep finite readings beside infinitive readings; only fall back to an
+- [x] Segment on the relative lemma and the closed inflected relative set.
+- [x] Neutralise `sekä ... että` when no predicate stands between the pair,
+      and let the coordinated-subject pass see that `että` as a coordinator.
+      `joko ... tai` was already handled once S1 stopped reading `joko` as a
+      noun.
+- [x] Keep finite readings beside infinitive readings; only fall back to an
       infinitive when the clause has no finite candidate.
-- [ ] Add the user sentence `Hän tuli tupaan, jossa roihusi tuli.` to the
-      corpus with the exact expected roles.
+- [x] Add `Hän tuli tupaan, jossa roihusi tuli.` to the corpus. It is no
+      longer a defect row.
 
-Acceptance: two clauses; `jossa` starts clause 1; `roihusi` is its predicate;
-the second `tuli` is the **subject** with lemma `tuli` (noun), while the first
-`tuli` is the predicate with lemma `tulla`.
+Acceptance (passing): two clauses; `jossa` starts clause 1; `roihusi` is its
+predicate; the second `tuli` is the **subject** with lemma `tuli` (noun),
+while the first `tuli` is the predicate with lemma `tulla`. A post-predicate
+nominative is a subject, but a partitive remains an object (`Luen kirjaa`).
 
 ### Phase 3 — predicate and auxiliaries (S8–S11)
 

@@ -176,7 +176,6 @@
 
     {
       "id": "two_tuli",
-      "defect": "S5,S7",
       "sentence": "Hän tuli tupaan, jossa roihusi tuli.",
       "clauses": 2,
       "predicate_tokens": 2,
@@ -442,7 +441,6 @@
     },
     {
       "id": "seka_etta",
-      "defect": "S6",
       "sentence": "Sekä Sami että Liisa tulivat.",
       "clauses": 1,
       "words": [
@@ -455,11 +453,10 @@
     },
     {
       "id": "joko_tai",
-      "defect": "S6",
       "sentence": "Joko Sami tai Liisa tulee.",
       "clauses": 1,
       "words": [
-        {"text": "Joko", "role": "unknown", "confidence": "weak"},
+        {"text": "Joko", "role": "adverbial", "confidence": "likely"},
         {"text": "Sami", "role": "subject", "case": "nominative"},
         {"text": "tai", "role": "unknown", "confidence": "weak"},
         {"text": "Liisa", "role": "subject", "case": "nominative"},
