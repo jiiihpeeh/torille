@@ -1,7 +1,7 @@
 # PLAN_SYNTAX — making the advisory syntax layer trustworthy
 
-Status: audit complete, no engine changes yet. Work happens on the `syntax`
-branch off `master`.
+Status: audit and fixture complete, no engine changes yet. Work happens on
+the `syntax` branch off `master`.
 
 The syntax layer (`src/syntax.rs`) is the second, on-demand layer over the
 morphology engine. It is **not** in the keystroke path; its only shipping
@@ -367,22 +367,48 @@ is not. Recommend: add `complement`, keep `adverbials` out (they are many and
 order matters), and either produce `Certain` for the unambiguous finite
 predicate/subject cases or remove the variant in a breaking-change commit.
 
+**S20. A sentence costs seconds, not milliseconds.**
+The audit measured `syntax::analyze` on the probe corpus:
+
+- one five-word sentence: about 1–2 s wall, about 10 s CPU;
+- the 32-case corpus: about 45 s wall and 8 min CPU even with 16 test
+  threads.
+
+`resolve_word` calls `find_bases_with_form_filter` for every unique surface.
+That entry point collects the **suggestion** payload — every generated form of
+every head/tail/prefix candidate plus its neighbours — while the syntax layer
+only needs the readings of the one surface. On an on-demand UI this is not
+affordable for a paragraph, and it makes the regression suite expensive enough
+that defects will be found late.
+
+Fix direction: resolve with a cheaper recognition path
+(`find_bases_for_check`) and inflect only the winning base, or add a
+per-document cache in the wasm layer. Measure before and after on
+`examples/syntax_probe_sentences.txt`; the target is tens of milliseconds per
+sentence, not seconds. Do not make the keystroke path depend on this layer.
+
 ## Phases
 
 Each phase is a separate commit with tests. Do not mix a data regeneration
 with a role-rule change.
 
-### Phase 0 — fixture and tooling (no engine change)
+### Phase 0 — fixture and tooling (done on this branch)
 
-- [ ] Turn the probe corpus into `tests/data/syntax_cases.tsv`: sentence,
-      expected clause count, and per-word `surface -> role/lemma/case/head`.
-- [ ] `tests/syntax_corpus.rs` reads it and asserts the fields that are
-      already correct; expected-wrong rows are marked `xfail:<id>` and become
-      the phase gates.
-- [ ] Keep `examples/syntax_probe.rs` as the human view; it must not be the
-      only way to see a regression.
-- [ ] Add `S1`–`S19` as named tests (the failing ones are ignored with a
-      comment naming the phase that turns them on).
+- [x] `tests/fixtures/syntax_cases.json` holds the expected output: sentence,
+      clause count, per-word role/confidence/case/lemma/head, and the
+      clause-level `predicate`/`subject`/`object`/`negative`/`existential`.
+- [x] `tests/syntax_corpus.rs` is the runner. A case with `defect` must
+      currently mismatch at least one assertion, and the suite fails once it
+      matches all of them, so an xfail cannot go stale.
+- [x] One `#[test]` per case (macro at the bottom of the runner), so the
+      expensive morphology runs in parallel and a failure names the sentence.
+- [x] 32 cases: 12 pin behaviour that is already correct, 20 are
+      defect-marked gates for phases 1–4.
+- [x] `examples/syntax_probe.rs` remains the human view over a wider corpus,
+      including sentences the fixture does not pin yet.
+
+The fixture is now the gate; do not weaken a defect row to make a phase land.
+When a fix turns a row green, remove its `defect` field in the same commit.
 
 ### Phase 1 — reading fidelity (S1–S4)
 
@@ -446,6 +472,16 @@ subject, `asuva` modifier. `Hänellä on kaksi lasta.` -> `kaksi` subject,
 - [ ] Add a wasm/integration check that the JSON keys still match the doc
       comment.
 
+### Phase 6 — make it affordable before a UI uses it (S20)
+
+- [ ] Replace the suggestion-payload base search with a recognition-only
+      resolution plus one inflection of the winning base, or cache per
+      document in the wasm layer.
+- [ ] Record before/after wall and CPU time for
+      `examples/syntax_probe_sentences.txt` in this file.
+- [ ] Do not ship an interactive consumer until a paragraph is tens of
+      milliseconds, not seconds.
+
 ## Non-goals
 
 - No statistical model, no external parser, no new dependency.
@@ -464,10 +500,16 @@ subject, `asuva` modifier. `Hänellä on kaksi lasta.` -> `kaksi` subject,
 1. Should `Clause.predicate` point at the finite auxiliary or the main verb in
    a compound tense? Recommendation: the main verb, with `Auxiliary` linked to
    it — that is what a UI wants to underline.
-2. Should a relative clause's antecedent be linked (`head` of the relative
+2. Relative clauses interrupt their host (`Mies, joka tuli, söi`). `Clause`
+   ranges are contiguous, so the host predicate is forced into its own
+   clause. Do we accept linear segments and document that, or add nesting
+   (`parent`/`children`)? Recommendation: accept linear for now; the audit
+   sentence has a final relative, so it works. Revisit when a consumer needs
+   the host clause as one unit.
+3. Should a relative clause's antecedent be linked (`head` of the relative
    pronoun -> antecedent), or only the clause roles? Recommendation: later;
    it needs an antecedent search across the clause boundary.
-3. For proper names, is expanding `data/proper_name_forms.csv` with a case
+4. For proper names, is expanding `data/proper_name_forms.csv` with a case
    column acceptable as a data change, or should the syntax layer infer case
    from the name's final suffix? Recommendation: the column; inference would
    be a suffix stripper by another name.

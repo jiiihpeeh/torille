@@ -1,0 +1,479 @@
+{
+  "_comment": [
+    "Expected syntax output, one case per sentence.",
+    "",
+    "Word fields are optional: text is always checked; role, confidence, case,",
+    "lemma and head are checked when present. `head` is an index into this",
+    "case's words array, not a token index. `null` means the field must be None.",
+    "",
+    "`defect` marks a case that is expected to fail today. The runner requires",
+    "at least one mismatch for such a case and fails once all of them pass, so",
+    "a fix cannot leave a stale xfail behind. The ids refer to PLAN_SYNTAX.md."
+  ],
+  "cases": [
+    {
+      "id": "basic_svo",
+      "sentence": "Sami söi aamupuuronsa.",
+      "clauses": 1,
+      "words": [
+        {"text": "Sami", "role": "subject", "confidence": "likely", "case": "nominative"},
+        {"text": "söi", "role": "predicate", "confidence": "likely", "lemma": "syödä"},
+        {"text": "aamupuuronsa", "role": "object", "confidence": "likely", "case": "nominative", "head": 1}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": 0, "object": 2, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "existential",
+      "sentence": "Pöydällä on kirja.",
+      "clauses": 1,
+      "words": [
+        {"text": "Pöydällä", "role": "adverbial", "confidence": "likely", "case": "adessive", "head": 1},
+        {"text": "on", "role": "predicate", "confidence": "likely", "lemma": "olla"},
+        {"text": "kirja", "role": "subject", "confidence": "likely", "case": "nominative", "head": 1}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": 2, "object": null, "negative": false, "existential": true}
+      ]
+    },
+    {
+      "id": "copula_complement",
+      "sentence": "Talo on kaunis.",
+      "clauses": 1,
+      "words": [
+        {"text": "Talo", "role": "subject", "confidence": "likely", "case": "nominative"},
+        {"text": "on", "role": "predicate", "confidence": "likely", "lemma": "olla"},
+        {"text": "kaunis", "role": "complement", "confidence": "likely", "case": "nominative", "head": 1}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": 0, "object": null, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "negative_partitive_object",
+      "sentence": "En syö puuroa.",
+      "clauses": 1,
+      "words": [
+        {"text": "En"},
+        {"text": "syö", "role": "predicate", "confidence": "likely", "lemma": "syödä"},
+        {"text": "puuroa", "role": "object", "confidence": "likely", "case": "partitive", "head": 1}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": null, "object": 2, "negative": true, "existential": false}
+      ]
+    },
+    {
+      "id": "coordinated_clauses",
+      "sentence": "Sami söi puuron ja joi maidon.",
+      "clauses": 2,
+      "words": [
+        {"text": "Sami", "role": "subject", "case": "nominative"},
+        {"text": "söi", "role": "predicate", "lemma": "syödä"},
+        {"text": "puuron", "role": "object", "case": "genitive", "head": 1},
+        {"text": "ja"},
+        {"text": "joi", "role": "predicate", "lemma": "juoda"},
+        {"text": "maidon", "role": "object", "case": "genitive", "head": 4}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": 0, "object": 2, "negative": false, "existential": false},
+        {"predicate": 4, "subject": 0, "object": 5, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "infinitive_clause",
+      "sentence": "Sami haluaa syödä puuron.",
+      "clauses": 2,
+      "words": [
+        {"text": "Sami", "role": "subject", "case": "nominative"},
+        {"text": "haluaa", "role": "predicate", "lemma": "haluta"},
+        {"text": "syödä", "role": "predicate", "lemma": "syödä"},
+        {"text": "puuron", "role": "object", "case": "genitive", "head": 2}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": 0, "object": null, "negative": false, "existential": false},
+        {"predicate": 2, "subject": 0, "object": 3, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "passive",
+      "sentence": "Talo rakennettiin.",
+      "clauses": 1,
+      "words": [
+        {"text": "Talo", "role": "object", "confidence": "likely", "case": "nominative", "head": 1},
+        {"text": "rakennettiin", "role": "predicate", "confidence": "likely", "lemma": "rakentaa"}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": null, "object": 0, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "necessity",
+      "sentence": "Minun on mentävä.",
+      "clauses": 1,
+      "words": [
+        {"text": "Minun", "role": "subject", "confidence": "likely", "case": "genitive", "head": 1},
+        {"text": "on", "role": "predicate", "confidence": "likely", "lemma": "olla"},
+        {"text": "mentävä", "role": "complement", "confidence": "likely", "case": "nominative", "head": 1}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": 0, "object": null, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "local_adverbial",
+      "sentence": "Kirja on pöydällä.",
+      "clauses": 1,
+      "words": [
+        {"text": "Kirja", "role": "subject", "case": "nominative"},
+        {"text": "on", "role": "predicate", "lemma": "olla"},
+        {"text": "pöydällä", "role": "adverbial", "case": "adessive", "head": 1}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": 0, "object": null, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "multiword_name",
+      "sentence": "Sami Ruotsalainen söi puuron.",
+      "clauses": 1,
+      "words": [
+        {"text": "Sami", "role": "subject", "case": "nominative"},
+        {"text": "Ruotsalainen", "role": "modifier", "confidence": "weak", "head": 0},
+        {"text": "söi", "role": "predicate", "lemma": "syödä"},
+        {"text": "puuron", "role": "object", "case": "genitive", "head": 2}
+      ],
+      "clause_roles": [
+        {"predicate": 2, "subject": 0, "object": 3, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "coordinated_subjects",
+      "sentence": "Sami ja Liisa söivät.",
+      "clauses": 1,
+      "words": [
+        {"text": "Sami", "role": "subject", "case": "nominative"},
+        {"text": "ja"},
+        {"text": "Liisa", "role": "subject", "case": "nominative"},
+        {"text": "söivät", "role": "predicate", "lemma": "syödä"}
+      ],
+      "clause_roles": [
+        {"predicate": 3, "subject": 0, "object": null, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "unknown_word",
+      "sentence": "Zorblax istuu.",
+      "clauses": 1,
+      "words": [
+        {"text": "Zorblax", "role": "unknown", "confidence": "weak"},
+        {"text": "istuu", "role": "predicate", "lemma": "istua"}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": null, "object": null, "negative": false, "existential": false}
+      ]
+    },
+
+    {
+      "id": "two_tuli",
+      "defect": "S5,S7",
+      "sentence": "Hän tuli tupaan, jossa roihusi tuli.",
+      "clauses": 2,
+      "predicate_tokens": 2,
+      "words": [
+        {"text": "Hän", "role": "subject", "confidence": "likely", "case": "nominative", "head": 1},
+        {"text": "tuli", "role": "predicate", "confidence": "weak", "lemma": "tulla"},
+        {"text": "tupaan", "role": "adverbial", "confidence": "likely", "case": "illative", "head": 1},
+        {"text": "jossa", "role": "adverbial", "confidence": "likely", "case": "inessive", "head": 4},
+        {"text": "roihusi", "role": "predicate", "confidence": "weak", "lemma": "roihuta"},
+        {"text": "tuli", "role": "subject", "confidence": "weak", "case": "nominative", "lemma": "tuli", "head": 4}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": 0, "object": null, "negative": false, "existential": false},
+        {"predicate": 4, "subject": 5, "object": null, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "sentence_adverb",
+      "defect": "S1",
+      "sentence": "Eilen satoi lunta.",
+      "clauses": 1,
+      "words": [
+        {"text": "Eilen", "role": "adverbial", "confidence": "likely", "head": 1},
+        {"text": "satoi", "role": "predicate", "confidence": "likely", "lemma": "sataa"},
+        {"text": "lunta", "role": "object", "confidence": "likely", "case": "partitive", "head": 1}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": null, "object": 2, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "subordinator_subject",
+      "defect": "S1,S12",
+      "sentence": "Kun hän tuli, söin.",
+      "clauses": 2,
+      "words": [
+        {"text": "Kun", "role": "unknown", "confidence": "weak"},
+        {"text": "hän", "role": "subject", "confidence": "likely", "case": "nominative", "head": 2},
+        {"text": "tuli", "role": "predicate", "confidence": "weak", "lemma": "tulla"},
+        {"text": "söin", "role": "predicate", "confidence": "likely", "lemma": "syödä"}
+      ],
+      "clause_roles": [
+        {"predicate": 2, "subject": 1, "object": null, "negative": false, "existential": false},
+        {"predicate": 3, "subject": null, "object": null, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "clitic_question",
+      "defect": "S3,S4",
+      "sentence": "Onko sinulla kirjaa?",
+      "clauses": 1,
+      "words": [
+        {"text": "Onko", "role": "predicate", "confidence": "likely", "lemma": "olla"},
+        {"text": "sinulla", "role": "adverbial", "confidence": "likely", "case": "adessive", "head": 0},
+        {"text": "kirjaa", "role": "subject", "confidence": "weak", "case": "partitive", "head": 0}
+      ],
+      "clause_roles": [
+        {"predicate": 0, "subject": 2, "object": null, "negative": false, "existential": true}
+      ]
+    },
+    {
+      "id": "imperative_affirmative",
+      "defect": "S4",
+      "sentence": "Syö puuro!",
+      "clauses": 1,
+      "words": [
+        {"text": "Syö", "role": "predicate", "confidence": "likely", "lemma": "syödä"},
+        {"text": "puuro", "role": "object", "confidence": "likely", "case": "nominative", "head": 0}
+      ],
+      "clause_roles": [
+        {"predicate": 0, "subject": null, "object": 1, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "negative_auxiliary",
+      "defect": "S8",
+      "sentence": "Sami ei syö puuroa.",
+      "clauses": 1,
+      "predicate_tokens": 1,
+      "words": [
+        {"text": "Sami", "role": "subject", "case": "nominative"},
+        {"text": "ei"},
+        {"text": "syö", "role": "predicate", "lemma": "syödä"},
+        {"text": "puuroa", "role": "object", "case": "partitive", "head": 2}
+      ],
+      "clause_roles": [
+        {"predicate": 2, "subject": 0, "object": 3, "negative": true, "existential": false}
+      ]
+    },
+    {
+      "id": "perfect_tense",
+      "defect": "S9",
+      "sentence": "Olen lukenut kirjan.",
+      "clauses": 1,
+      "predicate_tokens": 1,
+      "words": [
+        {"text": "Olen"},
+        {"text": "lukenut", "role": "predicate", "lemma": "lukea"},
+        {"text": "kirjan", "role": "object", "confidence": "likely", "case": "genitive", "head": 1}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": null, "object": 2, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "necessive_modal",
+      "defect": "S10,S17",
+      "sentence": "Minun täytyy mennä.",
+      "clauses": 2,
+      "words": [
+        {"text": "Minun", "role": "subject", "confidence": "likely", "case": "genitive", "head": 1},
+        {"text": "täytyy", "role": "predicate", "confidence": "likely", "lemma": "täytyä"},
+        {"text": "mennä", "role": "predicate", "confidence": "likely", "lemma": "mennä"}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": 0, "object": null, "negative": false, "existential": false},
+        {"predicate": 2, "subject": 0, "object": null, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "ablative_complement",
+      "defect": "S15",
+      "sentence": "Hän näyttää väsyneeltä.",
+      "clauses": 1,
+      "words": [
+        {"text": "Hän", "role": "subject", "case": "nominative"},
+        {"text": "näyttää", "role": "predicate", "confidence": "likely", "lemma": "näyttää"},
+        {"text": "väsyneeltä", "role": "complement", "confidence": "likely", "case": "ablative", "head": 1}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": 0, "object": null, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "translative_complement",
+      "defect": "S15",
+      "sentence": "Talo maalattiin punaiseksi.",
+      "clauses": 1,
+      "words": [
+        {"text": "Talo", "role": "object", "case": "nominative", "head": 1},
+        {"text": "maalattiin", "role": "predicate", "lemma": "maalata"},
+        {"text": "punaiseksi", "role": "complement", "confidence": "likely", "case": "translative", "head": 1}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": null, "object": 0, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "recipient_vs_theme",
+      "defect": "S2,S16",
+      "sentence": "Sami antoi Liisalle kirjan.",
+      "clauses": 1,
+      "words": [
+        {"text": "Sami", "role": "subject", "case": "nominative"},
+        {"text": "antoi", "role": "predicate", "lemma": "antaa"},
+        {"text": "Liisalle", "role": "adverbial", "confidence": "likely", "case": "allative", "head": 1},
+        {"text": "kirjan", "role": "object", "confidence": "likely", "case": "genitive", "head": 1}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": 0, "object": 3, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "numeral_phrase",
+      "defect": "S14",
+      "sentence": "Hänellä on kaksi lasta.",
+      "clauses": 1,
+      "words": [
+        {"text": "Hänellä", "role": "adverbial", "case": "adessive", "head": 1},
+        {"text": "on", "role": "predicate", "lemma": "olla"},
+        {"text": "kaksi", "role": "subject", "confidence": "likely", "case": "nominative", "head": 1},
+        {"text": "lasta", "role": "modifier", "confidence": "likely", "case": "partitive", "head": 2}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": 2, "object": null, "negative": false, "existential": true}
+      ]
+    },
+    {
+      "id": "postposition_locative",
+      "defect": "S13",
+      "sentence": "Pöydän alla on kissa.",
+      "clauses": 1,
+      "words": [
+        {"text": "Pöydän", "role": "modifier", "confidence": "likely", "case": "genitive", "head": 1},
+        {"text": "alla", "role": "adverbial", "confidence": "likely", "head": 2},
+        {"text": "on", "role": "predicate", "lemma": "olla"},
+        {"text": "kissa", "role": "subject", "confidence": "likely", "case": "nominative", "head": 2}
+      ],
+      "clause_roles": [
+        {"predicate": 2, "subject": 3, "object": null, "negative": false, "existential": true}
+      ]
+    },
+    {
+      "id": "proper_name_adessive",
+      "defect": "S2,S12",
+      "sentence": "Helsingissä asuva mies on opettaja.",
+      "clauses": 1,
+      "words": [
+        {"text": "Helsingissä", "role": "adverbial", "confidence": "likely", "case": "inessive", "head": 1},
+        {"text": "asuva", "role": "modifier", "confidence": "weak", "head": 2},
+        {"text": "mies", "role": "subject", "confidence": "likely", "case": "nominative", "head": 3},
+        {"text": "on", "role": "predicate", "lemma": "olla"},
+        {"text": "opettaja", "role": "complement", "case": "nominative", "head": 3}
+      ],
+      "clause_roles": [
+        {"predicate": 3, "subject": 2, "object": null, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "genitive_modifier_subject",
+      "defect": "S12",
+      "sentence": "Matin auto on punainen.",
+      "clauses": 1,
+      "words": [
+        {"text": "Matin", "role": "modifier", "confidence": "likely", "case": "genitive", "head": 1},
+        {"text": "auto", "role": "subject", "confidence": "likely", "case": "nominative", "head": 2},
+        {"text": "on", "role": "predicate", "lemma": "olla"},
+        {"text": "punainen", "role": "complement", "case": "nominative", "head": 2}
+      ],
+      "clause_roles": [
+        {"predicate": 2, "subject": 1, "object": null, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "subordinate_subject_sharing",
+      "defect": "S17",
+      "sentence": "Sami söi puuron, koska oli nälkäinen.",
+      "clauses": 2,
+      "words": [
+        {"text": "Sami", "role": "subject", "case": "nominative"},
+        {"text": "söi", "role": "predicate", "lemma": "syödä"},
+        {"text": "puuron", "role": "object", "case": "genitive", "head": 1},
+        {"text": "koska", "role": "unknown", "confidence": "weak"},
+        {"text": "oli", "role": "predicate", "lemma": "olla"},
+        {"text": "nälkäinen", "role": "complement", "case": "nominative", "head": 4}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": 0, "object": 2, "negative": false, "existential": false},
+        {"predicate": 4, "subject": 0, "object": null, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "seka_etta",
+      "defect": "S6",
+      "sentence": "Sekä Sami että Liisa tulivat.",
+      "clauses": 1,
+      "words": [
+        {"text": "Sekä", "role": "unknown", "confidence": "weak"},
+        {"text": "Sami", "role": "subject", "case": "nominative"},
+        {"text": "että", "role": "unknown", "confidence": "weak"},
+        {"text": "Liisa", "role": "subject", "case": "nominative"},
+        {"text": "tulivat", "role": "predicate", "lemma": "tulla"}
+      ]
+    },
+    {
+      "id": "joko_tai",
+      "defect": "S6",
+      "sentence": "Joko Sami tai Liisa tulee.",
+      "clauses": 1,
+      "words": [
+        {"text": "Joko", "role": "unknown", "confidence": "weak"},
+        {"text": "Sami", "role": "subject", "case": "nominative"},
+        {"text": "tai", "role": "unknown", "confidence": "weak"},
+        {"text": "Liisa", "role": "subject", "case": "nominative"},
+        {"text": "tulee", "role": "predicate", "lemma": "tulla"}
+      ]
+    },
+    {
+      "id": "name_table_false_positive",
+      "defect": "S12",
+      "sentence": "Vanha talo Helsingissä on kaunis.",
+      "clauses": 1,
+      "words": [
+        {"text": "Vanha", "role": "modifier", "confidence": "weak", "head": 1},
+        {"text": "talo", "role": "subject", "confidence": "likely", "case": "nominative", "head": 3},
+        {"text": "Helsingissä", "role": "adverbial", "confidence": "likely", "case": "inessive", "head": 1},
+        {"text": "on", "role": "predicate", "lemma": "olla"},
+        {"text": "kaunis", "role": "complement", "case": "nominative", "head": 3}
+      ],
+      "clause_roles": [
+        {"predicate": 3, "subject": 1, "object": null, "negative": false, "existential": false}
+      ]
+    },
+    {
+      "id": "negative_clitic_question",
+      "defect": "S3,S8",
+      "sentence": "Eikö hän tullut?",
+      "clauses": 1,
+      "predicate_tokens": 1,
+      "words": [
+        {"text": "Eikö"},
+        {"text": "hän", "role": "subject", "confidence": "likely", "case": "nominative", "head": 2},
+        {"text": "tullut", "role": "predicate", "confidence": "weak", "lemma": "tulla"}
+      ],
+      "clause_roles": [
+        {"predicate": 2, "subject": 1, "object": null, "negative": true, "existential": false}
+      ]
+    }
+  ]
+}
