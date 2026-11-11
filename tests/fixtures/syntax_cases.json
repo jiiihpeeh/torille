@@ -222,7 +222,6 @@
     },
     {
       "id": "clitic_question",
-      "defect": "S13",
       "sentence": "Onko sinulla kirjaa?",
       "clauses": 1,
       "words": [
@@ -317,7 +316,6 @@
     },
     {
       "id": "ablative_complement",
-      "defect": "S15",
       "sentence": "Hän näyttää väsyneeltä.",
       "clauses": 1,
       "words": [
@@ -331,7 +329,6 @@
     },
     {
       "id": "translative_complement",
-      "defect": "S15",
       "sentence": "Talo maalattiin punaiseksi.",
       "clauses": 1,
       "words": [
@@ -345,7 +342,7 @@
     },
     {
       "id": "recipient_vs_theme",
-      "defect": "S2,S16",
+      "defect": "S2",
       "sentence": "Sami antoi Liisalle kirjan.",
       "clauses": 1,
       "words": [
@@ -360,7 +357,6 @@
     },
     {
       "id": "numeral_phrase",
-      "defect": "S14",
       "sentence": "Hänellä on kaksi lasta.",
       "clauses": 1,
       "words": [
@@ -375,7 +371,6 @@
     },
     {
       "id": "postposition_locative",
-      "defect": "S13",
       "sentence": "Pöydän alla on kissa.",
       "clauses": 1,
       "words": [
@@ -390,7 +385,7 @@
     },
     {
       "id": "proper_name_adessive",
-      "defect": "S2,S12",
+      "defect": "S2",
       "sentence": "Helsingissä asuva mies on opettaja.",
       "clauses": 1,
       "words": [
@@ -420,7 +415,6 @@
     },
     {
       "id": "subordinate_subject_sharing",
-      "defect": "S17",
       "sentence": "Sami söi puuron, koska oli nälkäinen.",
       "clauses": 2,
       "words": [
@@ -462,7 +456,7 @@
     },
     {
       "id": "name_table_false_positive",
-      "defect": "S12",
+      "defect": "S2",
       "sentence": "Vanha talo Helsingissä on kaunis.",
       "clauses": 1,
       "words": [

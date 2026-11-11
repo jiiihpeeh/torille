@@ -26,7 +26,7 @@ use crate::expand::find_bases_with_form_filter;
 use crate::kotus::lemmas;
 use crate::sentence::{self, SentenceSpan};
 use crate::spec::Catalogues;
-use crate::tags::{Case, Mood, PartOfSpeech, Polarity, Tags, add_reading};
+use crate::tags::{Case, Mood, PartOfSpeech, Person, Polarity, Tags, add_reading};
 use crate::tokenise::Token;
 
 /// What a token is doing in its sentence.
@@ -1022,6 +1022,9 @@ fn resolve_clause(
         .unwrap_or(0);
     let before = &words[..predicate_position];
     let after = &words[predicate_position + 1..];
+    // A postposition and its genitive modifier (`Pöydän alla`) must be a
+    // locative phrase before the existential test runs.
+    mark_adpositions(&words, predicate, out);
 
     let passive = predicate_is_passive(predicate, out);
     // The negative auxiliary is the only thing that makes a clause negative.
@@ -1045,13 +1048,16 @@ fn resolve_clause(
     let lemma = out[predicate].lemma.clone().unwrap_or_default();
     let is_olla = lemma == "olla";
     let is_change = matches!(lemma.as_str(), "tulla" | "tulee");
-    let locative_before = before.iter().any(|&index| {
-        out[index].role == SyntacticRole::Adverbial && out[index].case.is_some_and(is_local_case)
-    });
+    // The locative may precede the predicate (`Pöydällä on kirja`) or follow
+    // it in a question (`Onko sinulla kirjaa?`).
+    let locative = before
+        .iter()
+        .chain(after)
+        .any(|&index| is_locative_adverbial(index, tokens, out));
     let nominative_after = after.iter().any(|&index| {
         is_nominal(&out[index]) && has_case(&out[index], &[Case::Nominative, Case::Partitive])
     });
-    clause.existential = is_olla && locative_before && nominative_after;
+    clause.existential = is_olla && locative && nominative_after;
 
     let genitive_before = before.iter().rev().copied().find(|&index| {
         out[index].role == SyntacticRole::Unknown
@@ -1114,7 +1120,10 @@ fn resolve_clause(
     // predicate is the object of a negative/existential clause, and a
     // genitive is the total object. This is what keeps `Luen kirjaa` an
     // object while `roihusi tuli` gets its subject.
-    if subject.is_none() && !passive && !passive_construction && !imperative {
+    // A copula's post-predicate nominative is its complement (`koska oli
+    // nälkäinen`), not a subject. The existential case above is the exception
+    // and is already handled.
+    if subject.is_none() && !passive && !passive_construction && !imperative && !is_olla {
         subject = after.iter().copied().find(|&index| {
             out[index].role == SyntacticRole::Unknown
                 && is_nominal(&out[index])
@@ -1135,6 +1144,7 @@ fn resolve_clause(
         out[index].head = Some(predicate);
         clause.subject = Some(index);
         mark_coordinated_subjects(before, index, predicate, tokens, out);
+        mark_numeral_complement(index, &words, out);
     }
 
     let object_cases: &[Case] = if negative {
@@ -1175,6 +1185,29 @@ fn resolve_clause(
         out[index].head = Some(predicate);
         clause.object = Some(index);
         mark_coordinated_objects(after, index, predicate, object_cases, tokens, out);
+        mark_numeral_complement(index, &words, out);
+    }
+
+    // A small productive valency table for verbs whose complement is a case
+    // that would otherwise read as an adverbial: `näyttää väsyneeltä`,
+    // `maalattiin punaiseksi`.
+    if let Some(complement_cases) = predicate_complement_cases(&lemma) {
+        let complement = after.iter().copied().find(|&index| {
+            matches!(
+                out[index].role,
+                SyntacticRole::Unknown | SyntacticRole::Adverbial
+            ) && is_nominal(&out[index])
+                && has_case(&out[index], complement_cases)
+                && !is_clause_marker(index, tokens, out)
+        });
+        if let Some(index) = complement {
+            out[index].role = SyntacticRole::Complement;
+            // The verb's valency, not the word's other readings, licenses
+            // this case.
+            out[index].confidence = RoleConfidence::Likely;
+            out[index].case = best_case(&out[index], complement_cases);
+            out[index].head = Some(predicate);
+        }
     }
 
     if is_olla || is_change {
@@ -1249,6 +1282,41 @@ fn passive_participle_after(after: &[usize], out: &[TokenSyntax]) -> bool {
     })
 }
 
+/// Mark a postposition and its genitive modifier as one locative phrase.
+///
+/// `Pöydän alla` is a postposition phrase, not a nominative `alla` subject:
+/// `alla` is the adverbial the predicate governs, and `Pöydän` is its
+/// genitive modifier. The genitive is caught here before the object pass
+/// would offer it to a verb.
+fn mark_adpositions(words: &[usize], predicate: usize, out: &mut [TokenSyntax]) {
+    for (position, &index) in words.iter().enumerate() {
+        if out[index].role != SyntacticRole::Unknown
+            || !out[index]
+                .readings
+                .iter()
+                .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Postposition))
+        {
+            continue;
+        }
+        if position > 0 {
+            let modifier = words[position - 1];
+            if out[modifier].role == SyntacticRole::Unknown
+                && is_nominal(&out[modifier])
+                && has_case(&out[modifier], &[Case::Genitive])
+            {
+                out[modifier].role = SyntacticRole::Modifier;
+                out[modifier].confidence = RoleConfidence::Likely;
+                out[modifier].case = Some(Case::Genitive);
+                out[modifier].head = Some(index);
+            }
+        }
+        out[index].role = SyntacticRole::Adverbial;
+        out[index].confidence = RoleConfidence::Likely;
+        out[index].case = None;
+        out[index].head = Some(predicate);
+    }
+}
+
 /// Attributes, genitive modifiers, titles, and appositions.
 fn mark_modifiers(
     words: &[usize],
@@ -1298,6 +1366,33 @@ fn mark_modifiers(
                 out[index].head = Some(next);
             }
         }
+    }
+}
+
+/// Mark the counted noun of a numeral phrase: `kaksi lasta`, `kaksi miestä`.
+///
+/// The numeral is the head (subject or object); the following partitive is
+/// its modifier, not an independent complement. The partitive reading is
+/// chosen explicitly because `lasta` also has a lexical nominative reading.
+fn mark_numeral_complement(head: usize, words: &[usize], out: &mut [TokenSyntax]) {
+    let is_numeral = out[head]
+        .readings
+        .iter()
+        .any(|reading| matches!(reading.part_of_speech, Some(PartOfSpeech::Numeral)));
+    if !is_numeral {
+        return;
+    }
+    let Some(&next) = words.iter().find(|&&index| index > head) else {
+        return;
+    };
+    if out[next].role == SyntacticRole::Unknown
+        && is_nominal(&out[next])
+        && has_case(&out[next], &[Case::Partitive])
+    {
+        out[next].role = SyntacticRole::Modifier;
+        out[next].confidence = RoleConfidence::Likely;
+        out[next].case = Some(Case::Partitive);
+        out[next].head = Some(head);
     }
 }
 
@@ -1402,9 +1497,97 @@ fn share_clause_roles(
                 .iter()
                 .any(|reading| matches!(reading.mood, Some(Mood::Infinitive | Mood::Instructive)))
         });
-        if starts_with_coordinator || predicate_is_non_finite {
+        // A dropped subject in a subordinate clause is recoverable from
+        // agreement: `Sami söi, koska oli nälkäinen`. First/second person
+        // (`Kun hän tuli, söin`) must not inherit the previous subject.
+        let predicate_is_third_person = clauses[index].predicate.is_some_and(|predicate| {
+            !predicate_is_passive(predicate, out)
+                && out[predicate].readings.iter().any(|reading| {
+                    is_finite_predicate(reading) && reading.person == Some(Person::Third)
+                })
+        });
+        if starts_with_coordinator || predicate_is_non_finite || predicate_is_third_person {
             clauses[index].subject = clauses[index - 1].subject;
         }
+    }
+}
+
+/// Local adverbs and postpositions that function as the locative of an
+/// existential without carrying a case of their own (`Pöydän alla on kissa`).
+const LOCAL_ADVERBS: &[&str] = &[
+    "alla",
+    "alta",
+    "alle",
+    "päällä",
+    "päältä",
+    "päälle",
+    "sisällä",
+    "sisältä",
+    "sisälle",
+    "ulkona",
+    "ulkoa",
+    "ulko",
+    "vieressä",
+    "vierestä",
+    "viereen",
+    "luona",
+    "luota",
+    "luo",
+    "kotona",
+    "kotoa",
+    "kotiin",
+    "täällä",
+    "täältä",
+    "tänne",
+    "siellä",
+    "sieltä",
+    "sinne",
+    "tuolla",
+    "tuolta",
+    "tuonne",
+    "ylhäällä",
+    "alhaalla",
+    "lähellä",
+    "kaukana",
+    "välissä",
+    "keskellä",
+    "edessä",
+    "takana",
+    "rinnalla",
+    "mukana",
+    "poissa",
+    "paikalla",
+    "matkalla",
+];
+
+/// An adverbial that can be the locative of an existential.
+fn is_locative_adverbial(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
+    out[index].role == SyntacticRole::Adverbial
+        && (out[index].case.is_some_and(is_local_case)
+            || out[index]
+                .readings
+                .iter()
+                .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Postposition))
+            || LOCAL_ADVERBS.contains(&tokens[index].text.to_lowercase().as_str()))
+}
+
+const ABLATIVE_COMPLEMENT: &[Case] = &[Case::Ablative];
+const TRANSLATIVE_COMPLEMENT: &[Case] = &[Case::Translative];
+
+/// The complement case of a small, productive verb family.
+///
+/// The generic case classifier calls these adverbials because the case is
+/// local (`väsyneeltä`) or a result state (`punaiseksi`). Their verb governs
+/// the case, so a closed table is enough and no suffix rule is involved.
+fn predicate_complement_cases(lemma: &str) -> Option<&'static [Case]> {
+    match lemma {
+        "näyttää" | "tuntua" | "vaikuttaa" | "kuulostaa" | "haisahtaa" | "maistua" => {
+            Some(ABLATIVE_COMPLEMENT)
+        }
+        "maalata" | "värittää" | "kutsua" | "nimittää" | "valita" | "tehdä" => {
+            Some(TRANSLATIVE_COMPLEMENT)
+        }
+        _ => None,
     }
 }
 

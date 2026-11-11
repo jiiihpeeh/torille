@@ -1,6 +1,6 @@
 # PLAN_SYNTAX — making the advisory syntax layer trustworthy
 
-Status: audit and fixture complete; Phases 1–3 landed (S1, S3–S11; S2
+Status: audit and fixture complete; Phases 1–4 landed (S1, S3–S18; S2
 partial). Work happens on the `syntax` branch off `master`.
 
 The syntax layer (`src/syntax.rs`) is the second, on-demand layer over the
@@ -357,6 +357,13 @@ set (`alla`, `alla`, `päällä`, `sisällä`, `luona`, `vieressä`, ...) counts
 the locative. Prefer a small closed set or the `PartOfSpeech::Postposition` /
 `Adverb` reading, not a suffix rule.
 
+**Phase 4 landing.** `mark_adpositions` turns `Pöydän alla` into a genitive
+modifier plus a postposition adverbial, and `is_locative_adverbial` accepts
+either a local case or one of the closed local adverbs/postpositions. The
+existential locative is now found on either side of the predicate, so
+`Onko sinulla kirjaa?` has `kirjaa` as subject. `Kirja on pöydällä` remains a
+predicate + adverbial, not an existential.
+
 **S14. Numeral phrases pick the counted noun as the head.**
 `Hänellä on kaksi lasta.` makes `kaksi` subject and `lasta` complement; the
 partitive `lasta` also has a spurious nominative reading (`lasta` = splinter),
@@ -366,6 +373,11 @@ Fix direction: when a numeral (`kaksi`, `kolme`, `monta`, ...) is followed by
 a partitive nominal, the numeral is the subject/object and the counted noun is
 a `Modifier` with `head = numeral` and `case = Partitive`. Use the numeral's
 POS (S1) and the partitive reading, not the first case in the array.
+
+**Phase 4 landing.** `mark_numeral_complement` links the following partitive
+to a numeral subject or object. `kaksi` is the subject/object and `lasta` is
+a `Modifier` with `case = Partitive`, so the spurious nominative reading of
+`lasta` no longer wins.
 
 **S15. Valency complements are only recognised after `olla` and `tulla`.**
 `Hän näyttää väsyneeltä.` -> `väsyneeltä` is adverbial (ablative); expected
@@ -383,6 +395,13 @@ Fix direction: a small predicate-valency table for the productive cases:
 Keep it a table in `syntax.rs`; do not rewrite the case classifier. The
 adverbial-case fallback remains for verbs the table does not know.
 
+**Phase 4 landing.** `predicate_complement_cases` implements the ablative
+and translative rows; a reading that classify called `Adverbial` is promoted
+to `Complement` for those verbs. `Hän näyttää väsyneeltä` and `Talo
+maalattiin punaiseksi` now pass. The `pitää` essive row is not in the table
+yet; the existing copula complement handles `pitää häntä hulluna` only if
+the verb is recognised as a copula, which it is not.
+
 **S16. The first nominal after the predicate becomes the object, even when it
 is a recipient.**
 `Sami antoi Liisalle kirjan.` makes `Liisalle` the object (and, via S2, calls
@@ -395,6 +414,11 @@ Fix direction: object selection ranks cases (accusative/genitive > partitive >
 nominative) and skips allative/ablative when a later theme candidate exists.
 Recipient marking can stay `Adverbial` with a `head` of the predicate; a
 dedicated `IndirectObject` role is out of scope for this branch.
+
+**Phase 4 landing.** The allative is not in the object case set, so
+`Sami antoi Liisalle kirjan` gives `kirjan` the object role. `Liisalle` is
+still `Unknown` because its proper-name case is missing (S2); once the case
+column lands it becomes an allative `Adverbial`.
 
 **S17. Subject sharing is limited to coordination and non-finite clauses.**
 `Sami söi puuron, koska oli nälkäinen.` leaves the second clause subjectless;
@@ -409,6 +433,12 @@ predicate). Do not share when the predicate is first/second person and the
 previous subject is third. This needs `Person`/`Number` on the selected
 reading, not just the lemma.
 
+**Phase 4 landing.** `share_clause_roles` also shares when the predicate has a
+third-person finite reading and is not passive. `Sami söi puuron, koska oli
+nälkäinen` shares `Sami`; `Kun hän tuli, söin` does not, because `söin` is
+first person. The post-predicate-subject rule is disabled for `olla`, so the
+`söin`-style clause keeps `nälkäinen` as the copula complement.
+
 **S18. Function words leak into nominal roles.**
 `Kun`, `Missä`, `Eilen`, `Joko`, `Sekä`, `ja`, `että` all have nominal
 readings from S1 and can become subjects, objects or modifiers. `classify`
@@ -419,6 +449,12 @@ Fix direction: one `is_function_word(index, out)` gate for conjunction,
 subordinator, relative, postposition, and the closed adverb/pronoun set. Use
 it in subject/object/complement/modifier selection. Reuse the existing
 `is_clause_marker` and extend it, rather than adding a second list.
+
+**Phase 1/4 landing.** The source-lemma POS correction (S1) plus the
+`role == Unknown` gate and the extended `is_clause_marker` (coordination,
+subordinator, relative surface/lemma) keep the function words out of subject,
+object, complement and modifier assignment. `Kun`, `Joko`, `Sekä`, `ja` and
+`että` are no longer candidates.
 
 **S19. Clause and token API gaps.**
 `Auxiliary` now exists in the token stream (Phase 3). `Clause` has
@@ -471,8 +507,8 @@ with a role-rule change.
       matches all of them, so an xfail cannot go stale.
 - [x] One `#[test]` per case (macro at the bottom of the runner), so the
       expensive morphology runs in parallel and a failure names the sentence.
-- [x] 34 cases: 25 pin behaviour that is already correct, 9 are
-      defect-marked gates for the remaining phases.
+- [x] 34 cases: 31 pin behaviour that is already correct, 3 are
+      defect-marked gates for the remaining proper-name case work.
 - [x] `examples/syntax_probe.rs` remains the human view over a wider corpus,
       including sentences the fixture does not pin yet.
 
@@ -540,22 +576,26 @@ kirjan.` has `kirjan` as object; `Minun täytyy mennä.` has a genitive subject
 and an infinitive clause that shares it; `Eikö hän tullut?` has `hän` as
 subject. `Talo on rakennettu` gives `Talo` the logical-object role.
 
-### Phase 4 — nominal roles (S12–S18)
+### Phase 4 — nominal roles (S12–S18) — landed, S2 cases open
 
-- [ ] Case-gated subject selection; no proper-name shortcut.
-- [ ] Postpositional existential.
-- [ ] Numeral phrase.
-- [ ] Valency complements table.
-- [ ] Recipient vs theme object ranking.
-- [ ] Agreement-based subject sharing.
-- [ ] Extend the function-word gate.
+- [x] Case-gated subject selection; no proper-name shortcut. The only name
+      tie-breaker requires a capitalized lemma plus nominative/partitive.
+- [x] Postpositional existential; locative on either side of the predicate.
+- [x] Numeral phrase.
+- [x] Valency complements table (ablative and translative).
+- [x] Recipient vs theme object ranking: the allative is excluded from the
+      object cases, so `kirjan` is the object. `Liisalle` itself still needs
+      the proper-name case (S2).
+- [x] Agreement-based subject sharing.
+- [x] Extend the function-word gate (relative forms, `että` pair, role gates).
 
-Acceptance: `Matin auto on punainen.` -> `Matin` modifier, `auto` subject.
-`Helsingissä asuva mies on opettaja.` -> `Helsingissä` adverbial, `mies`
-subject, `asuva` modifier. `Hänellä on kaksi lasta.` -> `kaksi` subject,
-`lasta` modifier. `Pöydän alla on kissa.` -> `kissa` subject.
-`Sami antoi Liisalle kirjan.` -> `kirjan` object, `Liisalle` adverbial.
-`Sami söi puuron, koska oli nälkäinen.` -> second clause shares `Sami`.
+Acceptance (passing): `Matin auto on punainen.` -> `Matin` modifier, `auto`
+subject. `Hänellä on kaksi lasta.` -> `kaksi` subject, `lasta` modifier.
+`Pöydän alla on kissa.` -> `kissa` subject, `alla` adverbial.
+`Sami antoi Liisalle kirjan.` -> `kirjan` object (the recipient role awaits
+S2). `Sami söi puuron, koska oli nälkäinen.` -> second clause shares `Sami`.
+`Helsingissä asuva mies on opettaja.` still needs the name case for
+`Helsingissä`; `mies` is already the subject.
 
 ### Phase 5 — API and wasm contract (S19)
 
