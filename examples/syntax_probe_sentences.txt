@@ -1,0 +1,76 @@
+# -- baseline ------------------------------------------------------------
+Sami söi aamupuuronsa.
+Pöydällä on kirja.
+Minulla on kirja.
+Kirja on pöydällä.
+Talo on kaunis.
+Hän tuli iloiseksi.
+En syö puuroa.
+Sami ei syö puuroa.
+Talo rakennettiin.
+Talo on rakennettu.
+Minun on mentävä.
+Minun täytyy mennä.
+Hänen pitää mennä.
+Sami haluaa syödä puuron.
+Sami söi puuron ja joi maidon.
+Sami ja Liisa söivät.
+Sami söi puuron ja Liisa joi maidon.
+Sami ja Liisa söivät ja joivat.
+
+# -- relative and subordinate clauses -----------------------------------
+Mies, joka tuli, söi.
+Mies, jonka näin, söi.
+Mies jonka näin söi.
+Talo, jossa asun, on vanha.
+Se, mitä sanoit, on totta.
+Hän sanoi, että tulee.
+Sami söi puuron, koska oli nälkäinen.
+Kun hän tuli, söin.
+Jos hän tulee, lähden.
+Vaikka hän on väsynyt, hän jatkaa.
+Sekä Sami että Liisa tulivat.
+Joko Sami tai Liisa tulee.
+Hän tuli tupaan, jossa roihusi tuli.
+
+# -- questions and imperatives ------------------------------------------
+Onko sinulla kirjaa?
+Missä sinä olet?
+Mitä sinä teet?
+Anna kirja minulle.
+Syö puuro!
+Älä syö puuroa.
+
+# -- arguments and valency ----------------------------------------------
+Hän rakastaa sinua.
+Minä näen hänet.
+Ajattelen sinua.
+Kuuntelen musiikkia.
+Autan sinua.
+Minä pidän sinusta.
+Hän on opettaja.
+Hänestä tuli opettaja.
+Sataa.
+Eilen satoi lunta.
+Ulkona tuulee.
+
+# -- noun phrases -------------------------------------------------------
+Matin auto on punainen.
+Kaksi miestä tuli.
+Hänellä on kaksi lasta.
+Pöydän alla on kissa.
+Tämä kirja on hyvä.
+Punainen auto on nopea.
+Vanha talo Helsingissä on kaunis.
+Sami Ruotsalainen söi puuron.
+Helsingissä asuva mies on opettaja.
+
+# -- tense, auxiliaries and valency -------------------------------------
+Olen lukenut kirjan.
+Kirjaa ei ole luettu.
+Minun täytyy lukea kirja.
+Hän näyttää väsyneeltä.
+Talo maalattiin punaiseksi.
+Sami antoi Liisalle kirjan.
+Sami antoi kirjan Liisalle.
+Eikö hän tullut?
