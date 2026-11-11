@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "torille",
-  "version": "0.1.0",
+  "version": "0.5.0",
   "description": "Finnish spell-check via the torille wasm; replaces the browser's hunspell for text inputs.",
   "icons": {
     "16": "icons/icon-16.png",
