@@ -183,13 +183,19 @@ fn analyze_with(
             && token.is_capitalised()
             && let Some(name) = crate::expand::proper_names::lemma(&token.text)
         {
-            // The name table knows the lemma but not the case. Only the
-            // citation spelling is safely nominative; an inflected name
-            // (`Helsingissä`, `Liisalle`) gets a case-less reading rather
-            // than a guessed nominative, so it cannot become a subject or
-            // object by accident. See PLAN_SYNTAX.md S2 for the case column
-            // that will replace this.
-            add_reading(&mut readings, proper_name_reading(&token.text, name));
+            // The name table carries the case the generator saw
+            // (`Helsingissä` is inessive). A curated extra or an unknown
+            // name has no recorded case; the fallback gives the citation
+            // spelling a nominative and leaves an inflected form case-less,
+            // so it cannot become a subject or object by accident.
+            add_reading(
+                &mut readings,
+                proper_name_reading(
+                    &token.text,
+                    name,
+                    crate::expand::proper_names::case(&token.text),
+                ),
+            );
             lemma = Some(name.to_string());
             nominal_lemmas[index] = Some(name.to_string());
         }
@@ -642,11 +648,13 @@ fn is_adverbial_case(case: Case) -> bool {
 
 /// A reading for a recognized proper name.
 ///
-/// The citation spelling is nominative. Any other form is a case the name
-/// table does not carry, so it stays case-less: role selection then leaves it
-/// `Unknown` instead of inventing a nominative.
-fn proper_name_reading(surface: &str, lemma: &str) -> Tags {
-    if surface.eq_ignore_ascii_case(lemma) {
+/// A recorded case wins. Without one, the citation spelling is nominative and
+/// any other form stays case-less: role selection then leaves it `Unknown`
+/// instead of inventing a nominative.
+fn proper_name_reading(surface: &str, lemma: &str, case: Option<Case>) -> Tags {
+    if let Some(case) = case {
+        Tags::nominal(case).of_pos(PartOfSpeech::Noun)
+    } else if surface.eq_ignore_ascii_case(lemma) {
         Tags::nominal(Case::Nominative).of_pos(PartOfSpeech::Noun)
     } else {
         Tags::UNKNOWN.of_pos(PartOfSpeech::Noun)
@@ -673,6 +681,15 @@ fn is_nominal_pos(pos: Option<PartOfSpeech>) -> bool {
                 | PartOfSpeech::Ordinal
         )
     )
+}
+
+/// A participle used as a prenominal attribute (`Helsingissä asuva mies`).
+fn is_participle_attribute(index: usize, out: &[TokenSyntax]) -> bool {
+    out[index].readings.iter().any(|reading| {
+        reading.part_of_speech == Some(PartOfSpeech::Verb)
+            && reading.case.is_some()
+            && reading.mood != Some(Mood::Infinitive)
+    })
 }
 
 /// Whether any reading of a token is nominal.
@@ -1057,7 +1074,14 @@ fn resolve_clause(
     let nominative_after = after.iter().any(|&index| {
         is_nominal(&out[index]) && has_case(&out[index], &[Case::Nominative, Case::Partitive])
     });
-    clause.existential = is_olla && locative && nominative_after;
+    // A nominative before the predicate is the subject of a copula
+    // (`Helsingissä asuva mies on opettaja`), not an existential's postverbal
+    // subject. Without this gate the locative of a modifying phrase would make
+    // every `on` clause existential.
+    let nominative_before = before
+        .iter()
+        .any(|&index| is_nominal(&out[index]) && has_case(&out[index], &[Case::Nominative]));
+    clause.existential = is_olla && locative && nominative_after && !nominative_before;
 
     let genitive_before = before.iter().rev().copied().find(|&index| {
         out[index].role == SyntacticRole::Unknown
@@ -1327,7 +1351,7 @@ fn mark_modifiers(
 ) {
     for &index in words {
         if out[index].role != SyntacticRole::Unknown
-            || !is_nominal(&out[index])
+            || (!is_nominal(&out[index]) && !is_participle_attribute(index, out))
             || is_clause_marker(index, tokens, out)
         {
             continue;
@@ -1802,16 +1826,15 @@ mod tests {
         assert_eq!(analysis.tokens[talo].role, SyntacticRole::Object);
     }
 
-    /// The name table knows the forms but not their cases. Only the citation
-    /// spelling is safely nominative; `Helsingissä` must not become a
-    /// nominative subject just because the form is capitalized.
+    /// The name table records the case the generator saw; `Helsingissä` is an
+    /// inessive adverbial, not a nominative subject.
     #[test]
-    fn an_inflected_name_is_not_guessed_nominative() {
+    fn an_inflected_name_keeps_its_recorded_case() {
         let (tokens, analysis) = analyzed("Helsingissä asuva mies on opettaja.");
         let helsinki = word_index(&tokens, "Helsingissä");
         let mies = word_index(&tokens, "mies");
-        assert_eq!(analysis.tokens[helsinki].case, None);
-        assert_eq!(analysis.tokens[helsinki].role, SyntacticRole::Unknown);
+        assert_eq!(analysis.tokens[helsinki].case, Some(Case::Inessive));
+        assert_eq!(analysis.tokens[helsinki].role, SyntacticRole::Adverbial);
         assert_eq!(analysis.tokens[mies].role, SyntacticRole::Subject);
     }
 

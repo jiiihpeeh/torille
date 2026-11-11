@@ -1,7 +1,7 @@
 # PLAN_SYNTAX — making the advisory syntax layer trustworthy
 
-Status: audit and fixture complete; Phases 1–4 landed (S1, S3–S18; S2
-partial). Work happens on the `syntax` branch off `master`.
+Status: audit and fixture complete; Phases 1–4 landed (S1–S18). Work happens
+on the `syntax` branch off `master`.
 
 The syntax layer (`src/syntax.rs`) is the second, on-demand layer over the
 morphology engine. It is **not** in the keystroke path; its only shipping
@@ -95,14 +95,15 @@ emit `(form, name, case)` and add a `proper_names::case(form)` lookup (a small
 parallel map is enough), then prefer that reading over the synthetic
 nominative. This is a data + build-script change and should be its own commit.
 
-**S2 interim (Phase 1).** The syntax layer now uses the name table's lemma
-(`Helsingissä` -> `Helsing`) and assigns the nominative only when the surface
-equals that lemma. An inflected name therefore has a noun reading and no
-case, which keeps it out of subject/object selection instead of inventing a
-nominative. This fixes `Matin auto` and stops `Helsingissä` becoming a
-subject, but it does **not** recover the inessive/allative.
-`proper_name_adessive` and `recipient_vs_theme` remain defect rows for that
-reason.
+**S2 landing.** The generator now writes `form`, `name`, and the Omorfi case
+code (`NOM`, `INE`, `ALL`, ...). `build.rs` emits a `form -> case` map
+(`proper_name_cases.bin`), exposed as `proper_names::case(form)`, which also
+follows a clitic or possessive host. The syntax layer uses the recorded case
+when it exists and falls back to the citation-nominative / case-less rule for
+extras and unknown names. `Helsingissä` is inessive, `Liisalle` allative, and
+`Matin auto` gets its genitive modifier. The regeneration has to run in one
+Omorfi process: the old 10-name measurement was almost all model load, and
+the full 53k-name run took 6 minutes, not hours.
 
 **S3. Clitics are not resolved in the syntax layer.**
 `find_bases_with_form_filter` peels a clitic to find the base but retains no
@@ -341,19 +342,19 @@ name only as a tie-breaker.
 search now requires `role == Unknown`. A capitalized lemma with a
 nominative/partitive case is the only name tie-breaker (`Sami` over
 `Ruotsalainen`; `Vanha` has a lowercase lemma). `Matin auto` and
-`Vanha talo` now produce the right subject. The general rules (genitive
-subject, recipient ranking, existential word order) remain phases 3–4.
+`Vanha talo` now produce the right subject. The name table's `Vanha`/`Kun`
+homonyms no longer win; with the S2 case map, `Helsingissä` is adverbial, and
+`asuva` is marked as a prenominal participle modifier.
 
 **S13. Postpositional locatives do not count as existential locatives.**
 `Pöydän alla on kissa.` currently makes `alla` the subject (S1 gives it a noun
 reading) and `kissa` a complement. Even after S1, `alla` is an adverb with no
 case, so `locative_before` (which requires `case.is_some_and(is_local_case)`)
-stays false and the existential is missed. The same positional rule misses
-`Onko sinulla kirjaa?`, where the locative follows the predicate; that leaves
-`clitic_question` as a defect row even after the clitic itself resolves.
+stays false and the existential is missed. The same positional rule missed
+`Onko sinulla kirjaa?`, where the locative follows the predicate.
 
 Fix direction: an adverbial whose lemma is a postposition/adverb in the local
-set (`alla`, `alla`, `päällä`, `sisällä`, `luona`, `vieressä`, ...) counts as
+set (`alla`, `päällä`, `sisällä`, `luona`, `vieressä`, ...) counts as
 the locative. Prefer a small closed set or the `PartOfSpeech::Postposition` /
 `Adverb` reading, not a suffix rule.
 
@@ -362,7 +363,10 @@ modifier plus a postposition adverbial, and `is_locative_adverbial` accepts
 either a local case or one of the closed local adverbs/postpositions. The
 existential locative is now found on either side of the predicate, so
 `Onko sinulla kirjaa?` has `kirjaa` as subject. `Kirja on pöydällä` remains a
-predicate + adverbial, not an existential.
+predicate + adverbial, not an existential. A nominative before the predicate
+disables the existential: `Helsingissä asuva mies on opettaja` and `Vanha talo
+Helsingissä on kaunis` are copula clauses with a locative adverbial, not
+existentials.
 
 **S14. Numeral phrases pick the counted noun as the head.**
 `Hänellä on kaksi lasta.` makes `kaksi` subject and `lasta` complement; the
@@ -415,10 +419,10 @@ nominative) and skips allative/ablative when a later theme candidate exists.
 Recipient marking can stay `Adverbial` with a `head` of the predicate; a
 dedicated `IndirectObject` role is out of scope for this branch.
 
-**Phase 4 landing.** The allative is not in the object case set, so
-`Sami antoi Liisalle kirjan` gives `kirjan` the object role. `Liisalle` is
-still `Unknown` because its proper-name case is missing (S2); once the case
-column lands it becomes an allative `Adverbial`.
+**Phase 4 landing + S2.** The allative is not in the object case set, so
+`Sami antoi Liisalle kirjan` gives `kirjan` the object role. The name case
+map supplies `Liisalle`'s allative, so it is an allative `Adverbial` with the
+predicate as its head.
 
 **S17. Subject sharing is limited to coordination and non-finite clauses.**
 `Sami söi puuron, koska oli nälkäinen.` leaves the second clause subjectless;
@@ -507,15 +511,14 @@ with a role-rule change.
       matches all of them, so an xfail cannot go stale.
 - [x] One `#[test]` per case (macro at the bottom of the runner), so the
       expensive morphology runs in parallel and a failure names the sentence.
-- [x] 34 cases: 31 pin behaviour that is already correct, 3 are
-      defect-marked gates for the remaining proper-name case work.
+- [x] 34 cases, all pinned correct; no defect rows remain.
 - [x] `examples/syntax_probe.rs` remains the human view over a wider corpus,
       including sentences the fixture does not pin yet.
 
 The fixture is now the gate; do not weaken a defect row to make a phase land.
 When a fix turns a row green, remove its `defect` field in the same commit.
 
-### Phase 1 — reading fidelity (S1–S4) — landed, S2 partial
+### Phase 1 — reading fidelity (S1–S4) — landed
 
 - [x] Correct the part of speech from the source lemma in `resolve_word`.
       `reading_with_pos` overrides the noun default with the `SourcedForm`
@@ -531,16 +534,14 @@ When a fix turns a row green, remove its `defect` field in the same commit.
 - [x] Replace the case-blind proper-name subject shortcut with a case-gated
       tie-breaker for a capitalized lemma (`Sami` wins over `Ruotsalainen`,
       while `Vanha` has a lowercase lemma and does not).
-- [ ] Emit the proper-name case column and replace the case-less reading.
-      Deferred: regenerating `data/proper_name_forms.csv` needs a batched
-      Omorfi run. Measured, 10 names take 7.3 s, so the current 53k names
-      would take about 11 hours. This is a tooling task, not a syntax rule.
+- [x] Emit the proper-name case column and replace the case-less reading.
+      The CSV is now `(form, name, case)`; `proper_name_cases.bin` and
+      `proper_names::case` carry it into the syntax layer.
 
-Acceptance now passing: `sentence_adverb` (`Eilen`), `subordinator_subject`
-(`Kun`, `hän`), `imperative_affirmative`, `genitive_modifier_subject`
-(`Matin`), `clitic_verb` (`Onko`), `negative_imperative` (`Älä`).
-`clitic_question` still needs the existential word order of S13, not the
-clitic rule.
+Acceptance: `sentence_adverb` (`Eilen`), `subordinator_subject` (`Kun`,
+`hän`), `imperative_affirmative`, `genitive_modifier_subject` (`Matin`),
+`clitic_verb` (`Onko`), `negative_imperative` (`Älä`), and the three
+proper-name rows (`Helsingissä`, `Liisalle`, `Vanha talo`) all pass.
 
 ### Phase 2 — clause segmentation (S5–S7) — landed
 
@@ -576,7 +577,7 @@ kirjan.` has `kirjan` as object; `Minun täytyy mennä.` has a genitive subject
 and an infinitive clause that shares it; `Eikö hän tullut?` has `hän` as
 subject. `Talo on rakennettu` gives `Talo` the logical-object role.
 
-### Phase 4 — nominal roles (S12–S18) — landed, S2 cases open
+### Phase 4 — nominal roles (S12–S18) — landed
 
 - [x] Case-gated subject selection; no proper-name shortcut. The only name
       tie-breaker requires a capitalized lemma plus nominative/partitive.
@@ -584,18 +585,18 @@ subject. `Talo on rakennettu` gives `Talo` the logical-object role.
 - [x] Numeral phrase.
 - [x] Valency complements table (ablative and translative).
 - [x] Recipient vs theme object ranking: the allative is excluded from the
-      object cases, so `kirjan` is the object. `Liisalle` itself still needs
-      the proper-name case (S2).
+      object cases, so `kirjan` is the object; S2 supplies `Liisalle`'s
+      allative.
 - [x] Agreement-based subject sharing.
 - [x] Extend the function-word gate (relative forms, `että` pair, role gates).
 
 Acceptance (passing): `Matin auto on punainen.` -> `Matin` modifier, `auto`
 subject. `Hänellä on kaksi lasta.` -> `kaksi` subject, `lasta` modifier.
 `Pöydän alla on kissa.` -> `kissa` subject, `alla` adverbial.
-`Sami antoi Liisalle kirjan.` -> `kirjan` object (the recipient role awaits
-S2). `Sami söi puuron, koska oli nälkäinen.` -> second clause shares `Sami`.
-`Helsingissä asuva mies on opettaja.` still needs the name case for
-`Helsingissä`; `mies` is already the subject.
+`Sami antoi Liisalle kirjan.` -> `kirjan` object, `Liisalle` allative
+adverbial. `Sami söi puuron, koska oli nälkäinen.` -> second clause shares
+`Sami`. `Helsingissä asuva mies on opettaja.` -> `Helsingissä` adverbial,
+`asuva` modifier, `mies` subject.
 
 ### Phase 5 — API and wasm contract (S19)
 
@@ -642,7 +643,3 @@ S2). `Sami söi puuron, koska oli nälkäinen.` -> second clause shares `Sami`.
 3. Should a relative clause's antecedent be linked (`head` of the relative
    pronoun -> antecedent), or only the clause roles? Recommendation: later;
    it needs an antecedent search across the clause boundary.
-4. For proper names, is expanding `data/proper_name_forms.csv` with a case
-   column acceptable as a data change, or should the syntax layer infer case
-   from the name's final suffix? Recommendation: the column; inference would
-   be a suffix stripper by another name.

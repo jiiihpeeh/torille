@@ -342,7 +342,6 @@
     },
     {
       "id": "recipient_vs_theme",
-      "defect": "S2",
       "sentence": "Sami antoi Liisalle kirjan.",
       "clauses": 1,
       "words": [
@@ -385,11 +384,10 @@
     },
     {
       "id": "proper_name_adessive",
-      "defect": "S2",
       "sentence": "Helsingissä asuva mies on opettaja.",
       "clauses": 1,
       "words": [
-        {"text": "Helsingissä", "role": "adverbial", "confidence": "likely", "case": "inessive", "head": 1},
+        {"text": "Helsingissä", "role": "adverbial", "confidence": "likely", "case": "inessive", "head": 3},
         {"text": "asuva", "role": "modifier", "confidence": "weak", "head": 2},
         {"text": "mies", "role": "subject", "confidence": "likely", "case": "nominative", "head": 3},
         {"text": "on", "role": "predicate", "lemma": "olla"},
@@ -456,13 +454,12 @@
     },
     {
       "id": "name_table_false_positive",
-      "defect": "S2",
       "sentence": "Vanha talo Helsingissä on kaunis.",
       "clauses": 1,
       "words": [
         {"text": "Vanha", "role": "modifier", "confidence": "weak", "head": 1},
         {"text": "talo", "role": "subject", "confidence": "likely", "case": "nominative", "head": 3},
-        {"text": "Helsingissä", "role": "adverbial", "confidence": "likely", "case": "inessive", "head": 1},
+        {"text": "Helsingissä", "role": "adverbial", "confidence": "likely", "case": "inessive", "head": 3},
         {"text": "on", "role": "predicate", "lemma": "olla"},
         {"text": "kaunis", "role": "complement", "case": "nominative", "head": 3}
       ],
