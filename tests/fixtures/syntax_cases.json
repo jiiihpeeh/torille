@@ -195,7 +195,6 @@
     },
     {
       "id": "sentence_adverb",
-      "defect": "S1",
       "sentence": "Eilen satoi lunta.",
       "clauses": 1,
       "words": [
@@ -209,7 +208,6 @@
     },
     {
       "id": "subordinator_subject",
-      "defect": "S1,S12",
       "sentence": "Kun hän tuli, söin.",
       "clauses": 2,
       "words": [
@@ -225,7 +223,7 @@
     },
     {
       "id": "clitic_question",
-      "defect": "S3,S4",
+      "defect": "S13",
       "sentence": "Onko sinulla kirjaa?",
       "clauses": 1,
       "words": [
@@ -238,8 +236,33 @@
       ]
     },
     {
+      "id": "clitic_verb",
+      "sentence": "Onko sinulla kirjaa?",
+      "clauses": 1,
+      "words": [
+        {"text": "Onko", "role": "predicate", "confidence": "likely", "lemma": "olla"},
+        {"text": "sinulla", "role": "adverbial", "confidence": "likely", "case": "adessive", "head": 0},
+        {"text": "kirjaa"}
+      ],
+      "clause_roles": [
+        {"predicate": 0, "negative": false}
+      ]
+    },
+    {
+      "id": "negative_imperative",
+      "sentence": "Älä syö puuroa.",
+      "clauses": 1,
+      "words": [
+        {"text": "Älä", "case": null},
+        {"text": "syö", "role": "predicate", "confidence": "likely", "lemma": "syödä"},
+        {"text": "puuroa", "role": "object", "confidence": "likely", "case": "partitive", "head": 1}
+      ],
+      "clause_roles": [
+        {"predicate": 1, "subject": null, "object": 2, "negative": true, "existential": false}
+      ]
+    },
+    {
       "id": "imperative_affirmative",
-      "defect": "S4",
       "sentence": "Syö puuro!",
       "clauses": 1,
       "words": [
@@ -387,7 +410,6 @@
     },
     {
       "id": "genitive_modifier_subject",
-      "defect": "S12",
       "sentence": "Matin auto on punainen.",
       "clauses": 1,
       "words": [
@@ -462,7 +484,7 @@
     },
     {
       "id": "negative_clitic_question",
-      "defect": "S3,S8",
+      "defect": "S8,S9",
       "sentence": "Eikö hän tullut?",
       "clauses": 1,
       "predicate_tokens": 1,

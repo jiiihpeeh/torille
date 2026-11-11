@@ -371,6 +371,8 @@ corpus_tests!(
     sentence_adverb,
     subordinator_subject,
     clitic_question,
+    clitic_verb,
+    negative_imperative,
     imperative_affirmative,
     negative_auxiliary,
     perfect_tense,

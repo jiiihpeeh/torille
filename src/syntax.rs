@@ -174,15 +174,20 @@ fn analyze_with(
             .or_insert_with(|| resolve_word(lexicon, cat, &token.text.to_lowercase()));
         let mut readings = analysis.readings.clone();
         let mut lemma = analysis.lemma.clone();
+        nominal_lemmas[index] = analysis.nominal_lemma.clone();
         if readings.is_empty()
             && token.is_capitalised()
-            && crate::expand::proper_names::contains_capitalised(&token.text)
+            && let Some(name) = crate::expand::proper_names::lemma(&token.text)
         {
-            add_reading(&mut readings, proper_name_reading());
-            lemma = Some(token.text.clone());
-            nominal_lemmas[index] = Some(token.text.clone());
-        } else {
-            nominal_lemmas[index] = analysis.nominal_lemma.clone();
+            // The name table knows the lemma but not the case. Only the
+            // citation spelling is safely nominative; an inflected name
+            // (`Helsingissä`, `Liisalle`) gets a case-less reading rather
+            // than a guessed nominative, so it cannot become a subject or
+            // object by accident. See PLAN_SYNTAX.md S2 for the case column
+            // that will replace this.
+            add_reading(&mut readings, proper_name_reading(&token.text, name));
+            lemma = Some(name.to_string());
+            nominal_lemmas[index] = Some(name.to_string());
         }
         let (role, confidence, case) = classify(&readings);
         if role == SyntacticRole::Predicate {
@@ -273,17 +278,59 @@ struct WordAnalysis {
     verb_lemma: Option<String>,
     /// The lemma of a nominal reading, for the same reason.
     nominal_lemma: Option<String>,
+    /// True when the ordinary search found this exact surface, not just a
+    /// clitic-stripped host. A clitic word (`onko`, `talohan`) is only
+    /// re-analysed through its host when this is false.
+    exact: bool,
     readings: Vec<Tags>,
 }
 
-/// Resolve a lowercase word through the engine's base search.
+/// Resolve a lowercase word, peeling its clitic layers when the host is the
+/// real word.
+///
+/// The base search recognises a clitic-bearing word through its host, but it
+/// keeps no form for the surface (`onko` has no generated `onko`), so the
+/// ordinary resolution falls back to a bare lemma reading with no mood or
+/// case. `onko` then cannot be the predicate of a question. Resolving the
+/// host and carrying its readings over fixes that. The clitic itself is kept
+/// on the reading; it is discourse information, not a role cue.
 fn resolve_word(
     lexicon: &[crate::kotus::Lemma<'_>],
     cat: &Catalogues,
     lower: &str,
 ) -> WordAnalysis {
+    let ordinary = resolve_word_plain(lexicon, cat, lower);
+    if ordinary.exact {
+        return ordinary;
+    }
+    let (host, clitics) = crate::expand::clitic::strip_all_clitics(lower);
+    if clitics.is_empty() || host == lower {
+        return ordinary;
+    }
+    let mut resolved = resolve_word_plain(lexicon, cat, &host);
+    if resolved.readings.is_empty() {
+        return ordinary;
+    }
+    // `strip_all_clitics` returns the stack from the outside in. One slot is
+    // all `Tags` has, so record the outermost particle.
+    for reading in &mut resolved.readings {
+        reading.clitic = clitics.first().copied();
+    }
+    resolved.exact = true;
+    resolved
+}
+
+/// The ordinary, no-clitic resolution.
+fn resolve_word_plain(
+    lexicon: &[crate::kotus::Lemma<'_>],
+    cat: &Catalogues,
+    lower: &str,
+) -> WordAnalysis {
     let report = find_bases_with_form_filter(lexicon, cat, lower, |form| form == lower);
-    let mut out = WordAnalysis::default();
+    let mut out = WordAnalysis {
+        exact: !report.direct.is_empty() || !report.forms.is_empty(),
+        ..WordAnalysis::default()
+    };
 
     if let Some(base) = report.bases.first() {
         out.lemma = Some(base.word.to_string());
@@ -300,29 +347,21 @@ fn resolve_word(
         }
         let pos = lemma_pos(source.lemma);
         for reading in &source.form.readings {
-            let mut tags = *reading;
-            if tags.part_of_speech.is_none() {
-                tags.part_of_speech = pos;
-            }
-            add_reading(&mut out.readings, tags);
+            add_reading(&mut out.readings, reading_with_pos(*reading, pos));
         }
-        let form_has_finite = source.form.readings.iter().any(|reading| {
-            let mut tags = *reading;
-            if tags.part_of_speech.is_none() {
-                tags.part_of_speech = pos;
-            }
-            is_finite_predicate(&tags)
-        });
+        let form_has_finite = source
+            .form
+            .readings
+            .iter()
+            .any(|reading| is_finite_predicate(&reading_with_pos(*reading, pos)));
         if form_has_finite {
             out.verb_lemma = Some(source.lemma.to_string());
         }
-        let form_has_nominal = source.form.readings.iter().any(|reading| {
-            let mut tags = *reading;
-            if tags.part_of_speech.is_none() {
-                tags.part_of_speech = pos;
-            }
-            is_nominal_pos(tags.part_of_speech)
-        });
+        let form_has_nominal = source
+            .form
+            .readings
+            .iter()
+            .any(|reading| is_nominal_pos(reading_with_pos(*reading, pos).part_of_speech));
         if form_has_nominal && is_nominal_pos(pos) {
             out.nominal_lemma = Some(source.lemma.to_string());
         }
@@ -385,9 +424,15 @@ fn resolve_word(
     }
 
     // The negation auxiliary is a closed table, not a general verb
-    // paradigm. Mark it negative so the clause-level flag is reliable.
-    if crate::expand::negation::negation_base(lower).is_some() {
-        if out.readings.is_empty() {
+    // paradigm. Add the auxiliary reading even when a homonymous noun
+    // reading exists (`ei` is also a noun), and leave the noun reading alone;
+    // the clause flag keys off the auxiliary, not on every reading.
+    if let Some(base) = crate::expand::negation::negation_base(lower) {
+        if !out
+            .readings
+            .iter()
+            .any(|reading| reading.part_of_speech == Some(PartOfSpeech::NegativeVerb))
+        {
             add_reading(
                 &mut out.readings,
                 Tags {
@@ -398,11 +443,13 @@ fn resolve_word(
             );
         } else {
             for reading in &mut out.readings {
-                reading.polarity = Polarity::Negative;
-                if reading.part_of_speech.is_none() {
-                    reading.part_of_speech = Some(PartOfSpeech::NegativeVerb);
+                if reading.part_of_speech == Some(PartOfSpeech::NegativeVerb) {
+                    reading.polarity = Polarity::Negative;
                 }
             }
+        }
+        if out.lemma.is_none() {
+            out.lemma = Some(base.to_string());
         }
     }
 
@@ -439,16 +486,28 @@ fn add_readings_from_base(base: &str, lower: &str, cat: &Catalogues, readings: &
             continue;
         }
         for reading in &form.readings {
-            let mut tags = *reading;
-            if tags.part_of_speech.is_none() {
-                tags.part_of_speech = Some(pos);
-            }
-            add_reading(readings, tags);
+            add_reading(readings, reading_with_pos(*reading, Some(pos)));
         }
     }
     if readings.is_empty() {
         add_reading(readings, direct_reading(&row));
     }
+}
+
+/// Replace a generated reading's part of speech with the source lemma's.
+///
+/// The base search inflects every lemma with `PartOfSpeech::Noun` (the
+/// suggestion pool only needs surfaces), so an adverb or pronoun form arrives
+/// tagged as a noun. The lemma row is the authority here: `eilen` must stay
+/// an adverb and `sinä` a pronoun, or the role rules mistake them for
+/// nominals. A form may be a reading of several lemmas, and each
+/// `SourcedForm` names its own lemma, so this stays correct for homonyms
+/// (`tuli` the noun vs. `tulla` the verb).
+fn reading_with_pos(mut tags: Tags, pos: Option<PartOfSpeech>) -> Tags {
+    if let Some(pos) = pos {
+        tags.part_of_speech = Some(pos);
+    }
+    tags
 }
 
 /// The sanalista's first part of speech for a lemma.
@@ -575,9 +634,17 @@ fn is_adverbial_case(case: Case) -> bool {
     )
 }
 
-/// A synthetic nominative reading for a recognized proper name.
-fn proper_name_reading() -> Tags {
-    Tags::nominal(Case::Nominative).of_pos(PartOfSpeech::Noun)
+/// A reading for a recognized proper name.
+///
+/// The citation spelling is nominative. Any other form is a case the name
+/// table does not carry, so it stays case-less: role selection then leaves it
+/// `Unknown` instead of inventing a nominative.
+fn proper_name_reading(surface: &str, lemma: &str) -> Tags {
+    if surface.eq_ignore_ascii_case(lemma) {
+        Tags::nominal(Case::Nominative).of_pos(PartOfSpeech::Noun)
+    } else {
+        Tags::UNKNOWN.of_pos(PartOfSpeech::Noun)
+    }
 }
 
 /// Whether any reading of a token is a verb.
@@ -783,6 +850,29 @@ fn resolve_clause(
         out[predicate].role = SyntacticRole::Predicate;
         out[predicate].confidence = RoleConfidence::Likely;
     }
+    // One clause has one predicate. A second finite reading that also has a
+    // nominal reading (`kirjaa` is the imperative of `kirjata` and the
+    // partitive of `kirja`) is re-read as the nominal it can be, so the
+    // object/subject pass can use it. Auxiliaries are not demoted: the
+    // negation auxiliary is phase 3's `Auxiliary`, and `olla`/participles are
+    // phase 3's compound predicate.
+    for &index in &words {
+        if index == predicate || out[index].role != SyntacticRole::Predicate {
+            continue;
+        }
+        let auxiliary = out[index]
+            .readings
+            .iter()
+            .any(|reading| reading.part_of_speech == Some(PartOfSpeech::NegativeVerb));
+        let nominal = out[index]
+            .readings
+            .iter()
+            .any(|reading| is_nominal_pos(reading.part_of_speech));
+        if !auxiliary && nominal {
+            out[index].role = SyntacticRole::Unknown;
+            out[index].confidence = RoleConfidence::Weak;
+        }
+    }
     let predicate_position = words
         .iter()
         .position(|&index| index == predicate)
@@ -794,20 +884,16 @@ fn resolve_clause(
         .readings
         .iter()
         .any(|reading| reading.voice == Some(crate::tags::Voice::Passive));
-    let negative_auxiliary = words.iter().any(|&index| {
-        out[index].readings.iter().any(|reading| {
-            reading.polarity == Polarity::Negative
-                && reading.part_of_speech == Some(PartOfSpeech::NegativeVerb)
-        })
+    // The negative auxiliary is the only thing that makes a clause negative.
+    // A connegative main verb (`syö` in `en syö`) also carries a negative
+    // polarity reading, but it does not negate an affirmative imperative
+    // (`Syö puuro!`) or an infinitive (`Hänen pitää mennä`).
+    let negative = words.iter().any(|&index| {
+        out[index]
+            .readings
+            .iter()
+            .any(|reading| reading.part_of_speech == Some(PartOfSpeech::NegativeVerb))
     });
-    // An infinitive can carry a spurious passive reading (`syödä` does), so
-    // only a finite predicate's own polarity marks a finite clause negative.
-    let negative = negative_auxiliary
-        || (!is_infinitive(predicate, out)
-            && out[predicate]
-                .readings
-                .iter()
-                .any(|reading| reading.polarity == Polarity::Negative));
     clause.negative = negative;
 
     let lemma = out[predicate].lemma.clone().unwrap_or_default();
@@ -822,7 +908,8 @@ fn resolve_clause(
     clause.existential = is_olla && locative_before && nominative_after;
 
     let genitive_before = before.iter().rev().copied().find(|&index| {
-        is_nominal(&out[index])
+        out[index].role == SyntacticRole::Unknown
+            && is_nominal(&out[index])
             && has_case(&out[index], &[Case::Genitive])
             && !is_clause_marker(index, tokens)
     });
@@ -833,7 +920,8 @@ fn resolve_clause(
     if !passive && !passive_construction {
         if clause.existential {
             subject = after.iter().copied().find(|&index| {
-                is_nominal(&out[index])
+                out[index].role == SyntacticRole::Unknown
+                    && is_nominal(&out[index])
                     && has_case(&out[index], &[Case::Nominative, Case::Partitive])
                     && !is_clause_marker(index, tokens)
             });
@@ -841,14 +929,27 @@ fn resolve_clause(
             subject = genitive_before;
         }
         if subject.is_none() {
-            subject = before
-                .iter()
-                .copied()
-                .find(|&index| is_proper_name(index, tokens, out));
+            // A true name (`Sami`) wins over a following capitalized common
+            // word (`Ruotsalainen`) so a multiword name stays one subject.
+            // The lemma's capitalization is the marker: a common word that
+            // happens to be in the name table (`Vanha`) has a lowercase
+            // lemma, and an inflected name has no case at all (S2).
+            subject = before.iter().copied().find(|&index| {
+                out[index].role == SyntacticRole::Unknown
+                    && out[index]
+                        .lemma
+                        .as_deref()
+                        .and_then(|lemma| lemma.chars().next())
+                        .is_some_and(|first| first.is_uppercase())
+                    && is_nominal(&out[index])
+                    && has_case(&out[index], &[Case::Nominative, Case::Partitive])
+                    && !is_clause_marker(index, tokens)
+            });
         }
         if subject.is_none() {
             subject = before.iter().rev().copied().find(|&index| {
-                is_nominal(&out[index])
+                out[index].role == SyntacticRole::Unknown
+                    && is_nominal(&out[index])
                     && has_case(&out[index], &[Case::Nominative])
                     && !is_clause_marker(index, tokens)
             });
@@ -881,13 +982,15 @@ fn resolve_clause(
     };
     let object = if passive || passive_construction {
         before.iter().chain(after).copied().find(|&index| {
-            is_nominal(&out[index])
+            out[index].role == SyntacticRole::Unknown
+                && is_nominal(&out[index])
                 && has_case(&out[index], object_cases)
                 && !is_clause_marker(index, tokens)
         })
     } else if !is_olla && !is_change {
         after.iter().copied().find(|&index| {
             Some(index) != subject
+                && out[index].role == SyntacticRole::Unknown
                 && is_nominal(&out[index])
                 && has_case(&out[index], object_cases)
                 && !is_clause_marker(index, tokens)
@@ -920,6 +1023,7 @@ fn resolve_clause(
         };
         let complement = after.iter().copied().find(|&index| {
             Some(index) != subject
+                && out[index].role == SyntacticRole::Unknown
                 && is_nominal(&out[index])
                 && has_case(&out[index], complement_cases)
                 && !is_clause_marker(index, tokens)
@@ -977,16 +1081,6 @@ fn passive_participle_after(after: &[usize], out: &[TokenSyntax]) -> bool {
                 && reading.mood != Some(Mood::Infinitive)
         })
     })
-}
-
-/// A recognized proper name token (capitalized and in the name set).
-fn is_proper_name(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
-    tokens[index].is_capitalised()
-        && out[index]
-            .readings
-            .iter()
-            .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Noun))
-        && crate::expand::proper_names::contains_capitalised(&tokens[index].text)
 }
 
 /// Attributes, genitive modifiers, titles, and appositions.
@@ -1349,6 +1443,30 @@ mod tests {
         let talo = word_index(&tokens, "Talo");
         assert_eq!(analysis.clauses[0].subject, None);
         assert_eq!(analysis.tokens[talo].role, SyntacticRole::Object);
+    }
+
+    /// The name table knows the forms but not their cases. Only the citation
+    /// spelling is safely nominative; `Helsingissä` must not become a
+    /// nominative subject just because the form is capitalized.
+    #[test]
+    fn an_inflected_name_is_not_guessed_nominative() {
+        let (tokens, analysis) = analyzed("Helsingissä asuva mies on opettaja.");
+        let helsinki = word_index(&tokens, "Helsingissä");
+        let mies = word_index(&tokens, "mies");
+        assert_eq!(analysis.tokens[helsinki].case, None);
+        assert_eq!(analysis.tokens[helsinki].role, SyntacticRole::Unknown);
+        assert_eq!(analysis.tokens[mies].role, SyntacticRole::Subject);
+    }
+
+    /// The `-ko` clitic must not cost the auxiliary its mood. A question is
+    /// not a negative clause just because a connegative reading exists.
+    #[test]
+    fn a_clitic_question_is_not_a_negative_clause() {
+        let (tokens, analysis) = analyzed("Onko sinulla kirjaa?");
+        let onko = word_index(&tokens, "Onko");
+        assert_eq!(analysis.tokens[onko].role, SyntacticRole::Predicate);
+        assert_eq!(analysis.tokens[onko].lemma.as_deref(), Some("olla"));
+        assert!(!analysis.clauses[0].negative);
     }
 
     #[test]

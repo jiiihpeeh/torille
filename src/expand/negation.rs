@@ -43,6 +43,13 @@ mod table {
 /// so a common word is rejected on its first character before any clitic
 /// scan.
 pub fn negation_base(word: &str) -> Option<&'static str> {
+    // The imperative auxiliaries are the same closed construction in a
+    // different mood: `älä syö`, `älkää syökö`. They are not forms of `ei`,
+    // and `älä` has no verb paradigm of its own in the sanalista, so the
+    // table must name the auxiliary itself.
+    if matches!(word, "älä" | "älkää" | "älköön" | "älkööt" | "älkäämme") {
+        return Some("älä");
+    }
     // `vaikka` fused with a finite negative auxiliary is a closed family:
     // `vaikken`, `vaikket`, `vaikkei`, `vaikkemme`, `vaikkette`,
     // `vaikkeivät`. Like `miksei`, it is a constructional word rather than
@@ -100,8 +107,7 @@ fn vaikka_negation_base(word: &str) -> Option<&'static str> {
 /// The six finite forms of the fused adverb + negation `miksei`.
 fn miksei_base(word: &str) -> Option<&'static str> {
     let rest = word.strip_prefix("miks")?;
-    matches!(rest, "en" | "et" | "ei" | "emme" | "ette" | "eivät")
-        .then_some("miksei")
+    matches!(rest, "en" | "et" | "ei" | "emme" | "ette" | "eivät").then_some("miksei")
 }
 
 #[cfg(test)]
@@ -114,6 +120,13 @@ mod tests {
     fn the_auxiliaries_name_ei() {
         for word in FINITE {
             assert_eq!(negation_base(word), Some("ei"), "{word}");
+        }
+    }
+
+    #[test]
+    fn the_imperative_auxiliaries_name_ala() {
+        for word in ["älä", "älkää", "älköön", "älkööt", "älkäämme"] {
+            assert_eq!(negation_base(word), Some("älä"), "{word}");
         }
     }
 
@@ -178,7 +191,14 @@ mod tests {
 
     #[test]
     fn the_fused_miksei_family_names_miksei() {
-        for word in ["miksen", "mikset", "miksei", "miksemme", "miksette", "mikseivät"] {
+        for word in [
+            "miksen",
+            "mikset",
+            "miksei",
+            "miksemme",
+            "miksette",
+            "mikseivät",
+        ] {
             assert_eq!(negation_base(word), Some("miksei"), "{word}");
         }
         assert_eq!(negation_base("miksetkö"), Some("miksei"));

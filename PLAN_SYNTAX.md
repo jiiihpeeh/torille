@@ -1,7 +1,7 @@
 # PLAN_SYNTAX — making the advisory syntax layer trustworthy
 
-Status: audit and fixture complete, no engine changes yet. Work happens on
-the `syntax` branch off `master`.
+Status: audit and fixture complete; Phase 1 landed (S1, S3, S4; S2 partial).
+Work happens on the `syntax` branch off `master`.
 
 The syntax layer (`src/syntax.rs`) is the second, on-demand layer over the
 morphology engine. It is **not** in the keystroke path; its only shipping
@@ -94,6 +94,15 @@ the emitted table is `(form, name)` only; the case is discarded. Fix direction:
 emit `(form, name, case)` and add a `proper_names::case(form)` lookup (a small
 parallel map is enough), then prefer that reading over the synthetic
 nominative. This is a data + build-script change and should be its own commit.
+
+**S2 interim (Phase 1).** The syntax layer now uses the name table's lemma
+(`Helsingissä` -> `Helsing`) and assigns the nominative only when the surface
+equals that lemma. An inflected name therefore has a noun reading and no
+case, which keeps it out of subject/object selection instead of inventing a
+nominative. This fixes `Matin auto` and stops `Helsingissä` becoming a
+subject, but it does **not** recover the inessive/allative.
+`proper_name_adessive` and `recipient_vs_theme` remain defect rows for that
+reason.
 
 **S3. Clitics are not resolved in the syntax layer.**
 `find_bases_with_form_filter` peels a clitic to find the base but retains no
@@ -219,6 +228,12 @@ The second is less API churn but loses the auxiliary in the token stream.
 Recommendation: add `Auxiliary`; the wasm JSON already passes `role.name()`
 and consumers can ignore an unknown name.
 
+**Phase 1 landing.** The demotion half is in: after the clause predicate is
+chosen, any other finite reading that also has a nominal reading is demoted to
+`Unknown`, so `kirjaa` in `Luen kirjaa` can be the object again. Negative
+auxiliaries are deliberately excluded, so `En syö` still has two `Predicate`
+tokens until phase 3 adds `Auxiliary`.
+
 **S9. `olla` + participle is always a complement.**
 `Olen lukenut kirjan.` produces `Olen` predicate, `lukenut` complement,
 `kirjan` unknown. In a compound tense the participle is part of the predicate,
@@ -278,11 +293,20 @@ subject in the necessive construction (S10). Do not special-case a proper
 name before the ordinary nominative scan; use the same case gate, with the
 name only as a tie-breaker.
 
+**Phase 1 landing.** The case-blind shortcut is gone, and every candidate
+search now requires `role == Unknown`. A capitalized lemma with a
+nominative/partitive case is the only name tie-breaker (`Sami` over
+`Ruotsalainen`; `Vanha` has a lowercase lemma). `Matin auto` and
+`Vanha talo` now produce the right subject. The general rules (genitive
+subject, recipient ranking, existential word order) remain phases 3–4.
+
 **S13. Postpositional locatives do not count as existential locatives.**
 `Pöydän alla on kissa.` currently makes `alla` the subject (S1 gives it a noun
 reading) and `kissa` a complement. Even after S1, `alla` is an adverb with no
 case, so `locative_before` (which requires `case.is_some_and(is_local_case)`)
-stays false and the existential is missed.
+stays false and the existential is missed. The same positional rule misses
+`Onko sinulla kirjaa?`, where the locative follows the predicate; that leaves
+`clitic_question` as a defect row even after the clitic itself resolves.
 
 Fix direction: an adverbial whose lemma is a postposition/adverb in the local
 set (`alla`, `alla`, `päällä`, `sisällä`, `luona`, `vieressä`, ...) counts as
@@ -402,26 +426,40 @@ with a role-rule change.
       matches all of them, so an xfail cannot go stale.
 - [x] One `#[test]` per case (macro at the bottom of the runner), so the
       expensive morphology runs in parallel and a failure names the sentence.
-- [x] 32 cases: 12 pin behaviour that is already correct, 20 are
-      defect-marked gates for phases 1–4.
+- [x] 34 cases: 18 pin behaviour that is already correct, 16 are
+      defect-marked gates for the remaining phases.
 - [x] `examples/syntax_probe.rs` remains the human view over a wider corpus,
       including sentences the fixture does not pin yet.
 
 The fixture is now the gate; do not weaken a defect row to make a phase land.
 When a fix turns a row green, remove its `defect` field in the same commit.
 
-### Phase 1 — reading fidelity (S1–S4)
+### Phase 1 — reading fidelity (S1–S4) — landed, S2 partial
 
-- [ ] Correct the part of speech from the source lemma in `resolve_word`.
-- [ ] Resolve one clitic layer and preserve the host's readings.
-- [ ] Add `älä`/`älkää` to the closed negation set.
-- [ ] Make `clause.negative` depend on a `NegativeVerb` token only.
-- [ ] Proper-name case: extend the CSV/build-script/map and replace the
-      synthetic nominative when a case is known. Keep the fallback nominative
-      for names the table has no case for.
+- [x] Correct the part of speech from the source lemma in `resolve_word`.
+      `reading_with_pos` overrides the noun default with the `SourcedForm`
+      lemma's own part of speech.
+- [x] Resolve a clitic through its host and preserve the host's readings.
+      `onko` is now a finite predicate with lemma `olla` and mood indicative.
+- [x] Add `älä`/`älkää` (and the other imperative auxiliaries) to the closed
+      negation set.
+- [x] Make `clause.negative` depend on a `NegativeVerb` token only.
+- [x] Proper names: use the name table's lemma and only give a name the
+      nominative when the surface is the citation spelling. An inflected name
+      is case-less, so it cannot become a subject or object by accident.
+- [x] Replace the case-blind proper-name subject shortcut with a case-gated
+      tie-breaker for a capitalized lemma (`Sami` wins over `Ruotsalainen`,
+      while `Vanha` has a lowercase lemma and does not).
+- [ ] Emit the proper-name case column and replace the case-less reading.
+      Deferred: regenerating `data/proper_name_forms.csv` needs a batched
+      Omorfi run. Measured, 10 names take 7.3 s, so the current 53k names
+      would take about 11 hours. This is a tooling task, not a syntax rule.
 
-Acceptance: `Eilen`, `Kun`, `Missä`, `sinä`, `hän`, `jossa`, `Onko`,
-`Syö puuro!`, `Anna kirja minulle.`, `Älä syö puuroa.`
+Acceptance now passing: `sentence_adverb` (`Eilen`), `subordinator_subject`
+(`Kun`, `hän`), `imperative_affirmative`, `genitive_modifier_subject`
+(`Matin`), `clitic_verb` (`Onko`), `negative_imperative` (`Älä`).
+`clitic_question` still needs the existential word order of S13, not the
+clitic rule.
 
 ### Phase 2 — clause segmentation (S5–S7)
 
