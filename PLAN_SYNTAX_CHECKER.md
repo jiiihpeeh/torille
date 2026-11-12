@@ -1,11 +1,10 @@
 # PLAN_SYNTAX_CHECKER — grammar and punctuation diagnostics
 
-Status: Phases 0–4 are landed, including nested lists. Phase 5 has the
-negative-clause object case, rection precedence, missing/extra argument
-warnings and the word-order decision record; aspect-based object case is still
-open. Phase 6 is partly landed: deterministic ranking, the wasm word cache and
-the evaluation baseline exist, while punctuation phase 2, UI rendering and the
-style decision are open. The analysis layer it builds on is `PLAN_SYNTAX.md` and is already landed
+Status: Phases 0–5 are landed, including nested lists, missing/extra argument
+warnings, the word-order decision record and aspect-based object-case
+suggestions (singular completive; plural deferred). Phase 6 is partly landed:
+deterministic ranking, the wasm word cache and the evaluation baseline exist,
+while punctuation phase 2, UI rendering and the style decision are open. The analysis layer it builds on is `PLAN_SYNTAX.md` and is already landed
 on the `syntax` branch.
 
 The remaining work is indexed in §16; each open item has enough detail to be
@@ -953,7 +952,7 @@ The exact-output fixture proves individual rules; it does not measure how
 often the checker is wrong on real prose. `tests/fixtures/syntax_eval.json` is
 the second, larger corpus for aggregate evaluation:
 
-- 140 sentences at the current baseline: 97 clean and 43 with expected
+- 148 sentences at the current baseline: 103 clean and 45 with expected
   diagnostics;
 - one row per sentence, with the expected kind(s);
 - every emitted kind represented, plus the guards named in §13;
@@ -1156,9 +1155,11 @@ Design:
     reading is not certain, leave `viimeistään` out.
 - A progressive cue plus a total object (genitive singular, nominative plural,
   or accusative) suggests the partitive.
-- A completive cue plus a partitive object suggests the total object. The
-  target case is **genitive for singular** and **nominative for plural**;
-  do not ask the correction engine for a genitive plural.
+- A completive cue plus a partitive object suggests the total object. For a
+  singular object the target is the **genitive**. Plural is deferred: a
+  partitive plural is often homonymous (`kirjoja` belongs to both `kirja` and
+  `kirjo`), so the syntax layer's chosen lemma can produce a different word
+  (`kirjot`). Stay quiet until the reading carries per-lemma candidates.
 - The diagnostic is `Suggestion`, `DiagnosticConfidence::Medium`, one
   correction, never an `Error`.
 - If the cue and the object are in different clauses, stay quiet.
@@ -1174,6 +1175,7 @@ Luen parhaillaan kirjaa.   # clean
 Luin kirjan loppuun.       # clean
 Luen kirjan.               # clean: no aspect cue
 Luen kirjaa.               # clean: no aspect cue
+Luin kirjoja loppuun.      # clean: plural completive deferred
 ```
 
 The clean corpus must stay free of `Error`; suggestions are allowed only on
@@ -1181,11 +1183,21 @@ the two cue rows above.
 
 Tasks:
 
-- [ ] Add the two closed cue tables and the singular/plural total-object
-      target helper.
-- [ ] Emit only `Suggestion`/`Medium`; add all guards above.
-- [ ] Add the two suggestion cases and the four clean rows to the fixture.
-- [ ] Add a unit test that a clause without an aspect cue stays quiet.
+- [x] Add the two closed cue tables and the total-object target.
+- [x] Emit only `Suggestion`/`Medium`; add all guards above.
+- [x] Add the two suggestion cases and the clean rows to the fixture.
+- [x] Add unit tests for the cues, the matching cases, the parenthetical guard
+      and the no-cue path.
+- [x] Defer plural completive with an explicit guard and test.
+
+Implementation notes:
+
+- Cues are matched as word runs, so `juuri nyt` and `tällä hetkellä` work.
+  `viimeistään` is omitted: its “at the latest” reading is not completion.
+- A cue inside a parenthetical is ignored (`Luen (parhaillaan) kirjan.`).
+- The object is taken from `Clause.object`; a clause without one stays quiet.
+- The plural completive path is deliberately silent until a partitive plural
+  can name its lemma without the homonym risk.
 
 #### Phase 5C — missing and extra arguments, warning only
 
@@ -1412,8 +1424,8 @@ Tasks:
 First baseline (2026-11-12):
 
 ```text
-clean rows 97: 0 errors, 0 warnings, 0 suggestions
-cases 43: every emitted kind precision 1.00, recall 1.00
+clean rows 103: 0 errors, 0 warnings, 0 suggestions
+cases 45: every emitted kind precision 1.00, recall 1.00
 ```
 
 The baseline is a snapshot, not a target: a new rule that adds an extra
@@ -1520,12 +1532,12 @@ Ordered by user-facing value. Each item points at the phase that specifies it.
 
 1. [x] **Missing and extra arguments** — phase 5C. `data/verb_arguments.csv`
    plus `MissingArgument` / `ExtraArgument` warnings.
-2. [ ] **Aspect-based object case** — phase 5B. Suggestion only, closed cue
-   tables, never an `Error`.
+2. [x] **Aspect-based object case** — phase 5B. Suggestion only, closed cue
+   tables, never an `Error`; singular completive, plural deferred.
 3. [ ] **Punctuation phase 2** — phase 6B. Semicolon boundaries, question-mark
    diagnostics, unbalanced quotes, advisory parenthetical pairs, no
    quote-style corrections.
-4. [x] **Evaluation corpus** — phase 6D. 140 sentences, zero `Error` on clean
+4. [x] **Evaluation corpus** — phase 6D. 148 sentences, zero `Error` on clean
    rows, per-kind baseline recorded.
 5. [ ] **UI and edit application** — phase 6C. Demo panel, reverse-order edit
    replay, opt-in extension toggle.

@@ -102,7 +102,13 @@
     "Herää mies.",
     "Nukuin hyvin.",
     "Sataa vettä.",
-    "Minä nukun."
+    "Minä nukun.",
+    "Luen kirjan.",
+    "Luen kirjaa.",
+    "Luen parhaillaan kirjaa.",
+    "Luin kirjan loppuun.",
+    "Luen (parhaillaan) kirjan.",
+    "Luin kirjoja loppuun."
   ],
   "cases": [
     {
@@ -404,6 +410,20 @@
       "text": "Nukun kirja.",
       "kinds": [
         "extra_argument"
+      ]
+    },
+    {
+      "id": "eval_aspect_progressive",
+      "text": "Luen parhaillaan kirjan.",
+      "kinds": [
+        "object_case"
+      ]
+    },
+    {
+      "id": "eval_aspect_completive",
+      "text": "Luin kirjaa loppuun.",
+      "kinds": [
+        "object_case"
       ]
     }
   ]

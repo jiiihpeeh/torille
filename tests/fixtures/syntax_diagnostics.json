@@ -423,6 +423,32 @@
           "corrections": []
         }
       ]
+    },
+    {
+      "id": "aspect_progressive_suggestion",
+      "text": "Luen parhaillaan kirjan.",
+      "diagnostics": [
+        {
+          "kind": "object_case",
+          "severity": "suggestion",
+          "start": 17,
+          "end": 23,
+          "corrections": ["kirjaa"]
+        }
+      ]
+    },
+    {
+      "id": "aspect_completive_suggestion",
+      "text": "Luin kirjaa loppuun.",
+      "diagnostics": [
+        {
+          "kind": "object_case",
+          "severity": "suggestion",
+          "start": 5,
+          "end": 11,
+          "corrections": ["kirjan"]
+        }
+      ]
     }
   ],
   "clean": [
@@ -519,6 +545,12 @@
     "Herää mies.",
     "Nukuin hyvin.",
     "Sataa vettä.",
-    "Minä nukun."
+    "Minä nukun.",
+    "Luen kirjan.",
+    "Luen kirjaa.",
+    "Luen parhaillaan kirjaa.",
+    "Luin kirjan loppuun.",
+    "Luen (parhaillaan) kirjan.",
+    "Luin kirjoja loppuun."
   ]
 }

@@ -184,4 +184,6 @@ diagnostic_tests!(
     negative_rection_wins,
     missing_argument,
     extra_argument,
+    aspect_progressive_suggestion,
+    aspect_completive_suggestion,
 );
