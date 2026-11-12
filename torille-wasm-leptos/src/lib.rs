@@ -37,6 +37,7 @@ mod components;
 pub use app::App;
 pub use components::editor::Editor;
 pub use components::popup::SuggestionsPopup;
+pub use components::style::StylePanel;
 pub use components::syntax::SyntaxPanel;
 
 /// Mount the `App` component to `<body>`. The default `index.html`

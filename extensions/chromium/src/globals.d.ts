@@ -149,6 +149,13 @@ declare type R_CheckSyntax = {
 declare type R_CheckSyntaxResponse = {
   diagnostics: R_SyntaxDiagnostic[];
 };
+declare type R_CheckStyle = {
+  type: 'torille:check-style';
+  text: string;
+};
+declare type R_CheckStyleResponse = {
+  diagnostics: R_SyntaxDiagnostic[];
+};
 
 declare type R_Message =
   | R_Check
@@ -165,7 +172,8 @@ declare type R_Message =
   | R_UpdateState
   | R_AnalyzeText
   | R_SuggestWithState
-  | R_CheckSyntax;
+  | R_CheckSyntax
+  | R_CheckStyle;
 // `null` means "the checker could not answer" (worker down, wasm
 // failure, timeout). It is deliberately distinct from `false`
 // ("misspelled"): only a `false` should produce a red underline.
@@ -222,9 +230,13 @@ declare type R_TogglePendingInputMessage = {
 declare type R_CheckGrammarPendingInputMessage = {
   type: 'torille:check-grammar-pending-input';
 };
+declare type R_CheckStylePendingInputMessage = {
+  type: 'torille:check-style-pending-input';
+};
 declare type R_ContentInboundMessage =
   | R_TogglePendingInputMessage
-  | R_CheckGrammarPendingInputMessage;
+  | R_CheckGrammarPendingInputMessage
+  | R_CheckStylePendingInputMessage;
 declare type R_ToggleResponse = { disabled: boolean };
 declare type R_CheckGrammarResponse = { checked: boolean };
 // Worker-level message protocol. The wasm worker is loaded once per
@@ -259,6 +271,7 @@ declare type R_WorkerInbound =
       max: number;
     }
   | { id: number; type: 'check-syntax'; idx: number; text: string }
+  | { id: number; type: 'check-style'; text: string }
   | { type: 'debug'; on: boolean };
 declare type R_WorkerOutbound =
   | { type: 'ready' }
@@ -277,4 +290,5 @@ declare type R_WorkerOutbound =
     }
   | { id: number; type: 'suggest-with-state'; suggestions: string[] }
   | { id: number; type: 'check-syntax'; diagnostics: R_SyntaxDiagnostic[] }
+  | { id: number; type: 'check-style'; diagnostics: R_SyntaxDiagnostic[] }
   | { id: number; type: 'error'; for: string; word?: string; error: string };

@@ -60,6 +60,8 @@ pub(super) fn check(tokens: &[Token]) -> Vec<StyleDiagnostic> {
             );
             diagnostic.expected = Some(key);
             if let Some(replacement) = entry.replacement {
+                let replacement =
+                    sentence_case(replacement, contexts[first].sentence_start);
                 diagnostic
                     .corrections
                     .push(Correction::replacement(span.start, span.end, replacement));
@@ -71,6 +73,22 @@ pub(super) fn check(tokens: &[Token]) -> Vec<StyleDiagnostic> {
         }
     }
     diagnostics
+}
+
+/// Uppercase the first character when the match starts a sentence.
+///
+/// A phrase table stores lowercase surfaces, but a replacement at the start
+/// of a sentence must keep the sentence's capital: `Tällä hetkellä` becomes
+/// `Nyt`, not `nyt`.
+fn sentence_case(replacement: &str, sentence_start: bool) -> String {
+    if !sentence_start {
+        return replacement.to_string();
+    }
+    let mut chars = replacement.chars();
+    match chars.next() {
+        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+        None => String::new(),
+    }
 }
 
 #[cfg(test)]
@@ -98,7 +116,7 @@ mod tests {
         assert_eq!(found[0].expected.as_deref(), Some("tällä hetkellä"));
         assert_eq!(
             found[0].corrections[0].edits[0].replacement,
-            "nyt".to_string()
+            "Nyt".to_string()
         );
     }
 
@@ -129,7 +147,7 @@ mod tests {
         assert_eq!(found[0].span, span_of(text, "Systeemi"));
         assert_eq!(
             found[0].corrections[0].edits[0].replacement,
-            "järjestelmä".to_string()
+            "Järjestelmä".to_string()
         );
     }
 
@@ -148,6 +166,21 @@ mod tests {
         let found = diagnostics("Tällä hetkellä hetkellä tilanne on rauhallinen.");
         assert_eq!(found.len(), 1, "{found:#?}");
         assert_eq!(found[0].span, span_of("Tällä hetkellä hetkellä tilanne on rauhallinen.", "Tällä hetkellä"));
+    }
+
+    #[test]
+    fn a_sentence_initial_replacement_keeps_the_capital() {
+        let text = "Tällä hetkellä tilanne on rauhallinen.";
+        let found = diagnostics(text);
+        assert_eq!(
+            found[0].corrections[0].edits[0].replacement,
+            "Nyt".to_string()
+        );
+        let mid = diagnostics("Tilanne on tällä hetkellä rauhallinen.");
+        assert_eq!(
+            mid[0].corrections[0].edits[0].replacement,
+            "nyt".to_string()
+        );
     }
 
     #[test]

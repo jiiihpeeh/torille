@@ -13,6 +13,7 @@ export function createTextboxToggle(opts: {
   describeInput: DescribeInput;
   setVisible: (el: HTMLElement, visible: boolean) => void;
   checkGrammar: (el: HTMLElement) => void;
+  checkStyle: (el: HTMLElement) => void;
 }): void {
   const disabledInputs = new WeakSet<HTMLElement>();
   let pendingInput: HTMLElement | null = null;
@@ -51,6 +52,11 @@ export function createTextboxToggle(opts: {
     if (m?.type === 'torille:check-grammar-pending-input') {
       const input = pendingInput;
       if (input) opts.checkGrammar(input);
+      return Promise.resolve({ checked: !!input } as R_CheckGrammarResponse);
+    }
+    if (m?.type === 'torille:check-style-pending-input') {
+      const input = pendingInput;
+      if (input) opts.checkStyle(input);
       return Promise.resolve({ checked: !!input } as R_CheckGrammarResponse);
     }
     if (m?.type !== 'torille:toggle-pending-input') return undefined;

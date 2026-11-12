@@ -116,7 +116,7 @@ fn diagnostic_row(
 }
 
 /// Apply a correction's edits without shifting the later offsets.
-fn apply_correction(text: &str, edits: &[torille::syntax_check::Edit]) -> String {
+pub(crate) fn apply_correction(text: &str, edits: &[torille::syntax_check::Edit]) -> String {
     let mut updated = text.to_string();
     let mut ordered: Vec<&torille::syntax_check::Edit> = edits.iter().collect();
     ordered.sort_by(|a, b| b.start.cmp(&a.start).then_with(|| b.end.cmp(&a.end)));

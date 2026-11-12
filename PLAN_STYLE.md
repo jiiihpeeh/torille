@@ -1,12 +1,12 @@
 # PLAN_STYLE — the opt-in style layer
 
-Status: **Phase 0–5 landed; phases 6–7 planned.** The public types, the
-curated phrase/word table, sentence-local repetition, the long-sentence metric
-and the evaluation corpus are implemented in `src/style_check/` and `tests/`.
-The wasm/UI surface and the user-facing documentation are not wired yet. This
-is the separate plan that `PLAN_SYNTAX_CHECKER.md` phase 6E asked for before
-any style rule lands. It does not change the grammar checker, the suggestion
-pipeline or the keystroke path.
+Status: **Phase 0–6 landed; phase 7 planned.** The public types, the curated
+phrase/word table, sentence-local repetition, the long-sentence metric, the
+evaluation corpus, the wasm export and the opt-in UI are implemented. The
+user-facing documentation and release bump remain. This is the separate plan
+that `PLAN_SYNTAX_CHECKER.md` phase 6E asked for before any style rule lands.
+It does not change the grammar checker, the suggestion pipeline or the
+keystroke path.
 
 The grammar checker answers “is this written Finnish correct?”. The style
 layer answers a different, optional question: “is this sentence needlessly
@@ -329,11 +329,11 @@ measurement.
 
 ### 7.3 Leptos demo
 
-- The diagnostics panel gets a mode switch: `Kielioppi` / `Tyyli`.
-- The style mode uses the same list component and a blue/gray accent, never
-  the red error styling.
-- Switching modes must not re-run the other checker; each mode owns its wasm
-  call.
+- The demo gets a separate `Tyyli` panel next to `Kielioppi`.
+- It reuses the diagnostic list classes and the suggestion accent, never the
+  red error styling.
+- Opening or checking one panel must not re-run the other checker; each owns
+  its own call.
 - The panel shows a short empty state: `Ei tyylihuomautuksia.`
 
 ## 8. Evaluation
@@ -474,13 +474,20 @@ budget met.
 
 ### Phase 6 — wasm and UI
 
-- [ ] Add `check_style` to `torille-wasm`.
-- [ ] Add the `torille:check-style` worker path and the
+- [x] Add `check_style` to `torille-wasm`.
+- [x] Add the `torille:check-style` worker path and the
       `torille:check-style-pending-input` content path.
-- [ ] Add **Tarkista tyyli** to both extension manifests and context menus.
-- [ ] Add the `Kielioppi` / `Tyyli` switch to the Leptos panel.
-- [ ] Filter findings inside ignored ranges in the extension.
-- [ ] Run both extensions’ typecheck, build and tests.
+- [x] Add **Tarkista tyyli** to both extension context menus.
+- [x] Add a separate `Tyyli` panel to the Leptos demo.
+- [x] Filter style findings whose spans intersect an ignored range, so code
+      blocks, URLs and BBCode never produce style advice.
+- [x] Run both extensions’ typecheck, build and tests.
+
+Phase 6 landed with a stateless `check_style(text)` wasm export, a separate
+`check-style` worker message and `Tarkista tyyli` menu item, a `Tyyli` panel in
+both browsers, and a separate Leptos panel. The wasm worker converts byte
+offsets to UTF-16 with the same helper as the grammar path. Both browsers pass
+48 tests, including a new `check-style` integration case.
 
 Acceptance: style is invisible until requested; grammar output is unchanged;
 the worker protocol has one new message type and no changed old one.

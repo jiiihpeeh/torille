@@ -9,4 +9,5 @@
 
 pub mod editor;
 pub mod popup;
+pub mod style;
 pub mod syntax;

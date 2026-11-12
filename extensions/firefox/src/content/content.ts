@@ -17,12 +17,13 @@
 
 import { createBlacklist } from './blacklist';
 import { createTextboxToggle } from './context-menu';
-import { editorText, showGrammarPanel } from './grammar-panel';
+import { editorText, showGrammarPanel, showStylePanel } from './grammar-panel';
 import { createOverlay } from './overlay';
 import { createScanner } from './scanner';
+import { isIgnored } from './ignore-ranges';
 import {
-  UI_SETTINGS, api, dbg, describeInput, isCodeEditorField, isSearchField,
-  loadUiSettings, setDebugFlag, uiSettings,
+  UI_SETTINGS, api, dbg, describeInput, ignoredRangesFor, isCodeEditorField,
+  isSearchField, loadUiSettings, setDebugFlag, uiSettings,
 } from './shared';
 import { createWorkerClient } from './worker-client';
 
@@ -138,6 +139,30 @@ createTextboxToggle({
       });
     }).catch((e: unknown) => {
       dbg('content', 'checkGrammar failed', String(e));
+    });
+  },
+  checkStyle(input: HTMLElement): void {
+    const overlay = perInput.get(input);
+    if (!overlay) return;
+    const text = editorText(input);
+    overlay.workerClient.checkStyleAsync(text).then((diagnostics) => {
+      if (diagnostics === null) return;
+      // Code blocks, URLs and BBCode are not style prose. Drop any finding
+      // that intersects an ignored range, exactly as the spell overlay does.
+      const ignored = ignoredRangesFor(text);
+      const visible = ignored.length === 0
+        ? diagnostics
+        : diagnostics.filter(
+            (diagnostic) => !isIgnored(
+              { start: diagnostic.start, end: diagnostic.end }, ignored),
+          );
+      showStylePanel(input, visible, (correction) => {
+        // If the field changed after the check, the offsets are stale.
+        if (editorText(input) !== text) return false;
+        return overlay.applyTextEdits(correction.edits);
+      });
+    }).catch((e: unknown) => {
+      dbg('content', 'checkStyle failed', String(e));
     });
   },
 });

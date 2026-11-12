@@ -96,6 +96,22 @@ test('built core: check-syntax reports UTF-16 spans and edits',
   await core.handle({ id: 3, type: 'destroy-state', idx });
 });
 
+test('built core: check-style is suggestion-only with UTF-16 spans',
+     { skip: !available && 'run `npm run build` first' }, async () => {
+  const { createSpellCore } = await import(distCore);
+  const core = createSpellCore();
+  await core.init();
+
+  const text = 'Tällä hetkellä tilanne on rauhallinen.';
+  const out = await core.handle({ id: 1, type: 'check-style', text });
+  assert.equal(out?.type, 'check-style');
+  const diagnostic = out.diagnostics.find((d) => d.kind === 'style_wordy');
+  assert.ok(diagnostic, 'the phrase diagnostic should be present');
+  assert.equal(diagnostic.severity, 'suggestion');
+  assert.equal(text.slice(diagnostic.start, diagnostic.end), 'Tällä hetkellä');
+  assert.equal(diagnostic.corrections[0].edits[0].replacement, 'Nyt');
+});
+
 test('built core: check-syntax falls back when the state handle is stale',
      { skip: !available && 'run `npm run build` first' }, async () => {
   const { createSpellCore } = await import(distCore);

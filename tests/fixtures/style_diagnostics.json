@@ -12,7 +12,7 @@
           "message": "style_wordy",
           "expected": "tällä hetkellä",
           "corrections": [
-            "nyt"
+            "Nyt"
           ]
         }
       ]
@@ -44,7 +44,7 @@
           "message": "style_colloquial",
           "expected": "systeemi",
           "corrections": [
-            "järjestelmä"
+            "Järjestelmä"
           ]
         }
       ]
@@ -76,7 +76,7 @@
           "message": "style_wordy",
           "expected": "kokonaisuudessaan",
           "corrections": [
-            "kokonaan"
+            "Kokonaan"
           ]
         }
       ]
@@ -103,7 +103,7 @@
           "message": "style_wordy",
           "expected": "tällä hetkellä",
           "corrections": [
-            "nyt"
+            "Nyt"
           ]
         }
       ]

@@ -144,7 +144,8 @@ export type CoreResponse =
   | { type: 'create-state'; idx: number }
   | { type: 'analyze-text'; hits: AnalyzeHit[]; stateValid: boolean }
   | { type: 'suggest-with-state'; suggestions: string[] }
-  | { type: 'check-syntax'; diagnostics: R_SyntaxDiagnostic[] };
+  | { type: 'check-syntax'; diagnostics: R_SyntaxDiagnostic[] }
+  | { type: 'check-style'; diagnostics: R_SyntaxDiagnostic[] };
 
 // ───────────────────────────────────────────────────────────────────────
 // §5  Handlers
@@ -340,30 +341,30 @@ function handleSuggestWithState(
   return { type: 'suggest-with-state', suggestions };
 }
 
-function handleCheckSyntax(
-  msg: Extract<R_WorkerInbound, { type: 'check-syntax' }>,
-): CoreResponse {
+type RawDiagnostic = {
+  kind: string;
+  severity: string;
+  confidence: string;
+  start: number;
+  end: number;
+  message: string;
+  expected: string | null;
+  corrections?: {
+    score: number;
+    note: string;
+    edits?: { start: number; end: number; replacement: string }[];
+  }[];
+};
+
+function toContentDiagnostics(
+  text: string,
+  rawDiagnostics: RawDiagnostic[],
+): R_SyntaxDiagnostic[] {
   // The wasm side reports UTF-8 byte offsets. The content script slices
   // a JS string, so convert the diagnostic and edit offsets once here.
-  const offsetMap = buildByteToUtf16Map(msg.text);
-  const raw = bg.check_syntax_with_state(msg.idx, msg.text) as {
-    diagnostics?: {
-      kind: string;
-      severity: string;
-      confidence: string;
-      start: number;
-      end: number;
-      message: string;
-      expected: string | null;
-      corrections?: {
-        score: number;
-        note: string;
-        edits?: { start: number; end: number; replacement: string }[];
-      }[];
-    }[];
-  };
+  const offsetMap = buildByteToUtf16Map(text);
   const diagnostics: R_SyntaxDiagnostic[] = [];
-  for (const d of raw.diagnostics ?? []) {
+  for (const d of rawDiagnostics) {
     const start = offsetMap[d.start];
     const end = offsetMap[d.end];
     if (start === undefined || end === undefined) continue;
@@ -399,9 +400,31 @@ function handleCheckSyntax(
       corrections,
     });
   }
+  return diagnostics;
+}
+
+function handleCheckSyntax(
+  msg: Extract<R_WorkerInbound, { type: 'check-syntax' }>,
+): CoreResponse {
+  const raw = bg.check_syntax_with_state(msg.idx, msg.text) as {
+    diagnostics?: RawDiagnostic[];
+  };
+  const diagnostics = toContentDiagnostics(msg.text, raw.diagnostics ?? []);
   dbg('core', 'check-syntax',
       { idx: msg.idx, len: msg.text.length, diagnostics: diagnostics.length });
   return { type: 'check-syntax', diagnostics };
+}
+
+function handleCheckStyle(
+  msg: Extract<R_WorkerInbound, { type: 'check-style' }>,
+): CoreResponse {
+  const raw = bg.check_style(msg.text) as {
+    diagnostics?: RawDiagnostic[];
+  };
+  const diagnostics = toContentDiagnostics(msg.text, raw.diagnostics ?? []);
+  dbg('core', 'check-style',
+      { len: msg.text.length, diagnostics: diagnostics.length });
+  return { type: 'check-style', diagnostics };
 }
 
 // ───────────────────────────────────────────────────────────────────────
@@ -445,6 +468,7 @@ export function createSpellCore(): SpellCore {
         case 'analyze-text': return handleAnalyzeText(msg);
         case 'suggest-with-state': return handleSuggestWithState(msg);
         case 'check-syntax': return handleCheckSyntax(msg);
+        case 'check-style': return handleCheckStyle(msg);
         default: {
           const unknown = msg as { type?: string };
           throw new Error(`unknown message type: ${unknown.type ?? '?'}`);

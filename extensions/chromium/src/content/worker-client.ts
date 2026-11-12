@@ -233,6 +233,14 @@ export function createWorkerClient(opts: { dbg: DebugFn; inputId: number }) {
       });
       return Array.isArray(r?.diagnostics) ? r.diagnostics : null;
     },
+    // On-demand style check for the separate Tyyli command. It has
+    // no per-textarea state: the style pass is stateless.
+    async checkStyleAsync(text: string): Promise<R_SyntaxDiagnostic[] | null> {
+      const r = await send<R_CheckStyleResponse>({
+        type: 'torille:check-style', text,
+      });
+      return Array.isArray(r?.diagnostics) ? r.diagnostics : null;
+    },
     // Free the wasm-side slot. Called from the scanner's
     // detach path so a per-overlay slot doesn't outlive the
     // overlay.

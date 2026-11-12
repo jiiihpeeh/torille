@@ -96,7 +96,8 @@ type SpellCallPayload =
   | { type: 'update-state'; idx: number; text: string }
   | { type: 'analyze-text'; idx: number; text: string; max: number }
   | { type: 'suggest-with-state'; idx: number; word: string; max: number }
-  | { type: 'check-syntax'; idx: number; text: string };
+  | { type: 'check-syntax'; idx: number; text: string }
+  | { type: 'check-style'; text: string };
 
 type SpellResponse =
   | { id: number; type: 'check'; ok: boolean }
@@ -113,6 +114,7 @@ type SpellResponse =
     }
   | { id: number; type: 'suggest-with-state'; suggestions: string[] }
   | { id: number; type: 'check-syntax'; diagnostics: R_SyntaxDiagnostic[] }
+  | { id: number; type: 'check-style'; diagnostics: R_SyntaxDiagnostic[] }
   // Fire-and-forget ops (destroy/clear/update-state, debug) resolve
   // with this in the direct host, where there is no message id to
   // mirror. Callers ignore the value.
@@ -484,11 +486,17 @@ async function spellBatchSuggest(
 const MENU_DISABLE_INPUT = 'torille-disable-input';
 const MENU_DISABLE_SITE = 'torille-disable-site';
 const MENU_CHECK_GRAMMAR = 'torille-check-grammar';
+const MENU_CHECK_STYLE = 'torille-check-style';
 
 const MENU_ITEMS: browser.contextMenus._CreateCreateProperties[] = [
   {
     id: MENU_CHECK_GRAMMAR,
     title: 'Tarkista kielioppi',
+    contexts: ['editable'],
+  },
+  {
+    id: MENU_CHECK_STYLE,
+    title: 'Tarkista tyyli',
     contexts: ['editable'],
   },
   {
@@ -545,6 +553,7 @@ api.runtime.onMessage.addListener((message: unknown) => {
     | R_AnalyzeText
     | R_SuggestWithState
     | R_CheckSyntax
+    | R_CheckStyle
     | R_ContextMenuFired
     | R_SiteContextMenuFired
     | R_Debug;
@@ -727,6 +736,24 @@ api.runtime.onMessage.addListener((message: unknown) => {
     })();
   }
 
+  // On-demand style check. It is stateless and separate from the
+  // grammar command; the worker converts byte offsets to UTF-16.
+  if (m?.type === 'torille:check-style') {
+    return (async (): Promise<R_CheckStyleResponse> => {
+      try {
+        await ensureSpellWorkerForRequest();
+        const r = await spellCall({ type: 'check-style', text: m.text });
+        if (r.type !== 'check-style') {
+          throw new Error('worker returned unexpected response');
+        }
+        return { diagnostics: r.diagnostics };
+      } catch (e) {
+        dbg('background', 'check-style route error', String(e));
+        return { diagnostics: [] };
+      }
+    })();
+  }
+
   // Debug flag from the content script. Route it to whichever host
   // is live; the worker has its own `debug` frame, the direct core
   // exposes `setDebug`.
@@ -761,6 +788,10 @@ api.contextMenus.onClicked.addListener(async (info, tab) => {
     await handleCheckGrammarClick(tab);
     return;
   }
+  if (info.menuItemId === MENU_CHECK_STYLE) {
+    await handleCheckStyleClick(tab);
+    return;
+  }
   if (info.menuItemId === MENU_DISABLE_INPUT) {
     await handleDisableInputClick(tab);
     return;
@@ -776,6 +807,17 @@ async function handleCheckGrammarClick(tab: browser.tabs.Tab | undefined): Promi
   try {
     await api.tabs.sendMessage(tab.id, {
       type: 'torille:check-grammar-pending-input',
+    });
+  } catch (_) {
+    // No content script on this tab; nothing to check.
+  }
+}
+
+async function handleCheckStyleClick(tab: browser.tabs.Tab | undefined): Promise<void> {
+  if (!tab || tab.id == null) return;
+  try {
+    await api.tabs.sendMessage(tab.id, {
+      type: 'torille:check-style-pending-input',
     });
   } catch (_) {
     // No content script on this tab; nothing to check.

@@ -29,6 +29,18 @@ export function syntaxKindLabel(kind: string): string {
   }
 }
 
+function styleKindLabel(kind: string): string {
+  switch (kind) {
+    case 'style_repetition': return 'toistuva sana';
+    case 'style_long_sentence': return 'pitkä virke';
+    case 'style_cliche': return 'kulunut ilmaus';
+    case 'style_filler': return 'täytesana';
+    case 'style_wordy': return 'monisanainen ilmaus';
+    case 'style_colloquial': return 'arkikielinen ilmaus';
+    default: return kind;
+  }
+}
+
 export function syntaxSeverityLabel(severity: string): string {
   if (severity === 'error') return 'virhe';
   if (severity === 'warning') return 'varoitus';
@@ -68,10 +80,41 @@ export function editorText(input: HTMLElement): string {
   return input.textContent ?? '';
 }
 
+interface PanelLabels {
+  title: string;
+  empty: string;
+  kindLabel: (kind: string) => string;
+}
+
 export function showGrammarPanel(
   input: HTMLElement,
   diagnostics: R_SyntaxDiagnostic[],
   apply: (correction: R_SyntaxCorrection) => boolean,
+): void {
+  showPanel(input, diagnostics, apply, {
+    title: 'Kielioppi',
+    empty: 'Ei huomautuksia.',
+    kindLabel: syntaxKindLabel,
+  });
+}
+
+export function showStylePanel(
+  input: HTMLElement,
+  diagnostics: R_SyntaxDiagnostic[],
+  apply: (correction: R_SyntaxCorrection) => boolean,
+): void {
+  showPanel(input, diagnostics, apply, {
+    title: 'Tyyli',
+    empty: 'Ei tyylihuomautuksia.',
+    kindLabel: styleKindLabel,
+  });
+}
+
+function showPanel(
+  input: HTMLElement,
+  diagnostics: R_SyntaxDiagnostic[],
+  apply: (correction: R_SyntaxCorrection) => boolean,
+  labels: PanelLabels,
 ): void {
   document.querySelector('.torille-grammar-panel')?.remove();
   const panel = document.createElement('div');
@@ -106,7 +149,7 @@ export function showGrammarPanel(
   header.style.cssText =
     'display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;';
   const title = document.createElement('strong');
-  title.textContent = 'Kielioppi';
+  title.textContent = labels.title;
   const close = document.createElement('button');
   close.type = 'button';
   close.textContent = 'sulje';
@@ -117,7 +160,7 @@ export function showGrammarPanel(
 
   if (diagnostics.length === 0) {
     const empty = document.createElement('p');
-    empty.textContent = 'Ei huomautuksia.';
+    empty.textContent = labels.empty;
     empty.style.margin = '0.3em 0';
     panel.append(empty);
   } else {
@@ -130,7 +173,7 @@ export function showGrammarPanel(
         + ';padding:4px 6px;margin:6px 0;background:#fafafa;';
       const head = document.createElement('div');
       const label = document.createElement('strong');
-      label.textContent = syntaxKindLabel(diagnostic.kind);
+      label.textContent = labels.kindLabel(diagnostic.kind);
       const severity = document.createElement('span');
       severity.textContent = ' ' + syntaxSeverityLabel(diagnostic.severity);
       severity.style.color = '#666';
