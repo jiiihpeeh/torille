@@ -65,8 +65,6 @@ impl SyntacticRole {
 /// How much the role resolver trusts a role.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RoleConfidence {
-    /// Morphology and valency agree.
-    Certain,
     /// Morphology fits and word order supports it.
     Likely,
     /// Positional fallback, or an ambiguous word.
@@ -86,12 +84,16 @@ pub struct Clause {
     /// Token indices. The range includes only the clause's words, not the
     /// separators around them.
     pub tokens: Range<usize>,
-    /// First finite predicate token, when one could be found.
+    /// The predicate token, when one could be found. In a compound tense this
+    /// is the main verb; the auxiliary carries `head = predicate`.
     pub predicate: Option<usize>,
-    /// Filled by a later phase.
+    /// The clause subject, when one could be found.
     pub subject: Option<usize>,
-    /// Filled by a later phase.
+    /// The clause object, when one could be found.
     pub object: Option<usize>,
+    /// The predicative or object complement, when one could be found
+    /// (`Talo on kaunis`, `Hän näyttää väsyneeltä`).
+    pub complement: Option<usize>,
     /// True when the clause contains a negative auxiliary (`en`, `et`, ...).
     pub negative: bool,
     /// True for an existential construction (`pöydällä on kirja`).
@@ -249,6 +251,7 @@ fn analyze_with(
                 predicate: None,
                 subject: None,
                 object: None,
+                complement: None,
                 negative: false,
                 existential: false,
             });
@@ -1268,6 +1271,7 @@ fn resolve_clause(
             out[index].confidence = RoleConfidence::Likely;
             out[index].case = best_case(&out[index], complement_cases);
             out[index].head = Some(predicate);
+            clause.complement = Some(index);
         }
     }
 
@@ -1310,6 +1314,7 @@ fn resolve_clause(
             }
             out[index].case = best_case(&out[index], complement_cases);
             out[index].head = Some(predicate);
+            clause.complement = Some(index);
         }
     }
 
@@ -1790,6 +1795,7 @@ mod tests {
         let kaunis = word_index(&tokens, "kaunis");
         assert_eq!(analysis.tokens[talo].role, SyntacticRole::Subject);
         assert_eq!(analysis.tokens[kaunis].role, SyntacticRole::Complement);
+        assert_eq!(analysis.clauses[0].complement, Some(kaunis));
     }
 
     #[test]

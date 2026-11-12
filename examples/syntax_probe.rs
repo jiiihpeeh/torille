@@ -56,7 +56,6 @@ fn main() {
                 token.text,
                 s.role.name(),
                 match s.confidence {
-                    RoleConfidence::Certain => "certain",
                     RoleConfidence::Likely => "likely",
                     RoleConfidence::Weak => "weak",
                 },

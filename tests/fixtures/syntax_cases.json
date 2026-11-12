@@ -47,7 +47,7 @@
         {"text": "kaunis", "role": "complement", "confidence": "likely", "case": "nominative", "head": 1}
       ],
       "clause_roles": [
-        {"predicate": 1, "subject": 0, "object": null, "negative": false, "existential": false}
+        {"predicate": 1, "subject": 0, "object": null, "complement": 2, "negative": false, "existential": false}
       ]
     },
     {
@@ -117,7 +117,7 @@
         {"text": "mentävä", "role": "complement", "confidence": "likely", "case": "nominative", "head": 1}
       ],
       "clause_roles": [
-        {"predicate": 1, "subject": 0, "object": null, "negative": false, "existential": false}
+        {"predicate": 1, "subject": 0, "object": null, "complement": 2, "negative": false, "existential": false}
       ]
     },
     {
@@ -324,7 +324,7 @@
         {"text": "väsyneeltä", "role": "complement", "confidence": "likely", "case": "ablative", "head": 1}
       ],
       "clause_roles": [
-        {"predicate": 1, "subject": 0, "object": null, "negative": false, "existential": false}
+        {"predicate": 1, "subject": 0, "object": null, "complement": 2, "negative": false, "existential": false}
       ]
     },
     {
@@ -337,7 +337,7 @@
         {"text": "punaiseksi", "role": "complement", "confidence": "likely", "case": "translative", "head": 1}
       ],
       "clause_roles": [
-        {"predicate": 1, "subject": null, "object": 0, "negative": false, "existential": false}
+        {"predicate": 1, "subject": null, "object": 0, "complement": 2, "negative": false, "existential": false}
       ]
     },
     {
@@ -394,7 +394,7 @@
         {"text": "opettaja", "role": "complement", "case": "nominative", "head": 3}
       ],
       "clause_roles": [
-        {"predicate": 3, "subject": 2, "object": null, "negative": false, "existential": false}
+        {"predicate": 3, "subject": 2, "object": null, "complement": 4, "negative": false, "existential": false}
       ]
     },
     {
@@ -408,7 +408,7 @@
         {"text": "punainen", "role": "complement", "case": "nominative", "head": 2}
       ],
       "clause_roles": [
-        {"predicate": 2, "subject": 1, "object": null, "negative": false, "existential": false}
+        {"predicate": 2, "subject": 1, "object": null, "complement": 3, "negative": false, "existential": false}
       ]
     },
     {
@@ -425,7 +425,7 @@
       ],
       "clause_roles": [
         {"predicate": 1, "subject": 0, "object": 2, "negative": false, "existential": false},
-        {"predicate": 4, "subject": 0, "object": null, "negative": false, "existential": false}
+        {"predicate": 4, "subject": 0, "object": null, "complement": 5, "negative": false, "existential": false}
       ]
     },
     {
@@ -464,7 +464,7 @@
         {"text": "kaunis", "role": "complement", "case": "nominative", "head": 3}
       ],
       "clause_roles": [
-        {"predicate": 3, "subject": 1, "object": null, "negative": false, "existential": false}
+        {"predicate": 3, "subject": 1, "object": null, "complement": 4, "negative": false, "existential": false}
       ]
     },
     {

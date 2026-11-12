@@ -185,7 +185,7 @@ pub fn hyphenate(
 /// {
 ///   sentences: [{ start, end, index, paragraphStart }],
 ///   clauses:   [{ start, end, tokensStart, tokensEnd, predicate, subject,
-///                 object, negative, existential }],
+///                 object, complement, negative, existential }],
 ///   tokens:    [{ word, start, end, role, confidence, clause, head,
 ///                 case, lemma, readings: [{ pos, case, number, person,
 ///                 tense, mood, voice, polarity }] }]
@@ -233,6 +233,7 @@ pub fn analyze_syntax(text: &str) -> js_sys::Object {
         set_option(&item, "predicate", clause.predicate);
         set_option(&item, "subject", clause.subject);
         set_option(&item, "object", clause.object);
+        set_option(&item, "complement", clause.complement);
         set(&item, "negative", JsValue::from(clause.negative));
         set(&item, "existential", JsValue::from(clause.existential));
         clauses.push(&item);
@@ -251,7 +252,6 @@ pub fn analyze_syntax(text: &str) -> js_sys::Object {
             &item,
             "confidence",
             JsValue::from(match syntax.confidence {
-                torille::syntax::RoleConfidence::Certain => "certain",
                 torille::syntax::RoleConfidence::Likely => "likely",
                 torille::syntax::RoleConfidence::Weak => "weak",
             }),

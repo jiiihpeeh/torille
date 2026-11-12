@@ -1,8 +1,8 @@
 # PLAN_SYNTAX — making the advisory syntax layer trustworthy
 
-Status: audit and fixture complete; Phases 1–4 landed (S1–S18), and Phase 6
-has removed the suggestion-payload cost. Phase 5 (API contract) is open. Work
-happens on the `syntax` branch off `master`.
+Status: Phases 0–5 landed; Phase 6 has removed the suggestion-payload cost,
+with a per-document wasm cache still open. Work happens on the `syntax` branch
+off `master`.
 
 The syntax layer (`src/syntax.rs`) is the second, on-demand layer over the
 morphology engine. It is **not** in the keystroke path; its only shipping
@@ -38,8 +38,8 @@ regression fixture in phase 0.
   complement, an existential, a passive, a necessity construction, coordinated
   subjects/objects, modifiers, and adverbials from local cases.
 - `Clause.negative` and `Clause.existential` flags.
-- `RoleConfidence::{Certain, Likely, Weak}`. `Certain` is currently never
-  produced; `Likely` and `Weak` carry the whole contract.
+- `RoleConfidence::{Likely, Weak}`. `Certain` was removed in Phase 5 because
+  no rule produced it.
 
 The 24 tests cover the happy paths of those rules. The audit below covers the
 paths they do not.
@@ -462,20 +462,17 @@ object, complement and modifier assignment. `Kun`, `Joko`, `Sekä`, `ja` and
 `että` are no longer candidates.
 
 **S19. Clause and token API gaps.**
-`Auxiliary` now exists in the token stream (Phase 3). `Clause` has
-`predicate`, `subject`, `object` but no `complement` or `adverbials`, even
-though tokens can carry those roles. `RoleConfidence::Certain` is never
-constructed. Decide before phase 4:
+`Auxiliary` now exists in the token stream (Phase 3). `Clause` had
+`predicate`, `subject`, `object` but no `complement`, even though tokens can
+carry that role, and `RoleConfidence::Certain` was never constructed.
 
-- add `Clause.complement: Option<usize>` and maybe `Clause.adverbials:
-  Vec<usize>`; or
-- document that only the core three are on the clause and consumers must scan
-  tokens for the rest.
-
-Either is fine; leaving an unused `Certain` while claiming a confidence model
-is not. Recommend: add `complement`, keep `adverbials` out (they are many and
-order matters), and either produce `Certain` for the unambiguous finite
-predicate/subject cases or remove the variant in a breaking-change commit.
+**Phase 5 landing.** `Clause.complement: Option<usize>` is filled by both the
+valency table and the copula/change-verb path, and `Clause.adverbials` stays
+out (adverbials are many and ordered; consumers scan tokens). `Certain` is
+removed from `RoleConfidence` — it had no producer, and keeping a dead
+confidence level made the model look stronger than it is. The wasm clause
+object and its doc comment now include `complement`; the corpus
+`clause_roles` rows assert it.
 
 **S20. A sentence costs seconds, not milliseconds.**
 The audit measured `syntax::analyze` on the probe corpus:
@@ -619,13 +616,17 @@ adverbial. `Sami söi puuron, koska oli nälkäinen.` -> second clause shares
 `Sami`. `Helsingissä asuva mies on opettaja.` -> `Helsingissä` adverbial,
 `asuva` modifier, `mies` subject.
 
-### Phase 5 — API and wasm contract (S19)
+### Phase 5 — API and wasm contract (S19) — landed
 
-- [ ] Decide `Clause.complement` / `Auxiliary` / `Certain`.
-- [ ] Update `analyze_syntax` and its TypeScript shape in
-      `torille-wasm/src/lib.rs`.
-- [ ] Add a wasm/integration check that the JSON keys still match the doc
-      comment.
+- [x] Add `Clause.complement`; keep `adverbials` out. `Auxiliary` was already
+      added in Phase 3.
+- [x] Remove `RoleConfidence::Certain`, which no rule produced. This is a
+      breaking change to the public enum.
+- [x] Update `analyze_syntax`, its doc-comment shape and the TypeScript
+      consumer shape with `complement`.
+- [x] Assert `clause.complement` in the corpus `clause_roles` rows and in the
+      engine unit test. The wasm key is compile-checked against the engine
+      field, though the JSON string itself has no native test.
 
 ### Phase 6 — make it affordable before a UI uses it (S20) — mostly landed
 

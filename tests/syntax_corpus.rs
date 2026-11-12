@@ -47,7 +47,6 @@ fn role(name: &str) -> SyntacticRole {
 
 fn confidence(name: &str) -> RoleConfidence {
     match name {
-        "certain" => RoleConfidence::Certain,
         "likely" => RoleConfidence::Likely,
         "weak" => RoleConfidence::Weak,
         other => panic!("unknown confidence {other:?}"),
@@ -281,6 +280,7 @@ fn run_case(id: &str) {
                 ("predicate", actual.predicate),
                 ("subject", actual.subject),
                 ("object", actual.object),
+                ("complement", actual.complement),
             ] {
                 match expected_index(expected, key) {
                     Expected::Absent => {}
