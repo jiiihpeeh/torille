@@ -1,7 +1,7 @@
 # Building the torille Firefox add-on from source
 
 This document describes how to build the submitted Firefox extension
-(`torille`, version 0.5.0) from the accompanying source archive. The result
+(`torille`, version 0.6.0) from the accompanying source archive. The result
 is the same code that is packaged in `torille-firefox.xpi`.
 
 ## Tested build environment

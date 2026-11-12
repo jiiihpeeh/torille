@@ -1,6 +1,6 @@
 {
   "name": "torille-firefox",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A Manifest V3 Firefox extension that turns the torille wasm into a context-menu spell-checker.",
   "main": "dist/background/background.js",
   "scripts": {

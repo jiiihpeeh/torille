@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "torille"
-version = "0.1.0"
+version = "0.6.0"
 description = "torille morphology, as a Python extension"
 license = { text = "MIT OR Apache-2.0" }
 requires-python = ">=3.9"
