@@ -192,7 +192,9 @@ form.
 sentence splits into two clauses, and `Talo, jossa asun, on vanha` no longer
 folds the relative into the host. The contiguous-range limitation remains:
 `Mies, jonka näin, söi` yields three linear clauses, with `Mies` separated
-from its predicate (open question 2). A post-predicate **nominative** is now
+from its predicate. `Clause.parent`/`children` and `Clause.antecedent` now
+link the relative clause to `Mies` (open questions 2–3), but the host is still
+not one contiguous range. A post-predicate **nominative** is now
 allowed to be the subject (`jossa roihusi tuli`), while a partitive after the
 predicate still belongs to the object (`Luen kirjaa`).
 
@@ -665,25 +667,27 @@ adverbial. `Sami söi puuron, koska oli nälkäinen.` -> second clause shares
 2. Relative clauses interrupt their host (`Mies, joka tuli, söi`). `Clause`
    ranges are contiguous, so the host predicate is forced into its own
    clause. Do we accept linear segments and document that, or add nesting
-   (`parent`/`children`)? Recommendation: accept linear for now; the audit
-   sentence has a final relative, so it works. Revisit when a consumer needs
-   the host clause as one unit.
+   (`parent`/`children`)? **Landed as an additive tree.** The linear ranges
+   stay the source of truth, and a relative clause points at the preceding
+   host segment. A non-contiguous unified host span is still not modelled.
 3. Should a relative clause's antecedent be linked (`head` of the relative
-   pronoun -> antecedent), or only the clause roles? Recommendation: later;
-   it needs an antecedent search across the clause boundary.
+   pronoun -> antecedent), or only the clause roles? **Landed.** `Clause` now
+   carries `antecedent`, the nearest matching nominal in the host segment;
+   coordinated antecedents stay unlinked.
 
 ## Remaining analysis refinements
 
-These are deliberately outside the landed v1. Do not start one without a
-consumer; the checker derives what it needs from the current linear clauses.
+These are optional. Do not start one without a consumer; the checker derives
+what it needs from the current linear clauses. Relative-clause nesting and the
+antecedent link landed in the refactor; the rest still wait for a consumer.
 
-- [ ] **Host-clause nesting for interrupted relatives.** `Mies, joka tuli, söi`
-  is three contiguous clauses. Add `Clause.parent` / `children` (or a
-  non-contiguous host span) only when the checker or UI needs the host clause
-  as one unit. Keep the linear ranges until then.
-- [ ] **Relative antecedent link.** Point the relative pronoun (or relative
-  clause) at its antecedent. Needs a search across the clause boundary and a
-  rule for coordinated antecedents; not needed for comma diagnostics.
+- [x] **Host-clause nesting for interrupted relatives.** `Clause.parent` and
+  `Clause.children` now link a relative clause to the preceding host segment.
+  The linear ranges stay authoritative; a non-contiguous unified host span is
+  still not modelled.
+- [x] **Relative antecedent link.** `Clause.antecedent` points at the nearest
+  nominal in the host segment whose number matches the relative pronoun.
+  Coordinated antecedents are left unlinked.
 - [x] **Multiple bracketed lists in one item.** `ListItemKind::List(Vec<usize>)`
   now represents every child in the item; the wasm object exposes `lists` and
   keeps `list` as the first child for older consumers.

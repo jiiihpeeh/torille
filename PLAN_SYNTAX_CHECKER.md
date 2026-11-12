@@ -98,13 +98,13 @@ lists are a post-order child arena: `ListItemKind::List(index)` and
 phrase-structure parser, but it is a real syntactic structure, not a comma
 heuristic.
 
-Clause kinds and relative-clause extent are now derived in
-`src/syntax_check/punctuation.rs`; the analysis layer still keeps linear
-clause ranges. A relative clause inside its host still splits the host
-(`Mies, joka tuli, söi` becomes three ranges), which is enough for the comma
-rules but not for a UI that wants the host clause as one unit. Host nesting and
-antecedent linking are deferred analysis refinements in `PLAN_SYNTAX.md`, not
-blockers for the checker.
+Clause kinds are derived in `src/syntax_check/punctuation/clause.rs`. The
+analysis layer keeps linear clause ranges and adds a `parent`/`children`
+relative-clause tree plus an `antecedent` token link; the ranges stay the
+source of truth for the comma rules. A non-contiguous unified host span is
+still not modelled, so a UI cannot ask for `Mies … söi` as one uninterrupted
+range. `ClauseKind` promotion, `Clause.sentence` and antecedent-aware list
+roles remain optional refinements in `PLAN_SYNTAX.md`.
 
 ## 3. Design principles
 
@@ -1568,8 +1568,9 @@ than one that is unsure about twenty.
 
 Lists, including nested lists, are part of the landed checker. The checker
 surface in §16 is complete. Deferred edge cases remain documented in
-`docs/syntax_checker.md`: linear relative clauses and the context-menu-only
-extension trigger. Word order stays deferred.
+`docs/syntax_checker.md`: the context-menu-only extension trigger and the
+absence of a unified host span for interrupted relatives. Word order stays
+deferred.
 
 ## 16. Remaining work index
 
@@ -1595,8 +1596,9 @@ Ordered by user-facing value. Each item points at the phase that specifies it.
    separate opt-in analyzer would reopen it.
 
 Deferred analysis refinements live in `PLAN_SYNTAX.md` §“Remaining analysis
-refinements”: relative-clause nesting and antecedent linking. None is a blocker
-for the checker work above.
+refinements”: `ClauseKind` promotion, `Clause.sentence` and antecedent-aware
+list roles. Relative-clause nesting and the antecedent link landed in the
+refactor. None is a blocker for the checker work above.
 
 The modularisation plan for `syntax.rs`, `syntax_check/` and the extension
 content script is [`PLAN_SYNTAX_REFACTOR.md`](PLAN_SYNTAX_REFACTOR.md).
