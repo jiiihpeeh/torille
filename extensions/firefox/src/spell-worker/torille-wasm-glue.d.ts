@@ -59,6 +59,27 @@ declare module '*/torille_wasm_bg.js' {
     max_n: number,
   ): string[];
 
+  /** Grammar diagnostics with UTF-8 byte offsets and edit lists. */
+  export function check_syntax_with_state(
+    idx: number,
+    text: string,
+  ): {
+    diagnostics: {
+      kind: string;
+      severity: string;
+      confidence: string;
+      start: number;
+      end: number;
+      message: string;
+      expected: string | null;
+      corrections: {
+        score: number;
+        note: string;
+        edits: { start: number; end: number; replacement: string }[];
+      }[];
+    }[];
+  };
+
   /** Pre-warm the lemma set / catalogue at boot. */
   export function warm_caches(): void;
 

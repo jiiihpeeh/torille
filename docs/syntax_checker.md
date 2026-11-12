@@ -94,6 +94,19 @@ For one sentence during development:
 cargo run --release -p torille-tools --bin check_syntax -- "Koira nukkuvat."
 ```
 
+## Surfaces
+
+- **Leptos demo:** the `SyntaxPanel` runs `syntax_check::check` on a button
+  press, lists diagnostics in rank order and applies corrections.
+- **Firefox / Chromium extensions:** right-click a text field and choose
+  **Tarkista kielioppi**. The check is opt-in and runs on one input at a time;
+  a floating panel lists diagnostics and applies corrections to textarea and
+  input fields. The extension calls `check_syntax_with_state` in the wasm
+  worker, which converts UTF-8 byte offsets to UTF-16 before the panel sees
+  them.
+- **CLI:** `check_syntax` prints the analysis and diagnostics for one sentence
+  or file.
+
 ## Data files
 
 | file | content |
@@ -118,7 +131,11 @@ obligatory argument from a suffix or a dictionary class.
   ranges; there is no `Clause.parent` or antecedent link.
 - **Nested lists hold one child per item.** A second bracketed list in the
   same item is not represented yet.
-- **The browser extensions do not yet expose a grammar toggle.** The Leptos
-  demo panel is the current UI; the extensions remain spell-check-only.
+- **Contenteditable grammar corrections are read-only.** Textarea and input
+  fields can apply a correction; a contenteditable editor shows the diagnostics
+  but not an apply button, because replacing arbitrary rich text needs a
+  range-aware writer.
+- **The extension grammar check is context-menu only.** There is no per-site
+  toggle or keystroke trigger yet; the context menu is the opt-in.
 - **No style layer.** Repetition, register and phrasing are out of scope; a
   style analyzer would be a separate opt-in module with its own kinds.

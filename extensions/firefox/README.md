@@ -24,6 +24,14 @@ automatically to `storage.local` and apply live to open tabs:
 The same keys are read by the content script at startup and on
 `storage.onChanged`, so an options tab and a page being checked stay in sync.
 
+## Grammar check
+
+Right-click a text field and choose **Tarkista kielioppi**. The check is
+on-demand and does not run on every keystroke. A floating panel lists the
+diagnostics in the checker's rank order; clicking a correction replaces the
+field text. Corrections are applied only to `<textarea>` and `<input>` fields;
+contenteditable shows the diagnostics read-only.
+
 ## Temporary add-on (development)
 
 ```bash

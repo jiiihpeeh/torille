@@ -119,6 +119,37 @@ declare type R_SuggestWithState = {
   word: string;
   max: number;
 };
+// Grammar diagnostics. Offsets are UTF-16 string offsets after the
+// worker's byte-to-UTF-16 map; the content script slices JS strings.
+declare type R_SyntaxEdit = {
+  start: number;
+  end: number;
+  replacement: string;
+};
+declare type R_SyntaxCorrection = {
+  score: number;
+  note: string;
+  edits: R_SyntaxEdit[];
+};
+declare type R_SyntaxDiagnostic = {
+  kind: string;
+  severity: string;
+  confidence: string;
+  start: number;
+  end: number;
+  message: string;
+  expected: string | null;
+  corrections: R_SyntaxCorrection[];
+};
+declare type R_CheckSyntax = {
+  type: 'torille:check-syntax';
+  idx: number;
+  text: string;
+};
+declare type R_CheckSyntaxResponse = {
+  diagnostics: R_SyntaxDiagnostic[];
+};
+
 declare type R_Message =
   | R_Check
   | R_CheckFast
@@ -133,7 +164,8 @@ declare type R_Message =
   | R_ClearState
   | R_UpdateState
   | R_AnalyzeText
-  | R_SuggestWithState;
+  | R_SuggestWithState
+  | R_CheckSyntax;
 // `null` means "the checker could not answer" (worker down, wasm
 // failure, timeout). It is deliberately distinct from `false`
 // ("misspelled"): only a `false` should produce a red underline.
@@ -187,8 +219,14 @@ declare type R_ContentMessageResponse =
 declare type R_TogglePendingInputMessage = {
   type: 'torille:toggle-pending-input';
 };
-declare type R_ContentInboundMessage = R_TogglePendingInputMessage;
+declare type R_CheckGrammarPendingInputMessage = {
+  type: 'torille:check-grammar-pending-input';
+};
+declare type R_ContentInboundMessage =
+  | R_TogglePendingInputMessage
+  | R_CheckGrammarPendingInputMessage;
 declare type R_ToggleResponse = { disabled: boolean };
+declare type R_CheckGrammarResponse = { checked: boolean };
 // Worker-level message protocol. The wasm worker is loaded once per
 // browser session in the background; the same wire is shared by
 // every overlay's content script. `R_CreateState` /
@@ -220,6 +258,7 @@ declare type R_WorkerInbound =
       word: string;
       max: number;
     }
+  | { id: number; type: 'check-syntax'; idx: number; text: string }
   | { type: 'debug'; on: boolean };
 declare type R_WorkerOutbound =
   | { type: 'ready' }
@@ -237,4 +276,5 @@ declare type R_WorkerOutbound =
       hits: { word: string; start: number; end: number; suggestions: string[] }[];
     }
   | { id: number; type: 'suggest-with-state'; suggestions: string[] }
+  | { id: number; type: 'check-syntax'; diagnostics: R_SyntaxDiagnostic[] }
   | { id: number; type: 'error'; for: string; word?: string; error: string };

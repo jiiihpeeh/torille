@@ -95,7 +95,8 @@ type SpellCallPayload =
   | { type: 'clear-state'; idx: number }
   | { type: 'update-state'; idx: number; text: string }
   | { type: 'analyze-text'; idx: number; text: string; max: number }
-  | { type: 'suggest-with-state'; idx: number; word: string; max: number };
+  | { type: 'suggest-with-state'; idx: number; word: string; max: number }
+  | { type: 'check-syntax'; idx: number; text: string };
 
 type SpellResponse =
   | { id: number; type: 'check'; ok: boolean }
@@ -111,6 +112,7 @@ type SpellResponse =
       stateValid?: boolean;
     }
   | { id: number; type: 'suggest-with-state'; suggestions: string[] }
+  | { id: number; type: 'check-syntax'; diagnostics: R_SyntaxDiagnostic[] }
   // Fire-and-forget ops (destroy/clear/update-state, debug) resolve
   // with this in the direct host, where there is no message id to
   // mirror. Callers ignore the value.
@@ -481,15 +483,23 @@ async function spellBatchSuggest(
 
 const MENU_DISABLE_INPUT = 'torille-disable-input';
 const MENU_DISABLE_SITE = 'torille-disable-site';
+const MENU_CHECK_GRAMMAR = 'torille-check-grammar';
 
 const MENU_ITEMS: browser.contextMenus._CreateCreateProperties[] = [
   {
+    id: MENU_CHECK_GRAMMAR,
+    title: 'Tarkista kielioppi',
+    contexts: ['editable'],
+  },
+  {
     id: MENU_DISABLE_INPUT,
+    type: 'checkbox',
     title: 'Älä tarkasta tätä tekstiä',
     contexts: ['editable'],
   },
   {
     id: MENU_DISABLE_SITE,
+    type: 'checkbox',
     title: 'Älä tarkasta tällä sivulla',
     contexts: ['all'],
   },
@@ -499,7 +509,7 @@ function setupContextMenus(): void {
   dbg('background', 'onInstalled: creating context menu items');
   for (const item of MENU_ITEMS) {
     try {
-      api.contextMenus.create({ type: 'checkbox', ...item });
+      api.contextMenus.create(item);
       // duplicate on hot-reload is fine; contextMenus.create throws
       // if the id already exists.
     } catch (_) { /* already created */ }
@@ -534,6 +544,7 @@ api.runtime.onMessage.addListener((message: unknown) => {
     | R_UpdateState
     | R_AnalyzeText
     | R_SuggestWithState
+    | R_CheckSyntax
     | R_ContextMenuFired
     | R_SiteContextMenuFired
     | R_Debug;
@@ -695,6 +706,27 @@ api.runtime.onMessage.addListener((message: unknown) => {
     })();
   }
 
+  // On-demand grammar check. The content script sends the current text
+  // and its per-textarea state handle; the worker converts byte offsets
+  // to UTF-16 before returning the diagnostics.
+  if (m?.type === 'torille:check-syntax') {
+    return (async (): Promise<R_CheckSyntaxResponse> => {
+      try {
+        await ensureSpellWorkerForRequest();
+        const r = await spellCall({
+          type: 'check-syntax', idx: m.idx, text: m.text,
+        });
+        if (r.type !== 'check-syntax') {
+          throw new Error('worker returned unexpected response');
+        }
+        return { diagnostics: r.diagnostics };
+      } catch (e) {
+        dbg('background', 'check-syntax route error', String(e));
+        return { diagnostics: [] };
+      }
+    })();
+  }
+
   // Debug flag from the content script. Route it to whichever host
   // is live; the worker has its own `debug` frame, the direct core
   // exposes `setDebug`.
@@ -725,6 +757,10 @@ api.runtime.onMessage.addListener((message: unknown) => {
 // ───────────────────────────────────────────────────────────────────────
 
 api.contextMenus.onClicked.addListener(async (info, tab) => {
+  if (info.menuItemId === MENU_CHECK_GRAMMAR) {
+    await handleCheckGrammarClick(tab);
+    return;
+  }
   if (info.menuItemId === MENU_DISABLE_INPUT) {
     await handleDisableInputClick(tab);
     return;
@@ -734,6 +770,17 @@ api.contextMenus.onClicked.addListener(async (info, tab) => {
     return;
   }
 });
+
+async function handleCheckGrammarClick(tab: browser.tabs.Tab | undefined): Promise<void> {
+  if (!tab || tab.id == null) return;
+  try {
+    await api.tabs.sendMessage(tab.id, {
+      type: 'torille:check-grammar-pending-input',
+    });
+  } catch (_) {
+    // No content script on this tab; nothing to check.
+  }
+}
 
 async function handleDisableInputClick(tab: browser.tabs.Tab | undefined): Promise<void> {
   if (!tab || tab.id == null) return;

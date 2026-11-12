@@ -1542,15 +1542,15 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
 
 ## Medium priority
 
-- [ ] **Wire the syntax checker into the browser extensions**
-  The engine, Leptos panel with edit application, docs and evaluation baseline
-  are landed. The last surface is an opt-in, debounced grammar call in the
-  Firefox and Chromium extensions; they remain spell-check-only for now.
-  Deferred edge cases: plural completive object suggestions and `kuten`
-  parenthetical phrase extent. Word order stays deliberately deferred. The
-  phased plan and the ordered remaining index are in
-  [`PLAN_SYNTAX_CHECKER.md`](PLAN_SYNTAX_CHECKER.md) §16; deferred analysis
-  refinements are in [`PLAN_SYNTAX.md`](PLAN_SYNTAX.md).
+- [x] **Wire the syntax checker into the browser extensions**
+  Done. The Firefox and Chromium context menus now have **Tarkista kielioppi**;
+  it runs the checker on demand and shows a floating diagnostics panel with
+  correction buttons. The worker converts byte offsets to UTF-16, and the
+  extension integration tests cover spans, edits and the stale-state fallback.
+  Deferred edge cases (plural completive object suggestions, `kuten`
+  parenthetical phrase extent) and the remaining analysis refinements are
+  documented in [`docs/syntax_checker.md`](docs/syntax_checker.md) and
+  [`PLAN_SYNTAX.md`](PLAN_SYNTAX.md).
 
 - [ ] **Fill the bare case gaps**
   **1565 missing forms across 65 classes**, small enough to list by case: ELA

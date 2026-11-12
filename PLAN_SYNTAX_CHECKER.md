@@ -4,9 +4,9 @@ Status: Phases 0–5 are landed, including nested lists, missing/extra argument
 warnings, the word-order decision record and aspect-based object-case
 suggestions (singular completive; plural deferred). Phase 6 has deterministic
 ranking, the wasm word cache, the evaluation baseline, punctuation phase 2,
-the Leptos diagnostic panel with edit application and the checker docs. The
-browser-extension grammar toggle is a documented follow-up; the style layer is
-deliberately out of scope. The analysis layer it builds on is `PLAN_SYNTAX.md` and is already landed
+the Leptos diagnostic panel with edit application, the browser-extension
+grammar check and the checker docs. The style layer is deliberately out of
+scope; deferred edge cases are listed in `docs/syntax_checker.md`. The analysis layer it builds on is `PLAN_SYNTAX.md` and is already landed
 on the `syntax` branch.
 
 The remaining work is indexed in §16; each open item has enough detail to be
@@ -1411,11 +1411,22 @@ Tasks:
       correction buttons.
 - [x] Add reverse-order edit replay and tests for a replacement, a two-edit
       insertion pair and a deletion.
-- [ ] Add the opt-in, debounced grammar call to the browser extensions.
-      Deferred: the Leptos panel is the acceptance surface; the extensions
-      remain spell-check-only until their content-script panel is designed.
-- [ ] Add a test that a destroyed state handle falls back to the stateless
-      `check_syntax` path. Deferred with the extension work.
+- [x] Add the opt-in grammar call to the browser extensions. The context menu
+      item **Tarkista kielioppi** runs on one input; a floating panel lists
+      diagnostics and applies corrections to textarea/input fields.
+- [x] Add an integration test for the stateless fallback when the state handle
+      is stale, and for UTF-16 span/edit offsets after non-ASCII text.
+
+Implementation notes:
+
+- The extension panel is reached from the context menu, so it is opt-in and
+  never runs on a keystroke.
+- The worker converts the checker's UTF-8 byte offsets to UTF-16 before the
+  content script slices a JS string; the integration test uses `Äiti …` to
+  catch a drift.
+- Corrections are applied only to `<textarea>` and `<input>`; a
+  contenteditable editor shows the diagnostics read-only because a range-aware
+  writer is a separate problem.
 
 #### Phase 6D — evaluation corpus
 
@@ -1554,9 +1565,10 @@ lists/punctuation (phase 3), rection (phase 4) and the negative-object rule
 than one that is unsure about twenty.
 
 Lists, including nested lists, are part of the landed checker. The checker
-surface in §16 is complete except for the browser-extension grammar toggle and
-the deferred edge cases (plural completive object case, `kuten` phrase extent).
-Word order stays deferred.
+surface in §16 is complete. Deferred edge cases remain documented in
+`docs/syntax_checker.md`: plural completive object case, `kuten` phrase
+extent, linear relative clauses and one child list per item. Word order stays
+deferred.
 
 ## 16. Remaining work index
 
@@ -1571,9 +1583,9 @@ Ordered by user-facing value. Each item points at the phase that specifies it.
    quote-style corrections.
 4. [x] **Evaluation corpus** — phase 6D. 159 sentences, zero `Error` on clean
    rows, per-kind baseline recorded.
-5. [ ] **UI and edit application** — phase 6C. Leptos panel and reverse-order
-   edit replay are done; the opt-in browser-extension grammar toggle is
-   deferred.
+5. [x] **UI and edit application** — phase 6C. Leptos panel, reverse-order edit
+   replay, and the opt-in browser-extension grammar check with a floating
+   diagnostics panel.
 6. [x] **Word-order decision record** — phase 5D. Clean rows and a comment on
    the reserved kind; no rule.
 7. [x] **Checker documentation** — phase 6F. `docs/syntax_checker.md` with the

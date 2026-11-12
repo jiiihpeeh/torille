@@ -143,7 +143,8 @@ export type CoreResponse =
   | { type: 'suggest-batch'; inputId: number; results: string[][] }
   | { type: 'create-state'; idx: number }
   | { type: 'analyze-text'; hits: AnalyzeHit[]; stateValid: boolean }
-  | { type: 'suggest-with-state'; suggestions: string[] };
+  | { type: 'suggest-with-state'; suggestions: string[] }
+  | { type: 'check-syntax'; diagnostics: R_SyntaxDiagnostic[] };
 
 // ───────────────────────────────────────────────────────────────────────
 // §5  Handlers
@@ -339,6 +340,70 @@ function handleSuggestWithState(
   return { type: 'suggest-with-state', suggestions };
 }
 
+function handleCheckSyntax(
+  msg: Extract<R_WorkerInbound, { type: 'check-syntax' }>,
+): CoreResponse {
+  // The wasm side reports UTF-8 byte offsets. The content script slices
+  // a JS string, so convert the diagnostic and edit offsets once here.
+  const offsetMap = buildByteToUtf16Map(msg.text);
+  const raw = bg.check_syntax_with_state(msg.idx, msg.text) as {
+    diagnostics?: {
+      kind: string;
+      severity: string;
+      confidence: string;
+      start: number;
+      end: number;
+      message: string;
+      expected: string | null;
+      corrections?: {
+        score: number;
+        note: string;
+        edits?: { start: number; end: number; replacement: string }[];
+      }[];
+    }[];
+  };
+  const diagnostics: R_SyntaxDiagnostic[] = [];
+  for (const d of raw.diagnostics ?? []) {
+    const start = offsetMap[d.start];
+    const end = offsetMap[d.end];
+    if (start === undefined || end === undefined) continue;
+    const corrections: R_SyntaxCorrection[] = [];
+    for (const c of d.corrections ?? []) {
+      const edits: R_SyntaxEdit[] = [];
+      let usable = true;
+      for (const e of c.edits ?? []) {
+        const editStart = offsetMap[e.start];
+        const editEnd = offsetMap[e.end];
+        if (editStart === undefined || editEnd === undefined) {
+          usable = false;
+          break;
+        }
+        edits.push({
+          start: editStart,
+          end: editEnd,
+          replacement: e.replacement,
+        });
+      }
+      if (usable) {
+        corrections.push({ score: c.score, note: c.note, edits });
+      }
+    }
+    diagnostics.push({
+      kind: d.kind,
+      severity: d.severity,
+      confidence: d.confidence,
+      start,
+      end,
+      message: d.message,
+      expected: d.expected ?? null,
+      corrections,
+    });
+  }
+  dbg('core', 'check-syntax',
+      { idx: msg.idx, len: msg.text.length, diagnostics: diagnostics.length });
+  return { type: 'check-syntax', diagnostics };
+}
+
 // ───────────────────────────────────────────────────────────────────────
 // §6  Public surface
 // ───────────────────────────────────────────────────────────────────────
@@ -379,6 +444,7 @@ export function createSpellCore(): SpellCore {
         case 'update-state': return handleUpdateState(msg);
         case 'analyze-text': return handleAnalyzeText(msg);
         case 'suggest-with-state': return handleSuggestWithState(msg);
+        case 'check-syntax': return handleCheckSyntax(msg);
         default: {
           const unknown = msg as { type?: string };
           throw new Error(`unknown message type: ${unknown.type ?? '?'}`);

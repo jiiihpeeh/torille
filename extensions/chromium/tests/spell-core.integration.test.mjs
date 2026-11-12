@@ -70,6 +70,46 @@ test('built core: analyse reports UTF-16 ranges after non-ASCII text',
   await core.handle({ id: 4, type: 'destroy-state', idx });
 });
 
+test('built core: check-syntax reports UTF-16 spans and edits',
+     { skip: !available && 'run `npm run build` first' }, async () => {
+  const { createSpellCore } = await import(distCore);
+  const core = createSpellCore();
+  await core.init();
+
+  const created = await core.handle({ id: 1, type: 'create-state' });
+  assert.equal(created?.type, 'create-state');
+  const idx = created.idx;
+
+  const text = 'Äiti söi puuron. Koira nukkuvat.';
+  const out = await core.handle({
+    id: 2, type: 'check-syntax', idx, text,
+  });
+  assert.equal(out?.type, 'check-syntax');
+  const diagnostic = out.diagnostics.find(
+    (d) => d.kind === 'subject_predicate_agreement');
+  assert.ok(diagnostic, 'the agreement diagnostic should be present');
+  assert.equal(text.slice(diagnostic.start, diagnostic.end), 'nukkuvat');
+  const edit = diagnostic.corrections[0].edits[0];
+  assert.equal(text.slice(edit.start, edit.end), 'nukkuvat');
+  assert.equal(edit.replacement, 'nukkuu');
+
+  await core.handle({ id: 3, type: 'destroy-state', idx });
+});
+
+test('built core: check-syntax falls back when the state handle is stale',
+     { skip: !available && 'run `npm run build` first' }, async () => {
+  const { createSpellCore } = await import(distCore);
+  const core = createSpellCore();
+  await core.init();
+
+  const out = await core.handle({
+    id: 1, type: 'check-syntax', idx: 999999, text: 'Koira nukkuvat.',
+  });
+  assert.equal(out?.type, 'check-syntax');
+  assert.ok(out.diagnostics.some(
+    (d) => d.kind === 'subject_predicate_agreement'));
+});
+
 test('built core: unavailable wasm is not reported as misspelled',
      { skip: !available && 'run `npm run build` first' }, async () => {
   // Sanity-check the contract the background relies on: `check`
