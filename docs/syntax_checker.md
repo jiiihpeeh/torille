@@ -126,8 +126,10 @@ obligatory argument from a suffix or a dictionary class.
   is offered when every noun base names the same total form (`autoja →
   autot`); a homonymous surface such as `kirjoja` (`kirja`/`kirjo`) stays
   quiet instead of naming the wrong word.
-- **Relative clauses are linear.** The host clause is split into contiguous
-  ranges; there is no `Clause.parent` or antecedent link.
+- **Relative clauses are linked but not reparsed.** A relative clause carries
+  `parent`, `children` and an `antecedent` token link, while the linear clause
+  ranges stay the source of truth. Comma diagnostics still work on the linear
+  ranges; a rule cannot yet ask for the host as one uninterrupted span.
 - **The extension grammar check is context-menu only.** There is no per-site
   toggle or keystroke trigger yet; the context menu is the opt-in.
 - **No style layer.** Repetition, register and phrasing are out of scope; a

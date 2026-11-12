@@ -39,7 +39,7 @@ pub(crate) use predicates::{
 };
 use cache::proper_name_reading;
 use roles::{classify, resolve_clause, share_clause_roles};
-use segments::{clause_groups, segment_clause_words};
+use segments::{build_clause_tree, clause_groups, segment_clause_words};
 
 /// What a token is doing in its sentence.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -115,6 +115,15 @@ pub struct Clause {
     pub negative: bool,
     /// True for an existential construction (`pöydällä on kirja`).
     pub existential: bool,
+    /// The clause this one is nested inside, when it is a relative clause.
+    /// The linear `start`, `end` and `tokens` stay the source of truth; the
+    /// tree is additive so existing rules and callers are unaffected.
+    pub parent: Option<usize>,
+    /// Relative clauses nested inside this one, in source order.
+    pub children: Vec<usize>,
+    /// The nominal this relative clause modifies, when one could be found
+    /// unambiguously. A token index, not a clause index.
+    pub antecedent: Option<usize>,
 }
 
 /// What one token is doing, plus the morphology behind the choice.
@@ -295,6 +304,9 @@ fn analyze_with(
                 complement: None,
                 negative: false,
                 existential: false,
+                parent: None,
+                children: Vec::new(),
+                antecedent: None,
             });
             clause_groups_of.push(group_index);
         }
@@ -309,6 +321,8 @@ fn analyze_with(
             out[index].clause = current_clause;
         }
     }
+
+    build_clause_tree(&mut clauses, &clause_groups_of, tokens, &out);
 
     for clause in &mut clauses {
         resolve_clause(clause, tokens, &mut out, &nominal_lemmas);
@@ -719,5 +733,45 @@ mod tests {
         let lemmas = &analysis.tokens[index].lemmas;
         assert!(lemmas.iter().any(|lemma| lemma == "tuli"), "{lemmas:?}");
         assert!(lemmas.iter().any(|lemma| lemma == "tulla"), "{lemmas:?}");
+    }
+
+    #[test]
+    fn a_relative_clause_links_to_its_host_and_antecedent() {
+        let (tokens, analysis) = analyzed("Mies, joka tuli, söi.");
+        let mies = word_index(&tokens, "Mies");
+        let joka = word_index(&tokens, "joka");
+        let relative = analysis
+            .clauses
+            .iter()
+            .position(|clause| clause.tokens.contains(&joka))
+            .expect("relative clause");
+        let host = analysis
+            .clauses
+            .iter()
+            .position(|clause| clause.tokens.contains(&mies))
+            .expect("host clause");
+        assert_eq!(analysis.clauses[relative].parent, Some(host), "{:#?}", analysis.clauses);
+        assert!(analysis.clauses[host].children.contains(&relative));
+        assert_eq!(analysis.clauses[relative].antecedent, Some(mies));
+    }
+
+    #[test]
+    fn a_plural_relative_clause_matches_a_plural_antecedent() {
+        let (tokens, analysis) = analyzed("Kissat, jotka tulivat, söivät.");
+        let kissat = word_index(&tokens, "Kissat");
+        let jotka = word_index(&tokens, "jotka");
+        let relative = analysis
+            .clauses
+            .iter()
+            .position(|clause| clause.tokens.contains(&jotka))
+            .expect("relative clause");
+        assert_eq!(analysis.clauses[relative].antecedent, Some(kissat));
+    }
+
+    #[test]
+    fn a_subordinate_clause_is_not_a_relative_child() {
+        let (_, analysis) = analyzed("Kun tulin, söin.");
+        assert!(analysis.clauses.iter().all(|clause| clause.parent.is_none()));
+        assert!(analysis.clauses.iter().all(|clause| clause.children.is_empty()));
     }
 }

@@ -1,12 +1,12 @@
 # PLAN_SYNTAX_REFACTOR — modularizing the syntax layer and checker
 
-Status: **Phase 0–4 landed.** The shared-helper extraction is in
+Status: **Phase 0–5 landed.** The shared-helper extraction is in
 `src/syntax_check/analysis.rs`; punctuation is a module tree under
 `src/syntax_check/punctuation/`. `src/syntax/` now has `cache.rs`,
 `segments.rs`, `predicates.rs` and `roles.rs`; `syntax/mod.rs` holds the public
 types, orchestration and tests. Phase 4 added the additive
-`TokenSyntax::lemmas` per-reading base list. Phases 5–6 remain optional/
-on-demand.
+`TokenSyntax::lemmas` per-reading base list; Phase 5 added the additive
+relative-clause tree on `Clause`. Phase 6 remains optional/on-demand.
 
 The checker is feature-complete after `PLAN_SYNTAX_CHECKER.md`; this plan asks
 what should be restructured before the next feature lands, and what should be
@@ -263,23 +263,29 @@ Landed as an additive model change. `TokenSyntax::lemmas` is ordered by
 resolution and includes the chosen `lemma`; rules that need every base read it
 instead of calling `find_bases_for_analysis` again.
 
-### Phase 5 — clause tree for relatives (optional feature)
+### Phase 5 — clause tree for relatives (landed)
 
-This is a model extension, not cleanup. Do it only when a UI or rule needs the
-host clause as one unit.
+This is a model extension, not cleanup.
 
-- [ ] Add additive fields to `Clause`:
+- [x] Add additive fields to `Clause`:
       `parent: Option<usize>`, `children: Vec<usize>`,
       `antecedent: Option<usize>`.
-- [ ] Keep the linear `start`, `end`, `tokens` and roles unchanged.
-- [ ] Build the tree in the segmentation pass: a relative clause is a child of
+- [x] Keep the linear `start`, `end`, `tokens` and roles unchanged.
+- [x] Build the tree in the segmentation pass: a relative clause is a child of
       the host segment; its antecedent link points at the modified nominal
       when it is unambiguous.
-- [ ] Keep comma diagnostics on the linear ranges until the tree is proven.
-- [ ] Expose the tree in the wasm shape only after the checker uses it.
+- [x] Keep comma diagnostics on the linear ranges until a rule needs the tree.
+- [x] Expose the tree additively in the wasm shape (`parent`, `children`,
+      `antecedent`).
 
 Acceptance: the existing linear clause array is unchanged; the tree is
 additive; the comma fixture is unchanged.
+
+Landed in `segments::build_clause_tree`. Only `joka`/`mikä`/`ken`/`kuka`
+clauses become children; a subordinate clause stays a sibling. The antecedent
+is the nearest preceding nominal in the host segment whose number matches the
+relative pronoun, falling back to earlier clauses of the same sentence group.
+The wasm clause object gains the three fields; existing consumers ignore them.
 
 ### Phase 6 — split the extension content script (optional)
 

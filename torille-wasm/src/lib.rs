@@ -189,7 +189,8 @@ pub fn hyphenate(
 /// {
 ///   sentences: [{ start, end, index, paragraphStart }],
 ///   clauses:   [{ start, end, tokensStart, tokensEnd, predicate, subject,
-///                 object, complement, negative, existential }],
+///                 object, complement, negative, existential, parent,
+///                 children, antecedent }],
 ///   lists:     [{ start, end, tokensStart, tokensEnd, clause, role, head,
 ///                 kind, items, separators, conjunction, introducer, parent }],
 ///   tokens:    [{ word, start, end, role, confidence, clause, head,
@@ -198,10 +199,15 @@ pub fn hyphenate(
 /// }
 /// ```
 ///
-/// Token indices in `predicate`, `subject`, `object`, and `head` refer to the
-/// `tokens` array; null means no such role or governor. `role` is one of
-/// `predicate`, `auxiliary`, `subject`, `object`, `adverbial`, `complement`,
-/// `modifier` or `unknown`.
+/// Token indices in `predicate`, `subject`, `object`, `head` and
+/// `antecedent` refer to the `tokens` array; null means no such role,
+/// governor or antecedent. `parent` and `children` are clause indices into
+/// `clauses`. `role` is one of `predicate`, `auxiliary`, `subject`, `object`,
+/// `adverbial`, `complement`, `modifier` or `unknown`.
+///
+/// `parent`, `children` and `antecedent` are the additive relative-clause
+/// tree. The linear clause array stays the source of truth: a relative clause
+/// is also present at its own index and keeps its own `start`/`end`.
 ///
 /// A clause may span two `sentences` entries when the sentence layer split at
 /// a parenthetical bracket; the syntax layer merges that boundary.
@@ -275,6 +281,13 @@ fn syntax_object(
         set_option(&item, "complement", clause.complement);
         set(&item, "negative", JsValue::from(clause.negative));
         set(&item, "existential", JsValue::from(clause.existential));
+        set_option(&item, "parent", clause.parent);
+        let children = Array::new();
+        for child in &clause.children {
+            children.push(&JsValue::from(*child as u32));
+        }
+        set(&item, "children", children.into());
+        set_option(&item, "antecedent", clause.antecedent);
         clauses.push(&item);
     }
     set(&obj, "clauses", clauses.into());

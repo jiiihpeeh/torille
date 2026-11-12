@@ -294,6 +294,9 @@ fn nested_in_item(
             complement: None,
             negative: false,
             existential: false,
+            parent: None,
+            children: Vec::new(),
+            antecedent: None,
         };
         if let Some(child) = parse_clause(clause_index, &clause, tokens, out, lists) {
             children.push(child);

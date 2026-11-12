@@ -4,9 +4,10 @@ use crate::sentence;
 use crate::tokenise::Token;
 
 use super::predicates::{
-    is_coordinating, is_infinitive, is_predicate_candidate, is_relative_word, is_subordinator,
+    is_coordinating, is_infinitive, is_nominal, is_predicate_candidate, is_relative_word,
+    is_subordinator,
 };
-use super::TokenSyntax;
+use super::{Clause, TokenSyntax};
 
 /// Words grouped for clause segmentation.
 ///
@@ -155,6 +156,109 @@ pub(super) fn segment_clause_words(
         }
     }
     segments
+}
+
+/// Link each relative clause to the host segment it interrupts.
+///
+/// The linear clause array is unchanged. A relative clause gets a `parent`
+/// pointing at the preceding clause of the same sentence group, the parent
+/// records it in `children`, and `antecedent` names the modified nominal when
+/// one can be identified. Only `joka`/`mikä`/`ken`/`kuka` clauses are linked;
+/// a subordinate clause (`kun`, `että`) stays a sibling, not a child.
+pub(super) fn build_clause_tree(
+    clauses: &mut [Clause],
+    groups: &[usize],
+    tokens: &[Token],
+    out: &[TokenSyntax],
+) {
+    let group_count = groups.iter().copied().max().map_or(0, |group| group + 1);
+    let mut last_in_group: Vec<Option<usize>> = vec![None; group_count];
+    let mut parents: Vec<Option<usize>> = vec![None; clauses.len()];
+
+    for (index, clause) in clauses.iter().enumerate() {
+        let group = groups[index];
+        let first = clause.tokens.start;
+        if first < tokens.len() && is_relative_word(first, tokens, out) {
+            parents[index] = last_in_group[group];
+        }
+        last_in_group[group] = Some(index);
+    }
+
+    for (index, parent) in parents.iter().enumerate() {
+        let Some(parent) = parent else {
+            continue;
+        };
+        clauses[index].parent = Some(*parent);
+        clauses[*parent].children.push(index);
+    }
+
+    for index in 0..clauses.len() {
+        let Some(parent) = clauses[index].parent else {
+            continue;
+        };
+        let antecedent = find_antecedent(index, parent, clauses, groups, tokens, out);
+        clauses[index].antecedent = antecedent;
+    }
+}
+
+/// The nearest nominal in the host segment that the relative pronoun can
+/// modify, preferring a number match.
+///
+/// `Mies, joka tuli, söi` links `joka` to `Mies`. If the immediate host
+/// segment has no nominal, earlier clauses of the same sentence group are
+/// searched; a different sentence never contributes an antecedent.
+fn find_antecedent(
+    relative: usize,
+    parent: usize,
+    clauses: &[Clause],
+    groups: &[usize],
+    tokens: &[Token],
+    out: &[TokenSyntax],
+) -> Option<usize> {
+    let first = clauses[relative].tokens.start;
+    let number = token_number(out.get(first)?);
+    let group = groups[parent];
+
+    let mut clause_index = Some(parent);
+    while let Some(index) = clause_index {
+        if groups[index] != group {
+            break;
+        }
+        let clause = &clauses[index];
+        for word in (clause.tokens.start..clause.tokens.end).rev() {
+            if !tokens[word].is_word() || is_relative_word(word, tokens, out) {
+                continue;
+            }
+            let syntax = &out[word];
+            if !is_nominal(syntax) {
+                continue;
+            }
+            if let (Some(wanted), Some(found)) = (number, token_number(syntax))
+                && wanted != found
+            {
+                continue;
+            }
+            return Some(word);
+        }
+        clause_index = index.checked_sub(1);
+    }
+    None
+}
+
+/// The number a token's readings agree on, if they do.
+fn token_number(syntax: &TokenSyntax) -> Option<crate::tags::Number> {
+    let mut number = None;
+    for reading in &syntax.readings {
+        let Some(candidate) = reading.number else {
+            continue;
+        };
+        match number {
+            None => number = Some(candidate),
+            Some(known) if known == candidate => {}
+            Some(_) => return None,
+        }
+    }
+    number
 }
 
 /// `sekä ... että` without a predicate between them coordinates nominals, so
