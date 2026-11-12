@@ -50,12 +50,34 @@ fn check_subject_predicate(
         if clause.existential {
             continue;
         }
+        // A merged initial subordinate clause (`Koska olin väsynyt menin
+        // kotiin`) has unreliable roles: the complement of the subordinate
+        // verb looks like the main subject. The punctuation rule handles the
+        // missing comma; agreement stays out of it.
+        if starts_with_subordinator(clause, tokens)
+            && clause
+                .tokens
+                .clone()
+                .filter(|&index| tokens[index].is_word())
+                .filter(|&index| finite_reading(&analysis.tokens[index]).is_some())
+                .count()
+                >= 2
+        {
+            continue;
+        }
         let Some(subject) = subject_of(clause, tokens, analysis) else {
             continue;
         };
         let Some(bearer) = bearer_of(clause, tokens, analysis) else {
             continue;
         };
+        // A post-predicate subject is a presentation/existential order
+        // (`jossa roihusi tuli`) or a misread object (`Ostin kolme asiaa`),
+        // not a normal agreement controller. Existential clauses are already
+        // skipped above.
+        if subject.index > bearer.index {
+            continue;
+        }
         if bearer.reading.voice == Some(Voice::Passive)
             || bearer.reading.mood == Some(Mood::Imperative)
         {
@@ -266,6 +288,16 @@ fn attribute_head(
         .find(|&candidate| candidate > index && tokens[candidate].is_word())
 }
 
+fn starts_with_subordinator(clause: &crate::syntax::Clause, tokens: &[Token]) -> bool {
+    clause
+        .tokens
+        .clone()
+        .find(|&index| tokens[index].is_word())
+        .is_some_and(|index| {
+            crate::syntax::is_subordinator(&tokens[index].text.to_lowercase())
+        })
+}
+
 /// The subject of a clause, including a shared subject from a preceding
 /// clause and coordinated subjects inside this one.
 fn subject_of(
@@ -441,7 +473,7 @@ fn bearer_of(
     })
 }
 
-fn finite_reading(token: &TokenSyntax) -> Option<Tags> {
+pub(super) fn finite_reading(token: &TokenSyntax) -> Option<Tags> {
     token.readings.iter().copied().find(|reading| {
         match reading.part_of_speech {
             Some(PartOfSpeech::Verb) => {

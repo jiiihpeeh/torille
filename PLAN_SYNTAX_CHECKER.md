@@ -1,8 +1,8 @@
 # PLAN_SYNTAX_CHECKER — grammar and punctuation diagnostics
 
-Status: Phases 0–2 landed (subject–predicate and attribute agreement); Phases
-3–6 are planned. The analysis layer it builds on is `PLAN_SYNTAX.md` and is
-already landed on the `syntax` branch.
+Status: Phases 0–3 landed, with nested lists still open (top-level and
+introduced lists work). Phases 4–6 are planned. The analysis layer it builds
+on is `PLAN_SYNTAX.md` and is already landed on the `syntax` branch.
 
 The goal is a **correction checker**, not another parser: detect a small set of
 high-confidence grammatical errors, explain them, and produce corrections from
@@ -999,27 +999,29 @@ No errors for `punaisen auton`, `punaisen auto` (ambiguous genitive),
 `Vanha talo`, `Sami Ruotsalainen`, `kaksi miestä`, `Punaisempi auto`,
 `Punaisessa talossa` or `Hän tuli iloisena kotiin`.
 
-### Phase 3 — lists, comma rules and clause kinds
+### Phase 3 — lists, comma rules and clause kinds — mostly done
 
 Lists first, because a comma-separated nominal run must not be mistaken for
 clause coordination.
 
-- [ ] `src/syntax_list.rs`: `List`, `ListItem`, `ListKind`,
+- [x] `src/syntax_list.rs`: `List`, `ListItem`, `ListKind`,
       `ListItemKind`, and `parse`.
-- [ ] `SyntaxAnalysis.lists` and wasm serialisation.
-- [ ] Nominal / Clause / Predicate / Mixed classification.
-- [ ] Top-level comma splitting, final conjunction, colon introducer.
-- [ ] Nested list arena and parent index.
-- [ ] List punctuation rules and the Finnish default policy.
-- [ ] `ClauseKind` derivation.
-- [ ] Relative-clause extent heuristics for the interrupted-host case.
-- [ ] Subordinate comma in both orders.
-- [ ] Relative comma pair only when the opening comma exists; optional
-      suggestion otherwise.
-- [ ] Unbalanced pair detection.
-- [ ] Coordinate comma advisory only.
+- [x] `SyntaxAnalysis.lists` and wasm serialisation.
+- [x] Nominal / Clause / Predicate / Mixed classification.
+- [x] Top-level comma splitting, final conjunction, colon introducer.
+- [ ] Nested list arena and parent index: the fields and `ListItemKind::List`
+      exist, but the parser still produces only top-level lists.
+- [x] List punctuation rules and the Finnish default policy.
+- [x] `ClauseKind` derivation.
+- [x] Relative-clause extent heuristics for the interrupted-host case.
+- [x] Subordinate comma in both orders, including the merged
+      `Koska olin väsynyt menin kotiin` case.
+- [x] Relative comma pair only when the opening comma exists; no error for a
+      restrictive relative without commas.
+- [x] Unbalanced pair detection.
+- [x] Coordinate comma advisory only (no automatic diagnostic).
 
-Acceptance:
+Acceptance (passing):
 
 ```text
 Ostin omenoita, appelsiineja ja banaaneja.        # valid list
@@ -1028,6 +1030,7 @@ Ostin omenoita appelsiineja, banaaneja ja päärynöitä.
 Ostin omenoita, appelsiineja,, ja banaaneja.       → duplicate comma
 Ostin omenoita, appelsiineja, ja banaaneja.        # suggestion only
 Ostin kolme asiaa: omenoita, appelsiineja ja banaaneja.  # introduced list
+Ostin kolme asiaa:, omenoita, appelsiineja ja banaaneja. → introducer comma
 Ostin omenoita, Liisa osti banaaneja ja Matti osti päärynöitä.
                                                    # clause coordination, no list error
 Menin kotiin koska olin väsynyt.   → Menin kotiin, koska olin väsynyt.
@@ -1035,11 +1038,15 @@ Koska olin väsynyt menin kotiin.   → Koska olin väsynyt, menin kotiin.
 Koira, joka nukkuu sohvalla on minun.
                                    → Koira, joka nukkuu sohvalla, on minun.
 Menin kauppaan ja ostin maitoa.    # no error
-Sami söi puuron, ja Liisa joi maidon. # suggestion, not error
+Sami söi puuron, ja Liisa joi maidon. # no error; comma is optional
 ```
 
 No error for a restrictive relative without commas, and no error for
 `Kuitenkin, ostin omenoita, jotka olivat kalliita, eilen.` (not a list).
+
+Nested lists are the one remaining list item. The structure has `parent` and
+`ListItemKind::List(idx)`, but `parse` currently builds the top-level arena
+only. That is the next list commit, not a blocker for the diagnostics above.
 
 ### Phase 4 — verb rection and case selection
 

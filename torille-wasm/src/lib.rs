@@ -190,6 +190,8 @@ pub fn hyphenate(
 ///   sentences: [{ start, end, index, paragraphStart }],
 ///   clauses:   [{ start, end, tokensStart, tokensEnd, predicate, subject,
 ///                 object, complement, negative, existential }],
+///   lists:     [{ start, end, tokensStart, tokensEnd, clause, role, head,
+///                 kind, items, separators, conjunction, introducer, parent }],
 ///   tokens:    [{ word, start, end, role, confidence, clause, head,
 ///                 case, lemma, readings: [{ pos, case, number, person,
 ///                 tense, mood, voice, polarity }] }]
@@ -331,6 +333,55 @@ fn syntax_object(
         token_items.push(&item);
     }
     set(&obj, "tokens", token_items.into());
+
+    let lists = Array::new();
+    for list in &analysis.lists {
+        let item = Object::new();
+        set(&item, "start", JsValue::from(list.span.start as u32));
+        set(&item, "end", JsValue::from(list.span.end as u32));
+        set(
+            &item,
+            "tokensStart",
+            JsValue::from(list.tokens.start as u32),
+        );
+        set(&item, "tokensEnd", JsValue::from(list.tokens.end as u32));
+        set(&item, "clause", JsValue::from(list.clause as u32));
+        set_option(&item, "role", list.role.map(|role| role.name()));
+        set_option(&item, "head", list.head);
+        set(&item, "kind", JsValue::from(list.kind.name()));
+        let items = Array::new();
+        for list_item in &list.items {
+            let child = Object::new();
+            set(&child, "start", JsValue::from(list_item.span.start as u32));
+            set(&child, "end", JsValue::from(list_item.span.end as u32));
+            set(
+                &child,
+                "tokensStart",
+                JsValue::from(list_item.tokens.start as u32),
+            );
+            set(
+                &child,
+                "tokensEnd",
+                JsValue::from(list_item.tokens.end as u32),
+            );
+            set(&child, "kind", JsValue::from(list_item.kind.name()));
+            if let torille::syntax_list::ListItemKind::List(index) = list_item.kind {
+                set(&child, "list", JsValue::from(index as u32));
+            }
+            items.push(&child);
+        }
+        set(&item, "items", items.into());
+        let separators = Array::new();
+        for separator in &list.separators {
+            separators.push(&JsValue::from(*separator as u32));
+        }
+        set(&item, "separators", separators.into());
+        set_option(&item, "conjunction", list.conjunction);
+        set_option(&item, "introducer", list.introducer);
+        set_option(&item, "parent", list.parent);
+        lists.push(&item);
+    }
+    set(&obj, "lists", lists.into());
 
     obj
 }

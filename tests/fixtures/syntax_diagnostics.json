@@ -189,6 +189,97 @@
           "corrections": ["punainen"]
         }
       ]
+    },
+    {
+      "id": "list_missing_separator",
+      "text": "Ostin omenoita appelsiineja, banaaneja ja päärynöitä.",
+      "diagnostics": [
+        {
+          "kind": "list_separator_missing",
+          "severity": "error",
+          "start": 14,
+          "end": 14,
+          "corrections": [","]
+        }
+      ]
+    },
+    {
+      "id": "list_duplicate_separator",
+      "text": "Ostin omenoita, appelsiineja,, ja banaaneja.",
+      "diagnostics": [
+        {
+          "kind": "list_separator_duplicate",
+          "severity": "error",
+          "start": 29,
+          "end": 30,
+          "corrections": [""]
+        }
+      ]
+    },
+    {
+      "id": "list_comma_before_conjunction",
+      "text": "Ostin omenoita, appelsiineja, ja banaaneja.",
+      "diagnostics": [
+        {
+          "kind": "list_comma_before_conjunction",
+          "severity": "suggestion",
+          "start": 28,
+          "end": 29,
+          "corrections": [""]
+        }
+      ]
+    },
+    {
+      "id": "list_introducer_comma",
+      "text": "Ostin kolme asiaa:, omenoita, appelsiineja ja banaaneja.",
+      "diagnostics": [
+        {
+          "kind": "list_introducer_comma",
+          "severity": "error",
+          "start": 18,
+          "end": 19,
+          "corrections": [""]
+        }
+      ]
+    },
+    {
+      "id": "subordinate_comma_after_main",
+      "text": "Menin kotiin koska olin väsynyt.",
+      "diagnostics": [
+        {
+          "kind": "comma_missing",
+          "severity": "error",
+          "start": 12,
+          "end": 12,
+          "corrections": [","]
+        }
+      ]
+    },
+    {
+      "id": "subordinate_comma_initial",
+      "text": "Koska olin väsynyt menin kotiin.",
+      "diagnostics": [
+        {
+          "kind": "comma_missing",
+          "severity": "error",
+          "start": 19,
+          "end": 19,
+          "corrections": [","]
+        }
+      ]
+    },
+    {
+      "id": "relative_comma_pair",
+      "text": "Koira, joka nukkuu sohvalla on minun.",
+      "diagnostics": [
+        {
+          "kind": "comma_pair_unbalanced",
+          "severity": "error",
+          "start": 27,
+          "end": 27,
+          "corrections": [","]
+        }
+      ]
     }
   ],
   "clean": [
@@ -247,6 +338,15 @@
     "Kaksi miestä tuli.",
     "Punainen ja sininen auto.",
     "Punaisessa talossa.",
-    "Hän tuli iloisena kotiin."
+    "Hän tuli iloisena kotiin.",
+    "Ostin omenoita, appelsiineja ja banaaneja.",
+    "Ostin kolme asiaa: omenoita, appelsiineja ja banaaneja.",
+    "Kuitenkin, ostin omenoita, jotka olivat kalliita, eilen.",
+    "Koira, joka nukkuu sohvalla, on minun.",
+    "Koira joka nukkuu sohvalla on minun.",
+    "Menin kotiin, koska olin väsynyt.",
+    "Koska olin väsynyt, menin kotiin.",
+    "Ostin omenoita, Liisa osti banaaneja ja Matti osti päärynöitä.",
+    "Menin kauppaan ja ostin maitoa."
   ]
 }

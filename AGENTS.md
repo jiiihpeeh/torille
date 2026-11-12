@@ -62,6 +62,7 @@ src/
   tokenise.rs         word/separator tokeniser for the wasm API
   sentence.rs         sentence spans and token sentence/paragraph context
   syntax.rs           on-demand clause/role analysis over the morphology engine
+  syntax_list.rs      list structure parser used by the syntax checker
   syntax_check/       grammar diagnostics + corrections over `syntax`
   hyphenation/        Finnish line-break hyphenation (patterns + policy)
   gradation.rs        consonant gradation ("*X" code) strong<->weak
@@ -341,9 +342,10 @@ ComponentInflection, Explanation, Action}`;
 `parse_sanalista`, `read_sanalista`, `Sanalista`, `Lemma`, `Inflection`;
 `Tags`, `Form`, `Confidence`; `sentence::{analyze, spans, Analyzer, TokenContext,
 SentenceSpan}`; `syntax::{analyze, SyntaxAnalysis, Clause, TokenSyntax,
-SyntacticRole, RoleConfidence}`; `Suggestion` / `SuggestionSource` under
-`suggest`; `syntax_check::{check, check_with_cache, check_analysis,
-SyntaxCheck, SyntaxDiagnostic, DiagnosticKind, Severity, Correction}`.
+SyntacticRole, RoleConfidence}`; `syntax_list::{List, ListItem, ListKind,
+ListItemKind}`; `Suggestion` / `SuggestionSource` under `suggest`;
+`syntax_check::{check, check_with_cache, check_analysis, SyntaxCheck,
+SyntaxDiagnostic, DiagnosticKind, Severity, Correction}`.
 
 ## The binary maps (`maps/`)
 

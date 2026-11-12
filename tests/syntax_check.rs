@@ -166,4 +166,11 @@ diagnostic_tests!(
     attribute_demonstrative_plural,
     attribute_demonstrative_singular,
     attribute_case_mismatch,
+    list_missing_separator,
+    list_duplicate_separator,
+    list_comma_before_conjunction,
+    list_introducer_comma,
+    subordinate_comma_after_main,
+    subordinate_comma_initial,
+    relative_comma_pair,
 );

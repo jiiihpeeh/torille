@@ -141,6 +141,8 @@ pub struct SyntaxAnalysis {
     pub sentences: Vec<SentenceSpan>,
     /// One clause per sentence in phase 5.
     pub clauses: Vec<Clause>,
+    /// Nominal, clause and predicate lists found in the clauses.
+    pub lists: Vec<crate::syntax_list::List>,
     /// One entry per input token, separators included.
     pub tokens: Vec<TokenSyntax>,
 }
@@ -292,9 +294,11 @@ fn analyze_with(
     }
     share_clause_roles(&mut clauses, &clause_sentences, tokens, &out);
 
+    let lists = crate::syntax_list::parse(tokens, &clauses, &out);
     SyntaxAnalysis {
         sentences,
         clauses,
+        lists,
         tokens: out,
     }
 }
@@ -968,14 +972,14 @@ fn segment_clause_words(words: &[usize], tokens: &[Token], out: &[TokenSyntax]) 
     segments
 }
 
-fn is_coordinating(word: &str) -> bool {
+pub(crate) fn is_coordinating(word: &str) -> bool {
     matches!(
         word,
         "ja" | "mutta" | "tai" | "eli" | "sekä" | "vai" | "vaan"
     )
 }
 
-fn is_subordinator(word: &str) -> bool {
+pub(crate) fn is_subordinator(word: &str) -> bool {
     matches!(
         word,
         "että" | "kun" | "jos" | "vaikka" | "koska" | "jotta" | "mikäli" | "ellei"
@@ -998,7 +1002,7 @@ const RELATIVE_SURFACES: &[&str] = &[
 ];
 
 /// Whether this token is a relative pronoun, in any of its cases.
-fn is_relative_word(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
+pub(crate) fn is_relative_word(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
     let lower = tokens[index].text.to_lowercase();
     if RELATIVE_SURFACES.contains(&lower.as_str()) {
         return true;

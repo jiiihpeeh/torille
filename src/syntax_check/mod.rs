@@ -11,6 +11,7 @@
 
 mod agreement;
 mod correction;
+mod punctuation;
 mod rank;
 
 pub mod diagnostic;
@@ -56,6 +57,7 @@ pub fn check_with_cache(text: &str, cache: &mut AnalysisCache) -> SyntaxCheck {
 /// This is the testable core: a caller that already has tokens and an analysis
 /// does not pay for a second parse.
 pub fn check_analysis(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
-    let diagnostics = agreement::check(tokens, analysis);
+    let mut diagnostics = agreement::check(tokens, analysis);
+    diagnostics.extend(punctuation::check(tokens, analysis));
     rank::resolve(diagnostics)
 }
