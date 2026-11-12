@@ -1046,7 +1046,11 @@ No error for a restrictive relative without commas, and no error for
 
 Nested lists are the one remaining list item. The structure has `parent` and
 `ListItemKind::List(idx)`, but `parse` currently builds the top-level arena
-only. That is the next list commit, not a blocker for the diagnostics above.
+only. The concrete blocker is that `src/sentence.rs` treats brackets as
+sentence boundaries, so a parenthetical list is split before the list parser
+sees it. The focused plan is
+[`PLAN_NESTED_LISTS.md`](PLAN_NESTED_LISTS.md): merge bracket-only sentence
+groups in the syntax layer, then populate the child arena.
 
 ### Phase 4 — verb rection and case selection — done
 
