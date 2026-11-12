@@ -78,6 +78,11 @@ pub struct TextAreaState {
     /// proper-noun half depends on the text, and `find_misspells` checks
     /// that separately. Bounded by [`KNOWN_CACHE_LIMIT`].
     known: HashMap<String, bool>,
+    /// Resolved syntax words for this document. Reusing them makes a
+    /// re-render of the diagnostic panel a hash probe per word instead of a
+    /// base search. Morphology is text-independent; the cache is cleared by
+    /// [`clear`](Self::clear).
+    pub(crate) syntax_cache: torille::syntax::AnalysisCache,
 }
 
 /// Cap on the cross-render lexical cache. A paste can contain tens of
@@ -107,6 +112,7 @@ impl TextAreaState {
             phrases: HashSet::new(),
             generation: 0,
             known: HashMap::new(),
+            syntax_cache: torille::syntax::AnalysisCache::new(),
         }
     }
 
@@ -185,6 +191,7 @@ impl TextAreaState {
     pub fn clear(&mut self) {
         self.proper_nouns.clear();
         self.phrases.clear();
+        self.syntax_cache.clear();
         self.generation += 1;
     }
 
@@ -567,6 +574,20 @@ mod tests {
             !hits.iter().any(|h| h.word == "Pohjanmaan"),
             "Pohjanmaan must be accepted: {hits:?}"
         );
+    }
+
+    #[test]
+    fn the_syntax_cache_survives_a_rerender_and_clears_with_the_state() {
+        let mut st = TextAreaState::new();
+        let tokens = torille::tokenise::tokenise("Sami söi puuron.");
+        let first = torille::syntax::analyze_with_cache(&tokens, &mut st.syntax_cache);
+        let words = st.syntax_cache.len();
+        let second = torille::syntax::analyze_with_cache(&tokens, &mut st.syntax_cache);
+        assert_eq!(first, second);
+        assert_eq!(st.syntax_cache.len(), words);
+        assert!(words > 0);
+        st.clear();
+        assert!(st.syntax_cache.is_empty());
     }
 
     #[test]

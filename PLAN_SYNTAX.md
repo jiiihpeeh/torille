@@ -1,8 +1,6 @@
 # PLAN_SYNTAX — making the advisory syntax layer trustworthy
 
-Status: Phases 0–5 landed; Phase 6 has removed the suggestion-payload cost,
-with a per-document wasm cache still open. Work happens on the `syntax` branch
-off `master`.
+Status: Phases 0–6 landed. Work happens on the `syntax` branch off `master`.
 
 The syntax layer (`src/syntax.rs`) is the second, on-demand layer over the
 morphology engine. It is **not** in the keystroke path; its only shipping
@@ -509,10 +507,12 @@ Measured on this machine:
 | full lib suite | ~218 s | ~180 s |
 | one sentence, process included | ~2 s | ~0.2 s |
 
-A fresh word still pays for its first paradigm build, so a 60-sentence probe
-process is ~8 s (~140 ms/sentence); repeated lemmas are cached. The target is
-tens of milliseconds per sentence, so the remaining step is a per-document
-`WordAnalysis` cache in the wasm layer, not another search rewrite.
+A fresh word still pays for its first paradigm build. `syntax::analyze` now
+uses a capped thread-local `AnalysisCache`, and the wasm textarea state owns
+one through `analyze_syntax_with_state`: a re-render of the same document is a
+hash probe per word, and the 60-sentence probe process dropped from ~8 s to
+~5.6 s (~93 ms/sentence). The first pass over a paragraph is still dominated by
+new lemmas; the cache removes the repeat cost, not the initial paradigm build.
 
 ## Phases
 
@@ -628,15 +628,17 @@ adverbial. `Sami söi puuron, koska oli nälkäinen.` -> second clause shares
       engine unit test. The wasm key is compile-checked against the engine
       field, though the JSON string itself has no native test.
 
-### Phase 6 — make it affordable before a UI uses it (S20) — mostly landed
+### Phase 6 — make it affordable before a UI uses it (S20) — landed
 
 - [x] Replace the suggestion-payload base search with a recognition-only
       resolution plus one inflection of the winning bases.
 - [x] Record before/after wall and CPU time in S20 above.
-- [ ] Add a per-document `WordAnalysis` cache in the wasm layer; a fresh word
-      still pays its first paradigm build, so a paragraph is ~140 ms/sentence
-      rather than tens of milliseconds.
-- [ ] Do not ship an interactive consumer until the remaining cache lands.
+- [x] Add `AnalysisCache` + `analyze_with_cache` in the engine and
+      `TextAreaState.syntax_cache` + `analyze_syntax_with_state` in wasm. A
+      re-render is a cache hit per word; the first pass still pays for new
+      lemmas.
+- [x] Keep the per-document cache bounded: 4096 words, cleared wholesale when
+      full and on `TextAreaState::clear`.
 
 ## Non-goals
 

@@ -17,6 +17,8 @@
 //!
 //! [`analyze_syntax`] is a separate, on-demand diagnostic export. It is not
 //! called by the keystroke path and must stay out of the render loop.
+//! [`analyze_syntax_with_state`] is the same object through a textarea's
+//! word cache, for a panel that re-renders on the same document.
 //!
 //! ## Why this layer exists
 //!
@@ -198,10 +200,35 @@ pub fn hyphenate(
 /// `modifier` or `unknown`.
 #[wasm_bindgen]
 pub fn analyze_syntax(text: &str) -> js_sys::Object {
-    use js_sys::{Array, Object};
-
     let tokens = torille::tokenise::tokenise(text);
     let analysis = torille::syntax::analyze(&tokens);
+    syntax_object(&tokens, &analysis)
+}
+
+/// The same object, resolved through the per-textarea cache.
+///
+/// A re-render of the diagnostic panel for the same document then costs one
+/// hash probe per word instead of a morphology search. A stale or destroyed
+/// handle falls back to the stateless path.
+#[wasm_bindgen]
+pub fn analyze_syntax_with_state(idx: u32, text: &str) -> js_sys::Object {
+    let tokens = torille::tokenise::tokenise(text);
+    let mut slots = states().lock().expect("states mutex poisoned");
+    if let Some(Some(state)) = slots.get_mut(idx as usize) {
+        let analysis = torille::syntax::analyze_with_cache(&tokens, &mut state.syntax_cache);
+        return syntax_object(&tokens, &analysis);
+    }
+    drop(slots);
+    let analysis = torille::syntax::analyze(&tokens);
+    syntax_object(&tokens, &analysis)
+}
+
+fn syntax_object(
+    tokens: &[torille::tokenise::Token],
+    analysis: &torille::syntax::SyntaxAnalysis,
+) -> js_sys::Object {
+    use js_sys::{Array, Object};
+
     let obj = Object::new();
 
     let sentences = Array::new();

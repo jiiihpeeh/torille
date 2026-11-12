@@ -19,6 +19,7 @@
 //! coordinated or non-finite clause shares the preceding subject, and a
 //! passive participle after `olla` is a complement rather than a subject.
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ops::Range;
 
@@ -149,8 +150,27 @@ pub struct SyntaxAnalysis {
 /// This walks the same morphology engine the checker uses, so callers see the
 /// engine's reading of every word. It is intentionally separate from
 /// [`crate::sentence::analyze`] and must not run in the keystroke path.
+///
+/// Resolved words are kept in a capped thread-local cache, so re-analysing a
+/// document does not repeat the morphology for the words it shares with the
+/// previous analysis. Use [`analyze_with_cache`] when the caller owns a
+/// document-scoped cache (the wasm textarea state does).
 pub fn analyze(tokens: &[Token]) -> SyntaxAnalysis {
-    analyze_with(tokens, lemmas(), Catalogues::embedded())
+    thread_local! {
+        static CACHE: RefCell<AnalysisCache> = RefCell::new(AnalysisCache::new());
+    }
+    CACHE.with_borrow_mut(|cache| {
+        analyze_with(tokens, lemmas(), Catalogues::embedded(), cache)
+    })
+}
+
+/// Analyze with a caller-owned word cache.
+///
+/// The cache key is the lowercased surface; morphology is independent of the
+/// document, so a cache may outlive one text. It is capped and clears itself
+/// when full.
+pub fn analyze_with_cache(tokens: &[Token], cache: &mut AnalysisCache) -> SyntaxAnalysis {
+    analyze_with(tokens, lemmas(), Catalogues::embedded(), cache)
 }
 
 /// The same analysis against a caller-supplied lexicon and catalogue.
@@ -161,13 +181,13 @@ fn analyze_with(
     tokens: &[Token],
     lexicon: &[crate::kotus::Lemma<'_>],
     cat: &Catalogues,
+    cache: &mut AnalysisCache,
 ) -> SyntaxAnalysis {
     let contexts = sentence::analyze(tokens);
     let sentences = sentence::spans(tokens);
 
     let mut out = vec![TokenSyntax::default(); tokens.len()];
     let mut nominal_lemmas: Vec<Option<String>> = vec![None; tokens.len()];
-    let mut cache: HashMap<String, WordAnalysis> = HashMap::new();
 
     // Morphology first: every later rule reads the same resolved readings.
     for (index, token) in tokens.iter().enumerate() {
@@ -175,10 +195,8 @@ fn analyze_with(
             continue;
         }
         let lower = token.text.to_lowercase();
-        let analysis = cache
-            .entry(lower)
-            .or_insert_with(|| resolve_word(lexicon, cat, &token.text.to_lowercase()));
-        let mut readings = analysis.readings.clone();
+        let analysis = cache.resolve_word(lexicon, cat, &lower);
+        let mut readings = analysis.readings;
         let mut lemma = analysis.lemma.clone();
         nominal_lemmas[index] = analysis.nominal_lemma.clone();
         if readings.is_empty()
@@ -296,6 +314,59 @@ struct WordAnalysis {
     /// re-analysed through its host when this is false.
     exact: bool,
     readings: Vec<Tags>,
+}
+
+/// A capped cache of resolved words for the syntax layer.
+///
+/// The morphology of a surface is independent of the sentence and the
+/// document, so the cache can be reused across analyses. That is what makes a
+/// re-render of a paragraph cheap: the second pass is a hash probe per word
+/// instead of a base search. The cap keeps a large paste's vocabulary from
+/// growing the wasm heap without bound; it clears wholesale when full.
+#[derive(Debug, Default, Clone)]
+pub struct AnalysisCache {
+    words: HashMap<String, WordAnalysis>,
+}
+
+/// The cap on resolved words. One entry holds a few small `Tags` structs and
+/// lemma strings; 4096 covers a long article.
+const ANALYSIS_CACHE_LIMIT: usize = 4096;
+
+impl AnalysisCache {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Drop every resolved word.
+    pub fn clear(&mut self) {
+        self.words.clear();
+    }
+
+    /// Number of resolved words currently cached.
+    pub fn len(&self) -> usize {
+        self.words.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.words.is_empty()
+    }
+
+    fn resolve_word(
+        &mut self,
+        lexicon: &[crate::kotus::Lemma<'_>],
+        cat: &Catalogues,
+        lower: &str,
+    ) -> WordAnalysis {
+        if let Some(analysis) = self.words.get(lower) {
+            return analysis.clone();
+        }
+        let analysis = resolve_word(lexicon, cat, lower);
+        if self.words.len() >= ANALYSIS_CACHE_LIMIT {
+            self.words.clear();
+        }
+        self.words.insert(lower.to_string(), analysis.clone());
+        analysis
+    }
 }
 
 /// Resolve a lowercase word, peeling its clitic layers when the host is the
@@ -1871,6 +1942,18 @@ mod tests {
 
     /// The name table records the case the generator saw; `Helsingissä` is an
     /// inessive adverbial, not a nominative subject.
+    #[test]
+    fn the_analysis_cache_returns_the_same_roles_and_reuses_words() {
+        let tokens = tokenise("Sami söi puuron. Sami söi puuron.");
+        let mut cache = AnalysisCache::new();
+        let first = analyze_with_cache(&tokens, &mut cache);
+        let words = cache.len();
+        let second = analyze_with_cache(&tokens, &mut cache);
+        assert_eq!(first, second);
+        assert_eq!(cache.len(), words, "the second pass added no words");
+        assert_eq!(words, 3, "sami, söi, puuron");
+    }
+
     #[test]
     fn an_inflected_name_keeps_its_recorded_case() {
         let (tokens, analysis) = analyzed("Helsingissä asuva mies on opettaja.");
