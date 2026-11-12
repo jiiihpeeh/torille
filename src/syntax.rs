@@ -419,10 +419,13 @@ fn resolve_word_plain(
         ..WordAnalysis::default()
     };
 
-    if let Some(base) = report.bases.first() {
-        out.lemma = Some(base.word.to_string());
-    } else if let Some(direct) = report.direct.first() {
+    // A direct lemma is the surface itself and is the right default lemma.
+    // A homonymous base (`minä` is also an essive of `mikä`) must not replace
+    // it; the role resolver below still sees every reading.
+    if let Some(direct) = report.direct.first() {
         out.lemma = Some(direct.word().to_string());
+    } else if let Some(base) = report.bases.first() {
+        out.lemma = Some(base.word.to_string());
     }
 
     let mut seen: Vec<&str> = Vec::new();
@@ -996,12 +999,20 @@ const RELATIVE_SURFACES: &[&str] = &[
 
 /// Whether this token is a relative pronoun, in any of its cases.
 fn is_relative_word(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
-    let lemma = out[index].lemma.as_deref().unwrap_or_default();
-    if matches!(lemma, "joka" | "mikä" | "ken" | "kuka") {
+    let lower = tokens[index].text.to_lowercase();
+    if RELATIVE_SURFACES.contains(&lower.as_str()) {
         return true;
     }
-    let lower = tokens[index].text.to_lowercase();
-    RELATIVE_SURFACES.contains(&lower.as_str())
+    // A personal pronoun is never a relative pronoun, even when the homonym
+    // resolver gives it a relative lemma (`minä` is also an essive of `mikä`).
+    if matches!(
+        lower.as_str(),
+        "minä" | "sinä" | "hän" | "me" | "te" | "he"
+    ) {
+        return false;
+    }
+    let lemma = out[index].lemma.as_deref().unwrap_or_default();
+    matches!(lemma, "joka" | "mikä" | "ken" | "kuka")
 }
 
 /// `sekä ... että` without a predicate between them coordinates nominals, so

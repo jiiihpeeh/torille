@@ -19,6 +19,8 @@
 //! called by the keystroke path and must stay out of the render loop.
 //! [`analyze_syntax_with_state`] is the same object through a textarea's
 //! word cache, for a panel that re-renders on the same document.
+//! [`check_syntax`] adds grammar diagnostics and corrections to the analysis;
+//! [`check_syntax_with_state`] is its cache-aware form.
 //!
 //! ## Why this layer exists
 //!
@@ -331,6 +333,107 @@ fn syntax_object(
     set(&obj, "tokens", token_items.into());
 
     obj
+}
+
+/// Analysis plus grammar diagnostics for `text`.
+///
+/// The object is the [`analyze_syntax`] shape with a `diagnostics` array. Each
+/// diagnostic has byte offsets, a stable kind/severity/confidence, a message
+/// key, and a list of corrections. A correction carries edits, so applying it
+/// never risks replacing the whole text.
+#[wasm_bindgen]
+pub fn check_syntax(text: &str) -> js_sys::Object {
+    let tokens = torille::tokenise::tokenise(text);
+    let analysis = torille::syntax::analyze(&tokens);
+    let diagnostics = torille::syntax_check::check_analysis(&tokens, &analysis);
+    let obj = syntax_object(&tokens, &analysis);
+    set(
+        &obj,
+        "diagnostics",
+        diagnostics_array(&diagnostics).into(),
+    );
+    obj
+}
+
+/// The same diagnostics through the per-textarea word cache.
+///
+/// A stale or destroyed handle falls back to the stateless path.
+#[wasm_bindgen]
+pub fn check_syntax_with_state(idx: u32, text: &str) -> js_sys::Object {
+    let tokens = torille::tokenise::tokenise(text);
+    let mut slots = states().lock().expect("states mutex poisoned");
+    if let Some(Some(state)) = slots.get_mut(idx as usize) {
+        let analysis =
+            torille::syntax::analyze_with_cache(&tokens, &mut state.syntax_cache);
+        let diagnostics = torille::syntax_check::check_analysis(&tokens, &analysis);
+        let obj = syntax_object(&tokens, &analysis);
+        set(
+            &obj,
+            "diagnostics",
+            diagnostics_array(&diagnostics).into(),
+        );
+        return obj;
+    }
+    drop(slots);
+    check_syntax(text)
+}
+
+fn diagnostics_array(
+    diagnostics: &[torille::syntax_check::SyntaxDiagnostic],
+) -> js_sys::Array {
+    use js_sys::{Array, Object};
+
+    let array = Array::new();
+    for diagnostic in diagnostics {
+        let item = Object::new();
+        set(&item, "kind", JsValue::from(diagnostic.kind.name()));
+        set(&item, "severity", JsValue::from(diagnostic.severity.name()));
+        set(
+            &item,
+            "confidence",
+            JsValue::from(diagnostic.confidence.name()),
+        );
+        set(
+            &item,
+            "start",
+            JsValue::from(diagnostic.span.start as u32),
+        );
+        set(&item, "end", JsValue::from(diagnostic.span.end as u32));
+        set(&item, "message", JsValue::from(diagnostic.message));
+        set_option(&item, "expected", diagnostic.expected.as_deref());
+
+        let corrections = Array::new();
+        for correction in &diagnostic.corrections {
+            let correction_item = Object::new();
+            set(
+                &correction_item,
+                "score",
+                JsValue::from(correction.score as f64),
+            );
+            set(
+                &correction_item,
+                "note",
+                JsValue::from(correction.note),
+            );
+            let edits = Array::new();
+            for edit in &correction.edits {
+                let edit_item = Object::new();
+                set(&edit_item, "start", JsValue::from(edit.start as u32));
+                set(&edit_item, "end", JsValue::from(edit.end as u32));
+                set(
+                    &edit_item,
+                    "replacement",
+                    JsValue::from(edit.replacement.as_str()),
+                );
+                edits.push(&edit_item);
+            }
+            set(&correction_item, "edits", edits.into());
+            corrections.push(&correction_item);
+        }
+        set(&item, "corrections", corrections.into());
+        array.push(&item);
+    }
+    array
 }
 
 fn set(obj: &js_sys::Object, key: &str, value: JsValue) {

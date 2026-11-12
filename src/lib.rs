@@ -23,6 +23,7 @@ pub mod sentence;
 pub mod spec;
 pub mod suggest;
 pub mod syntax;
+pub mod syntax_check;
 pub mod tags;
 pub mod tokenise;
 pub(crate) mod wordset;

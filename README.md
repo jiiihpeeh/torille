@@ -20,6 +20,7 @@ cargo test --release --workspace
 cargo run --release -p torille-tools --bin inflect -- talo
 cargo run --release -p torille-tools --bin check -- talo
 cargo run --release -p torille-tools --bin hyphenate -- tietokoneohjelmointi
+cargo run --release -p torille-tools --bin check_syntax -- "Koira nukkuvat."
 ```
 
 The first build fetches `maps/*.bin.gz` from the orphan `maps` branch through
@@ -86,6 +87,7 @@ torille/
     compound.rs         splitting an unknown word
     sentence.rs         sentence spans and token context
     syntax.rs           on-demand clause/role analysis
+    syntax_check/       grammar diagnostics and corrections
   maps/                 embedded binary maps, with a README
   data/                 Kotus sources, committed build inputs, reference tables
   tools/                CLI drivers, build generators, oracle reference, harness

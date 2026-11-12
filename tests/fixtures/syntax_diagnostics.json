@@ -1,0 +1,160 @@
+{
+  "_comment": [
+    "Subject–predicate agreement diagnostics.",
+    "Spans are UTF-8 byte offsets. `corrections` lists the replacement of the",
+    "first edit of each correction, in the checker's deterministic order.",
+    "`clean` sentences must produce no diagnostic at all: they cover the",
+    "existential, passive, necessive, numeral and coordinated constructions",
+    "that must not be flagged."
+  ],
+  "cases": [
+    {
+      "id": "sv_agreement_plural_verb",
+      "text": "Koira nukkuvat.",
+      "diagnostics": [
+        {
+          "kind": "subject_predicate_agreement",
+          "severity": "error",
+          "start": 6,
+          "end": 14,
+          "corrections": ["nukkuu"]
+        }
+      ]
+    },
+    {
+      "id": "sv_agreement_first_singular",
+      "text": "Minä menee kotiin.",
+      "diagnostics": [
+        {
+          "kind": "subject_predicate_agreement",
+          "severity": "error",
+          "start": 6,
+          "end": 11,
+          "corrections": ["menen"]
+        }
+      ]
+    },
+    {
+      "id": "sv_agreement_third_plural",
+      "text": "Hän antoivat kirjan.",
+      "diagnostics": [
+        {
+          "kind": "subject_predicate_agreement",
+          "severity": "error",
+          "start": 5,
+          "end": 13,
+          "corrections": ["antoi"]
+        }
+      ]
+    },
+    {
+      "id": "sv_agreement_plural_subject",
+      "text": "Lapset leikkii.",
+      "diagnostics": [
+        {
+          "kind": "subject_predicate_agreement",
+          "severity": "error",
+          "start": 7,
+          "end": 14,
+          "corrections": ["leikkivät"]
+        }
+      ]
+    },
+    {
+      "id": "sv_agreement_first_plural",
+      "text": "Me menee.",
+      "diagnostics": [
+        {
+          "kind": "subject_predicate_agreement",
+          "severity": "error",
+          "start": 3,
+          "end": 8,
+          "corrections": ["menemme"]
+        }
+      ]
+    },
+    {
+      "id": "sv_agreement_compound_auxiliary",
+      "text": "Minä on lukenut.",
+      "diagnostics": [
+        {
+          "kind": "subject_predicate_agreement",
+          "severity": "error",
+          "start": 6,
+          "end": 8,
+          "corrections": ["olen"]
+        }
+      ]
+    },
+    {
+      "id": "sv_agreement_negative_auxiliary",
+      "text": "Hän en tule.",
+      "diagnostics": [
+        {
+          "kind": "subject_predicate_agreement",
+          "severity": "error",
+          "start": 5,
+          "end": 7,
+          "corrections": ["ei"]
+        }
+      ]
+    },
+    {
+      "id": "sv_agreement_coordinated_subject",
+      "text": "Sami ja Liisa söi puuron.",
+      "diagnostics": [
+        {
+          "kind": "subject_predicate_agreement",
+          "severity": "error",
+          "start": 14,
+          "end": 18,
+          "corrections": ["söivät"]
+        }
+      ]
+    }
+  ],
+  "clean": [
+    "Pöydällä on kirjat.",
+    "Pöydällä on kirja.",
+    "Pöydällä on kirjat ja kynät.",
+    "Talo on rakennettu.",
+    "Talo on kaunis.",
+    "Talot ovat kauniita.",
+    "Minun täytyy mennä.",
+    "Hänen pitää mennä.",
+    "Minun on mentävä.",
+    "Kaksi miestä tuli.",
+    "Hänellä on kaksi lasta.",
+    "Sami ja Liisa söivät.",
+    "Sami ja Liisa söivät ja joivat.",
+    "Sami söi puuron.",
+    "Sami söi ja joi.",
+    "Sami tai Liisa tulee.",
+    "Lapset leikkivät.",
+    "Koirat nukkuvat.",
+    "Koira nukkuu.",
+    "Minä menen kotiin.",
+    "Sinä menet.",
+    "Te menette.",
+    "He menevät.",
+    "Hän antoi kirjan.",
+    "En lue kirjaa.",
+    "Minä en tule.",
+    "Hän ei tule.",
+    "Minä olen lukenut.",
+    "Hän on lukenut.",
+    "Me olemme lukeneet.",
+    "He ovat lukeneet.",
+    "Sami ja Liisa ovat lukeneet.",
+    "Hän sanoi, että tulee.",
+    "Sami söi puuron, koska oli nälkäinen.",
+    "Hän tuli tupaan, jossa roihusi tuli.",
+    "Helsingissä asuva mies on opettaja.",
+    "Vanha talo Helsingissä on kaunis.",
+    "Hän näyttää väsyneeltä.",
+    "Talo maalattiin punaiseksi.",
+    "Sami antoi Liisalle kirjan.",
+    "Onko sinulla kirjaa?",
+    "Onko sinulla kirjoja?"
+  ]
+}

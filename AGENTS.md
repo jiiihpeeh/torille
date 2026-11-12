@@ -62,6 +62,7 @@ src/
   tokenise.rs         word/separator tokeniser for the wasm API
   sentence.rs         sentence spans and token sentence/paragraph context
   syntax.rs           on-demand clause/role analysis over the morphology engine
+  syntax_check/       grammar diagnostics + corrections over `syntax`
   hyphenation/        Finnish line-break hyphenation (patterns + policy)
   gradation.rs        consonant gradation ("*X" code) strong<->weak
   harmony.rs          vowel-harmony primitives for the hand-written engines
@@ -341,7 +342,8 @@ ComponentInflection, Explanation, Action}`;
 `Tags`, `Form`, `Confidence`; `sentence::{analyze, spans, Analyzer, TokenContext,
 SentenceSpan}`; `syntax::{analyze, SyntaxAnalysis, Clause, TokenSyntax,
 SyntacticRole, RoleConfidence}`; `Suggestion` / `SuggestionSource` under
-`suggest`.
+`suggest`; `syntax_check::{check, check_with_cache, check_analysis,
+SyntaxCheck, SyntaxDiagnostic, DiagnosticKind, Severity, Correction}`.
 
 ## The binary maps (`maps/`)
 
@@ -522,6 +524,7 @@ is gitignored and generated.
 | a new verb/noun class engine | `src/expand/verbs/`, `src/expand/nominals*/`, then `dispatch` + `AUTHORITATIVE_CLASSES` |
 | feminine derivations (`-tar`, `-nna`, `-ska`, `-kko`) | `src/expand/derived_forms/agent.rs` for productive `-tar`; lexical `-nna`/`-ska`/`-kko` as data, not a suffix stripper |
 | the grammar reading model | `src/tags.rs` |
+| grammar diagnostics/corrections | `src/syntax_check/`, `tests/syntax_check.rs`, `PLAN_SYNTAX_CHECKER.md` |
 | hyphenation patterns/policy | `src/hyphenation/`, `data/hyphenation/` |
 | the wasm/browser surface | `torille-wasm/src/`, `extensions/firefox/`, `extensions/chromium/` |
 | verification | `tools/*.py`, `tests/catalogue.rs`, `docs/harness.md` |

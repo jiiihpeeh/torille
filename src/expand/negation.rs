@@ -18,6 +18,7 @@
 //! back to a finite auxiliary the table does.
 
 use crate::expand::clitic::strip_all_clitics;
+use crate::tags::{Number, Person};
 
 mod table {
     use crate::expand::static_table::StemMap;
@@ -96,6 +97,63 @@ pub fn negation_base(word: &str) -> Option<&'static str> {
     None
 }
 
+/// The finite negative auxiliary for a person and number.
+///
+/// This is the declarative paradigm (`en`, `et`, `ei`, `emme`, `ette`,
+/// `eivät`). The imperative auxiliaries (`älä`, `älkää`, ...) are handled by
+/// [`person_number`] for analysis; a correction in a declarative clause uses
+/// this table.
+pub fn auxiliary(person: Person, number: Number) -> Option<&'static str> {
+    Some(match (person, number) {
+        (Person::First, Number::Singular) => "en",
+        (Person::Second, Number::Singular) => "et",
+        (Person::Third, Number::Singular) => "ei",
+        (Person::First, Number::Plural) => "emme",
+        (Person::Second, Number::Plural) => "ette",
+        (Person::Third, Number::Plural) => "eivät",
+        _ => return None,
+    })
+}
+
+/// The person and number carried by a negative auxiliary surface.
+///
+/// The morphological tags for the bare negative auxiliary do not reliably
+/// carry person/number (`en` is a single-token form of `ei` with no finite
+/// person), so the closed table supplies them. Clitics and the negative
+/// `-kä` are peeled first: `enkä`, `eikö`, `etten`.
+pub fn person_number(word: &str) -> Option<(Person, Number)> {
+    let lower = word.to_lowercase();
+    if let Some(found) = bare_person_number(&lower) {
+        return Some(found);
+    }
+    let (host, _) = strip_all_clitics(&lower);
+    if let Some(found) = bare_person_number(&host) {
+        return Some(found);
+    }
+    for candidate in [lower.as_str(), host.as_str()] {
+        for suffix in ["kä", "ka"] {
+            if let Some(stem) = candidate.strip_suffix(suffix)
+                && let Some(found) = bare_person_number(stem)
+            {
+                return Some(found);
+            }
+        }
+    }
+    None
+}
+
+fn bare_person_number(word: &str) -> Option<(Person, Number)> {
+    Some(match word {
+        "en" => (Person::First, Number::Singular),
+        "et" | "älä" => (Person::Second, Number::Singular),
+        "ei" | "älköön" => (Person::Third, Number::Singular),
+        "emme" | "älkäämme" => (Person::First, Number::Plural),
+        "ette" | "älkää" => (Person::Second, Number::Plural),
+        "eivät" | "älkööt" => (Person::Third, Number::Plural),
+        _ => return None,
+    })
+}
+
 /// The six finite forms of the fused conjunction + negation `vaikka`.
 /// `vaikka` drops its final `a` before the auxiliary: `vaikk` + `en` =
 /// `vaikken`, `vaikk` + `eivät` = `vaikkeivät`.
@@ -121,6 +179,30 @@ mod tests {
         for word in FINITE {
             assert_eq!(negation_base(word), Some("ei"), "{word}");
         }
+    }
+
+    #[test]
+    fn the_auxiliary_paradigm_carries_person_and_number() {
+        use crate::tags::{Number, Person};
+        for (word, person, number) in [
+            ("en", Person::First, Number::Singular),
+            ("et", Person::Second, Number::Singular),
+            ("ei", Person::Third, Number::Singular),
+            ("emme", Person::First, Number::Plural),
+            ("ette", Person::Second, Number::Plural),
+            ("eivät", Person::Third, Number::Plural),
+            ("enkä", Person::First, Number::Singular),
+            ("eikö", Person::Third, Number::Singular),
+            ("älä", Person::Second, Number::Singular),
+            ("älkää", Person::Second, Number::Plural),
+        ] {
+            assert_eq!(person_number(word), Some((person, number)), "{word}");
+            assert!(
+                auxiliary(person, number).is_some(),
+                "{word} has a declarative correction"
+            );
+        }
+        assert_eq!(auxiliary(Person::Third, Number::Singular), Some("ei"));
     }
 
     #[test]

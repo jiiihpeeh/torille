@@ -1,7 +1,8 @@
 # PLAN_SYNTAX_CHECKER — grammar and punctuation diagnostics
 
-Status: plan only. The analysis layer it builds on is `PLAN_SYNTAX.md` and is
-already landed on the `syntax` branch.
+Status: Phases 0–1 landed (subject–predicate agreement); Phases 2–6 are
+planned. The analysis layer it builds on is `PLAN_SYNTAX.md` and is already
+landed on the `syntax` branch.
 
 The goal is a **correction checker**, not another parser: detect a small set of
 high-confidence grammatical errors, explain them, and produce corrections from
@@ -942,22 +943,24 @@ a gate.
 
 Each phase is a separate commit with its fixture rows.
 
-### Phase 0 — contract, fixtures, no rules
+### Phase 0 — contract, fixtures, no rules — done
 
-- [ ] `src/syntax_check/` skeleton and public types.
-- [ ] `check`, `check_analysis`, `check_with_cache`; empty diagnostics.
-- [ ] `tests/syntax_diagnostics.json` runner + clean corpus.
-- [ ] `tools/src/bin/check_syntax.rs`.
-- [ ] Wasm exports `check_syntax` / `check_syntax_with_state`.
+- [x] `src/syntax_check/` skeleton and public types (`diagnostic`, `agreement`,
+      `correction`, `rank`).
+- [x] `check`, `check_analysis`, `check_with_cache`.
+- [x] `tests/fixtures/syntax_diagnostics.json`, `tests/syntax_check.rs` and the
+      clean corpus.
+- [x] `tools/src/bin/check_syntax.rs`.
+- [x] Wasm exports `check_syntax` / `check_syntax_with_state`.
 
-### Phase 1 — subject–predicate agreement (the first release)
+### Phase 1 — subject–predicate agreement (the first release) — done
 
-- [ ] Finite verb, compound auxiliary, and negative auxiliary agreement.
-- [ ] Coordinated subjects and numeral subjects.
-- [ ] Exceptions: existential, passive, necessive, infinitive, impersonal.
-- [ ] Corrections from `forms_of`, plain forms only.
+- [x] Finite verb, compound auxiliary, and negative auxiliary agreement.
+- [x] Coordinated subjects and numeral subjects.
+- [x] Exceptions: existential, passive, necessive, infinitive, impersonal.
+- [x] Corrections from `forms_of`, plain forms only.
 
-Acceptance:
+Acceptance (passing):
 
 ```text
 Koira nukkuvat.       → Koira nukkuu.
@@ -969,7 +972,8 @@ Minä on lukenut.      → Minä olen lukenut.
 Hän en tule.          → Hän ei tule.
 ```
 
-No errors for the clean corpus above.
+The clean corpus has no diagnostics at all, including existential, passive,
+necessive, numeral and coordinated constructions.
 
 ### Phase 2 — attribute–noun agreement
 
@@ -1129,10 +1133,10 @@ Punainen autot    → Punaiset autot
 Lapset leikkii    → Lapset leikkivät
 ```
 
-It needs phase 0, phase 1 and phase 2 only. Ship those four rules with a clean
-corpus and a correction action, then add lists/punctuation (phase 3) and
-rection (phase 4). A checker that is right about four constructions is more
-useful than one that is unsure about twenty.
+It needs phase 0, phase 1 and phase 2 only. Phases 0–1 are landed; phase 2 is
+the next piece. Then add lists/punctuation (phase 3) and rection (phase 4). A
+checker that is right about four constructions is more useful than one that is
+unsure about twenty.
 
 Lists are planned now but are not part of the first release. Their structure
 is a prerequisite for phase 3 punctuation, not a prerequisite for the four
