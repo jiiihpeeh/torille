@@ -3,10 +3,10 @@
 use crate::sentence;
 use crate::tokenise::Token;
 
-use super::{
-    TokenSyntax, is_coordinating, is_infinitive, is_predicate_candidate, is_relative_word,
-    is_subordinator,
+use super::predicates::{
+    is_coordinating, is_infinitive, is_predicate_candidate, is_relative_word, is_subordinator,
 };
+use super::TokenSyntax;
 
 /// Words grouped for clause segmentation.
 ///

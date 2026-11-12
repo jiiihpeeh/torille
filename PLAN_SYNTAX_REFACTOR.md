@@ -1,9 +1,10 @@
 # PLAN_SYNTAX_REFACTOR — modularizing the syntax layer and checker
 
-Status: **Phase 0–2 landed; Phase 3 in progress.** The shared-helper
-extraction is in `src/syntax_check/analysis.rs`; punctuation is a module tree
-under `src/syntax_check/punctuation/`. `src/syntax/` now has `cache.rs` and
-`segments.rs`; roles and predicates still live in `syntax/mod.rs`.
+Status: **Phase 0–3 landed.** The shared-helper extraction is in
+`src/syntax_check/analysis.rs`; punctuation is a module tree under
+`src/syntax_check/punctuation/`. `src/syntax/` now has `cache.rs`,
+`segments.rs`, `predicates.rs` and `roles.rs`; `syntax/mod.rs` holds the public
+types, orchestration and tests. Phases 4–6 remain optional/on-demand.
 
 The checker is feature-complete after `PLAN_SYNTAX_CHECKER.md`; this plan asks
 what should be restructured before the next feature lands, and what should be
@@ -226,11 +227,14 @@ imports.
       `SyntacticRole` and `AnalysisCache` public paths identical.
 - [x] Keep the tests in `syntax/mod.rs`; they still exercise the same entry
       points.
-- [ ] Move roles and predicates into `roles.rs` / `predicates.rs`.
-- [ ] Verify `cargo doc` still links the public items after the full split.
+- [x] Move roles and predicates into `roles.rs` / `predicates.rs`.
+- [x] Verify the public `crate::syntax::*` paths still compile in `torille`,
+      `syntax_check`, the wasm crate and the Leptos crate.
+- [x] Keep the tests in `syntax/mod.rs`; they exercise the same entry points.
 
-Phase 3a landed with `cache.rs` and `segments.rs`. Readings stay in `cache.rs`
-until they grow enough to justify a separate `readings.rs`.
+Phase 3 landed with `cache.rs`, `segments.rs`, `predicates.rs` and `roles.rs`.
+Readings stay in `cache.rs` until they grow enough to justify a separate
+`readings.rs`.
 
 Acceptance: fixture, evaluation, `tests/catalogue.rs`, and the wasm32 check are
 unchanged. No public path breaks.

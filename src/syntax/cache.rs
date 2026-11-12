@@ -9,7 +9,7 @@ use crate::expand::find_bases_for_analysis;
 use crate::spec::Catalogues;
 use crate::tags::{Case, PartOfSpeech, Polarity, Tags, add_reading};
 
-use super::{is_finite_predicate, is_nominal_pos, is_verb_reading};
+use super::predicates::{is_finite_predicate, is_nominal_pos, is_verb_reading};
 
 /// The morphology of one surface word, reduced to what a role rule needs.
 #[derive(Debug, Clone, Default)]
