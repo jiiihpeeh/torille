@@ -20,7 +20,9 @@
 //! [`analyze_syntax_with_state`] is the same object through a textarea's
 //! word cache, for a panel that re-renders on the same document.
 //! [`check_syntax`] adds grammar diagnostics and corrections to the analysis;
-//! [`check_syntax_with_state`] is its cache-aware form.
+//! [`check_syntax_with_state`] is its cache-aware form. [`check_style`] is
+//! the separate, suggestion-only style layer; it never returns an error or a
+//! warning.
 //!
 //! ## Why this layer exists
 //!
@@ -439,6 +441,25 @@ pub fn check_syntax(text: &str) -> js_sys::Object {
     obj
 }
 
+/// Optional style diagnostics for `text`.
+///
+/// This is the separate, suggestion-only style layer. It does not run the
+/// grammar checker and never returns `error` or `warning`; every diagnostic
+/// is a `suggestion`. The object is `{ diagnostics: [...] }` with the same
+/// field shape as `check_syntax`, including UTF-8 byte offsets that the
+/// worker converts to UTF-16.
+#[wasm_bindgen]
+pub fn check_style(text: &str) -> js_sys::Object {
+    let analysis = torille::style_check::check(text);
+    let obj = js_sys::Object::new();
+    set(
+        &obj,
+        "diagnostics",
+        style_diagnostics_array(&analysis.diagnostics).into(),
+    );
+    obj
+}
+
 /// The same diagnostics through the per-textarea word cache.
 ///
 /// A stale or destroyed handle falls back to the stateless path.
@@ -465,59 +486,109 @@ pub fn check_syntax_with_state(idx: u32, text: &str) -> js_sys::Object {
 fn diagnostics_array(
     diagnostics: &[torille::syntax_check::SyntaxDiagnostic],
 ) -> js_sys::Array {
-    use js_sys::{Array, Object};
+    use js_sys::Array;
 
     let array = Array::new();
     for diagnostic in diagnostics {
-        let item = Object::new();
-        set(&item, "kind", JsValue::from(diagnostic.kind.name()));
-        set(&item, "severity", JsValue::from(diagnostic.severity.name()));
-        set(
-            &item,
-            "confidence",
-            JsValue::from(diagnostic.confidence.name()),
-        );
-        set(
-            &item,
-            "start",
-            JsValue::from(diagnostic.span.start as u32),
-        );
-        set(&item, "end", JsValue::from(diagnostic.span.end as u32));
-        set(&item, "message", JsValue::from(diagnostic.message));
-        set_option(&item, "expected", diagnostic.expected.as_deref());
-
-        let corrections = Array::new();
-        for correction in &diagnostic.corrections {
-            let correction_item = Object::new();
-            set(
-                &correction_item,
-                "score",
-                JsValue::from(correction.score as f64),
-            );
-            set(
-                &correction_item,
-                "note",
-                JsValue::from(correction.note),
-            );
-            let edits = Array::new();
-            for edit in &correction.edits {
-                let edit_item = Object::new();
-                set(&edit_item, "start", JsValue::from(edit.start as u32));
-                set(&edit_item, "end", JsValue::from(edit.end as u32));
-                set(
-                    &edit_item,
-                    "replacement",
-                    JsValue::from(edit.replacement.as_str()),
-                );
-                edits.push(&edit_item);
-            }
-            set(&correction_item, "edits", edits.into());
-            corrections.push(&correction_item);
-        }
-        set(&item, "corrections", corrections.into());
-        array.push(&item);
+        array.push(&diagnostic_object(
+            DiagnosticFields {
+                kind: diagnostic.kind.name(),
+                severity: diagnostic.severity.name(),
+                confidence: diagnostic.confidence.name(),
+                start: diagnostic.span.start,
+                end: diagnostic.span.end,
+                message: diagnostic.message,
+                expected: diagnostic.expected.as_deref(),
+            },
+            &diagnostic.corrections,
+        ));
     }
     array
+}
+
+fn style_diagnostics_array(
+    diagnostics: &[torille::style_check::StyleDiagnostic],
+) -> js_sys::Array {
+    use js_sys::Array;
+
+    let array = Array::new();
+    for diagnostic in diagnostics {
+        array.push(&diagnostic_object(
+            DiagnosticFields {
+                kind: diagnostic.kind.name(),
+                severity: diagnostic.severity.name(),
+                confidence: diagnostic.confidence.name(),
+                start: diagnostic.span.start,
+                end: diagnostic.span.end,
+                message: diagnostic.message,
+                expected: diagnostic.expected.as_deref(),
+            },
+            &diagnostic.corrections,
+        ));
+    }
+    array
+}
+
+struct DiagnosticFields<'a> {
+    kind: &'a str,
+    severity: &'a str,
+    confidence: &'a str,
+    start: usize,
+    end: usize,
+    message: &'a str,
+    expected: Option<&'a str>,
+}
+
+fn diagnostic_object(
+    fields: DiagnosticFields<'_>,
+    corrections: &[torille::syntax_check::Correction],
+) -> js_sys::Object {
+    use js_sys::{Array, Object};
+
+    let DiagnosticFields {
+        kind,
+        severity,
+        confidence,
+        start,
+        end,
+        message,
+        expected,
+    } = fields;
+    let item = Object::new();
+    set(&item, "kind", JsValue::from(kind));
+    set(&item, "severity", JsValue::from(severity));
+    set(&item, "confidence", JsValue::from(confidence));
+    set(&item, "start", JsValue::from(start as u32));
+    set(&item, "end", JsValue::from(end as u32));
+    set(&item, "message", JsValue::from(message));
+    set_option(&item, "expected", expected);
+
+    let corrections_array = Array::new();
+    for correction in corrections {
+        let correction_item = Object::new();
+        set(
+            &correction_item,
+            "score",
+            JsValue::from(correction.score as f64),
+        );
+        set(&correction_item, "note", JsValue::from(correction.note));
+        let edits = Array::new();
+        for edit in &correction.edits {
+            let edit_item = Object::new();
+            set(&edit_item, "start", JsValue::from(edit.start as u32));
+            set(&edit_item, "end", JsValue::from(edit.end as u32));
+            set(
+                &edit_item,
+                "replacement",
+                JsValue::from(edit.replacement.as_str()),
+            );
+            edits.push(&edit_item);
+        }
+        set(&correction_item, "edits", edits.into());
+        corrections_array.push(&correction_item);
+    }
+    set(&item, "corrections", corrections_array.into());
+    item
 }
 
 fn set(obj: &js_sys::Object, key: &str, value: JsValue) {
