@@ -111,6 +111,84 @@
           "corrections": ["söivät"]
         }
       ]
+    },
+    {
+      "id": "attribute_plural_head",
+      "text": "Punainen autot.",
+      "diagnostics": [
+        {
+          "kind": "attribute_agreement",
+          "severity": "error",
+          "start": 0,
+          "end": 8,
+          "corrections": ["punaiset"]
+        }
+      ]
+    },
+    {
+      "id": "attribute_singular_head",
+      "text": "Punaiset auto.",
+      "diagnostics": [
+        {
+          "kind": "attribute_agreement",
+          "severity": "error",
+          "start": 0,
+          "end": 8,
+          "corrections": ["punainen"]
+        }
+      ]
+    },
+    {
+      "id": "attribute_number_mismatch",
+      "text": "Vanhat talo.",
+      "diagnostics": [
+        {
+          "kind": "attribute_agreement",
+          "severity": "error",
+          "start": 0,
+          "end": 6,
+          "corrections": ["vanha"]
+        }
+      ]
+    },
+    {
+      "id": "attribute_demonstrative_plural",
+      "text": "Nämä kirja on hyvä.",
+      "diagnostics": [
+        {
+          "kind": "attribute_agreement",
+          "severity": "error",
+          "start": 0,
+          "end": 6,
+          "corrections": ["tämä"]
+        }
+      ]
+    },
+    {
+      "id": "attribute_demonstrative_singular",
+      "text": "Tämä kirjat ovat hyviä.",
+      "diagnostics": [
+        {
+          "kind": "attribute_agreement",
+          "severity": "error",
+          "start": 0,
+          "end": 6,
+          "corrections": ["nämä"]
+        }
+      ]
+    },
+    {
+      "id": "attribute_case_mismatch",
+      "text": "Punaisessa auto.",
+      "diagnostics": [
+        {
+          "kind": "attribute_agreement",
+          "severity": "warning",
+          "start": 0,
+          "end": 10,
+          "corrections": ["punainen"]
+        }
+      ]
     }
   ],
   "clean": [
@@ -155,6 +233,20 @@
     "Talo maalattiin punaiseksi.",
     "Sami antoi Liisalle kirjan.",
     "Onko sinulla kirjaa?",
-    "Onko sinulla kirjoja?"
+    "Onko sinulla kirjoja?",
+    "Punainen auto.",
+    "Punaiset autot.",
+    "Vanha talo.",
+    "Vanhat talot.",
+    "Tämä kirja on hyvä.",
+    "Nämä kirjat ovat hyviä.",
+    "Punaisempi auto.",
+    "Punaisemmat autot.",
+    "Punaisen auto.",
+    "punaisen auton omistaja tuli.",
+    "Kaksi miestä tuli.",
+    "Punainen ja sininen auto.",
+    "Punaisessa talossa.",
+    "Hän tuli iloisena kotiin."
   ]
 }

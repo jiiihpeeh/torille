@@ -35,6 +35,15 @@ struct Bearer {
 }
 
 pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
+    let mut diagnostics = check_subject_predicate(tokens, analysis);
+    diagnostics.extend(check_attributes(tokens, analysis));
+    diagnostics
+}
+
+fn check_subject_predicate(
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+) -> Vec<SyntaxDiagnostic> {
     let mut diagnostics = Vec::new();
     for clause in &analysis.clauses {
         // Existential plural subjects take a singular verb.
@@ -105,6 +114,156 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         diagnostics.push(diagnostic);
     }
     diagnostics
+}
+
+/// Attributive adjective, ordinal, and demonstrative agreement.
+///
+/// The attribute must have an unambiguous case/number reading and must not be
+/// a genitive modifier (`Punaisen auton` is not an agreement error), a
+/// cardinal numeral (`kaksi miestä` governs the partitive), or a comparative/
+/// superlative (`punaisempi auto`). Only then is the head's case/number a fair
+/// comparison.
+fn check_attributes(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
+    let mut diagnostics = Vec::new();
+    for (index, syntax) in analysis.tokens.iter().enumerate() {
+        let predicate_less = analysis
+            .clauses
+            .get(syntax.clause)
+            .is_none_or(|clause| clause.predicate.is_none());
+        if !tokens[index].is_word()
+            || !(matches!(
+                syntax.role,
+                SyntacticRole::Modifier | SyntacticRole::Unknown
+            ) || (predicate_less && syntax.role == SyntacticRole::Adverbial))
+        {
+            continue;
+        }
+        if crate::expand::degree_base(&tokens[index].text.to_lowercase()).is_some() {
+            continue;
+        }
+        let Some((attribute_case, attribute_number)) = attribute_shape(syntax) else {
+            continue;
+        };
+        if attribute_case == Case::Genitive {
+            continue;
+        }
+        let Some(head) = attribute_head(index, syntax, tokens, analysis) else {
+            continue;
+        };
+        let Some((head_case, head_number)) = head_shape(&analysis.tokens[head]) else {
+            continue;
+        };
+        if attribute_case == head_case && attribute_number == head_number {
+            continue;
+        }
+        let Some(pos) = attribute_pos(syntax) else {
+            continue;
+        };
+        let Some(lemma) = syntax.lemma.as_deref() else {
+            continue;
+        };
+        let token = &tokens[index];
+        let corrections = correction::attribute_agreement_corrections(
+            lemma,
+            token,
+            head_case,
+            head_number,
+            pos,
+            crate::spec::Catalogues::embedded(),
+        );
+        let number_mismatch = attribute_number != head_number;
+        let (severity, confidence) = if number_mismatch {
+            (Severity::Error, DiagnosticConfidence::High)
+        } else {
+            (Severity::Warning, DiagnosticConfidence::Medium)
+        };
+        let mut diagnostic = SyntaxDiagnostic::new(
+            DiagnosticKind::AttributeAgreement,
+            severity,
+            confidence,
+            token.start..token.end,
+            "attribute_agreement",
+        );
+        diagnostic.expected = Some(format!("{} {}", head_case.name(), head_number.name()));
+        diagnostic.corrections = corrections;
+        diagnostics.push(diagnostic);
+    }
+    diagnostics
+}
+
+fn attribute_shape(token: &TokenSyntax) -> Option<(Case, Number)> {
+    let mut shapes: Vec<(Case, Number)> = token
+        .readings
+        .iter()
+        .filter(|reading| is_attribute_pos(reading.part_of_speech))
+        .filter_map(|reading| Some((reading.case?, reading.number?)))
+        .collect();
+    shapes.sort_unstable();
+    shapes.dedup();
+    match shapes.as_slice() {
+        [shape] => Some(*shape),
+        _ => None,
+    }
+}
+
+fn head_shape(token: &TokenSyntax) -> Option<(Case, Number)> {
+    let mut shapes: Vec<(Case, Number)> = token
+        .readings
+        .iter()
+        .filter(|reading| is_head_pos(reading.part_of_speech))
+        .filter_map(|reading| Some((reading.case?, reading.number?)))
+        .collect();
+    shapes.sort_unstable();
+    shapes.dedup();
+    match shapes.as_slice() {
+        [shape] => Some(*shape),
+        _ => None,
+    }
+}
+
+fn attribute_pos(token: &TokenSyntax) -> Option<PartOfSpeech> {
+    token
+        .readings
+        .iter()
+        .find_map(|reading| {
+            is_attribute_pos(reading.part_of_speech).then_some(reading.part_of_speech?)
+        })
+}
+
+fn is_attribute_pos(pos: Option<PartOfSpeech>) -> bool {
+    matches!(
+        pos,
+        Some(PartOfSpeech::Adjective | PartOfSpeech::Ordinal | PartOfSpeech::Pronoun)
+    )
+}
+
+fn is_head_pos(pos: Option<PartOfSpeech>) -> bool {
+    matches!(
+        pos,
+        Some(PartOfSpeech::Noun | PartOfSpeech::Adjective | PartOfSpeech::Pronoun)
+    )
+}
+
+/// The head of an attribute: the parser's link when there is one, otherwise the
+/// next word in the same clause (a predicate-less phrase such as
+/// `Punainen autot`).
+fn attribute_head(
+    index: usize,
+    syntax: &TokenSyntax,
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+) -> Option<usize> {
+    if let Some(head) = syntax.head
+        && head != index
+        && tokens.get(head).is_some_and(Token::is_word)
+    {
+        return Some(head);
+    }
+    let clause = analysis.clauses.get(syntax.clause)?;
+    clause
+        .tokens
+        .clone()
+        .find(|&candidate| candidate > index && tokens[candidate].is_word())
 }
 
 /// The subject of a clause, including a shared subject from a preceding

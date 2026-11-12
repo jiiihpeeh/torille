@@ -1,8 +1,8 @@
 # PLAN_SYNTAX_CHECKER — grammar and punctuation diagnostics
 
-Status: Phases 0–1 landed (subject–predicate agreement); Phases 2–6 are
-planned. The analysis layer it builds on is `PLAN_SYNTAX.md` and is already
-landed on the `syntax` branch.
+Status: Phases 0–2 landed (subject–predicate and attribute agreement); Phases
+3–6 are planned. The analysis layer it builds on is `PLAN_SYNTAX.md` and is
+already landed on the `syntax` branch.
 
 The goal is a **correction checker**, not another parser: detect a small set of
 high-confidence grammatical errors, explain them, and produce corrections from
@@ -975,21 +975,29 @@ Hän en tule.          → Hän ei tule.
 The clean corpus has no diagnostics at all, including existential, passive,
 necessive, numeral and coordinated constructions.
 
-### Phase 2 — attribute–noun agreement
+### Phase 2 — attribute–noun agreement — done
 
-- [ ] Positive-degree attributive adjectives.
-- [ ] Demonstratives/ordinals where the case/number is unambiguous.
-- [ ] Skip genitive modifiers, titles, names, and non-positive degrees.
+- [x] Positive-degree attributive adjectives.
+- [x] Demonstratives/ordinals where the case/number is unambiguous.
+- [x] Skip genitive modifiers, titles, names, and non-positive degrees.
+- [x] Predicate-less phrases (`Punainen autot`) use the adjacent nominal as
+      the head; full clauses use the parser's `head` link.
+- [x] Cardinal numerals stay out (they govern the partitive, not agreement).
 
-Acceptance:
+Acceptance (passing):
 
 ```text
-Punainen autot.  → Punaiset autot.
-Punaiset auto.   → Punainen auto.
+Punainen autot.       → Punaiset autot.
+Punaiset auto.        → Punainen auto.
+Vanhat talo.          → Vanha talo.
+Nämä kirja on hyvä.   → Tämä kirja on hyvä.
+Tämä kirjat ovat hyviä. → Nämä kirjat ovat hyviä.
+Punaisessa auto.      → Punainen auto. (warning: case)
 ```
 
 No errors for `punaisen auton`, `punaisen auto` (ambiguous genitive),
-`Vanha talo`, `Sami Ruotsalainen`, `kaksi miestä`.
+`Vanha talo`, `Sami Ruotsalainen`, `kaksi miestä`, `Punaisempi auto`,
+`Punaisessa talossa` or `Hän tuli iloisena kotiin`.
 
 ### Phase 3 — lists, comma rules and clause kinds
 
@@ -1133,10 +1141,9 @@ Punainen autot    → Punaiset autot
 Lapset leikkii    → Lapset leikkivät
 ```
 
-It needs phase 0, phase 1 and phase 2 only. Phases 0–1 are landed; phase 2 is
-the next piece. Then add lists/punctuation (phase 3) and rection (phase 4). A
-checker that is right about four constructions is more useful than one that is
-unsure about twenty.
+It needs phase 0, phase 1 and phase 2 only. All three are landed. Then add
+lists/punctuation (phase 3) and rection (phase 4). A checker that is right
+about four constructions is more useful than one that is unsure about twenty.
 
 Lists are planned now but are not part of the first release. Their structure
 is a prerequisite for phase 3 punctuation, not a prerequisite for the four

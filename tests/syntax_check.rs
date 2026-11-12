@@ -160,4 +160,10 @@ diagnostic_tests!(
     sv_agreement_compound_auxiliary,
     sv_agreement_negative_auxiliary,
     sv_agreement_coordinated_subject,
+    attribute_plural_head,
+    attribute_singular_head,
+    attribute_number_mismatch,
+    attribute_demonstrative_plural,
+    attribute_demonstrative_singular,
+    attribute_case_mismatch,
 );
