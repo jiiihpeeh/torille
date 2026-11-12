@@ -298,8 +298,8 @@ pub struct ListItem {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ListKind {
-    Nominal,   // apples, oranges and bananas
-    Clause,    // I bought apples, John bought oranges
+    Nominal,   // omenoita, appelsiineja ja banaaneja
+    Clause,    // Ostin omenoita, Liisa osti banaaneja
     Predicate, // Sami söi, joi ja nukkui (shared subject)
     Mixed,     // do not apply list punctuation automatically
 }
@@ -612,43 +612,37 @@ A two-predicate coordination is not a list: `Sami söi ja joi.` has one
 subject and two predicates, and needs no comma. `Predicate` lists require
 three parallel predicates or a clear comma cue before the last conjunction.
 
-The English examples in the request map to the same structures:
+The same structures in the Finnish examples above:
 
 ```text
-I bought apples, oranges, bananas and pears.          Nominal
-I bought apples, John bought oranges and Mary bought bananas.  Clause
+Ostin omenoita, appelsiineja, banaaneja ja päärynöitä.          Nominal
+Ostin omenoita, Liisa osti banaaneja ja Matti osti päärynöitä.  Clause
 ```
 
 Do not classify by punctuation alone. Require item parallelism and a
 grammatical function for the whole span. This is what keeps the checker from
-treating `However, I bought apples, which were expensive, yesterday.` as a
-list: the commas mark an introductory expression and a relative clause, and
-the items are not parallel.
+treating `Kuitenkin, ostin omenoita, jotka olivat kalliita, eilen.` as a list:
+the commas mark an introductory expression and a relative clause, and the
+items are not parallel. Both commas are clause/relative boundaries, not list
+separators.
 
-Finnish analogue:
+#### Finnish-only list punctuation policy
 
-```text
-Kuitenkin, ostin omenoita, jotka olivat kalliita, eilen.
-```
+`ListPunctuationPolicy` is fixed to Finnish. No other language policy exists
+in this project:
 
-Both commas are clause/relative boundaries, not list separators.
+| rule | Finnish policy |
+|---|---|
+| comma between list items | required (`Error` when missing) |
+| duplicate comma | `Error` |
+| comma before final `ja`/`sekä` | not preferred; `Suggestion` at most, never `Error` |
+| comma before a two-item conjunction | `Suggestion`/no error |
+| comma after a colon introducer | `Error` |
 
-#### Punctuation policy is language-specific
-
-The structure is language-independent; the rule is not. `ListPunctuationPolicy`
-has a final-conjunction policy:
-
-| policy | Finnish | English |
-|---|---|---|
-| comma before final `ja`/`and` | not preferred; `Suggestion` at most | Oxford comma optional; both valid |
-| missing separator between items | `Error` | `Error` |
-| duplicate comma | `Error` | `Error` |
-| comma before a two-item conjunction (`item, and item`) | `Suggestion`/no error | context-dependent; `Suggestion` |
-| comma after a colon introducer | `Error` | `Error` |
-
-The first implementation targets Finnish. The English row is a policy variant,
-not the default: torille must not start requiring the Oxford comma in Finnish
-lists. A user-facing language/style setting can select the policy later.
+The standard Finnish list is `omena, appelsiini ja banaani`, not
+`omena, appelsiini, ja banaani`. A comma before the final conjunction is a
+stylistic choice, not a grammar error, so it stays a suggestion. Do not add
+examples or policies for other languages.
 
 #### List diagnostics
 
@@ -667,10 +661,10 @@ Rules:
   comma and without being a lexical compound. The correction is an insertion
   at the end of the preceding item. High confidence only when the item boundary
   is unambiguous.
-- **Duplicate comma:** two comma separators in a row (`item,, item`). Remove
-  one comma only, not the following space.
+- **Duplicate comma:** two comma separators in a row (`omena,, appelsiini`).
+  Remove one comma only, not the following space.
 - **Comma before final conjunction:** Finnish `Suggestion` (remove or keep),
-  never `Error`; English policy may accept it as the Oxford comma.
+  never `Error`. No other language policy makes it mandatory or valid here.
 - **Colon introducer:** a colon introduces a list; a comma immediately after
   the colon is an error (`ListIntroducerComma`). Do not treat the colon as a
   list separator.
@@ -928,9 +922,6 @@ clauses:     Ostin omenoita, Liisa osti banaaneja ja Matti osti päärynöitä.
 mixed:       Ostin omenoita, appelsiineja ja Liisa osti banaaneja.
 ```
 
-The English structural analogues are unit tests for the parser’s
-classification, not for the Finnish punctuation policy.
-
 Unit tests live beside each rule module, but the fixture is the gate. A
 hand-written list is not enough.
 
@@ -1091,8 +1082,8 @@ Ship fewer rules, not more guesses.
   relative clause, a subordinate clause or an introductory phrase is not a
   list.
 - `Mixed` lists never produce an automatic punctuation correction. A final
-  conjunction without a comma is never an error in Finnish; the Oxford comma
-  is not the default policy.
+  conjunction without a comma is never an error in Finnish, and a comma before
+  it is only a suggestion. No other language policy applies.
 - `Warning` for constructions with standard variation (coordinated subjects,
   colloquial number, optional commas).
 - `Suggestion` for style/optional punctuation.
@@ -1108,9 +1099,8 @@ Ship fewer rules, not more guesses.
    `syntax.rs`, or convert `syntax.rs` into a directory and add
    `syntax/list.rs`? Recommendation: the sibling module first; move it into a
    `syntax/` directory only when more phrase-level analyses appear.
-2. **List punctuation policy.** Is Finnish the only policy in v1, with English
-   Oxford comma as a configuration later? Recommendation: yes; do not make
-   the Oxford comma a Finnish default.
+2. **List punctuation policy.** Confirm Finnish-only punctuation; no other
+   language policy is planned.
 3. **Clause kinds and relative extent.** Do we extend `syntax::Clause` with
    `kind`/`parent`, or derive them in `syntax_check`? Recommendation: derive
    first, promote only when a second consumer needs them.
