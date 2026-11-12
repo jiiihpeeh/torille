@@ -1,12 +1,13 @@
 # PLAN_SYNTAX_REFACTOR — modularizing the syntax layer and checker
 
-Status: **Phase 0–5 landed.** The shared-helper extraction is in
+Status: **Phase 0–6 landed.** The shared-helper extraction is in
 `src/syntax_check/analysis.rs`; punctuation is a module tree under
 `src/syntax_check/punctuation/`. `src/syntax/` now has `cache.rs`,
 `segments.rs`, `predicates.rs` and `roles.rs`; `syntax/mod.rs` holds the public
 types, orchestration and tests. Phase 4 added the additive
 `TokenSyntax::lemmas` per-reading base list; Phase 5 added the additive
-relative-clause tree on `Clause`. Phase 6 remains optional/on-demand.
+relative-clause tree on `Clause`; Phase 6 split the extension content script
+into modules behind the same esbuild entry point.
 
 The checker is feature-complete after `PLAN_SYNTAX_CHECKER.md`; this plan asks
 what should be restructured before the next feature lands, and what should be
@@ -68,12 +69,12 @@ A full rewrite is not justified. The recommended order is:
 
 | phase | recommendation | why |
 |---|---|---|
-| 1. Shared token/clause helpers | **do first** | Three copies already, low risk |
-| 2. Split punctuation | **do before the next punctuation rule** | 868 lines, six rule families |
-| 3. Split `syntax.rs` | **do when the next analysis change lands** | 2256 lines, clear seams |
-| 4. Per-reading lemmas | **only when a second homonym-sensitive rule needs it** | Additive model change |
-| 5. Clause tree for relatives | **only when a consumer needs host nesting** | Feature, not cleanup |
-| 6. Split extension content | **when the next extension UI change lands** | Bundled single file, clear seams |
+| 1. Shared token/clause helpers | **landed** | Three copies already, low risk |
+| 2. Split punctuation | **landed** | 868 lines, six rule families |
+| 3. Split `syntax.rs` | **landed** | 2256 lines, clear seams |
+| 4. Per-reading lemmas | **landed** | Additive model change |
+| 5. Clause tree for relatives | **landed** | Tree is additive; linear ranges stay |
+| 6. Split extension content | **landed** | Bundled single file, clear seams |
 
 Each phase is a separate commit. A phase that only moves code must not change a
 single diagnostic, span, correction or test expectation. If a move forces a
@@ -132,25 +133,30 @@ src/syntax_check/
 The public API stays `syntax_check::{check, check_with_cache, check_analysis,
 ...}`. Only the internal module tree changes.
 
-### 4.3 Extension content (optional, later)
+### 4.3 Extension content (landed)
 
-Keep `content.ts` as the esbuild entry point, but move the bodies behind it:
+Keep `content.ts` as the esbuild entry point, with the bodies behind it:
 
 ```text
 extensions/firefox/src/content/
   content.ts          entry: imports and boot only
+  shared.ts           dbg/api, UI settings, ignore mask, native spellcheck,
+                      tap handler, overlay CSS, input description
   worker-client.ts    createWorkerClient and the message wrappers
   overlay/
-    textarea.ts       textarea/input overlay
+    index.ts          createOverlay dispatch + Overlay/OverlayOptions
+    textarea.ts       textarea/input shadow mirror
     contenteditable.ts
-    popup.ts
+    popup.ts          shared suggestion-button list
   grammar-panel.ts    showGrammarPanel, apply helpers, Finnish labels
   ignore-ranges.ts    already separate
   context-menu.ts     pending-input tracking and menu messages
+  blacklist.ts        per-host blacklist
+  scanner.ts          input discovery + MutationObserver
 ```
 
-Chromium keeps the same layout and the source-sync test should grow to cover
-every shared module that is meant to stay byte-identical.
+Chromium keeps the same layout and `tests/source-sync.test.mjs` covers every
+shared module that is meant to stay byte-identical.
 
 ## 5. Phases
 
@@ -287,18 +293,24 @@ is the nearest preceding nominal in the host segment whose number matches the
 relative pronoun, falling back to earlier clauses of the same sentence group.
 The wasm clause object gains the three fields; existing consumers ignore them.
 
-### Phase 6 — split the extension content script (optional)
+### Phase 6 — split the extension content script (landed)
 
-Do this when the next extension UI change lands, not before.
-
-- [ ] Move the worker client, overlays, popup, grammar panel, context-menu
-      tracking and boot code into the layout in §4.3.
-- [ ] Keep `content.ts` as the esbuild entry point.
-- [ ] Keep the message protocol and DOM behaviour identical.
-- [ ] Extend `tests/source-sync.test.mjs` to every shared content module.
-- [ ] Run both extensions' typecheck, build and tests.
+- [x] Move the worker client, overlays, popup list, grammar panel,
+      context-menu tracking, blacklist and scanner into the layout in §4.3.
+- [x] Keep `content.ts` as the esbuild entry point and keep the IIFE bundle
+      shape.
+- [x] Keep the message protocol and DOM behaviour identical.
+- [x] Extend `tests/source-sync.test.mjs` in both browsers to every shared
+      content module.
+- [x] Run both extensions' typecheck, build and tests.
 
 Acceptance: 37 tests per browser still pass; no change to the worker protocol.
+
+Landed with `shared.ts` for the debug shim, UI settings and DOM helpers, plus
+`blacklist.ts` and `scanner.ts` alongside the paths named in §4.3. The content
+bundle is still one classic script; only its sources are modular now. The
+source-sync suites grew from 3 file comparisons to 13, and both browsers run
+47 tests.
 
 ## 6. API and compatibility notes
 

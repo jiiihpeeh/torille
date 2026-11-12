@@ -13,6 +13,16 @@ const other = join(here, '..', '..', 'chromium', 'src');
 
 for (const rel of [
   'content/content.ts',
+  'content/shared.ts',
+  'content/worker-client.ts',
+  'content/overlay/index.ts',
+  'content/overlay/textarea.ts',
+  'content/overlay/contenteditable.ts',
+  'content/overlay/popup.ts',
+  'content/grammar-panel.ts',
+  'content/context-menu.ts',
+  'content/blacklist.ts',
+  'content/scanner.ts',
   'content/ignore-ranges.ts',
   'options/index.tsx',
 ]) {
