@@ -96,7 +96,13 @@
     "Hän tuli; minä lähdin.",
     "Kysyin, missä hän asuu.",
     "Hän sanoi: »Missä sinä asut?»",
-    "Missä sinä asut?"
+    "Missä sinä asut?",
+    "Minä rakastan sinua.",
+    "Rakastan.",
+    "Herää mies.",
+    "Nukuin hyvin.",
+    "Sataa vettä.",
+    "Minä nukun."
   ],
   "cases": [
     {
@@ -384,6 +390,20 @@
       "text": "Tulen kun ehdin.",
       "kinds": [
         "comma_missing"
+      ]
+    },
+    {
+      "id": "eval_missing_argument",
+      "text": "Hän luottaa.",
+      "kinds": [
+        "missing_argument"
+      ]
+    },
+    {
+      "id": "eval_extra_argument",
+      "text": "Nukun kirja.",
+      "kinds": [
+        "extra_argument"
       ]
     }
   ]

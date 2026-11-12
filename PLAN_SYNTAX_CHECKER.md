@@ -1,10 +1,10 @@
 # PLAN_SYNTAX_CHECKER — grammar and punctuation diagnostics
 
 Status: Phases 0–4 are landed, including nested lists. Phase 5 has the
-negative-clause object case and rection precedence; aspect-based object case,
-missing/extra arguments and the word-order decision record are still open.
-Phase 6 is partly landed: deterministic ranking, the wasm word cache and the
-evaluation baseline exist, while punctuation phase 2, UI rendering and the
+negative-clause object case, rection precedence, missing/extra argument
+warnings and the word-order decision record; aspect-based object case is still
+open. Phase 6 is partly landed: deterministic ranking, the wasm word cache and
+the evaluation baseline exist, while punctuation phase 2, UI rendering and the
 style decision are open. The analysis layer it builds on is `PLAN_SYNTAX.md` and is already landed
 on the `syntax` branch.
 
@@ -953,7 +953,7 @@ The exact-output fixture proves individual rules; it does not measure how
 often the checker is wrong on real prose. `tests/fixtures/syntax_eval.json` is
 the second, larger corpus for aggregate evaluation:
 
-- 132 sentences at the first baseline: 91 clean and 41 with expected
+- 140 sentences at the current baseline: 97 clean and 43 with expected
   diagnostics;
 - one row per sentence, with the expected kind(s);
 - every emitted kind represented, plus the guards named in §13;
@@ -1242,12 +1242,24 @@ Minä nukun.         # clean
 
 Tasks:
 
-- [ ] Add `data/verb_arguments.csv` and its build writer/blob.
-- [ ] Add `src/expand/verb_arguments.rs` with a lookup per lemma/slot.
-- [ ] Implement `MissingArgument` with the passive/ellipsis guards.
-- [ ] Implement `ExtraArgument` with the adverbial/numeral guards.
-- [ ] Add fixtures for one warning of each kind and the clean rows above.
-- [ ] Confirm rection and argument checks never both fire on the same span.
+- [x] Add `data/verb_arguments.csv` and its build writer/blob (`maps/verb_arguments.bin.gz`).
+- [x] Add `src/expand/verb_arguments.rs` with a lookup per lemma/slot.
+- [x] Implement `MissingArgument` with the passive/ellipsis guards.
+- [x] Implement `ExtraArgument` with the adverbial/numeral guards.
+- [x] Add fixtures for one warning of each kind and the clean rows above.
+- [x] Confirm rection and argument checks never both fire on the same span.
+
+Implementation notes:
+
+- The table has 17 rows: 11 obligatory frames and 6 forbidden-object verbs.
+- `slot` has a third value, `argument`, for case-governed complements
+  (`luottaa johonkin`). The plan's original two values were too narrow.
+- A post-predicate nominative can be read as a subject (`Nukun kirja`); it is
+  an extra argument only when the predicate's person/number cannot agree with
+  it. A genuine presentational subject (`Herää mies`) agrees and stays quiet.
+- A wrong-case argument is left to rection; the missing rule only fires when
+  the predicate's own segment has no nominal candidate at all.
+- A one-word clause (`Rakastan.`) and a clause ending in `...` stay quiet.
 
 #### Phase 5D — word order decision record
 
@@ -1400,8 +1412,8 @@ Tasks:
 First baseline (2026-11-12):
 
 ```text
-clean rows 91: 0 errors, 0 warnings, 0 suggestions
-cases 41: every emitted kind precision 1.00, recall 1.00
+clean rows 97: 0 errors, 0 warnings, 0 suggestions
+cases 43: every emitted kind precision 1.00, recall 1.00
 ```
 
 The baseline is a snapshot, not a target: a new rule that adds an extra
@@ -1506,18 +1518,18 @@ punctuation phase 2, UI, evaluation and docs. Word order stays deferred.
 
 Ordered by user-facing value. Each item points at the phase that specifies it.
 
-1. [ ] **Missing and extra arguments** — phase 5C. New
-   `data/verb_arguments.csv` plus `MissingArgument` / `ExtraArgument` warnings.
+1. [x] **Missing and extra arguments** — phase 5C. `data/verb_arguments.csv`
+   plus `MissingArgument` / `ExtraArgument` warnings.
 2. [ ] **Aspect-based object case** — phase 5B. Suggestion only, closed cue
    tables, never an `Error`.
 3. [ ] **Punctuation phase 2** — phase 6B. Semicolon boundaries, question-mark
    diagnostics, unbalanced quotes, advisory parenthetical pairs, no
    quote-style corrections.
-4. [x] **Evaluation corpus** — phase 6D. 132 sentences, zero `Error` on clean
+4. [x] **Evaluation corpus** — phase 6D. 140 sentences, zero `Error` on clean
    rows, per-kind baseline recorded.
 5. [ ] **UI and edit application** — phase 6C. Demo panel, reverse-order edit
    replay, opt-in extension toggle.
-6. [ ] **Word-order decision record** — phase 5D. Clean rows and a comment on
+6. [x] **Word-order decision record** — phase 5D. Clean rows and a comment on
    the reserved kind; no rule.
 7. [ ] **Checker documentation** — phase 6F. `docs/syntax_checker.md` with the
    rule catalogue and limitations.

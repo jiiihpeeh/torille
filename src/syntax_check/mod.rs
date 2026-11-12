@@ -10,6 +10,7 @@
 //! `PLAN_SYNTAX_CHECKER.md`.
 
 mod agreement;
+mod arguments;
 mod correction;
 mod object_case;
 mod punctuation;
@@ -63,5 +64,6 @@ pub fn check_analysis(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<Syntax
     diagnostics.extend(punctuation::check(tokens, analysis));
     diagnostics.extend(rection::check(tokens, analysis));
     diagnostics.extend(object_case::check(tokens, analysis));
+    diagnostics.extend(arguments::check(tokens, analysis));
     rank::resolve(diagnostics)
 }

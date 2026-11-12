@@ -182,4 +182,6 @@ diagnostic_tests!(
     object_case_negative,
     object_case_negative_subject,
     negative_rection_wins,
+    missing_argument,
+    extra_argument,
 );

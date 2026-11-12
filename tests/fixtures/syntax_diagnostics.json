@@ -397,6 +397,32 @@
           "corrections": ["sinusta", "sinua"]
         }
       ]
+    },
+    {
+      "id": "missing_argument",
+      "text": "Hän luottaa.",
+      "diagnostics": [
+        {
+          "kind": "missing_argument",
+          "severity": "warning",
+          "start": 12,
+          "end": 12,
+          "corrections": []
+        }
+      ]
+    },
+    {
+      "id": "extra_argument",
+      "text": "Nukun kirja.",
+      "diagnostics": [
+        {
+          "kind": "extra_argument",
+          "severity": "warning",
+          "start": 6,
+          "end": 11,
+          "corrections": []
+        }
+      ]
     }
   ],
   "clean": [
@@ -486,6 +512,13 @@
     "Ostin omenoita, appelsiineja (pieniä, makeita) ja banaaneja.",
     "Kuitenkin, ostin omenoita (jotka olivat kalliita) eilen.",
     "Teksti (tämä) jatkuu.",
-    "(Tämä on uusi virke.) Toinen virke."
+    "(Tämä on uusi virke.) Toinen virke.",
+    "Luotan sinuun.",
+    "Minä rakastan sinua.",
+    "Rakastan.",
+    "Herää mies.",
+    "Nukuin hyvin.",
+    "Sataa vettä.",
+    "Minä nukun."
   ]
 }

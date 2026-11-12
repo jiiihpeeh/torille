@@ -1,0 +1,18 @@
+lemma,slot,case,requirement,note
+rakastaa,object,partitive,obligatory,rakastaa jotakuta
+vihata,object,partitive,obligatory,vihata jotakuta
+auttaa,object,partitive,obligatory,auttaa jotakuta
+kiittää,object,partitive,obligatory,kiittää jotakuta
+tarvita,object,partitive,obligatory,tarvita jotakin
+etsiä,object,partitive,obligatory,etsiä jotakin
+käyttää,object,partitive,obligatory,käyttää jotakin
+luottaa,argument,illative,obligatory,luottaa johonkin
+tutustua,argument,illative,obligatory,tutustua johonkin
+osallistua,argument,illative,obligatory,osallistua johonkin
+kiinnostua,argument,elative,obligatory,kiinnostua jostakin
+nukkua,object,any,forbidden,nukkua ilman objektia
+herätä,object,any,forbidden,herätä ilman objektia
+vilustua,object,any,forbidden,vilustua ilman objektia
+parantua,object,any,forbidden,parantua ilman objektia
+kuolla,object,any,forbidden,kuolla ilman objektia
+kukoistaa,object,any,forbidden,kukoistaa ilman objektia

@@ -982,7 +982,7 @@ fn is_past_participle(index: usize, out: &[TokenSyntax]) -> bool {
 /// passive readings), so one passive reading is not enough. If any verb
 /// reading is active, the token is treated as active; a genuinely passive
 /// form (`rakennettu`, `luettu`, `rakennettiin`) has no active reading.
-fn predicate_is_passive(index: usize, out: &[TokenSyntax]) -> bool {
+pub(crate) fn predicate_is_passive(index: usize, out: &[TokenSyntax]) -> bool {
     let mut saw_verb = false;
     for reading in &out[index].readings {
         if reading.part_of_speech != Some(PartOfSpeech::Verb) {

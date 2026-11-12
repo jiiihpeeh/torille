@@ -1543,13 +1543,14 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
 ## Medium priority
 
 - [ ] **Finish the syntax checker's remaining rules**
-  Agreement, rection, negative-object case, comma punctuation and nested lists
-  are landed. Open: aspect-based object-case suggestions, missing/extra
-  argument warnings, punctuation phase 2 (semicolons, questions, unbalanced
-  quotes), the evaluation corpus, UI edit application and checker docs. Word
-  order stays deliberately deferred. The phased plan and the ordered remaining
-  index are in [`PLAN_SYNTAX_CHECKER.md`](PLAN_SYNTAX_CHECKER.md) §16; deferred
-  analysis refinements are in [`PLAN_SYNTAX.md`](PLAN_SYNTAX.md).
+  Agreement, rection, negative-object case, missing/extra argument warnings,
+  comma punctuation, nested lists and the evaluation baseline are landed.
+  Open: aspect-based object-case suggestions, punctuation phase 2 (semicolons,
+  questions, unbalanced quotes, parenthetical pairs), UI edit application and
+  checker docs. Word order stays deliberately deferred. The phased plan and the
+  ordered remaining index are in
+  [`PLAN_SYNTAX_CHECKER.md`](PLAN_SYNTAX_CHECKER.md) §16; deferred analysis
+  refinements are in [`PLAN_SYNTAX.md`](PLAN_SYNTAX.md).
 
 - [ ] **Fill the bare case gaps**
   **1565 missing forms across 65 classes**, small enough to list by case: ELA

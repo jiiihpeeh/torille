@@ -18,6 +18,8 @@ const EMITTED_KINDS: &[DiagnosticKind] = &[
     DiagnosticKind::AttributeAgreement,
     DiagnosticKind::VerbRection,
     DiagnosticKind::ObjectCase,
+    DiagnosticKind::MissingArgument,
+    DiagnosticKind::ExtraArgument,
     DiagnosticKind::CommaMissing,
     DiagnosticKind::CommaPairUnbalanced,
     DiagnosticKind::ListSeparatorMissing,
