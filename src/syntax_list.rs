@@ -555,4 +555,10 @@ mod tests {
         let (_, lists) = lists("Kuitenkin, ostin omenoita (jotka olivat kalliita) eilen.");
         assert!(lists.iter().all(|list| list.parent.is_none()), "{lists:#?}");
     }
+
+    #[test]
+    fn a_semicolon_does_not_make_one_list() {
+        let (_, lists) = lists("Ostin omenoita; appelsiineja ja banaaneja.");
+        assert!(lists.is_empty(), "{lists:#?}");
+    }
 }

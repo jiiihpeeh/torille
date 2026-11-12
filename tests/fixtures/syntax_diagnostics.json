@@ -449,6 +449,71 @@
           "corrections": ["kirjan"]
         }
       ]
+    },
+    {
+      "id": "question_mark_missing",
+      "text": "Missä sinä asut.",
+      "diagnostics": [
+        {
+          "kind": "question_mark_missing",
+          "severity": "error",
+          "start": 17,
+          "end": 18,
+          "corrections": ["?"]
+        }
+      ]
+    },
+    {
+      "id": "question_mark_ko",
+      "text": "Onko sinulla kirjaa.",
+      "diagnostics": [
+        {
+          "kind": "question_mark_missing",
+          "severity": "error",
+          "start": 19,
+          "end": 20,
+          "corrections": ["?"]
+        }
+      ]
+    },
+    {
+      "id": "question_mark_quoted",
+      "text": "»Missä sinä asut.»",
+      "diagnostics": [
+        {
+          "kind": "question_mark_missing",
+          "severity": "error",
+          "start": 19,
+          "end": 20,
+          "corrections": ["?"]
+        }
+      ]
+    },
+    {
+      "id": "unbalanced_quote",
+      "text": "Hän sanoi: »Elä tule.",
+      "diagnostics": [
+        {
+          "kind": "unbalanced_quote",
+          "severity": "warning",
+          "start": 24,
+          "end": 24,
+          "corrections": []
+        }
+      ]
+    },
+    {
+      "id": "parenthetical_comma",
+      "text": "Omena esimerkiksi on hyvä.",
+      "diagnostics": [
+        {
+          "kind": "comma_missing",
+          "severity": "suggestion",
+          "start": 6,
+          "end": 17,
+          "corrections": [","]
+        }
+      ]
     }
   ],
   "clean": [
@@ -551,6 +616,17 @@
     "Luen parhaillaan kirjaa.",
     "Luin kirjan loppuun.",
     "Luen (parhaillaan) kirjan.",
-    "Luin kirjoja loppuun."
+    "Luin kirjoja loppuun.",
+    "Missä sinä asut?",
+    "Onko sinulla kirjaa?",
+    "Kysyin, missä hän asuu.",
+    "Hän sanoi: »Missä sinä asut?»",
+    "Hän tuli; minä lähdin.",
+    "Hän sanoi: »Elä tule.»",
+    "Kuka tahansa voi tulla.",
+    "Ostin omenoita; appelsiineja ja banaaneja.",
+    "Omena, esimerkiksi, on hyvä.",
+    "Esimerkiksi omena on hyvä.",
+    "Omena kuten päärynä on hedelmä."
   ]
 }

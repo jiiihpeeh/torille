@@ -5,9 +5,10 @@
 //! subordinate clause needs a subordinator, a relative clause needs a relative
 //! pronoun, and a list needs the parallel items that `syntax_list` found.
 
+use crate::sentence;
 use crate::syntax::{Clause, SyntacticRole, SyntaxAnalysis, TokenSyntax};
 use crate::syntax_list::{List, ListItem, ListItemKind, ListKind};
-use crate::tags::{Mood, PartOfSpeech, Polarity};
+use crate::tags::{Clitic, Mood, PartOfSpeech, Polarity};
 use crate::tokenise::Token;
 
 use super::diagnostic::{
@@ -15,8 +16,12 @@ use super::diagnostic::{
 };
 
 pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
+    let contexts = sentence::analyze(tokens);
     let mut diagnostics = list_diagnostics(tokens, analysis);
     diagnostics.extend(clause_diagnostics(tokens, analysis));
+    diagnostics.extend(question_diagnostics(tokens, analysis));
+    diagnostics.extend(quote_diagnostics(tokens, &contexts));
+    diagnostics.extend(parenthetical_diagnostics(tokens, analysis, &contexts));
     diagnostics
 }
 
@@ -439,6 +444,250 @@ fn comma_positions(tokens: &[Token], start: usize, end: usize) -> Vec<(usize, us
     out
 }
 
+// ── questions and quotes ─────────────────────────────────────────────────
+
+/// Interrogative surfaces that open a direct question.
+///
+/// The inflected forms of `kuka`/`ken` and `mikä` are included because the
+/// sentence opener is often `Kenen`, `Missä` or `Mitä`, not the citation form.
+/// `koska` is deliberately absent: it is also the subordinator “because”.
+const INTERROGATIVE_SURFACES: &[&str] = &[
+    "kuka", "ken", "ketä", "kenen", "kelle", "keneltä", "kenelle", "kenessä", "kenestä",
+    "kenellä", "ketkä", "keiden", "keitä", "keissä", "keistä", "keihin", "keillä", "keiltä",
+    "keille", "mikä", "mitä", "minkä", "missä", "mistä", "mihin", "millä", "miltä", "mille",
+    "miksi", "mitkä", "millainen", "millaisia", "millaiset", "kumpi", "kumman", "kumpaa",
+    "kummat", "kumpia", "milloin", "miten", "kuinka", "montako",
+];
+
+fn question_diagnostics(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
+    let mut out = Vec::new();
+    for sentence in &analysis.sentences {
+        let clauses: Vec<&Clause> = analysis
+            .clauses
+            .iter()
+            .filter(|clause| clause.start >= sentence.start && clause.start < sentence.end)
+            .collect();
+        // A question with a second clause is too ambiguous to punctuate
+        // automatically (`Missä olet ja mitä teet`); stay quiet.
+        if clauses.len() != 1 {
+            continue;
+        }
+        let clause = clauses[0];
+        let Some(first) = first_word(clause, tokens) else {
+            continue;
+        };
+        let lower = tokens[first].text.to_lowercase();
+        let interrogative = INTERROGATIVE_SURFACES.contains(&lower.as_str());
+        let clitic = has_ko_clitic(first, analysis)
+            || clause
+                .predicate
+                .is_some_and(|predicate| has_ko_clitic(predicate, analysis));
+        if !interrogative && !clitic {
+            continue;
+        }
+        if interrogative && is_indefinite(tokens, first) {
+            continue;
+        }
+        if crate::syntax::is_subordinator(&lower) {
+            continue;
+        }
+        let Some(last) = last_word_in_sentence(tokens, sentence) else {
+            continue;
+        };
+        let edit = match terminal_punctuation(tokens, last) {
+            Terminal::Question | Terminal::Skip => continue,
+            Terminal::Dot(at) => Edit::new(at, at + 1, "?"),
+            Terminal::Insert(at) => Edit::insertion(at, "?"),
+        };
+        let mut diagnostic = SyntaxDiagnostic::new(
+            DiagnosticKind::QuestionMarkMissing,
+            Severity::Error,
+            DiagnosticConfidence::High,
+            edit.start..edit.end,
+            "question_mark_missing",
+        );
+        diagnostic.expected = Some("?".to_string());
+        diagnostic.corrections = vec![Correction::new(
+            vec![edit],
+            0.0,
+            "question_mark_missing",
+        )];
+        out.push(diagnostic);
+    }
+    out
+}
+
+fn has_ko_clitic(index: usize, analysis: &SyntaxAnalysis) -> bool {
+    analysis.tokens[index]
+        .readings
+        .iter()
+        .any(|reading| reading.clitic == Some(Clitic::Ko))
+}
+
+/// `kuka tahansa`, `mikä vain` and similar are indefinite pronouns, not
+/// questions.
+fn is_indefinite(tokens: &[Token], first: usize) -> bool {
+    let next = tokens
+        .iter()
+        .skip(first + 1)
+        .find(|token| token.is_word())
+        .map(|token| token.text.to_lowercase());
+    matches!(
+        next.as_deref(),
+        Some("tahansa" | "hyvänsä" | "vain" | "ikin")
+    )
+}
+
+fn last_word_in_sentence(tokens: &[Token], sentence: &sentence::SentenceSpan) -> Option<usize> {
+    (0..tokens.len()).rev().find(|&index| {
+        tokens[index].is_word()
+            && tokens[index].start >= sentence.start
+            && tokens[index].start < sentence.end
+    })
+}
+
+enum Terminal {
+    /// The sentence already ends with `?`.
+    Question,
+    /// A comma, semicolon, exclamation or ellipsis: do not guess.
+    Skip,
+    /// A period that can be replaced.
+    Dot(usize),
+    /// No terminal punctuation; insert at this byte.
+    Insert(usize),
+}
+
+fn terminal_punctuation(tokens: &[Token], last_word: usize) -> Terminal {
+    let mut dot = None;
+    let mut question = false;
+    let mut skip = false;
+    for token in tokens.iter().skip(last_word + 1) {
+        if token.is_word() {
+            break;
+        }
+        if token.text.contains("...") || token.text.contains('…') {
+            skip = true;
+        }
+        for (offset, character) in token.text.char_indices() {
+            match character {
+                '?' => question = true,
+                '!' => skip = true,
+                ',' | ';' | ':' => skip = true,
+                '.' if dot.is_none() => dot = Some(token.start + offset),
+                _ => {}
+            }
+        }
+    }
+    if question {
+        Terminal::Question
+    } else if skip {
+        Terminal::Skip
+    } else if let Some(at) = dot {
+        Terminal::Dot(at)
+    } else {
+        Terminal::Insert(tokens[last_word].end)
+    }
+}
+
+/// One warning for a quote left open at the end of the document.
+fn quote_diagnostics(
+    tokens: &[Token],
+    contexts: &[sentence::TokenContext],
+) -> Vec<SyntaxDiagnostic> {
+    let depth = contexts
+        .last()
+        .map(|context| context.quote_depth)
+        .unwrap_or(0);
+    if depth == 0 {
+        return Vec::new();
+    }
+    let at = tokens.last().map(|token| token.end).unwrap_or(0);
+    vec![SyntaxDiagnostic::new(
+        DiagnosticKind::UnbalancedQuote,
+        Severity::Warning,
+        DiagnosticConfidence::Medium,
+        at..at,
+        "unbalanced_quote",
+    )]
+}
+
+/// Adverbs that are clearly parenthetical on their own.
+///
+/// `kuten` is absent because its parenthetical is the following phrase, not
+/// the cue word: `Omena, kuten päärynä, on hedelmä`. A pair around `kuten`
+/// would be wrong, and phrase extent is a later rule.
+const PARENTHETICAL_CUES: &[&str] = &["esimerkiksi"];
+
+fn parenthetical_diagnostics(
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+    contexts: &[sentence::TokenContext],
+) -> Vec<SyntaxDiagnostic> {
+    let mut out = Vec::new();
+    for clause in &analysis.clauses {
+        let words: Vec<usize> = clause
+            .tokens
+            .clone()
+            .filter(|&index| tokens[index].is_word())
+            .collect();
+        for (position, &index) in words.iter().enumerate() {
+            let lower = tokens[index].text.to_lowercase();
+            if !PARENTHETICAL_CUES.contains(&lower.as_str()) {
+                continue;
+            }
+            if position == 0 || position + 1 >= words.len() {
+                continue;
+            }
+            if inside_brackets(tokens, clause.tokens.start, index)
+                || contexts
+                    .get(index)
+                    .is_some_and(|context| context.quote_depth > 0)
+            {
+                continue;
+            }
+            let left = words[position - 1];
+            let right = words[position + 1];
+            if comma_between(tokens, left, index) || comma_between(tokens, index, right) {
+                continue;
+            }
+            let mut diagnostic = SyntaxDiagnostic::new(
+                DiagnosticKind::CommaMissing,
+                Severity::Suggestion,
+                DiagnosticConfidence::Medium,
+                tokens[index].start..tokens[index].end,
+                "parenthetical_comma",
+            );
+            diagnostic.corrections = vec![Correction::new(
+                vec![
+                    Edit::insertion(tokens[left].end, ","),
+                    Edit::insertion(tokens[index].end, ","),
+                ],
+                0.0,
+                "parenthetical_comma",
+            )];
+            out.push(diagnostic);
+        }
+    }
+    out
+}
+
+fn inside_brackets(tokens: &[Token], start: usize, index: usize) -> bool {
+    let mut depth = 0i32;
+    for token in tokens.iter().take(index).skip(start) {
+        if token.is_word() {
+            continue;
+        }
+        for character in token.text.chars() {
+            match character {
+                '(' | '[' | '{' => depth += 1,
+                ')' | ']' | '}' => depth = (depth - 1).max(0),
+                _ => {}
+            }
+        }
+    }
+    depth > 0
+}
+
 fn same_sentence(left: &Clause, right: &Clause, analysis: &SyntaxAnalysis) -> bool {
     sentence_index(left.start, analysis) == sentence_index(right.start, analysis)
 }
@@ -449,4 +698,105 @@ fn sentence_index(byte: usize, analysis: &SyntaxAnalysis) -> Option<usize> {
         .iter()
         .find(|sentence| byte >= sentence.start && byte < sentence.end)
         .map(|sentence| sentence.index)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tokenise::tokenise;
+
+    fn diagnostics(text: &str) -> Vec<SyntaxDiagnostic> {
+        let tokens = tokenise(text);
+        let analysis = crate::syntax::analyze(&tokens);
+        check(&tokens, &analysis)
+    }
+
+    fn kind(text: &str, wanted: DiagnosticKind) -> Vec<SyntaxDiagnostic> {
+        diagnostics(text)
+            .into_iter()
+            .filter(|diagnostic| diagnostic.kind == wanted)
+            .collect()
+    }
+
+    #[test]
+    fn a_missing_question_mark_is_an_error() {
+        let found = kind("Missä sinä asut.", DiagnosticKind::QuestionMarkMissing);
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].severity, Severity::Error);
+        assert_eq!(found[0].corrections[0].edits[0].replacement, "?");
+    }
+
+    #[test]
+    fn a_ko_question_without_a_mark_is_an_error() {
+        let found = kind(
+            "Onko sinulla kirjaa.",
+            DiagnosticKind::QuestionMarkMissing,
+        );
+        assert_eq!(found.len(), 1);
+    }
+
+    #[test]
+    fn indirect_questions_and_existing_marks_stay_quiet() {
+        for text in [
+            "Kysyin, missä hän asuu.",
+            "Hän sanoi: »Missä sinä asut?»",
+            "Missä sinä asut?",
+        ] {
+            assert!(
+                kind(text, DiagnosticKind::QuestionMarkMissing).is_empty(),
+                "{text}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_quoted_question_gets_the_mark_inside_the_quote() {
+        let found = kind(
+            "»Missä sinä asut.»",
+            DiagnosticKind::QuestionMarkMissing,
+        );
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].corrections[0].edits[0].start, 19);
+        assert_eq!(found[0].corrections[0].edits[0].replacement, "?");
+    }
+
+    #[test]
+    fn an_indefinite_pronoun_is_not_a_question() {
+        assert!(
+            kind("Kuka tahansa voi tulla.", DiagnosticKind::QuestionMarkMissing).is_empty()
+        );
+    }
+
+    #[test]
+    fn a_semicolon_is_not_a_punctuation_error() {
+        assert!(diagnostics("Hän tuli; minä lähdin.").is_empty());
+    }
+
+    #[test]
+    fn an_unbalanced_quote_is_a_warning() {
+        let found = kind("Hän sanoi: »Elä tule.", DiagnosticKind::UnbalancedQuote);
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].severity, Severity::Warning);
+    }
+
+    #[test]
+    fn balanced_quotes_are_quiet() {
+        assert!(kind("Hän sanoi: »Elä tule.»", DiagnosticKind::UnbalancedQuote).is_empty());
+    }
+
+    #[test]
+    fn an_unmarked_parenthetical_adverb_gets_a_pair() {
+        let found = kind("Omena esimerkiksi on hyvä.", DiagnosticKind::CommaMissing);
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].severity, Severity::Suggestion);
+        assert_eq!(found[0].corrections[0].edits.len(), 2);
+        assert_eq!(found[0].corrections[0].edits[0].replacement, ",");
+        assert_eq!(found[0].corrections[0].edits[1].replacement, ",");
+    }
+
+    #[test]
+    fn a_marked_parenthetical_adverb_is_quiet() {
+        assert!(diagnostics("Omena, esimerkiksi, on hyvä.").is_empty());
+        assert!(diagnostics("Esimerkiksi omena on hyvä.").is_empty());
+    }
 }

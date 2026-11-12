@@ -35,6 +35,8 @@ fn kind(name: &str) -> DiagnosticKind {
         DiagnosticKind::CommaMissing,
         DiagnosticKind::CommaExtra,
         DiagnosticKind::CommaPairUnbalanced,
+        DiagnosticKind::QuestionMarkMissing,
+        DiagnosticKind::UnbalancedQuote,
         DiagnosticKind::ListSeparatorMissing,
         DiagnosticKind::ListSeparatorDuplicate,
         DiagnosticKind::ListCommaBeforeConjunction,
@@ -186,4 +188,9 @@ diagnostic_tests!(
     extra_argument,
     aspect_progressive_suggestion,
     aspect_completive_suggestion,
+    question_mark_missing,
+    question_mark_ko,
+    question_mark_quoted,
+    unbalanced_quote,
+    parenthetical_comma,
 );

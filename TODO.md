@@ -1542,15 +1542,14 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
 
 ## Medium priority
 
-- [ ] **Finish the syntax checker's remaining rules**
+- [ ] **Finish the syntax checker's remaining surface**
   Agreement, rection, object case (negative and aspect suggestions),
-  missing/extra argument warnings, comma punctuation, nested lists and the
-  evaluation baseline are landed. Open: punctuation phase 2 (semicolons,
-  questions, unbalanced quotes, parenthetical pairs), UI edit application and
-  checker docs. Plural completive object suggestions are deferred until a
-  partitive plural carries its lemma unambiguously. Word order stays
-  deliberately deferred. The phased plan and the ordered remaining index are
-  in [`PLAN_SYNTAX_CHECKER.md`](PLAN_SYNTAX_CHECKER.md) §16; deferred analysis
+  missing/extra argument warnings, comma/question/quote punctuation, nested
+  lists and the evaluation baseline are landed. Open: UI edit application and
+  checker docs. Plural completive object suggestions and `kuten` parenthetical
+  phrase extent are deferred. Word order stays deliberately deferred. The
+  phased plan and the ordered remaining index are in
+  [`PLAN_SYNTAX_CHECKER.md`](PLAN_SYNTAX_CHECKER.md) §16; deferred analysis
   refinements are in [`PLAN_SYNTAX.md`](PLAN_SYNTAX.md).
 
 - [ ] **Fill the bare case gaps**

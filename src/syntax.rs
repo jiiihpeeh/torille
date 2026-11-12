@@ -253,7 +253,7 @@ fn analyze_with(
         if words.is_empty() {
             continue;
         }
-        for segment in segment_clause_words(words, tokens, &out) {
+        for segment in segment_clause_words(words, tokens, &out, &contexts) {
             let Some(&first) = segment.first() else {
                 continue;
             };
@@ -1003,9 +1003,20 @@ pub(crate) fn predicate_is_passive(index: usize, out: &[TokenSyntax]) -> bool {
 /// Liisa söivät` stays one clause. Subordinators and relative pronouns always
 /// start a clause. A comma before a finite verb also starts one, which keeps
 /// `Kun hän tuli, söin` from merging into a single predicate.
-fn segment_clause_words(words: &[usize], tokens: &[Token], out: &[TokenSyntax]) -> Vec<Vec<usize>> {
+fn segment_clause_words(
+    words: &[usize],
+    tokens: &[Token],
+    out: &[TokenSyntax],
+    contexts: &[sentence::TokenContext],
+) -> Vec<Vec<usize>> {
     let mut starts = vec![0usize];
     for position in 1..words.len() {
+        // A top-level semicolon separates clauses. It is not a sentence
+        // boundary for the case layer, so the split belongs here.
+        if top_level_semicolon(tokens, words[position - 1], words[position], contexts) {
+            starts.push(position);
+            continue;
+        }
         let lower = tokens[words[position]].text.to_lowercase();
         if is_relative_word(words[position], tokens, out) {
             starts.push(position);
@@ -1132,6 +1143,39 @@ fn has_separator_between(tokens: &[Token], left: usize, right: usize, needle: ch
         .take(right.saturating_sub(left + 1))
         .filter(|token| !token.is_word())
         .any(|token| token.text.contains(needle))
+}
+
+/// A semicolon at bracket depth zero and outside a quote.
+///
+/// `Hän tuli; minä lähdin` is two clauses, but a semicolon inside `(…)` or a
+/// quotation must not split the host clause. The quote check uses the depth at
+/// the word before the separator, which is where the semicolon is read.
+fn top_level_semicolon(
+    tokens: &[Token],
+    left: usize,
+    right: usize,
+    contexts: &[sentence::TokenContext],
+) -> bool {
+    if contexts.get(left).is_some_and(|context| context.quote_depth > 0) {
+        return false;
+    }
+    // Start at the beginning of the text so an opening bracket before the
+    // pair still counts: `Hän tuli (nopeasti; hiljaa) kotiin` must not split.
+    let mut depth = 0i32;
+    for (index, token) in tokens.iter().enumerate().take(right) {
+        if token.is_word() {
+            continue;
+        }
+        for character in token.text.chars() {
+            match character {
+                '(' | '[' | '{' => depth += 1,
+                ')' | ']' | '}' => depth = (depth - 1).max(0),
+                ';' if depth == 0 && index > left => return true,
+                _ => {}
+            }
+        }
+    }
+    false
 }
 
 /// The first finite predicate candidate in a clause, preferring an
@@ -2018,6 +2062,18 @@ mod tests {
     fn a_comma_before_a_finite_verb_starts_a_clause() {
         let (_, analysis) = analyzed("Kun hän tuli, söin.");
         assert_eq!(analysis.clauses.len(), 2);
+    }
+
+    #[test]
+    fn a_top_level_semicolon_starts_a_clause() {
+        let (_, analysis) = analyzed("Hän tuli; minä lähdin.");
+        assert_eq!(analysis.clauses.len(), 2);
+    }
+
+    #[test]
+    fn a_semicolon_inside_a_parenthetical_does_not_split() {
+        let (_, analysis) = analyzed("Hän tuli (nopeasti; hiljaa) kotiin.");
+        assert_eq!(analysis.clauses.len(), 1);
     }
 
     #[test]

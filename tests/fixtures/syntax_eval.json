@@ -108,7 +108,13 @@
     "Luen parhaillaan kirjaa.",
     "Luin kirjan loppuun.",
     "Luen (parhaillaan) kirjan.",
-    "Luin kirjoja loppuun."
+    "Luin kirjoja loppuun.",
+    "Hän sanoi: »Elä tule.»",
+    "Kuka tahansa voi tulla.",
+    "Ostin omenoita; appelsiineja ja banaaneja.",
+    "Omena, esimerkiksi, on hyvä.",
+    "Esimerkiksi omena on hyvä.",
+    "Omena kuten päärynä on hedelmä."
   ],
   "cases": [
     {
@@ -424,6 +430,41 @@
       "text": "Luin kirjaa loppuun.",
       "kinds": [
         "object_case"
+      ]
+    },
+    {
+      "id": "eval_question_mark_missing",
+      "text": "Missä sinä asut.",
+      "kinds": [
+        "question_mark_missing"
+      ]
+    },
+    {
+      "id": "eval_question_mark_ko",
+      "text": "Onko sinulla kirjaa.",
+      "kinds": [
+        "question_mark_missing"
+      ]
+    },
+    {
+      "id": "eval_question_mark_quoted",
+      "text": "»Missä sinä asut.»",
+      "kinds": [
+        "question_mark_missing"
+      ]
+    },
+    {
+      "id": "eval_unbalanced_quote",
+      "text": "Hän sanoi: »Elä tule.",
+      "kinds": [
+        "unbalanced_quote"
+      ]
+    },
+    {
+      "id": "eval_parenthetical_comma",
+      "text": "Omena esimerkiksi on hyvä.",
+      "kinds": [
+        "comma_missing"
       ]
     }
   ]

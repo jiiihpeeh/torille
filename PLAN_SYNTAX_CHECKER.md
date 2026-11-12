@@ -2,9 +2,9 @@
 
 Status: Phases 0–5 are landed, including nested lists, missing/extra argument
 warnings, the word-order decision record and aspect-based object-case
-suggestions (singular completive; plural deferred). Phase 6 is partly landed:
-deterministic ranking, the wasm word cache and the evaluation baseline exist,
-while punctuation phase 2, UI rendering and the style decision are open. The analysis layer it builds on is `PLAN_SYNTAX.md` and is already landed
+suggestions (singular completive; plural deferred). Phase 6 has deterministic
+ranking, the wasm word cache, the evaluation baseline and punctuation phase 2;
+UI rendering, checker docs and the style decision are open. The analysis layer it builds on is `PLAN_SYNTAX.md` and is already landed
 on the `syntax` branch.
 
 The remaining work is indexed in §16; each open item has enough detail to be
@@ -952,7 +952,7 @@ The exact-output fixture proves individual rules; it does not measure how
 often the checker is wrong on real prose. `tests/fixtures/syntax_eval.json` is
 the second, larger corpus for aggregate evaluation:
 
-- 148 sentences at the current baseline: 103 clean and 45 with expected
+- 159 sentences at the current baseline: 109 clean and 50 with expected
   diagnostics;
 - one row per sentence, with the expected kind(s);
 - every emitted kind represented, plus the guards named in §13;
@@ -1365,14 +1365,28 @@ Hän tuli; minä lähdin.    # clean: semicolon style
 
 Tasks:
 
-- [ ] Treat `;` as a clause/list boundary in scanning; emit no diagnostic for
+- [x] Treat `;` as a clause/list boundary in scanning; emit no diagnostic for
       the semicolon itself.
-- [ ] Add `QuestionMarkMissing` (or the chosen kind) to `DiagnosticKind`, with
+- [x] Add `QuestionMarkMissing` (or the chosen kind) to `DiagnosticKind`, with
       the sentence-initial/only-main-clause guard.
-- [ ] Add the unbalanced-quote warning from `quote_depth`; no style edits.
-- [ ] Add the advisory parenthetical/apposition pair with the closed cue list.
-- [ ] Add the six rows above and their clean/dirty split to the fixture.
-- [ ] Confirm indirect questions and quoted questions stay quiet.
+- [x] Add the unbalanced-quote warning from `quote_depth`; no style edits.
+- [x] Add the advisory parenthetical pair with the closed cue list.
+- [x] Add the six rows above and their clean/dirty split to the fixture.
+- [x] Confirm indirect questions and quoted questions stay quiet.
+
+Implementation notes:
+
+- A top-level `;` splits clauses in `syntax.rs`; a semicolon inside a
+  parenthetical or quotation does not. No semicolon diagnostic is emitted.
+- The question rule fires only when a sentence has one clause and its first
+  word is interrogative or carries `-ko`/`-kö`. It replaces the final `.`, or
+  inserts `?` before a closing quote/bracket. Indirect questions and
+  `kuka tahansa`-style indefinites stay quiet.
+- The parenthetical pair is `Suggestion` only and currently limited to
+  `esimerkiksi`. `kuten` is deferred because its parenthetical is the following
+  phrase, not the cue word.
+- An unbalanced quote is one `Warning` at the end of the document; quote style
+  and dialogue dashes are never corrected.
 
 #### Phase 6C — UI and edit application
 
@@ -1424,8 +1438,8 @@ Tasks:
 First baseline (2026-11-12):
 
 ```text
-clean rows 103: 0 errors, 0 warnings, 0 suggestions
-cases 45: every emitted kind precision 1.00, recall 1.00
+clean rows 109: 0 errors, 0 warnings, 0 suggestions
+cases 50: every emitted kind precision 1.00, recall 1.00
 ```
 
 The baseline is a snapshot, not a target: a new rule that adds an extra
@@ -1475,6 +1489,16 @@ Ship fewer rules, not more guesses.
 - `Mixed` lists never produce an automatic punctuation correction. A final
   conjunction without a comma is never an error in Finnish, and a comma before
   it is only a suggestion. No other language policy applies.
+- A semicolon is never an error. It splits clauses for scanning, and a
+  semicolon inside a parenthetical or quotation does not split the host.
+- A missing question mark is an `Error` only when the sentence has one clause
+  and its first word is interrogative or carries `-ko`/`-kö`. Indirect
+  questions, `kuka tahansa`-style indefinites and sentences with a second
+  clause stay quiet.
+- An unbalanced quote is a `Warning`, never an `Error`; quote style and
+  dialogue dashes are not corrected.
+- A parenthetical comma pair is a `Suggestion`, never an `Error`, and only a
+  closed cue list may trigger it.
 - `Warning` for constructions with standard variation (coordinated subjects,
   colloquial number, optional commas).
 - `Suggestion` for style/optional punctuation.
@@ -1534,10 +1558,10 @@ Ordered by user-facing value. Each item points at the phase that specifies it.
    plus `MissingArgument` / `ExtraArgument` warnings.
 2. [x] **Aspect-based object case** — phase 5B. Suggestion only, closed cue
    tables, never an `Error`; singular completive, plural deferred.
-3. [ ] **Punctuation phase 2** — phase 6B. Semicolon boundaries, question-mark
+3. [x] **Punctuation phase 2** — phase 6B. Semicolon boundaries, question-mark
    diagnostics, unbalanced quotes, advisory parenthetical pairs, no
    quote-style corrections.
-4. [x] **Evaluation corpus** — phase 6D. 148 sentences, zero `Error` on clean
+4. [x] **Evaluation corpus** — phase 6D. 159 sentences, zero `Error` on clean
    rows, per-kind baseline recorded.
 5. [ ] **UI and edit application** — phase 6C. Demo panel, reverse-order edit
    replay, opt-in extension toggle.
