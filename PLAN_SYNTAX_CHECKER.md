@@ -1255,11 +1255,11 @@ No word-order rules are planned. Finnish order is information structure, and
 
 Tasks:
 
-- [ ] Add `Söi Sami puuron.` and `Puuron söi Sami.` to the clean corpus.
-- [ ] Add a comment on `DiagnosticKind::WordOrder` saying the kind is reserved
+- [x] Add `Söi Sami puuron.` and `Puuron söi Sami.` to the clean corpus.
+- [x] Add a comment on `DiagnosticKind::WordOrder` saying the kind is reserved
       and not emitted, so a future reader does not assume a missing rule.
-- [ ] Keep `WordOrder` out of the severity/ranking examples unless a test
-      explicitly needs a placeholder kind.
+- [x] Keep `WordOrder` out of the severity/ranking examples; the rank test now
+      uses `CommaMissing` as its suggestion placeholder.
 
 This closes the deferral without shipping a rule.
 

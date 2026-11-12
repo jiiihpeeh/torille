@@ -60,6 +60,9 @@ pub enum DiagnosticKind {
     MissingArgument,
     ExtraArgument,
     ClauseStructure,
+    /// Reserved: Finnish word order is information structure, not a fixed
+    /// rule (`Söi Sami puuron` is grammatical). No rule emits this kind; see
+    /// `PLAN_SYNTAX_CHECKER.md` phase 5D.
     WordOrder,
     CommaMissing,
     CommaExtra,

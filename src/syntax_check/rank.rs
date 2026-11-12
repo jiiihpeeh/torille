@@ -45,11 +45,11 @@ mod tests {
     #[test]
     fn errors_come_first_and_duplicates_collapse() {
         let low = SyntaxDiagnostic::new(
-            DiagnosticKind::WordOrder,
+            DiagnosticKind::CommaMissing,
             Severity::Suggestion,
             DiagnosticConfidence::Low,
             10..12,
-            "word_order",
+            "comma_missing",
         );
         let error = SyntaxDiagnostic::new(
             DiagnosticKind::SubjectPredicateAgreement,
