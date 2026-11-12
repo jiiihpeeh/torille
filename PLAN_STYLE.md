@@ -1,8 +1,8 @@
 # PLAN_STYLE — the opt-in style layer
 
-Status: **Phase 0–1 landed; phases 2–7 planned.** The public types and an empty
-rule pass exist in `src/style_check/`. No phrase table, repetition or
-long-sentence rule is implemented yet, and no wasm/UI surface is wired. This is
+Status: **Phase 0–2 landed; phases 3–7 planned.** The public types and the
+curated phrase/word table are implemented in `src/style_check/`. Repetition,
+the long-sentence metric and the wasm/UI surface are not wired yet. This is
 the separate plan that `PLAN_SYNTAX_CHECKER.md` phase 6E asked for before any
 style rule lands. It does not change the grammar checker, the suggestion
 pipeline or the keystroke path.
@@ -398,13 +398,20 @@ yet.
 
 ### Phase 2 — curated table pipeline
 
-- [ ] Add `data/style_phrases.csv` and `data/style_words.csv`.
-- [ ] Emit the two blobs from `build.rs`; add the readers in
+- [x] Add `data/style_phrases.csv` and `data/style_words.csv`.
+- [x] Emit the two blobs from `build.rs`; add the readers in
       `style_check/lexicon.rs`.
-- [ ] Implement the phrase/word matcher with exact spans and optional
+- [x] Implement the phrase/word matcher with exact spans and optional
       corrections.
-- [ ] Add `tests/fixtures/style_diagnostics.json` and `style_check.rs`.
-- [ ] Every table row has a case; unknown kinds fail the build.
+- [x] Add `tests/fixtures/style_diagnostics.json` and `style_check.rs`.
+- [x] Every table row has a case; unknown kinds fail the build.
+
+Phase 2 landed with eight phrases and six words. The build writer normalises
+the key, validates the kind against `cliche`/`filler`/`wordy`/`colloquial`,
+rejects duplicate keys and rows longer than four words, and stores
+`kind + replacement` as the blob values. The matcher tries the longest phrase
+first, stops at sentence boundaries, and resumes after a hit so a phrase is
+reported once.
 
 Acceptance: the exact-output fixture is stable; no overlap duplicates.
 

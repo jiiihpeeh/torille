@@ -50,6 +50,17 @@ committed files are what a build uses.
 | `oracle_exceptions.json` | curated | evidence for the harness (`tools/test_illegal_evidence.py`) |
 | `wiktionary-taivutukset.txt` | Wiktionary | fetched paradigms used by `tests/catalogue.rs` |
 
+## Curated style tables
+
+These are optional, suggestion-only data for the style layer
+(`../PLAN_STYLE.md`). They never feed the spell checker or the grammar pass.
+The `note` column is curation-only and is not shipped.
+
+| file | producer | used by |
+|---|---|---|
+| `style_phrases.csv` | original curation | `maps/style_phrases.bin.gz`; `phrase,kind,replacement,note` |
+| `style_words.csv` | original curation | `maps/style_words.bin.gz`; `word,kind,replacement,note` |
+
 ## Local only (ignored)
 
 | file | why it is local |

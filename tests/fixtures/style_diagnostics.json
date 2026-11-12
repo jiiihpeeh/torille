@@ -1,0 +1,112 @@
+{
+  "cases": [
+    {
+      "id": "phrase_wordy",
+      "text": "Tällä hetkellä tilanne on rauhallinen.",
+      "diagnostics": [
+        {
+          "kind": "style_wordy",
+          "severity": "suggestion",
+          "start": 0,
+          "end": 17,
+          "message": "style_wordy",
+          "expected": "tällä hetkellä",
+          "corrections": ["nyt"]
+        }
+      ]
+    },
+    {
+      "id": "phrase_cliche_without_replacement",
+      "text": "Viime kädessä ratkaisu on sinun.",
+      "diagnostics": [
+        {
+          "kind": "style_cliche",
+          "severity": "suggestion",
+          "start": 0,
+          "end": 15,
+          "message": "style_cliche",
+          "expected": "viime kädessä",
+          "corrections": []
+        }
+      ]
+    },
+    {
+      "id": "word_colloquial",
+      "text": "Systeemi toimii.",
+      "diagnostics": [
+        {
+          "kind": "style_colloquial",
+          "severity": "suggestion",
+          "start": 0,
+          "end": 8,
+          "message": "style_colloquial",
+          "expected": "systeemi",
+          "corrections": ["järjestelmä"]
+        }
+      ]
+    },
+    {
+      "id": "word_filler",
+      "text": "Tavallaan se on hyvä.",
+      "diagnostics": [
+        {
+          "kind": "style_filler",
+          "severity": "suggestion",
+          "start": 0,
+          "end": 9,
+          "message": "style_filler",
+          "expected": "tavallaan",
+          "corrections": []
+        }
+      ]
+    },
+    {
+      "id": "word_wordy",
+      "text": "Kokonaisuudessaan ehdotus on hyvä.",
+      "diagnostics": [
+        {
+          "kind": "style_wordy",
+          "severity": "suggestion",
+          "start": 0,
+          "end": 17,
+          "message": "style_wordy",
+          "expected": "kokonaisuudessaan",
+          "corrections": ["kokonaan"]
+        }
+      ]
+    },
+    {
+      "id": "a_word_does_not_match_inside_a_longer_word",
+      "text": "Systeeminen virhe.",
+      "diagnostics": []
+    },
+    {
+      "id": "a_phrase_does_not_cross_a_sentence_boundary",
+      "text": "Tällä. Hetkellä tilanne on rauhallinen.",
+      "diagnostics": []
+    },
+    {
+      "id": "a_phrase_is_reported_once",
+      "text": "Tällä hetkellä hetkellä tilanne on rauhallinen.",
+      "diagnostics": [
+        {
+          "kind": "style_wordy",
+          "severity": "suggestion",
+          "start": 0,
+          "end": 17,
+          "message": "style_wordy",
+          "expected": "tällä hetkellä",
+          "corrections": ["nyt"]
+        }
+      ]
+    }
+  ],
+  "clean": [
+    "Talo on kaunis.",
+    "Kissa istuu pöydällä.",
+    "Luen kirjaa.",
+    "Hän tuli kotiin.",
+    "Kokous alkaa yhdeksältä.",
+    "Lapsi juoksee pihalla."
+  ]
+}

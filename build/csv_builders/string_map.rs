@@ -143,3 +143,83 @@ pub(crate) fn emit_adj_degrees(csv_path: &Path, blob_path: &Path) {
     );
 }
 
+/// Emit one style table as `key -> (kind, replacement)`.
+///
+/// The CSV is `key,kind,replacement,note`: the note is curation-only and is
+/// not shipped. The key is lowercased and whitespace-normalised; the kind is
+/// checked against the style layer's closed set so a typo fails the build
+/// rather than silently disabling a row. A phrase may be at most four words,
+/// matching `style_check::lexicon::MAX_PHRASE_WORDS`.
+pub(crate) fn emit_style_table(csv_path: &Path, blob_path: &Path, label: &str) {
+    if !csv_path.exists() && blob_path.exists() {
+        eprintln!(
+            "build.rs: {} missing but {} present -- reusing",
+            csv_path.display(),
+            blob_path.display(),
+        );
+        return;
+    }
+    let csv = fs::read_to_string(csv_path).unwrap_or_else(|e| {
+        panic!(
+            "build.rs: could not read {}: {e}",
+            csv_path.display(),
+        )
+    });
+    let header = csv.lines().next().unwrap_or_default();
+    assert!(
+        header.starts_with("phrase,") || header.starts_with("word,"),
+        "build.rs: {}: expected a `phrase,kind,replacement,note` or \
+         `word,kind,replacement,note` header",
+        csv_path.display(),
+    );
+    let mut entries: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for line in csv.lines().skip(1) {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+        let mut fields = line.splitn(4, ',');
+        let Some(key) = fields.next().map(str::trim).filter(|s| !s.is_empty()) else {
+            continue;
+        };
+        let key = key
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .to_lowercase();
+        let Some(kind) = fields.next().map(str::trim).filter(|s| !s.is_empty()) else {
+            panic!(
+                "build.rs: {}: `{key}` has no style kind",
+                csv_path.display()
+            );
+        };
+        if !matches!(kind, "cliche" | "filler" | "wordy" | "colloquial") {
+            panic!(
+                "build.rs: {}: `{key}` has unknown style kind `{kind}`",
+                csv_path.display()
+            );
+        }
+        let replacement = fields.next().map(str::trim).unwrap_or_default();
+        if entries.contains_key(&key) {
+            panic!(
+                "build.rs: {}: duplicate style key `{key}`",
+                csv_path.display()
+            );
+        }
+        if key.split(' ').count() > 4 {
+            panic!(
+                "build.rs: {}: `{key}` is longer than four words",
+                csv_path.display()
+            );
+        }
+        entries.insert(key, vec![kind.to_string(), replacement.to_string()]);
+    }
+    eprintln!(
+        "build.rs: {label}: {} keys from {} rows",
+        entries.len(),
+        csv.lines().count().saturating_sub(1),
+    );
+    let entries: Vec<(String, Vec<String>)> = entries.into_iter().collect();
+    write_front_coded_map(blob_path, &entries);
+}
+

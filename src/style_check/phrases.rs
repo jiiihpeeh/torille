@@ -1,0 +1,164 @@
+//! Curated phrase and word matching.
+//!
+//! The rule scans word runs, longest phrase first, and never crosses a
+//! sentence boundary. A match covers the whole phrase; after a hit the scan
+//! resumes after it, so overlapping table rows cannot double-report.
+
+use crate::sentence;
+use crate::syntax_check::{Correction, DiagnosticConfidence};
+use crate::tokenise::Token;
+
+use super::{StyleDiagnostic, lexicon};
+
+pub(super) fn check(tokens: &[Token]) -> Vec<StyleDiagnostic> {
+    let contexts = sentence::analyze(tokens);
+    let words: Vec<usize> = tokens
+        .iter()
+        .enumerate()
+        .filter(|(_, token)| token.is_word())
+        .map(|(index, _)| index)
+        .collect();
+
+    let mut diagnostics = Vec::new();
+    let mut position = 0;
+    while position < words.len() {
+        let first = words[position];
+        let sentence_index = contexts[first].sentence_index;
+        let mut matched = None;
+        for length in (1..=lexicon::MAX_PHRASE_WORDS).rev() {
+            let last_position = position + length - 1;
+            if last_position >= words.len() {
+                continue;
+            }
+            let last = words[last_position];
+            if contexts[last].sentence_index != sentence_index {
+                continue;
+            }
+            let key = words[position..=last_position]
+                .iter()
+                .map(|&index| tokens[index].text.to_lowercase())
+                .collect::<Vec<_>>()
+                .join(" ");
+            let entry = if length == 1 {
+                lexicon::word(&key).or_else(|| lexicon::phrase(&key))
+            } else {
+                lexicon::phrase(&key)
+            };
+            if let Some(entry) = entry {
+                matched = Some((last_position, last, key, entry));
+                break;
+            }
+        }
+
+        if let Some((last_position, last, key, entry)) = matched {
+            let span = tokens[first].start..tokens[last].end;
+            let mut diagnostic = StyleDiagnostic::new(
+                entry.kind,
+                DiagnosticConfidence::High,
+                span.clone(),
+                entry.kind.name(),
+            );
+            diagnostic.expected = Some(key);
+            if let Some(replacement) = entry.replacement {
+                diagnostic
+                    .corrections
+                    .push(Correction::replacement(span.start, span.end, replacement));
+            }
+            diagnostics.push(diagnostic);
+            position = last_position + 1;
+        } else {
+            position += 1;
+        }
+    }
+    diagnostics
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tokenise::tokenise;
+    use crate::style_check::StyleKind;
+
+    fn diagnostics(text: &str) -> Vec<StyleDiagnostic> {
+        check(&tokenise(text))
+    }
+
+    fn span_of(text: &str, needle: &str) -> std::ops::Range<usize> {
+        let start = text.find(needle).expect("needle in text");
+        start..start + needle.len()
+    }
+
+    #[test]
+    fn a_multi_word_phrase_is_matched_as_one_span() {
+        let text = "Tällä hetkellä tilanne on rauhallinen.";
+        let found = diagnostics(text);
+        assert_eq!(found.len(), 1, "{found:#?}");
+        assert_eq!(found[0].kind, StyleKind::Wordy);
+        assert_eq!(found[0].span, span_of(text, "Tällä hetkellä"));
+        assert_eq!(found[0].expected.as_deref(), Some("tällä hetkellä"));
+        assert_eq!(
+            found[0].corrections[0].edits[0].replacement,
+            "nyt".to_string()
+        );
+    }
+
+    #[test]
+    fn phrase_matching_is_case_insensitive() {
+        let text = "Kuin myös naapurit tulivat.";
+        let found = diagnostics(text);
+        assert_eq!(found.len(), 1, "{found:#?}");
+        assert_eq!(found[0].kind, StyleKind::Wordy);
+        assert_eq!(found[0].span, span_of(text, "Kuin myös"));
+    }
+
+    #[test]
+    fn a_label_only_phrase_has_no_correction() {
+        let text = "Viime kädessä ratkaisu on sinun.";
+        let found = diagnostics(text);
+        assert_eq!(found.len(), 1, "{found:#?}");
+        assert_eq!(found[0].kind, StyleKind::Cliche);
+        assert!(found[0].corrections.is_empty());
+    }
+
+    #[test]
+    fn a_single_word_entry_matches_a_standalone_token() {
+        let text = "Systeemi toimii.";
+        let found = diagnostics(text);
+        assert_eq!(found.len(), 1, "{found:#?}");
+        assert_eq!(found[0].kind, StyleKind::Colloquial);
+        assert_eq!(found[0].span, span_of(text, "Systeemi"));
+        assert_eq!(
+            found[0].corrections[0].edits[0].replacement,
+            "järjestelmä".to_string()
+        );
+    }
+
+    #[test]
+    fn a_word_entry_does_not_match_inside_a_longer_word() {
+        assert!(diagnostics("Systeeminen virhe.").is_empty());
+    }
+
+    #[test]
+    fn a_phrase_does_not_cross_a_sentence_boundary() {
+        assert!(diagnostics("Tällä. Hetkellä tilanne on rauhallinen.").is_empty());
+    }
+
+    #[test]
+    fn a_phrase_is_reported_once() {
+        let found = diagnostics("Tällä hetkellä hetkellä tilanne on rauhallinen.");
+        assert_eq!(found.len(), 1, "{found:#?}");
+        assert_eq!(found[0].span, span_of("Tällä hetkellä hetkellä tilanne on rauhallinen.", "Tällä hetkellä"));
+    }
+
+    #[test]
+    fn clean_prose_is_quiet() {
+        for text in [
+            "Talo on kaunis.",
+            "Kissa istuu pöydällä.",
+            "Luen kirjaa.",
+            "Hän tuli kotiin.",
+        ] {
+            assert!(diagnostics(text).is_empty(), "{text}: {:#?}", diagnostics(text));
+        }
+    }
+}

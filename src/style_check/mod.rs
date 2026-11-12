@@ -5,10 +5,12 @@
 //! never emits `Error` or `Warning`. It is on demand and must not run in the
 //! keystroke path. The design is in `PLAN_STYLE.md`.
 //!
-//! Phase 1 is the skeleton: the public types and an empty rule pass. Phrase
-//! tables, repetition and the long-sentence metric land in later phases.
+//! Phase 2 adds the curated phrase/word table. Repetition and the
+//! long-sentence metric land in later phases.
 
 mod diagnostic;
+mod lexicon;
+mod phrases;
 
 pub use diagnostic::{StyleDiagnostic, StyleKind};
 
@@ -31,11 +33,11 @@ pub fn check(text: &str) -> StyleAnalysis {
 
 /// Run the style rules over an existing token stream.
 ///
-/// This is the testable core and the phase 2 entry point for the table and
-/// metric rules. Until then it returns an empty analysis.
-pub fn check_tokens(_tokens: &[Token]) -> StyleAnalysis {
+/// This is the testable core. A caller that already has tokens does not pay
+/// for a second tokenisation.
+pub fn check_tokens(tokens: &[Token]) -> StyleAnalysis {
     StyleAnalysis {
-        diagnostics: Vec::new(),
+        diagnostics: phrases::check(tokens),
     }
 }
 
@@ -45,7 +47,7 @@ mod tests {
     use crate::syntax_check::Severity;
 
     #[test]
-    fn an_empty_layer_returns_no_diagnostics() {
+    fn clean_prose_has_no_diagnostics() {
         let analysis = check("Talo on kaunis. Kissa istuu.");
         assert!(analysis.diagnostics.is_empty());
     }

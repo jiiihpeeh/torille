@@ -42,6 +42,7 @@ use csv_builders::catalogue::emit_catalogue;
 use csv_builders::sanalista::generate;
 use csv_builders::string_map::{
     emit_adj_degrees, emit_adverbi, emit_connegatives, emit_connectives, emit_lexical_adverbs,
+    emit_style_table,
 };
 use map_builders::front_coded::{
     emit_empty_set, emit_front_coded_set, emit_proper_name_cases, emit_proper_name_lemmas,
@@ -184,6 +185,20 @@ fn main() {
     println!("cargo:rerun-if-changed={}", arguments_csv.display());
     emit_map(&out_dir, &precomputed, "verb_arguments.bin", |raw| {
         emit_verb_arguments(&arguments_csv, raw)
+    });
+
+    // Optional style layer: curated phrase and word tables, keyed by the
+    // literal surface. These are suggestions only and never used by the
+    // spell checker or the grammar pass.
+    let style_phrases_csv = Path::new(&manifest).join("data/style_phrases.csv");
+    let style_words_csv = Path::new(&manifest).join("data/style_words.csv");
+    println!("cargo:rerun-if-changed={}", style_phrases_csv.display());
+    println!("cargo:rerun-if-changed={}", style_words_csv.display());
+    emit_map(&out_dir, &precomputed, "style_phrases.bin", |raw| {
+        emit_style_table(&style_phrases_csv, raw, "style phrases")
+    });
+    emit_map(&out_dir, &precomputed, "style_words.bin", |raw| {
+        emit_style_table(&style_words_csv, raw, "style words")
     });
 
     // Stem maps: `(stem, bases)` pairs from
