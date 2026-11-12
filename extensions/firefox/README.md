@@ -29,8 +29,8 @@ The same keys are read by the content script at startup and on
 Right-click a text field and choose **Tarkista kielioppi**. The check is
 on-demand and does not run on every keystroke. A floating panel lists the
 diagnostics in the checker's rank order; clicking a correction replaces the
-field text. Corrections are applied only to `<textarea>` and `<input>` fields;
-contenteditable shows the diagnostics read-only.
+field text. Textarea and input fields are written directly; contenteditable
+uses a range-aware writer so the surrounding markup stays intact.
 
 ## Temporary add-on (development)
 

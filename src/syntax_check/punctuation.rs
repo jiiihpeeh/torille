@@ -107,18 +107,22 @@ fn missing_separators(
         .collect();
     // A nested item's own words are checked by the child list. The words of
     // the host item before the bracket still need the parent-level check.
-    let child = match item.kind {
-        ListItemKind::List(index) => lists.get(index).map(|list| list.tokens.clone()),
-        _ => None,
+    let children: Vec<_> = match &item.kind {
+        ListItemKind::List(indices) => indices
+            .iter()
+            .filter_map(|&index| lists.get(index))
+            .map(|list| list.tokens.clone())
+            .collect(),
+        _ => Vec::new(),
     };
     let mut diagnostics = Vec::new();
     for pair in words.windows(2) {
         let [left, right] = pair else {
             continue;
         };
-        if child
-            .as_ref()
-            .is_some_and(|range| range.contains(left) || range.contains(right))
+        if children
+            .iter()
+            .any(|range| range.contains(left) || range.contains(right))
         {
             continue;
         }
@@ -420,6 +424,9 @@ fn coordinated_between(tokens: &[Token], left: usize, right: usize) -> bool {
 }
 
 fn comma_between(tokens: &[Token], left: usize, right: usize) -> bool {
+    if left == right {
+        return false;
+    }
     let (start, end) = if left < right {
         (left + 1, right)
     } else {
@@ -611,12 +618,12 @@ fn quote_diagnostics(
     )]
 }
 
-/// Adverbs that are clearly parenthetical on their own.
+/// Cues whose parenthetical can be delimited locally.
 ///
-/// `kuten` is absent because its parenthetical is the following phrase, not
-/// the cue word: `Omena, kuten päärynä, on hedelmä`. A pair around `kuten`
-/// would be wrong, and phrase extent is a later rule.
-const PARENTHETICAL_CUES: &[&str] = &["esimerkiksi"];
+/// `esimerkiksi` is parenthetical on its own. `kuten` is parenthetical over
+/// the following phrase (`Omena, kuten päärynä, on hedelmä`), so its extent
+/// ends at the next predicate.
+const EXAMPLE_CUES: &[&str] = &["esimerkiksi"];
 
 fn parenthetical_diagnostics(
     tokens: &[Token],
@@ -632,10 +639,12 @@ fn parenthetical_diagnostics(
             .collect();
         for (position, &index) in words.iter().enumerate() {
             let lower = tokens[index].text.to_lowercase();
-            if !PARENTHETICAL_CUES.contains(&lower.as_str()) {
+            let example = EXAMPLE_CUES.contains(&lower.as_str());
+            let kuten = lower == "kuten";
+            if !example && !kuten {
                 continue;
             }
-            if position == 0 || position + 1 >= words.len() {
+            if position == 0 {
                 continue;
             }
             if inside_brackets(tokens, clause.tokens.start, index)
@@ -646,8 +655,21 @@ fn parenthetical_diagnostics(
                 continue;
             }
             let left = words[position - 1];
-            let right = words[position + 1];
-            if comma_between(tokens, left, index) || comma_between(tokens, index, right) {
+            if comma_between(tokens, left, index) {
+                continue;
+            }
+            let (last, next) = if example {
+                let Some(&next) = words.get(position + 1) else {
+                    continue;
+                };
+                (index, next)
+            } else {
+                let Some((last, predicate)) = kuten_phrase(&words, position, analysis) else {
+                    continue;
+                };
+                (last, predicate)
+            };
+            if comma_between(tokens, index, last) || comma_between(tokens, last, next) {
                 continue;
             }
             let mut diagnostic = SyntaxDiagnostic::new(
@@ -660,7 +682,7 @@ fn parenthetical_diagnostics(
             diagnostic.corrections = vec![Correction::new(
                 vec![
                     Edit::insertion(tokens[left].end, ","),
-                    Edit::insertion(tokens[index].end, ","),
+                    Edit::insertion(tokens[last].end, ","),
                 ],
                 0.0,
                 "parenthetical_comma",
@@ -669,6 +691,28 @@ fn parenthetical_diagnostics(
         }
     }
     out
+}
+
+/// The last word of a `kuten` phrase and the predicate that closes it.
+///
+/// `Omena kuten päärynä on hedelmä`: the phrase is `kuten päärynä`, and `on`
+/// is the predicate. With no predicate after the cue (`Hän puhui kuten
+/// asiantuntija`) there is no phrase boundary, so the rule stays quiet.
+fn kuten_phrase(
+    words: &[usize],
+    position: usize,
+    analysis: &SyntaxAnalysis,
+) -> Option<(usize, usize)> {
+    let end_position = words
+        .iter()
+        .enumerate()
+        .skip(position + 1)
+        .find(|&(_, &index)| analysis.tokens[index].role == SyntacticRole::Predicate)
+        .map(|(position, _)| position)?;
+    if end_position <= position + 1 {
+        return None;
+    }
+    Some((words[end_position - 1], words[end_position]))
 }
 
 fn inside_brackets(tokens: &[Token], start: usize, index: usize) -> bool {
@@ -798,5 +842,27 @@ mod tests {
     fn a_marked_parenthetical_adverb_is_quiet() {
         assert!(diagnostics("Omena, esimerkiksi, on hyvä.").is_empty());
         assert!(diagnostics("Esimerkiksi omena on hyvä.").is_empty());
+    }
+
+    #[test]
+    fn a_kuten_phrase_gets_a_pair_around_the_phrase() {
+        let found = kind("Omena kuten päärynä on hedelmä.", DiagnosticKind::CommaMissing);
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].severity, Severity::Suggestion);
+        assert_eq!(found[0].corrections[0].edits.len(), 2);
+        assert_eq!(found[0].corrections[0].edits[0].start, 5);
+        assert_eq!(found[0].corrections[0].edits[1].start, 22);
+    }
+
+    #[test]
+    fn a_marked_kuten_phrase_and_a_nonparenthetical_kuten_are_quiet() {
+        for text in [
+            "Omena, kuten päärynä, on hedelmä.",
+            "Omena kuten päärynä, on hedelmä.",
+            "Kuten tiedät, omena on hyvä.",
+            "Hän puhui kuten asiantuntija.",
+        ] {
+            assert!(diagnostics(text).is_empty(), "{text}: {:#?}", diagnostics(text));
+        }
     }
 }

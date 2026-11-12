@@ -73,8 +73,8 @@ gate is `tests/fixtures/syntax_diagnostics.json`.
 Current baseline (2026-11-12):
 
 ```text
-clean rows 109: 0 errors, 0 warnings, 0 suggestions
-cases 50: every emitted kind precision 1.00, recall 1.00
+clean rows 112: 0 errors, 0 warnings, 0 suggestions
+cases 52: every emitted kind precision 1.00, recall 1.00
 ```
 
 Run both gates:
@@ -100,10 +100,10 @@ cargo run --release -p torille-tools --bin check_syntax -- "Koira nukkuvat."
   press, lists diagnostics in rank order and applies corrections.
 - **Firefox / Chromium extensions:** right-click a text field and choose
   **Tarkista kielioppi**. The check is opt-in and runs on one input at a time;
-  a floating panel lists diagnostics and applies corrections to textarea and
-  input fields. The extension calls `check_syntax_with_state` in the wasm
-  worker, which converts UTF-8 byte offsets to UTF-16 before the panel sees
-  them.
+  a floating panel lists diagnostics and applies corrections to textarea,
+  input and contenteditable fields. The extension calls
+  `check_syntax_with_state` in the wasm worker, which converts UTF-8 byte
+  offsets to UTF-16 before the panel sees them.
 - **CLI:** `check_syntax` prints the analysis and diagnostics for one sentence
   or file.
 
@@ -122,19 +122,12 @@ obligatory argument from a suffix or a dictionary class.
 ## Known limitations
 
 - **Word order** is not checked.
-- **Plural completive object suggestions** are deferred: a partitive plural is
-  often homonymous (`kirjoja` belongs to both `kirja` and `kirjo`), so the
-  syntax layer's chosen lemma can name a different word (`kirjot`).
-- **`kuten` parenthetical pairs** are deferred: the parenthetical is the
-  following phrase, not the cue word, and phrase extent is not modelled.
+- **Ambiguous partitive plurals stay quiet.** A plural completive suggestion
+  is offered when every noun base names the same total form (`autoja →
+  autot`); a homonymous surface such as `kirjoja` (`kirja`/`kirjo`) stays
+  quiet instead of naming the wrong word.
 - **Relative clauses are linear.** The host clause is split into contiguous
   ranges; there is no `Clause.parent` or antecedent link.
-- **Nested lists hold one child per item.** A second bracketed list in the
-  same item is not represented yet.
-- **Contenteditable grammar corrections are read-only.** Textarea and input
-  fields can apply a correction; a contenteditable editor shows the diagnostics
-  but not an apply button, because replacing arbitrary rich text needs a
-  range-aware writer.
 - **The extension grammar check is context-menu only.** There is no per-site
   toggle or keystroke trigger yet; the context menu is the opt-in.
 - **No style layer.** Repetition, register and phrasing are out of scope; a

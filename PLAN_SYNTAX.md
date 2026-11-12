@@ -684,10 +684,9 @@ consumer; the checker derives what it needs from the current linear clauses.
 - [ ] **Relative antecedent link.** Point the relative pronoun (or relative
   clause) at its antecedent. Needs a search across the clause boundary and a
   rule for coordinated antecedents; not needed for comma diagnostics.
-- [ ] **Multiple bracketed lists in one item.** `ListItemKind::List(usize)`
-  represents one child. Add `Lists(Vec<usize>)` (or an arena of siblings only)
-  when a real sentence needs two child lists in the same item. The current
-  parser takes the first and leaves the second unrepresented.
+- [x] **Multiple bracketed lists in one item.** `ListItemKind::List(Vec<usize>)`
+  now represents every child in the item; the wasm object exposes `lists` and
+  keeps `list` as the first child for older consumers.
 - [ ] **Clause kind in the analysis layer.** `ClauseKind` currently lives in
   `syntax_check::punctuation` and is derived on demand. Promote it to
   `syntax::Clause` only when a second consumer needs it; do not duplicate the

@@ -15,7 +15,9 @@ use crate::tags::{Case, Number, PartOfSpeech};
 use crate::tokenise::Token;
 
 use super::correction;
-use super::diagnostic::{DiagnosticConfidence, DiagnosticKind, Severity, SyntaxDiagnostic};
+use super::diagnostic::{
+    Correction, DiagnosticConfidence, DiagnosticKind, Severity, SyntaxDiagnostic,
+};
 
 /// Adverbs that mark an ongoing action.
 const PROGRESSIVE_CUES: &[&str] = &[
@@ -115,32 +117,36 @@ fn aspect_suggestion(
         return None;
     }
 
+    let plural_completive = completive && case == Case::Partitive && number == Number::Plural;
     let target = if progressive && is_total(case) {
         (Case::Partitive, number)
     } else if completive && case == Case::Partitive {
         match number {
             Number::Singular => (Case::Genitive, Number::Singular),
-            // Deferred: a partitive plural is often homonymous (`kirjoja` is
-            // both `kirja` and `kirjo`), so the syntax layer's chosen lemma
-            // can be the wrong one and the "total" suggestion would name a
-            // different word (`kirjot`). Stay quiet rather than guess.
-            Number::Plural => return None,
+            // A partitive plural may be homonymous (`kirjoja` belongs to both
+            // `kirja` and `kirjo`). The helper only returns a correction when
+            // every plausible base names the same total form.
+            Number::Plural => (Case::Nominative, Number::Plural),
             _ => return None,
         }
     } else {
         return None;
     };
 
-    let pos = nominal_pos(syntax)?;
-    let lemma = syntax.lemma.as_deref()?;
-    let mut corrections = correction::case_corrections(
-        lemma,
-        &tokens[object],
-        target.0,
-        Some(target.1),
-        pos,
-        crate::spec::Catalogues::embedded(),
-    );
+    let mut corrections = if plural_completive {
+        vec![plural_total_correction(&tokens[object])?]
+    } else {
+        let pos = nominal_pos(syntax)?;
+        let lemma = syntax.lemma.as_deref()?;
+        correction::case_corrections(
+            lemma,
+            &tokens[object],
+            target.0,
+            Some(target.1),
+            pos,
+            crate::spec::Catalogues::embedded(),
+        )
+    };
     for correction in &mut corrections {
         correction.note = "object_case";
     }
@@ -164,6 +170,77 @@ fn is_total(case: Case) -> bool {
     matches!(
         case,
         Case::Genitive | Case::Accusative | Case::Nominative
+    )
+}
+
+/// The nominative plural of an unambiguous partitive plural.
+///
+/// A partitive plural can be homonymous (`kirjoja` belongs to both `kirja`
+/// and `kirjo`), and the syntax layer only keeps one lemma. This helper asks
+/// the base search for every nominal base, generates each nominative plural,
+/// and returns a correction only when every candidate names the same form.
+/// Ambiguous surfaces stay quiet instead of suggesting the wrong word.
+fn plural_total_correction(token: &Token) -> Option<Correction> {
+    let report = crate::expand::find_bases_for_analysis(
+        crate::kotus::lemmas(),
+        crate::spec::Catalogues::embedded(),
+        &token.text.to_lowercase(),
+    );
+    let mut seen_bases: Vec<&str> = Vec::new();
+    let mut seen_words: Vec<String> = Vec::new();
+    let mut candidates: Vec<Correction> = Vec::new();
+    for base in &report.bases {
+        if seen_bases.contains(&base.word) {
+            continue;
+        }
+        seen_bases.push(base.word);
+        let Some(pos) = PartOfSpeech::parse_all(base.part_of_speech)
+            .first()
+            .copied()
+        else {
+            continue;
+        };
+        if !is_nominal_pos(Some(pos)) {
+            continue;
+        }
+        for correction in correction::case_corrections(
+            base.word,
+            token,
+            Case::Nominative,
+            Some(Number::Plural),
+            pos,
+            crate::spec::Catalogues::embedded(),
+        ) {
+            let Some(replacement) = correction
+                .edits
+                .first()
+                .map(|edit| edit.replacement.clone())
+            else {
+                continue;
+            };
+            if seen_words.contains(&replacement) {
+                continue;
+            }
+            seen_words.push(replacement);
+            candidates.push(correction);
+        }
+    }
+    if candidates.len() == 1 {
+        candidates.pop()
+    } else {
+        None
+    }
+}
+
+fn is_nominal_pos(pos: Option<PartOfSpeech>) -> bool {
+    matches!(
+        pos,
+        Some(
+            PartOfSpeech::Noun
+                | PartOfSpeech::Adjective
+                | PartOfSpeech::Pronoun
+                | PartOfSpeech::Ordinal
+        )
     )
 }
 
@@ -353,7 +430,17 @@ mod tests {
     }
 
     #[test]
-    fn a_partitive_plural_stays_quiet_until_the_lemma_is_unambiguous() {
+    fn an_unambiguous_partitive_plural_takes_the_nominative() {
+        let diagnostic = suggestion("Luin autoja loppuun.");
+        assert_eq!(diagnostic.expected.as_deref(), Some("nominative"));
+        assert_eq!(
+            diagnostic.corrections[0].edits[0].replacement,
+            "autot".to_string()
+        );
+    }
+
+    #[test]
+    fn an_ambiguous_partitive_plural_stays_quiet() {
         assert!(diagnostics("Luin kirjoja loppuun.").is_empty());
     }
 

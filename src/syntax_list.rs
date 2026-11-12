@@ -64,13 +64,13 @@ pub enum ListKind {
     Mixed,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ListItemKind {
     Word,
     Phrase,
     Clause,
-    /// Nested list, index into `analysis.lists`.
-    List(usize),
+    /// Nested lists, indices into `analysis.lists`.
+    List(Vec<usize>),
 }
 
 impl ListKind {
@@ -85,7 +85,7 @@ impl ListKind {
 }
 
 impl ListItemKind {
-    pub fn name(self) -> &'static str {
+    pub fn name(&self) -> &'static str {
         match self {
             ListItemKind::Word => "word",
             ListItemKind::Phrase => "phrase",
@@ -99,7 +99,8 @@ impl ListItemKind {
 ///
 /// The arena is post-order: a nested list is pushed before the list that
 /// contains it, so `parent` indices are always smaller than the list itself.
-/// `ListItemKind::List(index)` names the child from the parent's `items`.
+/// `ListItemKind::List(indices)` names the children from the parent's
+/// `items`.
 pub fn parse(tokens: &[Token], clauses: &[Clause], out: &[TokenSyntax]) -> Vec<List> {
     let mut lists = Vec::new();
     for (clause_index, clause) in clauses.iter().enumerate() {
@@ -180,17 +181,17 @@ fn parse_clause(
         .map(|&(first, end)| list_item(first, end, clause.tokens.end, tokens, out))
         .collect();
     // Children are appended before the parent, so the arena stays post-order.
-    // An item represents one child; a second parenthetical list in the same
-    // item is left for a later `Lists(Vec<usize>)` shape.
-    let mut child_of: Vec<Option<usize>> = vec![None; items.len()];
+    let mut children_of: Vec<Vec<usize>> = vec![Vec::new(); items.len()];
     for (item_index, item) in items.iter().enumerate() {
-        child_of[item_index] = nested_in_item(item, clause_index, tokens, out, lists);
+        children_of[item_index] = nested_in_item(item, clause_index, tokens, out, lists);
     }
     let parent_index = lists.len();
-    for (item_index, child) in child_of.iter().enumerate() {
-        if let Some(child) = child {
-            lists[*child].parent = Some(parent_index);
-            items[item_index].kind = ListItemKind::List(*child);
+    for (item_index, children) in children_of.iter().enumerate() {
+        for &child in children {
+            lists[child].parent = Some(parent_index);
+        }
+        if !children.is_empty() {
+            items[item_index].kind = ListItemKind::List(children.clone());
         }
     }
     let kind = classify(&items, out);
@@ -229,15 +230,15 @@ fn parse_clause(
 /// Parse a bracketed list inside one item: `omena (pieniä, makeita)`.
 ///
 /// Only the outermost bracket pairs are considered, each needs at least two
-/// words and a top-level comma. The first child list is appended to the arena
-/// and its index returned; the caller sets the item kind and the parent link.
+/// words and a top-level comma. Every child list is appended to the arena and
+/// its index returned; the caller sets the item kind and the parent links.
 fn nested_in_item(
     item: &ListItem,
     clause_index: usize,
     tokens: &[Token],
     out: &[TokenSyntax],
     lists: &mut Vec<List>,
-) -> Option<usize> {
+) -> Vec<usize> {
     let mut stack: Vec<(usize, char)> = Vec::new();
     let mut pairs: Vec<(usize, usize)> = Vec::new();
     for index in item.scan.clone() {
@@ -275,6 +276,7 @@ fn nested_in_item(
         })
         .collect();
 
+    let mut children = Vec::new();
     for (start, end) in outer {
         if top_level_commas(tokens, start, end).is_empty() {
             continue;
@@ -294,10 +296,10 @@ fn nested_in_item(
             existential: false,
         };
         if let Some(child) = parse_clause(clause_index, &clause, tokens, out, lists) {
-            return Some(child);
+            children.push(child);
         }
     }
-    None
+    children
 }
 
 /// Where the list begins: after a colon introducer, or after the last finite
@@ -543,11 +545,33 @@ mod tests {
         assert_eq!(lists[parent].items.len(), 3);
         assert_eq!(lists[child].items.len(), 2);
         assert!(matches!(
-            lists[parent].items[1].kind,
-            ListItemKind::List(index) if index == child
+            &lists[parent].items[1].kind,
+            ListItemKind::List(indices) if indices == &vec![child]
         ));
         assert_eq!(&tokens[lists[child].items[0].tokens.start].text, "pieniä");
         assert_eq!(&tokens[lists[child].items[1].tokens.start].text, "makeita");
+    }
+
+    #[test]
+    fn one_item_can_hold_two_child_lists() {
+        let (_, lists) = lists(
+            "Ostin omenoita, appelsiineja (pieniä, makeita) (happamia, raikkaita) ja banaaneja.",
+        );
+        assert_eq!(lists.len(), 3, "{lists:#?}");
+        let parent = lists.iter().position(|list| list.parent.is_none()).unwrap();
+        let children: Vec<usize> = lists[parent]
+            .items
+            .iter()
+            .find_map(|item| match &item.kind {
+                ListItemKind::List(indices) => Some(indices.clone()),
+                _ => None,
+            })
+            .expect("the middle item should hold children");
+        assert_eq!(children.len(), 2, "{lists:#?}");
+        for child in children {
+            assert_eq!(lists[child].parent, Some(parent));
+            assert_eq!(lists[child].items.len(), 2);
+        }
     }
 
     #[test]

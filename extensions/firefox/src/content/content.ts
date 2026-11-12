@@ -700,6 +700,7 @@ import {
     describeInput: typeof describeInput;
   }): { host: HTMLElement; overlay: HTMLElement;
          workerClient: ReturnType<typeof createWorkerClient>;
+         applyTextEdits: (edits: R_SyntaxEdit[]) => boolean;
          initialRender: () => void; refresh: () => void;
          setVisible: (visible: boolean) => void;
          setDebug: (on: boolean) => void; destroy: () => void } {
@@ -718,6 +719,7 @@ import {
     describeInput: typeof describeInput;
   }): { host: HTMLElement; overlay: HTMLElement;
          workerClient: ReturnType<typeof createWorkerClient>;
+         applyTextEdits: (edits: R_SyntaxEdit[]) => boolean;
          initialRender: () => void; refresh: () => void;
          setVisible: (visible: boolean) => void;
          setDebug: (on: boolean) => void; destroy: () => void } {
@@ -1348,6 +1350,14 @@ import {
       host,
       overlay,
       workerClient,
+      applyTextEdits(edits: R_SyntaxEdit[]): boolean {
+        const current = input.value;
+        const updated = applySyntaxEdits(current, edits);
+        if (updated === current) return false;
+        input.value = updated;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        return true;
+      },
       initialRender() { void render(); },
       refresh() { scheduleRender(); },
       setVisible(visible: boolean) {
@@ -1403,6 +1413,7 @@ import {
     describeInput: typeof describeInput;
   }): { host: HTMLElement; overlay: HTMLElement;
          workerClient: ReturnType<typeof createWorkerClient>;
+         applyTextEdits: (edits: R_SyntaxEdit[]) => boolean;
          initialRender: () => void; refresh: () => void;
          setVisible: (visible: boolean) => void;
          setDebug: (on: boolean) => void; destroy: () => void } {
@@ -1825,6 +1836,28 @@ import {
       host,
       overlay: host,
       workerClient,
+      applyTextEdits(edits: R_SyntaxEdit[]): boolean {
+        const ordered = [...edits].sort(
+          (a, b) => (b.start - a.start) || (b.end - a.end));
+        let changed = false;
+        for (const edit of ordered) {
+          const start = textNodeAt(edit.start);
+          const end = textNodeAt(edit.end);
+          if (!start || !end) continue;
+          const range = document.createRange();
+          range.setStart(start.node, start.offset);
+          range.setEnd(end.node, end.offset);
+          range.deleteContents();
+          if (edit.replacement !== '') {
+            range.insertNode(document.createTextNode(edit.replacement));
+          }
+          changed = true;
+        }
+        if (changed) {
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        return changed;
+      },
       initialRender() {
         if (HIGHLIGHTS_SUPPORTED) void renderMisspellHighlights();
       },
@@ -1960,11 +1993,6 @@ import {
     return out;
   }
 
-  function canApplySyntax(input: HTMLElement): boolean {
-    return input instanceof HTMLTextAreaElement
-      || input instanceof HTMLInputElement;
-  }
-
   function editorText(input: HTMLElement): string {
     if (input instanceof HTMLTextAreaElement
         || input instanceof HTMLInputElement) {
@@ -1973,19 +2001,10 @@ import {
     return input.textContent ?? '';
   }
 
-  function setEditorText(input: HTMLElement, text: string): void {
-    if (input instanceof HTMLTextAreaElement
-        || input instanceof HTMLInputElement) {
-      input.value = text;
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-  }
-
   function showGrammarPanel(
     input: HTMLElement,
-    text: string,
     diagnostics: R_SyntaxDiagnostic[],
-    onApply: (newText: string) => void,
+    apply: (correction: R_SyntaxCorrection) => boolean,
   ): void {
     document.querySelector('.torille-grammar-panel')?.remove();
     const panel = document.createElement('div');
@@ -2065,19 +2084,9 @@ import {
             button.textContent = syntaxCorrectionLabel(correction);
             button.style.cssText =
               'font:inherit;padding:0.15em 0.5em;margin:0 4px 0 0;cursor:pointer;';
-            if (canApplySyntax(input)) {
-              button.addEventListener('click', () => {
-                if (editorText(input) !== text) {
-                  // The text changed after the check; the offsets are stale.
-                  panel.remove();
-                  return;
-                }
-                onApply(applySyntaxEdits(text, correction.edits));
-                panel.remove();
-              });
-            } else {
-              button.disabled = true;
-            }
+            button.addEventListener('click', () => {
+              if (apply(correction)) panel.remove();
+            });
             actions.append(button);
           }
           item.append(actions);
@@ -2085,12 +2094,6 @@ import {
         list.append(item);
       }
       panel.append(list);
-      if (!canApplySyntax(input)) {
-        const note = document.createElement('p');
-        note.textContent = 'Korjaukset ovat toistaiseksi vain tekstikentille.';
-        note.style.cssText = 'color:#666;font-size:0.85em;margin:6px 0 0;';
-        panel.append(note);
-      }
     }
     document.body.append(panel);
   }
@@ -2342,8 +2345,10 @@ import {
       const text = editorText(input);
       overlay.workerClient.checkSyntaxAsync(text).then((diagnostics) => {
         if (diagnostics === null) return;
-        showGrammarPanel(input, text, diagnostics, (newText) => {
-          setEditorText(input, newText);
+        showGrammarPanel(input, diagnostics, (correction) => {
+          // If the field changed after the check, the offsets are stale.
+          if (editorText(input) !== text) return false;
+          return overlay.applyTextEdits(correction.edits);
         });
       }).catch((e: unknown) => {
         dbg('content', 'checkGrammar failed', String(e));

@@ -208,8 +208,8 @@ pub fn hyphenate(
 ///
 /// `lists` is post-order: a nested list comes before its parent, and a
 /// parent's `parent` is always a smaller index (or null for a top-level list).
-/// An item whose `kind` is `list` also carries `list`, the index of its child
-/// list in the same array.
+/// An item whose `kind` is `list` also carries `lists`, every child index in
+/// the same array; `list` repeats the first child for older consumers.
 #[wasm_bindgen]
 pub fn analyze_syntax(text: &str) -> js_sys::Object {
     let tokens = torille::tokenise::tokenise(text);
@@ -373,8 +373,15 @@ fn syntax_object(
                 JsValue::from(list_item.tokens.end as u32),
             );
             set(&child, "kind", JsValue::from(list_item.kind.name()));
-            if let torille::syntax_list::ListItemKind::List(index) = list_item.kind {
-                set(&child, "list", JsValue::from(index as u32));
+            if let torille::syntax_list::ListItemKind::List(indices) = &list_item.kind {
+                let nested = Array::new();
+                for &index in indices {
+                    nested.push(&JsValue::from(index as u32));
+                }
+                set(&child, "lists", nested.into());
+                if let Some(&first) = indices.first() {
+                    set(&child, "list", JsValue::from(first as u32));
+                }
             }
             items.push(&child);
         }

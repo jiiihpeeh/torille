@@ -451,6 +451,32 @@
       ]
     },
     {
+      "id": "aspect_completive_plural",
+      "text": "Luin autoja loppuun.",
+      "diagnostics": [
+        {
+          "kind": "object_case",
+          "severity": "suggestion",
+          "start": 5,
+          "end": 11,
+          "corrections": ["autot"]
+        }
+      ]
+    },
+    {
+      "id": "kuten_comma_pair",
+      "text": "Omena kuten päärynä on hedelmä.",
+      "diagnostics": [
+        {
+          "kind": "comma_missing",
+          "severity": "suggestion",
+          "start": 6,
+          "end": 11,
+          "corrections": [","]
+        }
+      ]
+    },
+    {
       "id": "question_mark_missing",
       "text": "Missä sinä asut.",
       "diagnostics": [
@@ -627,6 +653,10 @@
     "Ostin omenoita; appelsiineja ja banaaneja.",
     "Omena, esimerkiksi, on hyvä.",
     "Esimerkiksi omena on hyvä.",
-    "Omena kuten päärynä on hedelmä."
+    "Omena, kuten päärynä, on hedelmä.",
+    "Omena kuten päärynä, on hedelmä.",
+    "Kuten tiedät, omena on hyvä.",
+    "Hän puhui kuten asiantuntija.",
+    "Luin kirjoja loppuun."
   ]
 }

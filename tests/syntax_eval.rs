@@ -61,8 +61,14 @@ fn the_evaluation_clean_rows_have_no_errors() {
                     diagnostic.span.start,
                     diagnostic.span.end
                 )),
-                Severity::Warning => warnings += 1,
-                Severity::Suggestion => suggestions += 1,
+                Severity::Warning => {
+                    warnings += 1;
+                    eprintln!("clean warning: {text:?}: {}", diagnostic.kind.name());
+                }
+                Severity::Suggestion => {
+                    suggestions += 1;
+                    eprintln!("clean suggestion: {text:?}: {}", diagnostic.kind.name());
+                }
             }
         }
     }

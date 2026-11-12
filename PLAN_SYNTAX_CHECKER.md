@@ -954,7 +954,7 @@ The exact-output fixture proves individual rules; it does not measure how
 often the checker is wrong on real prose. `tests/fixtures/syntax_eval.json` is
 the second, larger corpus for aggregate evaluation:
 
-- 159 sentences at the current baseline: 109 clean and 50 with expected
+- 164 sentences at the current baseline: 112 clean and 52 with expected
   diagnostics;
 - one row per sentence, with the expected kind(s);
 - every emitted kind represented, plus the guards named in §13;
@@ -1158,10 +1158,10 @@ Design:
 - A progressive cue plus a total object (genitive singular, nominative plural,
   or accusative) suggests the partitive.
 - A completive cue plus a partitive object suggests the total object. For a
-  singular object the target is the **genitive**. Plural is deferred: a
-  partitive plural is often homonymous (`kirjoja` belongs to both `kirja` and
-  `kirjo`), so the syntax layer's chosen lemma can produce a different word
-  (`kirjot`). Stay quiet until the reading carries per-lemma candidates.
+  singular object the target is the **genitive**. For a plural object the
+  target is the **nominative**, but only when every nominal base for the
+  surface names the same form (`autoja → autot`). A homonymous surface such as
+  `kirjoja` (`kirja`/`kirjo`) stays quiet instead of naming the wrong word.
 - The diagnostic is `Suggestion`, `DiagnosticConfidence::Medium`, one
   correction, never an `Error`.
 - If the cue and the object are in different clauses, stay quiet.
@@ -1177,7 +1177,8 @@ Luen parhaillaan kirjaa.   # clean
 Luin kirjan loppuun.       # clean
 Luen kirjan.               # clean: no aspect cue
 Luen kirjaa.               # clean: no aspect cue
-Luin kirjoja loppuun.      # clean: plural completive deferred
+Luin autoja loppuun.       → suggestion: Luin autot loppuun.
+Luin kirjoja loppuun.      # clean: ambiguous base (kirja/kirjo)
 ```
 
 The clean corpus must stay free of `Error`; suggestions are allowed only on
@@ -1190,7 +1191,8 @@ Tasks:
 - [x] Add the two suggestion cases and the clean rows to the fixture.
 - [x] Add unit tests for the cues, the matching cases, the parenthetical guard
       and the no-cue path.
-- [x] Defer plural completive with an explicit guard and test.
+- [x] Support plural completive when the base is unambiguous; stay quiet on
+      homonyms, with a test for both.
 
 Implementation notes:
 
@@ -1198,8 +1200,9 @@ Implementation notes:
   `viimeistään` is omitted: its “at the latest” reading is not completion.
 - A cue inside a parenthetical is ignored (`Luen (parhaillaan) kirjan.`).
 - The object is taken from `Clause.object`; a clause without one stays quiet.
-- The plural completive path is deliberately silent until a partitive plural
-  can name its lemma without the homonym risk.
+- The plural completive path asks `find_bases_for_analysis` for every nominal
+  base and only emits when all bases agree on one nominative plural. `autoja`
+  suggests `autot`; `kirjoja` stays quiet.
 
 #### Phase 5C — missing and extra arguments, warning only
 
@@ -1384,9 +1387,9 @@ Implementation notes:
   word is interrogative or carries `-ko`/`-kö`. It replaces the final `.`, or
   inserts `?` before a closing quote/bracket. Indirect questions and
   `kuka tahansa`-style indefinites stay quiet.
-- The parenthetical pair is `Suggestion` only and currently limited to
-  `esimerkiksi`. `kuten` is deferred because its parenthetical is the following
-  phrase, not the cue word.
+- The parenthetical pair is `Suggestion` only. `esimerkiksi` is delimited
+  around the cue; `kuten` is delimited around the following phrase, ending at
+  the next predicate.
 - An unbalanced quote is one `Warning` at the end of the document; quote style
   and dialogue dashes are never corrected.
 
@@ -1424,9 +1427,8 @@ Implementation notes:
 - The worker converts the checker's UTF-8 byte offsets to UTF-16 before the
   content script slices a JS string; the integration test uses `Äiti …` to
   catch a drift.
-- Corrections are applied only to `<textarea>` and `<input>`; a
-  contenteditable editor shows the diagnostics read-only because a range-aware
-  writer is a separate problem.
+- Textarea and input fields write the corrected value directly; contenteditable
+  maps each edit to a DOM Range, so the surrounding markup stays intact.
 
 #### Phase 6D — evaluation corpus
 
@@ -1455,8 +1457,8 @@ Tasks:
 First baseline (2026-11-12):
 
 ```text
-clean rows 109: 0 errors, 0 warnings, 0 suggestions
-cases 50: every emitted kind precision 1.00, recall 1.00
+clean rows 112: 0 errors, 0 warnings, 0 suggestions
+cases 52: every emitted kind precision 1.00, recall 1.00
 ```
 
 The baseline is a snapshot, not a target: a new rule that adds an extra
@@ -1566,9 +1568,8 @@ than one that is unsure about twenty.
 
 Lists, including nested lists, are part of the landed checker. The checker
 surface in §16 is complete. Deferred edge cases remain documented in
-`docs/syntax_checker.md`: plural completive object case, `kuten` phrase
-extent, linear relative clauses and one child list per item. Word order stays
-deferred.
+`docs/syntax_checker.md`: linear relative clauses and the context-menu-only
+extension trigger. Word order stays deferred.
 
 ## 16. Remaining work index
 
@@ -1581,7 +1582,7 @@ Ordered by user-facing value. Each item points at the phase that specifies it.
 3. [x] **Punctuation phase 2** — phase 6B. Semicolon boundaries, question-mark
    diagnostics, unbalanced quotes, advisory parenthetical pairs, no
    quote-style corrections.
-4. [x] **Evaluation corpus** — phase 6D. 159 sentences, zero `Error` on clean
+4. [x] **Evaluation corpus** — phase 6D. 164 sentences, zero `Error` on clean
    rows, per-kind baseline recorded.
 5. [x] **UI and edit application** — phase 6C. Leptos panel, reverse-order edit
    replay, and the opt-in browser-extension grammar check with a floating

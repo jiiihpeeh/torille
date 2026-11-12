@@ -114,7 +114,10 @@
     "Ostin omenoita; appelsiineja ja banaaneja.",
     "Omena, esimerkiksi, on hyvä.",
     "Esimerkiksi omena on hyvä.",
-    "Omena kuten päärynä on hedelmä."
+    "Omena, kuten päärynä, on hedelmä.",
+    "Omena kuten päärynä, on hedelmä.",
+    "Kuten tiedät, omena on hyvä.",
+    "Hän puhui kuten asiantuntija."
   ],
   "cases": [
     {
@@ -463,6 +466,20 @@
     {
       "id": "eval_parenthetical_comma",
       "text": "Omena esimerkiksi on hyvä.",
+      "kinds": [
+        "comma_missing"
+      ]
+    },
+    {
+      "id": "eval_aspect_completive_plural",
+      "text": "Luin autoja loppuun.",
+      "kinds": [
+        "object_case"
+      ]
+    },
+    {
+      "id": "eval_kuten_comma_pair",
+      "text": "Omena kuten päärynä on hedelmä.",
       "kinds": [
         "comma_missing"
       ]

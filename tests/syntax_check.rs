@@ -188,6 +188,8 @@ diagnostic_tests!(
     extra_argument,
     aspect_progressive_suggestion,
     aspect_completive_suggestion,
+    aspect_completive_plural,
+    kuten_comma_pair,
     question_mark_missing,
     question_mark_ko,
     question_mark_quoted,
