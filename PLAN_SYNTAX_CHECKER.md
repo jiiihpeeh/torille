@@ -1595,5 +1595,8 @@ Ordered by user-facing value. Each item points at the phase that specifies it.
    separate opt-in analyzer would reopen it.
 
 Deferred analysis refinements live in `PLAN_SYNTAX.md` §“Remaining analysis
-refinements”: relative-clause nesting, antecedent linking, and a multi-child
-list shape. None is a blocker for the checker work above.
+refinements”: relative-clause nesting and antecedent linking. None is a blocker
+for the checker work above.
+
+The modularisation plan for `syntax.rs`, `syntax_check/` and the extension
+content script is [`PLAN_SYNTAX_REFACTOR.md`](PLAN_SYNTAX_REFACTOR.md).

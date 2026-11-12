@@ -23,6 +23,8 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
 - `docs/lexicon.md` — the materialised noun lexicon used as the harness oracle.
 - `docs/syntax_checker.md` — grammar diagnostics, severity policy, corrections,
   evaluation and known limitations.
+- `PLAN_SYNTAX_REFACTOR.md` — the modularisation plan for `syntax.rs`,
+  `syntax_check/` and the extension content script.
 - `docs/hyphenation.md` — line-break hyphenation: patterns, compound adapter,
   policy, offsets and exceptions. The plan is `PLAN_HYPHENATION.md`.
 - `TODO.md` — known gaps ordered by user-facing impact.

@@ -280,6 +280,8 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
 
 - [`docs/syntax_checker.md`](docs/syntax_checker.md) — grammar diagnostics,
   severity policy, corrections, evaluation and known limitations.
+- [`PLAN_SYNTAX_REFACTOR.md`](PLAN_SYNTAX_REFACTOR.md) — a phased
+  modularisation plan for the syntax layer, checker and extension content.
 - [`docs/harness.md`](docs/harness.md) — the verification harness, baselines
   and the table of known defects.
 - [`docs/hyphenation.md`](docs/hyphenation.md) — patterns, compound adapter,
