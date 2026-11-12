@@ -164,10 +164,7 @@ mod tests {
     fn a_style_correction_applies_from_the_end() {
         let check = style_check::check("Tällä hetkellä tilanne on rauhallinen.");
         let correction = &check.diagnostics[0].corrections[0];
-        let updated = apply_correction(
-            "Tällä hetkellä tilanne on rauhallinen.",
-            &correction.edits,
-        );
+        let updated = apply_correction("Tällä hetkellä tilanne on rauhallinen.", &correction.edits);
         assert_eq!(updated, "Nyt tilanne on rauhallinen.");
     }
 }
