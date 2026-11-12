@@ -1,7 +1,8 @@
 # PLAN_SYNTAX — making the advisory syntax layer trustworthy
 
-Status: audit and fixture complete; Phases 1–4 landed (S1–S18). Work happens
-on the `syntax` branch off `master`.
+Status: audit and fixture complete; Phases 1–4 landed (S1–S18), and Phase 6
+has removed the suggestion-payload cost. Phase 5 (API contract) is open. Work
+happens on the `syntax` branch off `master`.
 
 The syntax layer (`src/syntax.rs`) is the second, on-demand layer over the
 morphology engine. It is **not** in the keystroke path; its only shipping
@@ -496,6 +497,26 @@ per-document cache in the wasm layer. Measure before and after on
 `examples/syntax_probe_sentences.txt`; the target is tens of milliseconds per
 sentence, not seconds. Do not make the keystroke path depend on this layer.
 
+**Phase 6 landing.** `find_bases_for_analysis` runs the walks with the cheap
+paradigm probe (`lemma_emit`), and the syntax layer inflects only the winning
+bases instead of building the suggestion pool. The recognition branch is
+shared with `find_bases_for_check`, so the checker gets the same speedup; the
+reverse-lookup recall gate (99.89% of answers include the right base, exit 0)
+and the engine-output comparison (no lost forms or stem pairs) still pass.
+Measured on this machine:
+
+| workload | before | after |
+|---|---|---|
+| `syntax::tests` (26 tests) | ~32 s | ~1.6 s |
+| 34-case corpus | ~43–53 s | ~2.3 s |
+| full lib suite | ~218 s | ~141 s |
+| one sentence, process included | ~2 s | ~0.2 s |
+
+A fresh word still pays for its first paradigm build, so a 60-sentence probe
+process is ~8 s (~140 ms/sentence); repeated lemmas are cached. The target is
+tens of milliseconds per sentence, so the remaining step is a per-document
+`WordAnalysis` cache in the wasm layer, not another search rewrite.
+
 ## Phases
 
 Each phase is a separate commit with tests. Do not mix a data regeneration
@@ -606,15 +627,15 @@ adverbial. `Sami söi puuron, koska oli nälkäinen.` -> second clause shares
 - [ ] Add a wasm/integration check that the JSON keys still match the doc
       comment.
 
-### Phase 6 — make it affordable before a UI uses it (S20)
+### Phase 6 — make it affordable before a UI uses it (S20) — mostly landed
 
-- [ ] Replace the suggestion-payload base search with a recognition-only
-      resolution plus one inflection of the winning base, or cache per
-      document in the wasm layer.
-- [ ] Record before/after wall and CPU time for
-      `examples/syntax_probe_sentences.txt` in this file.
-- [ ] Do not ship an interactive consumer until a paragraph is tens of
-      milliseconds, not seconds.
+- [x] Replace the suggestion-payload base search with a recognition-only
+      resolution plus one inflection of the winning bases.
+- [x] Record before/after wall and CPU time in S20 above.
+- [ ] Add a per-document `WordAnalysis` cache in the wasm layer; a fresh word
+      still pays its first paradigm build, so a paragraph is ~140 ms/sentence
+      rather than tens of milliseconds.
+- [ ] Do not ship an interactive consumer until the remaining cache lands.
 
 ## Non-goals
 

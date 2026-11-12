@@ -22,7 +22,7 @@
 use std::collections::HashMap;
 use std::ops::Range;
 
-use crate::expand::find_bases_with_form_filter;
+use crate::expand::find_bases_for_analysis;
 use crate::kotus::lemmas;
 use crate::sentence::{self, SentenceSpan};
 use crate::spec::Catalogues;
@@ -336,9 +336,12 @@ fn resolve_word_plain(
     cat: &Catalogues,
     lower: &str,
 ) -> WordAnalysis {
-    let report = find_bases_with_form_filter(lexicon, cat, lower, |form| form == lower);
+    // Recognition-only search: it uses the shared paradigm probe rather than
+    // building the suggestion pool's forms and neighbours for every candidate.
+    // The readings are produced below for the few winning bases only.
+    let report = find_bases_for_analysis(lexicon, cat, lower);
     let mut out = WordAnalysis {
-        exact: !report.direct.is_empty() || !report.forms.is_empty(),
+        exact: !report.direct.is_empty(),
         ..WordAnalysis::default()
     };
 
@@ -348,32 +351,28 @@ fn resolve_word_plain(
         out.lemma = Some(direct.word().to_string());
     }
 
-    for source in &report.forms {
-        if source.form.word != lower {
+    let mut seen: Vec<&str> = Vec::new();
+    for direct in &report.direct {
+        let word = direct.word();
+        seen.push(word);
+        let pos = PartOfSpeech::parse_all(direct.part_of_speech())
+            .first()
+            .copied();
+        let inflections: Vec<_> = direct.inflections().collect();
+        if add_forms_from_lemma(word, &inflections, pos, lower, cat, &mut out) {
+            out.exact = true;
+        }
+    }
+    for base in &report.bases {
+        if seen.contains(&base.word) {
             continue;
         }
-        if out.lemma.is_none() {
-            out.lemma = Some(source.lemma.to_string());
-        }
-        let pos = lemma_pos(source.lemma);
-        for reading in &source.form.readings {
-            add_reading(&mut out.readings, reading_with_pos(*reading, pos));
-        }
-        let form_has_finite = source
-            .form
-            .readings
-            .iter()
-            .any(|reading| is_finite_predicate(&reading_with_pos(*reading, pos)));
-        if form_has_finite {
-            out.verb_lemma = Some(source.lemma.to_string());
-        }
-        let form_has_nominal = source
-            .form
-            .readings
-            .iter()
-            .any(|reading| is_nominal_pos(reading_with_pos(*reading, pos).part_of_speech));
-        if form_has_nominal && is_nominal_pos(pos) {
-            out.nominal_lemma = Some(source.lemma.to_string());
+        seen.push(base.word);
+        let pos = PartOfSpeech::parse_all(base.part_of_speech)
+            .first()
+            .copied();
+        if add_forms_from_lemma(base.word, &base.inflections, pos, lower, cat, &mut out) {
+            out.exact = true;
         }
     }
 
@@ -479,6 +478,44 @@ fn cheap_base(lower: &str) -> Option<String> {
         NormalizedOutcome::Inflected { base, .. } => Some(base),
         NormalizedOutcome::Unknown => None,
     }
+}
+
+/// Inflect one known base and add the readings of `lower` to `out`.
+///
+/// Returns true when the base emits the exact surface. The base search has
+/// already decided which lemmas can produce it; this is the only inflection
+/// the syntax path does, so the suggestion pool's full form list is never
+/// built.
+fn add_forms_from_lemma(
+    base: &str,
+    inflections: &[crate::kotus::Inflection],
+    pos: Option<PartOfSpeech>,
+    lower: &str,
+    cat: &Catalogues,
+    out: &mut WordAnalysis,
+) -> bool {
+    let pos = pos.unwrap_or(PartOfSpeech::Unknown);
+    let mut exact = false;
+    for form in crate::expand::inflect_all(base, inflections, cat, None, pos, true) {
+        if form.word != lower {
+            continue;
+        }
+        exact = true;
+        if out.lemma.is_none() {
+            out.lemma = Some(base.to_string());
+        }
+        for reading in &form.readings {
+            let tags = reading_with_pos(*reading, Some(pos));
+            add_reading(&mut out.readings, tags);
+            if is_finite_predicate(&tags) {
+                out.verb_lemma = Some(base.to_string());
+            }
+            if is_nominal_pos(tags.part_of_speech) {
+                out.nominal_lemma = Some(base.to_string());
+            }
+        }
+    }
+    exact
 }
 
 /// Inflect `base` and add the readings for `lower`.

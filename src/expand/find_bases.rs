@@ -138,7 +138,7 @@ pub fn find_bases_with<'a>(
     find_bases_with_inner(
         lexicon, cat, word, /* with_clitic_phase */ true, /* keep_form */ None,
         /* collect_neighbours */ true, /* recognition_only */ false,
-        /* all_phases */ false,
+        /* all_phases */ false, /* keep_walking_with_direct */ false,
     )
 }
 
@@ -167,6 +167,7 @@ where
         /* collect_neighbours */ true,
         /* recognition_only */ false,
         /* all_phases */ false,
+        /* keep_walking_with_direct */ false,
     )
 }
 
@@ -191,6 +192,7 @@ pub fn find_all_bases_with<'a>(
         /* collect_neighbours */ false,
         /* recognition_only */ false,
         /* all_phases */ true,
+        /* keep_walking_with_direct */ false,
     )
 }
 
@@ -210,6 +212,42 @@ pub(crate) fn find_bases_for_check<'a>(
         /* collect_neighbours */ false,
         /* recognition_only */ true,
         /* all_phases */ false,
+        /* keep_walking_with_direct */ false,
+    )
+}
+
+/// The recognition-only search for callers that need every reading of a
+/// surface, not just the first base.
+///
+/// A direct lemma short-circuits [`find_bases_for_check`], which is right for
+/// the checker but wrong for the syntax layer: `lasta` is a lemma (a splinter)
+/// and also the partitive of `lapsi`, and stopping at the direct lemma would
+/// lose the subject/object reading. This variant keeps walking after a direct
+/// lemma, but still uses the cheap paradigm probe and stops at the first walk
+/// phase that finds a base.
+pub(crate) fn find_bases_for_analysis<'a>(
+    lexicon: &'a [Lemma<'a>],
+    cat: &Catalogues,
+    word: &str,
+) -> BasesReport<'a> {
+    // The extra walk exists to recover a homonym hidden behind a direct
+    // lemma (`lasta` is a lemma and the partitive of `lapsi`). A word with
+    // no direct lemma has nothing to hide behind, so it can stop as soon as
+    // phase 1 finds its base.
+    let has_direct = crate::kotus::sanalista()
+        .by_word(&word.to_ascii_lowercase())
+        .next()
+        .is_some();
+    find_bases_with_inner(
+        lexicon,
+        cat,
+        word,
+        /* with_clitic_phase */ true,
+        Some(&|_| false),
+        /* collect_neighbours */ false,
+        /* recognition_only */ true,
+        /* all_phases */ false,
+        /* keep_walking_with_direct */ has_direct,
     )
 }
 
@@ -764,6 +802,7 @@ fn find_bases_with_inner<'a>(
     collect_neighbours: bool,
     recognition_only: bool,
     all_phases: bool,
+    keep_walking_with_direct: bool,
 ) -> BasesReport<'a> {
     let index = LexiconIndex::new(lexicon);
     let pos = PartOfSpeech::Noun;
@@ -790,7 +829,7 @@ fn find_bases_with_inner<'a>(
     // Recognition returns as soon as the direct lemma answers: the walk
     // phases below exist to collect the suggestion pool's neighbours and
     // forms, and `find_bases_for_check` does not need either.
-    if recognition_only && !direct.is_empty() {
+    if recognition_only && !direct.is_empty() && !keep_walking_with_direct {
         return BasesReport {
             direct,
             bases,
@@ -817,7 +856,7 @@ fn find_bases_with_inner<'a>(
         bases.push(&lexicon[idx]);
     }
 
-    if recognition_only && !bases.is_empty() {
+    if recognition_only && !bases.is_empty() && !keep_walking_with_direct {
         return BasesReport {
             direct,
             bases,
@@ -836,6 +875,12 @@ fn find_bases_with_inner<'a>(
     }
     let mut forms: Vec<SourcedForm<'a>> = Vec::new();
     for lemma in &candidates {
+        if recognition_only {
+            if lemma_emit(cat, lemma, word, pos, possessives) {
+                bases.push(lemma);
+            }
+            continue;
+        }
         let generated = inflect_all(
             lemma.word,
             &lemma.inflections,
@@ -866,8 +911,10 @@ fn find_bases_with_inner<'a>(
 
     // Recognition can stop here: phase 1 found the base. Phases 1.5-4 exist
     // to find bases the head/tail ranges missed and to fill the ranker's
-    // neighbour list, and the checker needs neither.
-    if recognition_only && !bases.is_empty() {
+    // neighbour list, and the checker needs neither. The analysis search
+    // keeps going through phase 1.5 so a homonym behind a direct lemma
+    // (`lapsi` behind `lasta`) is not lost.
+    if recognition_only && !bases.is_empty() && !keep_walking_with_direct {
         return BasesReport {
             direct,
             bases,
@@ -925,6 +972,7 @@ fn find_bases_with_inner<'a>(
             &word_lc,
             keep_form,
             collect_neighbours,
+            recognition_only,
             pos,
             possessives,
         );
@@ -957,6 +1005,7 @@ fn find_bases_with_inner<'a>(
             &mut forms,
             keep_form,
             collect_neighbours,
+            recognition_only,
             3,
         );
     }
@@ -976,6 +1025,7 @@ fn find_bases_with_inner<'a>(
             &mut forms,
             keep_form,
             collect_neighbours,
+            recognition_only,
             2,
         );
     }
@@ -987,6 +1037,12 @@ fn find_bases_with_inner<'a>(
                 continue;
             }
             if seen.insert(lemma as *const _) {
+                if recognition_only {
+                    if lemma_emit(cat, lemma, word, pos, possessives) {
+                        bases.push(lemma);
+                    }
+                    continue;
+                }
                 let generated = inflect_all(
                     lemma.word,
                     &lemma.inflections,
@@ -1042,6 +1098,7 @@ fn find_bases_with_inner<'a>(
             collect_neighbours,
             recognition_only,
             all_phases,
+            keep_walking_with_direct,
         );
         if !inner.bases.is_empty() || !inner.direct.is_empty() {
             // The host is a known form. The original is too, with
@@ -1141,6 +1198,7 @@ fn walk_head1<'a>(
     word: &str,
     keep_form: Option<&(dyn Fn(&str) -> bool + Sync)>,
     collect_neighbours: bool,
+    recognition_only: bool,
     pos: PartOfSpeech,
     possessives: bool,
 ) -> WalkChunk<'a> {
@@ -1154,6 +1212,7 @@ fn walk_head1<'a>(
             word,
             keep_form,
             collect_neighbours,
+            recognition_only,
             pos,
             possessives,
         );
@@ -1171,6 +1230,7 @@ fn walk_head1<'a>(
                         word,
                         keep_form,
                         collect_neighbours,
+                        recognition_only,
                         pos,
                         possessives,
                     )
@@ -1203,6 +1263,7 @@ fn walk_head1_chunk<'a>(
     word: &str,
     keep_form: Option<&(dyn Fn(&str) -> bool + Sync)>,
     collect_neighbours: bool,
+    recognition_only: bool,
     pos: PartOfSpeech,
     possessives: bool,
 ) -> WalkChunk<'a> {
@@ -1212,6 +1273,12 @@ fn walk_head1_chunk<'a>(
         forms: Vec::new(),
     };
     for &lemma in head1 {
+        if recognition_only {
+            if lemma_emit(cat, lemma, word, pos, possessives) {
+                out.bases.push(lemma);
+            }
+            continue;
+        }
         let generated = inflect_all(
             lemma.word,
             &lemma.inflections,
@@ -1268,6 +1335,7 @@ fn run_prefix_walk<'a>(
     forms: &mut Vec<SourcedForm<'a>>,
     keep_form: Option<&(dyn Fn(&str) -> bool + Sync)>,
     collect_neighbours: bool,
+    recognition_only: bool,
     prefix_len: usize,
 ) {
     let Some(prefix) = take_chars(form, prefix_len) else {
@@ -1286,6 +1354,12 @@ fn run_prefix_walk<'a>(
             continue;
         }
         if !seen.insert(l as *const _) {
+            continue;
+        }
+        if recognition_only {
+            if lemma_emit(cat, l, form, pos, possessives) {
+                bases.push(l);
+            }
             continue;
         }
         let generated = inflect_all(l.word, &l.inflections, cat, Some(index), pos, possessives);
@@ -1322,6 +1396,18 @@ fn short_lemma_run<'a>(lexicon: &'a [Lemma<'a>]) -> Vec<&'a Lemma<'a>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The analysis search must not stop at a direct lemma: `lasta` is a
+    /// lemma of its own and the partitive of `lapsi`.
+    #[test]
+    fn analysis_search_keeps_homonyms_behind_a_direct_lemma() {
+        let cat = Catalogues::embedded().clone();
+        let lexicon = crate::kotus::parse_sanalista(crate::SANALISTA);
+        let report = find_bases_for_analysis(&lexicon, &cat, "lasta");
+        let bases: Vec<_> = report.bases.iter().map(|lemma| lemma.word).collect();
+        assert!(bases.contains(&"lasta"), "{bases:?}");
+        assert!(bases.contains(&"lapsi"), "{bases:?}");
+    }
 
     /// A small fix: every lemma the engine says inflects to the form really
     /// does, and the form is in the lemma's emitted set. Without this, a
