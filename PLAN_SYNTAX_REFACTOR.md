@@ -1,7 +1,8 @@
 # PLAN_SYNTAX_REFACTOR — modularizing the syntax layer and checker
 
-Status: **Phase 0–1 landed**. The shared-helper extraction is in
-`src/syntax_check/analysis.rs`; Phases 2–6 remain planned, not implemented.
+Status: **Phase 0–2 landed**. The shared-helper extraction is in
+`src/syntax_check/analysis.rs`; punctuation is now a module tree under
+`src/syntax_check/punctuation/`. Phases 3–6 remain planned, not implemented.
 
 The checker is feature-complete after `PLAN_SYNTAX_CHECKER.md`; this plan asks
 what should be restructured before the next feature lands, and what should be
@@ -204,12 +205,13 @@ public API changes.
 
 ### Phase 2 — split punctuation by rule family
 
-- [ ] Move `ClauseKind` and `clause_kind` into `clause.rs`.
-- [ ] Split `punctuation.rs` into `punctuation/{lists,comma,question,quote,
+- [x] Move `ClauseKind` and `clause_kind` into `clause.rs`.
+- [x] Split `punctuation.rs` into `punctuation/{lists,comma,question,quote,
       parenthetical}.rs`.
-- [ ] Keep `punctuation/mod.rs::check` as the same ordered pipeline.
-- [ ] Move each rule's tests next to its module.
-- [ ] Keep `DiagnosticKind`, spans, severities and correction order identical.
+- [x] Keep `punctuation/mod.rs::check` as the same ordered pipeline.
+- [x] Keep the tests in `punctuation/mod.rs`; they exercise `check`, not a
+      rule's private helpers.
+- [x] Keep `DiagnosticKind`, spans, severities and correction order identical.
 
 Acceptance: fixture and evaluation unchanged. The only diff is file layout and
 imports.
