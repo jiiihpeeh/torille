@@ -149,6 +149,7 @@ inventory is in [`tools/README.md`](tools/README.md).
 | `lookup` | build the reverse index and report what a word is a form of |
 | `check` | compound-aware spelling check |
 | `check_normal` | the per-keystroke gate the wasm demo uses |
+| `check_syntax` | grammar and punctuation diagnostics with corrections |
 | `derive` | productive derivations of a base word |
 | `hyphenate` | permitted Finnish line breaks, with `--json` offsets |
 | `suggest_correct` | ranked suggestions for a misspelling |
@@ -277,6 +278,8 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
 
 ## Documentation
 
+- [`docs/syntax_checker.md`](docs/syntax_checker.md) — grammar diagnostics,
+  severity policy, corrections, evaluation and known limitations.
 - [`docs/harness.md`](docs/harness.md) — the verification harness, baselines
   and the table of known defects.
 - [`docs/hyphenation.md`](docs/hyphenation.md) — patterns, compound adapter,

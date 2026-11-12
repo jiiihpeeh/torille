@@ -3,8 +3,10 @@
 Status: Phases 0–5 are landed, including nested lists, missing/extra argument
 warnings, the word-order decision record and aspect-based object-case
 suggestions (singular completive; plural deferred). Phase 6 has deterministic
-ranking, the wasm word cache, the evaluation baseline and punctuation phase 2;
-UI rendering, checker docs and the style decision are open. The analysis layer it builds on is `PLAN_SYNTAX.md` and is already landed
+ranking, the wasm word cache, the evaluation baseline, punctuation phase 2,
+the Leptos diagnostic panel with edit application and the checker docs. The
+browser-extension grammar toggle is a documented follow-up; the style layer is
+deliberately out of scope. The analysis layer it builds on is `PLAN_SYNTAX.md` and is already landed
 on the `syntax` branch.
 
 The remaining work is indexed in §16; each open item has enough detail to be
@@ -1404,12 +1406,16 @@ and `Edit` arrays. No rule work is needed.
 
 Tasks:
 
-- [ ] Add the diagnostic panel to `torille-wasm-leptos`.
-- [ ] Add reverse-order edit replay and a test that offsets survive multiple
-      edits in one diagnostic.
-- [ ] Add the opt-in, debounced grammar call to the extensions.
+- [x] Add the diagnostic panel to `torille-wasm-leptos`
+      (`components/syntax.rs`), with Finnish labels, severity classes and
+      correction buttons.
+- [x] Add reverse-order edit replay and tests for a replacement, a two-edit
+      insertion pair and a deletion.
+- [ ] Add the opt-in, debounced grammar call to the browser extensions.
+      Deferred: the Leptos panel is the acceptance surface; the extensions
+      remain spell-check-only until their content-script panel is designed.
 - [ ] Add a test that a destroyed state handle falls back to the stateless
-      `check_syntax` path.
+      `check_syntax` path. Deferred with the extension work.
 
 #### Phase 6D — evaluation corpus
 
@@ -1457,9 +1463,10 @@ Decision: do not start a style layer in this plan. If one is built later:
 
 Tasks:
 
-- [ ] Keep the decision in this plan; no code until a real style request
+- [x] Keep the decision in this plan; no code until a real style request
       arrives.
-- [ ] If it is reopened, write a separate plan before adding a module.
+- [x] Record the reopening condition: a separate plan, separate module and
+      opt-in UI before any style rule is added.
 
 #### Phase 6F — checker documentation
 
@@ -1470,8 +1477,8 @@ Tasks:
 
 Tasks:
 
-- [ ] Write `docs/syntax_checker.md` using the landed rules and the §16 index.
-- [ ] Add the README/AGENTS links after the document exists.
+- [x] Write `docs/syntax_checker.md` using the landed rules and the §16 index.
+- [x] Add the README/AGENTS links after the document exists.
 
 ## 13. False-positive policy
 
@@ -1546,9 +1553,10 @@ lists/punctuation (phase 3), rection (phase 4) and the negative-object rule
 (phase 5A). A checker that is right about four constructions is more useful
 than one that is unsure about twenty.
 
-Lists, including nested lists, are part of the landed checker. What remains is
-the narrower work in §16: aspect suggestions, argument completeness,
-punctuation phase 2, UI, evaluation and docs. Word order stays deferred.
+Lists, including nested lists, are part of the landed checker. The checker
+surface in §16 is complete except for the browser-extension grammar toggle and
+the deferred edge cases (plural completive object case, `kuten` phrase extent).
+Word order stays deferred.
 
 ## 16. Remaining work index
 
@@ -1563,13 +1571,14 @@ Ordered by user-facing value. Each item points at the phase that specifies it.
    quote-style corrections.
 4. [x] **Evaluation corpus** — phase 6D. 159 sentences, zero `Error` on clean
    rows, per-kind baseline recorded.
-5. [ ] **UI and edit application** — phase 6C. Demo panel, reverse-order edit
-   replay, opt-in extension toggle.
+5. [ ] **UI and edit application** — phase 6C. Leptos panel and reverse-order
+   edit replay are done; the opt-in browser-extension grammar toggle is
+   deferred.
 6. [x] **Word-order decision record** — phase 5D. Clean rows and a comment on
    the reserved kind; no rule.
-7. [ ] **Checker documentation** — phase 6F. `docs/syntax_checker.md` with the
-   rule catalogue and limitations.
-8. [ ] **Style layer decision** — phase 6E. Recorded as out of scope; only a
+7. [x] **Checker documentation** — phase 6F. `docs/syntax_checker.md` with the
+   rule catalogue and limitations; README and AGENTS link to it.
+8. [x] **Style layer decision** — phase 6E. Recorded as out of scope; only a
    separate opt-in analyzer would reopen it.
 
 Deferred analysis refinements live in `PLAN_SYNTAX.md` §“Remaining analysis

@@ -43,6 +43,42 @@
       border-radius: 4px;
       display: inline-block;
     }
+    .syntax-panel { margin-top: 2em; padding-top: 1em; border-top: 1px solid #ddd; }
+    .syntax-panel h2 { font-size: 1.1em; margin-bottom: 0.3em; }
+    .syntax-check {
+      font: inherit;
+      padding: 0.3em 0.7em;
+      border: 1px solid #36c;
+      background: #eef4ff;
+      color: #135;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .syntax-list { list-style: none; padding-left: 0; }
+    .syntax-diag {
+      margin: 0.8em 0;
+      padding: 0.6em 0.8em;
+      border-left: 4px solid #ccc;
+      background: #fafafa;
+      border-radius: 3px;
+    }
+    .syntax-diag.syntax-error { border-left-color: #c33; }
+    .syntax-diag.syntax-warning { border-left-color: #d80; }
+    .syntax-diag.syntax-suggestion { border-left-color: #36c; }
+    .syntax-head { display: flex; gap: 0.6em; align-items: baseline; flex-wrap: wrap; }
+    .syntax-head code { color: #666; font-size: 0.85em; }
+    .syntax-severity { font-size: 0.85em; color: #666; }
+    .syntax-expected { margin: 0.3em 0; color: #555; font-size: 0.9em; }
+    .syntax-corrections { display: flex; gap: 0.4em; flex-wrap: wrap; margin-top: 0.4em; }
+    .syntax-corrections button {
+      font: inherit;
+      padding: 0.15em 0.5em;
+      border: 1px solid #36c;
+      background: #fff;
+      color: #135;
+      border-radius: 4px;
+      cursor: pointer;
+    }
     .hyphenation { margin-top: 2em; padding-top: 1em; border-top: 1px solid #ddd; }
     .hyphenation h2 { font-size: 1.1em; margin-bottom: 0.5em; }
     .hyphenation label { margin-right: 0.5em; }

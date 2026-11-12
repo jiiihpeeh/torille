@@ -21,6 +21,8 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
 - `docs/harness.md` — the Omorfi + Voikko verification harness, finding kinds,
   and the current known defects (A/B/C/D).
 - `docs/lexicon.md` — the materialised noun lexicon used as the harness oracle.
+- `docs/syntax_checker.md` — grammar diagnostics, severity policy, corrections,
+  evaluation and known limitations.
 - `docs/hyphenation.md` — line-break hyphenation: patterns, compound adapter,
   policy, offsets and exceptions. The plan is `PLAN_HYPHENATION.md`.
 - `TODO.md` — known gaps ordered by user-facing impact.
