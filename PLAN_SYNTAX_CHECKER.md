@@ -6,8 +6,9 @@ suggestions (singular completive; plural deferred). Phase 6 has deterministic
 ranking, the wasm word cache, the evaluation baseline, punctuation phase 2,
 the Leptos diagnostic panel with edit application, the browser-extension
 grammar check and the checker docs. The style layer is deliberately out of
-scope; deferred edge cases are listed in `docs/syntax_checker.md`. The analysis layer it builds on is `PLAN_SYNTAX.md` and is already landed
-on the `syntax` branch.
+scope here; its separate plan is [`PLAN_STYLE.md`](PLAN_STYLE.md). Deferred
+edge cases are listed in `docs/syntax_checker.md`. The analysis layer it
+builds on is `PLAN_SYNTAX.md` and is already landed on the `syntax` branch.
 
 The remaining work is indexed in §16; each open item has enough detail to be
 implemented without reopening the whole design.
@@ -1473,6 +1474,10 @@ Decision: do not start a style layer in this plan. If one is built later:
   and opt-in UI;
 - it must not reuse grammar kinds or run in the same pass by default;
 - it must not make the clean corpus noisier.
+
+The separate plan now exists as [`PLAN_STYLE.md`](PLAN_STYLE.md). No style code
+is implemented; the plan keeps the reopening condition and adds the rule
+catalogue, data tables, wasm shape and UI phases.
 
 Tasks:
 

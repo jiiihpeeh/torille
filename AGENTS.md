@@ -25,6 +25,9 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
   evaluation and known limitations.
 - `PLAN_SYNTAX_REFACTOR.md` — the modularisation plan for `syntax.rs`,
   `syntax_check/` and the extension content script.
+- `PLAN_STYLE.md` — the separate opt-in style-layer plan: curated phrase/word
+  tables, repetition and long-sentence metrics, suggestion-only diagnostics and
+  a panel UI. Not implemented.
 - `docs/hyphenation.md` — line-break hyphenation: patterns, compound adapter,
   policy, offsets and exceptions. The plan is `PLAN_HYPHENATION.md`.
 - `TODO.md` — known gaps ordered by user-facing impact.

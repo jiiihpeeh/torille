@@ -282,6 +282,8 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
   severity policy, corrections, evaluation and known limitations.
 - [`PLAN_SYNTAX_REFACTOR.md`](PLAN_SYNTAX_REFACTOR.md) — a phased
   modularisation plan for the syntax layer, checker and extension content.
+- [`PLAN_STYLE.md`](PLAN_STYLE.md) — the design for a separate opt-in style
+  layer: suggestion-only diagnostics, curated tables and a panel UI.
 - [`docs/harness.md`](docs/harness.md) — the verification harness, baselines
   and the table of known defects.
 - [`docs/hyphenation.md`](docs/hyphenation.md) — patterns, compound adapter,
