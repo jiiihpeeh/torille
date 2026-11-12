@@ -133,7 +133,7 @@ fn aspect_suggestion(
     };
 
     let mut corrections = if plural_completive {
-        vec![plural_total_correction(&tokens[object])?]
+        vec![plural_total_correction(&tokens[object], syntax)?]
     } else {
         let pos = nominal_pos(syntax)?;
         let lemma = syntax.lemma.as_deref()?;
@@ -175,53 +175,56 @@ fn is_total(case: Case) -> bool {
 /// The nominative plural of an unambiguous partitive plural.
 ///
 /// A partitive plural can be homonymous (`kirjoja` belongs to both `kirja`
-/// and `kirjo`), and the syntax layer only keeps one lemma. This helper asks
-/// the base search for every nominal base, generates each nominative plural,
-/// and returns a correction only when every candidate names the same form.
-/// Ambiguous surfaces stay quiet instead of suggesting the wrong word.
-fn plural_total_correction(token: &Token) -> Option<Correction> {
-    let report = crate::expand::find_bases_for_analysis(
-        crate::kotus::lemmas(),
-        crate::spec::Catalogues::embedded(),
-        &token.text.to_lowercase(),
-    );
+/// and `kirjo`). The syntax layer records every lemma that produced the
+/// surface in [`crate::syntax::TokenSyntax::lemmas`], so this helper generates
+/// each nominal base's nominative plural and returns a correction only when
+/// every candidate names the same form. Ambiguous surfaces stay quiet instead
+/// of suggesting the wrong word.
+fn plural_total_correction(
+    token: &Token,
+    syntax: &crate::syntax::TokenSyntax,
+) -> Option<Correction> {
     let mut seen_bases: Vec<&str> = Vec::new();
     let mut seen_words: Vec<String> = Vec::new();
     let mut candidates: Vec<Correction> = Vec::new();
-    for base in &report.bases {
-        if seen_bases.contains(&base.word) {
+    for lemma in &syntax.lemmas {
+        if seen_bases.contains(&lemma.as_str()) {
             continue;
         }
-        seen_bases.push(base.word);
-        let Some(pos) = PartOfSpeech::parse_all(base.part_of_speech)
-            .first()
-            .copied()
-        else {
-            continue;
-        };
-        if !is_nominal_pos(Some(pos)) {
-            continue;
-        }
-        for correction in correction::case_corrections(
-            base.word,
-            token,
-            Case::Nominative,
-            Some(Number::Plural),
-            pos,
-            crate::spec::Catalogues::embedded(),
-        ) {
-            let Some(replacement) = correction
-                .edits
+        seen_bases.push(lemma);
+        // A lemma may have several sanalista rows. Every nominal row is a
+        // plausible base; a non-nominal row contributes no object form.
+        for row in crate::kotus::sanalista().by_word(lemma) {
+            let Some(pos) = PartOfSpeech::parse_all(row.part_of_speech())
                 .first()
-                .map(|edit| edit.replacement.clone())
+                .copied()
             else {
                 continue;
             };
-            if seen_words.contains(&replacement) {
+            if !is_nominal_pos(Some(pos)) {
                 continue;
             }
-            seen_words.push(replacement);
-            candidates.push(correction);
+            for correction in correction::case_corrections(
+                lemma,
+                token,
+                Case::Nominative,
+                Some(Number::Plural),
+                pos,
+                crate::spec::Catalogues::embedded(),
+            ) {
+                let Some(replacement) = correction
+                    .edits
+                    .first()
+                    .map(|edit| edit.replacement.clone())
+                else {
+                    continue;
+                };
+                if seen_words.contains(&replacement) {
+                    continue;
+                }
+                seen_words.push(replacement);
+                candidates.push(correction);
+            }
         }
     }
     if candidates.len() == 1 {

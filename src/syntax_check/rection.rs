@@ -38,23 +38,27 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
             continue;
         }
         let syntax = &analysis.tokens[argument];
-        let Some(pos) = nominal_or_numeral_pos(syntax) else {
+        if nominal_or_numeral_pos(syntax).is_none() {
             continue;
-        };
+        }
         let number = candidate_number(syntax, case);
         let mut corrections = Vec::new();
-        for (priority, frame) in frames.iter().enumerate() {
-            for mut correction in correction::case_corrections(
-                syntax.lemma.as_deref().unwrap_or_default(),
-                &tokens[argument],
-                *frame,
-                number,
-                pos,
-                crate::spec::Catalogues::embedded(),
-            ) {
-                // Keep the CSV frame order ahead of edit distance.
-                correction.score += priority as f32 * 100.0;
-                corrections.push(correction);
+        for (lemma_position, (lemma, base_pos)) in correction_bases(syntax).iter().enumerate() {
+            for (priority, frame) in frames.iter().enumerate() {
+                for mut correction in correction::case_corrections(
+                    lemma,
+                    &tokens[argument],
+                    *frame,
+                    number,
+                    *base_pos,
+                    crate::spec::Catalogues::embedded(),
+                ) {
+                    // Keep the CSV frame order ahead of edit distance, and the
+                    // chosen lemma's forms ahead of a homonym's.
+                    correction.score +=
+                        priority as f32 * 100.0 + lemma_position as f32 * 1000.0;
+                    corrections.push(correction);
+                }
             }
         }
         corrections.sort_by(|a, b| {
@@ -62,6 +66,7 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
                 .total_cmp(&b.score)
                 .then_with(|| a.edits[0].replacement.cmp(&b.edits[0].replacement))
         });
+        corrections.dedup_by(|a, b| a.edits[0].replacement == b.edits[0].replacement);
         let confident = analysis.tokens[predicate].confidence
             == crate::syntax::RoleConfidence::Likely;
         let (severity, confidence) = if confident {
@@ -87,6 +92,51 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         diagnostics.push(diagnostic);
     }
     diagnostics
+}
+
+/// Every nominal lemma behind the argument surface, chosen lemma first.
+///
+/// A homonymous surface (`kirjoja`, `tuli`) belongs to more than one base. The
+/// syntax layer records them in [`crate::syntax::TokenSyntax::lemmas`], so the
+/// rection rule can offer the right paradigm without re-running the base
+/// search. Only rows the sanalista marks nominal or numeral contribute.
+fn correction_bases(syntax: &crate::syntax::TokenSyntax) -> Vec<(&str, crate::tags::PartOfSpeech)> {
+    use crate::tags::PartOfSpeech;
+
+    let mut ordered: Vec<&str> = Vec::new();
+    if let Some(lemma) = syntax.lemma.as_deref() {
+        ordered.push(lemma);
+    }
+    for lemma in &syntax.lemmas {
+        let lemma = lemma.as_str();
+        if !ordered.contains(&lemma) {
+            ordered.push(lemma);
+        }
+    }
+
+    let mut out = Vec::new();
+    for lemma in ordered {
+        for row in crate::kotus::sanalista().by_word(lemma) {
+            let Some(pos) = PartOfSpeech::parse_all(row.part_of_speech())
+                .first()
+                .copied()
+            else {
+                continue;
+            };
+            if matches!(
+                pos,
+                PartOfSpeech::Noun
+                    | PartOfSpeech::Adjective
+                    | PartOfSpeech::Pronoun
+                    | PartOfSpeech::Numeral
+                    | PartOfSpeech::Ordinal
+            ) {
+                out.push((lemma, pos));
+                break;
+            }
+        }
+    }
+    out
 }
 
 /// The first post-predicate nominal that can be the governed argument.

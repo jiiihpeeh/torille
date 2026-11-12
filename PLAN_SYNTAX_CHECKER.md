@@ -1200,9 +1200,9 @@ Implementation notes:
   `viimeistään` is omitted: its “at the latest” reading is not completion.
 - A cue inside a parenthetical is ignored (`Luen (parhaillaan) kirjan.`).
 - The object is taken from `Clause.object`; a clause without one stays quiet.
-- The plural completive path asks `find_bases_for_analysis` for every nominal
-  base and only emits when all bases agree on one nominative plural. `autoja`
-  suggests `autot`; `kirjoja` stays quiet.
+- The plural completive path reads the token's `lemmas` (every base that
+  produced the surface) and only emits when all nominal bases agree on one
+  nominative plural. `autoja` suggests `autot`; `kirjoja` stays quiet.
 
 #### Phase 5C — missing and extra arguments, warning only
 

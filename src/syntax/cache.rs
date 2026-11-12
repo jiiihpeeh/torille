@@ -25,7 +25,18 @@ pub(super) struct WordAnalysis {
     /// clitic-stripped host. A clitic word (`onko`, `talohan`) is only
     /// re-analysed through its host when this is false.
     pub(super) exact: bool,
+    /// Every lemma that produced a reading for the surface, in resolution
+    /// order. The chosen `lemma` is one of them.
+    pub(super) lemmas: Vec<String>,
     pub(super) readings: Vec<Tags>,
+}
+
+impl WordAnalysis {
+    fn push_lemma(&mut self, lemma: &str) {
+        if !self.lemmas.iter().any(|known| known == lemma) {
+            self.lemmas.push(lemma.to_string());
+        }
+    }
 }
 
 /// A capped cache of resolved words for the syntax layer.
@@ -164,7 +175,6 @@ fn resolve_word_plain(
             out.exact = true;
         }
     }
-
     // The prefix walks miss some stem-changing paradigm members (`söi` is
     // `syödä` across a two-character stem change). The cheap stem-map gate
     // can name the base even when those walks do not, so use it as a
@@ -174,6 +184,7 @@ fn resolve_word_plain(
     {
         out.lemma = Some(base.clone());
         add_readings_from_base(&base, lower, cat, &mut out.readings);
+        out.push_lemma(&base);
         if is_nominal_pos(lemma_pos(&base)) {
             out.nominal_lemma = Some(base);
         }
@@ -187,6 +198,7 @@ fn resolve_word_plain(
         && let Some(base) = crate::expand::check_normal::find_base_via_verb_stem_map(lower, false)
     {
         add_readings_from_base(&base, lower, cat, &mut out.readings);
+        out.push_lemma(&base);
         if out.readings.iter().any(is_finite_predicate) {
             out.verb_lemma = Some(base);
         }
@@ -197,6 +209,7 @@ fn resolve_word_plain(
     if out.readings.is_empty() {
         for direct in &report.direct {
             add_reading(&mut out.readings, direct_reading(direct));
+            out.push_lemma(direct.word());
             if is_nominal_pos(
                 PartOfSpeech::parse_all(direct.part_of_speech())
                     .first()
@@ -209,6 +222,7 @@ fn resolve_word_plain(
             for base in &report.bases {
                 if let Some(row) = crate::kotus::sanalista().by_word(base.word).next() {
                     add_reading(&mut out.readings, direct_reading(&row));
+                    out.push_lemma(base.word);
                     if is_nominal_pos(
                         PartOfSpeech::parse_all(row.part_of_speech())
                             .first()
@@ -249,6 +263,7 @@ fn resolve_word_plain(
         if out.lemma.is_none() {
             out.lemma = Some(base.to_string());
         }
+        out.push_lemma(base);
     }
 
     out
@@ -293,6 +308,7 @@ fn add_forms_from_lemma(
         if out.lemma.is_none() {
             out.lemma = Some(base.to_string());
         }
+        out.push_lemma(base);
         for reading in &form.readings {
             let tags = reading_with_pos(*reading, Some(pos));
             add_reading(&mut out.readings, tags);

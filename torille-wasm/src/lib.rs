@@ -193,8 +193,8 @@ pub fn hyphenate(
 ///   lists:     [{ start, end, tokensStart, tokensEnd, clause, role, head,
 ///                 kind, items, separators, conjunction, introducer, parent }],
 ///   tokens:    [{ word, start, end, role, confidence, clause, head,
-///                 case, lemma, readings: [{ pos, case, number, person,
-///                 tense, mood, voice, polarity }] }]
+///                 case, lemma, lemmas, readings: [{ pos, case, number,
+///                 person, tense, mood, voice, polarity }] }]
 /// }
 /// ```
 ///
@@ -299,6 +299,11 @@ fn syntax_object(
         set_option(&item, "head", syntax.head);
         set_option(&item, "case", syntax.case.map(|case| case.name()));
         set_option(&item, "lemma", syntax.lemma.as_deref());
+        let lemmas = Array::new();
+        for lemma in &syntax.lemmas {
+            lemmas.push(&JsValue::from(lemma.as_str()));
+        }
+        set(&item, "lemmas", lemmas.into());
 
         let readings = Array::new();
         for reading in &syntax.readings {

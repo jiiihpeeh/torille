@@ -130,8 +130,14 @@ pub struct TokenSyntax {
     pub head: Option<usize>,
     /// The case that licensed the role, where one did.
     pub case: Option<Case>,
-    /// The chosen lemma reading. Alternatives remain in `readings`.
+    /// The chosen lemma reading. Alternatives remain in `lemmas` and
+    /// `readings`.
     pub lemma: Option<String>,
+    /// Every lemma whose inflection produced this surface, in resolution
+    /// order. `kirjoja` belongs to both `kirja` and `kirjo`; a rule that must
+    /// consider every base reads this instead of re-running the base search.
+    /// The chosen `lemma` is always also present here when one was found.
+    pub lemmas: Vec<String>,
     /// The morphological readings found for the surface word.
     pub readings: Vec<Tags>,
 }
@@ -145,6 +151,7 @@ impl Default for TokenSyntax {
             head: None,
             case: None,
             lemma: None,
+            lemmas: Vec::new(),
             readings: Vec::new(),
         }
     }
@@ -215,6 +222,7 @@ fn analyze_with(
         let lower = token.text.to_lowercase();
         let analysis = cache.resolve_word(lexicon, cat, &lower);
         let mut readings = analysis.readings;
+        let mut lemmas = analysis.lemmas;
         let mut lemma = analysis.lemma.clone();
         nominal_lemmas[index] = analysis.nominal_lemma.clone();
         if readings.is_empty()
@@ -236,6 +244,9 @@ fn analyze_with(
             );
             lemma = Some(name.to_string());
             nominal_lemmas[index] = Some(name.to_string());
+            if !lemmas.iter().any(|known| known == name) {
+                lemmas.push(name.to_string());
+            }
         }
         let (role, confidence, case) = classify(&readings);
         if role == SyntacticRole::Predicate {
@@ -252,6 +263,7 @@ fn analyze_with(
             head: None,
             case,
             lemma,
+            lemmas,
             readings,
         };
     }
@@ -682,5 +694,30 @@ mod tests {
                 assert_eq!(syntax.role, SyntacticRole::Unknown);
             }
         }
+    }
+
+    #[test]
+    fn a_homonymous_surface_keeps_every_base_lemma() {
+        let (tokens, analysis) = analyzed("kirjoja");
+        let index = word_index(&tokens, "kirjoja");
+        let lemmas = &analysis.tokens[index].lemmas;
+        assert!(lemmas.iter().any(|lemma| lemma == "kirja"), "{lemmas:?}");
+        assert!(lemmas.iter().any(|lemma| lemma == "kirjo"), "{lemmas:?}");
+    }
+
+    #[test]
+    fn an_unambiguous_surface_keeps_one_base_lemma() {
+        let (tokens, analysis) = analyzed("autoja");
+        let index = word_index(&tokens, "autoja");
+        assert_eq!(analysis.tokens[index].lemmas, vec!["auto".to_string()]);
+    }
+
+    #[test]
+    fn a_nominal_verb_homonym_keeps_both_lemmas() {
+        let (tokens, analysis) = analyzed("Tuli sammui.");
+        let index = word_index(&tokens, "Tuli");
+        let lemmas = &analysis.tokens[index].lemmas;
+        assert!(lemmas.iter().any(|lemma| lemma == "tuli"), "{lemmas:?}");
+        assert!(lemmas.iter().any(|lemma| lemma == "tulla"), "{lemmas:?}");
     }
 }

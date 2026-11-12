@@ -1,10 +1,12 @@
 # PLAN_SYNTAX_REFACTOR — modularizing the syntax layer and checker
 
-Status: **Phase 0–3 landed.** The shared-helper extraction is in
+Status: **Phase 0–4 landed.** The shared-helper extraction is in
 `src/syntax_check/analysis.rs`; punctuation is a module tree under
 `src/syntax_check/punctuation/`. `src/syntax/` now has `cache.rs`,
 `segments.rs`, `predicates.rs` and `roles.rs`; `syntax/mod.rs` holds the public
-types, orchestration and tests. Phases 4–6 remain optional/on-demand.
+types, orchestration and tests. Phase 4 added the additive
+`TokenSyntax::lemmas` per-reading base list. Phases 5–6 remain optional/
+on-demand.
 
 The checker is feature-complete after `PLAN_SYNTAX_CHECKER.md`; this plan asks
 what should be restructured before the next feature lands, and what should be
@@ -239,27 +241,27 @@ Readings stay in `cache.rs` until they grow enough to justify a separate
 Acceptance: fixture, evaluation, `tests/catalogue.rs`, and the wasm32 check are
 unchanged. No public path breaks.
 
-### Phase 4 — per-reading lemma candidates (optional feature)
+### Phase 4 — per-reading lemma candidates (landed)
 
 This is the clean fix for the homonym workaround.
 
-- [ ] Add a reading-level lemma representation, either:
-      `TokenSyntax.readings: Vec<Reading>` with `Reading { tags: Tags, lemma:
-      Option<String> }`, or an additive `TokenSyntax.lemmas: Vec<String>`.
-- [ ] Populate it in `resolve_word` while `add_forms_from_lemma` already knows
+- [x] Add a reading-level lemma representation: `TokenSyntax.lemmas` carries
+      every lemma whose inflection produced the surface, while `lemma` stays
+      the chosen reading for existing callers.
+- [x] Populate it in `resolve_word` while `add_forms_from_lemma` already knows
       the base.
-- [ ] Use it in `object_case::plural_total_correction` and `rection::argument`
-      to avoid re-running the base search for every candidate.
-- [ ] Keep the wasm shape additive (a `lemma` per reading or a `lemmas` array).
-- [ ] Add tests for `kirjoja` (two lemmas), `autoja` (one), and a rection
-      homonym.
+- [x] Use it in `object_case::plural_total_correction` and `rection` to avoid
+      re-running the base search for every candidate.
+- [x] Keep the wasm shape additive (`lemmas` is a sibling of `lemma`).
+- [x] Add tests for `kirjoja` (two lemmas), `autoja` (one), and `tuli`
+      (noun/verb homonym).
 
 Acceptance: `Luin autoja loppuun.` still suggests `autot`, `Luin kirjoja
 loppuun.` stays quiet, and the evaluation table is unchanged.
 
-Do this only when a second rule needs the per-reading lemma. If the plural
-completive helper remains the only consumer, leave it as a documented
-workaround.
+Landed as an additive model change. `TokenSyntax::lemmas` is ordered by
+resolution and includes the chosen `lemma`; rules that need every base read it
+instead of calling `find_bases_for_analysis` again.
 
 ### Phase 5 — clause tree for relatives (optional feature)
 
