@@ -3,9 +3,9 @@
 Status: Phases 0–4 are landed, including nested lists. Phase 5 has the
 negative-clause object case and rection precedence; aspect-based object case,
 missing/extra arguments and the word-order decision record are still open.
-Phase 6 is partly landed: deterministic ranking and the wasm word cache exist,
-while punctuation phase 2, UI rendering, evaluation and the style decision are
-open. The analysis layer it builds on is `PLAN_SYNTAX.md` and is already landed
+Phase 6 is partly landed: deterministic ranking, the wasm word cache and the
+evaluation baseline exist, while punctuation phase 2, UI rendering and the
+style decision are open. The analysis layer it builds on is `PLAN_SYNTAX.md` and is already landed
 on the `syntax` branch.
 
 The remaining work is indexed in §16; each open item has enough detail to be
@@ -950,13 +950,14 @@ hand-written list is not enough.
 ### Evaluation corpus
 
 The exact-output fixture proves individual rules; it does not measure how
-often the checker is wrong on real prose. Add a second, larger corpus for
-aggregate evaluation:
+often the checker is wrong on real prose. `tests/fixtures/syntax_eval.json` is
+the second, larger corpus for aggregate evaluation:
 
-- at least 100 sentences, about 60 clean and 40 with expected diagnostics;
-- one row per sentence, with the expected kind(s) and severity;
+- 132 sentences at the first baseline: 91 clean and 41 with expected
+  diagnostics;
+- one row per sentence, with the expected kind(s);
 - every emitted kind represented, plus the guards named in §13;
-- run as an integration test that prints per-kind precision/recall and the
+- run by `tests/syntax_eval.rs`, which prints per-kind precision/recall and the
   clean-corpus `Error` count.
 
 The release gate is **zero `Error` on clean rows**. Suggestion counts are
@@ -1389,10 +1390,23 @@ Tasks:
 
 Tasks:
 
-- [ ] Add the 100+ sentence corpus.
-- [ ] Add the metrics integration test and print the per-kind table.
-- [ ] Record the first baseline in the plan or `docs/syntax_checker.md`.
-- [ ] Gate zero `Error` on clean rows; keep suggestions ungated at first.
+- [x] Add the 100+ sentence corpus (`tests/fixtures/syntax_eval.json`, 91
+      clean + 41 cases at the first baseline).
+- [x] Add the metrics integration test (`tests/syntax_eval.rs`) and print the
+      per-kind table.
+- [x] Record the first baseline here.
+- [x] Gate zero `Error` on clean rows; keep suggestions ungated at first.
+
+First baseline (2026-11-12):
+
+```text
+clean rows 91: 0 errors, 0 warnings, 0 suggestions
+cases 41: every emitted kind precision 1.00, recall 1.00
+```
+
+The baseline is a snapshot, not a target: a new rule that adds an extra
+diagnostic to a case lowers precision and should be explained in its commit,
+but the gate is still zero `Error` on clean rows.
 
 #### Phase 6E — style layer decision
 
@@ -1499,8 +1513,8 @@ Ordered by user-facing value. Each item points at the phase that specifies it.
 3. [ ] **Punctuation phase 2** — phase 6B. Semicolon boundaries, question-mark
    diagnostics, unbalanced quotes, advisory parenthetical pairs, no
    quote-style corrections.
-4. [ ] **Evaluation corpus** — phase 6D. 100+ sentences, zero `Error` on clean
-   rows, per-kind baseline.
+4. [x] **Evaluation corpus** — phase 6D. 132 sentences, zero `Error` on clean
+   rows, per-kind baseline recorded.
 5. [ ] **UI and edit application** — phase 6C. Demo panel, reverse-order edit
    replay, opt-in extension toggle.
 6. [ ] **Word-order decision record** — phase 5D. Clean rows and a comment on

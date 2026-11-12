@@ -1,0 +1,390 @@
+{
+  "_comment": [
+    "Aggregate evaluation corpus for the syntax checker.",
+    "The exact-output gate is tests/fixtures/syntax_diagnostics.json.",
+    "This snapshot adds extra cases and is measured, not asserted span-for-span.",
+    "`clean` rows must produce no Error. `cases` list the expected kinds."
+  ],
+  "clean": [
+    "Pöydällä on kirjat.",
+    "Pöydällä on kirja.",
+    "Pöydällä on kirjat ja kynät.",
+    "Talo on rakennettu.",
+    "Talo on kaunis.",
+    "Talot ovat kauniita.",
+    "Minun täytyy mennä.",
+    "Hänen pitää mennä.",
+    "Minun on mentävä.",
+    "Kaksi miestä tuli.",
+    "Hänellä on kaksi lasta.",
+    "Sami ja Liisa söivät.",
+    "Sami ja Liisa söivät ja joivat.",
+    "Sami söi puuron.",
+    "Söi Sami puuron.",
+    "Puuron söi Sami.",
+    "Sami söi ja joi.",
+    "Sami tai Liisa tulee.",
+    "Lapset leikkivät.",
+    "Koirat nukkuvat.",
+    "Koira nukkuu.",
+    "Minä menen kotiin.",
+    "Sinä menet.",
+    "Te menette.",
+    "He menevät.",
+    "Hän antoi kirjan.",
+    "En lue kirjaa.",
+    "Minä en tule.",
+    "Hän ei tule.",
+    "Minä olen lukenut.",
+    "Hän on lukenut.",
+    "Me olemme lukeneet.",
+    "He ovat lukeneet.",
+    "Sami ja Liisa ovat lukeneet.",
+    "Hän sanoi, että tulee.",
+    "Sami söi puuron, koska oli nälkäinen.",
+    "Hän tuli tupaan, jossa roihusi tuli.",
+    "Helsingissä asuva mies on opettaja.",
+    "Vanha talo Helsingissä on kaunis.",
+    "Hän näyttää väsyneeltä.",
+    "Talo maalattiin punaiseksi.",
+    "Sami antoi Liisalle kirjan.",
+    "Onko sinulla kirjaa?",
+    "Onko sinulla kirjoja?",
+    "Punainen auto.",
+    "Punaiset autot.",
+    "Vanha talo.",
+    "Vanhat talot.",
+    "Tämä kirja on hyvä.",
+    "Nämä kirjat ovat hyviä.",
+    "Punaisempi auto.",
+    "Punaisemmat autot.",
+    "Punaisen auto.",
+    "punaisen auton omistaja tuli.",
+    "Kaksi miestä tuli.",
+    "Punainen ja sininen auto.",
+    "Punaisessa talossa.",
+    "Hän tuli iloisena kotiin.",
+    "Ostin omenoita, appelsiineja ja banaaneja.",
+    "Ostin kolme asiaa: omenoita, appelsiineja ja banaaneja.",
+    "Kuitenkin, ostin omenoita, jotka olivat kalliita, eilen.",
+    "Koira, joka nukkuu sohvalla, on minun.",
+    "Koira joka nukkuu sohvalla on minun.",
+    "Menin kotiin, koska olin väsynyt.",
+    "Koska olin väsynyt, menin kotiin.",
+    "Ostin omenoita, Liisa osti banaaneja ja Matti osti päärynöitä.",
+    "Menin kauppaan ja ostin maitoa.",
+    "Pidän sinusta.",
+    "Pidän sinua.",
+    "Menen kouluun.",
+    "Menen koululle.",
+    "Luotan sinuun.",
+    "Kuuntelen sinua.",
+    "Hän rakastaa sinua.",
+    "Minä opiskelen suomea.",
+    "Odotan kotona.",
+    "Asun kadulla.",
+    "Opiskelen koulussa.",
+    "Katson ikkunasta.",
+    "En lue kirjaa.",
+    "En syö puuroa.",
+    "En pidä sinusta.",
+    "En mene kouluun.",
+    "Ostin omenoita, appelsiineja (pieniä, makeita) ja banaaneja.",
+    "Kuitenkin, ostin omenoita (jotka olivat kalliita) eilen.",
+    "Teksti (tämä) jatkuu.",
+    "(Tämä on uusi virke.) Toinen virke.",
+    "Hän tuli; minä lähdin.",
+    "Kysyin, missä hän asuu.",
+    "Hän sanoi: »Missä sinä asut?»",
+    "Missä sinä asut?"
+  ],
+  "cases": [
+    {
+      "id": "sv_agreement_plural_verb",
+      "text": "Koira nukkuvat.",
+      "kinds": [
+        "subject_predicate_agreement"
+      ]
+    },
+    {
+      "id": "sv_agreement_first_singular",
+      "text": "Minä menee kotiin.",
+      "kinds": [
+        "subject_predicate_agreement"
+      ]
+    },
+    {
+      "id": "sv_agreement_third_plural",
+      "text": "Hän antoivat kirjan.",
+      "kinds": [
+        "subject_predicate_agreement"
+      ]
+    },
+    {
+      "id": "sv_agreement_plural_subject",
+      "text": "Lapset leikkii.",
+      "kinds": [
+        "subject_predicate_agreement"
+      ]
+    },
+    {
+      "id": "sv_agreement_first_plural",
+      "text": "Me menee.",
+      "kinds": [
+        "subject_predicate_agreement"
+      ]
+    },
+    {
+      "id": "sv_agreement_compound_auxiliary",
+      "text": "Minä on lukenut.",
+      "kinds": [
+        "subject_predicate_agreement"
+      ]
+    },
+    {
+      "id": "sv_agreement_negative_auxiliary",
+      "text": "Hän en tule.",
+      "kinds": [
+        "subject_predicate_agreement"
+      ]
+    },
+    {
+      "id": "sv_agreement_coordinated_subject",
+      "text": "Sami ja Liisa söi puuron.",
+      "kinds": [
+        "subject_predicate_agreement"
+      ]
+    },
+    {
+      "id": "attribute_plural_head",
+      "text": "Punainen autot.",
+      "kinds": [
+        "attribute_agreement"
+      ]
+    },
+    {
+      "id": "attribute_singular_head",
+      "text": "Punaiset auto.",
+      "kinds": [
+        "attribute_agreement"
+      ]
+    },
+    {
+      "id": "attribute_number_mismatch",
+      "text": "Vanhat talo.",
+      "kinds": [
+        "attribute_agreement"
+      ]
+    },
+    {
+      "id": "attribute_demonstrative_plural",
+      "text": "Nämä kirja on hyvä.",
+      "kinds": [
+        "attribute_agreement"
+      ]
+    },
+    {
+      "id": "attribute_demonstrative_singular",
+      "text": "Tämä kirjat ovat hyviä.",
+      "kinds": [
+        "attribute_agreement"
+      ]
+    },
+    {
+      "id": "attribute_case_mismatch",
+      "text": "Punaisessa auto.",
+      "kinds": [
+        "attribute_agreement"
+      ]
+    },
+    {
+      "id": "list_missing_separator",
+      "text": "Ostin omenoita appelsiineja, banaaneja ja päärynöitä.",
+      "kinds": [
+        "list_separator_missing"
+      ]
+    },
+    {
+      "id": "list_duplicate_separator",
+      "text": "Ostin omenoita, appelsiineja,, ja banaaneja.",
+      "kinds": [
+        "list_separator_duplicate"
+      ]
+    },
+    {
+      "id": "list_comma_before_conjunction",
+      "text": "Ostin omenoita, appelsiineja, ja banaaneja.",
+      "kinds": [
+        "list_comma_before_conjunction"
+      ]
+    },
+    {
+      "id": "list_introducer_comma",
+      "text": "Ostin kolme asiaa:, omenoita, appelsiineja ja banaaneja.",
+      "kinds": [
+        "list_introducer_comma"
+      ]
+    },
+    {
+      "id": "nested_list_missing_separator",
+      "text": "Ostin omenoita appelsiineja (pieniä, makeita), banaaneja ja päärynöitä.",
+      "kinds": [
+        "list_separator_missing"
+      ]
+    },
+    {
+      "id": "nested_list_duplicate_separator",
+      "text": "Ostin omenoita, appelsiineja (pieniä,, makeita) ja banaaneja.",
+      "kinds": [
+        "list_separator_duplicate"
+      ]
+    },
+    {
+      "id": "subordinate_comma_after_main",
+      "text": "Menin kotiin koska olin väsynyt.",
+      "kinds": [
+        "comma_missing"
+      ]
+    },
+    {
+      "id": "subordinate_comma_initial",
+      "text": "Koska olin väsynyt menin kotiin.",
+      "kinds": [
+        "comma_missing"
+      ]
+    },
+    {
+      "id": "relative_comma_pair",
+      "text": "Koira, joka nukkuu sohvalla on minun.",
+      "kinds": [
+        "comma_pair_unbalanced"
+      ]
+    },
+    {
+      "id": "rection_elative",
+      "text": "Pidän sinä.",
+      "kinds": [
+        "verb_rection"
+      ]
+    },
+    {
+      "id": "rection_illative",
+      "text": "Menen koulu.",
+      "kinds": [
+        "verb_rection"
+      ]
+    },
+    {
+      "id": "rection_partitive",
+      "text": "Hän rakastaa sinä.",
+      "kinds": [
+        "verb_rection"
+      ]
+    },
+    {
+      "id": "rection_weak_verb",
+      "text": "Luotan sinä.",
+      "kinds": [
+        "verb_rection"
+      ]
+    },
+    {
+      "id": "object_case_negative",
+      "text": "En lue kirja.",
+      "kinds": [
+        "object_case"
+      ]
+    },
+    {
+      "id": "object_case_negative_subject",
+      "text": "Sami ei syö puuro.",
+      "kinds": [
+        "object_case"
+      ]
+    },
+    {
+      "id": "negative_rection_wins",
+      "text": "En pidä sinä.",
+      "kinds": [
+        "verb_rection"
+      ]
+    },
+    {
+      "id": "eval_sv_second_singular",
+      "text": "Sinä menee kotiin.",
+      "kinds": [
+        "subject_predicate_agreement"
+      ]
+    },
+    {
+      "id": "eval_sv_second_plural",
+      "text": "Te menee kotiin.",
+      "kinds": [
+        "subject_predicate_agreement"
+      ]
+    },
+    {
+      "id": "eval_sv_third_singular_plural_verb",
+      "text": "Hän nukkuvat.",
+      "kinds": [
+        "subject_predicate_agreement"
+      ]
+    },
+    {
+      "id": "eval_attribute_demonstrative_plural",
+      "text": "Nämä talo on vanha.",
+      "kinds": [
+        "attribute_agreement"
+      ]
+    },
+    {
+      "id": "eval_attribute_case_warning",
+      "text": "Vanhassa talo.",
+      "kinds": [
+        "attribute_agreement"
+      ]
+    },
+    {
+      "id": "eval_rection_nauttia",
+      "text": "Nautin kahvi.",
+      "kinds": [
+        "verb_rection"
+      ]
+    },
+    {
+      "id": "eval_rection_soittaa",
+      "text": "Soitan sinä.",
+      "kinds": [
+        "verb_rection"
+      ]
+    },
+    {
+      "id": "eval_rection_weak",
+      "text": "Vastaan sinä.",
+      "kinds": [
+        "verb_rection"
+      ]
+    },
+    {
+      "id": "eval_object_case_negative_plural",
+      "text": "En osta kirjat.",
+      "kinds": [
+        "object_case"
+      ]
+    },
+    {
+      "id": "eval_list_missing_separator_2",
+      "text": "Ostin omenoita, appelsiineja banaaneja ja päärynöitä.",
+      "kinds": [
+        "list_separator_missing"
+      ]
+    },
+    {
+      "id": "eval_comma_missing_kun",
+      "text": "Tulen kun ehdin.",
+      "kinds": [
+        "comma_missing"
+      ]
+    }
+  ]
+}
