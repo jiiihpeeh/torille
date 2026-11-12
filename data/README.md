@@ -45,6 +45,7 @@ committed files are what a build uses.
 | `proper_names.csv` | Wikidata | name source for the proper-name tables |
 | `proper_name_forms.csv`, `proper_name_forms_extra.csv` | `tools/oracle/build_proper_name_forms.py` + curated extras | singular cases of names: `form`, `name`, Omorfi case code |
 | `verb_connegatives.csv`, `verb_connectives.csv` | `tools/oracle/build_verb_lexicon.py` | connegatives and negation fusions |
+| `verb_rection.csv` | curated (Kotus/Kielitoimiston ohjepankki) | `lemma,case,frame,priority,note` valency frames used by the syntax checker |
 | `oracle_exceptions.json` | curated | evidence for the harness (`tools/test_illegal_evidence.py`) |
 | `wiktionary-taivutukset.txt` | Wiktionary | fetched paradigms used by `tests/catalogue.rs` |
 

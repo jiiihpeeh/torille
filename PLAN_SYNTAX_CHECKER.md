@@ -1,7 +1,7 @@
 # PLAN_SYNTAX_CHECKER — grammar and punctuation diagnostics
 
-Status: Phases 0–3 landed, with nested lists still open (top-level and
-introduced lists work). Phases 4–6 are planned. The analysis layer it builds
+Status: Phases 0–4 landed, with nested lists still open (top-level and
+introduced lists work). Phases 5–6 are planned. The analysis layer it builds
 on is `PLAN_SYNTAX.md` and is already landed on the `syntax` branch.
 
 The goal is a **correction checker**, not another parser: detect a small set of
@@ -1048,22 +1048,29 @@ Nested lists are the one remaining list item. The structure has `parent` and
 `ListItemKind::List(idx)`, but `parse` currently builds the top-level arena
 only. That is the next list commit, not a blocker for the diagnostics above.
 
-### Phase 4 — verb rection and case selection
+### Phase 4 — verb rection and case selection — done
 
-- [ ] `data/verb_rection.csv` + build blob.
-- [ ] Rection rule and multi-frame corrections.
-- [ ] 30–50 curated verbs.
+- [x] `data/verb_rection.csv` + `verb_rection.bin.gz`.
+- [x] Rection rule and multi-frame corrections, in CSV priority order.
+- [x] 32 curated frames across 30 verbs.
+- [x] Candidates are post-predicate objects or post-predicate nominative
+      subjects (`Pidän sinä`); free adverbials (`Odotan kotona`,
+      `Asun kadulla`, `Katson ikkunasta`) are left alone.
 
-Acceptance:
+Acceptance (passing):
 
 ```text
 Pidän sinä.       → Pidän sinusta. (sinua as an alternative)
 Menen koulu.      → Menen kouluun. (koululle as an alternative)
-Luotan sinä.      → Luotan sinuun.
+Luotan sinä.      → Luotan sinuun. (warning: weak predicate)
 Kuuntelen sinä.   → Kuuntelen sinua.
+Hän rakastaa sinä. → Hän rakastaa sinua.
 ```
 
-No error for `Pidän sinusta`, `Menen kouluun`, `Luotan sinuun`.
+No error for `Pidän sinusta`, `Pidän sinua`, `Menen kouluun`,
+`Menen koululle`, `Luotan sinuun`, `Kuuntelen sinua`, `Minä opiskelen suomea`,
+`Odotan kotona`, `Asun kadulla`, `Opiskelen koulussa` or
+`Katson ikkunasta`.
 
 ### Phase 5 — object case, arguments, word order
 

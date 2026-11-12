@@ -88,6 +88,7 @@ one, or `map_gz compress|decompress` for a manual round-trip.
 | `proper_names.bin.gz` | `build.rs` → `build/map_builders/huffman.rs` | `src/expand/proper_names.rs` | `HST1` static-Huffman set of accepted proper-name forms |
 | `proper_name_lemmas.bin.gz` | `build.rs` → `build/map_builders/front_coded.rs` | `src/expand/proper_names.rs` | `(proper-name form → lemma)` map |
 | `proper_name_cases.bin.gz` | `build.rs` → `build/map_builders/front_coded.rs` | `src/expand/proper_names.rs` | `(proper-name form → case)` map |
+| `verb_rection.bin.gz` | `build.rs` → `build/map_builders/front_coded.rs` | `src/expand/verb_rection.rs` | `(verb lemma → governed cases)` map |
 | `adj_degrees.bin.gz` | `build.rs` → `build/csv_builders/string_map.rs` | `src/expand/mod.rs` | positive → comparative/superlative |
 | `adverbit.bin.gz` | `build.rs` → `build/csv_builders/string_map.rs` | `src/expand/check_normal.rs` | `-ksi` adverbs and their possessives |
 | `connegatives.bin.gz` | `build.rs` → `build/csv_builders/string_map.rs` | `src/expand/connegative.rs` | bare potential/imperative connegatives |

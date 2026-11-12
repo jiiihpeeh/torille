@@ -160,6 +160,59 @@ pub fn attribute_agreement_corrections(
     corrections
 }
 
+/// The nominal form for the case a verb governs.
+pub fn case_corrections(
+    lemma: &str,
+    token: &Token,
+    case: Case,
+    number: Option<Number>,
+    pos: PartOfSpeech,
+    cat: &Catalogues,
+) -> Vec<Correction> {
+    let Some(row) = sanalista().by_word(lemma).next() else {
+        return Vec::new();
+    };
+    let inflections: Vec<_> = row.inflections().collect();
+    let mut want = Tags::UNKNOWN;
+    want.part_of_speech = Some(pos);
+    want.case = Some(case);
+    want.number = number;
+
+    let mut corrections: Vec<Correction> = Vec::new();
+    for form in forms_of(lemma, &inflections, cat, None, &want, pos, false) {
+        if form.confidence != Confidence::Plain || form.word == token.text {
+            continue;
+        }
+        let exact = form.readings.iter().any(|candidate| {
+            candidate.part_of_speech == Some(pos)
+                && candidate.case == Some(case)
+                && number.is_none_or(|number| candidate.number == Some(number))
+        });
+        if !exact {
+            continue;
+        }
+        if corrections.iter().any(|seen| {
+            seen.edits
+                .first()
+                .is_some_and(|edit| edit.replacement == form.word)
+        }) {
+            continue;
+        }
+        let distance = crate::levenshtein_with_ops(&token.text, &form.word).0;
+        corrections.push(Correction::new(
+            vec![Edit::new(token.start, token.end, form.word)],
+            distance as f32,
+            "verb_rection",
+        ));
+    }
+    corrections.sort_by(|a, b| {
+        a.score
+            .total_cmp(&b.score)
+            .then_with(|| a.edits[0].replacement.cmp(&b.edits[0].replacement))
+    });
+    corrections
+}
+
 /// The negative auxiliary for a subject's person and number.
 pub fn negative_auxiliary_correction(
     start: usize,

@@ -45,7 +45,7 @@ use csv_builders::string_map::{
 };
 use map_builders::front_coded::{
     emit_empty_set, emit_front_coded_set, emit_proper_name_cases, emit_proper_name_lemmas,
-    emit_proper_names, emit_stem_map,
+    emit_proper_names, emit_stem_map, emit_verb_rection,
 };
 
 #[path = "src/rejected.rs"]
@@ -172,6 +172,12 @@ fn main() {
     });
     emit_map(&out_dir, &precomputed, "proper_name_cases.bin", |raw| {
         emit_proper_name_cases(&proper_csv, &proper_extra, raw)
+    });
+
+    let rection_csv = Path::new(&manifest).join("data/verb_rection.csv");
+    println!("cargo:rerun-if-changed={}", rection_csv.display());
+    emit_map(&out_dir, &precomputed, "verb_rection.bin", |raw| {
+        emit_verb_rection(&rection_csv, raw)
     });
 
     // Stem maps: `(stem, bases)` pairs from

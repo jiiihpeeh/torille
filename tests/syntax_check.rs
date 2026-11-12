@@ -173,4 +173,8 @@ diagnostic_tests!(
     subordinate_comma_after_main,
     subordinate_comma_initial,
     relative_comma_pair,
+    rection_elative,
+    rection_illative,
+    rection_partitive,
+    rection_weak_verb,
 );

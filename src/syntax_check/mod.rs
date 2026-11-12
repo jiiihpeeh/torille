@@ -13,6 +13,7 @@ mod agreement;
 mod correction;
 mod punctuation;
 mod rank;
+mod rection;
 
 pub mod diagnostic;
 
@@ -59,5 +60,6 @@ pub fn check_with_cache(text: &str, cache: &mut AnalysisCache) -> SyntaxCheck {
 pub fn check_analysis(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
     let mut diagnostics = agreement::check(tokens, analysis);
     diagnostics.extend(punctuation::check(tokens, analysis));
+    diagnostics.extend(rection::check(tokens, analysis));
     rank::resolve(diagnostics)
 }

@@ -328,6 +328,53 @@ fn case_name(code: &str) -> Option<&'static str> {
     })
 }
 
+/// Emit `lemma -> cases` from `data/verb_rection.csv`.
+///
+/// One row is one valency frame: `lemma,case,frame,priority,note`. The CSV is
+/// curated and comma-free in its note column; a note with a comma needs a
+/// quoted CSV reader, which this small table does not justify.
+pub(crate) fn emit_verb_rection(csv_path: &Path, blob_path: &Path) {
+    if !csv_path.exists() && blob_path.exists() {
+        eprintln!(
+            "build.rs: {} missing but {} present -- reusing",
+            csv_path.display(),
+            blob_path.display(),
+        );
+        return;
+    }
+    let csv = fs::read_to_string(csv_path).unwrap_or_else(|e| {
+        panic!(
+            "build.rs: could not read {}: {e}",
+            csv_path.display(),
+        )
+    });
+    let mut entries: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for line in csv.lines() {
+        let line = line.trim();
+        if line.is_empty() || line.starts_with("lemma,") {
+            continue;
+        }
+        let mut fields = line.splitn(5, ',');
+        let Some(lemma) = fields.next().map(str::trim).filter(|s| !s.is_empty()) else {
+            continue;
+        };
+        let Some(case) = fields.next().map(str::trim).filter(|s| !s.is_empty()) else {
+            continue;
+        };
+        let values = entries.entry(lemma.to_string()).or_default();
+        if !values.iter().any(|seen| seen == case) {
+            values.push(case.to_string());
+        }
+    }
+    eprintln!(
+        "build.rs: {}: {} verb-rection lemmas",
+        csv_path.display(),
+        entries.len(),
+    );
+    let entries: Vec<(String, Vec<String>)> = entries.into_iter().collect();
+    write_front_coded_map(blob_path, &entries);
+}
+
 /// Write a sorted key list as a front-coded `SST2` set blob.
 fn emit_front_coded_keys(blob_path: &Path, keys: &[String]) {
     // Front-code: one full key per `RESTART`-record block, then

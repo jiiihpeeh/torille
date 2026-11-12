@@ -280,6 +280,58 @@
           "corrections": [","]
         }
       ]
+    },
+    {
+      "id": "rection_elative",
+      "text": "Pidän sinä.",
+      "diagnostics": [
+        {
+          "kind": "verb_rection",
+          "severity": "error",
+          "start": 7,
+          "end": 12,
+          "corrections": ["sinusta", "sinua"]
+        }
+      ]
+    },
+    {
+      "id": "rection_illative",
+      "text": "Menen koulu.",
+      "diagnostics": [
+        {
+          "kind": "verb_rection",
+          "severity": "error",
+          "start": 6,
+          "end": 11,
+          "corrections": ["kouluun", "koululle"]
+        }
+      ]
+    },
+    {
+      "id": "rection_partitive",
+      "text": "Hän rakastaa sinä.",
+      "diagnostics": [
+        {
+          "kind": "verb_rection",
+          "severity": "error",
+          "start": 14,
+          "end": 19,
+          "corrections": ["sinua"]
+        }
+      ]
+    },
+    {
+      "id": "rection_weak_verb",
+      "text": "Luotan sinä.",
+      "diagnostics": [
+        {
+          "kind": "verb_rection",
+          "severity": "warning",
+          "start": 7,
+          "end": 12,
+          "corrections": ["sinuun"]
+        }
+      ]
     }
   ],
   "clean": [
@@ -347,6 +399,18 @@
     "Menin kotiin, koska olin väsynyt.",
     "Koska olin väsynyt, menin kotiin.",
     "Ostin omenoita, Liisa osti banaaneja ja Matti osti päärynöitä.",
-    "Menin kauppaan ja ostin maitoa."
+    "Menin kauppaan ja ostin maitoa.",
+    "Pidän sinusta.",
+    "Pidän sinua.",
+    "Menen kouluun.",
+    "Menen koululle.",
+    "Luotan sinuun.",
+    "Kuuntelen sinua.",
+    "Hän rakastaa sinua.",
+    "Minä opiskelen suomea.",
+    "Odotan kotona.",
+    "Asun kadulla.",
+    "Opiskelen koulussa.",
+    "Katson ikkunasta."
   ]
 }
