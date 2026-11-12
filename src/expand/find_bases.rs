@@ -138,7 +138,8 @@ pub fn find_bases_with<'a>(
     find_bases_with_inner(
         lexicon, cat, word, /* with_clitic_phase */ true, /* keep_form */ None,
         /* collect_neighbours */ true, /* recognition_only */ false,
-        /* all_phases */ false, /* keep_walking_with_direct */ false,
+        /* cheap_recognition */ false, /* all_phases */ false,
+        /* keep_walking_with_direct */ false,
     )
 }
 
@@ -166,6 +167,7 @@ where
         Some(&keep_form),
         /* collect_neighbours */ true,
         /* recognition_only */ false,
+        /* cheap_recognition */ false,
         /* all_phases */ false,
         /* keep_walking_with_direct */ false,
     )
@@ -191,6 +193,7 @@ pub fn find_all_bases_with<'a>(
         Some(&|_| false),
         /* collect_neighbours */ false,
         /* recognition_only */ false,
+        /* cheap_recognition */ false,
         /* all_phases */ true,
         /* keep_walking_with_direct */ false,
     )
@@ -211,6 +214,7 @@ pub(crate) fn find_bases_for_check<'a>(
         Some(&|_| false),
         /* collect_neighbours */ false,
         /* recognition_only */ true,
+        /* cheap_recognition */ false,
         /* all_phases */ false,
         /* keep_walking_with_direct */ false,
     )
@@ -246,6 +250,7 @@ pub(crate) fn find_bases_for_analysis<'a>(
         Some(&|_| false),
         /* collect_neighbours */ false,
         /* recognition_only */ true,
+        /* cheap_recognition */ true,
         /* all_phases */ false,
         /* keep_walking_with_direct */ has_direct,
     )
@@ -801,6 +806,7 @@ fn find_bases_with_inner<'a>(
     keep_form: Option<&(dyn Fn(&str) -> bool + Sync)>,
     collect_neighbours: bool,
     recognition_only: bool,
+    cheap_recognition: bool,
     all_phases: bool,
     keep_walking_with_direct: bool,
 ) -> BasesReport<'a> {
@@ -875,7 +881,7 @@ fn find_bases_with_inner<'a>(
     }
     let mut forms: Vec<SourcedForm<'a>> = Vec::new();
     for lemma in &candidates {
-        if recognition_only {
+        if recognition_only && cheap_recognition {
             if lemma_emit(cat, lemma, word, pos, possessives) {
                 bases.push(lemma);
             }
@@ -973,6 +979,7 @@ fn find_bases_with_inner<'a>(
             keep_form,
             collect_neighbours,
             recognition_only,
+            cheap_recognition,
             pos,
             possessives,
         );
@@ -1006,6 +1013,7 @@ fn find_bases_with_inner<'a>(
             keep_form,
             collect_neighbours,
             recognition_only,
+            cheap_recognition,
             3,
         );
     }
@@ -1026,6 +1034,7 @@ fn find_bases_with_inner<'a>(
             keep_form,
             collect_neighbours,
             recognition_only,
+            cheap_recognition,
             2,
         );
     }
@@ -1037,7 +1046,7 @@ fn find_bases_with_inner<'a>(
                 continue;
             }
             if seen.insert(lemma as *const _) {
-                if recognition_only {
+                if recognition_only && cheap_recognition {
                     if lemma_emit(cat, lemma, word, pos, possessives) {
                         bases.push(lemma);
                     }
@@ -1097,6 +1106,7 @@ fn find_bases_with_inner<'a>(
             keep_form,
             collect_neighbours,
             recognition_only,
+            cheap_recognition,
             all_phases,
             keep_walking_with_direct,
         );
@@ -1199,6 +1209,7 @@ fn walk_head1<'a>(
     keep_form: Option<&(dyn Fn(&str) -> bool + Sync)>,
     collect_neighbours: bool,
     recognition_only: bool,
+    cheap_recognition: bool,
     pos: PartOfSpeech,
     possessives: bool,
 ) -> WalkChunk<'a> {
@@ -1213,6 +1224,7 @@ fn walk_head1<'a>(
             keep_form,
             collect_neighbours,
             recognition_only,
+            cheap_recognition,
             pos,
             possessives,
         );
@@ -1231,6 +1243,7 @@ fn walk_head1<'a>(
                         keep_form,
                         collect_neighbours,
                         recognition_only,
+                        cheap_recognition,
                         pos,
                         possessives,
                     )
@@ -1264,6 +1277,7 @@ fn walk_head1_chunk<'a>(
     keep_form: Option<&(dyn Fn(&str) -> bool + Sync)>,
     collect_neighbours: bool,
     recognition_only: bool,
+    cheap_recognition: bool,
     pos: PartOfSpeech,
     possessives: bool,
 ) -> WalkChunk<'a> {
@@ -1273,7 +1287,7 @@ fn walk_head1_chunk<'a>(
         forms: Vec::new(),
     };
     for &lemma in head1 {
-        if recognition_only {
+        if recognition_only && cheap_recognition {
             if lemma_emit(cat, lemma, word, pos, possessives) {
                 out.bases.push(lemma);
             }
@@ -1336,6 +1350,7 @@ fn run_prefix_walk<'a>(
     keep_form: Option<&(dyn Fn(&str) -> bool + Sync)>,
     collect_neighbours: bool,
     recognition_only: bool,
+    cheap_recognition: bool,
     prefix_len: usize,
 ) {
     let Some(prefix) = take_chars(form, prefix_len) else {
@@ -1356,7 +1371,7 @@ fn run_prefix_walk<'a>(
         if !seen.insert(l as *const _) {
             continue;
         }
-        if recognition_only {
+        if recognition_only && cheap_recognition {
             if lemma_emit(cat, l, form, pos, possessives) {
                 bases.push(l);
             }

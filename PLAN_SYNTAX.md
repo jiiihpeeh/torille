@@ -496,17 +496,17 @@ sentence, not seconds. Do not make the keystroke path depend on this layer.
 
 **Phase 6 landing.** `find_bases_for_analysis` runs the walks with the cheap
 paradigm probe (`lemma_emit`), and the syntax layer inflects only the winning
-bases instead of building the suggestion pool. The recognition branch is
-shared with `find_bases_for_check`, so the checker gets the same speedup; the
-reverse-lookup recall gate (99.89% of answers include the right base, exit 0)
-and the engine-output comparison (no lost forms or stem pairs) still pass.
+bases instead of building the suggestion pool. The cheap probe is **syntax
+only**: applying it to `find_bases_for_check` lost `kuultensa` (the
+`emits_form` probe does not cover that possessive postposition the way
+`inflect_all` does), so the checker keeps the full inflection path.
 Measured on this machine:
 
 | workload | before | after |
 |---|---|---|
 | `syntax::tests` (26 tests) | ~32 s | ~1.6 s |
 | 34-case corpus | ~43–53 s | ~2.3 s |
-| full lib suite | ~218 s | ~141 s |
+| full lib suite | ~218 s | ~180 s |
 | one sentence, process included | ~2 s | ~0.2 s |
 
 A fresh word still pays for its first paradigm build, so a 60-sentence probe
