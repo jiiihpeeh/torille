@@ -1,6 +1,8 @@
 # PLAN_SYNTAX — making the advisory syntax layer trustworthy
 
-Status: Phases 0–6 landed. Work happens on the `syntax` branch off `master`.
+Status: Phases 0–6 landed. The correction layer on top of this analysis is
+planned separately in [`PLAN_SYNTAX_CHECKER.md`](PLAN_SYNTAX_CHECKER.md). Work
+happens on the `syntax` branch off `master`.
 
 The syntax layer (`src/syntax.rs`) is the second, on-demand layer over the
 morphology engine. It is **not** in the keystroke path; its only shipping
