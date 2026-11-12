@@ -11,7 +11,9 @@
           "end": 17,
           "message": "style_wordy",
           "expected": "tällä hetkellä",
-          "corrections": ["nyt"]
+          "corrections": [
+            "nyt"
+          ]
         }
       ]
     },
@@ -41,7 +43,9 @@
           "end": 8,
           "message": "style_colloquial",
           "expected": "systeemi",
-          "corrections": ["järjestelmä"]
+          "corrections": [
+            "järjestelmä"
+          ]
         }
       ]
     },
@@ -71,7 +75,9 @@
           "end": 17,
           "message": "style_wordy",
           "expected": "kokonaisuudessaan",
-          "corrections": ["kokonaan"]
+          "corrections": [
+            "kokonaan"
+          ]
         }
       ]
     },
@@ -96,9 +102,51 @@
           "end": 17,
           "message": "style_wordy",
           "expected": "tällä hetkellä",
-          "corrections": ["nyt"]
+          "corrections": [
+            "nyt"
+          ]
         }
       ]
+    },
+    {
+      "id": "repetition_near",
+      "text": "Tässä lauseessa asia toistuu ja asia jää mieleen.",
+      "diagnostics": [
+        {
+          "kind": "style_repetition",
+          "severity": "suggestion",
+          "start": 34,
+          "end": 38,
+          "message": "style_repetition",
+          "expected": "asia",
+          "corrections": []
+        }
+      ]
+    },
+    {
+      "id": "repetition_is_reported_once",
+      "text": "Asia on asia ja asia on asia.",
+      "diagnostics": [
+        {
+          "kind": "style_repetition",
+          "severity": "suggestion",
+          "start": 8,
+          "end": 12,
+          "message": "style_repetition",
+          "expected": "asia",
+          "corrections": []
+        }
+      ]
+    },
+    {
+      "id": "repetition_does_not_cross_a_sentence",
+      "text": "Asia on hyvä. Asia on tärkeä.",
+      "diagnostics": []
+    },
+    {
+      "id": "repetition_skips_a_light_verb",
+      "text": "Olemme täällä ja olemme valmiita.",
+      "diagnostics": []
     }
   ],
   "clean": [

@@ -1,11 +1,11 @@
 # PLAN_STYLE — the opt-in style layer
 
-Status: **Phase 0–2 landed; phases 3–7 planned.** The public types and the
-curated phrase/word table are implemented in `src/style_check/`. Repetition,
-the long-sentence metric and the wasm/UI surface are not wired yet. This is
-the separate plan that `PLAN_SYNTAX_CHECKER.md` phase 6E asked for before any
-style rule lands. It does not change the grammar checker, the suggestion
-pipeline or the keystroke path.
+Status: **Phase 0–3 landed; phases 4–7 planned.** The public types, the
+curated phrase/word table and sentence-local repetition are implemented in
+`src/style_check/`. The long-sentence metric and the wasm/UI surface are not
+wired yet. This is the separate plan that `PLAN_SYNTAX_CHECKER.md` phase 6E
+asked for before any style rule lands. It does not change the grammar checker,
+the suggestion pipeline or the keystroke path.
 
 The grammar checker answers “is this written Finnish correct?”. The style
 layer answers a different, optional question: “is this sentence needlessly
@@ -417,11 +417,19 @@ Acceptance: the exact-output fixture is stable; no overlap duplicates.
 
 ### Phase 3 — repetition
 
-- [ ] Add `style_check/repetition.rs`.
-- [ ] Sentence-scoped lemma repetition with the 10-token window.
-- [ ] Skip function words, light verbs, short words and proper names.
-- [ ] Add positive and negative cases, including the cross-sentence negative.
-- [ ] One finding per lemma per sentence.
+- [x] Add `style_check/repetition.rs`.
+- [x] Sentence-scoped lemma repetition with the 10-token window.
+- [x] Skip function words, light verbs, short words and proper names.
+- [x] Add positive and negative cases, including the cross-sentence negative.
+- [x] One finding per lemma per sentence.
+
+Phase 3 landed with a sentence-local scan over the syntax lemmas. It skips
+function words, light verbs (`olla`, `tulla`, `voida`, `tehdä`), words shorter
+than four characters and non-initial proper names; a sentence-initial capital
+is not a name signal, and `Asia` is both a name and the common noun. Phrase
+table spans are excluded, and the fixture covers the near repeat, the
+one-per-sentence rule, the cross-sentence negative and the light-verb
+negative.
 
 Acceptance: clean corpus stays within the metric budget.
 

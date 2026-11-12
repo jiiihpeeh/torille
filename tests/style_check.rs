@@ -160,4 +160,8 @@ diagnostic_tests!(
     a_word_does_not_match_inside_a_longer_word,
     a_phrase_does_not_cross_a_sentence_boundary,
     a_phrase_is_reported_once,
+    repetition_near,
+    repetition_is_reported_once,
+    repetition_does_not_cross_a_sentence,
+    repetition_skips_a_light_verb,
 );
