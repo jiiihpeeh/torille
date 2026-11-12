@@ -1,12 +1,12 @@
 # PLAN_STYLE — the opt-in style layer
 
-Status: **Phase 0–4 landed; phases 5–7 planned.** The public types, the
-curated phrase/word table, sentence-local repetition and the long-sentence
-metric are implemented in `src/style_check/`. The evaluation corpus and the
-wasm/UI surface are not wired yet. This is the separate plan that
-`PLAN_SYNTAX_CHECKER.md` phase 6E asked for before any style rule lands. It
-does not change the grammar checker, the suggestion pipeline or the keystroke
-path.
+Status: **Phase 0–5 landed; phases 6–7 planned.** The public types, the
+curated phrase/word table, sentence-local repetition, the long-sentence metric
+and the evaluation corpus are implemented in `src/style_check/` and `tests/`.
+The wasm/UI surface and the user-facing documentation are not wired yet. This
+is the separate plan that `PLAN_SYNTAX_CHECKER.md` phase 6E asked for before
+any style rule lands. It does not change the grammar checker, the suggestion
+pipeline or the keystroke path.
 
 The grammar checker answers “is this written Finnish correct?”. The style
 layer answers a different, optional question: “is this sentence needlessly
@@ -451,12 +451,23 @@ fragments.
 
 ### Phase 5 — evaluation corpus
 
-- [ ] Add `tests/fixtures/style_eval.json` and `tests/style_eval.rs`.
-- [ ] Record per-kind precision/recall and the clean budget.
-- [ ] Tune the repetition window and length threshold only from measured
+- [x] Add `tests/fixtures/style_eval.json` and `tests/style_eval.rs`.
+- [x] Record per-kind precision/recall and the clean budget.
+- [x] Tune the repetition window and length threshold only from measured
       corpus results; do not tune to a single example.
-- [ ] Add the baseline table to this plan and, after implementation, to
+- [x] Add the baseline table to this plan and, after implementation, to
       `docs/style_checker.md`.
+
+Phase 5 baseline (2026-11-13):
+
+```text
+clean rows 40: 0 table hits, 0 metric findings, budget 2
+cases 6: every emitted kind precision 1.00, recall 1.00
+```
+
+The thresholds did not need tuning: the 10-token repetition window and the
+35-word sentence threshold already keep the clean corpus quiet. The case set
+covers all six emitted kinds.
 
 Acceptance: zero `Error`/`Warning`, zero table hits on clean rows, metric
 budget met.

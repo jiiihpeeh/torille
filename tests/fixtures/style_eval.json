@@ -1,0 +1,82 @@
+{
+  "_comment": [
+    "Aggregate evaluation corpus for the opt-in style layer.",
+    "The exact-output gate is tests/fixtures/style_diagnostics.json.",
+    "`clean` rows must have zero table hits and stay within the metric budget.",
+    "`cases` list the expected kinds; counts are measured, not span-asserted."
+  ],
+  "clean": [
+    "Pöydällä on kirjat.",
+    "Pöydällä on kirja.",
+    "Talo on rakennettu.",
+    "Talo on kaunis.",
+    "Talot ovat kauniita.",
+    "Minun täytyy mennä.",
+    "Hänen pitää mennä.",
+    "Kaksi miestä tuli.",
+    "Hänellä on kaksi lasta.",
+    "Sami ja Liisa söivät.",
+    "Sami söi puuron.",
+    "Söi Sami puuron.",
+    "Puuron söi Sami.",
+    "Sami söi ja joi.",
+    "Sami tai Liisa tulee.",
+    "Lapset leikkivät.",
+    "Koirat nukkuvat.",
+    "Koira nukkuu.",
+    "Minä menen kotiin.",
+    "Sinä menet.",
+    "Te menette.",
+    "He menevät.",
+    "Hän antoi kirjan.",
+    "En lue kirjaa.",
+    "Minä en tule.",
+    "Hän ei tule.",
+    "Minä olen lukenut.",
+    "Hän on lukenut.",
+    "Me olemme lukeneet.",
+    "He ovat lukeneet.",
+    "Hän sanoi, että tulee.",
+    "Hän tuli tupaan, jossa roihusi tuli.",
+    "Helsingissä asuva mies on opettaja.",
+    "Vanha talo Helsingissä on kaunis.",
+    "Hän näyttää väsyneeltä.",
+    "Talo maalattiin punaiseksi.",
+    "Sami antoi Liisalle kirjan.",
+    "Onko sinulla kirjaa?",
+    "Punainen auto.",
+    "Vanhat talot."
+  ],
+  "cases": [
+    {
+      "id": "style_cliche",
+      "text": "Viime kädessä ratkaisu on sinun.",
+      "kinds": ["style_cliche"]
+    },
+    {
+      "id": "style_filler",
+      "text": "Tavallaan se on hyvä.",
+      "kinds": ["style_filler"]
+    },
+    {
+      "id": "style_wordy",
+      "text": "Tällä hetkellä tilanne on rauhallinen.",
+      "kinds": ["style_wordy"]
+    },
+    {
+      "id": "style_colloquial",
+      "text": "Systeemi toimii.",
+      "kinds": ["style_colloquial"]
+    },
+    {
+      "id": "style_repetition",
+      "text": "Tässä lauseessa asia toistuu ja asia jää mieleen.",
+      "kinds": ["style_repetition"]
+    },
+    {
+      "id": "style_long_sentence",
+      "text": "Hän on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on.",
+      "kinds": ["style_long_sentence"]
+    }
+  ]
+}
