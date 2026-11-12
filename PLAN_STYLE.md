@@ -1,12 +1,12 @@
 # PLAN_STYLE — the opt-in style layer
 
-Status: **Phase 0–6 landed; phase 7 planned.** The public types, the curated
-phrase/word table, sentence-local repetition, the long-sentence metric, the
-evaluation corpus, the wasm export and the opt-in UI are implemented. The
-user-facing documentation and release bump remain. This is the separate plan
-that `PLAN_SYNTAX_CHECKER.md` phase 6E asked for before any style rule lands.
-It does not change the grammar checker, the suggestion pipeline or the
-keystroke path.
+Status: **Phase 0–7 landed.** The style layer is implemented end to end:
+`src/style_check/`, the curated tables, the wasm export, the `Tarkista tyyli`
+command in both extensions, the Leptos panel, the evaluation corpus and
+`docs/style_checker.md`. The release is `0.7.0`; the extensions are `1.2.0`.
+This is the separate plan that `PLAN_SYNTAX_CHECKER.md` phase 6E asked for
+before any style rule lands. It does not change the grammar checker, the
+suggestion pipeline or the keystroke path.
 
 The grammar checker answers “is this written Finnish correct?”. The style
 layer answers a different, optional question: “is this sentence needlessly
@@ -494,12 +494,16 @@ the worker protocol has one new message type and no changed old one.
 
 ### Phase 7 — docs, version and gates
 
-- [ ] Add `docs/style_checker.md`: labels, thresholds, table columns, wasm
+- [x] Add `docs/style_checker.md`: labels, thresholds, table columns, wasm
       shape, UI contract, limitations and the measured baseline.
-- [ ] Link it from `README.md` and `AGENTS.md` only after the document exists.
-- [ ] Bump the shipping crates and both extension packages once, in the
-      release commit.
-- [ ] Run the full gates in §10.
+- [x] Link it from `README.md` and `AGENTS.md` only after the document exists.
+- [x] Bump the shipping crates to `0.7.0` and both extension packages to
+      `1.2.0`, in the release commit.
+- [x] Run the full gates in §10.
+
+Phase 7 landed with `docs/style_checker.md` linked from both entry points.
+`PLAN_SYNTAX_CHECKER.md` §6E now points at the implemented layer as well as
+the plan.
 
 ## 10. Gates
 

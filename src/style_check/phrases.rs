@@ -60,11 +60,12 @@ pub(super) fn check(tokens: &[Token]) -> Vec<StyleDiagnostic> {
             );
             diagnostic.expected = Some(key);
             if let Some(replacement) = entry.replacement {
-                let replacement =
-                    sentence_case(replacement, contexts[first].sentence_start);
-                diagnostic
-                    .corrections
-                    .push(Correction::replacement(span.start, span.end, replacement));
+                let replacement = sentence_case(replacement, contexts[first].sentence_start);
+                diagnostic.corrections.push(Correction::replacement(
+                    span.start,
+                    span.end,
+                    replacement,
+                ));
             }
             diagnostics.push(diagnostic);
             position = last_position + 1;
@@ -94,8 +95,8 @@ fn sentence_case(replacement: &str, sentence_start: bool) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tokenise::tokenise;
     use crate::style_check::StyleKind;
+    use crate::tokenise::tokenise;
 
     fn diagnostics(text: &str) -> Vec<StyleDiagnostic> {
         check(&tokenise(text))
@@ -165,7 +166,13 @@ mod tests {
     fn a_phrase_is_reported_once() {
         let found = diagnostics("Tällä hetkellä hetkellä tilanne on rauhallinen.");
         assert_eq!(found.len(), 1, "{found:#?}");
-        assert_eq!(found[0].span, span_of("Tällä hetkellä hetkellä tilanne on rauhallinen.", "Tällä hetkellä"));
+        assert_eq!(
+            found[0].span,
+            span_of(
+                "Tällä hetkellä hetkellä tilanne on rauhallinen.",
+                "Tällä hetkellä"
+            )
+        );
     }
 
     #[test]
@@ -191,7 +198,11 @@ mod tests {
             "Luen kirjaa.",
             "Hän tuli kotiin.",
         ] {
-            assert!(diagnostics(text).is_empty(), "{text}: {:#?}", diagnostics(text));
+            assert!(
+                diagnostics(text).is_empty(),
+                "{text}: {:#?}",
+                diagnostics(text)
+            );
         }
     }
 }

@@ -13,10 +13,7 @@ static PHRASES: StemMap = StemMap::new(include_bytes!(concat!(
     env!("OUT_DIR"),
     "/style_phrases.bin"
 )));
-static WORDS: StemMap = StemMap::new(include_bytes!(concat!(
-    env!("OUT_DIR"),
-    "/style_words.bin"
-)));
+static WORDS: StemMap = StemMap::new(include_bytes!(concat!(env!("OUT_DIR"), "/style_words.bin")));
 
 /// Longest phrase the matcher tries. Kept in step with the build writer, which
 /// rejects a longer row.

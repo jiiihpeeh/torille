@@ -64,8 +64,9 @@ Out of scope for this plan:
 - punctuation beyond commas, colons and semicolons in the first release
   (quotes and dialogue marks are a later punctuation-engine phase).
 
-The style layer, if built later, is a **separate** analyzer. It must not share
-diagnostic kinds with grammar errors, and it must be opt-in in the UI.
+The style layer is a **separate** analyzer. It does not share diagnostic kinds
+with grammar errors and is opt-in in the UI; see `PLAN_STYLE.md` and
+`docs/style_checker.md`.
 
 ## 2. What the analysis layer already gives us
 
@@ -1475,9 +1476,10 @@ Decision: do not start a style layer in this plan. If one is built later:
 - it must not reuse grammar kinds or run in the same pass by default;
 - it must not make the clean corpus noisier.
 
-The separate plan now exists as [`PLAN_STYLE.md`](PLAN_STYLE.md). No style code
-is implemented; the plan keeps the reopening condition and adds the rule
-catalogue, data tables, wasm shape and UI phases.
+The separate plan now exists as [`PLAN_STYLE.md`](PLAN_STYLE.md) and the
+layer shipped in `0.7.0`: `src/style_check/`, a separate wasm export, the
+`Tarkista tyyli` command and a `Tyyli` panel. The user-facing contract is
+[`docs/style_checker.md`](docs/style_checker.md).
 
 Tasks:
 

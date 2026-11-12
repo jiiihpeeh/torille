@@ -132,6 +132,6 @@ obligatory argument from a suffix or a dictionary class.
   ranges; a rule cannot yet ask for the host as one uninterrupted span.
 - **The extension grammar check is context-menu only.** There is no per-site
   toggle or keystroke trigger yet; the context menu is the opt-in.
-- **No style layer.** Repetition, register and phrasing are out of scope; a
-  style analyzer would be a separate opt-in module with its own kinds. The
-  design is in [`PLAN_STYLE.md`](../PLAN_STYLE.md); no style code is shipped.
+- **No grammar/style mixing.** Repetition, register and phrasing are a
+  separate opt-in layer, [`docs/style_checker.md`](style_checker.md); the
+  grammar checker does not emit those kinds.

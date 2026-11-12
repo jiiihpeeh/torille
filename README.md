@@ -88,6 +88,7 @@ torille/
     sentence.rs         sentence spans and token context
     syntax.rs           on-demand clause/role analysis
     syntax_check/       grammar diagnostics and corrections
+    style_check/        opt-in style suggestions (separate pass)
   maps/                 embedded binary maps, with a README
   data/                 Kotus sources, committed build inputs, reference tables
   tools/                CLI drivers, build generators, oracle reference, harness
@@ -150,6 +151,7 @@ inventory is in [`tools/README.md`](tools/README.md).
 | `check` | compound-aware spelling check |
 | `check_normal` | the per-keystroke gate the wasm demo uses |
 | `check_syntax` | grammar and punctuation diagnostics with corrections |
+| `check_style` | opt-in style suggestions (never an error) |
 | `derive` | productive derivations of a base word |
 | `hyphenate` | permitted Finnish line breaks, with `--json` offsets |
 | `suggest_correct` | ranked suggestions for a misspelling |
@@ -280,6 +282,8 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
 
 - [`docs/syntax_checker.md`](docs/syntax_checker.md) — grammar diagnostics,
   severity policy, corrections, evaluation and known limitations.
+- [`docs/style_checker.md`](docs/style_checker.md) — the opt-in style layer:
+  curated tables, repetition and long-sentence rules, UI and baseline.
 - [`PLAN_SYNTAX_REFACTOR.md`](PLAN_SYNTAX_REFACTOR.md) — a phased
   modularisation plan for the syntax layer, checker and extension content.
 - [`PLAN_STYLE.md`](PLAN_STYLE.md) — the design for a separate opt-in style

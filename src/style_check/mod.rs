@@ -39,8 +39,10 @@ pub fn check(text: &str) -> StyleAnalysis {
 /// for a second tokenisation.
 pub fn check_tokens(tokens: &[Token]) -> StyleAnalysis {
     let mut diagnostics = phrases::check(tokens);
-    let covered: Vec<std::ops::Range<usize>> =
-        diagnostics.iter().map(|diagnostic| diagnostic.span.clone()).collect();
+    let covered: Vec<std::ops::Range<usize>> = diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.span.clone())
+        .collect();
     let analysis = crate::syntax::analyze(tokens);
     diagnostics.extend(repetition::check(tokens, &analysis, &covered));
     let long_sentences = length::check(tokens, &analysis, &diagnostics);

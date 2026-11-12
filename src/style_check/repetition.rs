@@ -163,7 +163,12 @@ mod tests {
         let tokens = crate::tokenise::tokenise(text);
         let analysis = crate::syntax::analyze(&tokens);
         for (i, token) in tokens.iter().enumerate() {
-            eprintln!("{i} {:?} word={} lemma={:?}", token.text, token.is_word(), analysis.tokens[i].lemma);
+            eprintln!(
+                "{i} {:?} word={} lemma={:?}",
+                token.text,
+                token.is_word(),
+                analysis.tokens[i].lemma
+            );
         }
         assert_eq!(repetition(text).len(), 1);
     }
@@ -193,7 +198,10 @@ mod tests {
     #[test]
     fn a_phrase_match_suppresses_a_repeat_inside_it() {
         let found = diagnostics("Tällä hetkellä hetkellä tilanne on rauhallinen.");
-        assert!(found.iter().all(|d| d.kind == StyleKind::Wordy), "{found:#?}");
+        assert!(
+            found.iter().all(|d| d.kind == StyleKind::Wordy),
+            "{found:#?}"
+        );
     }
 
     #[test]

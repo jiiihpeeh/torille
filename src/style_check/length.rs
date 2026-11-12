@@ -26,9 +26,7 @@ pub(super) fn check(
     for span in sentence::spans(tokens) {
         let word_count = tokens
             .iter()
-            .filter(|token| {
-                token.is_word() && span.start <= token.start && token.end <= span.end
-            })
+            .filter(|token| token.is_word() && span.start <= token.start && token.end <= span.end)
             .count();
         if word_count <= LONG_SENTENCE_WORDS {
             continue;
@@ -94,7 +92,10 @@ mod tests {
         }
         text.push('.');
         assert_eq!(
-            tokenise(&text).iter().filter(|token| token.is_word()).count(),
+            tokenise(&text)
+                .iter()
+                .filter(|token| token.is_word())
+                .count(),
             words
         );
         text
@@ -115,10 +116,7 @@ mod tests {
         let found = diagnostics(&sentence_with(36));
         assert_eq!(found.len(), 1, "{found:#?}");
         assert_eq!(found[0].kind, StyleKind::LongSentence);
-        assert_eq!(
-            found[0].expected.as_deref(),
-            Some("enintään 35 sanaa")
-        );
+        assert_eq!(found[0].expected.as_deref(), Some("enintään 35 sanaa"));
         assert!(found[0].corrections.is_empty());
     }
 
