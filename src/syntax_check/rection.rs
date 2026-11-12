@@ -103,12 +103,12 @@ fn argument(
         let syntax = &analysis.tokens[index];
         if !matches!(
             syntax.role,
-            SyntacticRole::Object | SyntacticRole::Subject
+            SyntacticRole::Object | SyntacticRole::Subject | SyntacticRole::Unknown
         ) || is_marker(&tokens[index].text)
         {
             continue;
         }
-        let Some(case) = syntax.case else {
+        let Some(case) = nominal_case(syntax) else {
             continue;
         };
         if nominal_pos(syntax).is_none() {
@@ -124,6 +124,34 @@ fn is_marker(word: &str) -> bool {
     crate::syntax::is_coordinating(&lower)
         || crate::syntax::is_subordinator(&lower)
         || matches!(lower.as_str(), "joka" | "mikä" | "ken" | "kuka")
+}
+
+fn nominal_case(syntax: &crate::syntax::TokenSyntax) -> Option<Case> {
+    if let Some(case) = syntax.case {
+        return Some(case);
+    }
+    let mut cases: Vec<Case> = syntax
+        .readings
+        .iter()
+        .filter(|reading| {
+            matches!(
+                reading.part_of_speech,
+                Some(
+                    PartOfSpeech::Noun
+                        | PartOfSpeech::Adjective
+                        | PartOfSpeech::Pronoun
+                        | PartOfSpeech::Ordinal
+                )
+            )
+        })
+        .filter_map(|reading| reading.case)
+        .collect();
+    cases.sort_unstable();
+    cases.dedup();
+    match cases.as_slice() {
+        [case] => Some(*case),
+        _ => None,
+    }
 }
 
 fn nominal_pos(syntax: &crate::syntax::TokenSyntax) -> Option<PartOfSpeech> {

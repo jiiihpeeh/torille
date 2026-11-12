@@ -1,7 +1,7 @@
 # PLAN_SYNTAX_CHECKER — grammar and punctuation diagnostics
 
-Status: Phases 0–4 landed, with nested lists still open (top-level and
-introduced lists work). Phases 5–6 are planned. The analysis layer it builds
+Status: Phases 0–4 landed and Phase 5 started (negative-clause object case);
+nested lists are still open. Phase 6 is planned. The analysis layer it builds
 on is `PLAN_SYNTAX.md` and is already landed on the `syntax` branch.
 
 The goal is a **correction checker**, not another parser: detect a small set of
@@ -1072,19 +1072,25 @@ No error for `Pidän sinusta`, `Pidän sinua`, `Menen kouluun`,
 `Odotan kotona`, `Asun kadulla`, `Opiskelen koulussa` or
 `Katson ikkunasta`.
 
-### Phase 5 — object case, arguments, word order
+### Phase 5 — object case, arguments, word order — partial
 
-- [ ] Negative-clause partitive as an error.
+- [x] Negative-clause partitive as an error.
+- [x] Rection outranks the general negative-object rule on the same span
+      (`En pidä sinä` offers `sinusta`/`sinua`, not only `sinua`).
 - [ ] Aspect-based object case as a suggestion only.
 - [ ] Missing/extra arguments for explicitly marked frames.
 - [ ] Word order: no rules; document the deferral.
 
-Acceptance:
+Acceptance (passing):
 
 ```text
 En lue kirja.      → En lue kirjaa.        (error)
-Luen kirja.        → Luen kirjan / Luen kirjaa. (suggestion, both)
+Sami ei syö puuro. → Sami ei syö puuroa.   (error)
+En pidä sinä.      → En pidä sinusta.      (rection wins)
 ```
+
+No error for `En lue kirjaa`, `En syö puuroa`, `En pidä sinusta`,
+`En mene kouluun`.
 
 ### Phase 6 — UI, ranking, evaluation
 

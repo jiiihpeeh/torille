@@ -11,6 +11,7 @@
 
 mod agreement;
 mod correction;
+mod object_case;
 mod punctuation;
 mod rank;
 mod rection;
@@ -61,5 +62,6 @@ pub fn check_analysis(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<Syntax
     let mut diagnostics = agreement::check(tokens, analysis);
     diagnostics.extend(punctuation::check(tokens, analysis));
     diagnostics.extend(rection::check(tokens, analysis));
+    diagnostics.extend(object_case::check(tokens, analysis));
     rank::resolve(diagnostics)
 }

@@ -332,6 +332,45 @@
           "corrections": ["sinuun"]
         }
       ]
+    },
+    {
+      "id": "object_case_negative",
+      "text": "En lue kirja.",
+      "diagnostics": [
+        {
+          "kind": "object_case",
+          "severity": "error",
+          "start": 7,
+          "end": 12,
+          "corrections": ["kirjaa"]
+        }
+      ]
+    },
+    {
+      "id": "object_case_negative_subject",
+      "text": "Sami ei syö puuro.",
+      "diagnostics": [
+        {
+          "kind": "object_case",
+          "severity": "error",
+          "start": 13,
+          "end": 18,
+          "corrections": ["puuroa"]
+        }
+      ]
+    },
+    {
+      "id": "negative_rection_wins",
+      "text": "En pidä sinä.",
+      "diagnostics": [
+        {
+          "kind": "verb_rection",
+          "severity": "error",
+          "start": 9,
+          "end": 14,
+          "corrections": ["sinusta", "sinua"]
+        }
+      ]
     }
   ],
   "clean": [
@@ -411,6 +450,10 @@
     "Odotan kotona.",
     "Asun kadulla.",
     "Opiskelen koulussa.",
-    "Katson ikkunasta."
+    "Katson ikkunasta.",
+    "En lue kirjaa.",
+    "En syö puuroa.",
+    "En pidä sinusta.",
+    "En mene kouluun."
   ]
 }

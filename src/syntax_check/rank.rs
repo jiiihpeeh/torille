@@ -23,7 +23,9 @@ pub(super) fn resolve(mut diagnostics: Vec<SyntaxDiagnostic>) -> Vec<SyntaxDiagn
             .then_with(|| a.span.end.cmp(&b.span.end))
             .then_with(|| a.kind.cmp(&b.kind))
     });
-    diagnostics.dedup_by(|a, b| a.kind == b.kind && a.span == b.span);
+    // One diagnostic per span: a rection finding wins over the more general
+    // negative-object case when both describe the same token.
+    diagnostics.dedup_by(|a, b| a.span == b.span);
     diagnostics
 }
 

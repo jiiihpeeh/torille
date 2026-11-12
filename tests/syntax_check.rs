@@ -177,4 +177,7 @@ diagnostic_tests!(
     rection_illative,
     rection_partitive,
     rection_weak_verb,
+    object_case_negative,
+    object_case_negative_subject,
+    negative_rection_wins,
 );
