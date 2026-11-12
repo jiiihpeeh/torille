@@ -1,9 +1,11 @@
 # PLAN_STYLE — the opt-in style layer
 
-Status: **planned, not implemented.** This is the separate plan that
-`PLAN_SYNTAX_CHECKER.md` phase 6E asked for before any style rule lands. It
-does not change the grammar checker, the suggestion pipeline or the keystroke
-path.
+Status: **Phase 0–1 landed; phases 2–7 planned.** The public types and an empty
+rule pass exist in `src/style_check/`. No phrase table, repetition or
+long-sentence rule is implemented yet, and no wasm/UI surface is wired. This is
+the separate plan that `PLAN_SYNTAX_CHECKER.md` phase 6E asked for before any
+style rule lands. It does not change the grammar checker, the suggestion
+pipeline or the keystroke path.
 
 The grammar checker answers “is this written Finnish correct?”. The style
 layer answers a different, optional question: “is this sentence needlessly
@@ -372,20 +374,24 @@ grammar fixture and evaluation unchanged.
 
 ### Phase 0 — decision and baseline
 
-- [ ] Record the grammar/syntax separation in this plan.
-- [ ] Confirm `cargo test --release -p torille --lib`, `--tests`, clippy and
+- [x] Record the grammar/syntax separation in this plan.
+- [x] Confirm `cargo test --release -p torille --lib`, `--tests`, clippy and
       the wasm32 checks are green.
-- [ ] Do not add a style rule yet.
+- [x] Do not add a style rule yet.
 
 ### Phase 1 — module and diagnostic skeleton
 
-- [ ] Add `src/style_check/{mod,diagnostic}.rs`.
-- [ ] Add `StyleKind`, `StyleDiagnostic`, `StyleAnalysis`, `check`.
-- [ ] `check` returns an empty analysis; no rule yet.
-- [ ] Reuse `Severity`, `DiagnosticConfidence`, `Edit` and `Correction` from
+- [x] Add `src/style_check/{mod,diagnostic}.rs`.
+- [x] Add `StyleKind`, `StyleDiagnostic`, `StyleAnalysis`, `check`.
+- [x] `check` returns an empty analysis; no rule yet.
+- [x] Reuse `Severity`, `DiagnosticConfidence` and `Correction` from
       `syntax_check::diagnostic`; do not duplicate them.
-- [ ] Add a test that `check` never emits `Error`/`Warning`.
-- [ ] Keep the public grammar API unchanged.
+- [x] Add a test that `check` never emits `Error`/`Warning`.
+- [x] Keep the public grammar API unchanged.
+
+Phase 1 landed with `src/style_check/{mod,diagnostic}.rs` and
+`pub mod style_check` in `lib.rs`. `check()` tokenises and returns an empty
+`StyleAnalysis`; `StyleDiagnostic::new` pins `Severity::Suggestion`.
 
 Acceptance: empty output on every existing syntax fixture; no new wasm export
 yet.

@@ -21,6 +21,7 @@ mod rejected;
 mod sanalista_overrides;
 pub mod sentence;
 pub mod spec;
+pub mod style_check;
 pub mod suggest;
 pub mod syntax;
 pub mod syntax_check;
