@@ -1,9 +1,10 @@
 # PLAN_SYNTAX — making the advisory syntax layer trustworthy
 
 Status: Phases 0–6 landed. The correction layer on top of this analysis —
-including list structures, list punctuation and grammar diagnostics — is
-planned separately in [`PLAN_SYNTAX_CHECKER.md`](PLAN_SYNTAX_CHECKER.md). Work
-happens on the `syntax` branch off `master`.
+including list structures, list punctuation and grammar diagnostics — lives in
+[`PLAN_SYNTAX_CHECKER.md`](PLAN_SYNTAX_CHECKER.md). Deferred analysis
+refinements are listed at the end of this document; none blocks the checker.
+Work happens on the `syntax` branch off `master`.
 
 The syntax layer (`src/syntax.rs`) is the second, on-demand layer over the
 morphology engine. It is **not** in the keystroke path; its only shipping
@@ -670,3 +671,31 @@ adverbial. `Sami söi puuron, koska oli nälkäinen.` -> second clause shares
 3. Should a relative clause's antecedent be linked (`head` of the relative
    pronoun -> antecedent), or only the clause roles? Recommendation: later;
    it needs an antecedent search across the clause boundary.
+
+## Remaining analysis refinements
+
+These are deliberately outside the landed v1. Do not start one without a
+consumer; the checker derives what it needs from the current linear clauses.
+
+- [ ] **Host-clause nesting for interrupted relatives.** `Mies, joka tuli, söi`
+  is three contiguous clauses. Add `Clause.parent` / `children` (or a
+  non-contiguous host span) only when the checker or UI needs the host clause
+  as one unit. Keep the linear ranges until then.
+- [ ] **Relative antecedent link.** Point the relative pronoun (or relative
+  clause) at its antecedent. Needs a search across the clause boundary and a
+  rule for coordinated antecedents; not needed for comma diagnostics.
+- [ ] **Multiple bracketed lists in one item.** `ListItemKind::List(usize)`
+  represents one child. Add `Lists(Vec<usize>)` (or an arena of siblings only)
+  when a real sentence needs two child lists in the same item. The current
+  parser takes the first and leaves the second unrepresented.
+- [ ] **Clause kind in the analysis layer.** `ClauseKind` currently lives in
+  `syntax_check::punctuation` and is derived on demand. Promote it to
+  `syntax::Clause` only when a second consumer needs it; do not duplicate the
+  derivation.
+- [ ] **`Clause.sentence` for consumers.** A clause can span sentence spans
+  when brackets are merged. Add the original sentence index only if a UI needs
+  to highlight by sentence; document the span until then.
+- [ ] **Antecedent-aware list roles.** A nested list currently inherits the
+  host clause but not the parent's role. Add a role link only when the list
+  diagnostics need to distinguish an object list from an adverbial list inside
+  a parenthetical.

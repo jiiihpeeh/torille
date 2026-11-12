@@ -1,8 +1,15 @@
 # PLAN_SYNTAX_CHECKER — grammar and punctuation diagnostics
 
-Status: Phases 0–4 landed, including nested lists, and Phase 5 started
-(negative-clause object case). Phase 6 is planned. The analysis layer it
-builds on is `PLAN_SYNTAX.md` and is already landed on the `syntax` branch.
+Status: Phases 0–4 are landed, including nested lists. Phase 5 has the
+negative-clause object case and rection precedence; aspect-based object case,
+missing/extra arguments and the word-order decision record are still open.
+Phase 6 is partly landed: deterministic ranking and the wasm word cache exist,
+while punctuation phase 2, UI rendering, evaluation and the style decision are
+open. The analysis layer it builds on is `PLAN_SYNTAX.md` and is already landed
+on the `syntax` branch.
+
+The remaining work is indexed in §16; each open item has enough detail to be
+implemented without reopening the whole design.
 
 The goal is a **correction checker**, not another parser: detect a small set of
 high-confidence grammatical errors, explain them, and produce corrections from
@@ -16,17 +23,17 @@ UI copy is the caller's concern.
 
 Priority order:
 
-| priority | rule | first release |
+| priority | rule | status |
 |---|---|---|
-| 1 | subject–predicate agreement | yes |
-| 2 | attribute–noun agreement | yes |
-| 3 | verb rection | phase 4 |
-| 4 | case selection | phase 4 |
-| 5 | object case | phase 5, advisory |
-| 6 | missing/extra arguments | phase 5, warning |
-| 7 | word order | deferred |
-| 8 | list structure and list separators | phase 3 |
-| 9 | comma/clause punctuation | phase 3 |
+| 1 | subject–predicate agreement | done |
+| 2 | attribute–noun agreement | done |
+| 3 | verb rection | done |
+| 4 | case selection | done through rection |
+| 5 | object case | negative case done; aspect suggestions in phase 5B |
+| 6 | missing/extra arguments | phase 5C, warning only |
+| 7 | word order | deferred; decision record in phase 5D |
+| 8 | list structure and list separators | done, including nested lists |
+| 9 | comma/clause punctuation | commas done; semicolons/quotes in phase 6B |
 
 In scope, in this order:
 
@@ -81,18 +88,22 @@ That is enough for the first rules:
 | comma pair around a relative clause | relative clause start + host predicate |
 | list separators | a list structure built from item spans and commas |
 
-**Lists are a planned extension to the analysis layer.** The current
-`SyntaxAnalysis` has no phrase parser, so it cannot tell a list from a clause
-coordination. The checker plan adds `lists: Vec<List>` to `SyntaxAnalysis`,
-built by a focused phrase-level pass (`syntax_list`), and uses it for list
-punctuation. It is not a full phrase-structure parser, but it is a real
-syntactic structure, not a comma heuristic.
+**Lists are an implemented extension to the analysis layer.** `SyntaxAnalysis`
+has no phrase parser, so it cannot tell a list from clause coordination from
+clauses alone. The checker adds `lists: Vec<List>`, built by a focused
+phrase-level pass (`syntax_list`), and uses it for list punctuation. Nested
+lists are a post-order child arena: `ListItemKind::List(index)` and
+`List.parent` walk from the parent to the child. It is not a full
+phrase-structure parser, but it is a real syntactic structure, not a comma
+heuristic.
 
-The missing pieces are **clause kinds and relative-clause extent**. The current
-clause ranges are linear and a relative clause inside its host splits the host
-(`Mies, joka tuli, söi` becomes three ranges). Comma rules need a small amount
-of structure on top; see phase 3. That is a targeted extension, not a full
-parser.
+Clause kinds and relative-clause extent are now derived in
+`src/syntax_check/punctuation.rs`; the analysis layer still keeps linear
+clause ranges. A relative clause inside its host still splits the host
+(`Mies, joka tuli, söi` becomes three ranges), which is enough for the comma
+rules but not for a UI that wants the host clause as one unit. Host nesting and
+antecedent linking are deferred analysis refinements in `PLAN_SYNTAX.md`, not
+blockers for the checker.
 
 ## 3. Design principles
 
@@ -141,20 +152,20 @@ text
  └─ rank::resolve ───────────► SyntaxCheck { analysis, diagnostics }
 ```
 
-Module layout (new sibling of `src/syntax.rs`):
+Module layout (actual plus the planned phase-5C module):
 
 ```text
-src/syntax_list.rs  List, ListItem, ListKind, parse
+src/syntax_list.rs  List, ListItem, ListKind, parse (top-level + nested)
 src/syntax_check/
-  mod.rs          public API, orchestration, conflict resolution
+  mod.rs          public API, orchestration
   diagnostic.rs   DiagnosticKind, Severity, Diagnostic, Edit, Correction
   agreement.rs    subject–predicate and attribute–noun
   rection.rs      valency frames and case selection
-  arguments.rs    missing/extra arguments (advisory)
-  lists.rs        list punctuation and list/clause discrimination
-  punctuation.rs  clause-boundary comma rules and clause-kind derivation
+  object_case.rs  negative-clause partitive, aspect suggestions (phase 5B)
+  arguments.rs    missing/extra arguments (phase 5C)
+  punctuation.rs  clause/list punctuation and clause-kind derivation
   correction.rs   build corrections with forms_of
-  rank.rs         scoring, dedup, conflict resolution
+  rank.rs         scoring, dedup, deterministic ordering
 ```
 
 `SyntaxAnalysis` gains `pub lists: Vec<List>`; the wasm analysis object
@@ -314,6 +325,10 @@ pub enum ListItemKind {
     List(usize),
 }
 ```
+
+`ListItem` also carries a crate-private `scan` range that runs over trailing
+separators; it exists only so the nested parser can see the closing bracket
+after the item's last word. It is not serialised.
 
 The user-proposed `LIST`, `LIST_ITEM`, `LIST_SEPARATOR` and
 `LIST_CONJUNCTION` nodes are represented by `List`, `ListItem`, the
@@ -790,8 +805,10 @@ lists: [{
 }]
 ```
 
-`kind` is `nominal`, `clause`, `predicate` or `mixed`; an item's `kind` is
-`word`, `phrase`, `clause` or a child list index.
+`kind` is `nominal`, `clause`, `predicate` or `mixed`. An item's `kind` is
+`word`, `phrase`, `clause` or `list`; when it is `list`, the item also carries
+`list`, the index of the child in the same `lists` array. The array is
+post-order, so a child index is always smaller than its parent's.
 
 The extension should render:
 
@@ -805,12 +822,16 @@ The extension should render:
 | file | content | producer |
 |---|---|---|
 | `data/verb_rection.csv` | `lemma,case,frame,priority,note` | curated, reviewed against Kielitoimiston ohjepankki |
+| `data/verb_arguments.csv` | `lemma,slot,case,requirement,note` (phase 5C) | curated, reviewed against Kielitoimiston ohjepankki |
 | `data/comma_phrases.csv` | fixed phrases where a comma is not free | curated, only when observed |
 | `maps/verb_rection.bin.gz` | `lemma -> cases` | `build.rs` / `build/map_builders` |
+| `maps/verb_arguments.bin.gz` | `lemma/slot -> requirement` (phase 5C) | `build.rs` / `build/map_builders` |
 
 The rection map is a `StemMap` (lemma → case names), like the other small
-lexical maps. Update `data/README.md` and `maps/README.md`. `build.rs` gets a
-`rerun-if-changed` line for the CSV.
+lexical maps. Keep the argument-completeness table in its own blob so a change
+in “must the argument exist” cannot silently change the case choices. Update
+`data/README.md` and `maps/README.md`. `build.rs` gets a `rerun-if-changed`
+line for each CSV.
 
 Do not put the subordinator/relative/coordinator lists in a new file; they
 already exist in `src/syntax.rs`. Make them `pub(crate)` and reuse them.
@@ -926,6 +947,22 @@ mixed:       Ostin omenoita, appelsiineja ja Liisa osti banaaneja.
 Unit tests live beside each rule module, but the fixture is the gate. A
 hand-written list is not enough.
 
+### Evaluation corpus
+
+The exact-output fixture proves individual rules; it does not measure how
+often the checker is wrong on real prose. Add a second, larger corpus for
+aggregate evaluation:
+
+- at least 100 sentences, about 60 clean and 40 with expected diagnostics;
+- one row per sentence, with the expected kind(s) and severity;
+- every emitted kind represented, plus the guards named in §13;
+- run as an integration test that prints per-kind precision/recall and the
+  clean-corpus `Error` count.
+
+The release gate is **zero `Error` on clean rows**. Suggestion counts are
+recorded, not gated, until the baseline is stable. The exact-output fixture
+remains the per-case gate.
+
 ### Manual/CLI
 
 `tools/src/bin/check_syntax.rs` prints tokens, clauses and diagnostics for one
@@ -999,7 +1036,7 @@ No errors for `punaisen auton`, `punaisen auto` (ambiguous genitive),
 `Vanha talo`, `Sami Ruotsalainen`, `kaksi miestä`, `Punaisempi auto`,
 `Punaisessa talossa` or `Hän tuli iloisena kotiin`.
 
-### Phase 3 — lists, comma rules and clause kinds — mostly done
+### Phase 3 — lists, comma rules and clause kinds — done
 
 Lists first, because a comma-separated nominal run must not be mistaken for
 clause coordination.
@@ -1077,14 +1114,14 @@ No error for `Pidän sinusta`, `Pidän sinua`, `Menen kouluun`,
 `Odotan kotona`, `Asun kadulla`, `Opiskelen koulussa` or
 `Katson ikkunasta`.
 
-### Phase 5 — object case, arguments, word order — partial
+### Phase 5 — object case, arguments, word order
+
+#### Phase 5A — negative-clause partitive (done)
 
 - [x] Negative-clause partitive as an error.
 - [x] Rection outranks the general negative-object rule on the same span
       (`En pidä sinä` offers `sinusta`/`sinua`, not only `sinua`).
-- [ ] Aspect-based object case as a suggestion only.
-- [ ] Missing/extra arguments for explicitly marked frames.
-- [ ] Word order: no rules; document the deferral.
+- [x] A valid partitive object stays quiet.
 
 Acceptance (passing):
 
@@ -1097,13 +1134,292 @@ En pidä sinä.      → En pidä sinusta.      (rection wins)
 No error for `En lue kirjaa`, `En syö puuroa`, `En pidä sinusta`,
 `En mene kouluun`.
 
-### Phase 6 — UI, ranking, evaluation
+#### Phase 5B — aspect-based object case, suggestion only
 
-- [ ] Conflict resolution and deterministic ordering.
-- [ ] Extension/hover rendering with edit application.
-- [ ] Diagnostic cache in wasm (reuse `AnalysisCache`; rules are cheap).
-- [ ] Measure on a 100-sentence corpus; no `Error` on the clean corpus.
-- [ ] Decide whether the style layer starts.
+Goal: make the total/partitive choice visible without pretending the checker
+knows the speaker's aspect. This phase must never produce `Error`.
+
+Design:
+
+- Only affirmative clauses; the negative rule in 5A owns negation.
+- Only a clause whose `Clause.object` is set, or whose first post-predicate
+  nominal is unambiguous enough to be an object.
+- Only a nominal with a single retained case reading. `kirjaa` may be weak
+  (it is also a verb form), but it must not be an unknown word.
+- Two closed cue lists in `src/syntax_check/object_case.rs`, matched as token
+  runs so the multiword cues work:
+  - `PROGRESSIVE_CUES`: `parhaillaan`, `juuri nyt`, `tällä hetkellä`,
+    `kesken`, `paraikaa`.
+  - `COMPLETIVE_CUES`: `loppuun`, `valmiiksi`, `kokonaan`, `viimeistään`
+    only when it modifies the object's completion, not a deadline. If that
+    reading is not certain, leave `viimeistään` out.
+- A progressive cue plus a total object (genitive singular, nominative plural,
+  or accusative) suggests the partitive.
+- A completive cue plus a partitive object suggests the total object. The
+  target case is **genitive for singular** and **nominative for plural**;
+  do not ask the correction engine for a genitive plural.
+- The diagnostic is `Suggestion`, `DiagnosticConfidence::Medium`, one
+  correction, never an `Error`.
+- If the cue and the object are in different clauses, stay quiet.
+- If the object is a numeral phrase, a proper name without a case, or an
+  unknown word, stay quiet.
+
+Acceptance:
+
+```text
+Luen parhaillaan kirjan.   → suggestion: Luen parhaillaan kirjaa.
+Luin kirjaa loppuun.       → suggestion: Luin kirjan loppuun.
+Luen parhaillaan kirjaa.   # clean
+Luin kirjan loppuun.       # clean
+Luen kirjan.               # clean: no aspect cue
+Luen kirjaa.               # clean: no aspect cue
+```
+
+The clean corpus must stay free of `Error`; suggestions are allowed only on
+the two cue rows above.
+
+Tasks:
+
+- [ ] Add the two closed cue tables and the singular/plural total-object
+      target helper.
+- [ ] Emit only `Suggestion`/`Medium`; add all guards above.
+- [ ] Add the two suggestion cases and the four clean rows to the fixture.
+- [ ] Add a unit test that a clause without an aspect cue stays quiet.
+
+#### Phase 5C — missing and extra arguments, warning only
+
+Goal: catch the small set of frames where an argument is obligatory, and the
+small set of verbs that take none. This is not a general valency model.
+
+Data:
+
+- Add `data/verb_arguments.csv` with the schema
+  `lemma,slot,case,requirement,note`.
+  - `slot`: `object` or `recipient`.
+  - `case`: a case name, or `any` when the frame accepts several.
+  - `requirement`: `obligatory` or `forbidden`.
+- Build it into `maps/verb_arguments.bin.gz` with a writer in
+  `build/map_builders/front_coded.rs`; read it through a small
+  `src/expand/verb_arguments.rs` runtime module.
+- Keep it separate from `verb_rection.csv`. Rection answers “which case does
+  this argument take”; this table answers “must the argument exist”. Mixing
+  them would silently make existing frames obligatory.
+- Start with 10–20 verbs and only frames verified against Kielitoimiston
+  ohjepankki or a dictionary example. Do not infer transitivity from a class
+  or a suffix.
+
+Missing-argument rule:
+
+- Fire only for an `obligatory` row whose predicate is in the table.
+- The clause must have no candidate nominal in any accepted case for that
+  slot; a candidate in the wrong case already belongs to rection.
+- Do not fire for passive clauses (the argument may be suppressed), for a
+  clause with no subject in a context that permits ellipsis, or when the
+  clause ends in an ellipsis marker.
+- Emit `MissingArgument`, `Warning`, `DiagnosticConfidence::Medium`, with no
+  automatic correction. The message names the expected slot/case.
+
+Extra-argument rule:
+
+- Fire only for a `forbidden` row (a closed intransitive table) and an
+  object-role nominal with a clear case reading.
+- Do not fire for a local-case adverbial, a modifier, or a numeral complement.
+- Emit `ExtraArgument`, `Warning`, `Medium`, with no automatic correction.
+- Do not add `sataa` to the forbidden table: `Sataa vettä` is idiomatic.
+
+Acceptance:
+
+```text
+Hän luottaa.        → missing_argument warning (illative)
+Luotan sinuun.      # clean
+Nukun kirja.        → extra_argument warning
+Nukun hyvin.        # clean
+Sataa.              # clean
+Sataa vettä.        # clean
+Minä nukun.         # clean
+```
+
+Tasks:
+
+- [ ] Add `data/verb_arguments.csv` and its build writer/blob.
+- [ ] Add `src/expand/verb_arguments.rs` with a lookup per lemma/slot.
+- [ ] Implement `MissingArgument` with the passive/ellipsis guards.
+- [ ] Implement `ExtraArgument` with the adverbial/numeral guards.
+- [ ] Add fixtures for one warning of each kind and the clean rows above.
+- [ ] Confirm rection and argument checks never both fire on the same span.
+
+#### Phase 5D — word order decision record
+
+No word-order rules are planned. Finnish order is information structure, and
+`Söi Sami puuron`, `Puuron söi Sami` and `Sami söi puuron` are all grammatical.
+
+Tasks:
+
+- [ ] Add `Söi Sami puuron.` and `Puuron söi Sami.` to the clean corpus.
+- [ ] Add a comment on `DiagnosticKind::WordOrder` saying the kind is reserved
+      and not emitted, so a future reader does not assume a missing rule.
+- [ ] Keep `WordOrder` out of the severity/ranking examples unless a test
+      explicitly needs a placeholder kind.
+
+This closes the deferral without shipping a rule.
+
+### Phase 6 — punctuation phase 2, UI, ranking, evaluation
+
+#### Phase 6A — ranking and conflict resolution (done)
+
+- [x] Deterministic ordering: severity, confidence, start, end, kind.
+- [x] One diagnostic per span; rection wins over the general object-case rule.
+- [x] Corrections sorted by score, then note, then replacement.
+
+#### Phase 6B — punctuation phase 2
+
+The current punctuation module owns commas and list separators. This phase
+adds the remaining punctuation the tokeniser already exposes. It stays a
+separate rule library fed by clauses and list spans.
+
+**Semicolons**
+
+- A semicolon is a clause boundary for scanning, never an `Error`.
+- Do not suggest replacing a comma with a semicolon or vice versa; Finnish
+  usage is stylistic.
+- Task: make `syntax_list` and clause-comma rules treat `;` as a boundary, so
+  a semicolon cannot make two clauses look like one list.
+
+**Question marks**
+
+- Trigger when a sentence's first clause starts with an interrogative word
+  (`kuka`, `mikä`, `missä`, `mistä`, `mihin`, `milloin`, `miten`, `kuinka`,
+  `miksi`, `ken`, `kumpi`, `montako`) or its predicate carries the `-ko`/`-kö`
+  clitic.
+- Require the clause to be sentence-initial and the only main clause before
+  the terminal separator. This excludes indirect questions such as
+  `Kysyin, missä hän asuu.`
+- If the sentence ends with `.` or no terminal mark, use a new
+  `QuestionMarkMissing` kind. Emit `Error`/`High` only when the trigger is
+  unambiguous; otherwise stay silent.
+- Correction: replace the final `.` with `?`, or insert `?` at the last word's
+  end. When the question is quoted, the correction goes before the closing
+  quote.
+- Skip dialogue fragments and any sentence whose terminal separator already
+  contains `?`.
+
+**Quotes and dialogue dashes**
+
+- Use `sentence::TokenContext.quote_depth` to detect an unbalanced quote at
+  the end of the document. Emit one `Warning`, not a per-line error.
+- Do not correct quote style, dialogue dashes, or dash spacing. Those are
+  editorial choices.
+- A quoted question still satisfies the question-mark rule when the `?` is
+  inside the quote; the final separator is not the only place to look.
+
+**Parentheticals and appositions**
+
+- Comma pairs around clear parentheticals (`esimerkiksi`, `kuten`, short
+  appositions) are advisory. At most a `Suggestion`.
+- Use a small closed exception list; do not infer a parenthetical from every
+  adverb or every comma pair.
+- A missing pair is never an `Error`; the existing relative-clause rule is the
+  only pair rule allowed to emit one.
+
+**Colon and direct speech**
+
+- The colon introducer rule stays list-only. `Hän sanoi: …` is not a list and
+  must stay quiet.
+- Semicolon/colon scanning must not cross a quote or a parenthetical.
+
+Tests:
+
+```text
+Missä sinä asut.          → Missä sinä asut?
+Onko sinulla kirjaa.      → Onko sinulla kirjaa?
+Kysyin, missä hän asuu.   # clean: indirect question
+Hän sanoi: »Missä sinä asut?»  # clean
+»Missä sinä asut.»        → »Missä sinä asut?»   (inside the quote)
+Hän tuli; minä lähdin.    # clean: semicolon style
+```
+
+Tasks:
+
+- [ ] Treat `;` as a clause/list boundary in scanning; emit no diagnostic for
+      the semicolon itself.
+- [ ] Add `QuestionMarkMissing` (or the chosen kind) to `DiagnosticKind`, with
+      the sentence-initial/only-main-clause guard.
+- [ ] Add the unbalanced-quote warning from `quote_depth`; no style edits.
+- [ ] Add the advisory parenthetical/apposition pair with the closed cue list.
+- [ ] Add the six rows above and their clean/dirty split to the fixture.
+- [ ] Confirm indirect questions and quoted questions stay quiet.
+
+#### Phase 6C — UI and edit application
+
+The wasm layer already returns clauses, lists and diagnostics with byte spans
+and `Edit` arrays. No rule work is needed.
+
+- Add a diagnostic panel to `torille-wasm-leptos` that lists diagnostics by
+  rank and shows the rule name, severity and correction.
+- Apply a correction by replaying its edits **from the end of the text
+  backwards**, so earlier offsets stay valid.
+- Add an opt-in grammar toggle to the extensions; do not run `check_syntax`
+  on every keystroke. Debounce or run on blur.
+- Acceptance: applying all edits from the fixture produces the expected
+  corrected sentence; the panel order matches `rank::resolve`.
+
+Tasks:
+
+- [ ] Add the diagnostic panel to `torille-wasm-leptos`.
+- [ ] Add reverse-order edit replay and a test that offsets survive multiple
+      edits in one diagnostic.
+- [ ] Add the opt-in, debounced grammar call to the extensions.
+- [ ] Add a test that a destroyed state handle falls back to the stateless
+      `check_syntax` path.
+
+#### Phase 6D — evaluation corpus
+
+- Add `tests/fixtures/syntax_eval.json` (or a TSV if it gets long) with at
+  least 100 sentences: roughly 60 clean and 40 with expected diagnostics.
+- Cover every emitted kind and every guard: negation, passive, existential,
+  necessity, numerals, proper names, relative clauses, brackets, lists,
+  nested lists, semicolons and questions.
+- Metrics: per-kind precision/recall, total `Error` count on clean rows, and
+  the number of suggestions on clean rows.
+- Gate: **zero `Error` on clean rows**. Record the first measured baseline in
+  the plan or a short `docs/syntax_checker.md`; do not gate precision until
+  the baseline is stable.
+- Keep the existing per-case fixture as the exact-output gate; the evaluation
+  corpus is the aggregate measure, not a replacement.
+
+Tasks:
+
+- [ ] Add the 100+ sentence corpus.
+- [ ] Add the metrics integration test and print the per-kind table.
+- [ ] Record the first baseline in the plan or `docs/syntax_checker.md`.
+- [ ] Gate zero `Error` on clean rows; keep suggestions ungated at first.
+
+#### Phase 6E — style layer decision
+
+Decision: do not start a style layer in this plan. If one is built later:
+
+- it is a separate analyzer with its own module, `DiagnosticKind`s, severity
+  and opt-in UI;
+- it must not reuse grammar kinds or run in the same pass by default;
+- it must not make the clean corpus noisier.
+
+Tasks:
+
+- [ ] Keep the decision in this plan; no code until a real style request
+      arrives.
+- [ ] If it is reopened, write a separate plan before adding a module.
+
+#### Phase 6F — checker documentation
+
+- Add `docs/syntax_checker.md`: rule catalogue, severity policy, false-positive
+  policy, wasm shape, known limitations and the evaluation baseline.
+- Link it from `README.md` and `AGENTS.md` only after the document exists.
+- Keep the plan as the design record; the new doc is the user-facing contract.
+
+Tasks:
+
+- [ ] Write `docs/syntax_checker.md` using the landed rules and the §16 index.
+- [ ] Add the README/AGENTS links after the document exists.
 
 ## 13. False-positive policy
 
@@ -1130,29 +1446,26 @@ Ship fewer rules, not more guesses.
   the curated table.
 - A clean corpus failure is a release blocker.
 
-## 14. Open questions
+## 14. Decisions recorded
 
-1. **List parser placement.** `src/syntax_list.rs` as a sibling of
-   `syntax.rs`, or convert `syntax.rs` into a directory and add
-   `syntax/list.rs`? Recommendation: the sibling module first; move it into a
-   `syntax/` directory only when more phrase-level analyses appear.
-2. **List punctuation policy.** Confirm Finnish-only punctuation; no other
-   language policy is planned.
-3. **Clause kinds and relative extent.** Do we extend `syntax::Clause` with
-   `kind`/`parent`, or derive them in `syntax_check`? Recommendation: derive
-   first, promote only when a second consumer needs them.
-4. **Adjective degree.** `Tags` has no degree; do we add it to the grammar
-   model, or detect degree from the surface and skip non-positive corrections?
-   Recommendation: skip in v1, add a degree dimension only if the checker
-   needs to correct comparatives.
-5. **Rection data.** How large should the curated table grow, and who reviews
-   it? Recommendation: 30–50 high-frequency verbs, two frames maximum per
-   verb, no semantic guesses.
-6. **Comma norm.** Which relative clauses are non-restrictive? Recommendation:
-   only unbalanced pairs and subordinate clauses are errors; relative commas
-   are suggestions unless an opening comma is already present.
-7. **Style layer.** Keep it separate. It shares the analysis but has its own
-   `DiagnosticKind`, severity, and opt-in UI.
+1. **List parser placement.** Landed as the sibling `src/syntax_list.rs`.
+   Move it into a `syntax/` directory only when a second phrase-level analysis
+   needs the same home.
+2. **Punctuation policy.** Finnish-only. No other language policy is planned.
+3. **Clause kinds and relative extent.** `ClauseKind` stays in
+   `syntax_check::punctuation` and is derived on demand. Promote it to
+   `syntax::Clause` only when a second consumer needs it.
+4. **Adjective degree.** `Tags` still has no degree. The checker uses the
+   surface `expand::degree_base` guard to skip comparatives/superlatives; add a
+   degree dimension only when a correction rule needs it.
+5. **Rection data.** 32 frames across 30 verbs are landed. Grow by verified
+   additions only, 30–50 high-frequency verbs, two frames maximum per verb, no
+   semantic guesses.
+6. **Comma norm.** Implemented as decided: only unbalanced pairs and
+   subordinate clauses are errors; relative commas are suggestions unless an
+   opening comma is already present.
+7. **Style layer.** Out of scope for this plan; phase 6E records the conditions
+   for reopening it.
 
 ## 15. Recommended first release
 
@@ -1166,10 +1479,37 @@ Punainen autot    → Punaiset autot
 Lapset leikkii    → Lapset leikkivät
 ```
 
-It needs phase 0, phase 1 and phase 2 only. All three are landed. Then add
-lists/punctuation (phase 3) and rection (phase 4). A checker that is right
-about four constructions is more useful than one that is unsure about twenty.
+It needed phase 0, phase 1 and phase 2. All three are landed, followed by
+lists/punctuation (phase 3), rection (phase 4) and the negative-object rule
+(phase 5A). A checker that is right about four constructions is more useful
+than one that is unsure about twenty.
 
-Lists are planned now but are not part of the first release. Their structure
-is a prerequisite for phase 3 punctuation, not a prerequisite for the four
-agreement rules.
+Lists, including nested lists, are part of the landed checker. What remains is
+the narrower work in §16: aspect suggestions, argument completeness,
+punctuation phase 2, UI, evaluation and docs. Word order stays deferred.
+
+## 16. Remaining work index
+
+Ordered by user-facing value. Each item points at the phase that specifies it.
+
+1. [ ] **Missing and extra arguments** — phase 5C. New
+   `data/verb_arguments.csv` plus `MissingArgument` / `ExtraArgument` warnings.
+2. [ ] **Aspect-based object case** — phase 5B. Suggestion only, closed cue
+   tables, never an `Error`.
+3. [ ] **Punctuation phase 2** — phase 6B. Semicolon boundaries, question-mark
+   diagnostics, unbalanced quotes, advisory parenthetical pairs, no
+   quote-style corrections.
+4. [ ] **Evaluation corpus** — phase 6D. 100+ sentences, zero `Error` on clean
+   rows, per-kind baseline.
+5. [ ] **UI and edit application** — phase 6C. Demo panel, reverse-order edit
+   replay, opt-in extension toggle.
+6. [ ] **Word-order decision record** — phase 5D. Clean rows and a comment on
+   the reserved kind; no rule.
+7. [ ] **Checker documentation** — phase 6F. `docs/syntax_checker.md` with the
+   rule catalogue and limitations.
+8. [ ] **Style layer decision** — phase 6E. Recorded as out of scope; only a
+   separate opt-in analyzer would reopen it.
+
+Deferred analysis refinements live in `PLAN_SYNTAX.md` §“Remaining analysis
+refinements”: relative-clause nesting, antecedent linking, and a multi-child
+list shape. None is a blocker for the checker work above.
