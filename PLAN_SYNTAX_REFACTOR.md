@@ -1,8 +1,9 @@
 # PLAN_SYNTAX_REFACTOR — modularizing the syntax layer and checker
 
-Status: **Phase 0–2 landed**. The shared-helper extraction is in
-`src/syntax_check/analysis.rs`; punctuation is now a module tree under
-`src/syntax_check/punctuation/`. Phases 3–6 remain planned, not implemented.
+Status: **Phase 0–2 landed; Phase 3 in progress.** The shared-helper
+extraction is in `src/syntax_check/analysis.rs`; punctuation is a module tree
+under `src/syntax_check/punctuation/`. `src/syntax/` now has `cache.rs` and
+`segments.rs`; roles and predicates still live in `syntax/mod.rs`.
 
 The checker is feature-complete after `PLAN_SYNTAX_CHECKER.md`; this plan asks
 what should be restructured before the next feature lands, and what should be
@@ -218,12 +219,18 @@ imports.
 
 ### Phase 3 — split `syntax.rs`
 
-- [ ] Create `src/syntax/` and move the sections listed in §4.1.
-- [ ] Keep `crate::syntax` re-exports stable; no caller changes.
-- [ ] Keep `Clause`, `TokenSyntax`, `SyntaxAnalysis`, `RoleConfidence`,
+- [x] Create `src/syntax/` and move `cache.rs` (word analysis + cache) and
+      `segments.rs` (sentence grouping + clause segmentation).
+- [x] Keep `crate::syntax` re-exports stable; no caller changes.
+- [x] Keep `Clause`, `TokenSyntax`, `SyntaxAnalysis`, `RoleConfidence`,
       `SyntacticRole` and `AnalysisCache` public paths identical.
-- [ ] Move the `#[cfg(test)] mod tests` with the roles that own them.
-- [ ] Verify `cargo doc` still links the public items.
+- [x] Keep the tests in `syntax/mod.rs`; they still exercise the same entry
+      points.
+- [ ] Move roles and predicates into `roles.rs` / `predicates.rs`.
+- [ ] Verify `cargo doc` still links the public items after the full split.
+
+Phase 3a landed with `cache.rs` and `segments.rs`. Readings stay in `cache.rs`
+until they grow enough to justify a separate `readings.rs`.
 
 Acceptance: fixture, evaluation, `tests/catalogue.rs`, and the wasm32 check are
 unchanged. No public path breaks.
