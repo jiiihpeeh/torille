@@ -7,9 +7,12 @@
 //! priority order.
 
 use crate::syntax::{SyntacticRole, SyntaxAnalysis};
-use crate::tags::{Case, Number, PartOfSpeech};
+use crate::tags::Case;
 use crate::tokenise::Token;
 
+use super::analysis::{
+    candidate_number, clause_words, is_marker, nominal_case, nominal_or_numeral_pos,
+};
 use super::correction;
 use super::diagnostic::{
     DiagnosticConfidence, DiagnosticKind, Severity, SyntaxDiagnostic,
@@ -35,7 +38,7 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
             continue;
         }
         let syntax = &analysis.tokens[argument];
-        let Some(pos) = nominal_pos(syntax) else {
+        let Some(pos) = nominal_or_numeral_pos(syntax) else {
             continue;
         };
         let number = candidate_number(syntax, case);
@@ -93,11 +96,7 @@ fn argument(
     tokens: &[Token],
     analysis: &SyntaxAnalysis,
 ) -> Option<(usize, Case)> {
-    let words: Vec<usize> = clause
-        .tokens
-        .clone()
-        .filter(|&index| tokens[index].is_word())
-        .collect();
+    let words = clause_words(clause, tokens);
     let predicate_position = words.iter().position(|&index| index == predicate)?;
     for &index in words.iter().skip(predicate_position + 1) {
         let syntax = &analysis.tokens[index];
@@ -111,7 +110,7 @@ fn argument(
         let Some(case) = nominal_case(syntax) else {
             continue;
         };
-        if nominal_pos(syntax).is_none() {
+        if nominal_or_numeral_pos(syntax).is_none() {
             continue;
         }
         return Some((index, case));
@@ -119,68 +118,4 @@ fn argument(
     None
 }
 
-fn is_marker(word: &str) -> bool {
-    let lower = word.to_lowercase();
-    crate::syntax::is_coordinating(&lower)
-        || crate::syntax::is_subordinator(&lower)
-        || matches!(lower.as_str(), "joka" | "mikä" | "ken" | "kuka")
-}
 
-fn nominal_case(syntax: &crate::syntax::TokenSyntax) -> Option<Case> {
-    if let Some(case) = syntax.case {
-        return Some(case);
-    }
-    let mut cases: Vec<Case> = syntax
-        .readings
-        .iter()
-        .filter(|reading| {
-            matches!(
-                reading.part_of_speech,
-                Some(
-                    PartOfSpeech::Noun
-                        | PartOfSpeech::Adjective
-                        | PartOfSpeech::Pronoun
-                        | PartOfSpeech::Ordinal
-                )
-            )
-        })
-        .filter_map(|reading| reading.case)
-        .collect();
-    cases.sort_unstable();
-    cases.dedup();
-    match cases.as_slice() {
-        [case] => Some(*case),
-        _ => None,
-    }
-}
-
-fn nominal_pos(syntax: &crate::syntax::TokenSyntax) -> Option<PartOfSpeech> {
-    syntax.readings.iter().find_map(|reading| {
-        matches!(
-            reading.part_of_speech,
-            Some(
-                PartOfSpeech::Noun
-                    | PartOfSpeech::Adjective
-                    | PartOfSpeech::Pronoun
-                    | PartOfSpeech::Numeral
-                    | PartOfSpeech::Ordinal
-            )
-        )
-        .then_some(reading.part_of_speech?)
-    })
-}
-
-fn candidate_number(syntax: &crate::syntax::TokenSyntax, case: Case) -> Option<Number> {
-    let mut numbers: Vec<Number> = syntax
-        .readings
-        .iter()
-        .filter(|reading| reading.case == Some(case))
-        .filter_map(|reading| reading.number)
-        .collect();
-    numbers.sort_unstable();
-    numbers.dedup();
-    match numbers.as_slice() {
-        [number] => Some(*number),
-        _ => None,
-    }
-}

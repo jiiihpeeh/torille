@@ -10,6 +10,7 @@
 //! `PLAN_SYNTAX_CHECKER.md`.
 
 mod agreement;
+mod analysis;
 mod arguments;
 mod correction;
 mod object_case;

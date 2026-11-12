@@ -1,7 +1,7 @@
 # PLAN_SYNTAX_REFACTOR — modularizing the syntax layer and checker
 
-Status: **plan only**. No code has been changed for this plan. It is a design
-record for a plausible incremental refactor, not a commitment to a rewrite.
+Status: **Phase 0–1 landed**. The shared-helper extraction is in
+`src/syntax_check/analysis.rs`; Phases 2–6 remain planned, not implemented.
 
 The checker is feature-complete after `PLAN_SYNTAX_CHECKER.md`; this plan asks
 what should be restructured before the next feature lands, and what should be
@@ -151,14 +151,14 @@ every shared module that is meant to stay byte-identical.
 
 ### Phase 0 — freeze the behaviour baseline
 
-- [ ] Record the current gates in this plan: 968 lib tests, 43 syntax fixture
+- [x] Record the current gates in this plan: 968 lib tests, 43 syntax fixture
       tests, 164 evaluation sentences (112 clean + 52 cases), 37 extension
       tests per browser.
-- [ ] Save the current `syntax_eval` per-kind table in a comment or commit
-      message before Phase 1.
-- [ ] Confirm `cargo clippy --workspace --all-targets -- -D warnings`.
-- [ ] Confirm Firefox and Chromium `npm run typecheck`, `npm run build` and
-      `npm test`.
+- [x] Record the current `syntax_eval` per-kind table in the Phase 1 commit
+      message.
+- [x] Confirm `cargo clippy --workspace --all-targets -- -D warnings`.
+- [x] Confirm Firefox and Chromium `npm run typecheck`, `npm run build` and
+      `npm test` (unchanged from the previous commit).
 
 Acceptance: every gate is green before the first move.
 
@@ -184,11 +184,20 @@ shape. `is_finite` exists in `punctuation.rs` and `agreement.rs` with different
 visibility contracts; keep the more general one and document the difference if
 it is real.
 
-- [ ] Add `analysis.rs` and move the helpers.
-- [ ] Replace the copies in `rection.rs`, `object_case.rs`, `arguments.rs` and
+- [x] Add `analysis.rs` and move the helpers.
+- [x] Replace the copies in `rection.rs`, `object_case.rs`, `arguments.rs` and
       `punctuation.rs`.
-- [ ] Move the existing unit tests for those helpers into `analysis.rs`.
-- [ ] Do not touch rule bodies beyond imports and call sites.
+- [x] Keep the helper tests data-driven through the existing fixture; there
+      were no direct unit tests to move.
+- [x] Do not touch rule bodies beyond imports and call sites.
+
+Landed in `src/syntax_check/analysis.rs`. Two deliberate variants are kept:
+
+- `nominal_pos` excludes numerals; `nominal_or_numeral_pos` keeps them for
+  rection.
+- `analysis::is_finite` is the punctuation sense (imperatives count).
+  `agreement::finite_reading` remains separate because an imperative is never
+  the agreement bearer.
 
 Acceptance: the exact-output fixture and evaluation table are unchanged; no
 public API changes.

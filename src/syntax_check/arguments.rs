@@ -6,10 +6,11 @@
 //! an idiomatic phrase can look transitive. Neither rule emits a correction:
 //! deleting an argument or inventing one would be a guess.
 
-use crate::syntax::{SyntacticRole, SyntaxAnalysis, TokenSyntax};
-use crate::tags::{Case, PartOfSpeech};
+use crate::syntax::{SyntacticRole, SyntaxAnalysis};
+use crate::tags::Case;
 use crate::tokenise::Token;
 
+use super::analysis::{clause_words, is_marker, nominal_case, nominal_pos};
 use super::diagnostic::{
     DiagnosticConfidence, DiagnosticKind, Severity, SyntaxDiagnostic,
 };
@@ -31,11 +32,7 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         if crate::syntax::predicate_is_passive(predicate, &analysis.tokens) {
             continue;
         }
-        let words: Vec<usize> = clause
-            .tokens
-            .clone()
-            .filter(|&index| tokens[index].is_word())
-            .collect();
+        let words = clause_words(clause, tokens);
 
         if let Some(diagnostic) =
             missing_argument(clause, predicate, &words, &frames, tokens, analysis)
@@ -231,56 +228,6 @@ fn ends_with_ellipsis(clause: &crate::syntax::Clause, tokens: &[Token]) -> bool 
         }
     }
     false
-}
-
-fn is_marker(word: &str) -> bool {
-    let lower = word.to_lowercase();
-    crate::syntax::is_coordinating(&lower)
-        || crate::syntax::is_subordinator(&lower)
-        || matches!(lower.as_str(), "joka" | "mikä" | "ken" | "kuka")
-}
-
-fn nominal_pos(syntax: &TokenSyntax) -> Option<PartOfSpeech> {
-    syntax.readings.iter().find_map(|reading| {
-        matches!(
-            reading.part_of_speech,
-            Some(
-                PartOfSpeech::Noun
-                    | PartOfSpeech::Adjective
-                    | PartOfSpeech::Pronoun
-                    | PartOfSpeech::Ordinal
-            )
-        )
-        .then_some(reading.part_of_speech?)
-    })
-}
-
-fn nominal_case(syntax: &TokenSyntax) -> Option<Case> {
-    if let Some(case) = syntax.case {
-        return Some(case);
-    }
-    let mut cases: Vec<Case> = syntax
-        .readings
-        .iter()
-        .filter(|reading| {
-            matches!(
-                reading.part_of_speech,
-                Some(
-                    PartOfSpeech::Noun
-                        | PartOfSpeech::Adjective
-                        | PartOfSpeech::Pronoun
-                        | PartOfSpeech::Ordinal
-                )
-            )
-        })
-        .filter_map(|reading| reading.case)
-        .collect();
-    cases.sort_unstable();
-    cases.dedup();
-    match cases.as_slice() {
-        [case] => Some(*case),
-        _ => None,
-    }
 }
 
 #[cfg(test)]

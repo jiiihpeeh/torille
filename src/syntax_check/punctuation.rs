@@ -8,9 +8,10 @@
 use crate::sentence;
 use crate::syntax::{Clause, SyntacticRole, SyntaxAnalysis, TokenSyntax};
 use crate::syntax_list::{List, ListItem, ListItemKind, ListKind};
-use crate::tags::{Clitic, Mood, PartOfSpeech, Polarity};
+use crate::tags::{Clitic, Mood, PartOfSpeech};
 use crate::tokenise::Token;
 
+use super::analysis::{clause_words, comma_between, first_word, inside_brackets, is_finite, last_word};
 use super::diagnostic::{
     Correction, DiagnosticConfidence, DiagnosticKind, Edit, Severity, SyntaxDiagnostic,
 };
@@ -340,21 +341,6 @@ fn clause_kind(clause: &Clause, tokens: &[Token], analysis: &SyntaxAnalysis) -> 
     ClauseKind::Main
 }
 
-fn first_word(clause: &Clause, tokens: &[Token]) -> Option<usize> {
-    clause
-        .tokens
-        .clone()
-        .find(|&index| tokens[index].is_word())
-}
-
-fn last_word(clause: &Clause, tokens: &[Token]) -> Option<usize> {
-    clause
-        .tokens
-        .clone()
-        .rev()
-        .find(|&index| tokens[index].is_word())
-}
-
 fn previous_word(tokens: &[Token], index: usize) -> Option<usize> {
     (0..index).rev().find(|&candidate| tokens[candidate].is_word())
 }
@@ -386,19 +372,6 @@ fn finite_words(clause: &Clause, tokens: &[Token], analysis: &SyntaxAnalysis) ->
         .collect()
 }
 
-fn is_finite(syntax: &TokenSyntax) -> bool {
-    syntax.readings.iter().any(|reading| {
-        matches!(
-            reading.part_of_speech,
-            Some(PartOfSpeech::Verb | PartOfSpeech::NegativeVerb)
-        ) && reading.polarity == Polarity::Affirmative
-            && matches!(
-                reading.mood,
-                Some(Mood::Indicative | Mood::Conditional | Mood::Imperative | Mood::Potential)
-            )
-    })
-}
-
 fn is_infinitive(syntax: &TokenSyntax) -> bool {
     syntax
         .readings
@@ -421,21 +394,6 @@ fn coordinated_between(tokens: &[Token], left: usize, right: usize) -> bool {
                 "ja" | "sekä" | "tai" | "vai"
             )
         })
-}
-
-fn comma_between(tokens: &[Token], left: usize, right: usize) -> bool {
-    if left == right {
-        return false;
-    }
-    let (start, end) = if left < right {
-        (left + 1, right)
-    } else {
-        (right + 1, left)
-    };
-    tokens[start..end]
-        .iter()
-        .filter(|token| !token.is_word())
-        .any(|token| token.text.contains(','))
 }
 
 fn comma_positions(tokens: &[Token], start: usize, end: usize) -> Vec<(usize, usize)> {
@@ -632,11 +590,7 @@ fn parenthetical_diagnostics(
 ) -> Vec<SyntaxDiagnostic> {
     let mut out = Vec::new();
     for clause in &analysis.clauses {
-        let words: Vec<usize> = clause
-            .tokens
-            .clone()
-            .filter(|&index| tokens[index].is_word())
-            .collect();
+        let words = clause_words(clause, tokens);
         for (position, &index) in words.iter().enumerate() {
             let lower = tokens[index].text.to_lowercase();
             let example = EXAMPLE_CUES.contains(&lower.as_str());
@@ -713,23 +667,6 @@ fn kuten_phrase(
         return None;
     }
     Some((words[end_position - 1], words[end_position]))
-}
-
-fn inside_brackets(tokens: &[Token], start: usize, index: usize) -> bool {
-    let mut depth = 0i32;
-    for token in tokens.iter().take(index).skip(start) {
-        if token.is_word() {
-            continue;
-        }
-        for character in token.text.chars() {
-            match character {
-                '(' | '[' | '{' => depth += 1,
-                ')' | ']' | '}' => depth = (depth - 1).max(0),
-                _ => {}
-            }
-        }
-    }
-    depth > 0
 }
 
 fn same_sentence(left: &Clause, right: &Clause, analysis: &SyntaxAnalysis) -> bool {
