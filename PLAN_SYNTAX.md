@@ -1,6 +1,7 @@
 # PLAN_SYNTAX — making the advisory syntax layer trustworthy
 
-Status: Phases 0–6 landed. The correction layer on top of this analysis is
+Status: Phases 0–6 landed. The correction layer on top of this analysis —
+including list structures, list punctuation and grammar diagnostics — is
 planned separately in [`PLAN_SYNTAX_CHECKER.md`](PLAN_SYNTAX_CHECKER.md). Work
 happens on the `syntax` branch off `master`.
 

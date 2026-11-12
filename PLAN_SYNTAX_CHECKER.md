@@ -24,7 +24,8 @@ Priority order:
 | 5 | object case | phase 5, advisory |
 | 6 | missing/extra arguments | phase 5, warning |
 | 7 | word order | deferred |
-| 8 | comma/clause punctuation | phase 3 |
+| 8 | list structure and list separators | phase 3 |
+| 9 | comma/clause punctuation | phase 3 |
 
 In scope, in this order:
 
@@ -36,8 +37,9 @@ In scope, in this order:
    `mennä` + illative, ...).
 3. **Object case** — partitive vs. total object, only where a clear cue exists
    (negation, existential, explicit quantity).
-4. **Punctuation driven by clause structure** — subordinate-clause commas,
-   relative-clause comma pairs, coordinated clauses, parentheticals.
+4. **Punctuation driven by clause and list structure** — list separators,
+   colon-introduced lists, subordinate-clause commas, relative-clause comma
+   pairs, coordinated clauses, parentheticals.
 5. **Missing/extra arguments** — only for a small table of obligatory or
    strictly intransitive frames, and only as warnings.
 6. **Word order** — deferred; Finnish word order is flexible and most
@@ -76,6 +78,14 @@ That is enough for the first rules:
 | verb rection | `Predicate` lemma + `Object`/`Adverbial` case |
 | comma before a subordinate clause | clause spans + first token (`että`, `koska`, ...) |
 | comma pair around a relative clause | relative clause start + host predicate |
+| list separators | a list structure built from item spans and commas |
+
+**Lists are a planned extension to the analysis layer.** The current
+`SyntaxAnalysis` has no phrase parser, so it cannot tell a list from a clause
+coordination. The checker plan adds `lists: Vec<List>` to `SyntaxAnalysis`,
+built by a focused phrase-level pass (`syntax_list`), and uses it for list
+punctuation. It is not a full phrase-structure parser, but it is a real
+syntactic structure, not a comma heuristic.
 
 The missing pieces are **clause kinds and relative-clause extent**. The current
 clause ranges are linear and a relative clause inside its host splits the host
@@ -116,11 +126,13 @@ text
  ├─ tokenise ────────────────► tokens (byte spans, separators)
  │
  ├─ syntax::analyze ─────────► SyntaxAnalysis (clauses, roles, readings)
+ │      └─ syntax_list::parse ► lists (items, separators, conjunction)
  │
  ├─ syntax_check::check ─────► rule engine
  │      ├─ agreement
  │      ├─ rection / case
  │      ├─ arguments
+ │      ├─ lists
  │      └─ punctuation
  │
  ├─ correction::generate ────► candidates from forms_of
@@ -131,16 +143,21 @@ text
 Module layout (new sibling of `src/syntax.rs`):
 
 ```text
+src/syntax_list.rs  List, ListItem, ListKind, parse
 src/syntax_check/
   mod.rs          public API, orchestration, conflict resolution
   diagnostic.rs   DiagnosticKind, Severity, Diagnostic, Edit, Correction
   agreement.rs    subject–predicate and attribute–noun
   rection.rs      valency frames and case selection
   arguments.rs    missing/extra arguments (advisory)
-  punctuation.rs  comma rules and clause-kind derivation
+  lists.rs        list punctuation and list/clause discrimination
+  punctuation.rs  clause-boundary comma rules and clause-kind derivation
   correction.rs   build corrections with forms_of
   rank.rs         scoring, dedup, conflict resolution
 ```
+
+`SyntaxAnalysis` gains `pub lists: Vec<List>`; the wasm analysis object
+serialises it alongside clauses and tokens.
 
 `src/lib.rs` gets `pub mod syntax_check;`.
 
@@ -239,6 +256,69 @@ pub struct SyntaxCheck {
     pub diagnostics: Vec<SyntaxDiagnostic>,
 }
 ```
+
+### List structures
+
+Lists are a first-class part of the analysis, not a clause substitute. The
+arena keeps nesting cheap and serialisable:
+
+```rust
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct List {
+    /// Byte span of the whole list, introducer excluded.
+    pub span: Range<usize>,
+    /// Token range, introducer excluded.
+    pub tokens: Range<usize>,
+    /// Clause the list belongs to (index into `analysis.clauses`; for a
+    /// clause-coordination list, its first clause).
+    pub clause: usize,
+    /// The list's grammatical function, when the surrounding clause makes
+    /// it clear (`Object`, `Adverbial`, ...).
+    pub role: Option<SyntacticRole>,
+    /// Governing token: the predicate or the head the list belongs to.
+    pub head: Option<usize>,
+    pub kind: ListKind,
+    pub items: Vec<ListItem>,
+    /// Comma tokens that separate top-level items.
+    pub separators: Vec<usize>,
+    /// Final `ja`/`sekä`/`tai`/`vai`, when present.
+    pub conjunction: Option<usize>,
+    /// Colon that introduces the list (`Ostin kolme asiaa: ...`).
+    pub introducer: Option<usize>,
+    /// Parent list when this list is nested inside an item.
+    pub parent: Option<usize>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ListItem {
+    pub tokens: Range<usize>,
+    pub span: Range<usize>,
+    pub kind: ListItemKind,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ListKind {
+    Nominal,   // apples, oranges and bananas
+    Clause,    // I bought apples, John bought oranges
+    Predicate, // Sami söi, joi ja nukkui (shared subject)
+    Mixed,     // do not apply list punctuation automatically
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ListItemKind {
+    Word,
+    Phrase,
+    Clause,
+    /// Nested list, index into `analysis.lists`.
+    List(usize),
+}
+```
+
+The user-proposed `LIST`, `LIST_ITEM`, `LIST_SEPARATOR` and
+`LIST_CONJUNCTION` nodes are represented by `List`, `ListItem`, the
+`separators` vector and the `conjunction` field. There is no separate
+`ListSeparator` node because the separator is already a token; its index is
+enough for punctuation edits.
 
 Public entry points:
 
@@ -469,7 +549,7 @@ the clauses have separate subjects and predicates. Do not make it an `Error`:
 - `Sami söi puuron, ja Liisa joi maidon.` — separate subjects; comma is a
   suggestion, not an error.
 
-#### Parentheticals and lists
+#### Parentheticals and appositions
 
 Comma pairs around clear parentheticals (`esimerkiksi`, `kuten`, appositions)
 are advisory. Add a small exception list; do not infer parentheticals from
@@ -488,6 +568,125 @@ every adverb.
 Future punctuation engine: colon, semicolon, question marks, quotation marks,
 dialogue dashes. Keep the `Punctuation` module independent of the grammar
 rules; it consumes `ClauseKind` and token spans.
+
+### 6.8 Lists and list punctuation
+
+A list is a **syntactic structure**, not a sequence of clauses. The parser
+must recognise it before the punctuation checker decides whether a comma is
+required, optional or wrong.
+
+#### Recognition
+
+1. Take the maximal span inside one clause/sentence that ends at a clause
+   boundary, period, semicolon, closing parenthesis or quote.
+2. Split on **top-level** commas only. Commas inside parentheses, quotes,
+   relative clauses or nested lists are not separators.
+3. Attach a final conjunction (`ja`, `sekä`, `tai`, `vai`) to the last item;
+   it does not need a preceding comma in Finnish.
+4. Detect an introducer: a colon followed by the list
+   (`Ostin kolme asiaa: omenoita, appelsiineja ja banaaneja.`).
+5. Classify every item:
+   - all nominal phrases → `Nominal`;
+   - all independent clauses (finite predicate and their own/recoverable
+     subject) → `Clause`;
+   - all verb phrases sharing a subject → `Predicate`;
+   - anything else → `Mixed`.
+6. If `Mixed`, keep the structure for analysis but do **not** apply list
+   punctuation rules automatically.
+7. Parse nested lists recursively inside an item and store the child list
+   index in `ListItemKind::List`.
+
+A list must have at least two items and a real cue (a top-level comma, a
+final conjunction, or a colon introducer). A single comma is not a list.
+
+#### List vs. clause coordination
+
+| sentence | classification | punctuation rule |
+|---|---|---|
+| `Ostin omenoita, appelsiineja ja banaaneja.` | `Nominal` | list separators |
+| `Ostin omenoita, Liisa osti banaaneja ja Matti osti päärynöitä.` | `Clause` | clause punctuation, not list separators |
+| `Sami söi, joi ja nukkui.` | `Predicate` | commas optional; no missing-separator error |
+| `Ostin omenoita, appelsiineja ja Liisa osti banaaneja.` | `Mixed` | no automatic correction |
+
+A two-predicate coordination is not a list: `Sami söi ja joi.` has one
+subject and two predicates, and needs no comma. `Predicate` lists require
+three parallel predicates or a clear comma cue before the last conjunction.
+
+The English examples in the request map to the same structures:
+
+```text
+I bought apples, oranges, bananas and pears.          Nominal
+I bought apples, John bought oranges and Mary bought bananas.  Clause
+```
+
+Do not classify by punctuation alone. Require item parallelism and a
+grammatical function for the whole span. This is what keeps the checker from
+treating `However, I bought apples, which were expensive, yesterday.` as a
+list: the commas mark an introductory expression and a relative clause, and
+the items are not parallel.
+
+Finnish analogue:
+
+```text
+Kuitenkin, ostin omenoita, jotka olivat kalliita, eilen.
+```
+
+Both commas are clause/relative boundaries, not list separators.
+
+#### Punctuation policy is language-specific
+
+The structure is language-independent; the rule is not. `ListPunctuationPolicy`
+has a final-conjunction policy:
+
+| policy | Finnish | English |
+|---|---|---|
+| comma before final `ja`/`and` | not preferred; `Suggestion` at most | Oxford comma optional; both valid |
+| missing separator between items | `Error` | `Error` |
+| duplicate comma | `Error` | `Error` |
+| comma before a two-item conjunction (`item, and item`) | `Suggestion`/no error | context-dependent; `Suggestion` |
+| comma after a colon introducer | `Error` | `Error` |
+
+The first implementation targets Finnish. The English row is a policy variant,
+not the default: torille must not start requiring the Oxford comma in Finnish
+lists. A user-facing language/style setting can select the policy later.
+
+#### List diagnostics
+
+Add these kinds:
+
+```rust
+ListSeparatorMissing,
+ListSeparatorDuplicate,
+ListCommaBeforeConjunction,
+ListIntroducerComma,
+```
+
+Rules:
+
+- **Missing separator:** two parallel nominal items are adjacent without a
+  comma and without being a lexical compound. The correction is an insertion
+  at the end of the preceding item. High confidence only when the item boundary
+  is unambiguous.
+- **Duplicate comma:** two comma separators in a row (`item,, item`). Remove
+  one comma only, not the following space.
+- **Comma before final conjunction:** Finnish `Suggestion` (remove or keep),
+  never `Error`; English policy may accept it as the Oxford comma.
+- **Colon introducer:** a colon introduces a list; a comma immediately after
+  the colon is an error (`ListIntroducerComma`). Do not treat the colon as a
+  list separator.
+- **Nested list:** edits are applied to the child list; the parent does not
+  duplicate them. One diagnostic per child list.
+
+Examples:
+
+```text
+Ostin omenoita, appelsiineja, banaaneja ja päärynöitä.   # valid Finnish
+Ostin omenoita appelsiineja, banaaneja ja päärynöitä.    # missing separator
+Ostin omenoita, appelsiineja,, ja banaaneja.             # duplicate comma
+Ostin omenoita, appelsiineja, ja banaaneja.              # suggestion only
+Ostin kolme asiaa: omenoita, appelsiineja ja banaaneja.  # introduced list
+Ostin kolme asiaa:, omenoita, appelsiineja ja banaaneja. # introducer comma
+```
 
 ## 7. Correction generation
 
@@ -524,6 +723,11 @@ never settled matches any number request). After `forms_of`, re-check the
 candidate's readings for the exact person/number/case that the rule wants
 before offering it. The candidate's `Confidence` must also be `Plain`.
 
+List and punctuation corrections are **edit-only**: no `forms_of`. Insertion is
+a zero-length `Edit` at the end of the preceding item; removal covers only the
+comma character. A comma pair is one diagnostic with two edits, so one
+correction applies both.
+
 ## 8. Ranking and conflict resolution
 
 This is the layer that keeps the checker from sounding confident about the
@@ -538,14 +742,17 @@ wrong thing.
    different lemma; prefer the same tense/mood/voice.
 4. **Frame priority:** rection candidates are ordered by the CSV priority, so
    `Pidän sinä` offers `sinusta` before `sinua`.
-5. **Conflict:** one diagnostic per token/span. A punctuation insertion and a
+5. **List confidence:** only a `Nominal`/`Clause`/`Predicate` list with clear
+   item boundaries can produce a separator `Error`; `Mixed` lists produce no
+   correction, and a comma before the final conjunction is a `Suggestion`.
+6. **Conflict:** one diagnostic per token/span. A punctuation insertion and a
    token replacement at the same boundary cannot both win; compare severity,
    confidence, then edit cost.
-6. **Deduplication:** two rules that propose the same edit produce one
+7. **Deduplication:** two rules that propose the same edit produce one
    diagnostic. Two rules that propose different edits for the same span keep
    the higher-confidence one and attach the other as an alternative only if it
    is genuinely compatible.
-7. **Deterministic order:** severity desc, confidence desc, start asc, kind
+8. **Deterministic order:** severity desc, confidence desc, start asc, kind
    stable. Golden tests depend on this.
 
 ## 9. Public API and wasm
@@ -563,7 +770,7 @@ Wasm (new exports, no change to `analyze_syntax`):
 
 ```text
 check_syntax(text) -> {
-  analysis: { sentences, clauses, tokens },
+  analysis: { sentences, clauses, tokens, lists },
   diagnostics: [{
     kind, severity, start, end, message, confidence, expected,
     corrections: [{ edits: [{start, end, replacement}], score, note }]
@@ -573,9 +780,23 @@ check_syntax(text) -> {
 check_syntax_with_state(idx, text) -> same, through the textarea's cache
 ```
 
-The existing `analyze_syntax_with_state` stays the analysis-only export. The
-diagnostic panel calls `check_syntax_with_state`; it does not re-run the
-analysis separately.
+The existing `analyze_syntax_with_state` stays the analysis-only export. Once
+`SyntaxAnalysis.lists` lands, both analysis exports carry the same `lists`
+array; `check_syntax` only adds the diagnostics. The diagnostic panel calls
+`check_syntax_with_state`; it does not re-run the analysis separately.
+
+`lists` is serialised as:
+
+```text
+lists: [{
+  start, end, tokensStart, tokensEnd, clause, kind,
+  items: [{ start, end, tokensStart, tokensEnd, kind }],
+  separators: [tokenIndex], conjunction, introducer, parent
+}]
+```
+
+`kind` is `nominal`, `clause`, `predicate` or `mixed`; an item's `kind` is
+`word`, `phrase`, `clause` or a child list index.
 
 The extension should render:
 
@@ -660,10 +881,55 @@ Luen kirjan.
 Koira, joka nukkuu sohvalla, on minun.
 Koira joka nukkuu sohvalla on minun.
 Punaisen auto on punainen.   # ambiguous genitive, no error
+Ostin omenoita, appelsiineja ja banaaneja.
+Ostin omenoita, appelsiineja, banaaneja ja päärynöitä.
+Ostin omenoita, appelsiineja, ja banaaneja.   # suggestion, not Error
+Ostin kolme asiaa: omenoita, appelsiineja ja banaaneja.
+Ostin omenoita, Liisa osti banaaneja ja Matti osti päärynöitä.
+Kuitenkin, ostin omenoita, jotka olivat kalliita, eilen.
 ```
 
-The last two are both acceptable: the comma is a restrictive/non-restrictive
-choice, not an error.
+The two relative-clause variants are both acceptable: the comma is a
+restrictive/non-restrictive choice, not an error. `Punaisen auto` is ambiguous
+(genitive of a nominalized adjective) and must stay quiet.
+
+### List fixture
+
+`tests/fixtures/syntax_diagnostics.json` gets a list section:
+
+```json
+{
+  "id": "list_missing_separator",
+  "text": "Ostin omenoita appelsiineja, banaaneja ja päärynöitä.",
+  "diagnostics": [
+    {
+      "kind": "list_separator_missing",
+      "severity": "error",
+      "start": 14,
+      "end": 14,
+      "corrections": [","]
+    }
+  ]
+}
+```
+
+Cases:
+
+```text
+valid:       Ostin omenoita, appelsiineja ja banaaneja.
+valid:       Ostin omenoita, appelsiineja, banaaneja ja päärynöitä.
+missing:     Ostin omenoita appelsiineja, banaaneja ja päärynöitä.
+duplicate:   Ostin omenoita, appelsiineja,, ja banaaneja.
+suggestion:  Ostin omenoita, appelsiineja, ja banaaneja.
+introduced:  Ostin kolme asiaa: omenoita, appelsiineja ja banaaneja.
+introducer,: Ostin kolme asiaa:, omenoita, appelsiineja ja banaaneja.
+not a list:  Kuitenkin, ostin omenoita, jotka olivat kalliita, eilen.
+clauses:     Ostin omenoita, Liisa osti banaaneja ja Matti osti päärynöitä.
+mixed:       Ostin omenoita, appelsiineja ja Liisa osti banaaneja.
+```
+
+The English structural analogues are unit tests for the parser’s
+classification, not for the Finnish punctuation policy.
 
 Unit tests live beside each rule module, but the fixture is the gate. A
 hand-written list is not enough.
@@ -730,8 +996,18 @@ Punaiset auto.   → Punainen auto.
 No errors for `punaisen auton`, `punaisen auto` (ambiguous genitive),
 `Vanha talo`, `Sami Ruotsalainen`, `kaksi miestä`.
 
-### Phase 3 — comma rules and clause kinds
+### Phase 3 — lists, comma rules and clause kinds
 
+Lists first, because a comma-separated nominal run must not be mistaken for
+clause coordination.
+
+- [ ] `src/syntax_list.rs`: `List`, `ListItem`, `ListKind`,
+      `ListItemKind`, and `parse`.
+- [ ] `SyntaxAnalysis.lists` and wasm serialisation.
+- [ ] Nominal / Clause / Predicate / Mixed classification.
+- [ ] Top-level comma splitting, final conjunction, colon introducer.
+- [ ] Nested list arena and parent index.
+- [ ] List punctuation rules and the Finnish default policy.
 - [ ] `ClauseKind` derivation.
 - [ ] Relative-clause extent heuristics for the interrupted-host case.
 - [ ] Subordinate comma in both orders.
@@ -743,6 +1019,14 @@ No errors for `punaisen auton`, `punaisen auto` (ambiguous genitive),
 Acceptance:
 
 ```text
+Ostin omenoita, appelsiineja ja banaaneja.        # valid list
+Ostin omenoita appelsiineja, banaaneja ja päärynöitä.
+                                                   → missing separator
+Ostin omenoita, appelsiineja,, ja banaaneja.       → duplicate comma
+Ostin omenoita, appelsiineja, ja banaaneja.        # suggestion only
+Ostin kolme asiaa: omenoita, appelsiineja ja banaaneja.  # introduced list
+Ostin omenoita, Liisa osti banaaneja ja Matti osti päärynöitä.
+                                                   # clause coordination, no list error
 Menin kotiin koska olin väsynyt.   → Menin kotiin, koska olin väsynyt.
 Koska olin väsynyt menin kotiin.   → Koska olin väsynyt, menin kotiin.
 Koira, joka nukkuu sohvalla on minun.
@@ -751,7 +1035,8 @@ Menin kauppaan ja ostin maitoa.    # no error
 Sami söi puuron, ja Liisa joi maidon. # suggestion, not error
 ```
 
-No error for a restrictive relative without commas.
+No error for a restrictive relative without commas, and no error for
+`Kuitenkin, ostin omenoita, jotka olivat kalliita, eilen.` (not a list).
 
 ### Phase 4 — verb rection and case selection
 
@@ -801,6 +1086,13 @@ Ship fewer rules, not more guesses.
   dimension.
 - For punctuation, `Error` requires a clear clause boundary and a known clause
   kind; an ambiguous relative-clause reading is a `Suggestion`.
+- A list requires at least two parallel items plus a real cue (top-level comma,
+  final conjunction or colon introducer). A comma sequence broken by a
+  relative clause, a subordinate clause or an introductory phrase is not a
+  list.
+- `Mixed` lists never produce an automatic punctuation correction. A final
+  conjunction without a comma is never an error in Finnish; the Oxford comma
+  is not the default policy.
 - `Warning` for constructions with standard variation (coordinated subjects,
   colloquial number, optional commas).
 - `Suggestion` for style/optional punctuation.
@@ -812,20 +1104,27 @@ Ship fewer rules, not more guesses.
 
 ## 14. Open questions
 
-1. **Clause kinds and relative extent.** Do we extend `syntax::Clause` with
+1. **List parser placement.** `src/syntax_list.rs` as a sibling of
+   `syntax.rs`, or convert `syntax.rs` into a directory and add
+   `syntax/list.rs`? Recommendation: the sibling module first; move it into a
+   `syntax/` directory only when more phrase-level analyses appear.
+2. **List punctuation policy.** Is Finnish the only policy in v1, with English
+   Oxford comma as a configuration later? Recommendation: yes; do not make
+   the Oxford comma a Finnish default.
+3. **Clause kinds and relative extent.** Do we extend `syntax::Clause` with
    `kind`/`parent`, or derive them in `syntax_check`? Recommendation: derive
    first, promote only when a second consumer needs them.
-2. **Adjective degree.** `Tags` has no degree; do we add it to the grammar
+4. **Adjective degree.** `Tags` has no degree; do we add it to the grammar
    model, or detect degree from the surface and skip non-positive corrections?
    Recommendation: skip in v1, add a degree dimension only if the checker
    needs to correct comparatives.
-3. **Rection data.** How large should the curated table grow, and who reviews
+5. **Rection data.** How large should the curated table grow, and who reviews
    it? Recommendation: 30–50 high-frequency verbs, two frames maximum per
    verb, no semantic guesses.
-4. **Comma norm.** Which relative clauses are non-restrictive? Recommendation:
+6. **Comma norm.** Which relative clauses are non-restrictive? Recommendation:
    only unbalanced pairs and subordinate clauses are errors; relative commas
    are suggestions unless an opening comma is already present.
-5. **Style layer.** Keep it separate. It shares the analysis but has its own
+7. **Style layer.** Keep it separate. It shares the analysis but has its own
    `DiagnosticKind`, severity, and opt-in UI.
 
 ## 15. Recommended first release
@@ -841,6 +1140,10 @@ Lapset leikkii    → Lapset leikkivät
 ```
 
 It needs phase 0, phase 1 and phase 2 only. Ship those four rules with a clean
-corpus and a correction action, then add punctuation and rection. A checker
-that is right about four constructions is more useful than one that is unsure
-about twenty.
+corpus and a correction action, then add lists/punctuation (phase 3) and
+rection (phase 4). A checker that is right about four constructions is more
+useful than one that is unsure about twenty.
+
+Lists are planned now but are not part of the first release. Their structure
+is a prerequisite for phase 3 punctuation, not a prerequisite for the four
+agreement rules.
