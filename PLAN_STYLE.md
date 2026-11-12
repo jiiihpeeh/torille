@@ -1,11 +1,12 @@
 # PLAN_STYLE — the opt-in style layer
 
-Status: **Phase 0–3 landed; phases 4–7 planned.** The public types, the
-curated phrase/word table and sentence-local repetition are implemented in
-`src/style_check/`. The long-sentence metric and the wasm/UI surface are not
-wired yet. This is the separate plan that `PLAN_SYNTAX_CHECKER.md` phase 6E
-asked for before any style rule lands. It does not change the grammar checker,
-the suggestion pipeline or the keystroke path.
+Status: **Phase 0–4 landed; phases 5–7 planned.** The public types, the
+curated phrase/word table, sentence-local repetition and the long-sentence
+metric are implemented in `src/style_check/`. The evaluation corpus and the
+wasm/UI surface are not wired yet. This is the separate plan that
+`PLAN_SYNTAX_CHECKER.md` phase 6E asked for before any style rule lands. It
+does not change the grammar checker, the suggestion pipeline or the keystroke
+path.
 
 The grammar checker answers “is this written Finnish correct?”. The style
 layer answers a different, optional question: “is this sentence needlessly
@@ -435,10 +436,15 @@ Acceptance: clean corpus stays within the metric budget.
 
 ### Phase 4 — long sentence
 
-- [ ] Add `style_check/length.rs`.
-- [ ] 35-word threshold, finite-predicate guard, one-per-sentence rule.
-- [ ] Add 34/35/36-word boundary cases.
-- [ ] Suppress when the sentence already has a word-level finding.
+- [x] Add `style_check/length.rs`.
+- [x] 35-word threshold, finite-predicate guard, one-per-sentence rule.
+- [x] Add 34/35/36-word boundary cases.
+- [x] Suppress when the sentence already has a word-level finding.
+
+Phase 4 landed with `LONG_SENTENCE_WORDS = 35` (over 35 is reported), a
+finite-predicate check over the sentence's readings, and sentence-span
+suppression when any phrase or repetition finding sits inside it. The fixture
+pins the 36-word case and the inclusive 35-word negative.
 
 Acceptance: clean corpus budget unchanged; no finding on headings or list
 fragments.

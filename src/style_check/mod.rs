@@ -6,9 +6,10 @@
 //! keystroke path. The design is in `PLAN_STYLE.md`.
 //!
 //! Phase 2 adds the curated phrase/word table; phase 3 adds sentence-local
-//! repetition. The long-sentence metric lands in a later phase.
+//! repetition; phase 4 adds the long-sentence metric.
 
 mod diagnostic;
+mod length;
 mod lexicon;
 mod phrases;
 mod repetition;
@@ -42,6 +43,8 @@ pub fn check_tokens(tokens: &[Token]) -> StyleAnalysis {
         diagnostics.iter().map(|diagnostic| diagnostic.span.clone()).collect();
     let analysis = crate::syntax::analyze(tokens);
     diagnostics.extend(repetition::check(tokens, &analysis, &covered));
+    let long_sentences = length::check(tokens, &analysis, &diagnostics);
+    diagnostics.extend(long_sentences);
     diagnostics.sort_by(|a, b| {
         a.span
             .start

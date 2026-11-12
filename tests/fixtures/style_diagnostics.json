@@ -147,6 +147,26 @@
       "id": "repetition_skips_a_light_verb",
       "text": "Olemme täällä ja olemme valmiita.",
       "diagnostics": []
+    },
+    {
+      "id": "long_sentence",
+      "text": "Hän on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on.",
+      "diagnostics": [
+        {
+          "kind": "style_long_sentence",
+          "severity": "suggestion",
+          "start": 0,
+          "end": 110,
+          "message": "style_long_sentence",
+          "expected": "enintään 35 sanaa",
+          "corrections": []
+        }
+      ]
+    },
+    {
+      "id": "long_sentence_threshold_is_inclusive",
+      "text": "Hän on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on nyt.",
+      "diagnostics": []
     }
   ],
   "clean": [

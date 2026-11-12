@@ -35,7 +35,8 @@ use crate::tokenise::Token;
 
 pub use cache::AnalysisCache;
 pub(crate) use predicates::{
-    is_coordinating, is_relative_word, is_subordinator, predicate_is_passive,
+    is_coordinating, is_finite_predicate, is_relative_word, is_subordinator,
+    predicate_is_passive,
 };
 use cache::proper_name_reading;
 use roles::{classify, resolve_clause, share_clause_roles};

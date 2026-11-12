@@ -164,4 +164,6 @@ diagnostic_tests!(
     repetition_is_reported_once,
     repetition_does_not_cross_a_sentence,
     repetition_skips_a_light_verb,
+    long_sentence,
+    long_sentence_threshold_is_inclusive,
 );

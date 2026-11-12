@@ -6,7 +6,7 @@ use crate::tokenise::Token;
 use super::{RoleConfidence, SyntacticRole, TokenSyntax};
 
 /// A reading that can be the finite predicate of a clause.
-pub(super) fn is_finite_predicate(reading: &Tags) -> bool {
+pub(crate) fn is_finite_predicate(reading: &Tags) -> bool {
     match reading.part_of_speech {
         Some(PartOfSpeech::NegativeVerb) => true,
         // A single-token `Verb` reading with negative polarity is a
