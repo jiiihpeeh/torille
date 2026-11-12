@@ -76,6 +76,11 @@ pub enum RoleConfidence {
 ///
 /// Phase 5 creates one clause per sentence. Later phases split a sentence
 /// into coordinated and subordinate clauses and fill the role slots.
+///
+/// A clause may span more than one [`crate::sentence::SentenceSpan`] when the
+/// sentence layer split at a parenthetical bracket: the syntax layer merges
+/// bracket-only boundaries before segmenting, so `omena (pieni, makea) ja
+/// banaani` is one clause even though the sentence layer sees three spans.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Clause {
     /// Byte span in the source text.
@@ -240,18 +245,11 @@ fn analyze_with(
         };
     }
 
-    let mut sentence_words: Vec<Vec<usize>> = vec![Vec::new(); sentences.len()];
-    for (index, token) in tokens.iter().enumerate() {
-        if token.is_word()
-            && let Some(words) = sentence_words.get_mut(contexts[index].sentence_index)
-        {
-            words.push(index);
-        }
-    }
+    let groups = clause_groups(tokens, &contexts);
 
     let mut clauses: Vec<Clause> = Vec::new();
-    let mut clause_sentences: Vec<usize> = Vec::new();
-    for (sentence_index, words) in sentence_words.iter().enumerate() {
+    let mut clause_groups_of: Vec<usize> = Vec::new();
+    for (group_index, words) in groups.iter().enumerate() {
         if words.is_empty() {
             continue;
         }
@@ -275,7 +273,7 @@ fn analyze_with(
                 negative: false,
                 existential: false,
             });
-            clause_sentences.push(sentence_index);
+            clause_groups_of.push(group_index);
         }
     }
 
@@ -292,7 +290,7 @@ fn analyze_with(
     for clause in &mut clauses {
         resolve_clause(clause, tokens, &mut out, &nominal_lemmas);
     }
-    share_clause_roles(&mut clauses, &clause_sentences, tokens, &out);
+    share_clause_roles(&mut clauses, &clause_groups_of, tokens, &out);
 
     let lists = crate::syntax_list::parse(tokens, &clauses, &out);
     SyntaxAnalysis {
@@ -301,6 +299,84 @@ fn analyze_with(
         lists,
         tokens: out,
     }
+}
+
+/// Words grouped for clause segmentation.
+///
+/// The sentence layer starts a new sentence at an opening or closing bracket
+/// so the case checker accepts a capital after `(`. A parenthetical inside a
+/// clause must not tear that clause apart, so the syntax layer merges two
+/// adjacent sentence groups whose only boundary is a bracket. A period,
+/// question mark, exclamation mark, colon or line break still ends a group:
+/// `(Tämä on uusi virke.) Toinen virke.` stays two groups.
+fn clause_groups(tokens: &[Token], contexts: &[sentence::TokenContext]) -> Vec<Vec<usize>> {
+    let mut groups: Vec<Vec<usize>> = Vec::new();
+    let mut current_sentence: Option<usize> = None;
+    for (index, token) in tokens.iter().enumerate() {
+        if !token.is_word() {
+            continue;
+        }
+        let sentence_index = contexts[index].sentence_index;
+        if current_sentence != Some(sentence_index) {
+            groups.push(Vec::new());
+            current_sentence = Some(sentence_index);
+        }
+        if let Some(group) = groups.last_mut() {
+            group.push(index);
+        }
+    }
+
+    let mut merged: Vec<Vec<usize>> = Vec::new();
+    for group in groups {
+        let merge = merged
+            .last()
+            .and_then(|previous| previous.last().copied())
+            .and_then(|left| group.first().copied().map(|right| (left, right)))
+            .is_some_and(|(left, right)| bracket_only_boundary(tokens, left, right));
+        if merge {
+            if let Some(previous) = merged.last_mut() {
+                previous.extend(group);
+            }
+        } else {
+            merged.push(group);
+        }
+    }
+    merged
+}
+
+/// True when the separators between two words are only brackets.
+///
+/// A terminal mark, colon, newline or quote disqualifies the boundary. The
+/// period wins over a neighbouring bracket (`.)` and `).` are both terminal).
+fn bracket_only_boundary(tokens: &[Token], left: usize, right: usize) -> bool {
+    let mut bracket = false;
+    for token in tokens.iter().take(right).skip(left + 1) {
+        if token.is_word() {
+            return false;
+        }
+        if token.text.contains('\n') {
+            return false;
+        }
+        let text = token.text.trim();
+        if text
+            .chars()
+            .any(|c| matches!(c, '.' | '!' | '?' | ':' | ';'))
+        {
+            return false;
+        }
+        if text
+            .chars()
+            .any(|c| matches!(c, '(' | ')' | '[' | ']' | '{' | '}'))
+        {
+            bracket = true;
+        } else if text
+            .chars()
+            .any(|c| matches!(c, '»' | '«' | '"' | '“' | '”' | '‘' | '’'))
+        {
+            return false;
+        }
+    }
+    bracket
 }
 
 /// The morphology of one surface word, reduced to what a role rule needs.
@@ -869,12 +945,20 @@ fn is_predicate_candidate(index: usize, out: &[TokenSyntax]) -> bool {
     out[index].role == SyntacticRole::Predicate && !is_negative_auxiliary(index, out)
 }
 
-/// An infinitive reading, which can head an infinitival clause.
+/// A clear infinitive reading, which can head an infinitival clause.
+///
+/// A word that is also a nominal is not one: `pieniä` has an infinitive
+/// homonym, but in `omenoita (pieniä, makeita)` it is an adjective and must
+/// not split the clause.
 fn is_infinitive(index: usize, out: &[TokenSyntax]) -> bool {
     out[index]
         .readings
         .iter()
         .any(|reading| reading.mood == Some(Mood::Infinitive))
+        && !out[index]
+            .readings
+            .iter()
+            .any(|reading| is_nominal_pos(reading.part_of_speech))
 }
 
 /// A past participle, the verb of a compound tense or a passive construction.
@@ -1627,14 +1711,17 @@ fn has_coordinator_between(tokens: &[Token], left: usize, right: usize) -> bool 
 }
 
 /// Share the subject of a coordinated or non-finite clause with the one before.
+///
+/// `clause_groups` holds the clause-group index (see [`clause_groups`]); two
+/// clauses may share a group across a parenthetical bracket boundary.
 fn share_clause_roles(
     clauses: &mut [Clause],
-    clause_sentences: &[usize],
+    clause_groups: &[usize],
     tokens: &[Token],
     out: &[TokenSyntax],
 ) {
     for index in 1..clauses.len() {
-        if clause_sentences[index] != clause_sentences[index - 1] {
+        if clause_groups[index] != clause_groups[index - 1] {
             continue;
         }
         if clauses[index].subject.is_some() {
@@ -1772,6 +1859,43 @@ mod tests {
             .iter()
             .position(|token| token.text == word)
             .unwrap_or_else(|| panic!("{word} not in {tokens:?}"))
+    }
+
+    fn group_count(text: &str) -> usize {
+        let tokens = tokenise(text);
+        let contexts = sentence::analyze(&tokens);
+        clause_groups(&tokens, &contexts).len()
+    }
+
+    #[test]
+    fn bracket_only_boundaries_merge_into_one_clause_group() {
+        for text in [
+            "Ostin omenoita, appelsiineja (pieniä, makeita) ja banaaneja.",
+            "Teksti (tämä) jatkuu.",
+        ] {
+            assert_eq!(group_count(text), 1, "{text}");
+        }
+    }
+
+    #[test]
+    fn a_terminal_mark_after_a_bracket_still_ends_a_group() {
+        for text in [
+            "(Tämä on uusi virke.) Toinen virke.",
+            "Teksti (tämä). Jatkuu.",
+            "Teksti (tämä) jatkuu. Toinen virke.",
+        ] {
+            assert_eq!(group_count(text), 2, "{text}");
+        }
+    }
+
+    /// The syntax grouping merges the bracket boundary, but the sentence spans
+    /// the case layer sees must stay as they were.
+    #[test]
+    fn a_parenthetical_keeps_the_sentence_spans_but_not_the_clause_split() {
+        let (_, analysis) =
+            analyzed("Ostin omenoita, appelsiineja (pieniä, makeita) ja banaaneja.");
+        assert_eq!(analysis.sentences.len(), 3);
+        assert_eq!(analysis.clauses.len(), 1);
     }
 
     #[test]

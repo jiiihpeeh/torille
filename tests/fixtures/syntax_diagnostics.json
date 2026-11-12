@@ -243,6 +243,32 @@
       ]
     },
     {
+      "id": "nested_list_missing_separator",
+      "text": "Ostin omenoita appelsiineja (pieniä, makeita), banaaneja ja päärynöitä.",
+      "diagnostics": [
+        {
+          "kind": "list_separator_missing",
+          "severity": "error",
+          "start": 14,
+          "end": 14,
+          "corrections": [","]
+        }
+      ]
+    },
+    {
+      "id": "nested_list_duplicate_separator",
+      "text": "Ostin omenoita, appelsiineja (pieniä,, makeita) ja banaaneja.",
+      "diagnostics": [
+        {
+          "kind": "list_separator_duplicate",
+          "severity": "error",
+          "start": 38,
+          "end": 39,
+          "corrections": [""]
+        }
+      ]
+    },
+    {
       "id": "subordinate_comma_after_main",
       "text": "Menin kotiin koska olin väsynyt.",
       "diagnostics": [
@@ -454,6 +480,10 @@
     "En lue kirjaa.",
     "En syö puuroa.",
     "En pidä sinusta.",
-    "En mene kouluun."
+    "En mene kouluun.",
+    "Ostin omenoita, appelsiineja (pieniä, makeita) ja banaaneja.",
+    "Kuitenkin, ostin omenoita (jotka olivat kalliita) eilen.",
+    "Teksti (tämä) jatkuu.",
+    "(Tämä on uusi virke.) Toinen virke."
   ]
 }

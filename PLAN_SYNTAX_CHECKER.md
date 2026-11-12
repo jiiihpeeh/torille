@@ -1,8 +1,8 @@
 # PLAN_SYNTAX_CHECKER — grammar and punctuation diagnostics
 
-Status: Phases 0–4 landed and Phase 5 started (negative-clause object case);
-nested lists are still open. Phase 6 is planned. The analysis layer it builds
-on is `PLAN_SYNTAX.md` and is already landed on the `syntax` branch.
+Status: Phases 0–4 landed, including nested lists, and Phase 5 started
+(negative-clause object case). Phase 6 is planned. The analysis layer it
+builds on is `PLAN_SYNTAX.md` and is already landed on the `syntax` branch.
 
 The goal is a **correction checker**, not another parser: detect a small set of
 high-confidence grammatical errors, explain them, and produce corrections from
@@ -1009,8 +1009,9 @@ clause coordination.
 - [x] `SyntaxAnalysis.lists` and wasm serialisation.
 - [x] Nominal / Clause / Predicate / Mixed classification.
 - [x] Top-level comma splitting, final conjunction, colon introducer.
-- [ ] Nested list arena and parent index: the fields and `ListItemKind::List`
-      exist, but the parser still produces only top-level lists.
+- [x] Nested list arena and parent index: `parent`, `ListItemKind::List` and
+      a post-order child arena, built after `src/syntax.rs` merges
+      bracket-only sentence boundaries.
 - [x] List punctuation rules and the Finnish default policy.
 - [x] `ClauseKind` derivation.
 - [x] Relative-clause extent heuristics for the interrupted-host case.
@@ -1044,13 +1045,13 @@ Sami söi puuron, ja Liisa joi maidon. # no error; comma is optional
 No error for a restrictive relative without commas, and no error for
 `Kuitenkin, ostin omenoita, jotka olivat kalliita, eilen.` (not a list).
 
-Nested lists are the one remaining list item. The structure has `parent` and
-`ListItemKind::List(idx)`, but `parse` currently builds the top-level arena
-only. The concrete blocker is that `src/sentence.rs` treats brackets as
-sentence boundaries, so a parenthetical list is split before the list parser
-sees it. The focused plan is
-[`PLAN_NESTED_LISTS.md`](PLAN_NESTED_LISTS.md): merge bracket-only sentence
-groups in the syntax layer, then populate the child arena.
+Nested lists are done. `src/sentence.rs` still treats brackets as sentence
+boundaries for the case layer, so `src/syntax.rs`'s `clause_groups` merges
+bracket-only boundaries before clause segmentation; `src/syntax_list.rs` then
+parses the parenthetical recursively and appends a post-order child arena.
+`Ostin omenoita, appelsiineja (pieniä, makeita) ja banaaneja.` is one parent
+list with three items and one child list with two. The design record is
+[`PLAN_NESTED_LISTS.md`](PLAN_NESTED_LISTS.md).
 
 ### Phase 4 — verb rection and case selection — done
 

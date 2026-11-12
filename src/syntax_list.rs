@@ -44,6 +44,10 @@ pub struct List {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ListItem {
     pub tokens: Range<usize>,
+    /// Word range extended over trailing separators, up to the next word.
+    /// A nested list needs the closing bracket that trails the item's last
+    /// word; diagnostics keep using `tokens`.
+    pub(crate) scan: Range<usize>,
     pub span: Range<usize>,
     pub kind: ListItemKind,
 }
@@ -91,8 +95,11 @@ impl ListItemKind {
     }
 }
 
-/// Find lists in every clause. The returned arena is in source order; nested
-/// lists are not produced yet (the top-level introduced list is).
+/// Find lists in every clause.
+///
+/// The arena is post-order: a nested list is pushed before the list that
+/// contains it, so `parent` indices are always smaller than the list itself.
+/// `ListItemKind::List(index)` names the child from the parent's `items`.
 pub fn parse(tokens: &[Token], clauses: &[Clause], out: &[TokenSyntax]) -> Vec<List> {
     let mut lists = Vec::new();
     for (clause_index, clause) in clauses.iter().enumerate() {
@@ -107,31 +114,27 @@ fn parse_clause(
     tokens: &[Token],
     out: &[TokenSyntax],
     lists: &mut Vec<List>,
-) {
+) -> Option<usize> {
     let words: Vec<usize> = clause
         .tokens
         .clone()
         .filter(|&index| tokens[index].is_word())
         .collect();
     if words.len() < 2 {
-        return;
+        return None;
     }
 
     let (start_word, introducer) = list_start(&words, tokens, clause, out);
-    let Some(start_word) = start_word else {
-        return;
-    };
+    let start_word = start_word?;
     let start_token = words[start_word];
-    let Some(end_token) = words.last().copied() else {
-        return;
-    };
+    let end_token = words.last().copied()?;
     if start_token >= end_token {
-        return;
+        return None;
     }
 
     let commas = top_level_commas(tokens, start_token, end_token + 1);
     if commas.is_empty() && introducer.is_none() {
-        return;
+        return None;
     }
 
     // Split word runs at the top-level commas. Empty runs are kept out; a
@@ -148,7 +151,7 @@ fn parse_clause(
         bounds.push(run);
     }
     if bounds.len() < 2 {
-        return;
+        return None;
     }
 
     // The final chunk can carry the conjunction. Split the last item at the
@@ -169,13 +172,27 @@ fn parse_clause(
         }
     }
     if bounds.len() < 2 {
-        return;
+        return None;
     }
 
-    let items: Vec<ListItem> = bounds
+    let mut items: Vec<ListItem> = bounds
         .iter()
-        .map(|&(first, end)| list_item(first, end, tokens, out))
+        .map(|&(first, end)| list_item(first, end, clause.tokens.end, tokens, out))
         .collect();
+    // Children are appended before the parent, so the arena stays post-order.
+    // An item represents one child; a second parenthetical list in the same
+    // item is left for a later `Lists(Vec<usize>)` shape.
+    let mut child_of: Vec<Option<usize>> = vec![None; items.len()];
+    for (item_index, item) in items.iter().enumerate() {
+        child_of[item_index] = nested_in_item(item, clause_index, tokens, out, lists);
+    }
+    let parent_index = lists.len();
+    for (item_index, child) in child_of.iter().enumerate() {
+        if let Some(child) = child {
+            lists[*child].parent = Some(parent_index);
+            items[item_index].kind = ListItemKind::List(*child);
+        }
+    }
     let kind = classify(&items, out);
     let first = items.first().map(|item| item.tokens.start).unwrap_or(start_token);
     let last = items.last().map(|item| item.tokens.end).unwrap_or(end_token + 1);
@@ -206,6 +223,81 @@ fn parse_clause(
         introducer,
         parent: None,
     });
+    Some(parent_index)
+}
+
+/// Parse a bracketed list inside one item: `omena (pieniä, makeita)`.
+///
+/// Only the outermost bracket pairs are considered, each needs at least two
+/// words and a top-level comma. The first child list is appended to the arena
+/// and its index returned; the caller sets the item kind and the parent link.
+fn nested_in_item(
+    item: &ListItem,
+    clause_index: usize,
+    tokens: &[Token],
+    out: &[TokenSyntax],
+    lists: &mut Vec<List>,
+) -> Option<usize> {
+    let mut stack: Vec<(usize, char)> = Vec::new();
+    let mut pairs: Vec<(usize, usize)> = Vec::new();
+    for index in item.scan.clone() {
+        if tokens[index].is_word() {
+            continue;
+        }
+        for character in tokens[index].text.chars() {
+            match character {
+                '(' | '[' | '{' => stack.push((index, character)),
+                ')' | ']' | '}' => {
+                    let Some((open, opener)) = stack.pop() else {
+                        continue;
+                    };
+                    let matches =
+                        matches!((opener, character), ('(', ')') | ('[', ']') | ('{', '}'));
+                    if matches && open + 1 < index {
+                        pairs.push((open + 1, index));
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    // Keep only pairs that are not inside another pair. An outer pair's own
+    // recursive parse will find the inner one, so scanning both would produce
+    // the same child twice.
+    let outer: Vec<(usize, usize)> = pairs
+        .iter()
+        .copied()
+        .filter(|&(start, end)| {
+            !pairs
+                .iter()
+                .any(|&(outer_start, outer_end)| outer_start < start && end < outer_end)
+        })
+        .collect();
+
+    for (start, end) in outer {
+        if top_level_commas(tokens, start, end).is_empty() {
+            continue;
+        }
+        let Some((first, last)) = word_run(tokens, start, end) else {
+            continue;
+        };
+        let clause = Clause {
+            start: tokens[first].start,
+            end: tokens[last - 1].end,
+            tokens: first..last,
+            predicate: None,
+            subject: None,
+            object: None,
+            complement: None,
+            negative: false,
+            existential: false,
+        };
+        if let Some(child) = parse_clause(clause_index, &clause, tokens, out, lists) {
+            return Some(child);
+        }
+    }
+    None
 }
 
 /// Where the list begins: after a colon introducer, or after the last finite
@@ -241,8 +333,18 @@ fn list_start(
     (Some(predicate.map_or(0, |position| position + 1)), None)
 }
 
-fn list_item(first: usize, end: usize, tokens: &[Token], out: &[TokenSyntax]) -> ListItem {
+fn list_item(
+    first: usize,
+    end: usize,
+    clause_end: usize,
+    tokens: &[Token],
+    out: &[TokenSyntax],
+) -> ListItem {
     let words = word_run(tokens, first, end).unwrap_or((first, end));
+    let mut scan_end = words.1;
+    while scan_end < clause_end && !tokens[scan_end].is_word() {
+        scan_end += 1;
+    }
     let count = tokens[words.0..words.1]
         .iter()
         .filter(|token| token.is_word())
@@ -256,6 +358,7 @@ fn list_item(first: usize, end: usize, tokens: &[Token], out: &[TokenSyntax]) ->
     };
     ListItem {
         tokens: words.0..words.1,
+        scan: words.0..scan_end,
         span: tokens[words.0].start..tokens[words.1 - 1].end,
         kind,
     }
@@ -425,5 +528,31 @@ mod tests {
     fn a_relative_clause_is_not_a_list() {
         let (_, lists) = lists("Koira, joka nukkuu sohvalla, on minun.");
         assert!(lists.is_empty(), "{lists:#?}");
+    }
+
+    #[test]
+    fn a_parenthetical_list_is_a_child() {
+        let (tokens, lists) = lists(
+            "Ostin omenoita, appelsiineja (pieniä, makeita) ja banaaneja.",
+        );
+        assert_eq!(lists.len(), 2, "{lists:#?}");
+        let parent = lists.iter().position(|list| list.parent.is_none()).unwrap();
+        let child = lists.iter().position(|list| list.parent.is_some()).unwrap();
+        assert!(child < parent, "the arena is post-order: {lists:#?}");
+        assert_eq!(lists[child].parent, Some(parent));
+        assert_eq!(lists[parent].items.len(), 3);
+        assert_eq!(lists[child].items.len(), 2);
+        assert!(matches!(
+            lists[parent].items[1].kind,
+            ListItemKind::List(index) if index == child
+        ));
+        assert_eq!(&tokens[lists[child].items[0].tokens.start].text, "pieniä");
+        assert_eq!(&tokens[lists[child].items[1].tokens.start].text, "makeita");
+    }
+
+    #[test]
+    fn a_bracketed_relative_clause_is_not_a_nested_list() {
+        let (_, lists) = lists("Kuitenkin, ostin omenoita (jotka olivat kalliita) eilen.");
+        assert!(lists.iter().all(|list| list.parent.is_none()), "{lists:#?}");
     }
 }

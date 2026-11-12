@@ -1,7 +1,9 @@
 # PLAN_NESTED_LISTS — true list-in-list support
 
-Status: plan only. This is the remaining Phase 3 item from
-`PLAN_SYNTAX_CHECKER.md`. Do not implement this as another comma heuristic.
+Status: implemented. `clause_groups` in `src/syntax.rs` merges bracket-only
+sentence boundaries before clause segmentation, and `src/syntax_list.rs` now
+builds a post-order parent/child arena. The rest of this document is the plan
+that produced the change, kept as the rationale and the test map.
 
 The colon-introduced list already works:
 
@@ -224,46 +226,49 @@ reports the parent boundary, not the child.
 
 - [x] Reproduce the sentence split at `(` and `)`.
 - [x] Record the failed nested attempt and revert it.
-- [ ] Add the two regression examples above to a temporary audit test (can be
-      folded into Phase 1).
+- [x] Fold the regression examples into the Phase 1 tests.
 
 ### Phase 1 — bracket-merged clause grouping
 
-- [ ] Add `clause_groups` in `src/syntax.rs`; use it instead of raw
+- [x] Add `clause_groups` in `src/syntax.rs`; use it instead of raw
       `sentence_words` for clause segmentation.
-- [ ] Merge only bracket-only boundaries; periods/questions/exclamations after
-      the bracket stay real boundaries.
-- [ ] Keep `sentence::spans` and `TokenContext` unchanged.
-- [ ] Test the five grouping rows and the existing case tests.
+- [x] Merge only bracket-only boundaries; periods/questions/exclamations after
+      the bracket stay real boundaries (plus colon, semicolon, newline, quote).
+- [x] Keep `sentence::spans` and `TokenContext` unchanged.
+- [x] Test the grouping rows and the existing case tests.
+- [x] Do not split a clause at an infinitive homonym that is also a nominal
+      (`pieniä` in the example).
 
 ### Phase 2 — nested list arena
 
-- [ ] Add the internal `scan` range.
-- [ ] Bracket-pair scanner + recursive `parse_clause`.
-- [ ] Set `List.parent` and `ListItemKind::List(index)`.
-- [ ] Skip parent missing-separator checks for nested items.
-- [ ] Test the arena and the post-order indices.
+- [x] Add the internal `scan` range.
+- [x] Bracket-pair scanner + recursive `parse_clause`.
+- [x] Set `List.parent` and `ListItemKind::List(index)`.
+- [x] Check the host item's own words but let the child list check its own
+      (a missing separator before the parenthetical is still reported).
+- [x] Test the arena and the post-order indices.
 
 ### Phase 3 — nested punctuation and diagnostics
 
-- [ ] Apply the existing list rules to children.
-- [ ] Test valid, missing, duplicate and not-a-list cases.
-- [ ] Confirm conflict resolution and deterministic order.
+- [x] Apply the existing list rules to children.
+- [x] Test valid, missing, duplicate and not-a-list cases.
+- [x] Confirm conflict resolution and deterministic order.
 
 ### Phase 4 — integration
 
-- [ ] Add wasm/consumer docs for parent/child list traversal.
-- [ ] Add the clean corpus rows.
-- [ ] Run `cargo test --release --workspace`,
-      `cargo clippy --workspace --all-targets -- -D warnings`, and the Python
-      gates as for the other phases.
+- [x] Add wasm/consumer docs for parent/child list traversal.
+- [x] Add the clean corpus rows.
+- [x] Run the workspace tests, clippy, and the Rust syntax gates. (The Python
+      morphology harness is unaffected: no engine, lexicon or catalogue code
+      changed.)
 
 ## 8. Open questions
 
 1. **Multiple nested lists in one item.** `ListItemKind::List(usize)` supports
    one child. If an item contains two parenthetical lists, do we add
-   `Lists(Vec<usize>)` or leave the second unrepresented? Recommendation:
-   support one child now; add a vector only when a real sentence needs it.
+   `Lists(Vec<usize>)` or leave the second unrepresented? Decided: one child
+   now; the first bracketed list is parsed, a second in the same item is left
+   for a later vector shape.
 2. **Brackets vs. parentheses.** Treat `()`, `[]` and `{}` the same for
    grouping and nesting. This is a syntax decision, not a case-layer one.
 3. **Parent list role.** The parent list's `role`/`head` should still come from
@@ -274,8 +279,8 @@ reports the parent boundary, not the child.
    quote itself is not a nested-list cue.
 5. **Clause spans across sentences.** Is a clause spanning two
    `SyntaxAnalysis.sentences` acceptable, or should the UI get a separate
-   `Clause.sentence`? Recommendation: document the span and add the field only
-   when a consumer needs it.
+   `Clause.sentence`? Decided: document the span on `Clause` and in the wasm
+   shape; add a field only when a consumer needs it.
 
 ## 9. Definition of done
 

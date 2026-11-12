@@ -202,6 +202,14 @@ pub fn hyphenate(
 /// `tokens` array; null means no such role or governor. `role` is one of
 /// `predicate`, `auxiliary`, `subject`, `object`, `adverbial`, `complement`,
 /// `modifier` or `unknown`.
+///
+/// A clause may span two `sentences` entries when the sentence layer split at
+/// a parenthetical bracket; the syntax layer merges that boundary.
+///
+/// `lists` is post-order: a nested list comes before its parent, and a
+/// parent's `parent` is always a smaller index (or null for a top-level list).
+/// An item whose `kind` is `list` also carries `list`, the index of its child
+/// list in the same array.
 #[wasm_bindgen]
 pub fn analyze_syntax(text: &str) -> js_sys::Object {
     let tokens = torille::tokenise::tokenise(text);

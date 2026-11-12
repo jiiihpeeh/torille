@@ -6,7 +6,7 @@
 //! pronoun, and a list needs the parallel items that `syntax_list` found.
 
 use crate::syntax::{Clause, SyntacticRole, SyntaxAnalysis, TokenSyntax};
-use crate::syntax_list::{ListItem, ListKind};
+use crate::syntax_list::{List, ListItem, ListItemKind, ListKind};
 use crate::tags::{Mood, PartOfSpeech, Polarity};
 use crate::tokenise::Token;
 
@@ -58,7 +58,12 @@ fn list_diagnostics(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         }
 
         for item in &list.items {
-            out.extend(missing_separators(item, tokens, &analysis.tokens));
+            out.extend(missing_separators(
+                item,
+                tokens,
+                &analysis.tokens,
+                &analysis.lists,
+            ));
         }
 
         if let Some(conjunction) = list.conjunction {
@@ -88,17 +93,30 @@ fn missing_separators(
     item: &ListItem,
     tokens: &[Token],
     out: &[TokenSyntax],
+    lists: &[List],
 ) -> Vec<SyntaxDiagnostic> {
     let words: Vec<usize> = item
         .tokens
         .clone()
         .filter(|&index| tokens[index].is_word())
         .collect();
+    // A nested item's own words are checked by the child list. The words of
+    // the host item before the bracket still need the parent-level check.
+    let child = match item.kind {
+        ListItemKind::List(index) => lists.get(index).map(|list| list.tokens.clone()),
+        _ => None,
+    };
     let mut diagnostics = Vec::new();
     for pair in words.windows(2) {
         let [left, right] = pair else {
             continue;
         };
+        if child
+            .as_ref()
+            .is_some_and(|range| range.contains(left) || range.contains(right))
+        {
+            continue;
+        }
         if is_common_noun(*left, tokens, out) && is_common_noun(*right, tokens, out) {
             let boundary = tokens[*left].end;
             let mut diagnostic = SyntaxDiagnostic::new(

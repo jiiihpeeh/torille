@@ -170,6 +170,8 @@ diagnostic_tests!(
     list_duplicate_separator,
     list_comma_before_conjunction,
     list_introducer_comma,
+    nested_list_missing_separator,
+    nested_list_duplicate_separator,
     subordinate_comma_after_main,
     subordinate_comma_initial,
     relative_comma_pair,
