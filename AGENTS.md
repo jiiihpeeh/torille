@@ -73,7 +73,9 @@ src/
   pronoun.rs          personal pronouns (a closed paradigm)
   tokenise.rs         word/separator tokeniser for the wasm API
   sentence.rs         sentence spans and token sentence/paragraph context
-  syntax.rs           on-demand clause/role analysis over the morphology engine
+  morphology/         cached readings: case, number, POS, clitic, possessive
+  check.rs            combined grammar + style pass over one morphology result
+  syntax/             on-demand clause/role analysis over the morphology engine
   syntax_list.rs      list structure parser used by the syntax checker
   syntax_check/       grammar diagnostics + corrections over `syntax`
   hyphenation/        Finnish line-break hyphenation (patterns + policy)
@@ -353,11 +355,15 @@ ComponentInflection, Explanation, Action}`;
 `inflect`/`inflect_all`/`form_of`/`forms_of` under `expand`; `sanalista`,
 `parse_sanalista`, `read_sanalista`, `Sanalista`, `Lemma`, `Inflection`;
 `Tags`, `Form`, `Confidence`; `sentence::{analyze, spans, Analyzer, TokenContext,
-SentenceSpan}`; `syntax::{analyze, SyntaxAnalysis, Clause, TokenSyntax,
-SyntacticRole, RoleConfidence}`; `syntax_list::{List, ListItem, ListKind,
-ListItemKind}`; `Suggestion` / `SuggestionSource` under `suggest`;
-`syntax_check::{check, check_with_cache, check_analysis, SyntaxCheck,
-SyntaxDiagnostic, DiagnosticKind, Severity, Correction}`.
+SentenceSpan}`; `morphology::{analyze_morphology, MorphologyAnalysis,
+MorphologyCache, WordInfo, Depth, CacheStats}`; `syntax::{analyze,
+analyze_syntax, SyntaxAnalysis, Clause, TokenSyntax, SyntacticRole,
+RoleConfidence}`; `syntax_list::{List, ListItem, ListKind, ListItemKind}`;
+`Suggestion` / `SuggestionSource` under `suggest`; `syntax_check::{check,
+check_with_cache, check_analysis, SyntaxCheck, SyntaxDiagnostic,
+DiagnosticKind, Severity, Correction}`; `style_check::{check, check_with_cache,
+check_tokens_with_morphology, StyleAnalysis, StyleDiagnostic, StyleKind}`;
+`check_all`, `check_all_with_cache`, `CheckAll`.
 
 ## The binary maps (`maps/`)
 

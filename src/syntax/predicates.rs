@@ -45,7 +45,7 @@ pub(super) fn is_adverbial_case(case: Case) -> bool {
 }
 
 /// Whether any reading of a token is a verb.
-pub(super) fn is_verb_reading(reading: &Tags) -> bool {
+pub(crate) fn is_verb_reading(reading: &Tags) -> bool {
     matches!(
         reading.part_of_speech,
         Some(PartOfSpeech::Verb | PartOfSpeech::NegativeVerb)
@@ -53,7 +53,7 @@ pub(super) fn is_verb_reading(reading: &Tags) -> bool {
 }
 
 /// Whether a part of speech is nominal.
-pub(super) fn is_nominal_pos(pos: Option<PartOfSpeech>) -> bool {
+pub(crate) fn is_nominal_pos(pos: Option<PartOfSpeech>) -> bool {
     matches!(
         pos,
         Some(

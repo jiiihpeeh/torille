@@ -138,9 +138,11 @@ refresh them.
 ## Performance
 
 The layer is on demand and never runs in the keystroke path. A style pass needs
-morphology and sentence spans, not roles or clauses; it shares the per-textarea
-morphology cache with the grammar checker when both are enabled. The measured
-baseline, the cache design and the cold-path pruning plan are in
+morphology and sentence spans, not roles or clauses. `check_with_cache` and
+`check_tokens_with_morphology` consume the same per-textarea
+`morphology::MorphologyCache` as the grammar checker, so both layers resolve
+each surface once. The measured baseline, the remaining cold-path pruning and
+the worker plan are in
 [`PLAN_GRAMMAR_STYLE_PERF.md`](../PLAN_GRAMMAR_STYLE_PERF.md).
 
 ## Known limitations

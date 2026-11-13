@@ -86,7 +86,9 @@ torille/
     hyphenation/        Finnish line-break hyphenation
     compound.rs         splitting an unknown word
     sentence.rs         sentence spans and token context
-    syntax.rs           on-demand clause/role analysis
+    morphology/         cached readings: case, number, POS, clitic, possessive
+    check.rs            combined grammar + style pass over one morphology result
+    syntax/             on-demand clause/role analysis over the morphology engine
     syntax_check/       grammar diagnostics and corrections
     style_check/        opt-in style suggestions (separate pass)
   maps/                 embedded binary maps, with a README

@@ -7,8 +7,8 @@
 
 use std::ops::Range;
 
+use crate::morphology::{MorphologyAnalysis, WordInfo};
 use crate::sentence;
-use crate::syntax::{SyntaxAnalysis, TokenSyntax};
 use crate::tags::PartOfSpeech;
 use crate::tokenise::Token;
 
@@ -22,7 +22,7 @@ const LIGHT_LEMMAS: &[&str] = &["olla", "tulla", "voida", "tehdä"];
 
 pub(super) fn check(
     tokens: &[Token],
-    analysis: &SyntaxAnalysis,
+    morphology: &MorphologyAnalysis,
     covered: &[Range<usize>],
 ) -> Vec<StyleDiagnostic> {
     let contexts = sentence::analyze(tokens);
@@ -48,7 +48,7 @@ pub(super) fn check(
 
         let Some(lemma) = content_lemma(
             token,
-            &analysis.tokens[index],
+            morphology.word(index),
             contexts[index].sentence_start,
         ) else {
             continue;
@@ -87,7 +87,7 @@ pub(super) fn check(
 
 /// The lemma a repetition rule may use, or `None` when the token is not a
 /// content word.
-fn content_lemma(token: &Token, syntax: &TokenSyntax, sentence_start: bool) -> Option<String> {
+fn content_lemma(token: &Token, info: Option<&WordInfo>, sentence_start: bool) -> Option<String> {
     if token.text.chars().count() < 4 {
         return None;
     }
@@ -101,7 +101,8 @@ fn content_lemma(token: &Token, syntax: &TokenSyntax, sentence_start: bool) -> O
             return None;
         }
     }
-    let is_content = syntax.readings.iter().any(|reading| {
+    let info = info?;
+    let is_content = info.readings.iter().any(|reading| {
         matches!(
             reading.part_of_speech,
             Some(
@@ -115,7 +116,7 @@ fn content_lemma(token: &Token, syntax: &TokenSyntax, sentence_start: bool) -> O
     if !is_content {
         return None;
     }
-    let lemma = syntax
+    let lemma = info
         .lemma
         .clone()
         .unwrap_or_else(|| token.text.to_lowercase());
@@ -160,16 +161,6 @@ mod tests {
     #[test]
     fn ten_words_between_the_repeats_is_still_a_finding() {
         let text = "Asia ja ja ja ja ja ja ja ja ja ja asia.";
-        let tokens = crate::tokenise::tokenise(text);
-        let analysis = crate::syntax::analyze(&tokens);
-        for (i, token) in tokens.iter().enumerate() {
-            eprintln!(
-                "{i} {:?} word={} lemma={:?}",
-                token.text,
-                token.is_word(),
-                analysis.tokens[i].lemma
-            );
-        }
         assert_eq!(repetition(text).len(), 1);
     }
 

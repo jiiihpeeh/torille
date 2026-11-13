@@ -16,6 +16,9 @@ mod repetition;
 
 pub use diagnostic::{StyleDiagnostic, StyleKind};
 
+use std::cell::RefCell;
+
+use crate::morphology::{MorphologyAnalysis, MorphologyCache};
 use crate::tokenise::Token;
 
 /// The diagnostics found in one text.
@@ -36,16 +39,47 @@ pub fn check(text: &str) -> StyleAnalysis {
 /// Run the style rules over an existing token stream.
 ///
 /// This is the testable core. A caller that already has tokens does not pay
-/// for a second tokenisation.
+/// for a second tokenisation. The morphology pass uses a capped thread-local
+/// cache; use [`check_with_cache`] when the caller owns the per-textarea
+/// cache that the grammar checker also uses.
 pub fn check_tokens(tokens: &[Token]) -> StyleAnalysis {
+    thread_local! {
+        static CACHE: RefCell<MorphologyCache> = RefCell::new(MorphologyCache::new());
+    }
+    CACHE.with_borrow_mut(|cache| {
+        let morphology = crate::morphology::analyze_morphology(tokens, cache);
+        check_tokens_with_morphology(tokens, &morphology)
+    })
+}
+
+/// Style diagnostics through a caller-owned morphology cache.
+pub fn check_with_cache(text: &str, cache: &mut MorphologyCache) -> StyleAnalysis {
+    let tokens = crate::tokenise::tokenise(text);
+    check_tokens_with_cache(&tokens, cache)
+}
+
+/// The same pass over an existing token stream and a caller-owned cache.
+pub fn check_tokens_with_cache(tokens: &[Token], cache: &mut MorphologyCache) -> StyleAnalysis {
+    let morphology = crate::morphology::analyze_morphology(tokens, cache);
+    check_tokens_with_morphology(tokens, &morphology)
+}
+
+/// Run the style rules from an existing morphology pass.
+///
+/// This is the shared stage the grammar checker also consumes. It never
+/// builds roles, clauses or lists: style needs lemmas, parts of speech and
+/// sentence spans only.
+pub fn check_tokens_with_morphology(
+    tokens: &[Token],
+    morphology: &MorphologyAnalysis,
+) -> StyleAnalysis {
     let mut diagnostics = phrases::check(tokens);
     let covered: Vec<std::ops::Range<usize>> = diagnostics
         .iter()
         .map(|diagnostic| diagnostic.span.clone())
         .collect();
-    let analysis = crate::syntax::analyze(tokens);
-    diagnostics.extend(repetition::check(tokens, &analysis, &covered));
-    let long_sentences = length::check(tokens, &analysis, &diagnostics);
+    diagnostics.extend(repetition::check(tokens, morphology, &covered));
+    let long_sentences = length::check(tokens, morphology, &diagnostics);
     diagnostics.extend(long_sentences);
     diagnostics.sort_by(|a, b| {
         a.span

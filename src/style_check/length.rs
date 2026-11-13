@@ -7,8 +7,8 @@
 
 use std::ops::Range;
 
-use crate::sentence;
-use crate::syntax::{SyntaxAnalysis, is_finite_predicate};
+use crate::morphology::MorphologyAnalysis;
+use crate::syntax::is_finite_predicate;
 use crate::syntax_check::DiagnosticConfidence;
 use crate::tokenise::Token;
 
@@ -19,11 +19,11 @@ pub(super) const LONG_SENTENCE_WORDS: usize = 35;
 
 pub(super) fn check(
     tokens: &[Token],
-    analysis: &SyntaxAnalysis,
+    morphology: &MorphologyAnalysis,
     existing: &[StyleDiagnostic],
 ) -> Vec<StyleDiagnostic> {
     let mut diagnostics = Vec::new();
-    for span in sentence::spans(tokens) {
+    for span in &morphology.sentences {
         let word_count = tokens
             .iter()
             .filter(|token| token.is_word() && span.start <= token.start && token.end <= span.end)
@@ -31,7 +31,7 @@ pub(super) fn check(
         if word_count <= LONG_SENTENCE_WORDS {
             continue;
         }
-        if !has_finite_predicate(tokens, analysis, span.start..span.end) {
+        if !has_finite_predicate(tokens, morphology, span.start..span.end) {
             continue;
         }
         if existing
@@ -52,14 +52,17 @@ pub(super) fn check(
     diagnostics
 }
 
-fn has_finite_predicate(tokens: &[Token], analysis: &SyntaxAnalysis, span: Range<usize>) -> bool {
+fn has_finite_predicate(
+    tokens: &[Token],
+    morphology: &MorphologyAnalysis,
+    span: Range<usize>,
+) -> bool {
     tokens.iter().enumerate().any(|(index, token)| {
         span.start <= token.start
             && token.end <= span.end
-            && analysis.tokens[index]
-                .readings
-                .iter()
-                .any(is_finite_predicate)
+            && morphology
+                .word(index)
+                .is_some_and(|info| info.readings.iter().any(is_finite_predicate))
     })
 }
 
@@ -74,8 +77,11 @@ mod tests {
 
     fn diagnostics(text: &str) -> Vec<StyleDiagnostic> {
         let tokens = tokenise(text);
-        let analysis = crate::syntax::analyze(&tokens);
-        check(&tokens, &analysis, &[])
+        let morphology = crate::morphology::analyze_morphology(
+            &tokens,
+            &mut crate::morphology::MorphologyCache::new(),
+        );
+        check(&tokens, &morphology, &[])
     }
 
     fn sentence_with(words: usize) -> String {
@@ -130,22 +136,28 @@ mod tests {
     fn a_sentence_with_a_word_level_finding_is_suppressed() {
         let text = sentence_with(36);
         let tokens = tokenise(&text);
-        let analysis = crate::syntax::analyze(&tokens);
+        let morphology = crate::morphology::analyze_morphology(
+            &tokens,
+            &mut crate::morphology::MorphologyCache::new(),
+        );
         let covered = StyleDiagnostic::new(
             StyleKind::Wordy,
             DiagnosticConfidence::High,
             0..1,
             StyleKind::Wordy.name(),
         );
-        assert!(check(&tokens, &analysis, &[covered]).is_empty());
+        assert!(check(&tokens, &morphology, &[covered]).is_empty());
     }
 
     #[test]
     fn the_span_is_the_whole_sentence() {
         let text = sentence_with(36);
         let tokens = tokenise(&text);
-        let analysis = crate::syntax::analyze(&tokens);
-        let found = check(&tokens, &analysis, &[]);
+        let morphology = crate::morphology::analyze_morphology(
+            &tokens,
+            &mut crate::morphology::MorphologyCache::new(),
+        );
+        let found = check(&tokens, &morphology, &[]);
         assert_eq!(found[0].span, 0..text.len());
     }
 }

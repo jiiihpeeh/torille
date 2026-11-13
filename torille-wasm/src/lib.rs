@@ -451,11 +451,32 @@ pub fn check_syntax(text: &str) -> js_sys::Object {
 #[wasm_bindgen]
 pub fn check_style(text: &str) -> js_sys::Object {
     let analysis = torille::style_check::check(text);
+    style_object(&analysis.diagnostics)
+}
+
+/// The same style diagnostics through the per-textarea morphology cache.
+///
+/// The grammar checker and the style checker share this cache, so enabling
+/// both layers resolves each surface once. A stale or destroyed handle falls
+/// back to the stateless path.
+#[wasm_bindgen]
+pub fn check_style_with_state(idx: u32, text: &str) -> js_sys::Object {
+    let mut slots = states().lock().expect("states mutex poisoned");
+    if let Some(Some(state)) = slots.get_mut(idx as usize) {
+        let analysis =
+            torille::style_check::check_with_cache(text, &mut state.syntax_cache);
+        return style_object(&analysis.diagnostics);
+    }
+    drop(slots);
+    check_style(text)
+}
+
+fn style_object(diagnostics: &[torille::style_check::StyleDiagnostic]) -> js_sys::Object {
     let obj = js_sys::Object::new();
     set(
         &obj,
         "diagnostics",
-        style_diagnostics_array(&analysis.diagnostics).into(),
+        style_diagnostics_array(diagnostics).into(),
     );
     obj
 }

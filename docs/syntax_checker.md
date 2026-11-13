@@ -115,10 +115,13 @@ cargo run --release -p torille-tools --bin check_syntax -- "Koira nukkuvat."
 ## Performance
 
 The checker is on demand and must not run in the keystroke path. Its cost is
-dominated by the first morphology pass over a text, not by the rules. The
-current baseline, the shared morphology cache with cached case information,
-the cold-path candidate pruning, the sentence-level incremental cache and the
-worker chunking plan are in
+dominated by the first morphology pass over a text, not by the rules.
+`syntax_check::check_with_cache` and `torille::check_all_with_cache` share a
+per-textarea `morphology::MorphologyCache`; each `WordInfo` caches the readings
+plus the agreed case/number, part of speech, clitic and possessive, and the
+style layer reads the same pass. The measured baseline, the remaining
+cold-path pruning, the sentence-level incremental cache and the worker
+chunking plan are in
 [`PLAN_GRAMMAR_STYLE_PERF.md`](../PLAN_GRAMMAR_STYLE_PERF.md).
 
 ## Data files

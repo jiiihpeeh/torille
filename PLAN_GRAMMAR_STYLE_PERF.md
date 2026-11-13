@@ -1,6 +1,6 @@
 # PLAN_GRAMMAR_STYLE_PERF — one morphology pass for grammar and style
 
-Status: **proposed** · 2026-11-13 · branch `syntax` · baseline `2e5f13c`
+Status: **Phase 0–1 landed; Phase 2 in progress** · 2026-11-13 · branch `syntax` · baseline `2e5f13c`
 
 This is the performance plan for the two opt-in analysis layers:
 
@@ -23,6 +23,39 @@ Contents: [§1 measured problem](#1-the-measured-problem) ·
 [§6 worker](#6-wasm-and-worker-surfaces) · [§7 phases](#7-phases) ·
 [§8 harness](#8-measurement-harness) · [§9 risks](#9-invariants-and-risks) ·
 [§10 decisions](#10-open-decisions)
+
+### Implementation status (2026-11-13)
+
+Landed:
+
+- **Phase 0** — `tools/src/bin/perf_grammar_style.rs` and
+  `tests/fixtures/perf/page-2000.txt` (cold/warm, morphology/rules/style,
+  `--single-thread`, `--slowest`).
+- **Phase 1** — `src/morphology/` with `WordInfo` (`readings`, agreed `case`
+  and `number`, `part_of_speech`, `clitic`, `possessive`, a derivation
+  candidate, `depth`), a shared `MorphologyCache`, `analyze_morphology`,
+  `syntax::analyze_syntax`, `style_check::check_with_cache`,
+  `torille::check_all_with_cache`, wasm `check_style_with_state`, and the
+  per-textarea cache shared by both layers.
+- **Phase 2 (partial)** — direct lemma and stem-map fast path, clitic and
+  possessive host reuse, a numeral-governed deep upgrade (`kaksi lasta`), and
+  a deep-result cache. The full head/tail walk now runs only when the cheap
+  ladder misses.
+
+Measured on the committed fixture, single-thread (wasm shape):
+
+| workload | before | now |
+|---|---:|---:|
+| 20-word cold | 3.0 s | 1.95 s |
+| 96-word cold | 11.5 s | 3.0 s |
+| 1,959-word cold | ~120 s (1,722-word baseline) | 35.3 s |
+| 1,959-word warm style | 6–13 ms | 4.4 ms |
+| 1,959-word warm grammar+style | ~33–41 ms | 24.6 ms |
+
+Still open: the compound-head fallback (`kotirantaan`,
+`lehtipurjeessa`, `lempiviikkomme` are the remaining hot words), the
+partitive-plural stem-shape filter, the agreement rule pass, the sentence
+cache and the worker chunking. The cold targets are not met yet.
 
 ## 1. The measured problem
 
@@ -628,7 +661,7 @@ plus the exact-output fixtures. A phase that changes a diagnostic is reverted
 or the change is explained and the fixture updated deliberately, never as a
 side effect.
 
-### Phase 0 — harness and baseline (0.5 day)
+### Phase 0 — harness and baseline (0.5 day) — landed
 
 - Promote the temporary probe to `tools/src/bin/perf_grammar_style.rs`:
   `--book`, `--words`, `--repeat`, `--single-thread`, `--json`.
@@ -641,7 +674,7 @@ side effect.
 Acceptance: the tool runs on a clean checkout and the numbers reproduce the
 table in §1 within noise.
 
-### Phase 1 — morphology cache with case information (2–3 days)
+### Phase 1 — morphology cache with case information (2–3 days) — landed
 
 - Add `src/morphology/` with `WordInfo`, `MorphologyCache`, `Depth`,
   `CacheStats`, `analyze_morphology`.
@@ -660,7 +693,7 @@ Acceptance: warm grammar+style adds ≤ 3 ms over warm grammar alone; the exact
 fixtures are unchanged; `MorphologyCache` stats show a hit rate above 95% on a
 re-check.
 
-### Phase 2 — cold path (3–5 days)
+### Phase 2 — cold path (3–5 days) — in progress
 
 - §4.1 shallow/deep split and bounded walks.
 - §4.2 base-source ladder: direct, stem map, closed spelling, clitic,

@@ -12,10 +12,12 @@ pub mod derivation;
 pub mod expand;
 pub(crate) mod gradation;
 pub mod grammar;
+pub mod check;
 pub(crate) mod harmony;
 pub mod hyphenation;
 pub mod kotus;
 mod map_reader;
+pub mod morphology;
 pub mod pronoun;
 mod rejected;
 mod sanalista_overrides;
@@ -37,6 +39,7 @@ pub use kotus::Sanalista;
 pub use kotus::parse_sanalista;
 pub use kotus::read_sanalista;
 pub use kotus::sanalista;
+pub use check::{CheckAll, check_all, check_all_with_cache};
 pub use suggest::{EditOp, Suggestion, SuggestionSource, levenshtein_with_ops, suggest};
 
 /// Whether a character is one of the Finnish vowels.

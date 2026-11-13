@@ -22,23 +22,20 @@
 use std::cell::RefCell;
 use std::ops::Range;
 
-mod cache;
 mod predicates;
 mod roles;
 mod segments;
 
-use crate::kotus::lemmas;
+use crate::morphology::MorphologyAnalysis;
 use crate::sentence::{self, SentenceSpan};
-use crate::spec::Catalogues;
-use crate::tags::{Case, Tags, add_reading};
+use crate::tags::{Case, Tags};
 use crate::tokenise::Token;
 
-pub use cache::AnalysisCache;
+pub use crate::morphology::MorphologyCache as AnalysisCache;
 pub(crate) use predicates::{
-    is_coordinating, is_finite_predicate, is_relative_word, is_subordinator,
-    predicate_is_passive,
+    is_coordinating, is_finite_predicate, is_nominal_pos, is_relative_word, is_subordinator,
+    is_verb_reading, predicate_is_passive,
 };
-use cache::proper_name_reading;
 use roles::{classify, resolve_clause, share_clause_roles};
 use segments::{build_clause_tree, clause_groups, segment_clause_words};
 
@@ -182,88 +179,57 @@ pub struct SyntaxAnalysis {
 
 /// Analyze a token stream with the embedded lexicon.
 ///
-/// This walks the same morphology engine the checker uses, so callers see the
-/// engine's reading of every word. It is intentionally separate from
+/// This resolves morphology through a capped thread-local cache and then
+/// builds roles, clauses and lists from it. It is intentionally separate from
 /// [`crate::sentence::analyze`] and must not run in the keystroke path.
-///
-/// Resolved words are kept in a capped thread-local cache, so re-analysing a
-/// document does not repeat the morphology for the words it shares with the
-/// previous analysis. Use [`analyze_with_cache`] when the caller owns a
-/// document-scoped cache (the wasm textarea state does).
 pub fn analyze(tokens: &[Token]) -> SyntaxAnalysis {
     thread_local! {
         static CACHE: RefCell<AnalysisCache> = RefCell::new(AnalysisCache::new());
     }
     CACHE.with_borrow_mut(|cache| {
-        analyze_with(tokens, lemmas(), Catalogues::embedded(), cache)
+        let morphology = crate::morphology::analyze_morphology(tokens, cache);
+        analyze_syntax(tokens, &morphology)
     })
 }
 
-/// Analyze with a caller-owned word cache.
+/// Analyze with a caller-owned morphology cache.
 ///
 /// The cache key is the lowercased surface; morphology is independent of the
-/// document, so a cache may outlive one text. It is capped and clears itself
-/// when full.
+/// document, so a cache may outlive one text. The wasm textarea state owns
+/// one cache and shares it with the style layer.
 pub fn analyze_with_cache(tokens: &[Token], cache: &mut AnalysisCache) -> SyntaxAnalysis {
-    analyze_with(tokens, lemmas(), Catalogues::embedded(), cache)
+    let morphology = crate::morphology::analyze_morphology(tokens, cache);
+    analyze_syntax(tokens, &morphology)
 }
 
-/// The same analysis against a caller-supplied lexicon and catalogue.
+/// Build roles, clauses and lists from an existing morphology pass.
 ///
-/// Kept private for now: the crate's embedded data is the only production
-/// source, and a public override would freeze an API before a caller needs it.
-fn analyze_with(
-    tokens: &[Token],
-    lexicon: &[crate::kotus::Lemma<'_>],
-    cat: &Catalogues,
-    cache: &mut AnalysisCache,
-) -> SyntaxAnalysis {
+/// This is pure: it never searches the lexicon. A caller that also runs the
+/// style layer can reuse the same [`MorphologyAnalysis`].
+pub fn analyze_syntax(tokens: &[Token], morphology: &MorphologyAnalysis) -> SyntaxAnalysis {
     let contexts = sentence::analyze(tokens);
-    let sentences = sentence::spans(tokens);
+    let sentences = morphology.sentences.clone();
 
     let mut out = vec![TokenSyntax::default(); tokens.len()];
     let mut nominal_lemmas: Vec<Option<String>> = vec![None; tokens.len()];
 
-    // Morphology first: every later rule reads the same resolved readings.
     for (index, token) in tokens.iter().enumerate() {
         if !token.is_word() {
             continue;
         }
-        let lower = token.text.to_lowercase();
-        let analysis = cache.resolve_word(lexicon, cat, &lower);
-        let mut readings = analysis.readings;
-        let mut lemmas = analysis.lemmas;
-        let mut lemma = analysis.lemma.clone();
-        nominal_lemmas[index] = analysis.nominal_lemma.clone();
-        if readings.is_empty()
-            && token.is_capitalised()
-            && let Some(name) = crate::expand::proper_names::lemma(&token.text)
-        {
-            // The name table carries the case the generator saw
-            // (`Helsingissä` is inessive). A curated extra or an unknown
-            // name has no recorded case; the fallback gives the citation
-            // spelling a nominative and leaves an inflected form case-less,
-            // so it cannot become a subject or object by accident.
-            add_reading(
-                &mut readings,
-                proper_name_reading(
-                    &token.text,
-                    name,
-                    crate::expand::proper_names::case(&token.text),
-                ),
-            );
-            lemma = Some(name.to_string());
-            nominal_lemmas[index] = Some(name.to_string());
-            if !lemmas.iter().any(|known| known == name) {
-                lemmas.push(name.to_string());
-            }
-        }
+        let Some(info) = morphology.word(index) else {
+            continue;
+        };
+        let readings = info.readings.clone();
+        let lemmas = info.lemmas.clone();
+        let mut lemma = info.lemma.clone();
+        nominal_lemmas[index] = info.nominal_lemma.clone();
         let (role, confidence, case) = classify(&readings);
         if role == SyntacticRole::Predicate {
-            if let Some(verb_lemma) = &analysis.verb_lemma {
+            if let Some(verb_lemma) = &info.verb_lemma {
                 lemma = Some(verb_lemma.clone());
             }
-        } else if let Some(nominal_lemma) = &analysis.nominal_lemma {
+        } else if let Some(nominal_lemma) = &info.nominal_lemma {
             lemma = Some(nominal_lemma.clone());
         }
         out[index] = TokenSyntax {
@@ -338,10 +304,6 @@ fn analyze_with(
         tokens: out,
     }
 }
-
-
-
-
 
 #[cfg(test)]
 mod tests {
