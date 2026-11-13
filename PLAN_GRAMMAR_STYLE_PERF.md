@@ -55,11 +55,22 @@ Measured on the committed fixture, single-thread (wasm shape):
 | 1,959-word cold | ~120 s (1,722-word baseline) | 25.6 s |
 | 1,959-word warm style | 6–13 ms | 6.4 ms |
 | 1,959-word warm grammar+style | ~33–41 ms | ~34 ms |
+| 17-word bound-form fixture, cold | 620 ms | 79 ms |
+
+Bound forms are no longer a hotspot. The 17-word fixture
+(`esimerkki`, `leikkimielisyys`, `salaperäinen`, `täysi-ikäinen`,
+`nuori-isäntä`, `pariskunnan`, `epäsuhta`, ...) went from 620 ms to 79 ms
+cold, and every item is under 3 ms: `nuoren-isännän` fell from 250 ms to
+0.61 ms, `salaperäisen` from 68 ms to 1.8 ms, and `leikkimielisyyden` from
+52 ms to 0.6 ms. The fix is that
+`add_forms_from_lemma` passes the `LexiconIndex` to `inflect_all`, so class
+50/51 compounds can split their parts, and a classless base uses
+`compound_head_forms` directly for a bound suffix head.
 
 The synthetic 20-word slice is now near the interactive target. The full page
 is still dominated by a long tail of names, derived adjectives and archaic
-forms (`palajakaan`, `pariskunnan`, `kulettivat`, `kivuloinen`,
-`kenoveeva*`). The partitive-plural stem-shape filter, the agreement rule
+forms (`palajakaan`, `pariskunnan` at the time of measurement, `kulettivat`,
+`kivuloinen`, `kenoveeva*`); the page is 20.9 s after the bound-form fix. The partitive-plural stem-shape filter, the agreement rule
 pass, the sentence cache and the worker chunking remain. The cold page target
 is not met yet.
 

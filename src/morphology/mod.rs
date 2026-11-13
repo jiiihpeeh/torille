@@ -481,8 +481,7 @@ fn resolve_word_fast(cat: &Catalogues, lower: &str) -> Option<WordInfo> {
     {
         let suffix = strip_possessive(lower).is_some()
             || !crate::expand::clitic::strip_all_clitics(lower).1.is_empty();
-        let compound = is_classless_lemma(&base)
-            && crate::expand::head_inflections(&base, cat, None).is_some();
+        let compound = is_classless_lemma(&base);
         if (suffix || compound)
             && let Some(info) = resolve_from_base_surface(lower, &base, cat)
         {
@@ -574,10 +573,14 @@ fn resolve_from_base_surface(surface: &str, base: &str, cat: &Catalogues) -> Opt
         .first()
         .copied()
         .unwrap_or(PartOfSpeech::Unknown);
-    // A classless compound row has no class of its own; its head supplies
-    // one. `pariskunta` is `paris` + `kunta`, and `kunta` is class 10*J.
+    // A classless compound row has no class of its own. `add_forms_from_lemma`
+    // with an empty inflection list runs the classless-compound path
+    // (`compound_head_forms`), which covers both a free head (`pariskunta` =
+    // `paris` + `kunta`) and a bound suffix head (`salaperäinen` =
+    // `sala` + `‑peräinen`). `head_inflections` deliberately refuses the
+    // bound head, so it is not the right source here.
     let inflections: Vec<_> = if row.inflections().next().is_none() {
-        crate::expand::head_inflections(base, cat, None)?
+        Vec::new()
     } else {
         row.inflections().collect()
     };
@@ -1056,8 +1059,11 @@ fn add_forms_from_lemma(
     out: &mut WordInfo,
 ) -> bool {
     let pos = pos.unwrap_or(PartOfSpeech::Unknown);
+    // Class 50/51 compounds need the lexicon index to split their parts; the
+    // wrapper is free (two precomputed orders over the embedded lexicon).
+    let index = crate::expand::LexiconIndex::new(crate::kotus::lemmas());
     let mut exact = false;
-    for form in crate::expand::inflect_all(base, inflections, cat, None, pos, true) {
+    for form in crate::expand::inflect_all(base, inflections, cat, Some(&index), pos, true) {
         if form.word != lower {
             continue;
         }
@@ -1115,8 +1121,9 @@ fn add_readings_from_base_impl(
         .copied()
         .unwrap_or(PartOfSpeech::Unknown);
     let inflections: Vec<_> = row.inflections().collect();
+    let index = crate::expand::LexiconIndex::new(crate::kotus::lemmas());
     let mut matched = false;
-    for form in crate::expand::inflect_all(base, &inflections, cat, None, pos, true) {
+    for form in crate::expand::inflect_all(base, &inflections, cat, Some(&index), pos, true) {
         if form.word != lower {
             continue;
         }
