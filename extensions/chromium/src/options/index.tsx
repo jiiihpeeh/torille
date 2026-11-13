@@ -7,6 +7,12 @@ import { render } from 'solid-js/web';
 type Settings = {
   underlineStyle: string;
   underlineColor: string;
+  grammarUnderlines: boolean;
+  grammarErrorColor: string;
+  grammarWarningColor: string;
+  grammarSuggestionColor: string;
+  styleUnderlines: boolean;
+  styleColor: string;
   suggestionsMax: number;
   popupTrigger: string;
   popupBg: string;
@@ -23,6 +29,12 @@ type Settings = {
 const DEFAULTS: Settings = {
   underlineStyle: 'wavy',
   underlineColor: '#cc3333',
+  grammarUnderlines: true,
+  grammarErrorColor: '#c2410c',
+  grammarWarningColor: '#d97706',
+  grammarSuggestionColor: '#b45309',
+  styleUnderlines: true,
+  styleColor: '#2563eb',
   suggestionsMax: 8,
   popupTrigger: 'click',
   popupBg: '#ffffff',
@@ -39,6 +51,12 @@ const DEFAULTS: Settings = {
 const KEYS: Record<keyof Settings, string> = {
   underlineStyle: 'torille-underline-style',
   underlineColor: 'torille-underline-color',
+  grammarUnderlines: 'torille-grammar-underlines',
+  grammarErrorColor: 'torille-grammar-error-color',
+  grammarWarningColor: 'torille-grammar-warning-color',
+  grammarSuggestionColor: 'torille-grammar-suggestion-color',
+  styleUnderlines: 'torille-style-underlines',
+  styleColor: 'torille-style-color',
   suggestionsMax: 'torille-suggestions-max',
   popupTrigger: 'torille-popup-trigger',
   popupBg: 'torille-popup-bg',
@@ -88,6 +106,12 @@ function readSettings(raw: Record<string, unknown>): Settings {
     underlineStyle: ['wavy', 'solid', 'dashed', 'dotted', 'none'].includes(style)
       ? style : DEFAULTS.underlineStyle,
     underlineColor: color('underlineColor'),
+    grammarUnderlines: raw[KEYS.grammarUnderlines] !== false,
+    grammarErrorColor: color('grammarErrorColor'),
+    grammarWarningColor: color('grammarWarningColor'),
+    grammarSuggestionColor: color('grammarSuggestionColor'),
+    styleUnderlines: raw[KEYS.styleUnderlines] !== false,
+    styleColor: color('styleColor'),
     suggestionsMax: Number.isFinite(max)
       ? Math.min(MAX, Math.max(MIN, Math.round(max))) : DEFAULTS.suggestionsMax,
     popupTrigger: ['click', 'hover'].includes(trigger)
@@ -290,6 +314,60 @@ function OptionsApp() {
           </button>
         </div>
         <div id="settings-status" class="status" role="status" aria-live="polite">{status()}</div>
+      </section>
+
+      <section class="card">
+        <h2>Kieliopin ja tyylin alleviivaukset</h2>
+        <p class="lead">
+          Nämä alleviivaukset piirretään vasta <strong>Tarkista kielioppi</strong>- tai
+          <strong>Tarkista tyyli</strong> -komennon jälkeen. Ne tyhjenevät, kun tekstiä muokataan.
+        </p>
+        <label class="toggle">
+          <input
+            id="grammar-underlines"
+            type="checkbox"
+            checked={settings().grammarUnderlines}
+            onChange={(e) => patch('grammarUnderlines', e.currentTarget.checked)}
+          />
+          <span>Kieliopin alleviivaukset</span>
+        </label>
+        <div class="settings-grid">
+          <div class="row">
+            <label for="grammar-error-color">Virheen väri</label>
+            <input type="color" id="grammar-error-color"
+              value={settings().grammarErrorColor}
+              onInput={(e) => patch('grammarErrorColor', e.currentTarget.value)} />
+          </div>
+          <div class="row">
+            <label for="grammar-warning-color">Varoituksen väri</label>
+            <input type="color" id="grammar-warning-color"
+              value={settings().grammarWarningColor}
+              onInput={(e) => patch('grammarWarningColor', e.currentTarget.value)} />
+          </div>
+          <div class="row">
+            <label for="grammar-suggestion-color">Ehdotuksen väri</label>
+            <input type="color" id="grammar-suggestion-color"
+              value={settings().grammarSuggestionColor}
+              onInput={(e) => patch('grammarSuggestionColor', e.currentTarget.value)} />
+          </div>
+        </div>
+        <label class="toggle">
+          <input
+            id="style-underlines"
+            type="checkbox"
+            checked={settings().styleUnderlines}
+            onChange={(e) => patch('styleUnderlines', e.currentTarget.checked)}
+          />
+          <span>Tyylin alleviivaukset</span>
+        </label>
+        <div class="settings-grid">
+          <div class="row">
+            <label for="style-color">Tyylin väri</label>
+            <input type="color" id="style-color"
+              value={settings().styleColor}
+              onInput={(e) => patch('styleColor', e.currentTarget.value)} />
+          </div>
+        </div>
       </section>
 
       <section class="card">

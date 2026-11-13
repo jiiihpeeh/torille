@@ -117,13 +117,19 @@ Leptos demo has a separate `Tyyli` panel next to `Kielioppi`.
 
 Underlines are colour-coded across the three layers:
 
-| layer | colour | line style |
+| layer | default colour | line style |
 |---|---|---|
-| spelling | red (configurable on the options page) | wavy |
+| spelling | red `#cc3333` | wavy |
 | grammar error | orange `#c2410c` | double |
 | grammar warning | amber `#d97706` | dashed |
 | grammar suggestion | amber `#b45309` | dotted |
 | style | blue `#2563eb` | solid |
+
+The spelling colour and line style, the three grammar colours, the style
+colour, and separate visibility toggles for grammar and style are all in the
+options page under **Kieliopin ja tyylin alleviivaukset**. The values are
+applied live through CSS custom properties; contenteditable uses the CSS
+Highlight API with the same colours.
 
 Grammar and style results are snapshots. They are cleared on the next edit so
 a stale offset never paints over the wrong word; run the command again to

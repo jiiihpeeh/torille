@@ -26,7 +26,9 @@ debug logging.
 Open the extension options page to tune the checker. Changes save
 automatically to `storage.local` and apply live to open tabs:
 
-- underline style (wavy/solid/dashed/dotted/none) and colour;
+- spelling underline style (wavy/solid/dashed/dotted/none) and colour;
+- grammar error/warning/suggestion colours and grammar underline visibility;
+- style underline colour and style underline visibility;
 - maximum number of suggestions;
 - open suggestions on click or hover;
 - popup background, text, and highlighted-suggestion colours.

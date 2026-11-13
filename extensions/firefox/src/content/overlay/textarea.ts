@@ -402,20 +402,24 @@ export function createTextareaOverlay(opts: OverlayOptions): Overlay {
     for (const hit of hits) {
       underlines.push({ start: hit.start, end: hit.end, layer: 'spelling' });
     }
-    for (const diagnostic of grammarDiagnostics) {
-      underlines.push({
-        start: diagnostic.start,
-        end: diagnostic.end,
-        layer: 'grammar',
-        severity: diagnostic.severity,
-      });
+    if (uiSettings.grammarUnderlines) {
+      for (const diagnostic of grammarDiagnostics) {
+        underlines.push({
+          start: diagnostic.start,
+          end: diagnostic.end,
+          layer: 'grammar',
+          severity: diagnostic.severity,
+        });
+      }
     }
-    for (const diagnostic of styleDiagnostics) {
-      underlines.push({
-        start: diagnostic.start,
-        end: diagnostic.end,
-        layer: 'style',
-      });
+    if (uiSettings.styleUnderlines) {
+      for (const diagnostic of styleDiagnostics) {
+        underlines.push({
+          start: diagnostic.start,
+          end: diagnostic.end,
+          layer: 'style',
+        });
+      }
     }
 
     const regions = partitionUnderlines(text.length, underlines);
@@ -657,7 +661,10 @@ export function createTextareaOverlay(opts: OverlayOptions): Overlay {
       repaintCurrent();
     },
     initialRender() { void render(); },
-    refresh() { scheduleRender(); },
+    refresh() {
+      repaintCurrent();
+      scheduleRender();
+    },
     setVisible(visible: boolean) {
       host.style.display = visible ? '' : 'none';
       if (visible) {

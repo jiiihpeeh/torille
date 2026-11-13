@@ -67,6 +67,12 @@ export const api: typeof browser = (typeof browser !== 'undefined') ? browser : 
 export const UI_SETTINGS = {
   underlineStyle: 'torille-underline-style',
   underlineColor: 'torille-underline-color',
+  grammarUnderlines: 'torille-grammar-underlines',
+  grammarErrorColor: 'torille-grammar-error-color',
+  grammarWarningColor: 'torille-grammar-warning-color',
+  grammarSuggestionColor: 'torille-grammar-suggestion-color',
+  styleUnderlines: 'torille-style-underlines',
+  styleColor: 'torille-style-color',
   suggestionsMax: 'torille-suggestions-max',
   popupTrigger: 'torille-popup-trigger',
   popupBg: 'torille-popup-bg',
@@ -83,6 +89,12 @@ export const UI_SETTINGS = {
 export type UiSettings = {
   underlineStyle: string;
   underlineColor: string;
+  grammarUnderlines: boolean;
+  grammarErrorColor: string;
+  grammarWarningColor: string;
+  grammarSuggestionColor: string;
+  styleUnderlines: boolean;
+  styleColor: string;
   suggestionsMax: number;
   popupTrigger: 'click' | 'hover';
   popupBg: string;
@@ -99,6 +111,12 @@ export type UiSettings = {
 export const uiSettings: UiSettings = {
   underlineStyle: 'wavy',
   underlineColor: '#cc3333',
+  grammarUnderlines: true,
+  grammarErrorColor: '#c2410c',
+  grammarWarningColor: '#d97706',
+  grammarSuggestionColor: '#b45309',
+  styleUnderlines: true,
+  styleColor: '#2563eb',
   suggestionsMax: 8,
   popupTrigger: 'click',
   popupBg: '#ffffff',
@@ -118,6 +136,10 @@ function applyUiSettings(): void {
     uiSettings.underlineStyle === 'none' ? 'none' : 'underline');
   root.style.setProperty('--torille-underline-style', uiSettings.underlineStyle);
   root.style.setProperty('--torille-underline-color', uiSettings.underlineColor);
+  root.style.setProperty('--torille-grammar-error-color', uiSettings.grammarErrorColor);
+  root.style.setProperty('--torille-grammar-warning-color', uiSettings.grammarWarningColor);
+  root.style.setProperty('--torille-grammar-suggestion-color', uiSettings.grammarSuggestionColor);
+  root.style.setProperty('--torille-style-color', uiSettings.styleColor);
   root.style.setProperty('--torille-popup-bg', uiSettings.popupBg);
   root.style.setProperty('--torille-popup-fg', uiSettings.popupFg);
   root.style.setProperty('--torille-popup-accent', uiSettings.popupAccent);
@@ -133,6 +155,12 @@ export async function loadUiSettings(): Promise<void> {
     ? style : 'wavy';
   uiSettings.underlineColor = /^#[0-9a-f]{6}$/i.test(String(cur[UI_SETTINGS.underlineColor]))
     ? String(cur[UI_SETTINGS.underlineColor]) : '#cc3333';
+  const color = (key: string, fallback: string): string =>
+    /^#[0-9a-f]{6}$/i.test(String(cur[key])) ? String(cur[key]) : fallback;
+  uiSettings.grammarErrorColor = color(UI_SETTINGS.grammarErrorColor, '#c2410c');
+  uiSettings.grammarWarningColor = color(UI_SETTINGS.grammarWarningColor, '#d97706');
+  uiSettings.grammarSuggestionColor = color(UI_SETTINGS.grammarSuggestionColor, '#b45309');
+  uiSettings.styleColor = color(UI_SETTINGS.styleColor, '#2563eb');
   uiSettings.suggestionsMax = Number.isFinite(max)
     ? Math.min(20, Math.max(3, Math.round(max))) : 8;
   uiSettings.popupTrigger = trigger === 'hover' ? 'hover' : 'click';
@@ -153,6 +181,8 @@ export async function loadUiSettings(): Promise<void> {
   uiSettings.ignoreBbcode = bool(UI_SETTINGS.ignoreBbcode, true);
   uiSettings.ignoreUrls = bool(UI_SETTINGS.ignoreUrls, true);
   uiSettings.ignoreCodeEditors = bool(UI_SETTINGS.ignoreCodeEditors, true);
+  uiSettings.grammarUnderlines = bool(UI_SETTINGS.grammarUnderlines, true);
+  uiSettings.styleUnderlines = bool(UI_SETTINGS.styleUnderlines, true);
   applyUiSettings();
 }
 
@@ -260,25 +290,25 @@ export function ensureHighlightStyle(): void {
     ::highlight(torille-grammar-error) {
       text-decoration-line: underline;
       text-decoration-style: double;
-      text-decoration-color: #c2410c;
+      text-decoration-color: var(--torille-grammar-error-color, #c2410c);
       text-decoration-skip-ink: none;
     }
     ::highlight(torille-grammar-warning) {
       text-decoration-line: underline;
       text-decoration-style: dashed;
-      text-decoration-color: #d97706;
+      text-decoration-color: var(--torille-grammar-warning-color, #d97706);
       text-decoration-skip-ink: none;
     }
     ::highlight(torille-grammar-suggestion) {
       text-decoration-line: underline;
       text-decoration-style: dotted;
-      text-decoration-color: #b45309;
+      text-decoration-color: var(--torille-grammar-suggestion-color, #b45309);
       text-decoration-skip-ink: none;
     }
     ::highlight(torille-style) {
       text-decoration-line: underline;
       text-decoration-style: solid;
-      text-decoration-color: #2563eb;
+      text-decoration-color: var(--torille-style-color, #2563eb);
       text-decoration-skip-ink: none;
     }
   `;
@@ -309,7 +339,7 @@ export const OVERLAY_CSS = `
   .style-suggestion {
     text-decoration-line: underline;
     text-decoration-style: solid;
-    text-decoration-color: #2563eb;
+    text-decoration-color: var(--torille-style-color, #2563eb);
     text-decoration-skip-ink: none;
   }
   .misspell {
@@ -325,19 +355,19 @@ export const OVERLAY_CSS = `
   .grammar-suggestion {
     text-decoration-line: underline;
     text-decoration-style: dotted;
-    text-decoration-color: #b45309;
+    text-decoration-color: var(--torille-grammar-suggestion-color, #b45309);
     text-decoration-skip-ink: none;
   }
   .grammar-warning {
     text-decoration-line: underline;
     text-decoration-style: dashed;
-    text-decoration-color: #d97706;
+    text-decoration-color: var(--torille-grammar-warning-color, #d97706);
     text-decoration-skip-ink: none;
   }
   .grammar-error {
     text-decoration-line: underline;
     text-decoration-style: double;
-    text-decoration-color: #c2410c;
+    text-decoration-color: var(--torille-grammar-error-color, #c2410c);
     text-decoration-skip-ink: none;
   }
   .suggestions {

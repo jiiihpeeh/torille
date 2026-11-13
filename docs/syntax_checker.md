@@ -106,7 +106,9 @@ cargo run --release -p torille-tools --bin check_syntax -- "Koira nukkuvat."
   offsets to UTF-16 before the panel sees them. After the check the same spans
   are underlined: grammar errors orange double, warnings amber dashed and
   suggestions amber dotted. Spelling keeps its red wavy underline and style is
-  blue solid; the grammar/style underlines clear on the next edit.
+  blue solid; the grammar/style underlines clear on the next edit. The
+  grammar colours and the grammar/style visibility toggles are configurable
+  in the options page.
 - **CLI:** `check_syntax` prints the analysis and diagnostics for one sentence
   or file.
 

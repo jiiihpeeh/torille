@@ -289,24 +289,28 @@ export function createContentEditableOverlay(opts: OverlayOptions): Overlay {
       'torille-grammar-warning': [],
       'torille-grammar-suggestion': [],
     };
-    for (const diagnostic of grammarDiagnostics) {
-      const range = diagnosticRange(diagnostic.start, diagnostic.end);
-      if (!range) continue;
-      const name = diagnostic.severity === 'error'
-        ? 'torille-grammar-error'
-        : diagnostic.severity === 'warning'
-          ? 'torille-grammar-warning'
-          : 'torille-grammar-suggestion';
-      grammar[name].push(range);
+    if (uiSettings.grammarUnderlines) {
+      for (const diagnostic of grammarDiagnostics) {
+        const range = diagnosticRange(diagnostic.start, diagnostic.end);
+        if (!range) continue;
+        const name = diagnostic.severity === 'error'
+          ? 'torille-grammar-error'
+          : diagnostic.severity === 'warning'
+            ? 'torille-grammar-warning'
+            : 'torille-grammar-suggestion';
+        grammar[name].push(range);
+      }
     }
     for (const [name, ranges] of Object.entries(grammar)) {
       setDiagnosticHighlight(name, ranges);
     }
 
     const style: Range[] = [];
-    for (const diagnostic of styleDiagnostics) {
-      const range = diagnosticRange(diagnostic.start, diagnostic.end);
-      if (range) style.push(range);
+    if (uiSettings.styleUnderlines) {
+      for (const diagnostic of styleDiagnostics) {
+        const range = diagnosticRange(diagnostic.start, diagnostic.end);
+        if (range) style.push(range);
+      }
     }
     setDiagnosticHighlight('torille-style', style);
     dbg('content', 'diagnostic-highlights',
@@ -530,6 +534,7 @@ export function createContentEditableOverlay(opts: OverlayOptions): Overlay {
       if (HIGHLIGHTS_SUPPORTED) void renderMisspellHighlights();
     },
     refresh() {
+      renderDiagnosticHighlights();
       if (HIGHLIGHTS_SUPPORTED) void renderMisspellHighlights();
     },
     setVisible(visible: boolean) {
