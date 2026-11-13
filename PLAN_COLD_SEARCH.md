@@ -1,6 +1,6 @@
 # PLAN_COLD_SEARCH — make the first morphology pass cheap
 
-Status: **Phase 0–1, 3 (ambiguous partitives), 4 and 5 landed; Phase 2/6/7 next** · 2026-11-13 · parent:
+Status: **Phase 0–1, 3 (ambiguous partitives), 4, 5 and 7 (verification) landed; Phase 2/6 deferred** · 2026-11-13 · parent:
 [`PLAN_GRAMMAR_STYLE_PERF.md`](PLAN_GRAMMAR_STYLE_PERF.md) §3.4, §4.1–§4.6,
 Phase 2 · related: [`PERFORMANCE_TODO.md`](PERFORMANCE_TODO.md) P1.3/P1.4/P3.1
 
@@ -509,14 +509,28 @@ process-level caches healthy after the earlier phases.
 no diagnostic change. The parent plan’s ≤5 ms rule target remains its own
 Phase 3.
 
-### Phase 7 — wasm verification (2–3 days, only if the target is not met)
+### Phase 7 — wasm verification (done 2026-11-13)
 
-- Re-run the browser probes (`probe-timing.mjs`, `probe-toggle.mjs`) and the
-  wasm size report. The stem-shape blob must stay within the ≤ +1 MB budget.
-- If the cold page is still above 500 ms after Phase 5, add sentence chunking
-  with progress and cancellation (parent plan Phase 5). The target is no
-  uninterrupted worker task over 50 ms.
-- The reader stays spelling-only until the 500 ms or progress gate is met.
+Measured directly against `torille-wasm/pkg` (release wasm, one thread,
+`WebAssembly.instantiate` from Node) on `tests/fixtures/perf/page-2000.txt`:
+
+| workload | misspells cold | syntax cold | syntax warm | style warm | style, fresh state |
+|---|---:|---:|---:|---:|---:|
+| 20 words | 134.9 ms (first call) | **57.9 ms** | — | 0.8 ms | — |
+| 96 words | 47.3 ms | **110.4 ms** | — | 0.3 ms | — |
+| 1,959 words | 997.6 ms | **3,082 ms** | 101.4 ms | 10.1 ms | 2,930 ms |
+
+- The 20-word and 96-word cold targets (≤100 ms, ≤250 ms) are met.
+- The 1,959-word page is **3.08 s**, at the parent plan’s 3 s Phase 2 target
+  (native single-thread 2.71 s; wasm is ~14% slower).
+- The ultimate 500 ms target is **not** met. The reader stays spelling-only
+  until parent Phase 5 adds sentence chunking with progress/cancellation, or
+  parent Phase 6 ships the optional reverse index.
+- Wasm size: raw 27,999,048 bytes; brotli sidecar **5,129,635 bytes**, up
+  ~146 KB from 4,983,594 — inside the parent plan’s ≤ +1 MB budget for the
+  stem-shape filter.
+- No further change belongs in this plan: chunking is a parent-plan Phase 5
+  task, and the cold-search code itself has met its target.
 
 ## 8. Harness and gates
 
