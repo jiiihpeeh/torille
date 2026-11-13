@@ -1,11 +1,11 @@
 //! Closed spellings the engine does not derive.
 //!
-//! Closed spellings the engine does not derive.
-//!
-//! The table is currently empty: the last row (`tienpuoleen`) became a
-//! classless compound lemma (`tienpuoli`), so the engine derives the whole
-//! paradigm. It stays as the place for a future exact surface whose base has
-//! no sanalista lemma and no productive class or derivation behind it.
+//! These are exact surfaces whose paradigm the generic engine does not
+//! generate. `kuulten` and its possessive forms are the postpositional
+//! instructive of `kuulla`; the standard 2nd-infinitive instructive is
+//! `kuullen`, and the `kuulten` family is the accepted less common variant.
+//! It is a closed lexical exception, not a `kuulla` participle, so it belongs
+//! here rather than in the verb-class engine.
 //!
 //! Established one-word adverbs (`alhaaltapäin`, `ylhäältäpäin`,
 //! `äkkipikaa`) live in `data/lexical_adverbs.csv`, not here.
@@ -13,7 +13,14 @@
 //! Keep sorted; lookup is a binary search.
 
 /// `(surface, base)` pairs. Sorted by `surface`.
-const CLOSED: &[(&str, &str)] = &[];
+const CLOSED: &[(&str, &str)] = &[
+    ("kuultemme", "kuulla"),
+    ("kuulten", "kuulla"),
+    ("kuulteni", "kuulla"),
+    ("kuultenne", "kuulla"),
+    ("kuultensa", "kuulla"),
+    ("kuultesi", "kuulla"),
+];
 
 /// Fused spellings that modern Finnish writes as two words. They are not
 /// accepted; the suggester offers the split form.
@@ -76,10 +83,11 @@ mod tests {
         assert_eq!(base("ventovieraita"), None);
     }
 
-    /// The 2nd-infinitive instructive is `kuullen`; the `kuulten`/`kuulte-`
-    /// spellings are not in the paradigm.
+    /// The standard 2nd-infinitive instructive is `kuullen`; the accepted
+    /// less common `kuulten` family is a closed spelling that resolves to the
+    /// same verb.
     #[test]
-    fn the_second_infinitive_instructive_is_kuullen() {
+    fn the_kuulten_postposition_family_resolves_to_kuulla() {
         use crate::expand::check_normal::{NormalizedOutcome, check_normal, check_normal_fast};
 
         for outcome in [
@@ -99,17 +107,16 @@ mod tests {
             "kuultenne",
             "kuultensa",
         ] {
-            assert_eq!(base(word), None, "{word}");
-            assert_eq!(
-                check_normal(word, false),
-                NormalizedOutcome::Unknown,
-                "full path: {word}"
-            );
-            assert_eq!(
-                check_normal_fast(word, false),
-                NormalizedOutcome::Unknown,
-                "fast path: {word}"
-            );
+            assert_eq!(base(word), Some("kuulla"), "{word}");
+            for outcome in [check_normal(word, false), check_normal_fast(word, false)] {
+                assert!(
+                    matches!(
+                        outcome,
+                        NormalizedOutcome::Inflected { ref base, .. } if base == "kuulla"
+                    ),
+                    "full/fast path: {word}: {outcome:?}"
+                );
+            }
         }
     }
 
