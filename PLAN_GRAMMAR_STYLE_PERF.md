@@ -38,24 +38,30 @@ Landed:
   `torille::check_all_with_cache`, wasm `check_style_with_state`, and the
   per-textarea cache shared by both layers.
 - **Phase 2 (partial)** — direct lemma and stem-map fast path, clitic and
-  possessive host reuse, a numeral-governed deep upgrade (`kaksi lasta`), and
-  a deep-result cache. The full head/tail walk now runs only when the cheap
-  ladder misses.
+  possessive host reuse, contracted possessives (`-an`/`-än`), a
+  numeral-governed deep upgrade (`kaksi lasta`), a deep-result cache, and a
+  compound fallback. The compound split comes from the existing DP state
+  machine (`check_normal_fast` → `suggest::known::compound`), the modifier is
+  validated by `modifier_is_known` (which reads the classless CSV rows and the
+  bound prefixes `esi-`, `lempi-`, `ensi-`, ...), and the whole is inflected
+  with `head_inflections`. No new prefix list is added.
 
 Measured on the committed fixture, single-thread (wasm shape):
 
 | workload | before | now |
 |---|---:|---:|
-| 20-word cold | 3.0 s | 1.95 s |
-| 96-word cold | 11.5 s | 3.0 s |
-| 1,959-word cold | ~120 s (1,722-word baseline) | 35.3 s |
-| 1,959-word warm style | 6–13 ms | 4.4 ms |
-| 1,959-word warm grammar+style | ~33–41 ms | 24.6 ms |
+| 20-word cold | 3.0 s | 0.14 s |
+| 96-word cold | 11.5 s | 0.76 s |
+| 1,959-word cold | ~120 s (1,722-word baseline) | 25.6 s |
+| 1,959-word warm style | 6–13 ms | 6.4 ms |
+| 1,959-word warm grammar+style | ~33–41 ms | ~34 ms |
 
-Still open: the compound-head fallback (`kotirantaan`,
-`lehtipurjeessa`, `lempiviikkomme` are the remaining hot words), the
-partitive-plural stem-shape filter, the agreement rule pass, the sentence
-cache and the worker chunking. The cold targets are not met yet.
+The synthetic 20-word slice is now near the interactive target. The full page
+is still dominated by a long tail of names, derived adjectives and archaic
+forms (`palajakaan`, `pariskunnan`, `kulettivat`, `kivuloinen`,
+`kenoveeva*`). The partitive-plural stem-shape filter, the agreement rule
+pass, the sentence cache and the worker chunking remain. The cold page target
+is not met yet.
 
 ## 1. The measured problem
 

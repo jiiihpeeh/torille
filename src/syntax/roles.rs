@@ -3,6 +3,14 @@
 use crate::tags::{Case, Mood, PartOfSpeech, Person, Tags};
 use crate::tokenise::Token;
 
+/// Object cases when the surface carries a possessive suffix.
+const POSSESSIVE_OBJECT_CASES: &[Case] = &[
+    Case::Partitive,
+    Case::Nominative,
+    Case::Genitive,
+    Case::Accusative,
+];
+
 use super::predicates::*;
 use super::{Clause, RoleConfidence, SyntacticRole, TokenSyntax};
 
@@ -319,6 +327,9 @@ pub(super) fn resolve_clause(
             Case::Nominative,
         ]
     };
+    // A possessive total object is nominative (`söi aamupuuronsa`), not the
+    // genitive the bare head paradigm also offers. Prefer the nominative when
+    // the surface carries a possessive.
     let object = if passive || passive_construction {
         before.iter().chain(after).copied().find(|&index| {
             out[index].role == SyntacticRole::Unknown
@@ -343,10 +354,15 @@ pub(super) fn resolve_clause(
         if let Some(noun) = &nominal_lemmas[index] {
             out[index].lemma = Some(noun.clone());
         }
-        out[index].case = best_case(&out[index], object_cases);
+        let cases = if has_possessive(&out[index]) {
+            POSSESSIVE_OBJECT_CASES
+        } else {
+            object_cases
+        };
+        out[index].case = best_case(&out[index], cases);
         out[index].head = Some(predicate);
         clause.object = Some(index);
-        mark_coordinated_objects(after, index, predicate, object_cases, tokens, out);
+        mark_coordinated_objects(after, index, predicate, cases, tokens, out);
         mark_numeral_complement(index, &words, out);
     }
 
@@ -560,6 +576,14 @@ fn mark_numeral_complement(head: usize, words: &[usize], out: &mut [TokenSyntax]
     }
 }
 
+/// Whether a token carries a possessive suffix.
+fn has_possessive(syntax: &TokenSyntax) -> bool {
+    syntax
+        .readings
+        .iter()
+        .any(|reading| reading.possessive.is_some())
+}
+
 /// Mark `maidon` in `Sami söi puuron ja maidon` as a coordinated object.
 fn mark_coordinated_objects(
     after: &[usize],
@@ -586,7 +610,12 @@ fn mark_coordinated_objects(
         if has_coordinator_between(tokens, left, right) {
             out[index].role = SyntacticRole::Object;
             out[index].confidence = nominal_confidence(&out[index]);
-            out[index].case = best_case(&out[index], object_cases);
+            let cases = if has_possessive(&out[index]) {
+                POSSESSIVE_OBJECT_CASES
+            } else {
+                object_cases
+            };
+            out[index].case = best_case(&out[index], cases);
             out[index].head = Some(predicate);
         }
     }

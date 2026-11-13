@@ -42,6 +42,8 @@ pub enum Depth {
     Clitic,
     /// The surface was a host plus a possessive suffix.
     Possessive,
+    /// The surface was a modifier plus an inflected head.
+    Compound,
     /// A capitalized token resolved through the proper-name table.
     ProperName,
     /// No reading was found.
@@ -405,6 +407,20 @@ fn strip_possessive(lower: &str) -> Option<(&str, Possessive)> {
     {
         return Some((host, Possessive::Third));
     }
+    // `kidassaan`, `taudistaan`, `mukanaan`: the third-person possessive
+    // contracts to `-an`/`-än` after a vowel. Require the vowel so an ordinary
+    // genitive `sanan` (host `san`) is not treated as one.
+    for (suffix, possessive) in [("an", Possessive::Third), ("än", Possessive::Third)] {
+        if let Some(host) = lower.strip_suffix(suffix)
+            && !host.is_empty()
+            && host
+                .chars()
+                .last()
+                .is_some_and(|ch| matches!(ch, 'a' | 'e' | 'i' | 'o' | 'u' | 'y' | 'ä' | 'ö'))
+        {
+            return Some((host, possessive));
+        }
+    }
     None
 }
 
@@ -454,11 +470,39 @@ fn resolve_word_fast(cat: &Catalogues, lower: &str) -> Option<WordInfo> {
         return Some(out);
     }
 
+    // A surface the cheap gates can name as one base is verified with one
+    // paradigm when it carries a possessive/clitic or the base is itself a
+    // classless compound: `kalojani` is `kala`, `veneeni` is `vene`,
+    // `pariskunnan` is `pariskunta`. The ambiguous partitive plural is
+    // excluded because its second base can change a rule's correction
+    // (`kirjoja` belongs to `kirja` and `kirjo`).
+    if !needs_full_base_search(lower)
+        && let Some(base) = cheap_base(lower)
+    {
+        let suffix = strip_possessive(lower).is_some()
+            || !crate::expand::clitic::strip_all_clitics(lower).1.is_empty();
+        let compound = is_classless_lemma(&base)
+            && crate::expand::head_inflections(&base, cat, None).is_some();
+        if (suffix || compound)
+            && let Some(info) = resolve_from_base_surface(lower, &base, cat)
+        {
+            return Some(info);
+        }
+        if let Some(info) = resolve_compound_surface(lower, &base, cat) {
+            return Some(info);
+        }
+    }
+
     // A partitive plural can be a form of several lemmas (`kirjoja` belongs
     // to `kirja` and `kirjo`). The stem map names one of them; the other can
     // change a rule's correction, so leave these surfaces to the full
     // recognition walk until the stem-shape filter lands.
     if needs_full_base_search(lower) {
+        if let Some(base) = cheap_base(lower)
+            && let Some(info) = resolve_compound_surface(lower, &base, cat)
+        {
+            return Some(info);
+        }
         return None;
     }
 
@@ -505,6 +549,162 @@ fn resolve_word_fast(cat: &Catalogues, lower: &str) -> Option<WordInfo> {
     out.exact = true;
     add_negation(&mut out, lower);
     finish(&mut out, Depth::StemMap, lower);
+    Some(out)
+}
+
+/// Whether the lexicon lists the base without an inflection class.
+///
+/// A classless row is a compound: Kotus omits the type because it declines
+/// like its head. `menevä` is a classed adjective and must not be treated as
+/// one just because `head_inflections` can split its spelling.
+fn is_classless_lemma(word: &str) -> bool {
+    crate::kotus::sanalista()
+        .by_word(word)
+        .next()
+        .is_some_and(|row| row.inflections().next().is_none())
+}
+
+/// Verify the whole surface against one named base, including possessives.
+fn resolve_from_base_surface(surface: &str, base: &str, cat: &Catalogues) -> Option<WordInfo> {
+    if base == surface {
+        return None;
+    }
+    let row = crate::kotus::sanalista().by_word(base).next()?;
+    let pos = PartOfSpeech::parse_all(row.part_of_speech())
+        .first()
+        .copied()
+        .unwrap_or(PartOfSpeech::Unknown);
+    let inflections: Vec<_> = row.inflections().collect();
+    let mut out = WordInfo {
+        lemma: Some(base.to_string()),
+        ..WordInfo::default()
+    };
+    if !add_forms_from_lemma(base, &inflections, Some(pos), surface, cat, &mut out) {
+        return None;
+    }
+    out.exact = true;
+    if out.nominal_lemma.is_none()
+        && out
+            .readings
+            .iter()
+            .any(|reading| is_nominal_pos(reading.part_of_speech))
+    {
+        out.nominal_lemma = Some(base.to_string());
+    }
+    if out.verb_lemma.is_none() && out.readings.iter().any(is_finite_predicate) {
+        out.verb_lemma = Some(base.to_string());
+    }
+    finish(&mut out, Depth::StemMap, surface);
+    add_possessive_readings(&mut out, surface, cat);
+
+    // The cheap gate names one base (`roihu` for `roihusi`), but the surface
+    // can also be a verb form (`roihuta`). Add the other stem-map base so a
+    // verb/nominal ambiguity stays visible to the role rules.
+    for other in [
+        find_base_via_stem_map(surface, PartOfSpeech::Noun, false),
+        find_base_via_verb_stem_map(surface, false),
+    ]
+    .into_iter()
+    .flatten()
+    {
+        if other == base {
+            continue;
+        }
+        let before = out.readings.len();
+        if !add_readings_from_base_matched(&other, surface, cat, &mut out.readings) {
+            continue;
+        }
+        out.push_lemma(&other);
+        let added = &out.readings[before..];
+        if out.nominal_lemma.is_none()
+            && added
+                .iter()
+                .any(|reading| is_nominal_pos(reading.part_of_speech))
+        {
+            out.nominal_lemma = Some(other.clone());
+        }
+        if out.verb_lemma.is_none() && added.iter().any(is_finite_predicate) {
+            out.verb_lemma = Some(other);
+        }
+    }
+    finish(&mut out, Depth::StemMap, surface);
+    Some(out)
+}
+
+/// Resolve a compound surface from the head base the DP/state machine names.
+///
+/// `kotirantaan` is `koti` + the illative of `ranta`, `lempiviikkomme` is
+/// `lempi` + the possessive form of `viikko`. `check_normal_fast` already
+/// segments the compound and returns the head (`ranta`, `viikko`); this
+/// inflects that head and accepts the surface when the remaining prefix is a
+/// known modifier. No head/tail candidate walk is needed.
+fn resolve_compound_surface(surface: &str, base: &str, cat: &Catalogues) -> Option<WordInfo> {
+    if base == surface {
+        return None;
+    }
+    let row = crate::kotus::sanalista().by_word(base).next()?;
+    let pos = PartOfSpeech::parse_all(row.part_of_speech())
+        .first()
+        .copied()
+        .unwrap_or(PartOfSpeech::Noun);
+    let inflections: Vec<_> = row.inflections().collect();
+    let mut best: Option<(String, Vec<Tags>)> = None;
+    for form in crate::expand::inflect_all(base, &inflections, cat, None, pos, true) {
+        if form.word.contains(' ') || form.word.len() >= surface.len() {
+            continue;
+        }
+        let Some(prefix) = surface.strip_suffix(&form.word) else {
+            continue;
+        };
+        if prefix.is_empty() || !crate::expand::modifier_is_known(prefix) {
+            continue;
+        }
+        if best
+            .as_ref()
+            .is_none_or(|(known, _)| prefix.len() > known.len())
+        {
+            best = Some((
+                prefix.to_string(),
+                form.readings
+                    .iter()
+                    .map(|reading| reading_with_pos(*reading, Some(pos)))
+                    .collect(),
+            ));
+        }
+    }
+    let (prefix, head_readings) = best?;
+    let whole = format!("{prefix}{base}");
+
+    // Prefer the whole classless compound's own paradigm. The head's form can
+    // carry several readings (`puuronsa` is both a genitive and a possessive
+    // nominative), while the compound paradigm knows the slot the surface is
+    // in. When the head cannot classify the whole, keep the head readings.
+    let readings = crate::expand::head_inflections(&whole, cat, None)
+        .and_then(|inflections| {
+            crate::expand::inflect_all(&whole, &inflections, cat, None, pos, true)
+                .into_iter()
+                .find(|form| form.word == surface)
+                .map(|form| {
+                    form.readings
+                        .iter()
+                        .map(|reading| reading_with_pos(*reading, Some(pos)))
+                        .collect::<Vec<_>>()
+                })
+        })
+        .unwrap_or(head_readings);
+
+    let mut out = WordInfo {
+        lemma: Some(whole.clone()),
+        nominal_lemma: Some(whole.clone()),
+        exact: true,
+        lemmas: vec![whole],
+        readings,
+        ..WordInfo::default()
+    };
+    if out.readings.iter().any(is_finite_predicate) {
+        out.verb_lemma = Some(base.to_string());
+    }
+    finish(&mut out, Depth::Compound, surface);
     Some(out)
 }
 
