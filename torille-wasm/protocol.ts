@@ -93,6 +93,14 @@ export type R_WorkerInbound =
     }
   | { id: number; type: 'check-syntax'; idx: number; text: string }
   | { id: number; type: 'check-style'; text: string }
+  | {
+      id: number;
+      type: 'check-grammar-style';
+      idx: number;
+      text: string;
+      syntax: boolean;
+      style: boolean;
+    }
   | { type: 'debug'; on: boolean }
   | { id: number; type: 'memory-info' };
 
@@ -136,5 +144,12 @@ export type R_WorkerOutbound =
   | { id: number; type: 'suggest-for-misspell'; suggestions: string[] }
   | { id: number; type: 'check-syntax'; diagnostics: DiagnosticSpan[] }
   | { id: number; type: 'check-style'; diagnostics: DiagnosticSpan[] }
+  | { id: number; type: 'check-progress'; done: number; total: number }
+  | {
+      id: number;
+      type: 'check-grammar-style';
+      diagnostics: DiagnosticSpan[];
+      style: DiagnosticSpan[];
+    }
   | { id: number; type: 'memory-info'; wasmBytes: number; pendingCount: number }
   | { id: number; type: 'error'; for: string; word?: string; error: string };

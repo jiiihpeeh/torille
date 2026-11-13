@@ -450,6 +450,13 @@ type Response =
       id: number;
       diagnostics: DiagnosticSpan[];
     }
+  | { type: 'check-progress'; id: number; done: number; total: number }
+  | {
+      type: 'check-grammar-style';
+      id: number;
+      diagnostics: DiagnosticSpan[];
+      style: DiagnosticSpan[];
+    }
   | { type: 'memory-info'; id: number; wasmBytes: number; pendingCount: number }
   | { type: 'error'; id: number; for: string; word?: string; error: string };
 
@@ -508,6 +515,13 @@ function startWorker(): Promise<void> {
         // worker still has `suggestion-ready` envelopes in
         // flight for this id, and the listener will fire for
         // each one as it lands.
+        return;
+      }
+      // Progress is not terminal: keep the pending handler so the final
+      // `check-grammar-style` envelope can resolve it.
+      if (msg.type === 'check-progress') {
+        const handler = pending.get(msg.id);
+        if (handler) handler(msg);
         return;
       }
       const handler = pending.get(msg.id);
@@ -638,6 +652,37 @@ export function checkStyle(text: string): Promise<DiagnosticSpan[]> {
       else resolve([]);
     });
     worker!.postMessage({ type: 'check-style', id, text });
+  });
+}
+
+/**
+ * Grammar and style diagnostics in one chunked pass.
+ *
+ * The worker splits the text into sentence batches, yields between them, and
+ * posts `check-progress` envelopes. `onProgress` is called for each batch; the
+ * returned promise resolves with the merged, UTF-16-offset diagnostics.
+ */
+export function checkGrammarStyle(
+  idx: number,
+  text: string,
+  syntax: boolean,
+  style: boolean,
+  onProgress?: (done: number, total: number) => void,
+): Promise<{ diagnostics: DiagnosticSpan[]; style: DiagnosticSpan[] }> {
+  return new Promise((resolve) => {
+    const id = nextId++;
+    pending.set(id, (msg) => {
+      if (msg.type === 'check-progress') {
+        onProgress?.(msg.done, msg.total);
+        return;
+      }
+      if (msg.type === 'check-grammar-style') {
+        resolve({ diagnostics: msg.diagnostics, style: msg.style });
+      } else {
+        resolve({ diagnostics: [], style: [] });
+      }
+    });
+    worker!.postMessage({ type: 'check-grammar-style', id, idx, text, syntax, style });
   });
 }
 

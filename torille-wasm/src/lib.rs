@@ -504,6 +504,60 @@ pub fn check_syntax_with_state(idx: u32, text: &str) -> js_sys::Object {
     check_syntax(text)
 }
 
+/// Grammar and style diagnostics in one pass through the per-textarea cache.
+///
+/// `syntax` and `style` select the rule passes; the morphology pass is shared
+/// either way. Returns `{ diagnostics, style }`, both arrays in the same shape
+/// as [`check_syntax`] / [`check_style`], with UTF-8 byte offsets. This is the
+/// chunking entry point: the worker calls it once per sentence batch.
+#[wasm_bindgen]
+pub fn check_grammar_style_with_state(
+    idx: u32,
+    text: &str,
+    syntax: bool,
+    style: bool,
+) -> js_sys::Object {
+    let tokens = torille::tokenise::tokenise(text);
+    let mut slots = states().lock().expect("states mutex poisoned");
+    if let Some(Some(state)) = slots.get_mut(idx as usize) {
+        let morphology =
+            torille::morphology::analyze_morphology(&tokens, &mut state.syntax_cache);
+        let diagnostics = if syntax {
+            let analysis = torille::syntax::analyze_syntax(&tokens, &morphology);
+            torille::syntax_check::check_analysis(&tokens, &analysis)
+        } else {
+            Vec::new()
+        };
+        let style_diagnostics = if style {
+            torille::style_check::check_tokens_with_morphology(&tokens, &morphology).diagnostics
+        } else {
+            Vec::new()
+        };
+        let obj = js_sys::Object::new();
+        set(&obj, "diagnostics", diagnostics_array(&diagnostics).into());
+        set(
+            &obj,
+            "style",
+            style_diagnostics_array(&style_diagnostics).into(),
+        );
+        return obj;
+    }
+    drop(slots);
+    let all = torille::check_all(text);
+    let obj = js_sys::Object::new();
+    set(
+        &obj,
+        "diagnostics",
+        diagnostics_array(&all.syntax.diagnostics).into(),
+    );
+    set(
+        &obj,
+        "style",
+        style_diagnostics_array(&all.style.diagnostics).into(),
+    );
+    obj
+}
+
 fn diagnostics_array(
     diagnostics: &[torille::syntax_check::SyntaxDiagnostic],
 ) -> js_sys::Array {

@@ -22,6 +22,7 @@ declare module '*/torille_wasm_bg.js' {
   export const analyze_text: typeof Api.analyze_text;
   export const check: typeof Api.check;
   export const check_report: typeof Api.check_report;
+  export const check_grammar_style_with_state: typeof Api.check_grammar_style_with_state;
   export const check_syntax_with_state: typeof Api.check_syntax_with_state;
   export const check_style: typeof Api.check_style;
   export const clear_state: typeof Api.clear_state;

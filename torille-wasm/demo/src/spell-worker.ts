@@ -814,6 +814,169 @@ function toUtf16Diagnostics(
   }));
 }
 
+// ── grammar/style chunking ─────────────────────────────────────────────
+//
+// A synchronous wasm call cannot be interrupted. Split the text into
+// sentence batches, yield a macrotask between batches, and let a newer
+// request cancel the old run. The morphology cache lives in the wasm
+// state, so only the first batch is cold; the rest are warm.
+
+const grammarStyleEncoder = new TextEncoder();
+let grammarStyleRun = 0;
+
+interface TextChunk {
+  start: number;
+  end: number;
+  text: string;
+}
+
+/// Advance the quotation depth over a separator run, matching
+/// `sentence::update_quote_depth` in the engine. A chunk is only cut at a
+/// quote-balanced point so the whole-text `unbalanced_quote` rule is not
+/// duplicated or lost at a batch boundary.
+function updateQuoteDepth(depth: number, text: string): number {
+  for (const c of text) {
+    if (c === '»' || c === '"') {
+      depth = depth === 0 ? 1 : depth - 1;
+    } else if (c === '«') {
+      depth = Math.max(0, depth - 1);
+    } else if (c === '“' || c === '‘') {
+      depth += 1;
+    } else if (c === '”' || c === '’') {
+      depth = Math.max(0, depth - 1);
+    }
+  }
+  return depth;
+}
+
+/// Split at sentence ends, at most `maxSentences` per chunk, and never
+/// inside an open quotation.
+///
+/// The lookahead requires whitespace followed by an uppercase letter (or
+/// end of text), so `esim.` inside a sentence does not split. A chunk with
+/// no sentence punctuation is split at word boundaries by `splitLongChunks`.
+function sentenceChunks(text: string, maxSentences: number): TextChunk[] {
+  if (text.length === 0) return [];
+  const chunks: TextChunk[] = [];
+  let start = 0;
+  let sentences = 0;
+  const re = /[.!?](?=\s+[A-ZÄÖÅ]|\s*$)/g;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(text)) !== null) {
+    sentences++;
+    if (sentences >= maxSentences) {
+      const end = match.index + 1;
+      if (updateQuoteDepth(0, text.slice(start, end)) !== 0) {
+        continue;
+      }
+      chunks.push({ start, end, text: text.slice(start, end) });
+      start = end;
+      sentences = 0;
+    }
+  }
+  if (start < text.length) {
+    chunks.push({ start, end: text.length, text: text.slice(start) });
+  }
+  return chunks.flatMap(splitLongChunks);
+}
+
+const MAX_CHUNK_WORDS = 120;
+
+/// A paragraph with no sentence punctuation still has to yield. Split an
+/// oversized chunk at whitespace, keeping every chunk non-empty and ending
+/// only outside an open quotation.
+function splitLongChunks(chunk: TextChunk): TextChunk[] {
+  const words = chunk.text.split(/\s+/).filter(Boolean).length;
+  if (words <= MAX_CHUNK_WORDS) return [chunk];
+  const out: TextChunk[] = [];
+  let start = chunk.start;
+  let count = 0;
+  let depth = 0;
+  for (let i = 0; i < chunk.text.length; i++) {
+    depth = updateQuoteDepth(depth, chunk.text[i]);
+    if (/\s/.test(chunk.text[i])) {
+      count++;
+      if (count >= MAX_CHUNK_WORDS && depth === 0) {
+        const end = chunk.start + i;
+        out.push({ start, end, text: chunk.text.slice(start - chunk.start, i) });
+        start = end;
+        count = 0;
+      }
+    }
+  }
+  if (start < chunk.end) {
+    out.push({
+      start,
+      end: chunk.end,
+      text: chunk.text.slice(start - chunk.start),
+    });
+  }
+  return out;
+}
+
+async function handleCheckGrammarStyle(
+  msg: Extract<R_WorkerInbound, { type: 'check-grammar-style' }>,
+): Promise<void> {
+  const run = ++grammarStyleRun;
+  dbgStage(true, 'handler:check-grammar-style:enter',
+           `id=${msg.id} idx=${msg.idx} len=${msg.text.length} ` +
+           `syntax=${msg.syntax} style=${msg.style}`);
+  const chunks = sentenceChunks(msg.text, 5);
+  const diagnostics: DiagnosticSpan[] = [];
+  const style: DiagnosticSpan[] = [];
+  let byteStart = 0;
+  for (let i = 0; i < chunks.length; i++) {
+    if (run !== grammarStyleRun) {
+      // A newer edit superseded this run. Resolve the old promise with an
+      // empty result so the client does not leak a pending callback.
+      post({ id: msg.id, type: 'check-grammar-style', diagnostics: [], style: [] });
+      dbgStage(false, 'handler:check-grammar-style:cancelled', `id=${msg.id}`);
+      return;
+    }
+    const chunk = chunks[i];
+    let raw: { diagnostics?: DiagnosticSpan[]; style?: DiagnosticSpan[] } = {};
+    try {
+      raw = bg.check_grammar_style_with_state(
+        msg.idx, chunk.text, msg.syntax, msg.style,
+      ) as { diagnostics?: DiagnosticSpan[]; style?: DiagnosticSpan[] };
+    } catch (err) {
+      postError(msg.id, 'check-grammar-style', undefined, err);
+      return;
+    }
+    for (const diagnostic of raw.diagnostics ?? []) {
+      diagnostics.push({
+        ...diagnostic,
+        start: diagnostic.start + byteStart,
+        end: diagnostic.end + byteStart,
+      });
+    }
+    for (const diagnostic of raw.style ?? []) {
+      style.push({
+        ...diagnostic,
+        start: diagnostic.start + byteStart,
+        end: diagnostic.end + byteStart,
+      });
+    }
+    byteStart += grammarStyleEncoder.encode(chunk.text).length;
+    post({ id: msg.id, type: 'check-progress', done: i + 1, total: chunks.length });
+    // Let the worker process spelling messages between batches.
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  }
+  if (run !== grammarStyleRun) {
+    post({ id: msg.id, type: 'check-grammar-style', diagnostics: [], style: [] });
+    return;
+  }
+  const out: R_WorkerOutbound = {
+    id: msg.id,
+    type: 'check-grammar-style',
+    diagnostics: toUtf16Diagnostics(msg.text, diagnostics),
+    style: toUtf16Diagnostics(msg.text, style),
+  };
+  post(out);
+  dbgStage(false, 'handler:check-grammar-style:exit',
+           `id=${msg.id} n=${diagnostics.length} style=${style.length}`);
+}
+
 function handleCheckSyntax(
   msg: Extract<R_WorkerInbound, { type: 'check-syntax' }>,
 ): void {
@@ -937,6 +1100,9 @@ const HANDLERS: {
   'check-style': (
     msg: Extract<R_WorkerInbound, { type: 'check-style' }>,
   ) => void;
+  'check-grammar-style': (
+    msg: Extract<R_WorkerInbound, { type: 'check-grammar-style' }>,
+  ) => Promise<void>;
   debug: (msg: Extract<R_WorkerInbound, { type: 'debug' }>) => void;
   'memory-info': (msg: Extract<R_WorkerInbound, { type: 'memory-info' }>) => void;
 } = {
@@ -954,6 +1120,7 @@ const HANDLERS: {
   'suggest-with-state': handleSuggestWithState,
   'check-syntax': handleCheckSyntax,
   'check-style': handleCheckStyle,
+  'check-grammar-style': handleCheckGrammarStyle,
   debug: handleDebug,
   'memory-info': handleMemoryInfo,
 };
@@ -1092,6 +1259,8 @@ dbgStage(false, 'worker:boot', 'ready posted, onmessage registering');
           HANDLERS['check-syntax'](msg);
         } else if (msg.type === 'check-style') {
           HANDLERS['check-style'](msg);
+        } else if (msg.type === 'check-grammar-style') {
+          await HANDLERS['check-grammar-style'](msg);
         } else if (msg.type === 'debug') {
           HANDLERS.debug(msg);
         } else {

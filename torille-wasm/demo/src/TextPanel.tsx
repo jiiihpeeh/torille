@@ -30,8 +30,7 @@ import {
 } from './find-misspellings';
 import { Misspell } from './find-misspellings';
 import {
-  checkStyle,
-  checkSyntax,
+  checkGrammarStyle,
   createState,
   destroyState,
   ready as wasmReady,
@@ -252,27 +251,46 @@ export function TextPanel(props: TextPanelProps) {
   });
 
   // Grammar and style are opt-in and run on the same debounced text as the
-  // spell check. They are separate wasm calls: `checkSyntax` uses the
-  // per-textbox syntax cache, `checkStyle` is stateless. Both are skipped
-  // when the browser extension owns the page.
-  const [grammarDiagnostics] = createResource(
+  // spell check. One chunked worker call resolves morphology once and returns
+  // both streams; the worker posts progress between sentence batches.
+  const [grammarProgress, setGrammarProgress] = createSignal<
+    { done: number; total: number } | null
+  >(null);
+  let grammarRun = 0;
+  const [grammarStyle] = createResource(
     () => ({
       text: debouncedText(),
       idx: stateIdx(),
-      on: builtInGrammarCheckEnabled(),
+      syntax: builtInGrammarCheckEnabled(),
+      style: builtInStyleCheckEnabled(),
     }),
-    async ({ text, idx, on }): Promise<DiagnosticSpan[]> => {
-      if (!on || idx < 0) return [];
-      return checkSyntax(idx, text.replace(/\r\n?/g, '\n'));
+    async ({ text, idx, syntax, style }): Promise<{
+      diagnostics: DiagnosticSpan[];
+      style: DiagnosticSpan[];
+    }> => {
+      if ((!syntax && !style) || idx < 0) {
+        setGrammarProgress(null);
+        return { diagnostics: [], style: [] };
+      }
+      const run = ++grammarRun;
+      const report = (done: number, total: number) => {
+        if (run === grammarRun) setGrammarProgress({ done, total });
+      };
+      try {
+        return await checkGrammarStyle(
+          idx,
+          text.replace(/\r\n?/g, '\n'),
+          syntax,
+          style,
+          report,
+        );
+      } finally {
+        if (run === grammarRun) setGrammarProgress(null);
+      }
     },
   );
-  const [styleDiagnostics] = createResource(
-    () => ({ text: debouncedText(), on: builtInStyleCheckEnabled() }),
-    async ({ text, on }): Promise<DiagnosticSpan[]> => {
-      if (!on) return [];
-      return checkStyle(text.replace(/\r\n?/g, '\n'));
-    },
-  );
+  const grammarDiagnostics = () => grammarStyle()?.diagnostics ?? [];
+  const styleDiagnostics = () => grammarStyle()?.style ?? [];
 
   // Debug hook: each panel exposes its live state to `window` so
   // the puppeteer probes can see why a word is or isn't
@@ -310,6 +328,9 @@ export function TextPanel(props: TextPanelProps) {
       candidates,
       demoted,
       misspellings,
+      grammarDiagnostics,
+      styleDiagnostics,
+      grammarProgress,
       heading: () => props.heading,
       // Programmatic text setter. Goes through the same
       // `onText` path the Editor's input event uses, so
@@ -438,18 +459,26 @@ export function TextPanel(props: TextPanelProps) {
           </Show>
         </Show>
         <Show when={builtInGrammarCheckEnabled()}>
-          <span>{grammarDiagnostics()?.length ?? 0} grammar</span>
+          <span>{grammarDiagnostics().length} grammar</span>
         </Show>
         <Show when={builtInStyleCheckEnabled()}>
-          <span>{styleDiagnostics()?.length ?? 0} style</span>
+          <span>{styleDiagnostics().length} style</span>
+        </Show>
+        <Show when={grammarProgress()}>
+          {(progress) => (
+            <span class="checking">
+              <span class="status-dot" aria-hidden="true" />
+              tarkistetaan… {progress().done}/{progress().total}
+            </span>
+          )}
         </Show>
       </div>
       <Editor
         text={text()}
         onText={onText}
         misspellings={misspellings()}
-        grammarDiagnostics={grammarDiagnostics() ?? []}
-        styleDiagnostics={styleDiagnostics() ?? []}
+        grammarDiagnostics={grammarDiagnostics()}
+        styleDiagnostics={styleDiagnostics()}
         focused={focused()}
         stateIdx={stateIdx()}
         onFocus={(w) => setFocused(w)}

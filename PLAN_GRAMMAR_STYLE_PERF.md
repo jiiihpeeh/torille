@@ -1,6 +1,6 @@
 # PLAN_GRAMMAR_STYLE_PERF — one morphology pass for grammar and style
 
-Status: **Phase 0–1 landed; Phase 2 in progress** · 2026-11-13 · branch `syntax` · baseline `2e5f13c`
+Status: **Phase 0–1, 2 (cold path) and 5 (chunking) landed; Phase 3/4/6/7 next** · 2026-11-13 · branch `syntax` · baseline `2e5f13c`
 
 This is the performance plan for the two opt-in analysis layers:
 
@@ -778,12 +778,21 @@ Acceptance: rule pass ≤ 5 ms/page; style ≤ 3 ms/page; warm total ≤ 10 ms/p
 Acceptance: a 2,000-word page with one edited sentence re-checks in ≤ 5 ms;
 a 100-word page in ≤ 2 ms; diagnostics are identical to a full re-check.
 
-### Phase 5 — wasm and worker (3 days)
+### Phase 5 — wasm and worker (3 days) — partial
 
 - §6.1 diagnostics-only and combined export; update both workers and the
   glue `.d.ts`.
 - §6.2 chunking, generation, progress, cancellation.
 - §6.3 debounce and word budget.
+
+**Landed:** the combined `check_grammar_style_with_state` export, a
+quote-balanced sentence chunker in the demo worker, `check-progress`
+envelopes, generation-based cancellation, and a single panel resource that
+renders both streams. `probe-grammar-chunk.mjs` on the 1,959-word perf page:
+first progress **224 ms**, final **71 grammar / 14 style** (identical to the
+whole-text wasm check), and an edit during the run cancels to 0 diagnostics.
+The longest batch is still ~200 ms, so the 50 ms per-task target is not met;
+the extension workers, word budget and reader enablement remain.
 
 Acceptance: no worker task over 50 ms; an edit during a check cancels within
 one batch; spelling still answers while a grammar check runs; the demo and
