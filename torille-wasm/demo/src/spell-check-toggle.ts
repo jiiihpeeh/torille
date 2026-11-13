@@ -26,16 +26,31 @@ import { createSignal } from 'solid-js';
 
 const [spellCheckEnabled, setSpellCheckEnabled] = createSignal<boolean>(true);
 const [useExtension, setUseExtension] = createSignal<boolean>(false);
+// The grammar and style layers are opt-in. They are separate from
+// spelling so the default demo stays a spell-check playground.
+const [grammarCheckEnabled, setGrammarCheckEnabled] = createSignal<boolean>(false);
+const [styleCheckEnabled, setStyleCheckEnabled] = createSignal<boolean>(false);
 
-// Effective built-in state. Read this instead of `spellCheckEnabled`
-// anywhere the wasm pipeline is gated.
+// Effective built-in state. Read these instead of the preference
+// signals anywhere the wasm pipeline is gated. The extension is a hard
+// veto for all three layers, so the page never double-underlines.
 const builtInSpellCheckEnabled = (): boolean =>
   spellCheckEnabled() && !useExtension();
+const builtInGrammarCheckEnabled = (): boolean =>
+  grammarCheckEnabled() && !useExtension();
+const builtInStyleCheckEnabled = (): boolean =>
+  styleCheckEnabled() && !useExtension();
 
 export {
   spellCheckEnabled,
   setSpellCheckEnabled,
+  grammarCheckEnabled,
+  setGrammarCheckEnabled,
+  styleCheckEnabled,
+  setStyleCheckEnabled,
   useExtension,
   setUseExtension,
   builtInSpellCheckEnabled,
+  builtInGrammarCheckEnabled,
+  builtInStyleCheckEnabled,
 };

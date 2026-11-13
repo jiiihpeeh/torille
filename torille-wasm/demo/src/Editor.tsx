@@ -19,6 +19,7 @@ import {
 } from './spell-client';
 import { Misspell } from './find-misspellings';
 import { SuggestionsPopup } from './SuggestionsPopup';
+import type { DiagnosticSpan } from '../../protocol.js';
 
 /** The misspelled word the popup is open for.
  *
@@ -36,6 +37,8 @@ export interface EditorProps {
   text: string;
   onText: (next: string) => void;
   misspellings: Misspell[];
+  grammarDiagnostics?: DiagnosticSpan[];
+  styleDiagnostics?: DiagnosticSpan[];
   focused: FocusTarget | null;
   stateIdx: number;
   onFocus: (target: FocusTarget) => void;
@@ -207,6 +210,64 @@ export function Editor(props: EditorProps) {
   const escText = (s: string): string =>
     s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const escAttr = (s: string): string => escText(s).replace(/"/g, '&quot;');
+
+  // The grammar/style layer is a separate absolute underlay. Its text is
+  // transparent and only the decorations paint, so it can sit above the
+  // spelling mirror without hiding the red squiggles.
+  const diagnosticUnderlayHtml = createMemo(() => {
+    const text = props.text.replace(/\r\n?/g, '\n');
+    const spans: { start: number; end: number; cls: string }[] = [];
+    for (const diagnostic of props.grammarDiagnostics ?? []) {
+      const cls = diagnostic.severity === 'error'
+        ? 'grammar-error'
+        : diagnostic.severity === 'warning'
+          ? 'grammar-warning'
+          : 'grammar-suggestion';
+      spans.push({ start: diagnostic.start, end: diagnostic.end, cls });
+    }
+    for (const diagnostic of props.styleDiagnostics ?? []) {
+      spans.push({
+        start: diagnostic.start,
+        end: diagnostic.end,
+        cls: 'style-suggestion',
+      });
+    }
+    const valid = spans
+      .map((span) => ({
+        start: Math.max(0, Math.min(text.length, span.start)),
+        end: Math.max(0, Math.min(text.length, span.end)),
+        cls: span.cls,
+      }))
+      .filter((span) => span.end > span.start)
+      .sort((a, b) => a.start - b.start || a.end - b.end);
+    if (valid.length === 0) return '';
+
+    const boundaries = new Set<number>([0, text.length]);
+    for (const span of valid) {
+      boundaries.add(span.start);
+      boundaries.add(span.end);
+    }
+    const sorted = [...boundaries].sort((a, b) => a - b);
+    let out = '';
+    for (let index = 0; index < sorted.length - 1; index++) {
+      const start = sorted[index];
+      const end = sorted[index + 1];
+      if (end <= start) continue;
+      const classes = [
+        ...new Set(
+          valid
+            .filter((span) => span.start <= start && end <= span.end)
+            .map((span) => span.cls),
+        ),
+      ].sort();
+      const slice = escText(text.slice(start, end));
+      out += classes.length === 0
+        ? slice
+        : `<span class="${classes.join(' ')}">${slice}</span>`;
+    }
+    return out;
+  });
+
   const underlayHtml = createMemo(() => {
     const miss = misspellSet();
     const focus = resolvedFocus();
@@ -439,6 +500,7 @@ export function Editor(props: EditorProps) {
 
   return (
     <div class="editor" ref={editorRef}>
+      <div class="underlay diagnostics" innerHTML={diagnosticUnderlayHtml()} />
       <div
         class="underlay"
         innerHTML={underlayHtml()}

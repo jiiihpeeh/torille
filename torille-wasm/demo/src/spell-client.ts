@@ -14,6 +14,8 @@
 // `analyze_text` collapse the render path from N postMessage
 // crossings + N wasm-bindgen marshals to a single wasm call.
 
+import type { DiagnosticSpan } from '../../protocol.js';
+
 let worker: Worker | null = null;
 let nextId = 1;
 let readyPromise: Promise<void> | null = null;
@@ -438,6 +440,16 @@ type Response =
       suggestions: string[];
     }
   | { type: 'suggest-for-misspell'; id: number; suggestions: string[] }
+  | {
+      type: 'check-syntax';
+      id: number;
+      diagnostics: DiagnosticSpan[];
+    }
+  | {
+      type: 'check-style';
+      id: number;
+      diagnostics: DiagnosticSpan[];
+    }
   | { type: 'memory-info'; id: number; wasmBytes: number; pendingCount: number }
   | { type: 'error'; id: number; for: string; word?: string; error: string };
 
@@ -606,6 +618,33 @@ export function clearState(idx: number): void {
 
 export function updateState(idx: number, text: string): void {
   worker!.postMessage({ type: 'update-state', id: nextId++, idx, text });
+}
+
+/** Grammar diagnostics for one textarea, through its per-textbox cache. */
+export function checkSyntax(
+  idx: number,
+  text: string,
+): Promise<DiagnosticSpan[]> {
+  return new Promise<DiagnosticSpan[]>((resolve) => {
+    const id = nextId++;
+    pending.set(id, (msg) => {
+      if (msg.type === 'check-syntax') resolve(msg.diagnostics);
+      else resolve([]);
+    });
+    worker!.postMessage({ type: 'check-syntax', id, idx, text });
+  });
+}
+
+/** Style diagnostics. The style pass is stateless. */
+export function checkStyle(text: string): Promise<DiagnosticSpan[]> {
+  return new Promise<DiagnosticSpan[]>((resolve) => {
+    const id = nextId++;
+    pending.set(id, (msg) => {
+      if (msg.type === 'check-style') resolve(msg.diagnostics);
+      else resolve([]);
+    });
+    worker!.postMessage({ type: 'check-style', id, text });
+  });
 }
 
 export function analyzeText(

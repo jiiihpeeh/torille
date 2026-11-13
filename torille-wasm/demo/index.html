@@ -37,6 +37,8 @@
      bundled one so the two never underline the same text).
      `aria-pressed="false"` dims the control. */
   .spell-check-toggle,
+  .grammar-toggle,
+  .style-toggle,
   .extension-toggle {
     margin-left: 1em;
     font-size: 0.65em;
@@ -50,22 +52,32 @@
     vertical-align: middle;
   }
   .spell-check-toggle:hover,
+  .grammar-toggle:hover,
+  .style-toggle:hover,
   .extension-toggle:hover {
     background: var(--miss-bg);
   }
   .spell-check-toggle[aria-pressed="false"],
+  .grammar-toggle[aria-pressed="false"],
+  .style-toggle[aria-pressed="false"],
   .extension-toggle[aria-pressed="false"] {
     color: #888;
     background: #f0f0f0;
   }
-  .spell-check-toggle[disabled] {
+  .spell-check-toggle[disabled],
+  .grammar-toggle[disabled],
+  .style-toggle[disabled] {
     cursor: default;
     opacity: 0.65;
   }
-  .spell-check-toggle[disabled]:hover {
+  .spell-check-toggle[disabled]:hover,
+  .grammar-toggle[disabled]:hover,
+  .style-toggle[disabled]:hover {
     background: #f0f0f0;
   }
   .spell-check-toggle strong,
+  .grammar-toggle strong,
+  .style-toggle strong,
   .extension-toggle strong {
     font-weight: 600;
   }
@@ -159,6 +171,29 @@
   .editor .underlay .misspell.focused {
     outline: 2px solid var(--accent);
     outline-offset: -2px;
+  }
+  /* Grammar and style diagnostics paint on a second underlay above the
+     spelling layer. Its text is transparent; only the decorations show,
+     so it can sit over the spelling mirror without hiding it. */
+  .editor .underlay.diagnostics {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    background: transparent;
+  }
+  .editor .underlay.diagnostics .grammar-error {
+    text-decoration: underline double #c2410c;
+  }
+  .editor .underlay.diagnostics .grammar-warning {
+    text-decoration: underline dashed #d97706;
+  }
+  .editor .underlay.diagnostics .grammar-suggestion {
+    text-decoration: underline dotted #b45309;
+  }
+  .editor .underlay.diagnostics .style-suggestion {
+    text-decoration: underline solid #2563eb;
   }
 
   .suggestions {

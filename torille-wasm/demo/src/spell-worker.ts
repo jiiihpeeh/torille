@@ -12,7 +12,9 @@
 // extension's behaviour; both code paths share the same logic.
 
 import { bg, initTorilleWasm } from './wasm-loader';
-import type { R_WorkerInbound, R_WorkerOutbound } from '../../protocol.js';
+import type {
+  DiagnosticSpan, R_WorkerInbound, R_WorkerOutbound,
+} from '../../protocol.js';
 
 // The wasm-bindgen 0.14 shim only exposes the static-init path
 // (`import * as wasm from "./x.wasm"; __wbg_set_wasm(wasm);
@@ -742,6 +744,121 @@ function handleSuggestWithState(
   dbgStage(false, 'handler:suggest-with-state:exit', `id=${msg.id}`);
 }
 
+/**
+ * UTF-8 byte offset -> UTF-16 code-unit offset for one text.
+ *
+ * The wasm engine reports byte offsets; the DOM and JS string slicing use
+ * UTF-16. This is the same mapping the extension worker uses.
+ */
+function buildByteToUtf16Map(text: string): Uint32Array {
+  let byteLen = 0;
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    if (c < 0x80) {
+      byteLen += 1;
+    } else if (c < 0x800) {
+      byteLen += 2;
+    } else if (
+      c >= 0xd800 && c <= 0xdbff &&
+      i + 1 < text.length &&
+      text.charCodeAt(i + 1) >= 0xdc00 &&
+      text.charCodeAt(i + 1) <= 0xdfff
+    ) {
+      byteLen += 4;
+      i++;
+    } else {
+      byteLen += 3;
+    }
+  }
+  const map = new Uint32Array(byteLen + 1);
+  let b = 0;
+  let u = 0;
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    let bytes: number;
+    let units = 1;
+    if (c < 0x80) {
+      bytes = 1;
+    } else if (c < 0x800) {
+      bytes = 2;
+    } else if (
+      c >= 0xd800 && c <= 0xdbff &&
+      i + 1 < text.length &&
+      text.charCodeAt(i + 1) >= 0xdc00 &&
+      text.charCodeAt(i + 1) <= 0xdfff
+    ) {
+      bytes = 4;
+      units = 2;
+      i++;
+    } else {
+      bytes = 3;
+    }
+    for (let k = 0; k < bytes; k++) map[b + k] = u;
+    b += bytes;
+    u += units;
+  }
+  map[b] = u;
+  return map;
+}
+
+function toUtf16Diagnostics(
+  text: string,
+  diagnostics: DiagnosticSpan[],
+): DiagnosticSpan[] {
+  const map = buildByteToUtf16Map(text);
+  return diagnostics.map((diagnostic) => ({
+    ...diagnostic,
+    start: map[diagnostic.start] ?? diagnostic.start,
+    end: map[diagnostic.end] ?? diagnostic.end,
+  }));
+}
+
+function handleCheckSyntax(
+  msg: Extract<R_WorkerInbound, { type: 'check-syntax' }>,
+): void {
+  dbgStage(true, 'handler:check-syntax:enter',
+           `id=${msg.id} idx=${msg.idx} len=${msg.text.length}`);
+  let diagnostics: DiagnosticSpan[] = [];
+  try {
+    const raw = bg.check_syntax_with_state(msg.idx, msg.text) as {
+      diagnostics?: DiagnosticSpan[];
+    };
+    diagnostics = toUtf16Diagnostics(msg.text, raw.diagnostics ?? []);
+  } catch (err) {
+    postError(msg.id, 'check-syntax', undefined, err);
+    return;
+  }
+  const out: R_WorkerOutbound = {
+    id: msg.id, type: 'check-syntax', diagnostics,
+  };
+  (self as unknown as { postMessage(m: unknown): void }).postMessage(out);
+  dbgStage(false, 'handler:check-syntax:exit',
+           `id=${msg.id} n=${diagnostics.length}`);
+}
+
+function handleCheckStyle(
+  msg: Extract<R_WorkerInbound, { type: 'check-style' }>,
+): void {
+  dbgStage(true, 'handler:check-style:enter',
+           `id=${msg.id} len=${msg.text.length}`);
+  let diagnostics: DiagnosticSpan[] = [];
+  try {
+    const raw = bg.check_style(msg.text) as {
+      diagnostics?: DiagnosticSpan[];
+    };
+    diagnostics = toUtf16Diagnostics(msg.text, raw.diagnostics ?? []);
+  } catch (err) {
+    postError(msg.id, 'check-style', undefined, err);
+    return;
+  }
+  const out: R_WorkerOutbound = {
+    id: msg.id, type: 'check-style', diagnostics,
+  };
+  (self as unknown as { postMessage(m: unknown): void }).postMessage(out);
+  dbgStage(false, 'handler:check-style:exit',
+           `id=${msg.id} n=${diagnostics.length}`);
+}
+
 function handleDebug(msg: Extract<R_WorkerInbound, { type: 'debug' }>): void {
   TORILLE_DEBUG = !!msg.on;
   dbg('worker', 'debug ->', TORILLE_DEBUG);
@@ -813,6 +930,12 @@ const HANDLERS: {
   'suggest-with-state': (
     msg: Extract<R_WorkerInbound, { type: 'suggest-with-state' }>,
   ) => void;
+  'check-syntax': (
+    msg: Extract<R_WorkerInbound, { type: 'check-syntax' }>,
+  ) => void;
+  'check-style': (
+    msg: Extract<R_WorkerInbound, { type: 'check-style' }>,
+  ) => void;
   debug: (msg: Extract<R_WorkerInbound, { type: 'debug' }>) => void;
   'memory-info': (msg: Extract<R_WorkerInbound, { type: 'memory-info' }>) => void;
 } = {
@@ -828,6 +951,8 @@ const HANDLERS: {
   'analyze-misspells': handleAnalyzeMisspells,
   'suggest-for-misspell': handleSuggestForMisspell,
   'suggest-with-state': handleSuggestWithState,
+  'check-syntax': handleCheckSyntax,
+  'check-style': handleCheckStyle,
   debug: handleDebug,
   'memory-info': handleMemoryInfo,
 };
@@ -960,6 +1085,10 @@ dbgStage(false, 'worker:boot', 'ready posted, onmessage registering');
           HANDLERS['suggest-for-misspell'](msg);
         } else if (msg.type === 'suggest-with-state') {
           HANDLERS['suggest-with-state'](msg);
+        } else if (msg.type === 'check-syntax') {
+          HANDLERS['check-syntax'](msg);
+        } else if (msg.type === 'check-style') {
+          HANDLERS['check-style'](msg);
         } else if (msg.type === 'debug') {
           HANDLERS.debug(msg);
         } else {

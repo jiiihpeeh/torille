@@ -30,11 +30,19 @@ import {
 } from './find-misspellings';
 import { Misspell } from './find-misspellings';
 import {
+  checkStyle,
+  checkSyntax,
   createState,
   destroyState,
   ready as wasmReady,
 } from './spell-client';
-import { builtInSpellCheckEnabled, useExtension } from './spell-check-toggle';
+import {
+  builtInGrammarCheckEnabled,
+  builtInSpellCheckEnabled,
+  builtInStyleCheckEnabled,
+  useExtension,
+} from './spell-check-toggle';
+import type { DiagnosticSpan } from '../../protocol.js';
 import { Editor } from './Editor';
 import type { FocusTarget } from './Editor';
 
@@ -243,6 +251,29 @@ export function TextPanel(props: TextPanelProps) {
     return candidates().filter((m) => !dem.has(m.word));
   });
 
+  // Grammar and style are opt-in and run on the same debounced text as the
+  // spell check. They are separate wasm calls: `checkSyntax` uses the
+  // per-textbox syntax cache, `checkStyle` is stateless. Both are skipped
+  // when the browser extension owns the page.
+  const [grammarDiagnostics] = createResource(
+    () => ({
+      text: debouncedText(),
+      idx: stateIdx(),
+      on: builtInGrammarCheckEnabled(),
+    }),
+    async ({ text, idx, on }): Promise<DiagnosticSpan[]> => {
+      if (!on || idx < 0) return [];
+      return checkSyntax(idx, text.replace(/\r\n?/g, '\n'));
+    },
+  );
+  const [styleDiagnostics] = createResource(
+    () => ({ text: debouncedText(), on: builtInStyleCheckEnabled() }),
+    async ({ text, on }): Promise<DiagnosticSpan[]> => {
+      if (!on) return [];
+      return checkStyle(text.replace(/\r\n?/g, '\n'));
+    },
+  );
+
   // Debug hook: each panel exposes its live state to `window` so
   // the puppeteer probes can see why a word is or isn't
   // underlined. Two panels -> `__torille.panels[i]`; the legacy
@@ -403,11 +434,19 @@ export function TextPanel(props: TextPanelProps) {
             </span>
           </Show>
         </Show>
+        <Show when={builtInGrammarCheckEnabled()}>
+          <span>{grammarDiagnostics()?.length ?? 0} grammar</span>
+        </Show>
+        <Show when={builtInStyleCheckEnabled()}>
+          <span>{styleDiagnostics()?.length ?? 0} style</span>
+        </Show>
       </div>
       <Editor
         text={text()}
         onText={onText}
         misspellings={misspellings()}
+        grammarDiagnostics={grammarDiagnostics() ?? []}
+        styleDiagnostics={styleDiagnostics() ?? []}
         focused={focused()}
         stateIdx={stateIdx()}
         onFocus={(w) => setFocused(w)}

@@ -20,6 +20,20 @@
 // uses to tie a worker log line back to a specific text input
 // on a specific page; the demo passes a constant 0.
 
+/** One grammar or style diagnostic. The worker only forwards the
+ *  fields the demo needs; the extension has its own richer ambient
+ *  type in `globals.d.ts`. */
+export interface DiagnosticSpan {
+  kind: string;
+  severity: string;
+  confidence: string;
+  start: number;
+  end: number;
+  message: string;
+  expected?: string | null;
+  corrections?: unknown[];
+}
+
 /** Inbound: caller -> worker. */
 export type R_WorkerInbound =
   | { id: number; type: 'check'; word: string }
@@ -77,6 +91,8 @@ export type R_WorkerInbound =
       max: number;
       maxDistance: number;
     }
+  | { id: number; type: 'check-syntax'; idx: number; text: string }
+  | { id: number; type: 'check-style'; text: string }
   | { type: 'debug'; on: boolean }
   | { id: number; type: 'memory-info' };
 
@@ -118,5 +134,7 @@ export type R_WorkerOutbound =
       suggestions: string[];
     }
   | { id: number; type: 'suggest-for-misspell'; suggestions: string[] }
+  | { id: number; type: 'check-syntax'; diagnostics: DiagnosticSpan[] }
+  | { id: number; type: 'check-style'; diagnostics: DiagnosticSpan[] }
   | { id: number; type: 'memory-info'; wasmBytes: number; pendingCount: number }
   | { id: number; type: 'error'; for: string; word?: string; error: string };

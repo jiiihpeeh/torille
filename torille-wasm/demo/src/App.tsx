@@ -24,10 +24,16 @@
 import { createSignal, onCleanup, onMount, Show } from 'solid-js';
 import { GutenbergReader } from './GutenbergReader';
 import {
+  builtInGrammarCheckEnabled,
   builtInSpellCheckEnabled,
+  builtInStyleCheckEnabled,
+  grammarCheckEnabled,
+  setGrammarCheckEnabled,
   setSpellCheckEnabled,
+  setStyleCheckEnabled,
   setUseExtension,
   spellCheckEnabled,
+  styleCheckEnabled,
   useExtension,
 } from './spell-check-toggle';
 
@@ -105,6 +111,48 @@ export function App() {
         </button>
         <button
           type="button"
+          class="grammar-toggle"
+          disabled={useExtension()}
+          aria-pressed={builtInGrammarCheckEnabled() ? 'true' : 'false'}
+          title={
+            useExtension()
+              ? 'Built-in grammar check paused while the browser extension is in use'
+              : builtInGrammarCheckEnabled()
+                ? 'Turn the grammar checker OFF for the free-text panel'
+                : 'Turn the grammar checker ON for the free-text panel'
+          }
+          onClick={() => setGrammarCheckEnabled(!grammarCheckEnabled())}
+        >
+          <Show
+            when={builtInGrammarCheckEnabled()}
+            fallback={<>Grammar: <strong>OFF</strong></>}
+          >
+            Grammar: <strong>ON</strong>
+          </Show>
+        </button>
+        <button
+          type="button"
+          class="style-toggle"
+          disabled={useExtension()}
+          aria-pressed={builtInStyleCheckEnabled() ? 'true' : 'false'}
+          title={
+            useExtension()
+              ? 'Built-in style check paused while the browser extension is in use'
+              : builtInStyleCheckEnabled()
+                ? 'Turn the style checker OFF for the free-text panel'
+                : 'Turn the style checker ON for the free-text panel'
+          }
+          onClick={() => setStyleCheckEnabled(!styleCheckEnabled())}
+        >
+          <Show
+            when={builtInStyleCheckEnabled()}
+            fallback={<>Style: <strong>OFF</strong></>}
+          >
+            Style: <strong>ON</strong>
+          </Show>
+        </button>
+        <button
+          type="button"
           class="extension-toggle"
           aria-pressed={useExtension() ? 'true' : 'false'}
           title={
@@ -147,7 +195,8 @@ export function App() {
       </Show>
       <p>
         Click a red word to see suggestions; arrow keys + Enter to pick.
-        All panels share the same wasm worker + suggestion pool.
+        All panels share the same wasm worker + suggestion pool. Grammar and
+        style are opt-in toggles for the free-text panel.
       </p>
 
       <TextPanel
