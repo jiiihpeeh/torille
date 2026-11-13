@@ -10,6 +10,11 @@ scope here; its separate plan is [`PLAN_STYLE.md`](PLAN_STYLE.md). Deferred
 edge cases are listed in `docs/syntax_checker.md`. The analysis layer it
 builds on is `PLAN_SYNTAX.md` and is already landed on the `syntax` branch.
 
+Performance follow-up: [`PLAN_GRAMMAR_STYLE_PERF.md`](PLAN_GRAMMAR_STYLE_PERF.md)
+covers the shared morphology cache, cold-path pruning and sentence-level
+incremental checking. The rule catalogue and severity policy in this plan are
+unchanged.
+
 The remaining work is indexed in §16; each open item has enough detail to be
 implemented without reopening the whole design.
 

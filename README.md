@@ -288,6 +288,10 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
   modularisation plan for the syntax layer, checker and extension content.
 - [`PLAN_STYLE.md`](PLAN_STYLE.md) — the design for a separate opt-in style
   layer: suggestion-only diagnostics, curated tables and a panel UI.
+- [`PLAN_GRAMMAR_STYLE_PERF.md`](PLAN_GRAMMAR_STYLE_PERF.md) — the grammar and
+  style performance plan: one morphology pass with cached case information,
+  cold-path candidate pruning, sentence-level incremental checks and worker
+  chunking.
 - [`docs/harness.md`](docs/harness.md) — the verification harness, baselines
   and the table of known defects.
 - [`docs/hyphenation.md`](docs/hyphenation.md) — patterns, compound adapter,

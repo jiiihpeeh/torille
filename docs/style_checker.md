@@ -135,6 +135,14 @@ Grammar and style results are snapshots. They are cleared on the next edit so
 a stale offset never paints over the wrong word; run the command again to
 refresh them.
 
+## Performance
+
+The layer is on demand and never runs in the keystroke path. A style pass needs
+morphology and sentence spans, not roles or clauses; it shares the per-textarea
+morphology cache with the grammar checker when both are enabled. The measured
+baseline, the cache design and the cold-path pruning plan are in
+[`PLAN_GRAMMAR_STYLE_PERF.md`](../PLAN_GRAMMAR_STYLE_PERF.md).
+
 ## Known limitations
 
 - **Table matching is exact.** A phrase inside a longer word

@@ -8,6 +8,10 @@ This is the separate plan that `PLAN_SYNTAX_CHECKER.md` phase 6E asked for
 before any style rule lands. It does not change the grammar checker, the
 suggestion pipeline or the keystroke path.
 
+Performance follow-up: [`PLAN_GRAMMAR_STYLE_PERF.md`](PLAN_GRAMMAR_STYLE_PERF.md)
+covers the shared morphology cache, cold-path pruning and sentence-level
+incremental checking. The rules and their contract in this plan are unchanged.
+
 The grammar checker answers “is this written Finnish correct?”. The style
 layer answers a different, optional question: “is this sentence needlessly
 repetitive, wordy or clichéd?”. A style finding is never an error. It is an

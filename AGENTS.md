@@ -29,7 +29,10 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
   `syntax_check/` and the extension content script.
 - `PLAN_STYLE.md` — the separate opt-in style-layer plan: curated phrase/word
   tables, repetition and long-sentence metrics, suggestion-only diagnostics and
-  a panel UI. Not implemented.
+  a panel UI. Implemented; see `docs/style_checker.md`.
+- `PLAN_GRAMMAR_STYLE_PERF.md` — the grammar and style performance plan: one
+  shared morphology cache with cached case/number, cold-path candidate pruning,
+  sentence-level incremental checks and worker chunking.
 - `docs/hyphenation.md` — line-break hyphenation: patterns, compound adapter,
   policy, offsets and exceptions. The plan is `PLAN_HYPHENATION.md`.
 - `TODO.md` — known gaps ordered by user-facing impact.
@@ -536,6 +539,7 @@ is gitignored and generated.
 | feminine derivations (`-tar`, `-nna`, `-ska`, `-kko`) | `src/expand/derived_forms/agent.rs` for productive `-tar`; lexical `-nna`/`-ska`/`-kko` as data, not a suffix stripper |
 | the grammar reading model | `src/tags.rs` |
 | grammar diagnostics/corrections | `src/syntax_check/`, `tests/syntax_check.rs`, `PLAN_SYNTAX_CHECKER.md` |
+| grammar/style performance | `src/morphology/`, `src/syntax_check/`, `src/style_check/`, `PLAN_GRAMMAR_STYLE_PERF.md` |
 | hyphenation patterns/policy | `src/hyphenation/`, `data/hyphenation/` |
 | the wasm/browser surface | `torille-wasm/src/`, `extensions/firefox/`, `extensions/chromium/` |
 | verification | `tools/*.py`, `tests/catalogue.rs`, `docs/harness.md` |

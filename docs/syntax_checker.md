@@ -112,6 +112,15 @@ cargo run --release -p torille-tools --bin check_syntax -- "Koira nukkuvat."
 - **CLI:** `check_syntax` prints the analysis and diagnostics for one sentence
   or file.
 
+## Performance
+
+The checker is on demand and must not run in the keystroke path. Its cost is
+dominated by the first morphology pass over a text, not by the rules. The
+current baseline, the shared morphology cache with cached case information,
+the cold-path candidate pruning, the sentence-level incremental cache and the
+worker chunking plan are in
+[`PLAN_GRAMMAR_STYLE_PERF.md`](../PLAN_GRAMMAR_STYLE_PERF.md).
+
 ## Data files
 
 | file | content |
