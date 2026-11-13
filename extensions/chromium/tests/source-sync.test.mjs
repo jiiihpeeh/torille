@@ -23,6 +23,7 @@ for (const rel of [
   'content/context-menu.ts',
   'content/blacklist.ts',
   'content/scanner.ts',
+  'content/underline.ts',
   'content/ignore-ranges.ts',
   'options/index.tsx',
 ]) {

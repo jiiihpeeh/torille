@@ -110,10 +110,24 @@ UTF-16 for the content script, exactly as `check_syntax` does. `severity` is
 always `suggestion`.
 
 The Firefox and Chromium extensions add **Tarkista tyyli** as a separate
-context-menu command. It opens a `Tyyli` panel and never underlines the text by
-default. Findings whose span intersects an ignored range (code, URLs, BBCode)
-are dropped before the panel is shown. The Leptos demo has a separate `Tyyli`
-panel next to `Kielioppi`.
+context-menu command. It opens a `Tyyli` panel and paints blue style underlines
+on the checked text. Findings whose span intersects an ignored range (code,
+URLs, BBCode) are dropped before the panel and the underlines are shown. The
+Leptos demo has a separate `Tyyli` panel next to `Kielioppi`.
+
+Underlines are colour-coded across the three layers:
+
+| layer | colour | line style |
+|---|---|---|
+| spelling | red (configurable on the options page) | wavy |
+| grammar error | orange `#c2410c` | double |
+| grammar warning | amber `#d97706` | dashed |
+| grammar suggestion | amber `#b45309` | dotted |
+| style | blue `#2563eb` | solid |
+
+Grammar and style results are snapshots. They are cleared on the next edit so
+a stale offset never paints over the wrong word; run the command again to
+refresh them.
 
 ## Known limitations
 

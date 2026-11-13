@@ -257,6 +257,30 @@ export function ensureHighlightStyle(): void {
       text-decoration-skip-ink: none;
       cursor: pointer;
     }
+    ::highlight(torille-grammar-error) {
+      text-decoration-line: underline;
+      text-decoration-style: double;
+      text-decoration-color: #c2410c;
+      text-decoration-skip-ink: none;
+    }
+    ::highlight(torille-grammar-warning) {
+      text-decoration-line: underline;
+      text-decoration-style: dashed;
+      text-decoration-color: #d97706;
+      text-decoration-skip-ink: none;
+    }
+    ::highlight(torille-grammar-suggestion) {
+      text-decoration-line: underline;
+      text-decoration-style: dotted;
+      text-decoration-color: #b45309;
+      text-decoration-skip-ink: none;
+    }
+    ::highlight(torille-style) {
+      text-decoration-line: underline;
+      text-decoration-style: solid;
+      text-decoration-color: #2563eb;
+      text-decoration-skip-ink: none;
+    }
   `;
   document.head.appendChild(style);
 }
@@ -282,6 +306,12 @@ export const OVERLAY_CSS = `
     overflow-wrap: break-word;
   }
   .token { display: inline; }
+  .style-suggestion {
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-decoration-color: #2563eb;
+    text-decoration-skip-ink: none;
+  }
   .misspell {
     text-decoration-line: var(--torille-underline-line, underline);
     text-decoration-style: var(--torille-underline-style, wavy);
@@ -291,6 +321,24 @@ export const OVERLAY_CSS = `
     cursor: pointer;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+  }
+  .grammar-suggestion {
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-decoration-color: #b45309;
+    text-decoration-skip-ink: none;
+  }
+  .grammar-warning {
+    text-decoration-line: underline;
+    text-decoration-style: dashed;
+    text-decoration-color: #d97706;
+    text-decoration-skip-ink: none;
+  }
+  .grammar-error {
+    text-decoration-line: underline;
+    text-decoration-style: double;
+    text-decoration-color: #c2410c;
+    text-decoration-skip-ink: none;
   }
   .suggestions {
     position: absolute;

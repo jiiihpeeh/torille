@@ -103,7 +103,10 @@ cargo run --release -p torille-tools --bin check_syntax -- "Koira nukkuvat."
   a floating panel lists diagnostics and applies corrections to textarea,
   input and contenteditable fields. The extension calls
   `check_syntax_with_state` in the wasm worker, which converts UTF-8 byte
-  offsets to UTF-16 before the panel sees them.
+  offsets to UTF-16 before the panel sees them. After the check the same spans
+  are underlined: grammar errors orange double, warnings amber dashed and
+  suggestions amber dotted. Spelling keeps its red wavy underline and style is
+  blue solid; the grammar/style underlines clear on the next edit.
 - **CLI:** `check_syntax` prints the analysis and diagnostics for one sentence
   or file.
 

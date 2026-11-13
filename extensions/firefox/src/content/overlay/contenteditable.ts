@@ -65,6 +65,10 @@ export function createContentEditableOverlay(opts: OverlayOptions): Overlay {
   // Bumped before every analyse call so a stale response can be
   // discarded without overwriting a newer render.
   let renderGen = 0;
+  // Grammar and style results arrive only from the opt-in panel commands.
+  // They are cleared on the next edit, so their offsets never go stale.
+  let grammarDiagnostics: R_SyntaxDiagnostic[] = [];
+  let styleDiagnostics: R_SyntaxDiagnostic[] = [];
 
   function closePopup(): void {
     host.style.display = 'none';
@@ -236,6 +240,87 @@ export function createContentEditableOverlay(opts: OverlayOptions): Overlay {
     return null;
   }
 
+  const DIAGNOSTIC_HIGHLIGHTS = [
+    'torille-grammar-error',
+    'torille-grammar-warning',
+    'torille-grammar-suggestion',
+    'torille-style',
+  ] as const;
+
+  function highlightStore(): { set: (k: string, h: unknown) => void;
+                               delete: (k: string) => void } {
+    return (CSS as unknown as {
+      highlights: { set: (k: string, h: unknown) => void;
+                    delete: (k: string) => void };
+    }).highlights;
+  }
+
+  function setDiagnosticHighlight(name: string, ranges: Range[]): void {
+    const highlights = highlightStore();
+    if (ranges.length === 0) {
+      highlights.delete(name);
+      return;
+    }
+    const highlightCtor = (globalThis as unknown as {
+      Highlight: new (...ranges: AbstractRange[]) => unknown;
+    }).Highlight;
+    highlights.set(name, new highlightCtor(...ranges));
+  }
+
+  function diagnosticRange(start: number, end: number): Range | null {
+    const from = textNodeAt(start);
+    const to = textNodeAt(end);
+    if (!from || !to) return null;
+    const range = document.createRange();
+    try {
+      range.setStart(from.node, from.offset);
+      range.setEnd(to.node, to.offset);
+    } catch (e) {
+      dbg('content', 'diagnostic-highlight:range-failed', { err: String(e) });
+      return null;
+    }
+    return range;
+  }
+
+  function renderDiagnosticHighlights(): void {
+    if (!HIGHLIGHTS_SUPPORTED) return;
+    const grammar: Record<string, Range[]> = {
+      'torille-grammar-error': [],
+      'torille-grammar-warning': [],
+      'torille-grammar-suggestion': [],
+    };
+    for (const diagnostic of grammarDiagnostics) {
+      const range = diagnosticRange(diagnostic.start, diagnostic.end);
+      if (!range) continue;
+      const name = diagnostic.severity === 'error'
+        ? 'torille-grammar-error'
+        : diagnostic.severity === 'warning'
+          ? 'torille-grammar-warning'
+          : 'torille-grammar-suggestion';
+      grammar[name].push(range);
+    }
+    for (const [name, ranges] of Object.entries(grammar)) {
+      setDiagnosticHighlight(name, ranges);
+    }
+
+    const style: Range[] = [];
+    for (const diagnostic of styleDiagnostics) {
+      const range = diagnosticRange(diagnostic.start, diagnostic.end);
+      if (range) style.push(range);
+    }
+    setDiagnosticHighlight('torille-style', style);
+    dbg('content', 'diagnostic-highlights',
+        { grammar: grammarDiagnostics.length, style: styleDiagnostics.length });
+  }
+
+  function clearDiagnosticHighlights(): void {
+    grammarDiagnostics = [];
+    styleDiagnostics = [];
+    if (!HIGHLIGHTS_SUPPORTED) return;
+    const highlights = highlightStore();
+    for (const name of DIAGNOSTIC_HIGHLIGHTS) highlights.delete(name);
+  }
+
   /**
    * Re-analyse the editor and update CSS.highlights. Idempotent;
    * safe to call from any of the watchpoints (input, post-replace).
@@ -390,6 +475,7 @@ export function createContentEditableOverlay(opts: OverlayOptions): Overlay {
   function onDocumentInput(e: Event): void {
     if (e.target === el || (e.target instanceof Node && el.contains(e.target))) {
       dbg('content', 'input:hit', { target: (e.target as Node).nodeName });
+      clearDiagnosticHighlights();
       scheduleCheck();
       if (HIGHLIGHTS_SUPPORTED) void renderMisspellHighlights();
     }
@@ -432,6 +518,14 @@ export function createContentEditableOverlay(opts: OverlayOptions): Overlay {
       }
       return changed;
     },
+    setGrammarDiagnostics(diagnostics: R_SyntaxDiagnostic[]): void {
+      grammarDiagnostics = diagnostics;
+      renderDiagnosticHighlights();
+    },
+    setStyleDiagnostics(diagnostics: R_SyntaxDiagnostic[]): void {
+      styleDiagnostics = diagnostics;
+      renderDiagnosticHighlights();
+    },
     initialRender() {
       if (HIGHLIGHTS_SUPPORTED) void renderMisspellHighlights();
     },
@@ -449,6 +543,7 @@ export function createContentEditableOverlay(opts: OverlayOptions): Overlay {
     setDebug(on: boolean) { workerClient.setDebug(on); },
     destroy() {
       closePopup();
+      clearDiagnosticHighlights();
       restoreNativeSpellcheck(el, nativeAttrs);
       el.removeEventListener('click', onEditorClick);
       document.removeEventListener('input', onDocumentInput, true);

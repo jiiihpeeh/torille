@@ -44,8 +44,9 @@ Do not do any of these in this plan:
   text type is wrong;
 - no automatic rewrite of a subjective sentence. A correction exists only when
   the data table names a safe replacement;
-- no inline red underline in v1. Style findings live in a panel unless a later
-  phase proves that underlining is useful;
+- no always-on underline. Style findings live in a panel; after the explicit
+  check the same spans are also painted blue, and the paint clears on the next
+  edit;
 - no keystroke-path call. The style pass is on demand, like the grammar check;
 - no new runtime data files. The tables are build-time blobs, as with the rest
   of `data/`.
@@ -324,8 +325,9 @@ measurement.
   overlay does. Code blocks, URLs and BBCode never produce style findings.
 - The panel title is `Tyyli`; the labels are the neutral Finnish strings from
   §3. Corrections, when present, use the existing reverse-order edit replay.
-- No inline underline in v1. If a later phase adds one, it is a separate
-  setting and a different colour from the grammar underlines.
+- After the explicit check the same spans are painted blue solid, separate
+  from the spelling red and the grammar amber/orange. The paint is a snapshot:
+  it clears on the next edit and is never part of the keystroke path.
 
 ### 7.3 Leptos demo
 
@@ -536,7 +538,7 @@ updates only the style fixtures.
 
 | risk | mitigation |
 |---|---|
-| Subjective rules annoy users | Opt-in panel only; no inline underline in v1; neutral labels |
+| Subjective rules annoy users | Opt-in panel; underlines only after the explicit check and cleared on edit; neutral labels |
 | A table row is wrong or dated | One row per case; one-line removal; no suffix heuristics |
 | Clean prose becomes noisy | Metric budget; zero table hits on clean rows; a failing rule is not merged |
 | Style duplicates grammar | Ownership table in §1; `style_check` never calls the grammar rules; grammar kinds unchanged |
@@ -552,9 +554,10 @@ updates only the style fixtures.
 1. **Shared primitives.** Should `Severity`/`Correction` move to
    `src/diagnostic.rs` now? Recommendation: not in v1. Share them from
    `syntax_check::diagnostic`; move only when a third consumer appears.
-2. **Panel or inline.** Should style findings ever be underlined? Recommendation:
-   panel only in v1. Revisit after real use, and use a separate setting and
-   colour.
+2. **Panel or inline.** Should style findings ever be underlined? The shipped
+   layer paints blue underlines only after the explicit `Tarkista tyyli`
+   command and clears them on the next edit. A persistent per-site setting is
+   still open.
 3. **Table size.** How large may the curated tables grow? Recommendation: start
    with 20–40 rows each; a linear scan is fine until a few hundred.
 4. **Repetition scope.** Should cross-sentence repetition count? Recommendation:

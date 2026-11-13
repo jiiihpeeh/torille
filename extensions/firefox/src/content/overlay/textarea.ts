@@ -3,6 +3,7 @@ import {
   restoreNativeSpellcheck, saveAndDisableNativeSpellcheck, uiSettings,
 } from '../shared';
 import { isIgnored, maskIgnored } from '../ignore-ranges';
+import { partitionUnderlines, type Underline } from '../underline';
 import { applySyntaxEdits } from '../grammar-panel';
 import { appendSuggestionButtons } from './popup';
 import type { Overlay, OverlayOptions } from './index';
@@ -390,6 +391,98 @@ export function createTextareaOverlay(opts: OverlayOptions): Overlay {
   // rendered (and which suggests-list the popup should display).
   let lastHits: R_AnalyzeHit[] = [];
   let lastHitsText = '';
+  // Grammar and style results are opt-in: they arrive only after the
+  // context-menu command, and they are cleared on the next edit so a stale
+  // offset never paints over the wrong word.
+  let grammarDiagnostics: R_SyntaxDiagnostic[] = [];
+  let styleDiagnostics: R_SyntaxDiagnostic[] = [];
+
+  function paint(text: string, hits: R_AnalyzeHit[]): void {
+    const underlines: Underline[] = [];
+    for (const hit of hits) {
+      underlines.push({ start: hit.start, end: hit.end, layer: 'spelling' });
+    }
+    for (const diagnostic of grammarDiagnostics) {
+      underlines.push({
+        start: diagnostic.start,
+        end: diagnostic.end,
+        layer: 'grammar',
+        severity: diagnostic.severity,
+      });
+    }
+    for (const diagnostic of styleDiagnostics) {
+      underlines.push({
+        start: diagnostic.start,
+        end: diagnostic.end,
+        layer: 'style',
+      });
+    }
+
+    const regions = partitionUnderlines(text.length, underlines);
+    overlay.textContent = '';
+    let misspellCount = 0;
+    for (const region of regions) {
+      const slice = text.slice(region.start, region.end);
+      const span = document.createElement('span');
+      span.className = region.classes.length ? region.classes.join(' ') : 'token';
+      span.textContent = slice;
+      if (region.classes.includes('misspell')) {
+        misspellCount++;
+        span.dataset.word = slice;
+        span.dataset.start = String(region.start);
+        span.dataset.end = String(region.end);
+        if (uiSettings.popupTrigger === 'hover') {
+          span.addEventListener('mouseenter', () => {
+            openPopup(span, slice, region.start, region.end);
+          });
+        } else {
+          span.addEventListener('mousedown', (e: Event) => {
+            e.preventDefault();
+            openPopup(span, slice, region.start, region.end);
+          });
+        }
+        // Hover is meaningless on touch, so a tap always opens the
+        // dropdown regardless of the popup trigger setting.
+        addTapHandler(span, () => {
+          openPopup(span, slice, region.start, region.end);
+        });
+      }
+      overlay.appendChild(span);
+    }
+
+    const overlayText = overlay.textContent ?? '';
+    if (overlayText !== text) {
+      dbg('content', 'render:drift',
+          { textarea: text, overlay: overlayText,
+            lenDiff: overlayText.length - text.length });
+    }
+    // The text may have grown taller than the textarea's viewport. Resize the
+    // mirror before the next paint so scrolled-to lines keep their underlines.
+    syncOverlayHeight();
+    dbg('content', 'render:paint',
+        { regions: regions.length, misspellings: misspellCount,
+          grammar: grammarDiagnostics.length, style: styleDiagnostics.length });
+  }
+
+  function repaintCurrent(): void {
+    const text = input.value;
+    paint(text, lastHitsText === text ? lastHits : []);
+  }
+
+  function clearDiagnosticUnderlines(): void {
+    grammarDiagnostics = [];
+    styleDiagnostics = [];
+    // Remove only the diagnostic classes from the existing spans. Repainting
+    // here would drop the spelling underlines until the debounced render
+    // catches up, which made every keystroke blink.
+    for (const span of overlay.querySelectorAll(
+      '.grammar-error, .grammar-warning, .grammar-suggestion, .style-suggestion',
+    )) {
+      span.classList.remove(
+        'grammar-error', 'grammar-warning', 'grammar-suggestion', 'style-suggestion',
+      );
+    }
+  }
 
   async function render(): Promise<void> {
     const myGen = ++renderGen;
@@ -426,91 +519,13 @@ export function createTextareaOverlay(opts: OverlayOptions): Overlay {
       ? rawHits
       : rawHits.filter((h) => !isIgnored({ start: h.start, end: h.end }, ignored));
 
-    // Only now drop the previous spans: clearing before the await
-    // made every keystroke blink the underlines off and on.
-    overlay.textContent = '';
-
-    // Build a partition of [0, text.length) into non-misspell and
-    // misspell regions from the wasm-returned byte ranges, then
-    // append each as a span. The overlay's textContent ends up
-    // == text exactly, so the wrap matches the textarea's.
-    type Region = { start: number; end: number; misspell: boolean };
-    const regions: Region[] = [];
-    let lastEnd = 0;
-    if (hits) {
-      for (const h of hits) {
-        if (h.start > lastEnd) {
-          regions.push({ start: lastEnd, end: h.start, misspell: false });
-        }
-        regions.push({
-          start: h.start, end: h.end, misspell: true,
-        });
-        lastEnd = h.end;
-      }
-    }
-    if (lastEnd < text.length) {
-      regions.push({ start: lastEnd, end: text.length, misspell: false });
-    }
-
-    // Stash the latest hits at the factory scope so the popup's
-    // click handler can read suggestions without a second wasm
-    // round-trip. Cleared on each render so a stale click on a
-    // previous render's spans doesn't see ghosts.
+    // Stash the latest hits at the factory scope so the popup's click
+    // handler can read suggestions without a second wasm round-trip.
     lastHits = hits;
     lastHitsText = text;
-
-    let misspellCount = 0;
-    for (const r of regions) {
-      const slice = text.slice(r.start, r.end);
-      if (r.misspell) {
-        misspellCount++;
-        const span = document.createElement('span');
-        span.className = 'misspell';
-        span.textContent = slice;
-        span.dataset.word = slice;
-        span.dataset.start = String(r.start);
-        span.dataset.end = String(r.end);
-        if (uiSettings.popupTrigger === 'hover') {
-          span.addEventListener('mouseenter', () => {
-            openPopup(span, slice, r.start, r.end);
-          });
-        } else {
-          span.addEventListener('mousedown', (e: Event) => {
-            e.preventDefault();
-            openPopup(span, slice, r.start, r.end);
-          });
-        }
-        // Hover is meaningless on touch, so a tap always opens the
-        // dropdown regardless of the popup trigger setting.
-        addTapHandler(span, () => {
-          openPopup(span, slice, r.start, r.end);
-        });
-        overlay.appendChild(span);
-      } else {
-        const span = document.createElement('span');
-        span.className = 'token';
-        span.textContent = slice;
-        overlay.appendChild(span);
-      }
-    }
-
-    // Sanity check: the overlay's reconstructed text should equal
-    // the textarea's value, char for char. If it doesn't, the
-    // underline is under a different word than the user sees.
-    const overlayText = overlay.textContent ?? '';
-    if (overlayText !== text) {
-      dbg('content', 'render:drift',
-          { textarea: text, overlay: overlayText,
-            lenDiff: overlayText.length - text.length });
-    }
-    // The text may have grown taller than the textarea's viewport.
-    // Resize the mirror before the next paint so scrolled-to lines keep
-    // their underlines.
-    syncOverlayHeight();
-
+    paint(text, hits);
     dbg('content', 'render:done',
-        { gen: myGen, regions: regions.length, misspellings: misspellCount,
-          hits: hits?.length ?? 0 });
+        { gen: myGen, hits: hits?.length ?? 0 });
   }
 
   function scheduleRender(): void {
@@ -586,7 +601,12 @@ export function createTextareaOverlay(opts: OverlayOptions): Overlay {
     if (openAtPoint(e.clientX, e.clientY)) e.preventDefault();
   }
 
-  input.addEventListener('input', scheduleRender);
+  function onInput(): void {
+    clearDiagnosticUnderlines();
+    scheduleRender();
+  }
+
+  input.addEventListener('input', onInput);
   input.addEventListener('mousedown', onInputMouseDown, true);
   // The overlay can sit under a page editor that stacks above us; on
   // touch the tap lands on the input, so hit-test the mirror rects.
@@ -628,6 +648,14 @@ export function createTextareaOverlay(opts: OverlayOptions): Overlay {
       input.dispatchEvent(new Event('input', { bubbles: true }));
       return true;
     },
+    setGrammarDiagnostics(diagnostics: R_SyntaxDiagnostic[]): void {
+      grammarDiagnostics = diagnostics;
+      repaintCurrent();
+    },
+    setStyleDiagnostics(diagnostics: R_SyntaxDiagnostic[]): void {
+      styleDiagnostics = diagnostics;
+      repaintCurrent();
+    },
     initialRender() { void render(); },
     refresh() { scheduleRender(); },
     setVisible(visible: boolean) {
@@ -652,7 +680,7 @@ export function createTextareaOverlay(opts: OverlayOptions): Overlay {
       }
       closePopup();
       restoreNativeSpellcheck(el, nativeAttrs);
-      input.removeEventListener('input', scheduleRender);
+      input.removeEventListener('input', onInput);
       input.removeEventListener('scroll', onInputScroll);
       input.removeEventListener('mousedown', onInputMouseDown, true);
       window.removeEventListener('scroll', syncBox);

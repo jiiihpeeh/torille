@@ -19,6 +19,8 @@ export interface Overlay {
   overlay: HTMLElement;
   workerClient: WorkerClient;
   applyTextEdits: (edits: R_SyntaxEdit[]) => boolean;
+  setGrammarDiagnostics: (diagnostics: R_SyntaxDiagnostic[]) => void;
+  setStyleDiagnostics: (diagnostics: R_SyntaxDiagnostic[]) => void;
   initialRender: () => void;
   refresh: () => void;
   setVisible: (visible: boolean) => void;

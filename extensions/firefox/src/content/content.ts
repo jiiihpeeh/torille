@@ -132,6 +132,9 @@ createTextboxToggle({
     const text = editorText(input);
     overlay.workerClient.checkSyntaxAsync(text).then((diagnostics) => {
       if (diagnostics === null) return;
+      // The field changed while the check ran; the offsets are stale.
+      if (editorText(input) !== text) return;
+      overlay.setGrammarDiagnostics(diagnostics);
       showGrammarPanel(input, diagnostics, (correction) => {
         // If the field changed after the check, the offsets are stale.
         if (editorText(input) !== text) return false;
@@ -147,6 +150,8 @@ createTextboxToggle({
     const text = editorText(input);
     overlay.workerClient.checkStyleAsync(text).then((diagnostics) => {
       if (diagnostics === null) return;
+      // The field changed while the check ran; the offsets are stale.
+      if (editorText(input) !== text) return;
       // Code blocks, URLs and BBCode are not style prose. Drop any finding
       // that intersects an ignored range, exactly as the spell overlay does.
       const ignored = ignoredRangesFor(text);
@@ -156,6 +161,7 @@ createTextboxToggle({
             (diagnostic) => !isIgnored(
               { start: diagnostic.start, end: diagnostic.end }, ignored),
           );
+      overlay.setStyleDiagnostics(visible);
       showStylePanel(input, visible, (correction) => {
         // If the field changed after the check, the offsets are stale.
         if (editorText(input) !== text) return false;
