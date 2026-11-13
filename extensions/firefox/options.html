@@ -102,7 +102,17 @@
     margin-top: 0.4rem;
   }
   .settings-grid.single {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(7rem, max-content) max-content;
+    justify-content: start;
+    column-gap: 0.8rem;
+    row-gap: 0.9rem;
+  }
+  .settings-grid.single .row {
+    display: contents;
+  }
+  .settings-grid.single .row label,
+  .settings-grid.single .row input {
+    align-self: center;
   }
   .row {
     display: grid;
