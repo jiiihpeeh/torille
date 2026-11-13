@@ -331,7 +331,7 @@ function OptionsApp() {
           />
           <span>Kieliopin alleviivaukset</span>
         </label>
-        <div class="settings-grid single">
+        <div class="settings-grid colors">
           <div class="row">
             <label for="grammar-error-color">Virheen väri</label>
             <input type="color" id="grammar-error-color"
