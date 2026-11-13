@@ -27,10 +27,7 @@ import {
   updateState,
   dispatchCheckKnown,
   dispatchSuggestForMisspell,
-  type Misspell,
 } from './spell-client';
-
-export type { Misspell };
 
 /** Byte range attached to each confirmed misspell so the
  *  underlay renderer knows where to draw the red squiggle. */
@@ -46,6 +43,11 @@ export interface MisspellWithRange {
   /** Known word, wrong capitalization: do not dispatch the slow check. */
   caseOnly?: boolean;
 }
+
+/** A confirmed misspelling: the surface word plus the byte range the
+ *  underlay renderer needs. The pipeline always carries the range, so
+ *  this is the same shape as {@link MisspellWithRange}. */
+export type Misspell = MisspellWithRange;
 
 export type { MisspellRange as MisspellByteRange };
 
@@ -370,7 +372,7 @@ export async function findMisspellings(
       }
     });
   return {
-    hits: hits.map((h) => ({ word: h.word, caseOnly: h.caseOnly })),
+    hits,
     drained,
   };
 }

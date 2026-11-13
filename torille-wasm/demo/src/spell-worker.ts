@@ -205,8 +205,8 @@ async function handleCheck(msg: Extract<R_WorkerInbound, { type: 'check' }>): Pr
   // Cache hit path: same handler, but we never touch the wasm. Log
   // the cache look-up so the timeline shows the path actually taken.
   const cached = checkCacheGet(msg.word);
-  let ok = cached;
-  if (ok === undefined) {
+  let ok: boolean;
+  if (cached === undefined) {
     const t0 = performance.now();
     try {
       ok = bg.check(msg.word);
@@ -222,6 +222,7 @@ async function handleCheck(msg: Extract<R_WorkerInbound, { type: 'check' }>): Pr
                            `-> ok=${ok} (${dt}ms)`);
     checkCacheSet(msg.word, ok);
   } else {
+    ok = cached;
     if (TORILLE_DEBUG) dbg('wasm:check:cache', `id=${msg.id}`,
                            `word=${JSON.stringify(msg.word)}`,
                            `-> ok=${ok} (cached)`);
@@ -958,7 +959,9 @@ const HANDLERS: {
 };
 
 const post = (m: R_WorkerOutbound): void => {
-  if (TORILLE_DEBUG) dbg('out:post', `type=${m.type} id=${m.id}`);
+  if (TORILLE_DEBUG) {
+    dbg('out:post', `type=${m.type} id=${'id' in m ? m.id : 0}`);
+  }
   (self as unknown as { postMessage(m: unknown): void }).postMessage(m);
 };
 
@@ -1044,7 +1047,7 @@ dbgStage(false, 'worker:boot', 'ready posted, onmessage registering');
   (e: MessageEvent<R_WorkerInbound>): void => {
     const msg = e.data;
     if (TORILLE_DEBUG) dbg('in:recv',
-                           `type=${msg.type} id=${msg.id}`,
+                           `type=${msg.type} id=${'id' in msg ? msg.id : 0}`,
                            msg.type === 'check' || msg.type === 'suggest'
                               || msg.type === 'suggest-with-state'
                              ? `word=${JSON.stringify((msg as { word: string }).word)}`

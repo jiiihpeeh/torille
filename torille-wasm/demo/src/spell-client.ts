@@ -586,12 +586,6 @@ export interface Hit {
   suggestions: string[];
 }
 
-/** Just the word, for the underlay renderer's {@link Misspell[]} list. */
-export interface Misspell {
-  word: string;
-  caseOnly?: boolean;
-}
-
 export function createState(): Promise<number> {
   return new Promise<number>((resolve, reject) => {
     const id = nextId++;

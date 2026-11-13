@@ -176,7 +176,7 @@ export function TextPanel(props: TextPanelProps) {
         const myGen = renderGen() + 1;
         setRenderGen(myGen);
         setCandidates([]);
-        setDemoted(new Set());
+        setDemoted(new Set<string>());
         setFocused(null);
         // The fetch returned, so subscribers can fire.
         // The `renderGen() === myGen` guard from the
@@ -195,7 +195,7 @@ export function TextPanel(props: TextPanelProps) {
       // unchanged from the previous render.
       const prevForDiff = lastCandidates;
       setCandidates([]);
-      setDemoted(new Set());
+      setDemoted(new Set<string>());
       const cb: MisspellCallbacks = {
         onMisspellCandidate: (m: MisspellWithRange) => {
           const cur = renderGen();
@@ -351,15 +351,18 @@ export function TextPanel(props: TextPanelProps) {
       // navigation but we don't do today.
       clearState: (): void => {
         const idx = stateIdx();
+        // Drop the old state first so no render can reach it while
+        // the replacement is being created, then install the fresh
+        // index once the worker answers.
+        setStateIdx(-1);
         if (idx >= 0) {
           destroyState(idx);
-          const newIdx = createState();
-          setStateIdx(newIdx);
+          void createState().then((newIdx) => setStateIdx(newIdx));
         }
         setText('');
         setDebouncedText('');
         setCandidates([]);
-        setDemoted(new Set());
+        setDemoted(new Set<string>());
         setFocused(null);
       },
       // Subscribe to render completion. The callback fires
