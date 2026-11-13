@@ -305,6 +305,27 @@ fn main() {
         println!("cargo:rerun-if-changed={}", gz.display());
         gzip::decompress_file(&gz, &out_dir.join(name));
     }
+
+    // The stem-shape mask is optional. `gen_lemma_stem_shapes` writes it, but
+    // a clone without the blob must still build: an empty header disables the
+    // filter (`stem_shape::masks` returns `None`).
+    let shape_gz = precomputed.join("lemma_stem_shape.bin.gz");
+    let shape_raw = out_dir.join("lemma_stem_shape.bin");
+    println!("cargo:rerun-if-changed={}", shape_gz.display());
+    if shape_gz.exists() {
+        gzip::decompress_file(&shape_gz, &shape_raw);
+    } else {
+        eprintln!(
+            "build.rs: {} missing -- the stem-shape filter is disabled; run \
+             `cargo run --release -p torille-tools --bin gen_lemma_stem_shapes`",
+            shape_gz.display(),
+        );
+        let mut empty = Vec::with_capacity(8);
+        empty.extend_from_slice(b"LSS1");
+        empty.extend_from_slice(&0u32.to_le_bytes());
+        std::fs::write(&shape_raw, empty)
+            .unwrap_or_else(|e| panic!("write {}: {e}", shape_raw.display()));
+    }
 }
 
 /// Emit one map uncompressed into `OUT_DIR`, then gzip the committed copy.

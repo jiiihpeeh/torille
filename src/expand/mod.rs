@@ -34,6 +34,7 @@ pub mod negation;
 mod slot;
 mod sound;
 pub(super) mod split;
+pub mod stem_shape;
 
 // The generated, per-class nominal rules. See the `generated-nominals`
 // feature and tools/oracle/extract_class_rules.py --rust. `nominals::dispatch`
@@ -485,20 +486,29 @@ pub(super) fn inflect_paradigms(
     out
 }
 
-/// why the key carries the confidence.
-pub fn inflect_all(
+/// Visits every form the engine generates for `lemma`, in the same order as
+/// [`inflect_all`].
+///
+/// `visit` returns `false` to stop early. The core paradigm is walked raw;
+/// [`inflect_all`] applies its own deduplication, while [`emits_form`] and
+/// [`form_readings`] only need the set or the matching readings. One source
+/// list keeps the three from drifting.
+fn walk_generated(
     lemma: &str,
     inflections: &[Inflection],
     cat: &Catalogues,
     lexicon: Option<&LexiconIndex>,
     pos: PartOfSpeech,
     possessives: bool,
-) -> Vec<Generated> {
-    let mut out = inflect_paradigms(lemma, inflections, cat, lexicon, pos, possessives);
-    let mut seen: HashSet<(String, Confidence, Vec<Tags>)> = out
-        .iter()
-        .map(|f| (f.word.clone(), f.confidence, f.readings.clone()))
-        .collect();
+    mut visit: impl FnMut(Generated) -> bool,
+) -> bool {
+    for inflection in inflections {
+        for form in inflect_in(lemma, *inflection, cat, lexicon, pos, possessives) {
+            if !visit(form) {
+                return false;
+            }
+        }
+    }
     // Degree forms are added for any lemma in the table, whatever part of
     // speech the caller asks under: `paha` is `adjektiivi, substantiivi`
     // and is inflected as a noun in some callers, but it still has
@@ -506,15 +516,13 @@ pub fn inflect_all(
     // derives the quantifier `usea`'s degrees (`useampi`, `usein`), so a
     // lemma outside the adjective tag is not necessarily a no-op here.
     for form in degree_forms(lemma, cat, lexicon) {
-        let key = (form.word.clone(), form.confidence, form.readings.clone());
-        if seen.insert(key) {
-            out.push(form);
+        if !visit(form) {
+            return false;
         }
     }
     for form in numeral_forms(lemma, cat, lexicon) {
-        let key = (form.word.clone(), form.confidence, form.readings.clone());
-        if seen.insert(key) {
-            out.push(form);
+        if !visit(form) {
+            return false;
         }
     }
     // A classless lemma that is a compound with a classed head inflects as
@@ -525,9 +533,8 @@ pub fn inflect_all(
     // lemma has its own paradigm.
     if inflections.is_empty() {
         for form in compound_head_forms(lemma, cat, lexicon, pos, possessives) {
-            let key = (form.word.clone(), form.confidence, form.readings.clone());
-            if seen.insert(key) {
-                out.push(form);
+            if !visit(form) {
+                return false;
             }
         }
         // A classless `-inen` adjective (`kovakorvainen`,
@@ -536,9 +543,8 @@ pub fn inflect_all(
         // cannot reach it, but the whole word inflects as the `-inen`
         // class.
         for form in derived_inen_forms(lemma, cat, lexicon, pos, possessives) {
-            let key = (form.word.clone(), form.confidence, form.readings.clone());
-            if seen.insert(key) {
-                out.push(form);
+            if !visit(form) {
+                return false;
             }
         }
         // A classless verb is a compound with a verb head (`aliarvioida` is
@@ -546,14 +552,81 @@ pub fn inflect_all(
         // the verb case has its own path.
         if matches!(pos, PartOfSpeech::Verb | PartOfSpeech::Unknown) {
             for form in compound_verb_forms(lemma, cat, lexicon) {
-                let key = (form.word.clone(), form.confidence, form.readings.clone());
-                if seen.insert(key) {
-                    out.push(form);
+                if !visit(form) {
+                    return false;
                 }
             }
         }
     }
+    true
+}
+
+/// The forms of `lemma`, deduplicated.
+pub fn inflect_all(
+    lemma: &str,
+    inflections: &[Inflection],
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+    pos: PartOfSpeech,
+    possessives: bool,
+) -> Vec<Generated> {
+    let mut out: Vec<Generated> = Vec::new();
+    let mut seen: HashSet<(String, Confidence, Vec<Tags>)> = HashSet::new();
+    walk_generated(
+        lemma,
+        inflections,
+        cat,
+        lexicon,
+        pos,
+        possessives,
+        |form| {
+            let key = (form.word.clone(), form.confidence, form.readings.clone());
+            if seen.insert(key) {
+                out.push(form);
+            }
+            true
+        },
+    );
     out
+}
+
+/// The readings of the one form of `lemma` that spells `surface`.
+///
+/// This is the reading-extraction counterpart to [`emits_form`]: the caller
+/// already knows the base emits the surface and only needs the readings, so
+/// it must not pay [`inflect_all`]'s full-paradigm `HashSet` of cloned words
+/// and readings. Every matching reading is kept and deduplicated with
+/// [`crate::tags::add_reading`], because a surface can be several forms of
+/// one lemma (`appi` is class `7*B` and `5*B`).
+pub fn form_readings(
+    lemma: &str,
+    inflections: &[Inflection],
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+    pos: PartOfSpeech,
+    possessives: bool,
+    surface: &str,
+) -> Option<Vec<Tags>> {
+    let mut readings: Vec<Tags> = Vec::new();
+    let mut found = false;
+    walk_generated(
+        lemma,
+        inflections,
+        cat,
+        lexicon,
+        pos,
+        possessives,
+        |form| {
+            if form.word == surface {
+                found = true;
+                for reading in form.readings {
+                    crate::tags::add_reading(&mut readings, reading);
+                }
+            }
+            true
+        },
+    );
+    found.then_some(readings)
 }
 
 /// The key of [`emits_form`]'s paradigm cache: the lemma, its inflections,
@@ -589,9 +662,24 @@ pub fn emits_form(
     word: &str,
 ) -> bool {
     if inflections.is_empty() {
-        return inflect_all(lemma, inflections, cat, lexicon, pos, possessives)
-            .iter()
-            .any(|f| f.word == word);
+        let mut hit = false;
+        walk_generated(
+            lemma,
+            inflections,
+            cat,
+            lexicon,
+            pos,
+            possessives,
+            |form| {
+                if form.word == word {
+                    hit = true;
+                    false
+                } else {
+                    true
+                }
+            },
+        );
+        return hit;
     }
     // The stem-map gates verify the same base once per token, and a page has
     // many case forms of one lemma (`talo`, `talossa`, `talolle`, ...). Each
@@ -618,17 +706,18 @@ pub fn emits_form(
         return set.contains(word);
     }
     let mut set: HashSet<String> = HashSet::new();
-    for inflection in inflections {
-        for form in inflect_in(lemma, *inflection, cat, lexicon, pos, possessives) {
+    walk_generated(
+        lemma,
+        inflections,
+        cat,
+        lexicon,
+        pos,
+        possessives,
+        |form| {
             set.insert(form.word);
-        }
-    }
-    for form in degree_forms(lemma, cat, lexicon) {
-        set.insert(form.word);
-    }
-    for form in numeral_forms(lemma, cat, lexicon) {
-        set.insert(form.word);
-    }
+            true
+        },
+    );
     let hit = set.contains(word);
     let cached = std::rc::Rc::new(set);
     CACHE.with_borrow_mut(|cache| {
@@ -2591,6 +2680,56 @@ mod tests {
                 );
                 assert_eq!(listed, emitted, "{lemma_word} / {word}");
             }
+        }
+    }
+
+    /// `form_readings` must return exactly the readings `inflect_all` gives for
+    /// the same surface, across a noun, an adjective degree, a verb, a
+    /// possessive and a classless compound.
+    #[test]
+    fn form_readings_agrees_with_inflect_all() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let index = LexiconIndex::new(&lexicon);
+        let cases: &[(&str, &str, bool)] = &[
+            ("talo", "talossa", false),
+            ("puhdas", "puhtaampi", false),
+            ("huomata", "huomasi", false),
+            ("talo", "talossani", true),
+            ("pariskunta", "pariskunnan", false),
+        ];
+        for &(lemma_word, word, possessives) in cases {
+            let lemma = lexicon
+                .iter()
+                .find(|l| l.word == lemma_word)
+                .unwrap_or_else(|| panic!("{lemma_word} is not in the lexicon"));
+            let pos = PartOfSpeech::inflecting_reading(lemma.part_of_speech);
+            let mut expected: Vec<Tags> = Vec::new();
+            for form in inflect_all(
+                lemma.word,
+                &lemma.inflections,
+                &cat,
+                Some(&index),
+                pos,
+                possessives,
+            ) {
+                if form.word == word {
+                    for reading in form.readings {
+                        crate::tags::add_reading(&mut expected, reading);
+                    }
+                }
+            }
+            let got = form_readings(
+                lemma.word,
+                &lemma.inflections,
+                &cat,
+                Some(&index),
+                pos,
+                possessives,
+                word,
+            )
+            .unwrap_or_else(|| panic!("{lemma_word} / {word} not found"));
+            assert_eq!(got, expected, "{lemma_word} / {word}");
         }
     }
 

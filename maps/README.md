@@ -103,6 +103,7 @@ one, or `map_gz compress|decompress` for a manual round-trip.
 | `feminine_nouns.bin.gz` | `gen_derived` | `src/expand/check_normal.rs` | lexical `-nna` feminine surface -> masculine base (`pormestarinna` -> `pormestari`) |
 | `lexical_adverbs.bin.gz` | `build.rs` | `src/expand/check_normal.rs` | established one-word adverb -> base (`alhaaltapäin` -> `alhaalta`) |
 | `pronoun_forms.bin.gz` | `gen_derived` → `tools/src/der1.rs` | `src/expand/check_normal.rs` | the closed pronoun paradigm |
+| `lemma_stem_shape.bin.gz` | `gen_lemma_stem_shapes` → raw `LSS1` u64 array | `src/expand/stem_shape.rs` | per-lemma first-three-character mask for the recognition walks |
 
 ## How to regenerate
 
@@ -119,6 +120,7 @@ cannot link the engine it is building):
 
 ```bash
 cargo run --release -p torille-tools --bin gen_derived
+cargo run --release -p torille-tools --bin gen_lemma_stem_shapes
 ```
 
 The oracle-derived table needs the materialised Kotus database:
@@ -132,6 +134,7 @@ After regenerating, run the drift checks:
 ```bash
 cargo test --release -p torille --lib the_blobs_match_compute
 cargo test --release -p torille --lib the_pronoun_blob
+cargo test --release -p torille --lib the_mask_accepts_real_forms
 ```
 
 ## Formats

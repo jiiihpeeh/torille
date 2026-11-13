@@ -51,12 +51,63 @@ pub enum Depth {
     Unknown,
 }
 
+impl Depth {
+    /// Every depth, in the order the counters are stored.
+    pub const ALL: [Depth; 9] = [
+        Depth::Direct,
+        Depth::StemMap,
+        Depth::HeadsTails,
+        Depth::Prefix,
+        Depth::Clitic,
+        Depth::Possessive,
+        Depth::Compound,
+        Depth::ProperName,
+        Depth::Unknown,
+    ];
+
+    /// A stable index into [`CacheStats::by_depth`].
+    pub fn index(self) -> usize {
+        match self {
+            Depth::Direct => 0,
+            Depth::StemMap => 1,
+            Depth::HeadsTails => 2,
+            Depth::Prefix => 3,
+            Depth::Clitic => 4,
+            Depth::Possessive => 5,
+            Depth::Compound => 6,
+            Depth::ProperName => 7,
+            Depth::Unknown => 8,
+        }
+    }
+
+    /// A short label for the performance harness.
+    pub fn label(self) -> &'static str {
+        match self {
+            Depth::Direct => "direct",
+            Depth::StemMap => "stem_map",
+            Depth::HeadsTails => "heads_tails",
+            Depth::Prefix => "prefix",
+            Depth::Clitic => "clitic",
+            Depth::Possessive => "possessive",
+            Depth::Compound => "compound",
+            Depth::ProperName => "proper_name",
+            Depth::Unknown => "unknown",
+        }
+    }
+}
+
 /// Cache counters for the performance harness and the wasm probe.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct CacheStats {
     pub words: usize,
     pub hits: u64,
     pub misses: u64,
+    /// First resolutions of a surface, by the [`Depth`] that named it.
+    pub by_depth: [u64; Depth::ALL.len()],
+    /// Surfaces upgraded from a shallow entry by [`MorphologyCache::resolve_deep`].
+    pub deep_upgrades: u64,
+    /// Capitalized tokens resolved through the proper-name table.
+    pub proper_names: u64,
 }
 
 /// The morphology of one surface word.
@@ -159,6 +210,12 @@ pub struct MorphologyCache {
     deep: std::collections::HashSet<String>,
     hits: u64,
     misses: u64,
+    /// First resolutions of a surface, by the [`Depth`] that named it.
+    by_depth: [u64; Depth::ALL.len()],
+    /// Surfaces upgraded from a shallow entry by [`Self::resolve_deep`].
+    deep_upgrades: u64,
+    /// Capitalized tokens resolved through the proper-name table.
+    proper_names: u64,
 }
 
 /// The cap on resolved words. One entry holds a few `Tags` and lemma strings;
@@ -176,6 +233,9 @@ impl MorphologyCache {
         self.deep.clear();
         self.hits = 0;
         self.misses = 0;
+        self.by_depth = [0; Depth::ALL.len()];
+        self.deep_upgrades = 0;
+        self.proper_names = 0;
     }
 
     pub fn len(&self) -> usize {
@@ -191,12 +251,24 @@ impl MorphologyCache {
             words: self.words.len(),
             hits: self.hits,
             misses: self.misses,
+            by_depth: self.by_depth,
+            deep_upgrades: self.deep_upgrades,
+            proper_names: self.proper_names,
         }
     }
 
     /// The cached entry for a lowercased surface, without resolving it.
     pub fn get(&self, lower: &str) -> Option<&Arc<WordInfo>> {
         self.words.get(lower)
+    }
+
+    /// Count a capitalized token resolved through the proper-name table.
+    ///
+    /// The overlay is token-specific (a name's reading depends on the
+    /// capitalization), so it is not inserted into the lowercased cache; the
+    /// counter is what keeps it visible in the harness.
+    pub(crate) fn note_proper_name(&mut self) {
+        self.proper_names += 1;
     }
 
     /// Resolve one lowercased surface, sharing the cached entry.
@@ -212,6 +284,7 @@ impl MorphologyCache {
         }
         self.misses += 1;
         let info = Arc::new(resolve_word(lexicon, cat, lower));
+        self.by_depth[info.depth.index()] += 1;
         if self.words.len() >= MORPHOLOGY_CACHE_LIMIT {
             self.words.clear();
         }
@@ -237,7 +310,13 @@ impl MorphologyCache {
             return Arc::clone(info);
         }
         self.misses += 1;
+        let was_cached = self.words.contains_key(lower);
         let info = Arc::new(resolve_word_slow(lexicon, cat, lower));
+        if was_cached {
+            self.deep_upgrades += 1;
+        } else {
+            self.by_depth[info.depth.index()] += 1;
+        }
         if !info.readings.is_empty() {
             if self.words.len() >= MORPHOLOGY_CACHE_LIMIT {
                 self.words.clear();
@@ -287,6 +366,7 @@ pub fn analyze_morphology(tokens: &[Token], cache: &mut MorphologyCache) -> Morp
             && token.is_capitalised()
             && let Some(name) = crate::expand::proper_names::lemma(&token.text)
         {
+            cache.note_proper_name();
             Arc::new(proper_name_word(
                 &info,
                 &token.text,
@@ -422,6 +502,16 @@ fn strip_possessive(lower: &str) -> Option<(&str, Possessive)> {
         }
     }
     None
+}
+
+/// Whether `lower` carries a possessive or clitic suffix.
+///
+/// This is only a performance gate for reading extraction: a false positive
+/// costs the extra possessive column, while a false negative would lose a
+/// form, so over-approximating is safe.
+fn surface_carries_suffix(lower: &str) -> bool {
+    strip_possessive(lower).is_some()
+        || !crate::expand::clitic::strip_all_clitics(lower).1.is_empty()
 }
 
 /// The cheap sources: a direct lemma, or the base named by the stem maps.
@@ -1049,7 +1139,8 @@ fn cheap_base(lower: &str) -> Option<String> {
 /// Returns true when the base emits the exact surface. The base search has
 /// already decided which lemmas can produce it; this is the only inflection
 /// the syntax path does, so the suggestion pool's full form list is never
-/// built.
+/// built. `possessives` is paid only when the surface actually carries a
+/// possessive or clitic; the host path has already stripped one otherwise.
 fn add_forms_from_lemma(
     base: &str,
     inflections: &[crate::kotus::Inflection],
@@ -1062,28 +1153,32 @@ fn add_forms_from_lemma(
     // Class 50/51 compounds need the lexicon index to split their parts; the
     // wrapper is free (two precomputed orders over the embedded lexicon).
     let index = crate::expand::LexiconIndex::new(crate::kotus::lemmas());
-    let mut exact = false;
-    for form in crate::expand::inflect_all(base, inflections, cat, Some(&index), pos, true) {
-        if form.word != lower {
-            continue;
+    let Some(readings) = crate::expand::form_readings(
+        base,
+        inflections,
+        cat,
+        Some(&index),
+        pos,
+        surface_carries_suffix(lower),
+        lower,
+    ) else {
+        return false;
+    };
+    if out.lemma.is_none() {
+        out.lemma = Some(base.to_string());
+    }
+    out.push_lemma(base);
+    for reading in readings {
+        let tags = reading_with_pos(reading, Some(pos));
+        add_reading(&mut out.readings, tags);
+        if is_finite_predicate(&tags) {
+            out.verb_lemma = Some(base.to_string());
         }
-        exact = true;
-        if out.lemma.is_none() {
-            out.lemma = Some(base.to_string());
-        }
-        out.push_lemma(base);
-        for reading in &form.readings {
-            let tags = reading_with_pos(*reading, Some(pos));
-            add_reading(&mut out.readings, tags);
-            if is_finite_predicate(&tags) {
-                out.verb_lemma = Some(base.to_string());
-            }
-            if is_nominal_pos(tags.part_of_speech) {
-                out.nominal_lemma = Some(base.to_string());
-            }
+        if is_nominal_pos(tags.part_of_speech) {
+            out.nominal_lemma = Some(base.to_string());
         }
     }
-    exact
+    true
 }
 
 /// Inflect `base` and add the readings for `lower`.
@@ -1123,13 +1218,18 @@ fn add_readings_from_base_impl(
     let inflections: Vec<_> = row.inflections().collect();
     let index = crate::expand::LexiconIndex::new(crate::kotus::lemmas());
     let mut matched = false;
-    for form in crate::expand::inflect_all(base, &inflections, cat, Some(&index), pos, true) {
-        if form.word != lower {
-            continue;
-        }
+    if let Some(found) = crate::expand::form_readings(
+        base,
+        &inflections,
+        cat,
+        Some(&index),
+        pos,
+        surface_carries_suffix(lower),
+        lower,
+    ) {
         matched = true;
-        for reading in &form.readings {
-            add_reading(readings, reading_with_pos(*reading, Some(pos)));
+        for reading in found {
+            add_reading(readings, reading_with_pos(reading, Some(pos)));
         }
     }
     if !matched && fallback {

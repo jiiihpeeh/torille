@@ -14,7 +14,7 @@
 use std::time::Instant;
 
 use torille::check::check_all_with_cache;
-use torille::morphology::{MorphologyCache, analyze_morphology};
+use torille::morphology::{CacheStats, Depth, MorphologyCache, analyze_morphology};
 use torille::syntax::analyze_syntax;
 use torille::syntax_check::check_analysis;
 
@@ -96,6 +96,24 @@ fn ms(elapsed: std::time::Duration) -> f64 {
 fn median(mut values: Vec<f64>) -> f64 {
     values.sort_by(f64::total_cmp);
     values[values.len() / 2]
+}
+
+/// `direct=3 stem_map=12 ...` for the text report.
+fn depths(stats: &CacheStats) -> String {
+    Depth::ALL
+        .iter()
+        .map(|depth| format!("{}={}", depth.label(), stats.by_depth[depth.index()]))
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+/// The same counters as a JSON object.
+fn depths_json(stats: &CacheStats) -> String {
+    Depth::ALL
+        .iter()
+        .map(|depth| format!("\"{}\":{}", depth.label(), stats.by_depth[depth.index()]))
+        .collect::<Vec<_>>()
+        .join(",")
 }
 
 fn main() {
@@ -184,7 +202,9 @@ fn main() {
              \"rules_ms\":{:.2},\"style_ms\":{:.2},\"all_ms\":{:.2},\
              \"style_fresh_cache_ms\":{:.2},\
              \"cold_cache\":{{\"words\":{},\"hits\":{},\"misses\":{}}},\
-             \"warm_cache\":{{\"words\":{},\"hits\":{},\"misses\":{}}}}}",
+             \"cold_depths\":{{{}}},\"cold_deep_upgrades\":{},\"cold_proper_names\":{},\
+             \"warm_cache\":{{\"words\":{},\"hits\":{},\"misses\":{}}},\
+             \"warm_depths\":{{{}}},\"warm_deep_upgrades\":{},\"warm_proper_names\":{}}}",
             args.file,
             words,
             text.len(),
@@ -200,9 +220,15 @@ fn main() {
             cold_stats.words,
             cold_stats.hits,
             cold_stats.misses,
+            depths_json(&cold_stats),
+            cold_stats.deep_upgrades,
+            cold_stats.proper_names,
             stats.words,
             stats.hits,
             stats.misses,
+            depths_json(&stats),
+            stats.deep_upgrades,
+            stats.proper_names,
         );
         return;
     }
@@ -223,6 +249,12 @@ fn main() {
     println!(
         "cold cache: {} words, {} hits, {} misses",
         cold_stats.words, cold_stats.hits, cold_stats.misses
+    );
+    println!(
+        "depth counts: {} (deep upgrades {}, proper names {})",
+        depths(&cold_stats),
+        cold_stats.deep_upgrades,
+        cold_stats.proper_names
     );
     println!(
         "warm cache: {} words, {} hits, {} misses",

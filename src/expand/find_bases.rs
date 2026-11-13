@@ -761,6 +761,11 @@ fn lemma_emit(
     pos: PartOfSpeech,
     possessives: bool,
 ) -> bool {
+    // The stem-shape mask is a proof that this candidate cannot emit the
+    // surface; a `true` still goes through the full paradigm probe.
+    if !super::stem_shape::might_emit(lemma, word) {
+        return false;
+    }
     super::emits_form(
         lemma.word,
         &lemma.inflections,
