@@ -42,7 +42,9 @@ fn compound_head_row(head: &str) -> Option<EmbeddedLemma> {
         let mut bound = String::with_capacity(head.len() + '\u{2011}'.len_utf8());
         bound.push('\u{2011}');
         bound.push_str(head);
-        lexicon.get(&bound)
+        lexicon
+            .get(&bound)
+            .or_else(|| lexicon.get(&format!("-{head}")))
     })
 }
 

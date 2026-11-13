@@ -527,7 +527,9 @@ compound rule.
 The runtime fix is in place: `modifier_is_known` accepts the combining `-s`
 form (`pari` -> `paris-`), and `resolve_from_base_surface` gives a classless
 base the head's inflections before verifying the surface. `pariskunnan` now
-resolves as `pariskunta`, genitive singular, in ~30 ms instead of ~1 s.
+resolves as `pariskunta`, genitive singular, in ~30 ms instead of ~1 s. The
+bound-head lookup also tries the ASCII leading hyphen, not only U+2011, so
+`epäsuhta` (`epä` + `-suhta`) has a full paradigm.
 
 The general fix is a **generated** table, not a source edit:
 

@@ -2416,6 +2416,22 @@ mod tests {
         }
     }
 
+    #[test]
+    fn a_classless_compound_inflects_by_an_ascii_bound_head() {
+        // `epäsuhta` = `epä` + `-suhta`. The CSV writes this bound head with
+        // an ASCII leading hyphen, unlike the U+2011 rows; the head lookup must
+        // try both spellings or the whole paradigm is missing.
+        let cat = cat();
+        let forms = inflect_all("epäsuhta", &[], &cat, None, PartOfSpeech::Noun, true);
+        let words: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
+        for want in ["epäsuhdan", "epäsuhtaa"] {
+            assert!(
+                words.contains(&want),
+                "epäsuhta does not inflect to {want}"
+            );
+        }
+    }
+
     /// A numeral hundred inflects both members: `kaksisataa` is `kaksi` +
     /// `sata`, with the first in the case and the head in the same case
     /// (`kahdensadan`), except nominative (`kaksi` + `sataa`).
