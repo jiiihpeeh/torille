@@ -319,7 +319,7 @@ function OptionsApp() {
       <section class="card">
         <h2>Kieliopin ja tyylin alleviivaukset</h2>
         <p class="lead">
-          Nämä alleviivaukset piirretään vasta <strong>Tarkista kielioppi</strong>- tai
+          Nämä alleviivaukset piirretään vasta <strong>Tarkista kielioppi</strong>- tai{' '}
           <strong>Tarkista tyyli</strong> -komennon jälkeen. Ne tyhjenevät, kun tekstiä muokataan.
         </p>
         <label class="toggle">
@@ -331,7 +331,7 @@ function OptionsApp() {
           />
           <span>Kieliopin alleviivaukset</span>
         </label>
-        <div class="settings-grid">
+        <div class="settings-grid single">
           <div class="row">
             <label for="grammar-error-color">Virheen väri</label>
             <input type="color" id="grammar-error-color"
@@ -360,7 +360,7 @@ function OptionsApp() {
           />
           <span>Tyylin alleviivaukset</span>
         </label>
-        <div class="settings-grid">
+        <div class="settings-grid single">
           <div class="row">
             <label for="style-color">Tyylin väri</label>
             <input type="color" id="style-color"
