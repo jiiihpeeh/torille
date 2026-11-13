@@ -589,6 +589,16 @@ pub(crate) fn modifier_is_known(modifier: &str) -> bool {
     {
         return true;
     }
+    // A combining `-s` stem of a known modifier: `pari` -> `paris-`
+    // (`pariskunta`). The `-nen`/`-as` rules above cover their own families;
+    // this is the general shortened form the sanalista uses in a few
+    // classless compounds.
+    if let Some(stem) = bare.strip_suffix('s')
+        && !stem.is_empty()
+        && modifier_is_known(stem)
+    {
+        return true;
+    }
     is_bound_prefix(bare)
 }
 

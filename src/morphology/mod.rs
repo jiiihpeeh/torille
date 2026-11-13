@@ -574,7 +574,13 @@ fn resolve_from_base_surface(surface: &str, base: &str, cat: &Catalogues) -> Opt
         .first()
         .copied()
         .unwrap_or(PartOfSpeech::Unknown);
-    let inflections: Vec<_> = row.inflections().collect();
+    // A classless compound row has no class of its own; its head supplies
+    // one. `pariskunta` is `paris` + `kunta`, and `kunta` is class 10*J.
+    let inflections: Vec<_> = if row.inflections().next().is_none() {
+        crate::expand::head_inflections(base, cat, None)?
+    } else {
+        row.inflections().collect()
+    };
     let mut out = WordInfo {
         lemma: Some(base.to_string()),
         ..WordInfo::default()
@@ -1236,6 +1242,18 @@ mod tests {
         let info = morphology.word(0).expect("talossa resolved");
         assert_eq!(info.lemma(), Some("talo"));
         assert_eq!(info.case(), Some(Case::Inessive));
+        assert_eq!(info.number(), Some(Number::Singular));
+        assert_eq!(info.depth(), Depth::StemMap);
+    }
+
+    #[test]
+    fn a_classless_compound_uses_its_head_class() {
+        // `pariskunta` has no class of its own in the sanalista; `kunta` is
+        // 10*J and `paris` is the combining `-s` form of `pari`.
+        let (morphology, _) = analyzed("pariskunnan");
+        let info = morphology.word(0).expect("pariskunnan resolved");
+        assert_eq!(info.lemma(), Some("pariskunta"));
+        assert_eq!(info.case(), Some(Case::Genitive));
         assert_eq!(info.number(), Some(Number::Singular));
         assert_eq!(info.depth(), Depth::StemMap);
     }

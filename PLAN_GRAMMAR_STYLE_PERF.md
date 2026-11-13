@@ -509,6 +509,42 @@ is part of the product.
   separately in Phase 0; if it is material, warm those statics at worker boot
   (`warm_caches`) so the first user check does not pay it.
 
+### 4.7 Classless rows: a derived head table, not source edits
+
+A classless sanalista row is not a word missing a class; it is Kotus saying
+“this is a compound and declines like its final component”. That empty field
+is read by `compound::analyze`, `inflect_all` (`compound_head_forms`),
+`head_class` and the syntax resolver. Filling the CSV with the head's class
+would make those paths treat the word as simple, lose the modifier/head split,
+and hide the cases where the head is bound, absent, or has several classes.
+
+It would also not store the split. `pariskunta` is `paris` + `kunta`; the
+class belongs to `kunta` (10*J), but the modifier is the combining `-s` form of
+`pari`, and only the split says where the head begins. A class on its own
+would make the whole string align against `kunta` by suffix luck, not by the
+compound rule.
+
+The runtime fix is in place: `modifier_is_known` accepts the combining `-s`
+form (`pari` -> `paris-`), and `resolve_from_base_surface` gives a classless
+base the head's inflections before verifying the surface. `pariskunnan` now
+resolves as `pariskunta`, genitive singular, in ~30 ms instead of ~1 s.
+
+The general fix is a **generated** table, not a source edit:
+
+- `tools/src/bin/gen_classless_heads.rs` walks the 56k classless rows and
+  writes `maps/classless_heads.bin.gz`: lemma row -> head split + head
+  `Inflection` list, or an “unresolved/ambiguous” marker.
+- `head_inflections` and `compound_head_forms` probe the table first and fall
+  back to the current `classless_heads` walk for a row the generator could not
+  resolve.
+- The source CSV stays exactly Kotus. The table is regenerated and versioned
+  like `maps/derived_*`; the staleness test compares it against
+  `head_inflections` for a sample.
+- Estimated size: 56k rows × a few bytes, well under 200 KB compressed.
+
+This is the place to “fill the class”: in a derived map that still knows the
+split, not in the source column that means “compound”.
+
 ## 5. Making the warm path cheap
 
 Warm morphology is already 4–7 ms; the rule pass is the larger warm cost. The
