@@ -55,17 +55,37 @@ function replaceText(el: HTMLElement, text: string): void {
   el.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
-function countMisspells(): number {
+function countShadow(selector: string): number {
   let n = 0;
   for (const host of document.querySelectorAll('.torille-overlay-host')) {
-    n += host.shadowRoot?.querySelectorAll('.misspell').length ?? 0;
+    n += host.shadowRoot?.querySelectorAll(selector).length ?? 0;
   }
+  return n;
+}
+
+function countHighlight(name: string): number {
   const highlights = (CSS as unknown as {
     highlights?: { get?: (name: string) => { size?: number } | undefined };
   }).highlights;
-  const hl = highlights?.get?.('torille-misspell');
-  if (hl && typeof hl.size === 'number') n += hl.size;
-  return n;
+  const hl = highlights?.get?.(name);
+  return hl && typeof hl.size === 'number' ? hl.size : 0;
+}
+
+function countMisspells(): number {
+  return countShadow('.misspell') + countHighlight('torille-misspell');
+}
+
+function countGrammarUnderlines(): number {
+  return countShadow(
+    '.grammar-error, .grammar-warning, .grammar-suggestion',
+  ) +
+    countHighlight('torille-grammar-error') +
+    countHighlight('torille-grammar-warning') +
+    countHighlight('torille-grammar-suggestion');
+}
+
+function countStyleUnderlines(): number {
+  return countShadow('.style-suggestion') + countHighlight('torille-style');
 }
 
 function AutoTextarea(props: {
@@ -124,6 +144,8 @@ function App() {
   const [inputs, setInputs] = createSignal(0);
   const [hosts, setHosts] = createSignal(0);
   const [misses, setMisses] = createSignal(0);
+  const [grammar, setGrammar] = createSignal(0);
+  const [style, setStyle] = createSignal(0);
   const [debug, setDebug] = createSignal(false);
   const [cover, setCover] = createSignal(false);
   const [log, setLog] = createSignal<string[]>([]);
@@ -218,6 +240,8 @@ function App() {
           .length,
       );
       setMisses(countMisspells());
+      setGrammar(countGrammarUnderlines());
+      setStyle(countStyleUnderlines());
       try {
         setDebug(localStorage.getItem('torille-debug') === '1');
       } catch {
@@ -253,7 +277,10 @@ function App() {
         overlay with red wavy underlines under misspellings (try{' '}
         <code>kirjoitusvirhee</code>, <code>taloo</code>, <code>koirra</code>,{' '}
         <code>xyzzy</code>). Click an underlined word to see suggestions.
-        Password and number fields should be left alone.
+        Password and number fields should be left alone. Right-click a box and
+        choose <strong>Tarkista kielioppi</strong> or{' '}
+        <strong>Tarkista tyyli</strong> for the orange grammar and blue style
+        underlines; section 3 has examples.
       </div>
 
       <div class="note">
@@ -350,7 +377,52 @@ Kymmenes rivi.`}
         </Card>
       </div>
 
-      <h2>3. Layout edge cases</h2>
+      <h2>3. Grammar and style diagnostics</h2>
+      <div class="note">
+        Right-click inside a box and choose <strong>Tarkista kielioppi</strong>{' '}
+        or <strong>Tarkista tyyli</strong>. Grammar underlines are orange
+        (error: double, warning: dashed, suggestion: dotted); style is blue.
+        They are cleared on the next edit. The options page controls the
+        colours and can hide either layer. The status bar counts the painted
+        grammar and style spans. “Fill every box” overwrites these examples;
+        reload the page to restore them.
+      </div>
+      <div class="grid">
+        <Card label="Grammar: agreement (errors)">
+          <AutoTextarea value="Koira nukkuvat. Minä menee kotiin." />
+        </Card>
+        <Card label="Grammar: rection">
+          <AutoTextarea value="Pidän sinä. Menen koulu." />
+        </Card>
+        <Card label="Grammar: object case">
+          <AutoTextarea value="En lue kirja. Luin autoja loppuun." />
+        </Card>
+        <Card label="Grammar: comma and question mark">
+          <AutoTextarea value="Kun hän tuli söin. Onko sinulla kirjaa" />
+        </Card>
+        <Card label="Grammar: list punctuation">
+          <AutoTextarea value="Ostin omenoita, appelsiineja,, ja banaaneja." />
+        </Card>
+        <Card label="Style: phrase and repetition">
+          <AutoTextarea value="Tällä hetkellä tilanne on rauhallinen. Tässä lauseessa asia toistuu ja asia jää mieleen." />
+        </Card>
+        <Card label="Style: colloquial word">
+          <AutoTextarea value="Systeemi toimii." />
+        </Card>
+        <Card label="Style: long sentence (36 words)">
+          <AutoTextarea value="Hän on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on." />
+        </Card>
+        <Card label="Mixed spelling + grammar + style">
+          <AutoTextarea value="Tällä hetkellä koira nukkuvat ja koirra juoksee. Asia toistuu ja asia jää mieleen." />
+        </Card>
+        <Card label="Contenteditable: grammar + style">
+          <div class="editable" contentEditable={true}>
+            Koira nukkuvat. Tällä hetkellä asia on hyvä.
+          </div>
+        </Card>
+      </div>
+
+      <h2>4. Layout edge cases</h2>
       <div class="grid">
         <Card label="Inside a flex row with a button">
           <div class="flex-row">
@@ -464,7 +536,7 @@ Rivi 15.`}
         </Card>
       </div>
 
-      <h2>4. Dynamic boxes</h2>
+      <h2>5. Dynamic boxes</h2>
       <p class="muted">
         These are created after page load, like an SPA or a comment box that
         mounts on click. The extension's MutationObserver should attach to each
@@ -503,7 +575,7 @@ Rivi 15.`}
         <For each={boxes()}>{(box) => <DynamicBoxView box={box} />}</For>
       </div>
 
-      <h2>5. Dynamic inside a shadow root (known limitation)</h2>
+      <h2>6. Dynamic inside a shadow root (known limitation)</h2>
       <p class="muted">
         The scanner does not pierce shadow roots, so the box inside this host is
         expected <strong>not</strong> to be underlined. It is here to make the
@@ -511,7 +583,7 @@ Rivi 15.`}
       </p>
       <div class="shadow-host" ref={(el) => (shadowHost = el)} />
 
-      <h2>6. Iframe</h2>
+      <h2>7. Iframe</h2>
       <p class="muted">
         The manifest runs content scripts in all frames. The textarea inside
         this same-origin iframe should behave like the top-level ones.
@@ -527,7 +599,7 @@ Rivi 15.`}
         }}
       />
 
-      <h2>7. Diagnostics</h2>
+      <h2>8. Diagnostics</h2>
       <pre id="log">{log().join('\n')}</pre>
 
       <Show when={cover()}>
@@ -545,6 +617,12 @@ Rivi 15.`}
         </span>
         <span>
           underlines: <strong>{misses()}</strong>
+        </span>
+        <span>
+          grammar: <strong>{grammar()}</strong>
+        </span>
+        <span>
+          style: <strong>{style()}</strong>
         </span>
         <span>
           debug: <strong>{debug() ? 'on' : 'off'}</strong>
