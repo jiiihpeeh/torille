@@ -18,7 +18,10 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::expand::check_normal::{find_base_via_stem_map, find_base_via_verb_stem_map};
+use crate::expand::check_normal::{
+    collect_bases_via_stem_map, collect_bases_via_verb_stem_map, find_base_via_stem_map,
+    find_base_via_verb_stem_map,
+};
 use crate::expand::find_bases_for_analysis;
 use crate::kotus::{Lemma, lemmas};
 use crate::sentence::SentenceSpan;
@@ -272,9 +275,12 @@ impl MorphologyCache {
     }
 
     /// Resolve one lowercased surface, sharing the cached entry.
+    ///
+    /// This is the shallow first pass: a word the cheap ladder cannot name
+    /// stays [`Depth::Unknown`]. A rule that needs the head/tail ambiguity
+    /// calls [`Self::resolve_deep`] for that token.
     pub(crate) fn resolve(
         &mut self,
-        lexicon: &[Lemma<'_>],
         cat: &Catalogues,
         lower: &str,
     ) -> Arc<WordInfo> {
@@ -283,7 +289,7 @@ impl MorphologyCache {
             return Arc::clone(info);
         }
         self.misses += 1;
-        let info = Arc::new(resolve_word(lexicon, cat, lower));
+        let info = Arc::new(resolve_word(cat, lower));
         self.by_depth[info.depth.index()] += 1;
         if self.words.len() >= MORPHOLOGY_CACHE_LIMIT {
             self.words.clear();
@@ -361,7 +367,7 @@ pub fn analyze_morphology(tokens: &[Token], cache: &mut MorphologyCache) -> Morp
             continue;
         }
         let lower = token.text.to_lowercase();
-        let info = cache.resolve(lexicon, cat, &lower);
+        let info = cache.resolve(cat, &lower);
         let info = if info.readings.is_empty()
             && token.is_capitalised()
             && let Some(name) = crate::expand::proper_names::lemma(&token.text)
@@ -419,13 +425,13 @@ pub fn analyze_morphology(tokens: &[Token], cache: &mut MorphologyCache) -> Morp
     }
 }
 
-/// Resolve a lowercase word.
+/// Resolve a lowercase word through the shallow ladder.
 ///
 /// The cheap sources run first: a direct lemma or a noun/verb stem-map base.
-/// Only a word they cannot name reaches the head/tail recognition walk. A
-/// clitic is peeled before that walk when its host is cheap, so `silloinkin`
-/// does not pay for the whole lexicon.
-fn resolve_word(lexicon: &[Lemma<'_>], cat: &Catalogues, lower: &str) -> WordInfo {
+/// A clitic or possessive host is peeled when the host is cheap. A word none
+/// of them names stays [`Depth::Unknown`]; [`resolve_word_slow`] is the deep
+/// upgrade a rule requests for an ambiguous token.
+fn resolve_word(cat: &Catalogues, lower: &str) -> WordInfo {
     if let Some(mut fast) = resolve_word_fast(cat, lower) {
         add_possessive_readings(&mut fast, lower, cat);
         return fast;
@@ -456,7 +462,31 @@ fn resolve_word(lexicon: &[Lemma<'_>], cat: &Catalogues, lower: &str) -> WordInf
         resolved.depth = Depth::Possessive;
         return resolved;
     }
-    resolve_word_slow(lexicon, cat, lower)
+    // A bare verb connegative (`syöne`, `ajatelko`) is a word in its own
+    // right, not a form the paradigm emits. The closed table names the lemma;
+    // add its citation reading so the rules still see a verb.
+    if let Some(base) = crate::expand::connegative::base(lower)
+        && let Some(row) = crate::kotus::sanalista().by_word(base).next()
+    {
+        let mut out = WordInfo {
+            lemma: Some(base.to_string()),
+            verb_lemma: Some(base.to_string()),
+            lemmas: vec![base.to_string()],
+            readings: vec![direct_reading(&row)],
+            ..WordInfo::default()
+        };
+        finish(&mut out, Depth::Direct, lower);
+        return out;
+    }
+
+    let mut out = WordInfo::default();
+    add_negation(&mut out, lower);
+    if !out.readings.is_empty() {
+        finish(&mut out, Depth::Direct, lower);
+        return out;
+    }
+    finish(&mut out, Depth::Unknown, lower);
+    out
 }
 
 /// Strip one possessive suffix and name whose it is.
@@ -583,26 +613,38 @@ fn resolve_word_fast(cat: &Catalogues, lower: &str) -> Option<WordInfo> {
     }
 
     // A partitive plural can be a form of several lemmas (`kirjoja` belongs
-    // to `kirja` and `kirjo`). The stem map names one of them; the other can
-    // change a rule's correction, so leave these surfaces to the full
-    // recognition walk until the stem-shape filter lands.
-    if needs_full_base_search(lower) {
-        if let Some(base) = cheap_base(lower)
-            && let Some(info) = resolve_compound_surface(lower, &base, cat)
-        {
-            return Some(info);
-        }
-        return None;
+    // to `kirja` and `kirjo`, `pieniä` to the adjective `pieni` and the verb
+    // `pieniä`). The stem map already keeps every base; collect them all
+    // rather than sending the surface to the head/tail walk.
+    let ambiguous = needs_full_base_search(lower);
+    if ambiguous
+        && let Some(base) = cheap_base(lower)
+        && let Some(info) = resolve_compound_surface(lower, &base, cat)
+    {
+        return Some(info);
     }
 
     let mut bases: Vec<String> = Vec::new();
-    if let Some(base) = find_base_via_stem_map(lower, PartOfSpeech::Noun, false) {
-        bases.push(base);
-    }
-    if let Some(base) = find_base_via_verb_stem_map(lower, false)
-        && !bases.contains(&base)
-    {
-        bases.push(base);
+    if ambiguous {
+        bases.extend(collect_bases_via_stem_map(
+            lower,
+            PartOfSpeech::Noun,
+            false,
+        ));
+        for base in collect_bases_via_verb_stem_map(lower, false) {
+            if !bases.contains(&base) {
+                bases.push(base);
+            }
+        }
+    } else {
+        if let Some(base) = find_base_via_stem_map(lower, PartOfSpeech::Noun, false) {
+            bases.push(base);
+        }
+        if let Some(base) = find_base_via_verb_stem_map(lower, false)
+            && !bases.contains(&base)
+        {
+            bases.push(base);
+        }
     }
     if bases.is_empty() {
         return None;
@@ -1427,5 +1469,60 @@ mod tests {
         assert!(morphology.word(1).is_none(), "the comma is a separator");
         assert!(morphology.word(0).is_some());
         assert!(morphology.word(2).is_some());
+    }
+
+    /// A numeral governs a partitive, and the shallow `lasta` (a splinter
+    /// lemma) hides the partitive of `lapsi`. The numeral upgrade is the one
+    /// automatic deep walk left in the first pass.
+    #[test]
+    fn a_numeral_upgrades_the_partitive_homonym() {
+        let (morphology, _) = analyzed("kaksi lasta");
+        let info = morphology
+            .tokens
+            .iter()
+            .filter_map(|token| token.as_deref())
+            .last()
+            .expect("lasta resolved");
+        assert!(
+            info.readings()
+                .iter()
+                .any(|reading| reading.case == Some(Case::Partitive)),
+            "lasta should gain the partitive reading: {:?}",
+            info.readings()
+        );
+    }
+
+    /// A direct lemma keeps the hidden verb reading the stem map names.
+    #[test]
+    fn a_direct_lemma_keeps_the_hidden_verb_reading() {
+        let (morphology, _) = analyzed("tuli");
+        let info = morphology.word(0).expect("tuli resolved");
+        assert!(
+            info.readings()
+                .iter()
+                .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Noun))
+        );
+        assert!(
+            info.readings()
+                .iter()
+                .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Verb))
+        );
+    }
+
+    /// `kuusi` is the tree and the numeral; both homonym rows are read.
+    #[test]
+    fn kuusi_keeps_the_tree_and_numeral_readings() {
+        let (morphology, _) = analyzed("kuusi");
+        let info = morphology.word(0).expect("kuusi resolved");
+        assert!(
+            info.readings()
+                .iter()
+                .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Numeral))
+        );
+        assert!(
+            info.readings()
+                .iter()
+                .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Noun))
+        );
     }
 }
