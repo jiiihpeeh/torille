@@ -56,6 +56,7 @@
         "options/options.js",
         "spell-worker/spell-worker.js",
         "spell-worker/spell-core.js",
+        "spell-worker/morphology-worker.js",
         "spell-worker/wasm-loader.js",
         "spell-worker/offsets.js",
         "spell-worker/torille_wasm_bg.js",
