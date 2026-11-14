@@ -1,6 +1,6 @@
 # PLAN_PARALLEL_MORPHOLOGY — a morphology-only worker pool
 
-Status: **native prototype + demo pool + Firefox extension landed; Chromium single-thread (MV3 service worker); 4-thread cap** · 2026-11-14 · parent:
+Status: **native prototype + demo pool + Firefox extension + background e2e landed; Chromium single-thread (MV3 service worker); 4-thread cap** · 2026-11-14 · parent:
 [`PLAN_GRAMMAR_STYLE_PERF.md`](PLAN_GRAMMAR_STYLE_PERF.md) Phase 5/6 ·
 related: [`PLAN_COLD_SEARCH.md`](PLAN_COLD_SEARCH.md)
 
@@ -193,7 +193,8 @@ exceeds the morphology saving, do not ship it.
 1. **Wasm codec** — landed (`TMOR`, round-trip + seeded-cache parity tests).
 2. **Pool + state merge** — landed in the demo and Firefox; Chromium falls
    back to the chunked path. `grammarThreads` (1–4) selects the pool size.
-3. **Reader/extension e2e** — the demo probes pass; the browser-level
-   extension test remains.
+3. **Reader/extension e2e** — the demo probes pass; the background pool
+   e2e is `extensions/firefox/e2e/pool.mjs` (4 workers, 2-worker setting,
+   1-thread fallback, cancellation). The content-panel browser e2e remains.
 
 Do not add a reverse index or a new data blob for this work.

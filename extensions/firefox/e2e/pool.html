@@ -1,0 +1,81 @@
+<!doctype html>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<title>torille morphology pool e2e</title>
+<script type="module">
+  // Load the real compiled background script in a page. Only the browser
+  // extension APIs are stubbed; the spell worker, the morphology workers and
+  // the wasm are the real built artefacts under /dist/.
+  const progress = [];
+  const workerUrls = [];
+  const storageListeners = [];
+  const store = { 'torille-grammar-threads': 4 };
+  let messageHandler = null;
+
+  const RealWorker = window.Worker;
+  window.Worker = class extends RealWorker {
+    constructor(url, options) {
+      workerUrls.push(String(url));
+      super(url, options);
+    }
+  };
+
+  globalThis.browser = {
+    storage: {
+      local: {
+        get: async (key) => {
+          if (typeof key === 'string') return { [key]: store[key] };
+          return { ...store };
+        },
+        set: async (values) => Object.assign(store, values),
+      },
+      onChanged: {
+        addListener: (listener) => storageListeners.push(listener),
+      },
+    },
+    runtime: {
+      getURL: (path) => `/dist/${path}`,
+      onMessage: {
+        addListener: (listener) => {
+          messageHandler = listener;
+        },
+      },
+      onInstalled: { addListener: () => {} },
+    },
+    tabs: {
+      query: async () => [],
+      sendMessage: async (_tabId, message) => {
+        if (message?.type === 'torille:check-progress') progress.push(message);
+        return {};
+      },
+    },
+    contextMenus: {
+      create: () => {},
+      update: () => {},
+      onClicked: { addListener: () => {} },
+    },
+  };
+
+  await import('/dist/background/background.js');
+
+  window.__e2e = {
+    ready: true,
+    progress,
+    workerUrls,
+    send: (message) => {
+      if (!messageHandler) throw new Error('background listener missing');
+      return messageHandler(message, { tab: { id: 1 } });
+    },
+    clearProgress: () => {
+      progress.length = 0;
+    },
+    setThreads: (value) => {
+      store['torille-grammar-threads'] = value;
+      for (const listener of storageListeners) {
+        listener({ 'torille-grammar-threads': { newValue: value } }, 'local');
+      }
+    },
+    morphologyWorkerCount: () =>
+      workerUrls.filter((url) => url.includes('morphology-worker')).length,
+  };
+</script>
