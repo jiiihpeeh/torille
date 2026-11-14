@@ -23,10 +23,10 @@ use std::sync::OnceLock;
 
 use crate::kotus::Lemma;
 
-/// Blob magic and header: `LSS1` + the row count as a little-endian `u32`.
-const MAGIC: &[u8; 4] = b"LSS1";
+/// Blob magic and header: `LSS2` + the row count as a little-endian `u32`.
+const MAGIC: &[u8; 4] = b"LSS2";
 const HEADER: usize = 8;
-const MASK_BYTES: usize = 8;
+const MASK_BYTES: usize = 32;
 
 /// The embedded mask blob. `build.rs` writes an empty header (count 0) when
 /// the committed blob is absent, which disables the filter.
@@ -49,29 +49,46 @@ fn masks() -> Option<&'static [u8]> {
     })
 }
 
-/// The hash bit for a surface's first four characters (or the whole surface
-/// when it is shorter).
+/// The four hash bits for a surface's first four characters (or the whole
+/// surface when it is shorter).
 ///
 /// Four is more selective than three and still conservative: the generator
 /// stores the same prefix of every form, and a form shorter than four can
-/// only be that shorter surface. The generator and the runtime must use the
-/// same function; the tool calls it through this module rather than
+/// only be that shorter surface. Four independent hashes turn the 64-bit mask
+/// into a 256-bit Bloom mask: a form sets one bit in each word, and a
+/// candidate must have all four bits set. The generator and the runtime must
+/// use the same function; the tool calls it through this module rather than
 /// duplicating it. Lowercasing keeps a sentence-initial token and its
 /// lowercase lemma on the same bit.
-pub fn prefix_bit(surface: &str) -> u64 {
+pub fn prefix_bits(surface: &str) -> [u64; 4] {
     const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
     const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
-    let mut hash = FNV_OFFSET;
-    for ch in surface.chars().take(4) {
-        for lower in ch.to_lowercase() {
-            let mut buf = [0u8; 4];
-            for &byte in lower.encode_utf8(&mut buf).as_bytes() {
-                hash ^= byte as u64;
-                hash = hash.wrapping_mul(FNV_PRIME);
+    const SEEDS: [u64; 4] = [
+        0x9e37_79b9_7f4a_7c15,
+        0xc2b2_ae3d_27d4_eb4f,
+        0x1656_67b1_9e37_79f9,
+        0x27d4_eb2f_1656_67c5,
+    ];
+    let mut out = [0u64; 4];
+    for (slot, seed) in out.iter_mut().zip(SEEDS) {
+        let mut hash = FNV_OFFSET ^ seed;
+        for ch in surface.chars().take(4) {
+            for lower in ch.to_lowercase() {
+                let mut buf = [0u8; 4];
+                for &byte in lower.encode_utf8(&mut buf).as_bytes() {
+                    hash ^= byte as u64;
+                    hash = hash.wrapping_mul(FNV_PRIME);
+                }
             }
         }
+        *slot = 1u64 << (hash & 63);
     }
-    1u64 << (hash & 63)
+    out
+}
+
+/// The first hash bit, kept for callers that only need one.
+pub fn prefix_bit(surface: &str) -> u64 {
+    prefix_bits(surface)[0]
 }
 
 /// The row index of `lemma` in the embedded lexicon, if it is one of its rows.
@@ -96,18 +113,33 @@ fn row_of(lemma: &Lemma<'_>) -> Option<usize> {
 /// `false` is a proof that it cannot; `true` is "not ruled out". The caller
 /// still runs [`crate::expand::emits_form`].
 pub(crate) fn might_emit(lemma: &Lemma<'_>, surface: &str) -> bool {
-    let Some(masks) = masks() else {
-        return true;
-    };
     let Some(row) = row_of(lemma) else {
         return true;
     };
-    let at = row * MASK_BYTES;
-    let Some(bytes) = masks.get(at..at + MASK_BYTES) else {
+    might_emit_row(row, surface)
+}
+
+/// [`might_emit`] for a row already named by index.
+///
+/// The shallow stem-map gate walks [`crate::kotus::EmbeddedLemma`] rows, not
+/// the borrowed lexicon slice, so it cannot form a `&Lemma`. The row index is
+/// the same index the mask blob is built from.
+pub(crate) fn might_emit_row(row: usize, surface: &str) -> bool {
+    let Some(masks) = masks() else {
         return true;
     };
-    let mask = u64::from_le_bytes(bytes.try_into().expect("eight mask bytes"));
-    mask == u64::MAX || mask & prefix_bit(surface) != 0
+    let bits = prefix_bits(surface);
+    for (index, bit) in bits.into_iter().enumerate() {
+        let at = row * MASK_BYTES + index * 8;
+        let Some(bytes) = masks.get(at..at + 8) else {
+            return true;
+        };
+        let mask = u64::from_le_bytes(bytes.try_into().expect("eight mask bytes"));
+        if mask != u64::MAX && mask & bit == 0 {
+            return false;
+        }
+    }
+    true
 }
 
 #[cfg(test)]
@@ -118,6 +150,13 @@ mod tests {
     fn the_prefix_bit_is_case_insensitive() {
         assert_eq!(prefix_bit("talo"), prefix_bit("TALO"));
         assert_eq!(prefix_bit("äiti"), prefix_bit("ÄITI"));
+    }
+
+    #[test]
+    fn the_four_hashes_are_not_the_same_bit() {
+        let bits = prefix_bits("talo");
+        assert_eq!(bits[0], prefix_bit("talo"));
+        assert!(bits.iter().any(|bit| *bit != bits[0]));
     }
 
     #[test]
@@ -149,16 +188,8 @@ mod tests {
         let cat = crate::spec::Catalogues::embedded();
         let lexicon = crate::kotus::lemmas();
         let index = crate::expand::LexiconIndex::new(lexicon);
-        for (row, lemma) in lexicon.iter().enumerate().step_by(97) {
+        for lemma in lexicon.iter().step_by(97) {
             if lemma.inflections.is_empty() {
-                continue;
-            }
-            let mask = u64::from_le_bytes(
-                masks().expect("checked above")[row * MASK_BYTES..row * MASK_BYTES + MASK_BYTES]
-                    .try_into()
-                    .expect("eight mask bytes"),
-            );
-            if mask == u64::MAX {
                 continue;
             }
             for form in crate::expand::inflect_all(

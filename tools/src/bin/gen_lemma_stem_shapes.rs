@@ -2,7 +2,7 @@
 //! `gen_lemma_stem_shapes` — write the per-lemma stem-shape masks.
 //!
 //! `src/expand/stem_shape.rs` embeds `maps/lemma_stem_shape.bin.gz`: one
-//! `u64` per lexicon row. A bit is the hash of the first three characters of
+//! `[u64; 4]` per lexicon row. A bit is the hash of the first four characters of
 //! a surface the lemma can emit, so the recognition walk can reject a
 //! candidate before `emits_form` builds its paradigm.
 //!
@@ -18,20 +18,20 @@
 
 use std::path::Path;
 
-use torille::expand::stem_shape::prefix_bit;
+use torille::expand::stem_shape::prefix_bits;
 use torille::expand::{emits_form, inflect_all};
 use torille::kotus::lemmas;
 use torille::spec::Catalogues;
 use torille::tags::PartOfSpeech;
 
-const MAGIC: &[u8; 4] = b"LSS1";
-const MASK_BYTES: usize = 8;
+const MAGIC: &[u8; 4] = b"LSS2";
+const MASK_BYTES: usize = 32;
 
 fn main() {
     let catalogue = Catalogues::embedded();
     let lexicon = lemmas();
 
-    let mut masks: Vec<u64> = Vec::with_capacity(lexicon.len());
+    let mut masks: Vec<[u64; 4]> = Vec::with_capacity(lexicon.len());
     let mut classless = 0usize;
     let mut bits = 0u32;
     let mut checked = 0usize;
@@ -40,12 +40,12 @@ fn main() {
         // A classless row's paradigm is assembled by the compound fallbacks.
         // Skip the filter there rather than risk a false negative.
         if lemma.inflections.is_empty() {
-            masks.push(u64::MAX);
+            masks.push([u64::MAX; 4]);
             classless += 1;
             continue;
         }
 
-        let mut mask = prefix_bit(lemma.word);
+        let mut mask = prefix_bits(lemma.word);
         let forms = inflect_all(
             lemma.word,
             &lemma.inflections,
@@ -56,14 +56,16 @@ fn main() {
         );
         for form in &forms {
             if !form.word.is_empty() {
-                mask |= prefix_bit(&form.word);
+                for (slot, bit) in mask.iter_mut().zip(prefix_bits(&form.word)) {
+                    *slot |= bit;
+                }
             }
         }
-        if mask == 0 {
+        if mask.iter().all(|word| *word == 0) {
             // Defensive: an empty mask would reject everything.
-            mask = u64::MAX;
+            mask = [u64::MAX; 4];
         }
-        bits += mask.count_ones();
+        bits += mask.iter().map(|word| word.count_ones()).sum::<u32>();
         masks.push(mask);
 
         // Spot-check the same probe the search uses, with the same `None`
@@ -86,7 +88,9 @@ fn main() {
                     form.word
                 );
                 assert!(
-                    mask & prefix_bit(&form.word) != 0,
+                    mask.iter()
+                        .zip(prefix_bits(&form.word))
+                        .all(|(mask, bit)| mask & bit != 0),
                     "{} / {}: generated form is not in its own mask",
                     lemma.word,
                     form.word
@@ -100,7 +104,9 @@ fn main() {
     bytes.extend_from_slice(MAGIC);
     bytes.extend_from_slice(&(masks.len() as u32).to_le_bytes());
     for mask in &masks {
-        bytes.extend_from_slice(&mask.to_le_bytes());
+        for word in mask {
+            bytes.extend_from_slice(&word.to_le_bytes());
+        }
     }
     torille_tools::gzip::write(Path::new("maps/lemma_stem_shape.bin.gz"), &bytes);
 

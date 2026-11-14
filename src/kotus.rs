@@ -461,6 +461,14 @@ pub struct EmbeddedLemma {
 }
 
 impl EmbeddedLemma {
+    /// The row index in the embedded lexicon.
+    ///
+    /// Used by the stem-shape filter, which is indexed by the same row.
+    #[inline]
+    pub(crate) fn row_index(&self) -> usize {
+        self.row as usize
+    }
+
     /// The lemma as the sanalista spells it.
     #[inline]
     pub fn word(&self) -> &'static str {

@@ -1291,6 +1291,9 @@ pub fn collect_bases_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) 
             // numeral makes `kuuden`.
             let mut hit = false;
             for lemma in crate::kotus::sanalista().by_word(base) {
+                if !crate::expand::stem_shape::might_emit_row(lemma.row_index(), word) {
+                    continue;
+                }
                 let inflections: Vec<_> = lemma.inflections().collect();
                 if crate::expand::emits_form(
                     lemma.word(),
@@ -1386,6 +1389,9 @@ pub fn collect_bases_via_verb_stem_map(word: &str, verbose: bool) -> Vec<String>
                 }
                 let mut hit = false;
                 for lemma in crate::kotus::sanalista().by_word(base) {
+                    if !crate::expand::stem_shape::might_emit_row(lemma.row_index(), word) {
+                        continue;
+                    }
                     let inflections: Vec<_> = lemma.inflections().collect();
                     if crate::expand::emits_form(
                         lemma.word(),
@@ -1434,6 +1440,9 @@ fn find_base_via_possessive_noun(stem: &str, possessive_word: &str) -> Option<St
     }
     for base in STEM_BUCKETS_NOUN.bases(stem) {
         for lemma in crate::kotus::sanalista().by_word(base) {
+            if !crate::expand::stem_shape::might_emit_row(lemma.row_index(), possessive_word) {
+                continue;
+            }
             let inflections: Vec<_> = lemma.inflections().collect();
             if crate::expand::emits_form(
                 lemma.word(),
