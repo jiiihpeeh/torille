@@ -60,6 +60,23 @@ This is a partial win, not the target. The remaining cold cost is
 `form_readings`, the handful of deep walks, and the direct path; reaching
 500 ms still needs a different cold-path design.
 
+## 0c. Follow-ups (2026-11-14)
+
+The shared `emits_form`/`form_readings` cache was implemented next: the
+`emits_form` cache stored surface→readings instead of a word set, so the
+winning base's `form_readings` call became a lookup. It removed the second
+walk (`form_readings` 430 → 140 ms native) and took the native cold page to
+~1.94 s at a 200k-form cap, but the wasm result was neutral or slower at
+large caps, and the cache stores readings for every candidate. **Not
+shipped.**
+
+The other follow-ups are recorded in
+[`PLAN_COLD_SEARCH.md`](PLAN_COLD_SEARCH.md#2026-11-14-follow-ups): the
+256-bit prefix mask (shipped, ~6% wasm win), the rejected whole-surface
+Bloom mask, and the 8-worker parallel probe (1.23 s wall, still above
+500 ms). The final cold page is **~2.1–2.3 s native / ~3.0 s wasm**; the
+**≤500 ms target remains open**.
+
 ## 1. Problem
 
 The cold 1,959-word page is **~2.1 s native / ~3.1 s wasm** after the reorder; the target is

@@ -1,6 +1,6 @@
 # PLAN_GRAMMAR_STYLE_PERF — one morphology pass for grammar and style
 
-Status: **Phase 0–7 landed/decided; cold-page ≤500 ms open (new design needed); extension browser e2e gap** · 2026-11-14 · branch `syntax` · baseline `2e5f13c`
+Status: **Phase 0–7 landed/decided; 256-bit stem-shape filter landed; cold-page ≤500 ms open (new design needed); extension browser e2e gap** · 2026-11-14 · branch `syntax` · baseline `2e5f13c`
 
 This is the performance plan for the two opt-in analysis layers:
 
@@ -44,9 +44,9 @@ Landed:
   machine (`check_normal_fast` → `suggest::known::compound`), the modifier is
   validated by `modifier_is_known` (which reads the classless CSV rows and the
   bound prefixes `esi-`, `lempi-`, `ensi-`, ...), and the whole is inflected
-  with `head_inflections`. No new prefix list is added. Cold page: **~2.4 s
-  native / ~3.1 s wasm**; the 20/96-word targets are met, the 2,000-word
-  wasm target is just above 3 s, and the ≤500 ms target was deferred to
+  with `head_inflections`. No new prefix list is added. Cold page: **~2.1–2.3 s
+  native / ~3.0 s wasm**; the 20/96-word targets are met, the 2,000-word
+  wasm target is at ~3 s, and the ≤500 ms target was deferred to
   Phase 6 and remains open.
 - **Phase 3** — warm rule pass: `TokenSyntax.key` / `WordInfo.key` cache the
   lowercased surface, the agreement scan asks for an attribute shape before
@@ -89,13 +89,13 @@ Measured on the committed fixture, single-thread (wasm shape):
 |---|---:|---:|
 | 20-word cold | 3.0 s | 0.14 s |
 | 96-word cold | 11.5 s | 0.76 s |
-| 1,959-word cold morphology | ~120 s (1,722-word baseline) | 2.5 s |
+| 1,959-word cold morphology | ~120 s (1,722-word baseline) | ~2.2 s |
 | 1,959-word warm rule pass | 13.9 ms | 1.4 ms |
 | 1,959-word warm style | 6–13 ms | 2.5 ms |
 | 1,959-word warm grammar+style | ~33–41 ms | 6.9 ms |
 | 17-word bound-form fixture, cold | 620 ms | 79 ms |
 
-The full 1,959-word page is ~3.1 s in the release wasm (Phase 7), and the
+The full 1,959-word page is ~3.0 s in the release wasm (Phase 7), and the
 chunked worker shows first progress at ~160 ms (Phase 5).
 
 Bound forms are no longer a hotspot. The 17-word fixture
@@ -115,7 +115,7 @@ forms (`palajakaan`, `pariskunnan` at the time of measurement, `kulettivat`,
 partitive-plural stem-shape filter and the warm rule pass have landed, and the
 worker chunks the check with progress and cancellation. The sentence cache
 (Phase 4) remains. The cold page target is not met yet: the release wasm is
-~3.1 s for the whole page, with first progress at ~30–70 ms.
+~3.0 s for the whole page, with first progress at ~30–70 ms.
 
 ## 1. The measured problem
 
@@ -807,10 +807,12 @@ explicit test; the 20-word fixture's diagnostics are unchanged.
 **Landed:** the shallow/deep split, base-source ladder, stem-shape filter,
 clitic/possessive reuse, numeral upgrade, compound fallback and depth
 metrics. A stem-map-first reorder removed the duplicate `cheap_base` pass for
-plain words, taking the native cold page from ~2.4–2.6 s to **~2.1 s**. The
-20- and 96-word targets are met; the 2,000-word wasm page is ~3.1 s. The
-≤500 ms target was deferred to Phase 6, which rejected the reverse index, so
-it remains open and needs a different cold-path design.
+plain words, taking the native cold page from ~2.4–2.6 s to **~2.1–2.3 s**.
+The 256-bit stem-shape mask (`PLAN_COLD_SEARCH.md` Phase 4) then cut the
+per-candidate walk; the 2,000-word wasm page is now **~3.0 s**. The 20- and
+96-word targets are met. The ≤500 ms target was deferred to Phase 6, which
+rejected the reverse index, so it remains open and needs a different
+cold-path design.
 
 ### Phase 3 — warm rule pass (2 days) — landed
 

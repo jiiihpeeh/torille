@@ -108,7 +108,7 @@ Measured on the committed 1,959-word fixture
 | workload | time |
 |---|---:|
 | cold morphology, native single-thread (wasm shape) | ~2.1–2.3 s |
-| cold morphology, release wasm | ~3.1 s |
+| cold morphology, release wasm | ~3.0 s |
 | warm grammar rules | ~1.4 ms |
 | warm style | ~2.5–3 ms |
 | warm grammar + style | ~7–9 ms |
