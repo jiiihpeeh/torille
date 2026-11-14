@@ -1,6 +1,7 @@
 # torille
 
-A Finnish spell checker and morphology engine. It answers two questions:
+A Finnish spell checker, morphology engine and on-demand grammar/style checker.
+The core answers two questions:
 
 - **is this word correctly spelled?** — `check`
 - **if not, what did the user mean?** — `suggest`
@@ -8,8 +9,12 @@ A Finnish spell checker and morphology engine. It answers two questions:
 It is dictionary-driven, not statistical. The Kotus *sanalista* supplies the
 lemmas, a paradigm catalogue (generated from the Omorfi and Voikko oracles)
 supplies each class's slots, and the engine works out which slots a particular
-member actually has. Unknown words
-fall through to compound analysis and the productive derivation rules.
+member actually has. Unknown words fall through to compound analysis and the
+productive derivation rules.
+
+The same morphology engine also powers an **opt-in grammar and style checker**
+(`check_syntax`, `check_style`). It runs only when asked and never on the
+keystroke path.
 
 ## Quick start
 
@@ -21,6 +26,7 @@ cargo run --release -p torille-tools --bin inflect -- talo
 cargo run --release -p torille-tools --bin check -- talo
 cargo run --release -p torille-tools --bin hyphenate -- tietokoneohjelmointi
 cargo run --release -p torille-tools --bin check_syntax -- "Koira nukkuvat."
+cargo run --release -p torille-tools --bin check_style -- "Tällä hetkellä tilanne on rauhallinen."
 ```
 
 The first build fetches `maps/*.bin.gz` from the orphan `maps` branch through
@@ -31,10 +37,15 @@ remote, the offline switches, and what happens when the fetch fails.
 The wasm demo and the browser extensions are separate builds:
 
 ```bash
-cd torille-wasm/demo && npm install && node build.mjs
+# wasm package shared by the demo and the extensions
+(cd torille-wasm && wasm-pack build --release)
+
+# demo
+(cd torille-wasm/demo && npm install && node build.mjs)
 cargo run --release -p torille-demo-server      # serves the demo on :8765
 
-cd extensions/firefox && npm install && npm run build   # dist/ and the XPI
+# extension
+(cd extensions/firefox && npm install && npm run build)   # dist/ and the XPI
 ```
 
 Load the built extension from `extensions/firefox/dist/manifest.json` (or the
@@ -72,6 +83,46 @@ A small QWERTY-adjacency table breaks distance-1 ties. The known defects —
 recall, and `illegal` forms from wrong stems — are tracked in
 [`docs/harness.md`](docs/harness.md) and [`TODO.md`](TODO.md).
 
+## Grammar and style
+
+Two opt-in layers sit on top of the morphology engine. Neither runs in the
+keystroke path, and `style_check` never emits an error or a warning.
+
+- `syntax_check` — grammar and punctuation diagnostics with corrections.
+- `style_check` — suggestion-only style observations: repetition, long
+  sentences, clichés, filler, wordy phrases and colloquialisms.
+
+`torille::check_all` runs both over **one** morphology pass; `MorphologyCache`
+keeps the readings plus the agreed case and number for each surface. A
+per-textarea `SentenceCache` keys each sentence by its exact text and reuses
+its diagnostics across edits, so an edit re-checks only the sentences that
+changed. The wasm export `check_grammar_style_with_state` is the chunking
+entry point: the demo and the browser extensions check one sentence batch at a
+time, report progress, and cancel on the next edit. The Gutenberg reader shows
+the same spans as underlays. In the Firefox and Chromium extensions the check
+runs from the context menu (**Tarkista kielioppi**).
+
+Measured on the committed 1,959-word fixture
+(`tests/fixtures/perf/page-2000.txt`):
+
+| workload | time |
+|---|---:|
+| cold morphology, native single-thread (wasm shape) | ~2.1–2.3 s |
+| cold morphology, release wasm | ~3.1 s |
+| warm grammar rules | ~1.4 ms |
+| warm style | ~2.5–3 ms |
+| warm grammar + style | ~7–9 ms |
+| one edited sentence (native) | 2.6–3.7 ms |
+
+The worker reports first progress at ~30–70 ms, so a long page is not frozen
+while the cold pass runs. The **≤500 ms cold-page target is open**: the cold
+cost is per-lemma paradigm generation and a handful of deep walks. A
+precomputed reverse index for the wasm was measured and rejected on size and
+coverage (86.6% at 2.1 MB; 95% would exceed 3 MB). See
+[`PLAN_GRAMMAR_STYLE_PERF.md`](PLAN_GRAMMAR_STYLE_PERF.md),
+[`PLAN_COLD_SEARCH.md`](PLAN_COLD_SEARCH.md) and
+[`PLAN_COLD_READINGS_CACHE.md`](PLAN_COLD_READINGS_CACHE.md).
+
 ## Workspace
 
 ```text
@@ -86,7 +137,10 @@ torille/
     hyphenation/        Finnish line-break hyphenation
     compound.rs         splitting an unknown word
     sentence.rs         sentence spans and token context
-    morphology/         cached readings: case, number, POS, clitic, possessive
+    tokenise.rs         word/separator tokeniser shared by the checkers and wasm
+    syntax_list.rs      list structure parser used by the syntax checker
+    morphology/         cached readings shared by grammar and style: case,
+                        number, POS, clitic, possessive
     check.rs            combined grammar + style pass over one morphology result
     syntax/             on-demand clause/role analysis over the morphology engine
     syntax_check/       grammar diagnostics and corrections
@@ -100,8 +154,10 @@ torille/
   torille-wasm-leptos/  Leptos front end
   demo-server/          the static server for the demo
   extensions/           Firefox and Chromium extensions
-  tests/                catalogue, candidate generation, hyphenation, Wiktionary
-  docs/                 harness.md, hyphenation.md, lexicon.md
+  tests/                catalogue, candidate generation, hyphenation,
+                        syntax/style, Wiktionary
+  docs/                 harness, lexicon, syntax/style checkers,
+                        hyphenation, morfologia
 ```
 
 The root package is the library and the workspace root. `tools`,
@@ -154,6 +210,7 @@ inventory is in [`tools/README.md`](tools/README.md).
 | `check_normal` | the per-keystroke gate the wasm demo uses |
 | `check_syntax` | grammar and punctuation diagnostics with corrections |
 | `check_style` | opt-in style suggestions (never an error) |
+| `perf_grammar_style` | cold/warm morphology, rules, style and sentence-cache timings |
 | `derive` | productive derivations of a base word |
 | `hyphenate` | permitted Finnish line breaks, with `--json` offsets |
 | `suggest_correct` | ranked suggestions for a misspelling |
@@ -175,8 +232,10 @@ the possessive and comitative columns.
 
 The three confidence sections are separate on purpose: suggestions, accepted
 forms, and merely tolerated forms. `lookup` builds the whole reverse index
-(about 17 million words) once, then answers instantly; bases are ranked by
-`ClassPrior`, the same ranking the Python binding uses.
+(about 17 million words) once on the command line, then answers instantly;
+bases are ranked by `ClassPrior`, the same ranking the Python binding uses.
+The index is a tool, not a wasm payload: shipping it to the wasm is the route
+the cold-page work rejected on size and coverage.
 
 Generators (`gen_*`) and the verification harness are described in
 [`tools/build/README.md`](tools/build/README.md) and
@@ -294,6 +353,18 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
   style performance plan: one morphology pass with cached case information,
   cold-path candidate pruning, sentence-level incremental checks and worker
   chunking.
+- [`PLAN_COLD_SEARCH.md`](PLAN_COLD_SEARCH.md) — the cold morphology search:
+  base ladder, stem-shape filter and the deferred phases.
+- [`PLAN_COLD_READINGS_CACHE.md`](PLAN_COLD_READINGS_CACHE.md) — the negative
+  per-lemma form-cache experiment and the stem-map-first reorder.
+- [`PLAN_SYNTAX_CHECKER.md`](PLAN_SYNTAX_CHECKER.md) — grammar and punctuation
+  diagnostics, ranking and evaluation.
+- [`PLAN_SYNTAX.md`](PLAN_SYNTAX.md) — the advisory syntax analysis layer
+  underneath the checker.
+- [`PLAN_COMPOUND.md`](PLAN_COMPOUND.md) — the compound engine's inflection
+  model and remaining work.
+- [`PLAN_HYPHENATION.md`](PLAN_HYPHENATION.md) — the hyphenation milestones
+  and the remaining corpus triage.
 - [`docs/harness.md`](docs/harness.md) — the verification harness, baselines
   and the table of known defects.
 - [`docs/hyphenation.md`](docs/hyphenation.md) — patterns, compound adapter,
