@@ -233,11 +233,14 @@ export function createWorkerClient(opts: { dbg: DebugFn; inputId: number }) {
       });
       return Array.isArray(r?.diagnostics) ? r.diagnostics : null;
     },
-    // On-demand style check for the separate Tyyli command. It has
-    // no per-textarea state: the style pass is stateless.
+    // On-demand style check for the separate Tyyli command. It uses the
+    // overlay's per-textarea state so the combined export can share the
+    // morphology cache with the grammar pass.
     async checkStyleAsync(text: string): Promise<R_SyntaxDiagnostic[] | null> {
+      const idx = await stateIdx();
+      if (idx === null) return null;
       const r = await send<R_CheckStyleResponse>({
-        type: 'torille:check-style', text,
+        type: 'torille:check-style', idx, text,
       });
       return Array.isArray(r?.diagnostics) ? r.diagnostics : null;
     },

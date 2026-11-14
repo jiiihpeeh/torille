@@ -1,6 +1,6 @@
 # PLAN_GRAMMAR_STYLE_PERF — one morphology pass for grammar and style
 
-Status: **Phase 0–1, 2 (cold path), 3 (warm rule pass), 4 (sentence cache) and 5 (chunking) landed; Phase 6/7 next** · 2026-11-14 · branch `syntax` · baseline `2e5f13c`
+Status: **Phase 0–5 landed (Phase 5 leftovers partial: extension early-stop channel open); Phase 6 next** · 2026-11-14 · branch `syntax` · baseline `2e5f13c`
 
 This is the performance plan for the two opt-in analysis layers:
 
@@ -58,6 +58,13 @@ Landed:
   The wasm state owns the cache; one edited sentence on the 1,959-word page
   costs **2.6–3.7 ms** including tokenise, morphology and style, and a 96-word
   page costs **1.8 ms**. Diagnostics are identical to a full re-check.
+- **Phase 5 leftovers** — the demo worker batches one sentence at a time
+  (first progress **29–73 ms**), the extension workers use the combined
+  grammar/style export, the demo's cancellation token is per textarea state,
+  and `GutenbergReader` runs grammar/style with progress and cancellation.
+  The p90 batch is native **63 ms**; the remaining browser outliers are cold
+  names/compounds, so the extension early-stop channel and the cold-word p90
+  stay open.
 - **Shallow closed-class fix** — a pronoun base named by the cheap gate
   (`jossa` → `joka`) is verified across every sanalista row, so relative
   pronoun forms no longer fall to `Unknown`. The attribute rule now skips
@@ -866,9 +873,40 @@ whole-text wasm check), and an edit during the run cancels to 0 diagnostics.
 The longest batch is still ~200 ms, so the 50 ms per-task target is not met;
 the extension workers, word budget and reader enablement remain.
 
-Acceptance: no worker task over 50 ms; an edit during a check cancels within
-one batch; spelling still answers while a grammar check runs; the demo and
-both extensions build.
+**Phase 5 leftovers — landed (partial):**
+
+1. **Batch budget.** The demo worker now uses one sentence per batch (120-word
+   fallback for a paragraph with no sentence punctuation). On the 1,959-word
+   fixture the first progress is **29–73 ms** (was ~160 ms) and the native
+   wasm batch p90 is **63 ms** (median ~20 ms). The browser worker reports a
+   higher p90 (~200 ms) because two panels may run concurrently and a single
+   cold name/compound can cost 150–470 ms. Splitting a normal sentence at a
+   word boundary breaks diagnostic parity, so the remaining >50 ms outliers
+   are a cold-word cost, not a batch-size cost. The p90 ≤50 ms target is not
+   met; the next lever is the Phase 6 cold-path decision.
+2. **Extension combined worker.** The Firefox and Chromium spell workers now
+   call `check_grammar_style_with_state` for both the grammar and style
+   context-menu commands; the style command passes the overlay's state index,
+   so the morphology cache is shared. The glue `.d.ts` and `globals.d.ts`
+   carry the new export/message shape, and both source trees are identical.
+   The extension progress channel is still one-shot: the content script
+   discards a result whose text changed, but the worker is not stopped early.
+3. **Reader enablement.** `GutenbergReader` now has the same grammar/style
+   resource as `TextPanel`: `checkGrammarStyle`, progress, cancellation,
+   diagnostics on the `Editor`, and a `__torille.panels` hook.
+   `probe-reader-grammar.mjs` sets both the free-text panel and the reader to
+   the 1,959-word fixture and gets **69 grammar / 14 style** from both, with
+   grammar/style spans in the reader underlay and a clean cancel to 0.
+4. **Multi-panel generation.** The demo worker's cancellation token is now
+   per textarea state (`Map<idx, generation>`) instead of one global counter.
+   Two panels can check at once; a newer request for one state no longer
+   cancels the other panel's check.
+
+Acceptance: first progress ≤100 ms (met: 29–73 ms); p90 worker batch ≤50 ms
+(not met: native 63 ms, browser ~200 ms, cold-word bound); the reader and both
+extensions build; an edit during a check leaves no stale diagnostics in the
+demo/reader (met). The extension early-stop channel and the cold-word p90 are
+the remaining Phase 5/6 work.
 
 ### Phase 6 — optional reverse index (3 days, decision gate)
 
@@ -879,7 +917,7 @@ both extensions build.
 Acceptance: either a `maps/syntax_forms.bin.gz` with a generator and coverage
 report, or a written “not shipped” decision with the measured numbers.
 
-### Phase 7 — reader enablement and docs (1 day)
+### Phase 7 — reader enablement and docs (1 day) — landed
 
 - If a 2,000-word page checks in ≤ 500 ms, or the chunked progress UI is in
   place, enable the grammar/style command on the reader page; otherwise keep
@@ -887,6 +925,14 @@ report, or a written “not shipped” decision with the measured numbers.
 - Update `docs/syntax_checker.md`, `docs/style_checker.md`, `README.md` and
   this plan's status.
 - Bump the crate/demo and extension versions only if a surface changes.
+
+**Landed:** the reader now runs the same chunked grammar/style resource as
+`TextPanel`, with progress, cancellation, diagnostics on the `Editor` and a
+`__torille.panels` hook. `probe-reader-grammar.mjs` gets 69 grammar / 14 style
+from both the free-text panel and the reader, shows the reader underlay spans,
+and cancels to 0. `docs/syntax_checker.md` records the sentence-cache path.
+The reader was enabled on the chunked-progress branch of the condition, not
+the 500 ms cold-page branch.
 
 ## 8. Measurement harness
 

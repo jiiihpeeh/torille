@@ -97,7 +97,7 @@ type SpellCallPayload =
   | { type: 'analyze-text'; idx: number; text: string; max: number }
   | { type: 'suggest-with-state'; idx: number; word: string; max: number }
   | { type: 'check-syntax'; idx: number; text: string }
-  | { type: 'check-style'; text: string };
+  | { type: 'check-style'; idx: number; text: string };
 
 type SpellResponse =
   | { id: number; type: 'check'; ok: boolean }
@@ -736,13 +736,14 @@ api.runtime.onMessage.addListener((message: unknown) => {
     })();
   }
 
-  // On-demand style check. It is stateless and separate from the
-  // grammar command; the worker converts byte offsets to UTF-16.
+  // On-demand style check. It uses the overlay's state so the worker can
+  // share the morphology cache with the grammar pass; the worker converts
+  // byte offsets to UTF-16.
   if (m?.type === 'torille:check-style') {
     return (async (): Promise<R_CheckStyleResponse> => {
       try {
         await ensureSpellWorkerForRequest();
-        const r = await spellCall({ type: 'check-style', text: m.text });
+        const r = await spellCall({ type: 'check-style', idx: m.idx, text: m.text });
         if (r.type !== 'check-style') {
           throw new Error('worker returned unexpected response');
         }

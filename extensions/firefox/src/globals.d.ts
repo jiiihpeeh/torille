@@ -151,6 +151,7 @@ declare type R_CheckSyntaxResponse = {
 };
 declare type R_CheckStyle = {
   type: 'torille:check-style';
+  idx: number;
   text: string;
 };
 declare type R_CheckStyleResponse = {
@@ -271,7 +272,7 @@ declare type R_WorkerInbound =
       max: number;
     }
   | { id: number; type: 'check-syntax'; idx: number; text: string }
-  | { id: number; type: 'check-style'; text: string }
+  | { id: number; type: 'check-style'; idx: number; text: string }
   | { type: 'debug'; on: boolean };
 declare type R_WorkerOutbound =
   | { type: 'ready' }

@@ -450,7 +450,7 @@ type Response =
       id: number;
       diagnostics: DiagnosticSpan[];
     }
-  | { type: 'check-progress'; id: number; done: number; total: number }
+  | { type: 'check-progress'; id: number; done: number; total: number; ms?: number }
   | {
       type: 'check-grammar-style';
       id: number;
@@ -667,13 +667,13 @@ export function checkGrammarStyle(
   text: string,
   syntax: boolean,
   style: boolean,
-  onProgress?: (done: number, total: number) => void,
+  onProgress?: (done: number, total: number, ms?: number) => void,
 ): Promise<{ diagnostics: DiagnosticSpan[]; style: DiagnosticSpan[] }> {
   return new Promise((resolve) => {
     const id = nextId++;
     pending.set(id, (msg) => {
       if (msg.type === 'check-progress') {
-        onProgress?.(msg.done, msg.total);
+        onProgress?.(msg.done, msg.total, msg.ms);
         return;
       }
       if (msg.type === 'check-grammar-style') {

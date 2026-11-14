@@ -144,7 +144,7 @@ export type R_WorkerOutbound =
   | { id: number; type: 'suggest-for-misspell'; suggestions: string[] }
   | { id: number; type: 'check-syntax'; diagnostics: DiagnosticSpan[] }
   | { id: number; type: 'check-style'; diagnostics: DiagnosticSpan[] }
-  | { id: number; type: 'check-progress'; done: number; total: number }
+  | { id: number; type: 'check-progress'; done: number; total: number; ms?: number }
   | {
       id: number;
       type: 'check-grammar-style';

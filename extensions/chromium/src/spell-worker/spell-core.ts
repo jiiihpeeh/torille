@@ -406,9 +406,7 @@ function toContentDiagnostics(
 function handleCheckSyntax(
   msg: Extract<R_WorkerInbound, { type: 'check-syntax' }>,
 ): CoreResponse {
-  const raw = bg.check_syntax_with_state(msg.idx, msg.text) as {
-    diagnostics?: RawDiagnostic[];
-  };
+  const raw = bg.check_grammar_style_with_state(msg.idx, msg.text, true, false);
   const diagnostics = toContentDiagnostics(msg.text, raw.diagnostics ?? []);
   dbg('core', 'check-syntax',
       { idx: msg.idx, len: msg.text.length, diagnostics: diagnostics.length });
@@ -418,12 +416,10 @@ function handleCheckSyntax(
 function handleCheckStyle(
   msg: Extract<R_WorkerInbound, { type: 'check-style' }>,
 ): CoreResponse {
-  const raw = bg.check_style(msg.text) as {
-    diagnostics?: RawDiagnostic[];
-  };
-  const diagnostics = toContentDiagnostics(msg.text, raw.diagnostics ?? []);
+  const raw = bg.check_grammar_style_with_state(msg.idx, msg.text, false, true);
+  const diagnostics = toContentDiagnostics(msg.text, raw.style ?? []);
   dbg('core', 'check-style',
-      { len: msg.text.length, diagnostics: diagnostics.length });
+      { idx: msg.idx, len: msg.text.length, diagnostics: diagnostics.length });
   return { type: 'check-style', diagnostics };
 }
 

@@ -822,7 +822,10 @@ function toUtf16Diagnostics(
 // state, so only the first batch is cold; the rest are warm.
 
 const grammarStyleEncoder = new TextEncoder();
-let grammarStyleRun = 0;
+/// One generation per textarea state, so two panels can check at once.
+/// A newer request for the same state cancels the older one; a request for a
+/// different state must not.
+const grammarStyleRuns = new Map<number, number>();
 
 interface TextChunk {
   start: number;
@@ -880,11 +883,21 @@ function sentenceChunks(text: string, maxSentences: number): TextChunk[] {
   return chunks.flatMap(splitLongChunks);
 }
 
+const MAX_CHUNK_SENTENCES = 1;
 const MAX_CHUNK_WORDS = 120;
 
 /// A paragraph with no sentence punctuation still has to yield. Split an
 /// oversized chunk at whitespace, keeping every chunk non-empty and ending
 /// only outside an open quotation.
+///
+/// The caps are measured, not guessed. On the 1,959-word fixture a
+/// 5-sentence / 120-word batch has a p90 of ~305 ms; one sentence per batch
+/// brings the p90 to ~63 ms and the median to ~20 ms. The 120-word fallback
+/// only splits a paragraph that has no sentence punctuation: splitting a
+/// normal sentence at a word boundary would change its clause and quote
+/// context and break diagnostic parity. A single cold name or compound can
+/// still exceed 50 ms (`perunkirjoittamista`, `lempiviikkomme`); that cost is
+/// in the word resolution, not the batch boundary.
 function splitLongChunks(chunk: TextChunk): TextChunk[] {
   const words = chunk.text.split(/\s+/).filter(Boolean).length;
   if (words <= MAX_CHUNK_WORDS) return [chunk];
@@ -917,16 +930,17 @@ function splitLongChunks(chunk: TextChunk): TextChunk[] {
 async function handleCheckGrammarStyle(
   msg: Extract<R_WorkerInbound, { type: 'check-grammar-style' }>,
 ): Promise<void> {
-  const run = ++grammarStyleRun;
+  const run = (grammarStyleRuns.get(msg.idx) ?? 0) + 1;
+  grammarStyleRuns.set(msg.idx, run);
   dbgStage(true, 'handler:check-grammar-style:enter',
            `id=${msg.id} idx=${msg.idx} len=${msg.text.length} ` +
            `syntax=${msg.syntax} style=${msg.style}`);
-  const chunks = sentenceChunks(msg.text, 5);
+  const chunks = sentenceChunks(msg.text, MAX_CHUNK_SENTENCES);
   const diagnostics: DiagnosticSpan[] = [];
   const style: DiagnosticSpan[] = [];
   let byteStart = 0;
   for (let i = 0; i < chunks.length; i++) {
-    if (run !== grammarStyleRun) {
+    if (grammarStyleRuns.get(msg.idx) !== run) {
       // A newer edit superseded this run. Resolve the old promise with an
       // empty result so the client does not leak a pending callback.
       post({ id: msg.id, type: 'check-grammar-style', diagnostics: [], style: [] });
@@ -935,6 +949,7 @@ async function handleCheckGrammarStyle(
     }
     const chunk = chunks[i];
     let raw: { diagnostics?: DiagnosticSpan[]; style?: DiagnosticSpan[] } = {};
+    const batchStarted = performance.now();
     try {
       raw = bg.check_grammar_style_with_state(
         msg.idx, chunk.text, msg.syntax, msg.style,
@@ -943,6 +958,7 @@ async function handleCheckGrammarStyle(
       postError(msg.id, 'check-grammar-style', undefined, err);
       return;
     }
+    const batchMs = performance.now() - batchStarted;
     for (const diagnostic of raw.diagnostics ?? []) {
       diagnostics.push({
         ...diagnostic,
@@ -958,11 +974,17 @@ async function handleCheckGrammarStyle(
       });
     }
     byteStart += grammarStyleEncoder.encode(chunk.text).length;
-    post({ id: msg.id, type: 'check-progress', done: i + 1, total: chunks.length });
+    post({
+      id: msg.id,
+      type: 'check-progress',
+      done: i + 1,
+      total: chunks.length,
+      ms: batchMs,
+    });
     // Let the worker process spelling messages between batches.
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
   }
-  if (run !== grammarStyleRun) {
+  if (grammarStyleRuns.get(msg.idx) !== run) {
     post({ id: msg.id, type: 'check-grammar-style', diagnostics: [], style: [] });
     return;
   }

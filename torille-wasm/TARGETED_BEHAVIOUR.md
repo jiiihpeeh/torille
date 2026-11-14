@@ -168,6 +168,7 @@ The two-pass latency budget is:
 | Caret aligns with text | `probe-cursor.mjs` | caret x/y/height within 2 px of underlay text at same byte index |
 | Grammar/style runs in sentence batches with progress and cancellation | `probe-grammar-chunk.mjs` | first progress <2 s; final counts match the whole-text baseline (69 grammar, 14 style); editing cancels without stale diagnostics |
 | Sentence cache reuses unchanged sentences | `probe-sentence-cache.mjs` | warm result matches cold; one edited sentence matches a fresh whole-text check |
+| Reader runs grammar/style with progress and cancellation | `probe-reader-grammar.mjs` | free-text panel and reader both report 69 grammar / 14 style; reader underlay has grammar/style spans; replacing the text clears to 0 |
 | No regression on Rust core | `cargo test --release --workspace` | green |
 
 Run all probes after a demo change:
@@ -181,6 +182,7 @@ node probe-surgical.mjs                 # surgical diff
 node probe-cursor.mjs                   # caret alignment
 node probe-grammar-chunk.mjs            # chunked grammar/style + progress
 node probe-sentence-cache.mjs           # sentence reuse + edit parity
+node probe-reader-grammar.mjs           # reader grammar/style + progress
 ```
 
 `probe-debug.mjs` is a general-purpose page + worker console
@@ -196,11 +198,18 @@ needs the full timeline.
 Down from "1-2 s" before the candidate/demote split.
 
 ✅ **Grammar/style chunking** — `probe-grammar-chunk.mjs`:
-  * first progress ~160 ms on the 1,959-word perf page;
+  * first progress ~30–70 ms on the 1,959-word perf page (was ~160 ms);
   * final 69 grammar / 14 style, matching the whole-text wasm check;
   * editing during the run cancels it and clears to 0 diagnostics;
-  * the longest batch is still ~200 ms (5 sentences), so the
-    ≤50 ms per-task target remains open.
+  * the batch is one sentence (120-word fallback). Native wasm p90 is
+    ~63 ms; the browser p90 is ~200 ms because a cold name/compound can
+    dominate one batch. The ≤50 ms p90 target remains open and is a
+    cold-word cost, not a batch-boundary cost.
+
+✅ **Reader grammar/style** — `probe-reader-grammar.mjs`:
+  * the free-text panel and the reader both report 69 grammar / 14 style;
+  * the reader underlay shows 50 grammar and 14 style spans;
+  * replacing the text cancels the old run and clears to 0.
 
 ✅ **Sentence cache** — `probe-sentence-cache.mjs`:
   * the all-hit wasm pass returns the same diagnostics as the cold pass;

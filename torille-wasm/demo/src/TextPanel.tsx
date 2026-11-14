@@ -254,8 +254,9 @@ export function TextPanel(props: TextPanelProps) {
   // spell check. One chunked worker call resolves morphology once and returns
   // both streams; the worker posts progress between sentence batches.
   const [grammarProgress, setGrammarProgress] = createSignal<
-    { done: number; total: number } | null
+    { done: number; total: number; ms?: number } | null
   >(null);
+  const grammarBatchTimes: number[] = [];
   let grammarRun = 0;
   const [grammarStyle] = createResource(
     () => ({
@@ -273,8 +274,11 @@ export function TextPanel(props: TextPanelProps) {
         return { diagnostics: [], style: [] };
       }
       const run = ++grammarRun;
-      const report = (done: number, total: number) => {
-        if (run === grammarRun) setGrammarProgress({ done, total });
+      grammarBatchTimes.length = 0;
+      const report = (done: number, total: number, ms?: number) => {
+        if (run !== grammarRun) return;
+        if (ms !== undefined) grammarBatchTimes.push(ms);
+        setGrammarProgress({ done, total, ms });
       };
       try {
         return await checkGrammarStyle(
@@ -331,6 +335,7 @@ export function TextPanel(props: TextPanelProps) {
       grammarDiagnostics,
       styleDiagnostics,
       grammarProgress,
+      grammarBatchTimes: () => grammarBatchTimes,
       heading: () => props.heading,
       // Programmatic text setter. Goes through the same
       // `onText` path the Editor's input event uses, so

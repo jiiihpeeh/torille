@@ -36,13 +36,20 @@ import {
   MisspellWithRange,
 } from './find-misspellings';
 import {
+  checkGrammarStyle,
   createState,
   destroyState,
   ready as wasmReady,
 } from './spell-client';
 import { Editor } from './Editor';
 import type { FocusTarget } from './Editor';
-import { builtInSpellCheckEnabled, useExtension } from './spell-check-toggle';
+import {
+  builtInGrammarCheckEnabled,
+  builtInSpellCheckEnabled,
+  builtInStyleCheckEnabled,
+  useExtension,
+} from './spell-check-toggle';
+import type { DiagnosticSpan } from '../../protocol.js';
 import {
   Book,
   CatalogEntry,
@@ -199,6 +206,15 @@ export function GutenbergReader() {
   const [renderGen, setRenderGen] = createSignal(0);
   let lastCandidates: MisspellWithRange[] = [];
   let checkTimer: ReturnType<typeof setTimeout> | undefined;
+
+  // Grammar and style are opt-in and run on the same debounced chapter text
+  // as the spell check. The worker chunks the page, reports progress and
+  // cancels a stale run when the chapter changes.
+  const [grammarProgress, setGrammarProgress] = createSignal<
+    { done: number; total: number; ms?: number } | null
+  >(null);
+  const grammarBatchTimes: number[] = [];
+  let grammarRun = 0;
 
   // Load the book. Re-fires on `bookId` change. Solid's
   // resource is the right shape here -- we get a single
@@ -461,6 +477,47 @@ export function GutenbergReader() {
     return candidates().filter((m) => !dem.has(m.word));
   });
 
+  // One chunked worker call resolves morphology once and returns both
+  // streams. The worker posts `check-progress` between sentence batches and
+  // cancels the previous run when the chapter text changes.
+  const [grammarStyle] = createResource(
+    () => ({
+      text: debouncedText(),
+      idx: stateIdx(),
+      syntax: builtInGrammarCheckEnabled(),
+      style: builtInStyleCheckEnabled(),
+    }),
+    async ({ text, idx, syntax, style }): Promise<{
+      diagnostics: DiagnosticSpan[];
+      style: DiagnosticSpan[];
+    }> => {
+      if ((!syntax && !style) || idx < 0) {
+        setGrammarProgress(null);
+        return { diagnostics: [], style: [] };
+      }
+      const run = ++grammarRun;
+      grammarBatchTimes.length = 0;
+      const report = (done: number, total: number, ms?: number) => {
+        if (run !== grammarRun) return;
+        if (ms !== undefined) grammarBatchTimes.push(ms);
+        setGrammarProgress({ done, total, ms });
+      };
+      try {
+        return await checkGrammarStyle(
+          idx,
+          text.replace(/\r\n?/g, '\n'),
+          syntax,
+          style,
+          report,
+        );
+      } finally {
+        if (run === grammarRun) setGrammarProgress(null);
+      }
+    },
+  );
+  const grammarDiagnostics = () => grammarStyle()?.diagnostics ?? [];
+  const styleDiagnostics = () => grammarStyle()?.style ?? [];
+
   // ── navigation helpers ────────────────────────────────────
   const goPrev = (): void => {
     setChapterIdx((i) => Math.max(0, i - 1));
@@ -500,6 +557,10 @@ export function GutenbergReader() {
       candidates,
       demoted,
       misspellings,
+      grammarDiagnostics,
+      styleDiagnostics,
+      grammarProgress,
+      grammarBatchTimes: () => grammarBatchTimes,
       heading: () => 'Project Gutenberg',
       setText: (next: string): void => onText(next),
       setFocused: (w: string | FocusTarget | null): void => {
@@ -531,6 +592,8 @@ export function GutenbergReader() {
         setCandidates([]);
         setDemoted(new Set<string>());
         setFocused(null);
+        setGrammarProgress(null);
+        grammarBatchTimes.length = 0;
       },
       onRenderDone: (cb: () => void): (() => void) => {
         renderDoneSubscribers.add(cb);
@@ -798,11 +861,27 @@ export function GutenbergReader() {
               </span>
             </Show>
           </Show>
+          <Show when={builtInGrammarCheckEnabled()}>
+            <span>{grammarDiagnostics().length} grammar</span>
+          </Show>
+          <Show when={builtInStyleCheckEnabled()}>
+            <span>{styleDiagnostics().length} style</span>
+          </Show>
+          <Show when={grammarProgress()}>
+            {(progress) => (
+              <span class="checking">
+                <span class="status-dot" aria-hidden="true" />
+                tarkistetaan… {progress().done}/{progress().total}
+              </span>
+            )}
+          </Show>
         </div>
         <Editor
           text={text()}
           onText={onText}
           misspellings={misspellings()}
+          grammarDiagnostics={grammarDiagnostics()}
+          styleDiagnostics={styleDiagnostics()}
           focused={focused()}
           stateIdx={stateIdx()}
           onFocus={(w) => setFocused(w)}

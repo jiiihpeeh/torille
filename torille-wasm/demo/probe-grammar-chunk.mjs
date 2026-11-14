@@ -87,11 +87,23 @@ for (let i = 0; i < 800; i++) {
 }
 
 const totalMs = Date.now() - started;
+const batchTimes = await page.evaluate(
+  () => window.__torille.panels[0].grammarBatchTimes(),
+);
+const sortedBatches = [...batchTimes].sort((a, b) => a - b);
+const batchP90 = sortedBatches.length > 0
+  ? sortedBatches[Math.floor(sortedBatches.length * 0.9)]
+  : 0;
+const batchMax = sortedBatches.length > 0
+  ? sortedBatches[sortedBatches.length - 1]
+  : 0;
 console.log('=== chunked grammar/style ===');
 console.log(`  first progress: ${firstProgress} ms`);
 console.log(`  last batch:     ${maxDone}`);
 console.log(`  total:          ${totalMs} ms`);
 console.log(`  final:          ${final.grammar} grammar, ${final.style} style`);
+console.log(`  wasm batches:   p90 ${batchP90.toFixed(0)} ms, max ${batchMax.toFixed(0)} ms`);
+console.log('  slowest batches:', sortedBatches.slice(-5).map((ms) => ms.toFixed(0)).join(', '));
 
 const progressPass = firstProgress >= 0 && firstProgress < 2000 && maxDone > 0;
 const countsPass = final.grammar === EXPECTED_GRAMMAR && final.style === EXPECTED_STYLE;

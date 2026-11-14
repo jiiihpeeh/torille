@@ -80,6 +80,43 @@ declare module '*/torille_wasm_bg.js' {
     }[];
   };
 
+  /** Grammar and style diagnostics in one morphology pass. */
+  export function check_grammar_style_with_state(
+    idx: number,
+    text: string,
+    syntax: boolean,
+    style: boolean,
+  ): {
+    diagnostics: {
+      kind: string;
+      severity: string;
+      confidence: string;
+      start: number;
+      end: number;
+      message: string;
+      expected: string | null;
+      corrections: {
+        score: number;
+        note: string;
+        edits: { start: number; end: number; replacement: string }[];
+      }[];
+    }[];
+    style: {
+      kind: string;
+      severity: string;
+      confidence: string;
+      start: number;
+      end: number;
+      message: string;
+      expected: string | null;
+      corrections: {
+        score: number;
+        note: string;
+        edits: { start: number; end: number; replacement: string }[];
+      }[];
+    }[];
+  };
+
   /** Suggestion-only style diagnostics with UTF-8 byte offsets. */
   export function check_style(text: string): {
     diagnostics: {
