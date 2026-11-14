@@ -135,6 +135,21 @@ declare module '*/torille_wasm_bg.js' {
     }[];
   };
 
+  /** Unique lowercased surfaces, newline-separated. */
+  export function unique_surfaces(text: string): Uint8Array;
+
+  /** Resolve a surface group; returns the encoded `WordInfo` rows. */
+  export function morphology_chunk(idx: number, text: string): Uint8Array;
+
+  /** Run the full-document pass after seeding the pool payloads. */
+  export function check_grammar_style_from_morphology(
+    idx: number,
+    text: string,
+    payloads: Uint8Array[],
+    syntax: boolean,
+    style: boolean,
+  ): ReturnType<typeof check_grammar_style_with_state>;
+
   /** Pre-warm the lemma set / catalogue at boot. */
   export function warm_caches(): void;
 

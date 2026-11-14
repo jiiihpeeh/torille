@@ -96,11 +96,13 @@ keystroke path, and `style_check` never emits an error or a warning.
 keeps the readings plus the agreed case and number for each surface. A
 per-textarea `SentenceCache` keys each sentence by its exact text and reuses
 its diagnostics across edits, so an edit re-checks only the sentences that
-changed. The wasm export `check_grammar_style_with_state` is the chunking
-entry point: the demo and the browser extensions check one sentence batch at a
-time, report progress, and cancel on the next edit. The Gutenberg reader shows
-the same spans as underlays. In the Firefox and Chromium extensions the check
-runs from the context menu (**Tarkista kielioppi**).
+changed. On a long text the demo resolves the morphology in a **4-worker
+pool**, then runs syntax/style once over the full document; the Firefox
+extension does the same with a `grammarThreads` setting (1–4, default 4).
+Chromium's MV3 service worker cannot create nested workers, so it keeps the
+sentence-batch fallback. Both paths report progress and cancel on the next
+edit. The Gutenberg reader shows the same spans as underlays. In the
+extensions the check runs from the context menu (**Tarkista kielioppi**).
 
 Measured on the committed 1,959-word fixture
 (`tests/fixtures/perf/page-2000.txt`):
@@ -108,17 +110,18 @@ Measured on the committed 1,959-word fixture
 | workload | time |
 |---|---:|
 | cold morphology, native single-thread (wasm shape) | ~2.1–2.3 s |
-| cold morphology, release wasm | ~3.0 s |
+| cold grammar + style, release wasm, single thread | ~3.0 s |
+| cold grammar + style, release wasm, 4-worker pool | ~1.4 s |
 | warm grammar rules | ~1.4 ms |
 | warm style | ~2.5–3 ms |
 | warm grammar + style | ~7–9 ms |
 | one edited sentence (native) | 2.6–3.7 ms |
 
-The worker reports first progress at ~30–70 ms, so a long page is not frozen
-while the cold pass runs. The **≤500 ms cold-page target is open**: the cold
-cost is per-lemma paradigm generation and a handful of deep walks. A
-precomputed reverse index for the wasm was measured and rejected on size and
-coverage (86.6% at 2.1 MB; 95% would exceed 3 MB). See
+The first progress lands at ~110 ms on the full page, so it is not frozen
+while the cold pass runs. The **≤500 ms cold-page target is still open**: the
+pool halves the page, but the merged context pass and the per-lemma paradigm
+walk remain. A precomputed reverse index for the wasm was measured and
+rejected on size and coverage (86.6% at 2.1 MB; 95% would exceed 3 MB). See
 [`PLAN_GRAMMAR_STYLE_PERF.md`](PLAN_GRAMMAR_STYLE_PERF.md),
 [`PLAN_COLD_SEARCH.md`](PLAN_COLD_SEARCH.md) and
 [`PLAN_COLD_READINGS_CACHE.md`](PLAN_COLD_READINGS_CACHE.md).
@@ -353,6 +356,8 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
   style performance plan: one morphology pass with cached case information,
   cold-path candidate pruning, sentence-level incremental checks and worker
   chunking.
+- [`PLAN_PARALLEL_MORPHOLOGY.md`](PLAN_PARALLEL_MORPHOLOGY.md) — the
+  morphology-only worker pool: codec, state merge, demo and extension.
 - [`PLAN_COLD_SEARCH.md`](PLAN_COLD_SEARCH.md) — the cold morphology search:
   base ladder, stem-shape filter and the deferred phases.
 - [`PLAN_COLD_READINGS_CACHE.md`](PLAN_COLD_READINGS_CACHE.md) — the negative

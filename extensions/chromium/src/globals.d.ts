@@ -307,7 +307,9 @@ declare type R_WorkerInbound =
       text: string;
       syntax: boolean;
       style: boolean;
+      payloads?: Uint8Array[];
     }
+  | { id: number; type: 'unique-surfaces'; text: string }
   | { type: 'debug'; on: boolean };
 declare type R_WorkerOutbound =
   | { type: 'ready' }
@@ -333,4 +335,5 @@ declare type R_WorkerOutbound =
       diagnostics: R_SyntaxDiagnostic[];
       style: R_SyntaxDiagnostic[];
     }
+  | { id: number; type: 'unique-surfaces'; surfaces: string[] }
   | { id: number; type: 'error'; for: string; word?: string; error: string };

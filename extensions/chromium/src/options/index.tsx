@@ -14,6 +14,7 @@ type Settings = {
   styleUnderlines: boolean;
   styleColor: string;
   suggestionsMax: number;
+  grammarThreads: number;
   popupTrigger: string;
   popupBg: string;
   popupFg: string;
@@ -36,6 +37,7 @@ const DEFAULTS: Settings = {
   styleUnderlines: true,
   styleColor: '#2563eb',
   suggestionsMax: 8,
+  grammarThreads: 4,
   popupTrigger: 'click',
   popupBg: '#ffffff',
   popupFg: '#222222',
@@ -58,6 +60,7 @@ const KEYS: Record<keyof Settings, string> = {
   styleUnderlines: 'torille-style-underlines',
   styleColor: 'torille-style-color',
   suggestionsMax: 'torille-suggestions-max',
+  grammarThreads: 'torille-grammar-threads',
   popupTrigger: 'torille-popup-trigger',
   popupBg: 'torille-popup-bg',
   popupFg: 'torille-popup-fg',
@@ -98,6 +101,7 @@ function readSettings(raw: Record<string, unknown>): Settings {
   const style = pick('underlineStyle', DEFAULTS.underlineStyle);
   const trigger = pick('popupTrigger', DEFAULTS.popupTrigger);
   const max = Number(raw[KEYS.suggestionsMax] ?? DEFAULTS.suggestionsMax);
+  const threads = Number(raw[KEYS.grammarThreads] ?? DEFAULTS.grammarThreads);
   const color = (key: keyof Settings): string => {
     const value = pick(key, DEFAULTS[key] as string);
     return HEX.test(value) ? value : (DEFAULTS[key] as string);
@@ -114,6 +118,8 @@ function readSettings(raw: Record<string, unknown>): Settings {
     styleColor: color('styleColor'),
     suggestionsMax: Number.isFinite(max)
       ? Math.min(MAX, Math.max(MIN, Math.round(max))) : DEFAULTS.suggestionsMax,
+    grammarThreads: Number.isFinite(threads)
+      ? Math.min(4, Math.max(1, Math.round(threads))) : DEFAULTS.grammarThreads,
     popupTrigger: ['click', 'hover'].includes(trigger)
       ? trigger : DEFAULTS.popupTrigger,
     popupBg: color('popupBg'),
@@ -351,6 +357,29 @@ function OptionsApp() {
               onInput={(e) => patch('grammarSuggestionColor', e.currentTarget.value)} />
           </div>
         </div>
+        <div class="settings-grid single">
+          <div class="row">
+            <label for="grammar-threads">Kieliopin työthreadit
+              <small>1–4</small>
+            </label>
+            <input
+              type="number"
+              id="grammar-threads"
+              min="1"
+              max="4"
+              step="1"
+              value={settings().grammarThreads}
+              onChange={(e) => patch('grammarThreads', Math.min(
+                4, Math.max(1, Math.round(
+                  Number(e.currentTarget.value) || DEFAULTS.grammarThreads,
+                )),
+              ))}
+            />
+          </div>
+        </div>
+        <p class="lead">
+          1 = yksi wasm-instanssi. Chromiumin palvelutyöntekijä käyttää aina yhtä.
+        </p>
         <label class="toggle">
           <input
             id="style-underlines"

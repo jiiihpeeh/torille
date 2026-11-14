@@ -52,6 +52,9 @@ api.storage?.onChanged?.addListener((changes, area) => {
     TORILLE_DEBUG = changes['torille-debug'].newValue === true;
     dbg('background', 'storage.onChanged torille-debug ->', TORILLE_DEBUG);
   }
+  if (area === 'local' && changes['torille-grammar-threads']) {
+    teardownMorphologyPool('grammarThreads changed');
+  }
 });
 
 function dbg(label: string, ...args: unknown[]): void {
@@ -104,7 +107,9 @@ type SpellCallPayload =
       text: string;
       syntax: boolean;
       style: boolean;
-    };
+      payloads?: Uint8Array[];
+    }
+  | { type: 'unique-surfaces'; text: string };
 
 type SpellResponse =
   | { id: number; type: 'check'; ok: boolean }
@@ -128,6 +133,7 @@ type SpellResponse =
       diagnostics: R_SyntaxDiagnostic[];
       style: R_SyntaxDiagnostic[];
     }
+  | { id: number; type: 'unique-surfaces'; surfaces: string[] }
   // Fire-and-forget ops (destroy/clear/update-state, debug) resolve
   // with this in the direct host, where there is no message id to
   // mirror. Callers ignore the value.
@@ -416,6 +422,163 @@ function checkKey(tabId: number | undefined, inputId: number): string {
   return `${tabId ?? 0}:${inputId}`;
 }
 
+// ─── morphology pool (Firefox) ───────────────────────────────────────
+//
+// The background can create workers on Firefox's event page, so the cold
+// morphology pass is split across up to four workers. Chromium's MV3 service
+// worker cannot create nested workers; `ensureMorphologyPool` rejects there
+// and `checkGrammarStyle` stays on the sentence-chunked path.
+const GRAMMAR_THREADS_KEY = 'torille-grammar-threads';
+const GRAMMAR_THREADS_DEFAULT = 4;
+const GRAMMAR_THREADS_MAX = 4;
+const GRAMMAR_POOL_WORD_THRESHOLD = 200;
+const GRAMMAR_GROUP_SIZE = 24;
+
+interface MorphologyWorkerSlot {
+  worker: Worker;
+  ready: Promise<void>;
+  inflight: number;
+  handlers: Map<number, (message: any) => void>;
+}
+
+let morphologySlots: MorphologyWorkerSlot[] = [];
+let morphologyPoolSize = 0;
+let morphologyPoolInit: Promise<void> | null = null;
+let nextMorphologyId = 1;
+
+async function grammarThreads(): Promise<number> {
+  try {
+    const raw = await api.storage.local.get(GRAMMAR_THREADS_KEY);
+    const value = Number(raw[GRAMMAR_THREADS_KEY] ?? GRAMMAR_THREADS_DEFAULT);
+    if (!Number.isFinite(value)) return GRAMMAR_THREADS_DEFAULT;
+    return Math.min(GRAMMAR_THREADS_MAX, Math.max(1, Math.round(value)));
+  } catch {
+    return GRAMMAR_THREADS_DEFAULT;
+  }
+}
+
+function teardownMorphologyPool(reason: string): void {
+  for (const slot of morphologySlots) {
+    for (const handler of slot.handlers.values()) {
+      handler({ type: 'error', error: reason });
+    }
+    slot.handlers.clear();
+    slot.worker.terminate();
+  }
+  morphologySlots = [];
+  morphologyPoolSize = 0;
+  morphologyPoolInit = null;
+}
+
+function ensureMorphologyPool(size: number): Promise<void> {
+  if (typeof Worker === 'undefined') {
+    return Promise.reject(new Error('nested workers unavailable'));
+  }
+  if (size <= 1) return Promise.reject(new Error('pool disabled'));
+  if (morphologyPoolInit !== null && morphologyPoolSize === size) {
+    return morphologyPoolInit;
+  }
+  teardownMorphologyPool('pool resized');
+  morphologyPoolSize = size;
+  const url = api.runtime.getURL('spell-worker/morphology-worker.js');
+  morphologyPoolInit = Promise.all(
+    Array.from({ length: size }, (_, index) => new Promise<void>((resolve, reject) => {
+      const slot = {} as MorphologyWorkerSlot;
+      const worker = new Worker(url, { type: 'module' });
+      slot.worker = worker;
+      slot.inflight = 0;
+      slot.handlers = new Map();
+      slot.ready = new Promise<void>((ready, fail) => {
+        worker.addEventListener('message', (event: MessageEvent) => {
+          const message = event.data;
+          if (message?.type === 'ready') { ready(); return; }
+          if (message?.type === 'init_failed') {
+            fail(new Error(message.error));
+            return;
+          }
+          if (message?.type === 'morphology-chunk' || message?.type === 'error') {
+            const handler = slot.handlers.get(message.id);
+            if (handler) {
+              slot.handlers.delete(message.id);
+              slot.inflight = Math.max(0, slot.inflight - 1);
+              handler(message);
+            }
+          }
+        });
+        worker.addEventListener('error', (event) => {
+          fail(new Error(
+            `morphology worker #${index} crashed: ${event.message || 'unknown'}`,
+          ));
+        });
+      });
+      morphologySlots.push(slot);
+      slot.ready.then(resolve, reject);
+    })),
+  ).then(() => undefined);
+  return morphologyPoolInit;
+}
+
+function runMorphologyGroup(
+  slot: MorphologyWorkerSlot,
+  text: string,
+): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    const id = nextMorphologyId++;
+    slot.inflight += 1;
+    slot.handlers.set(id, (message) => {
+      if (message.type === 'morphology-chunk') resolve(message.payload);
+      else reject(new Error(message.error ?? 'morphology chunk failed'));
+    });
+    slot.worker.postMessage({ id, type: 'morphology-chunk', text });
+  });
+}
+
+async function runMorphologyPool(
+  surfaces: string[],
+  runKey: string,
+  run: number,
+  inputId: number,
+  tabId: number | undefined,
+): Promise<Uint8Array[] | null> {
+  const groups: string[][] = [];
+  for (let index = 0; index < surfaces.length; index += GRAMMAR_GROUP_SIZE) {
+    groups.push(surfaces.slice(index, index + GRAMMAR_GROUP_SIZE));
+  }
+  const payloads: Uint8Array[] = new Array(groups.length);
+  let next = 0;
+  let done = 0;
+  const total = groups.length;
+  await new Promise<void>((resolve, reject) => {
+    const pump = (slot: MorphologyWorkerSlot) => {
+      if (next >= groups.length) return;
+      const index = next++;
+      runMorphologyGroup(slot, groups[index].join(' '))
+        .then((payload) => {
+          if (checkRuns.get(runKey) !== run) {
+            resolve();
+            return;
+          }
+          payloads[index] = payload;
+          done += 1;
+          if (tabId != null) {
+            api.tabs.sendMessage(tabId, {
+              type: 'torille:check-progress',
+              inputId,
+              done,
+              total,
+            }).catch(() => { /* tab closed */ });
+          }
+          if (done === total) resolve();
+          else pump(slot);
+        })
+        .catch(reject);
+    };
+    for (const slot of morphologySlots) pump(slot);
+    if (total === 0) resolve();
+  });
+  return checkRuns.get(runKey) === run ? payloads : null;
+}
+
 function updateQuoteDepth(depth: number, text: string): number {
   for (const c of text) {
     if (c === '»' || c === '"') {
@@ -510,6 +673,40 @@ async function checkGrammarStyle(
   const key = checkKey(tabId, inputId);
   const run = (checkRuns.get(key) ?? 0) + 1;
   checkRuns.set(key, run);
+
+  // Pool path: resolve the morphology once across up to four workers, then
+  // run the full-document pass once in the spell worker. Chromium's MV3
+  // service worker cannot create nested workers, so it stays chunked.
+  const words = text.split(/\s+/).filter(Boolean).length;
+  const threads = await grammarThreads();
+  if (threads > 1 && words > GRAMMAR_POOL_WORD_THRESHOLD) {
+    try {
+      await withTimeout(
+        ensureMorphologyPool(threads), INIT_TIMEOUT_MS, 'morphology pool init',
+      );
+      const surfaces = await spellCall({ type: 'unique-surfaces', text });
+      if (surfaces.type !== 'unique-surfaces') {
+        throw new Error('worker returned unexpected response');
+      }
+      if (checkRuns.get(key) !== run) return { diagnostics: [], style: [] };
+      const payloads = await runMorphologyPool(
+        surfaces.surfaces, key, run, inputId, tabId,
+      );
+      if (payloads === null || checkRuns.get(key) !== run) {
+        return { diagnostics: [], style: [] };
+      }
+      const r = await spellCall({
+        type: 'check-grammar-style', idx, text, syntax, style, payloads,
+      });
+      if (r.type !== 'check-grammar-style') {
+        throw new Error('worker returned unexpected response');
+      }
+      return { diagnostics: r.diagnostics, style: r.style };
+    } catch (error) {
+      dbg('background', 'morphology pool failed; chunked fallback', String(error));
+    }
+  }
+
   const chunks = sentenceChunks(text);
   const diagnostics: R_SyntaxDiagnostic[] = [];
   const styleDiagnostics: R_SyntaxDiagnostic[] = [];

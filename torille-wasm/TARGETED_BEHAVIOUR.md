@@ -166,9 +166,10 @@ The two-pass latency budget is:
 | Garbage flagged immediately | `probe-sylvi.mjs` | 6 garbage words (qwerty, asdfg, …) all underlined |
 | Surgical diff: typing one character doesn't re-check unchanged words | `probe-surgical.mjs` | typing 1 char → `reused=N toCheck=0` for unchanged misspell positions |
 | Caret aligns with text | `probe-cursor.mjs` | caret x/y/height within 2 px of underlay text at same byte index |
-| Grammar/style runs in sentence batches with progress and cancellation | `probe-grammar-chunk.mjs` | first progress <2 s; final counts match the whole-text baseline (68 grammar, 14 style); editing cancels without stale diagnostics |
+| Grammar/style resolves morphology in a 4-worker pool, then runs the full-document pass | `probe-grammar-chunk.mjs` | first progress <2 s; final counts match the whole-text baseline (68 grammar, 14 style); editing cancels without stale diagnostics |
 | Sentence cache reuses unchanged sentences | `probe-sentence-cache.mjs` | warm result matches cold; one edited sentence matches a fresh whole-text check |
 | Reader runs grammar/style with progress and cancellation | `probe-reader-grammar.mjs` | free-text panel and reader both report 68 grammar / 14 style; reader underlay has grammar/style spans; replacing the text clears to 0 |
+| Extension grammar threads setting | options page | `grammarThreads` 1–4, default 4; Firefox uses the morphology pool, Chromium's service worker forces 1 |
 | No regression on Rust core | `cargo test --release --workspace` | green |
 
 Run all probes after a demo change:
@@ -197,18 +198,19 @@ needs the full timeline.
 14 ms on a 5-word garbage sample, 5 ms on a 6-word sample.
 Down from "1-2 s" before the candidate/demote split.
 
-✅ **Grammar/style chunking** — `probe-grammar-chunk.mjs`:
-  * first progress ~30–70 ms on the 1,959-word perf page (was ~160 ms);
+✅ **Grammar/style morphology pool** — `probe-grammar-chunk.mjs`:
+  * first progress **112 ms** on the 1,959-word perf page;
+  * **48 surface groups**, total **1.39 s** (was ~3.1 s);
   * final 68 grammar / 14 style, matching the whole-text wasm check;
   * editing during the run cancels it and clears to 0 diagnostics;
-  * the batch is one sentence (120-word fallback). Native wasm p90 is
-    ~63 ms; the browser p90 is ~200 ms because a cold name/compound can
-    dominate one batch. The ≤50 ms p90 target remains open and is a
-    cold-word cost, not a batch-boundary cost.
+  * the browser p90 group is ~71 ms. The 4-worker pool resolves morphology;
+    syntax/style run once over the full document. The ≤500 ms cold-page
+    target remains open and is a per-lemma paradigm cost, not a batch cost.
 
 ✅ **Reader grammar/style** — `probe-reader-grammar.mjs`:
   * the free-text panel and the reader both report 68 grammar / 14 style;
-  * the reader underlay shows 50 grammar and 14 style spans;
+  * the reader underlay shows 49 grammar and 14 style spans;
+  * 48 surface groups, p90 68 ms;
   * replacing the text cancels the old run and clears to 0.
 
 ✅ **Sentence cache** — `probe-sentence-cache.mjs`:

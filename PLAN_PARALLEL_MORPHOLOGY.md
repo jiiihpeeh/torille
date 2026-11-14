@@ -1,6 +1,6 @@
 # PLAN_PARALLEL_MORPHOLOGY — a morphology-only worker pool
 
-Status: **design + native prototype** · 2026-11-14 · parent:
+Status: **native prototype + demo pool + Firefox extension landed; Chromium single-thread (MV3 service worker); 4-thread cap** · 2026-11-14 · parent:
 [`PLAN_GRAMMAR_STYLE_PERF.md`](PLAN_GRAMMAR_STYLE_PERF.md) Phase 5/6 ·
 related: [`PLAN_COLD_SEARCH.md`](PLAN_COLD_SEARCH.md)
 
@@ -108,6 +108,25 @@ pool is technically viable. Native callers default to
 `min(available_parallelism, 8)`; the wasm path defaults to 4 and is
 configurable 1–4 in the extension settings.
 
+### Shipped (2026-11-14)
+
+- **Demo** — 4 workers, dynamic groups of 24 surfaces, a persistent
+  `TextAreaState` per worker. `probe-grammar-chunk.mjs`: first progress
+  **112 ms**, **48 groups**, total **1.39 s** (was ~3.1 s), final **68
+  grammar / 14 style**, cancel to 0. `probe-reader-grammar.mjs`: 68/14, 48
+  groups, p90 68 ms, spans and cancellation pass.
+- **Firefox extension** — the background owns the pool and reads
+  `grammarThreads` (1–4, default 4) from `storage.local`. The setting is on
+  the options page; changing it tears the pool down. The spell worker's
+  `check_grammar_style_from_morphology` runs the full-document pass once.
+- **Chromium extension** — the MV3 service worker cannot create nested
+  workers, so the pool is unavailable and the setting is effectively 1. The
+  existing sentence-chunked path stays as the fallback. The options page says
+  so.
+- **Native** — `perf_grammar_style --threads N` and
+  `analyze_morphology_parallel`; callers default to
+  `min(available_parallelism, 8)`.
+
 ### Acceptance
 
 - `--threads 1` diagnostics are byte-identical to the current pass.
@@ -170,13 +189,11 @@ exceeds the morphology saving, do not ship it.
 
 ## 7. Phases
 
-0. **Native prototype** — `--threads N`, morphology-only and full timings,
-   diagnostics identical. This is the go/no-go gate.
-1. **Wasm codec** — encode/decode `WordInfo`; measure the codec alone.
-2. **Pool + state merge** — one worker pool in the demo, then the extension;
-   progress and cancellation. The extension setting `grammarThreads` (1–4)
-   selects the pool size.
-3. **Reader/extension e2e** — the existing `probe-grammar-chunk` /
-   `probe-reader-grammar` flows plus a browser-level extension test.
+0. **Native prototype** — landed; diagnostics identical.
+1. **Wasm codec** — landed (`TMOR`, round-trip + seeded-cache parity tests).
+2. **Pool + state merge** — landed in the demo and Firefox; Chromium falls
+   back to the chunked path. `grammarThreads` (1–4) selects the pool size.
+3. **Reader/extension e2e** — the demo probes pass; the browser-level
+   extension test remains.
 
 Do not add a reverse index or a new data blob for this work.

@@ -101,9 +101,11 @@ cargo run --release -p torille-tools --bin check_syntax -- "Koira nukkuvat."
 - **Firefox / Chromium extensions:** right-click a text field and choose
   **Tarkista kielioppi**. The check is opt-in and runs on one input at a time;
   a floating panel lists diagnostics and applies corrections to textarea,
-  input and contenteditable fields. The extension calls
-  `check_syntax_with_state` in the wasm worker, which converts UTF-8 byte
-  offsets to UTF-16 before the panel sees them. After the check the same spans
+  input and contenteditable fields. On Firefox the background resolves
+  morphology in a pool of up to four workers (the `grammarThreads` setting,
+  1–4); Chromium's service worker cannot create nested workers and stays on
+  the sentence-batch path. The worker converts UTF-8 byte offsets to UTF-16
+  before the panel sees them. After the check the same spans
   are underlined: grammar errors orange double, warnings amber dashed and
   suggestions amber dotted. Spelling keeps its red wavy underline and style is
   blue solid; the grammar/style underlines clear on the next edit. The
@@ -122,9 +124,14 @@ plus the agreed case/number, part of speech, clitic and possessive, and the
 style layer reads the same pass. The wasm combined export runs the grammar
 rules through `sentence_cache::SentenceCache`: an unchanged sentence is a hash
 probe, and one edited sentence re-checks in ~2.6–3.7 ms on the 1,959-word
-fixture. The measured baseline, the remaining cold-path pruning and the worker
-chunking plan are in
-[`PLAN_GRAMMAR_STYLE_PERF.md`](../PLAN_GRAMMAR_STYLE_PERF.md).
+fixture. On a long text the demo and the Firefox extension resolve morphology
+in a 4-worker pool, collect the encoded rows in the owning state, and run
+syntax/style once over the full document; the full page drops from ~3.0 s to
+~1.4 s. Chromium's MV3 service worker cannot create nested workers, so it
+keeps the sentence-batch path. The measured baseline, the cold-path pruning
+and the pool are in
+[`PLAN_GRAMMAR_STYLE_PERF.md`](../PLAN_GRAMMAR_STYLE_PERF.md) and
+[`PLAN_PARALLEL_MORPHOLOGY.md`](../PLAN_PARALLEL_MORPHOLOGY.md).
 
 ## Data files
 

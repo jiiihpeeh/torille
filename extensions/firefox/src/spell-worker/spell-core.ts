@@ -150,7 +150,8 @@ export type CoreResponse =
       type: 'check-grammar-style';
       diagnostics: R_SyntaxDiagnostic[];
       style: R_SyntaxDiagnostic[];
-    };
+    }
+  | { type: 'unique-surfaces'; surfaces: string[] };
 
 // ───────────────────────────────────────────────────────────────────────
 // §5  Handlers
@@ -428,11 +429,23 @@ function handleCheckStyle(
   return { type: 'check-style', diagnostics };
 }
 
+function handleUniqueSurfaces(
+  msg: Extract<R_WorkerInbound, { type: 'unique-surfaces' }>,
+): CoreResponse {
+  const bytes = bg.unique_surfaces(msg.text);
+  const surfaces = new TextDecoder().decode(bytes).split('\n').filter(Boolean);
+  dbg('core', 'unique-surfaces', { len: msg.text.length, surfaces: surfaces.length });
+  return { type: 'unique-surfaces', surfaces };
+}
+
 function handleCheckGrammarStyle(
   msg: Extract<R_WorkerInbound, { type: 'check-grammar-style' }>,
 ): CoreResponse {
-  const raw = bg.check_grammar_style_with_state(
-    msg.idx, msg.text, msg.syntax, msg.style);
+  const raw = msg.payloads !== undefined && msg.payloads.length > 0
+    ? bg.check_grammar_style_from_morphology(
+        msg.idx, msg.text, msg.payloads, msg.syntax, msg.style)
+    : bg.check_grammar_style_with_state(
+        msg.idx, msg.text, msg.syntax, msg.style);
   return {
     type: 'check-grammar-style',
     diagnostics: toContentDiagnostics(msg.text, raw.diagnostics ?? []),
@@ -483,6 +496,7 @@ export function createSpellCore(): SpellCore {
         case 'check-syntax': return handleCheckSyntax(msg);
         case 'check-style': return handleCheckStyle(msg);
         case 'check-grammar-style': return handleCheckGrammarStyle(msg);
+        case 'unique-surfaces': return handleUniqueSurfaces(msg);
         default: {
           const unknown = msg as { type?: string };
           throw new Error(`unknown message type: ${unknown.type ?? '?'}`);

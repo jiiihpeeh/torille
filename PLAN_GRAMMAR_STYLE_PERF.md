@@ -1,6 +1,6 @@
 # PLAN_GRAMMAR_STYLE_PERF — one morphology pass for grammar and style
 
-Status: **Phase 0–7 landed/decided; 256-bit stem-shape filter landed; cold-page ≤500 ms open (new design needed); extension browser e2e gap** · 2026-11-14 · branch `syntax` · baseline `2e5f13c`
+Status: **Phase 0–7 landed/decided; 256-bit stem-shape filter and 4-worker morphology pool landed; cold page ~1.4 s wasm; ≤500 ms open; extension browser e2e gap** · 2026-11-14 · branch `syntax` · baseline `2e5f13c`
 
 This is the performance plan for the two opt-in analysis layers:
 
@@ -61,13 +61,19 @@ Landed:
   The wasm state owns the cache; one edited sentence on the 1,959-word page
   costs **2.6–3.7 ms** including tokenise, morphology and style, and a 96-word
   page costs **1.8 ms**. Diagnostics are identical to a full re-check.
-- **Phase 5 leftovers** — the demo worker batches one sentence at a time
-  (first progress **29–73 ms**), the extension workers use the combined
-  grammar/style export, the demo's cancellation token is per textarea state,
-  and `GutenbergReader` runs grammar/style with progress and cancellation.
-  The extension background chunks the command, posts progress and stops on
-  an edit. The p90 batch is native **63 ms**; the remaining browser outliers
-  are cold names/compounds, so the cold-word p90 stays open for Phase 6.
+- **Phase 5 leftovers** — the demo worker batches one sentence at a time,
+  the extension workers use the combined grammar/style export, the demo's
+  cancellation token is per textarea state, and `GutenbergReader` runs
+  grammar/style with progress and cancellation. The extension background
+  chunks the command, posts progress and stops on an edit. The p90 batch is
+  native **63 ms**; the remaining browser outliers are cold names/compounds.
+- **Parallel morphology (follow-up)** — a 4-worker pool resolves the unique
+  surfaces, the owning state collects the encoded rows, and syntax/style run
+  once over the full document. The demo cold page is **1.39 s** (first
+  progress 112 ms, 68/14 exact); the Firefox extension uses the same pool
+  behind `grammarThreads` (1–4). Chromium's MV3 service worker cannot create
+  nested workers and keeps the chunked path. See
+  [`PLAN_PARALLEL_MORPHOLOGY.md`](PLAN_PARALLEL_MORPHOLOGY.md).
 - **Phase 6 (decision)** — the reverse-index experiment measured five top-N
   subsets. No subset met both 95% page coverage and 3 MB compressed; the
   largest under-budget blob covers 86.6%, and the full 104k-lemma map is
@@ -95,8 +101,9 @@ Measured on the committed fixture, single-thread (wasm shape):
 | 1,959-word warm grammar+style | ~33–41 ms | 6.9 ms |
 | 17-word bound-form fixture, cold | 620 ms | 79 ms |
 
-The full 1,959-word page is ~3.0 s in the release wasm (Phase 7), and the
-chunked worker shows first progress at ~160 ms (Phase 5).
+The full 1,959-word page is ~3.0 s in the release wasm single-thread, and
+**~1.4 s** with the 4-worker morphology pool (Phase 5 follow-up). First
+progress lands at ~110 ms.
 
 Bound forms are no longer a hotspot. The 17-word fixture
 (`esimerkki`, `leikkimielisyys`, `salaperäinen`, `täysi-ikäinen`,
@@ -115,7 +122,8 @@ forms (`palajakaan`, `pariskunnan` at the time of measurement, `kulettivat`,
 partitive-plural stem-shape filter and the warm rule pass have landed, and the
 worker chunks the check with progress and cancellation. The sentence cache
 (Phase 4) remains. The cold page target is not met yet: the release wasm is
-~3.0 s for the whole page, with first progress at ~30–70 ms.
+~3.0 s single-thread / ~1.4 s with the 4-worker pool, with first progress at
+~110 ms.
 
 ## 1. The measured problem
 
@@ -809,10 +817,11 @@ clitic/possessive reuse, numeral upgrade, compound fallback and depth
 metrics. A stem-map-first reorder removed the duplicate `cheap_base` pass for
 plain words, taking the native cold page from ~2.4–2.6 s to **~2.1–2.3 s**.
 The 256-bit stem-shape mask (`PLAN_COLD_SEARCH.md` Phase 4) then cut the
-per-candidate walk; the 2,000-word wasm page is now **~3.0 s**. The 20- and
-96-word targets are met. The ≤500 ms target was deferred to Phase 6, which
-rejected the reverse index, so it remains open and needs a different
-cold-path design.
+per-candidate walk; the 2,000-word wasm page is now **~3.0 s** single-thread.
+The 4-worker morphology pool then takes the full page to **~1.4 s**. The 20-
+and 96-word targets are met. The ≤500 ms target was deferred to Phase 6,
+which rejected the reverse index, so it remains open; the pool is a large
+partial win, not the target.
 
 ### Phase 3 — warm rule pass (2 days) — landed
 

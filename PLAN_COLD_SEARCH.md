@@ -73,9 +73,11 @@ Rejected follow-ups:
   2.1 MB, 95% would exceed 3 MB, and the full map is 17.3 M rows.
 
 Final cold page after the shipped work: **~2.1–2.3 s native single-thread,
-~3.0 s release wasm**. The **≤500 ms target remains open**; the remaining
-cost is the per-candidate paradigm walk (`emits_form`), not the readings
-extraction or the warm rule pass.
+~3.0 s release wasm**. The 4-worker morphology pool in
+[`PLAN_PARALLEL_MORPHOLOGY.md`](PLAN_PARALLEL_MORPHOLOGY.md) takes the wasm
+page to **~1.4 s** without changing the single-thread engine. The **≤500 ms
+target remains open**; the remaining cost is the per-candidate paradigm walk
+(`emits_form`), not the readings extraction or the warm rule pass.
 
 **Final parent-plan status (2026-11-14):** the parent plan's Phase 6 evaluated
 a reverse index and decided **not to ship** it, so the ≤500 ms cold page

@@ -74,6 +74,7 @@ export const UI_SETTINGS = {
   styleUnderlines: 'torille-style-underlines',
   styleColor: 'torille-style-color',
   suggestionsMax: 'torille-suggestions-max',
+  grammarThreads: 'torille-grammar-threads',
   popupTrigger: 'torille-popup-trigger',
   popupBg: 'torille-popup-bg',
   popupFg: 'torille-popup-fg',
@@ -96,6 +97,7 @@ export type UiSettings = {
   styleUnderlines: boolean;
   styleColor: string;
   suggestionsMax: number;
+  grammarThreads: number;
   popupTrigger: 'click' | 'hover';
   popupBg: string;
   popupFg: string;
@@ -118,6 +120,7 @@ export const uiSettings: UiSettings = {
   styleUnderlines: true,
   styleColor: '#2563eb',
   suggestionsMax: 8,
+  grammarThreads: 4,
   popupTrigger: 'click',
   popupBg: '#ffffff',
   popupFg: '#222222',
@@ -151,6 +154,7 @@ export async function loadUiSettings(): Promise<void> {
   const style = String(cur[UI_SETTINGS.underlineStyle] ?? 'wavy');
   const trigger = String(cur[UI_SETTINGS.popupTrigger] ?? 'click');
   const max = Number(cur[UI_SETTINGS.suggestionsMax] ?? 8);
+  const threads = Number(cur[UI_SETTINGS.grammarThreads] ?? 4);
   uiSettings.underlineStyle = ['wavy', 'solid', 'dashed', 'dotted', 'none'].includes(style)
     ? style : 'wavy';
   uiSettings.underlineColor = /^#[0-9a-f]{6}$/i.test(String(cur[UI_SETTINGS.underlineColor]))
@@ -161,6 +165,8 @@ export async function loadUiSettings(): Promise<void> {
   uiSettings.grammarWarningColor = color(UI_SETTINGS.grammarWarningColor, '#d97706');
   uiSettings.grammarSuggestionColor = color(UI_SETTINGS.grammarSuggestionColor, '#b45309');
   uiSettings.styleColor = color(UI_SETTINGS.styleColor, '#2563eb');
+  uiSettings.grammarThreads = Number.isFinite(threads)
+    ? Math.min(4, Math.max(1, Math.round(threads))) : 4;
   uiSettings.suggestionsMax = Number.isFinite(max)
     ? Math.min(20, Math.max(3, Math.round(max))) : 8;
   uiSettings.popupTrigger = trigger === 'hover' ? 'hover' : 'click';
