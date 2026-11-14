@@ -99,6 +99,8 @@ impl Depth {
     }
 }
 
+pub mod codec;
+
 /// Cache counters for the performance harness and the wasm probe.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct CacheStats {
@@ -269,6 +271,20 @@ impl MorphologyCache {
         self.words.get(lower)
     }
 
+    /// Insert a row the parallel pool resolved in another worker.
+    ///
+    /// The row is already a complete [`WordInfo`]; this is a transport, not a
+    /// resolution, so it does not increment the depth counters. The next
+    /// [`analyze_morphology`] hits it and only pays for the context upgrades
+    /// (the numeral-governed partitive and the proper-name overlay).
+    pub fn seed(&mut self, lower: String, info: Arc<WordInfo>) {
+        if self.words.len() >= MORPHOLOGY_CACHE_LIMIT {
+            self.words.clear();
+            self.deep.clear();
+        }
+        self.words.insert(lower, info);
+    }
+
     /// Count a capitalized token resolved through the proper-name table.
     ///
     /// The overlay is token-specific (a name's reading depends on the
@@ -428,6 +444,180 @@ pub fn analyze_morphology(tokens: &[Token], cache: &mut MorphologyCache) -> Morp
         sentences,
         tokens: words,
     }
+}
+
+/// Resolve the unique surfaces of a token stream, without the context passes.
+///
+/// This is the worker half of the parallel pool: a group of surfaces is
+/// resolved in isolation, and the owning state later runs
+/// [`analyze_morphology`] on the full text to apply the proper-name overlay and
+/// the numeral-governed partitive upgrade. The rows are deterministic per
+/// surface, so seeding them cannot change a reading.
+pub fn resolve_surfaces(
+    tokens: &[Token],
+    cache: &mut MorphologyCache,
+) -> Vec<(String, Arc<WordInfo>)> {
+    use std::collections::HashSet;
+
+    let cat = Catalogues::embedded();
+    let mut seen: HashSet<String> = HashSet::new();
+    let mut rows = Vec::new();
+    for token in tokens {
+        if !token.is_word() {
+            continue;
+        }
+        let lower = token.text.to_lowercase();
+        if seen.insert(lower.clone()) {
+            rows.push((lower.clone(), cache.resolve(cat, &lower)));
+        }
+    }
+    rows
+}
+
+/// Resolve every word token with the unique surfaces split across `threads`
+/// worker caches.
+///
+/// This is the native prototype for a morphology-only worker pool: the
+/// expensive phase is split, then the caller runs syntax and style once over
+/// the merged [`MorphologyAnalysis`]. Surfaces are grouped by their first four
+/// characters so the case forms of one lemma tend to stay in one worker and
+/// the thread-local `emits_form` cache keeps its reuse.
+///
+/// The result is the same as [`analyze_morphology`]; only the cache counters
+/// are split across the worker caches. Native only: `wasm32-unknown-unknown`
+/// has no threads.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn analyze_morphology_parallel(
+    tokens: &[Token],
+    threads: usize,
+) -> (MorphologyAnalysis, CacheStats) {
+    use std::collections::HashSet;
+
+    let mut surfaces: Vec<String> = Vec::new();
+    let mut seen: HashSet<String> = HashSet::new();
+    for token in tokens {
+        if !token.is_word() {
+            continue;
+        }
+        let lower = token.text.to_lowercase();
+        if seen.insert(lower.clone()) {
+            surfaces.push(lower);
+        }
+    }
+    surfaces.sort_by(|a, b| {
+        let a_prefix: String = a.chars().take(4).collect();
+        let b_prefix: String = b.chars().take(4).collect();
+        a_prefix.cmp(&b_prefix).then_with(|| a.cmp(b))
+    });
+
+    let workers = threads.max(1).min(surfaces.len().max(1));
+    let per_worker = surfaces.len().div_ceil(workers).max(1);
+    let groups: Vec<Vec<String>> = surfaces
+        .chunks(per_worker)
+        .map(|group| group.to_vec())
+        .collect();
+
+    let mut handles = Vec::with_capacity(groups.len());
+    for group in groups {
+        handles.push(std::thread::spawn(move || {
+            let cat = Catalogues::embedded();
+            let mut cache = MorphologyCache::new();
+            let mut rows = Vec::with_capacity(group.len());
+            for surface in group {
+                rows.push((surface.clone(), cache.resolve(cat, &surface)));
+            }
+            (rows, cache.stats())
+        }));
+    }
+
+    let mut by_surface: HashMap<String, Arc<WordInfo>> = HashMap::new();
+    let mut stats = CacheStats::default();
+    for handle in handles {
+        let (rows, thread_stats) = handle.join().expect("morphology worker panicked");
+        stats.words += thread_stats.words;
+        stats.hits += thread_stats.hits;
+        stats.misses += thread_stats.misses;
+        for (index, count) in thread_stats.by_depth.iter().enumerate() {
+            stats.by_depth[index] += count;
+        }
+        for (surface, info) in rows {
+            by_surface.insert(surface, info);
+        }
+    }
+
+    let mut words: Vec<Option<Arc<WordInfo>>> = Vec::with_capacity(tokens.len());
+    for token in tokens {
+        if !token.is_word() {
+            words.push(None);
+            continue;
+        }
+        let lower = token.text.to_lowercase();
+        let info = by_surface
+            .get(&lower)
+            .cloned()
+            .unwrap_or_else(|| Arc::new(WordInfo::default()));
+        let info = if info.readings.is_empty()
+            && token.is_capitalised()
+            && let Some(name) = crate::expand::proper_names::lemma(&token.text)
+        {
+            stats.proper_names += 1;
+            Arc::new(proper_name_word(
+                &info,
+                &token.text,
+                name,
+                crate::expand::proper_names::case(&token.text),
+                &lower,
+            ))
+        } else {
+            info
+        };
+        words.push(Some(info));
+    }
+
+    // The numeral-governed partitive is a context upgrade, so it stays on the
+    // main thread after the merge.
+    let lexicon = lemmas();
+    let cat = Catalogues::embedded();
+    let mut upgrades = MorphologyCache::new();
+    let mut previous: Option<Arc<WordInfo>> = None;
+    for (index, token) in tokens.iter().enumerate() {
+        if !token.is_word() {
+            continue;
+        }
+        let Some(info) = words[index].clone() else {
+            continue;
+        };
+        let governed_by_numeral = previous.as_ref().is_some_and(|previous| {
+            previous
+                .readings
+                .iter()
+                .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Numeral))
+        });
+        if governed_by_numeral
+            && !info
+                .readings
+                .iter()
+                .any(|reading| reading.case == Some(Case::Partitive))
+        {
+            let lower = token.text.to_lowercase();
+            let deep = upgrades.resolve_deep(lexicon, cat, &lower);
+            if !deep.readings.is_empty() {
+                words[index] = Some(deep);
+            }
+        }
+        previous = words[index].clone();
+    }
+    let upgrade_stats = upgrades.stats();
+    stats.deep_upgrades += upgrade_stats.deep_upgrades;
+    stats.proper_names += upgrade_stats.proper_names;
+
+    (
+        MorphologyAnalysis {
+            sentences: crate::sentence::spans(tokens),
+            tokens: words,
+        },
+        stats,
+    )
 }
 
 /// Resolve a lowercase word through the shallow ladder.

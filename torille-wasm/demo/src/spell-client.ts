@@ -457,6 +457,7 @@ type Response =
       diagnostics: DiagnosticSpan[];
       style: DiagnosticSpan[];
     }
+  | { type: 'unique-surfaces'; id: number; surfaces: string[] }
   | { type: 'memory-info'; id: number; wasmBytes: number; pendingCount: number }
   | { type: 'error'; id: number; for: string; word?: string; error: string };
 
@@ -468,6 +469,7 @@ function startWorker(): Promise<void> {
   // misspells` lands, they're all ready to take incoming
   // suggests and check-known asks without first-call latency.
   startSuggestionPool();
+  void startMorphologyPool();
   readyPromise = new Promise<void>((resolve, reject) => {
     worker = new Worker(new URL('./spell-worker.js', import.meta.url), {
       type: 'module',
@@ -655,6 +657,137 @@ export function checkStyle(text: string): Promise<DiagnosticSpan[]> {
   });
 }
 
+// ── morphology pool ────────────────────────────────────────────────────
+//
+// The cold morphology pass is the expensive half of a grammar/style check.
+// Split the unique surfaces across a small pool, collect the encoded rows,
+// and let the primary spell worker run syntax/style once over the merged
+// document. Each pool worker owns a wasm instance and a persistent textarea
+// state, so its morphology cache carries across groups.
+//
+// The wasm path is capped at 4: eight workers only bought ~0.15 s and
+// doubles the ~28 MB wasm instances. A native caller can use more.
+const MORPHOLOGY_POOL_SIZE = Math.min(
+  4,
+  Math.max(
+    1,
+    (globalThis.navigator as Navigator | undefined)?.hardwareConcurrency ?? 4,
+  ),
+);
+const MORPHOLOGY_GROUP_SIZE = 24;
+
+interface MorphologySlot {
+  worker: Worker;
+  ready: Promise<void>;
+  inflight: number;
+  inflightById: Map<number, (message: any) => void>;
+}
+
+const morphologySlots: MorphologySlot[] = [];
+let morphologyPoolReady: Promise<void> | null = null;
+let morphologyNextId = 1;
+
+function startMorphologyPool(): Promise<void> {
+  if (morphologyPoolReady) return morphologyPoolReady;
+  morphologyPoolReady = Promise.all(
+    Array.from({ length: MORPHOLOGY_POOL_SIZE }, (_, index) => {
+      const slot = {} as MorphologySlot;
+      const worker = new Worker(
+        new URL('./morphology-worker.js', import.meta.url),
+        { type: 'module' },
+      );
+      slot.worker = worker;
+      slot.inflight = 0;
+      slot.inflightById = new Map();
+      slot.ready = new Promise<void>((resolve, reject) => {
+        worker.addEventListener('message', (event: MessageEvent<any>) => {
+          const message = event.data;
+          if (message?.type === 'ready') resolve();
+          if (message?.type === 'init_failed') reject(new Error(message.error));
+          if (message?.type === 'morphology-chunk' || message?.type === 'error') {
+            const callback = slot.inflightById.get(message.id);
+            if (callback) {
+              slot.inflightById.delete(message.id);
+              slot.inflight = Math.max(0, slot.inflight - 1);
+              callback(message);
+            }
+          }
+        });
+        worker.addEventListener('error', (event) => {
+          reject(new Error(
+            `morphology-pool worker #${index} crashed: ${event.message || 'unknown'}`,
+          ));
+        });
+      });
+      morphologySlots.push(slot);
+      return slot.ready;
+    }),
+  ).then(() => undefined);
+  return morphologyPoolReady;
+}
+
+function runMorphologyGroup(
+  slot: MorphologySlot,
+  text: string,
+): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    const id = morphologyNextId++;
+    slot.inflight += 1;
+    slot.inflightById.set(id, (message) => {
+      if (message.type === 'morphology-chunk') resolve(message.payload);
+      else reject(new Error(message.error ?? 'morphology chunk failed'));
+    });
+    slot.worker.postMessage({ id, type: 'morphology-chunk', text });
+  });
+}
+
+async function runMorphologyPool(
+  surfaces: string[],
+  onProgress?: (done: number, total: number, ms: number) => void,
+): Promise<Uint8Array[]> {
+  await startMorphologyPool();
+  const groups: string[][] = [];
+  for (let index = 0; index < surfaces.length; index += MORPHOLOGY_GROUP_SIZE) {
+    groups.push(surfaces.slice(index, index + MORPHOLOGY_GROUP_SIZE));
+  }
+  const payloads: Uint8Array[] = new Array(groups.length);
+  let next = 0;
+  let done = 0;
+  await new Promise<void>((resolve, reject) => {
+    const pump = (slot: MorphologySlot) => {
+      if (next >= groups.length) return;
+      const index = next++;
+      const started = performance.now();
+      runMorphologyGroup(slot, groups[index].join(' '))
+        .then((payload) => {
+          payloads[index] = payload;
+          done += 1;
+          onProgress?.(done, groups.length, performance.now() - started);
+          if (done === groups.length) resolve();
+          else pump(slot);
+        })
+        .catch(reject);
+    };
+    for (const slot of morphologySlots) pump(slot);
+    if (groups.length === 0) resolve();
+  });
+  return payloads;
+}
+
+function requestUniqueSurfaces(text: string): Promise<string[]> {
+  return new Promise((resolve) => {
+    const id = nextId++;
+    pending.set(id, (message) => {
+      if (message.type === 'unique-surfaces') resolve(message.surfaces);
+      else resolve([]);
+    });
+    worker!.postMessage({ id, type: 'unique-surfaces', text });
+  });
+}
+
+const grammarRuns = new Map<number, number>();
+const MORPHOLOGY_POOL_WORD_THRESHOLD = 200;
+
 /**
  * Grammar and style diagnostics in one chunked pass.
  *
@@ -671,6 +804,9 @@ export function checkGrammarStyle(
 ): Promise<{ diagnostics: DiagnosticSpan[]; style: DiagnosticSpan[] }> {
   return new Promise((resolve) => {
     const id = nextId++;
+    const run = (grammarRuns.get(idx) ?? 0) + 1;
+    grammarRuns.set(idx, run);
+    const empty = { diagnostics: [], style: [] };
     pending.set(id, (msg) => {
       if (msg.type === 'check-progress') {
         onProgress?.(msg.done, msg.total, msg.ms);
@@ -679,9 +815,39 @@ export function checkGrammarStyle(
       if (msg.type === 'check-grammar-style') {
         resolve({ diagnostics: msg.diagnostics, style: msg.style });
       } else {
-        resolve({ diagnostics: [], style: [] });
+        resolve(empty);
       }
     });
+    const words = text.split(/\s+/).filter(Boolean).length;
+    if (MORPHOLOGY_POOL_SIZE > 1 && words > MORPHOLOGY_POOL_WORD_THRESHOLD) {
+      void (async () => {
+        let payloads: Uint8Array[] = [];
+        try {
+          const surfaces = await requestUniqueSurfaces(text);
+          if (grammarRuns.get(idx) !== run) {
+            pending.delete(id);
+            resolve(empty);
+            return;
+          }
+          payloads = await runMorphologyPool(surfaces, (done, total, ms) =>
+            onProgress?.(done, total, ms),
+          );
+        } catch {
+          // Fall through to the single-thread chunked path.
+          payloads = [];
+        }
+        if (grammarRuns.get(idx) !== run) {
+          pending.delete(id);
+          resolve(empty);
+          return;
+        }
+        worker!.postMessage({
+          type: 'check-grammar-style', id, idx, text, syntax, style,
+          ...(payloads.length > 0 ? { payloads } : {}),
+        });
+      })();
+      return;
+    }
     worker!.postMessage({ type: 'check-grammar-style', id, idx, text, syntax, style });
   });
 }

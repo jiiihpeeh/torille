@@ -3,7 +3,7 @@
 //!
 //! Usage:
 //!   perf_grammar_style [--file PATH] [--words N] [--repeat N]
-//!                      [--single-thread] [--json]
+//!                      [--single-thread] [--threads N] [--json]
 //!
 //! The default fixture is `tests/fixtures/perf/page-2000.txt`; `--words`
 //! takes the first N word tokens of it. `--single-thread` measures the wasm
@@ -16,7 +16,9 @@
 use std::time::Instant;
 
 use torille::check::check_all_with_cache;
-use torille::morphology::{CacheStats, Depth, MorphologyCache, analyze_morphology};
+use torille::morphology::{
+    CacheStats, Depth, MorphologyCache, analyze_morphology, analyze_morphology_parallel,
+};
 use torille::syntax::analyze_syntax;
 use torille::syntax_check::{SentenceCache, check_analysis};
 
@@ -28,6 +30,7 @@ struct Args {
     repeat: usize,
     slowest: usize,
     single_thread: bool,
+    threads: usize,
     json: bool,
 }
 
@@ -38,6 +41,7 @@ fn parse_args() -> Args {
         repeat: 3,
         slowest: 0,
         single_thread: false,
+        threads: 0,
         json: false,
     };
     let mut iter = std::env::args().skip(1);
@@ -66,6 +70,13 @@ fn parse_args() -> Args {
                     .expect("--slowest must be a number")
             }
             "--single-thread" => args.single_thread = true,
+            "--threads" => {
+                args.threads = iter
+                    .next()
+                    .expect("--threads needs a number")
+                    .parse()
+                    .expect("--threads must be a number")
+            }
             "--json" => args.json = true,
             other => panic!("unknown argument: {other}"),
         }
@@ -98,6 +109,42 @@ fn ms(elapsed: std::time::Duration) -> f64 {
 fn median(mut values: Vec<f64>) -> f64 {
     values.sort_by(f64::total_cmp);
     values[values.len() / 2]
+}
+
+fn diagnostic_keys(
+    diagnostics: &[torille::syntax_check::SyntaxDiagnostic],
+) -> Vec<(String, usize, usize, &'static str)> {
+    let mut keys: Vec<_> = diagnostics
+        .iter()
+        .map(|diagnostic| {
+            (
+                format!("{:?}", diagnostic.kind),
+                diagnostic.span.start,
+                diagnostic.span.end,
+                diagnostic.message,
+            )
+        })
+        .collect();
+    keys.sort();
+    keys
+}
+
+fn style_keys(
+    diagnostics: &[torille::style_check::StyleDiagnostic],
+) -> Vec<(String, usize, usize, &'static str)> {
+    let mut keys: Vec<_> = diagnostics
+        .iter()
+        .map(|diagnostic| {
+            (
+                format!("{:?}", diagnostic.kind),
+                diagnostic.span.start,
+                diagnostic.span.end,
+                diagnostic.message,
+            )
+        })
+        .collect();
+    keys.sort();
+    keys
 }
 
 /// Change one sentence by inserting a letter at its first word.
@@ -150,6 +197,40 @@ fn main() {
     let morphology = analyze_morphology(&tokens, &mut cache);
     let morphology_cold_ms = ms(cold.elapsed());
     let cold_stats = cache.stats();
+
+    if args.threads > 0 {
+        let t = Instant::now();
+        let (parallel_morphology, parallel_stats) =
+            analyze_morphology_parallel(&tokens, args.threads);
+        let parallel_ms = ms(t.elapsed());
+        let single_syntax = analyze_syntax(&tokens, &morphology);
+        let single_diagnostics = check_analysis(&tokens, &single_syntax);
+        let single_style =
+            torille::style_check::check_tokens_with_morphology(&tokens, &morphology);
+        let parallel_syntax = analyze_syntax(&tokens, &parallel_morphology);
+        let parallel_diagnostics = check_analysis(&tokens, &parallel_syntax);
+        let parallel_style =
+            torille::style_check::check_tokens_with_morphology(&tokens, &parallel_morphology);
+        let grammar_matches = diagnostic_keys(&single_diagnostics)
+            == diagnostic_keys(&parallel_diagnostics);
+        let style_matches = style_keys(&single_style.diagnostics)
+            == style_keys(&parallel_style.diagnostics);
+        println!(
+            "parallel morphology ({} threads): {parallel_ms:9.2} ms",
+            args.threads
+        );
+        println!(
+            "  depth counts: {} (deep upgrades {}, proper names {})",
+            depths(&parallel_stats),
+            parallel_stats.deep_upgrades,
+            parallel_stats.proper_names
+        );
+        println!(
+            "  diagnostics: {} grammar, {} style; matches single-thread: grammar={grammar_matches}, style={style_matches}",
+            parallel_diagnostics.len(),
+            parallel_style.diagnostics.len()
+        );
+    }
 
     // Warm: the same cache after one complete pass.
     let mut warm_morphology = Vec::new();

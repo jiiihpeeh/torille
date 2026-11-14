@@ -504,6 +504,116 @@ pub fn check_syntax_with_state(idx: u32, text: &str) -> js_sys::Object {
     check_syntax(text)
 }
 
+/// The unique lowercased word surfaces in `text`, newline-separated.
+///
+/// The pool coordinator splits this list into groups; a surface cannot contain
+/// a newline, so the simple transport is unambiguous.
+#[wasm_bindgen]
+pub fn unique_surfaces(text: &str) -> js_sys::Uint8Array {
+    let tokens = torille::tokenise::tokenise(text);
+    let mut seen = std::collections::HashSet::new();
+    let mut surfaces = Vec::new();
+    for token in &tokens {
+        if !token.is_word() {
+            continue;
+        }
+        let surface = token.text.to_lowercase();
+        if seen.insert(surface.clone()) {
+            surfaces.push(surface);
+        }
+    }
+    js_sys::Uint8Array::from(surfaces.join("\n").as_bytes())
+}
+
+/// Resolve a group of surfaces and return the encoded `WordInfo` rows.
+///
+/// The worker owns one textarea state; its `syntax_cache` persists across
+/// groups. The owning state decodes the payload and seeds its own cache before
+/// the full-document grammar/style pass.
+#[wasm_bindgen]
+pub fn morphology_chunk(idx: u32, text: &str) -> js_sys::Uint8Array {
+    let tokens = torille::tokenise::tokenise(text);
+    let mut slots = states().lock().expect("states mutex poisoned");
+    if let Some(Some(state)) = slots.get_mut(idx as usize) {
+        let rows = torille::morphology::resolve_surfaces(&tokens, &mut state.syntax_cache);
+        return js_sys::Uint8Array::from(
+            torille::morphology::codec::encode_rows(&rows).as_slice(),
+        );
+    }
+    drop(slots);
+    let mut cache = torille::morphology::MorphologyCache::new();
+    let rows = torille::morphology::resolve_surfaces(&tokens, &mut cache);
+    js_sys::Uint8Array::from(torille::morphology::codec::encode_rows(&rows).as_slice())
+}
+
+/// Run the full-document grammar/style pass after seeding the collected rows.
+///
+/// `payloads` is one encoded [`morphology_chunk`] per pool worker. Decoding
+/// and seeding is a transport; the morphology pass then hits every seeded
+/// surface and only pays for the context upgrades.
+#[wasm_bindgen]
+pub fn check_grammar_style_from_morphology(
+    idx: u32,
+    text: &str,
+    payloads: js_sys::Array,
+    syntax: bool,
+    style: bool,
+) -> js_sys::Object {
+    let tokens = torille::tokenise::tokenise(text);
+    let mut slots = states().lock().expect("states mutex poisoned");
+    if let Some(Some(state)) = slots.get_mut(idx as usize) {
+        for payload in payloads.iter() {
+            if !payload.is_instance_of::<js_sys::Uint8Array>() {
+                continue;
+            }
+            let bytes = js_sys::Uint8Array::new(&payload).to_vec();
+            if let Ok(rows) = torille::morphology::codec::decode_rows(&bytes) {
+                for (surface, info) in rows {
+                    state.syntax_cache.seed(surface, info);
+                }
+            }
+        }
+        let TextAreaState {
+            sentence_cache,
+            syntax_cache,
+            ..
+        } = state;
+        let morphology = torille::morphology::analyze_morphology(&tokens, syntax_cache);
+        let diagnostics = if syntax {
+            sentence_cache.check(text, &tokens, &morphology, syntax_cache)
+        } else {
+            Vec::new()
+        };
+        let style_diagnostics = if style {
+            torille::style_check::check_tokens_with_morphology(&tokens, &morphology).diagnostics
+        } else {
+            Vec::new()
+        };
+        let obj = js_sys::Object::new();
+        set(&obj, "diagnostics", diagnostics_array(&diagnostics).into());
+        set(
+            &obj,
+            "style",
+            style_diagnostics_array(&style_diagnostics).into(),
+        );
+        return obj;
+    }
+    drop(slots);
+    let all = torille::check_all(text);
+    let obj = js_sys::Object::new();
+    set(
+        &obj,
+        "diagnostics",
+        diagnostics_array(&all.syntax.diagnostics).into(),
+    );
+    set(
+        &obj,
+        "style",
+        style_diagnostics_array(&all.style.diagnostics).into(),
+    );
+    obj
+}
+
 /// Grammar and style diagnostics in one pass through the per-textarea cache.
 ///
 /// `syntax` and `style` select the rule passes; the morphology pass is shared

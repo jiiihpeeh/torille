@@ -100,7 +100,10 @@ export type R_WorkerInbound =
       text: string;
       syntax: boolean;
       style: boolean;
+      /** Pre-resolved morphology rows from the pool, one per worker. */
+      payloads?: Uint8Array[];
     }
+  | { id: number; type: 'unique-surfaces'; text: string }
   | { type: 'debug'; on: boolean }
   | { id: number; type: 'memory-info' };
 
@@ -151,5 +154,21 @@ export type R_WorkerOutbound =
       diagnostics: DiagnosticSpan[];
       style: DiagnosticSpan[];
     }
+  | { id: number; type: 'unique-surfaces'; surfaces: string[] }
   | { id: number; type: 'memory-info'; wasmBytes: number; pendingCount: number }
   | { id: number; type: 'error'; for: string; word?: string; error: string };
+
+
+/** Pool worker: caller -> morphology worker. */
+export type R_MorphologyInbound = {
+  id: number;
+  type: 'morphology-chunk';
+  text: string;
+};
+
+/** Pool worker: morphology worker -> caller. */
+export type R_MorphologyOutbound =
+  | { type: 'ready' }
+  | { type: 'init_failed'; error: string }
+  | { id: number; type: 'morphology-chunk'; payload: Uint8Array }
+  | { type: 'error'; id: number; for: string; error: string };

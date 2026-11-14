@@ -564,6 +564,17 @@ pub enum Clitic {
     Pa,
 }
 
+impl Clitic {
+    /// Every clitic, in a stable order for the morphology codec.
+    pub const ALL: [Clitic; 5] = [
+        Clitic::Ko,
+        Clitic::Kin,
+        Clitic::Kaan,
+        Clitic::Han,
+        Clitic::Pa,
+    ];
+}
+
 /// A possessive suffix, with whose it is.
 ///
 /// Finnish has five distinct possessive suffixes, but the third person is one

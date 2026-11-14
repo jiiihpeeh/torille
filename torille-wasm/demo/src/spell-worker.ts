@@ -927,6 +927,22 @@ function splitLongChunks(chunk: TextChunk): TextChunk[] {
   return out;
 }
 
+function handleUniqueSurfaces(
+  msg: Extract<R_WorkerInbound, { type: 'unique-surfaces' }>,
+): void {
+  try {
+    const bytes = bg.unique_surfaces(msg.text);
+    const text = new TextDecoder().decode(bytes);
+    post({
+      id: msg.id,
+      type: 'unique-surfaces',
+      surfaces: text.split('\n').filter(Boolean),
+    });
+  } catch (err) {
+    postError(msg.id, 'unique-surfaces', undefined, err);
+  }
+}
+
 async function handleCheckGrammarStyle(
   msg: Extract<R_WorkerInbound, { type: 'check-grammar-style' }>,
 ): Promise<void> {
@@ -935,6 +951,30 @@ async function handleCheckGrammarStyle(
   dbgStage(true, 'handler:check-grammar-style:enter',
            `id=${msg.id} idx=${msg.idx} len=${msg.text.length} ` +
            `syntax=${msg.syntax} style=${msg.style}`);
+  if (msg.payloads !== undefined && msg.payloads.length > 0) {
+    // The morphology pool already resolved the surfaces. Seed the state and
+    // run the full-document pass once; the sentence cache and the seeded
+    // morphology cache make this the only wasm call.
+    let raw: { diagnostics?: DiagnosticSpan[]; style?: DiagnosticSpan[] } = {};
+    try {
+      raw = bg.check_grammar_style_from_morphology(
+        msg.idx, msg.text, msg.payloads, msg.syntax, msg.style,
+      ) as { diagnostics?: DiagnosticSpan[]; style?: DiagnosticSpan[] };
+    } catch (err) {
+      postError(msg.id, 'check-grammar-style', undefined, err);
+      return;
+    }
+    const out: R_WorkerOutbound = {
+      id: msg.id,
+      type: 'check-grammar-style',
+      diagnostics: toUtf16Diagnostics(msg.text, raw.diagnostics ?? []),
+      style: toUtf16Diagnostics(msg.text, raw.style ?? []),
+    };
+    post(out);
+    dbgStage(false, 'handler:check-grammar-style:pool-exit',
+             `id=${msg.id} n=${out.diagnostics.length} style=${out.style.length}`);
+    return;
+  }
   const chunks = sentenceChunks(msg.text, MAX_CHUNK_SENTENCES);
   const diagnostics: DiagnosticSpan[] = [];
   const style: DiagnosticSpan[] = [];
@@ -1125,6 +1165,9 @@ const HANDLERS: {
   'check-grammar-style': (
     msg: Extract<R_WorkerInbound, { type: 'check-grammar-style' }>,
   ) => Promise<void>;
+  'unique-surfaces': (
+    msg: Extract<R_WorkerInbound, { type: 'unique-surfaces' }>,
+  ) => void;
   debug: (msg: Extract<R_WorkerInbound, { type: 'debug' }>) => void;
   'memory-info': (msg: Extract<R_WorkerInbound, { type: 'memory-info' }>) => void;
 } = {
@@ -1143,6 +1186,7 @@ const HANDLERS: {
   'check-syntax': handleCheckSyntax,
   'check-style': handleCheckStyle,
   'check-grammar-style': handleCheckGrammarStyle,
+  'unique-surfaces': handleUniqueSurfaces,
   debug: handleDebug,
   'memory-info': handleMemoryInfo,
 };
@@ -1283,6 +1327,8 @@ dbgStage(false, 'worker:boot', 'ready posted, onmessage registering');
           HANDLERS['check-style'](msg);
         } else if (msg.type === 'check-grammar-style') {
           await HANDLERS['check-grammar-style'](msg);
+        } else if (msg.type === 'unique-surfaces') {
+          HANDLERS['unique-surfaces'](msg);
         } else if (msg.type === 'debug') {
           HANDLERS.debug(msg);
         } else {

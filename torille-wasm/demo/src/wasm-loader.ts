@@ -67,4 +67,19 @@ export async function initTorilleWasm(url: string): Promise<WebAssembly.Exports>
   return instance.exports;
 }
 
-export { glue as bg };
+/**
+ * The generated glue's new pool exports are not in the checked-in
+ * declaration surface yet, so the demo adds their shape here. The wasm
+ * module still owns the implementation; this is only a TypeScript view.
+ */
+export const bg = glue as typeof glue & {
+  morphology_chunk(idx: number, text: string): Uint8Array;
+  unique_surfaces(text: string): Uint8Array;
+  check_grammar_style_from_morphology(
+    idx: number,
+    text: string,
+    payloads: Uint8Array[],
+    syntax: boolean,
+    style: boolean,
+  ): object;
+};
