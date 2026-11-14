@@ -1,6 +1,6 @@
 # PLAN_GRAMMAR_STYLE_PERF — one morphology pass for grammar and style
 
-Status: **Phase 0–5 landed (cold-word p90 open); Phase 6 next** · 2026-11-14 · branch `syntax` · baseline `2e5f13c`
+Status: **Phase 0–6 decided (reverse index not shipped; cold-word p90 open); final docs/versioning next** · 2026-11-14 · branch `syntax` · baseline `2e5f13c`
 
 This is the performance plan for the two opt-in analysis layers:
 
@@ -65,6 +65,10 @@ Landed:
   The extension background chunks the command, posts progress and stops on
   an edit. The p90 batch is native **63 ms**; the remaining browser outliers
   are cold names/compounds, so the cold-word p90 stays open for Phase 6.
+- **Phase 6 (decision)** — the reverse-index experiment measured five top-N
+  subsets. No subset met both 95% page coverage and 3 MB compressed; the
+  largest under-budget blob covers 86.6%, and the full 104k-lemma map is
+  17.3 M rows. **Not shipped**; the §4.2/§4.3 ladder stays.
 - **Shallow closed-class fix** — a pronoun base named by the cheap gate
   (`jossa` → `joka`) is verified across every sanalista row, so relative
   pronoun forms no longer fall to `Unknown`. The attribute rule now skips
@@ -911,14 +915,41 @@ extensions build; an edit during a check leaves no stale diagnostics in the
 demo, reader and extension (met). The cold-word p90 is the remaining Phase 6
 work.
 
-### Phase 6 — optional reverse index (3 days, decision gate)
+### Phase 6 — optional reverse index (3 days, decision gate) — decided, not shipped
 
 - §4.5 coverage/size experiment.
 - Ship only if it meets the 95% / 3 MB gate and improves the cold page to
   ≤ 500 ms; otherwise document the decision and stop.
 
-Acceptance: either a `maps/syntax_forms.bin.gz` with a generator and coverage
-report, or a written “not shipped” decision with the measured numbers.
+**Experiment:** a 10.9 MB / 1.45 M-token sample of the local Gutenberg corpus
+(40 books, capped at 20 MB) supplied the lemma frequencies. The held-out page
+was the committed 1,959-word perf fixture (1,973 word tokens, 1,150 unique).
+The full engine form→base map was dumped with `dump_form_bases` (17.3 M rows,
+17.07 M unique words, 104,295 bases), and `gen_syntax_forms` wrote the
+front-coded `MST2` blob for each top-N subset.
+
+| top lemmas | form pairs | unique forms | page tokens covered | compressed blob |
+|---:|---:|---:|---:|---:|
+| 1,000 | 426,525 | 421,685 | 71.0% | 426 KB |
+| 2,000 | 860,645 | 848,818 | 78.8% | 839 KB |
+| 5,000 | 2,174,010 | 2,138,520 | 86.6% | **2.1 MB** |
+| 10,000 | 4,232,839 | 4,158,040 | 88.5% | 4.1 MB |
+| 19,000 | 7,289,501 | 7,156,694 | 89.3% | 7.0 MB |
+
+**Decision: not shipped.** The gate is an AND, and no point meets it. The
+largest blob under 3 MB (5,000 lemmas) covers 86.6% of the held-out page; the
+next point (10,000 lemmas) is 4.1 MB and still only 88.5%. Coverage plateaus
+around 89% because the remaining tokens are names, unknown words and rare
+lemmas; the full 104k-lemma map is 17.3 M rows and far above the download
+budget. The 500 ms cold-page target is therefore not reachable with this
+index shape. Keep the §4.2/§4.3 ladder. The remaining cold-word p90 and the
+500 ms page need a different cold-path design (for example, a form table that
+stores readings, not only the lemma), not a larger `form -> lemma` blob.
+
+The experiment used two local helper binaries (a full form→base dump and a
+front-coded map writer). They were not committed: neither is part of the
+shipped crate, and the measured decision is the deliverable. No `maps/` blob
+was added and nothing is embedded in the crate.
 
 ### Phase 7 — reader enablement and docs (1 day) — landed
 
