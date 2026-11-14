@@ -479,6 +479,7 @@ export function createContentEditableOverlay(opts: OverlayOptions): Overlay {
   function onDocumentInput(e: Event): void {
     if (e.target === el || (e.target instanceof Node && el.contains(e.target))) {
       dbg('content', 'input:hit', { target: (e.target as Node).nodeName });
+      workerClient.cancelCheckAsync();
       clearDiagnosticHighlights();
       scheduleCheck();
       if (HIGHLIGHTS_SUPPORTED) void renderMisspellHighlights();

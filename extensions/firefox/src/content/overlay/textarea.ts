@@ -606,6 +606,7 @@ export function createTextareaOverlay(opts: OverlayOptions): Overlay {
   }
 
   function onInput(): void {
+    workerClient.cancelCheckAsync();
     clearDiagnosticUnderlines();
     scheduleRender();
   }

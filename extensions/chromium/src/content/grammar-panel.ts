@@ -5,6 +5,45 @@
 // The grammar check is opt-in through the context menu and runs on
 // one input at a time. It is not on the keystroke path.
 
+const checkProgress = new Map<number, HTMLElement>();
+
+/// A small fixed toast while the background works through the batches.
+export function showCheckProgress(inputId: number, label: string): void {
+  hideCheckProgress(inputId);
+  const el = document.createElement('div');
+  el.className = 'torille-check-progress';
+  el.textContent = label;
+  el.style.cssText = [
+    'position:fixed',
+    'right:16px',
+    'bottom:16px',
+    'z-index:2147483647',
+    'background:#fff',
+    'color:#111',
+    'border:1px solid #888',
+    'border-radius:6px',
+    'box-shadow:0 4px 18px rgba(0,0,0,.25)',
+    'padding:8px 12px',
+    'font:13px/1.4 system-ui,sans-serif',
+  ].join(';');
+  document.body.append(el);
+  checkProgress.set(inputId, el);
+}
+
+export function updateCheckProgress(
+  inputId: number,
+  done: number,
+  total: number,
+): void {
+  const el = checkProgress.get(inputId);
+  if (el) el.textContent = `Tarkistetaan… ${done}/${total}`;
+}
+
+export function hideCheckProgress(inputId: number): void {
+  checkProgress.get(inputId)?.remove();
+  checkProgress.delete(inputId);
+}
+
 export function syntaxKindLabel(kind: string): string {
   switch (kind) {
     case 'subject_predicate_agreement': return 'subjektin ja predikaatin kongruenssi';

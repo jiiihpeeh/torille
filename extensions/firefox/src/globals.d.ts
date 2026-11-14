@@ -144,6 +144,7 @@ declare type R_SyntaxDiagnostic = {
 declare type R_CheckSyntax = {
   type: 'torille:check-syntax';
   idx: number;
+  inputId: number;
   text: string;
 };
 declare type R_CheckSyntaxResponse = {
@@ -152,10 +153,33 @@ declare type R_CheckSyntaxResponse = {
 declare type R_CheckStyle = {
   type: 'torille:check-style';
   idx: number;
+  inputId: number;
   text: string;
 };
 declare type R_CheckStyleResponse = {
   diagnostics: R_SyntaxDiagnostic[];
+};
+declare type R_CheckGrammarStyle = {
+  type: 'torille:check-grammar-style';
+  idx: number;
+  inputId: number;
+  text: string;
+  syntax: boolean;
+  style: boolean;
+};
+declare type R_CheckGrammarStyleResponse = {
+  diagnostics: R_SyntaxDiagnostic[];
+  style: R_SyntaxDiagnostic[];
+};
+declare type R_CancelCheck = {
+  type: 'torille:cancel-check';
+  inputId: number;
+};
+declare type R_CheckProgress = {
+  type: 'torille:check-progress';
+  inputId: number;
+  done: number;
+  total: number;
 };
 
 declare type R_Message =
@@ -174,7 +198,9 @@ declare type R_Message =
   | R_AnalyzeText
   | R_SuggestWithState
   | R_CheckSyntax
-  | R_CheckStyle;
+  | R_CheckStyle
+  | R_CheckGrammarStyle
+  | R_CancelCheck;
 // `null` means "the checker could not answer" (worker down, wasm
 // failure, timeout). It is deliberately distinct from `false`
 // ("misspelled"): only a `false` should produce a red underline.
@@ -237,7 +263,8 @@ declare type R_CheckStylePendingInputMessage = {
 declare type R_ContentInboundMessage =
   | R_TogglePendingInputMessage
   | R_CheckGrammarPendingInputMessage
-  | R_CheckStylePendingInputMessage;
+  | R_CheckStylePendingInputMessage
+  | R_CheckProgress;
 declare type R_ToggleResponse = { disabled: boolean };
 declare type R_CheckGrammarResponse = { checked: boolean };
 // Worker-level message protocol. The wasm worker is loaded once per
@@ -273,6 +300,14 @@ declare type R_WorkerInbound =
     }
   | { id: number; type: 'check-syntax'; idx: number; text: string }
   | { id: number; type: 'check-style'; idx: number; text: string }
+  | {
+      id: number;
+      type: 'check-grammar-style';
+      idx: number;
+      text: string;
+      syntax: boolean;
+      style: boolean;
+    }
   | { type: 'debug'; on: boolean };
 declare type R_WorkerOutbound =
   | { type: 'ready' }
@@ -292,4 +327,10 @@ declare type R_WorkerOutbound =
   | { id: number; type: 'suggest-with-state'; suggestions: string[] }
   | { id: number; type: 'check-syntax'; diagnostics: R_SyntaxDiagnostic[] }
   | { id: number; type: 'check-style'; diagnostics: R_SyntaxDiagnostic[] }
+  | {
+      id: number;
+      type: 'check-grammar-style';
+      diagnostics: R_SyntaxDiagnostic[];
+      style: R_SyntaxDiagnostic[];
+    }
   | { id: number; type: 'error'; for: string; word?: string; error: string };

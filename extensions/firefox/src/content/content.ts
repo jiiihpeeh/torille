@@ -17,7 +17,10 @@
 
 import { createBlacklist } from './blacklist';
 import { createTextboxToggle } from './context-menu';
-import { editorText, showGrammarPanel, showStylePanel } from './grammar-panel';
+import {
+  editorText, hideCheckProgress, showCheckProgress, showGrammarPanel,
+  showStylePanel,
+} from './grammar-panel';
 import { createOverlay } from './overlay';
 import { createScanner } from './scanner';
 import { isIgnored } from './ignore-ranges';
@@ -39,6 +42,15 @@ let nextInputId = 1;
 let checkSearchboxes = false;
 
 const perInput = new Map<HTMLElement, ReturnType<typeof createOverlay>>();
+
+// One token per context-menu check. A stale check's `finally` must not hide
+// the progress toast of a newer check for the same input.
+const checkTokens = new Map<number, number>();
+function nextCheckToken(inputId: number): number {
+  const next = (checkTokens.get(inputId) ?? 0) + 1;
+  checkTokens.set(inputId, next);
+  return next;
+}
 
 // Hide or show the host element for one input. Used by the
 // per-textbox toggle and the blacklist.
@@ -130,6 +142,9 @@ createTextboxToggle({
     const overlay = perInput.get(input);
     if (!overlay) return;
     const text = editorText(input);
+    const inputId = overlay.workerClient.inputId;
+    const token = nextCheckToken(inputId);
+    showCheckProgress(inputId, 'Tarkistetaan kielioppia…');
     overlay.workerClient.checkSyntaxAsync(text).then((diagnostics) => {
       if (diagnostics === null) return;
       // The field changed while the check ran; the offsets are stale.
@@ -142,12 +157,17 @@ createTextboxToggle({
       });
     }).catch((e: unknown) => {
       dbg('content', 'checkGrammar failed', String(e));
+    }).finally(() => {
+      if (checkTokens.get(inputId) === token) hideCheckProgress(inputId);
     });
   },
   checkStyle(input: HTMLElement): void {
     const overlay = perInput.get(input);
     if (!overlay) return;
     const text = editorText(input);
+    const inputId = overlay.workerClient.inputId;
+    const token = nextCheckToken(inputId);
+    showCheckProgress(inputId, 'Tarkistetaan tyyliä…');
     overlay.workerClient.checkStyleAsync(text).then((diagnostics) => {
       if (diagnostics === null) return;
       // The field changed while the check ran; the offsets are stale.
@@ -169,6 +189,8 @@ createTextboxToggle({
       });
     }).catch((e: unknown) => {
       dbg('content', 'checkStyle failed', String(e));
+    }).finally(() => {
+      if (checkTokens.get(inputId) === token) hideCheckProgress(inputId);
     });
   },
 });

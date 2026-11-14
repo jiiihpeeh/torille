@@ -97,7 +97,14 @@ type SpellCallPayload =
   | { type: 'analyze-text'; idx: number; text: string; max: number }
   | { type: 'suggest-with-state'; idx: number; word: string; max: number }
   | { type: 'check-syntax'; idx: number; text: string }
-  | { type: 'check-style'; idx: number; text: string };
+  | { type: 'check-style'; idx: number; text: string }
+  | {
+      type: 'check-grammar-style';
+      idx: number;
+      text: string;
+      syntax: boolean;
+      style: boolean;
+    };
 
 type SpellResponse =
   | { id: number; type: 'check'; ok: boolean }
@@ -115,6 +122,12 @@ type SpellResponse =
   | { id: number; type: 'suggest-with-state'; suggestions: string[] }
   | { id: number; type: 'check-syntax'; diagnostics: R_SyntaxDiagnostic[] }
   | { id: number; type: 'check-style'; diagnostics: R_SyntaxDiagnostic[] }
+  | {
+      id: number;
+      type: 'check-grammar-style';
+      diagnostics: R_SyntaxDiagnostic[];
+      style: R_SyntaxDiagnostic[];
+    }
   // Fire-and-forget ops (destroy/clear/update-state, debug) resolve
   // with this in the direct host, where there is no message id to
   // mirror. Callers ignore the value.
@@ -381,6 +394,164 @@ function spellCall(payload: SpellCallPayload): Promise<SpellResponse> {
   });
 }
 
+// ─── grammar/style chunking ──────────────────────────────────────────
+//
+// One wasm call per sentence batch keeps the worker responsive. The
+// background merges the UTF-16 diagnostics (the worker already converted
+// byte offsets) and posts `torille:check-progress` to the content script.
+// A newer edit bumps the per-input generation and stops the loop.
+
+interface TextChunk {
+  start: number;
+  end: number;
+  text: string;
+}
+
+const MAX_CHUNK_WORDS = 120;
+/// Cancellation generations are keyed by tab + input: `inputId` is only
+/// unique inside one page, and the background is shared by every tab.
+const checkRuns = new Map<string, number>();
+
+function checkKey(tabId: number | undefined, inputId: number): string {
+  return `${tabId ?? 0}:${inputId}`;
+}
+
+function updateQuoteDepth(depth: number, text: string): number {
+  for (const c of text) {
+    if (c === '»' || c === '"') {
+      depth = depth === 0 ? 1 : depth - 1;
+    } else if (c === '«') {
+      depth = Math.max(0, depth - 1);
+    } else if (c === '“' || c === '‘') {
+      depth += 1;
+    } else if (c === '”' || c === '’') {
+      depth = Math.max(0, depth - 1);
+    }
+  }
+  return depth;
+}
+
+function splitLongChunks(chunk: TextChunk): TextChunk[] {
+  const words = chunk.text.split(/\s+/).filter(Boolean).length;
+  if (words <= MAX_CHUNK_WORDS) return [chunk];
+  const out: TextChunk[] = [];
+  let start = chunk.start;
+  let count = 0;
+  let depth = 0;
+  for (let i = 0; i < chunk.text.length; i++) {
+    depth = updateQuoteDepth(depth, chunk.text[i]);
+    if (/\s/.test(chunk.text[i])) {
+      count++;
+      if (count >= MAX_CHUNK_WORDS && depth === 0) {
+        const end = chunk.start + i;
+        out.push({ start, end, text: chunk.text.slice(start - chunk.start, i) });
+        start = end;
+        count = 0;
+      }
+    }
+  }
+  if (start < chunk.end) {
+    out.push({
+      start,
+      end: chunk.end,
+      text: chunk.text.slice(start - chunk.start),
+    });
+  }
+  return out;
+}
+
+function sentenceChunks(text: string): TextChunk[] {
+  if (text.length === 0) return [];
+  const chunks: TextChunk[] = [];
+  let start = 0;
+  const re = /[.!?](?=\s+[A-ZÄÖÅ]|\s*$)/g;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(text)) !== null) {
+    const end = match.index + 1;
+    if (updateQuoteDepth(0, text.slice(start, end)) !== 0) {
+      continue;
+    }
+    chunks.push({ start, end, text: text.slice(start, end) });
+    start = end;
+  }
+  if (start < text.length) {
+    chunks.push({ start, end: text.length, text: text.slice(start) });
+  }
+  return chunks.flatMap(splitLongChunks);
+}
+
+function shiftDiagnostic(
+  diagnostic: R_SyntaxDiagnostic,
+  offset: number,
+): R_SyntaxDiagnostic {
+  return {
+    ...diagnostic,
+    start: diagnostic.start + offset,
+    end: diagnostic.end + offset,
+    corrections: diagnostic.corrections.map((correction) => ({
+      ...correction,
+      edits: correction.edits.map((edit) => ({
+        ...edit,
+        start: edit.start + offset,
+        end: edit.end + offset,
+      })),
+    })),
+  };
+}
+
+async function checkGrammarStyle(
+  inputId: number,
+  idx: number,
+  text: string,
+  syntax: boolean,
+  style: boolean,
+  tabId: number | undefined,
+): Promise<R_CheckGrammarStyleResponse> {
+  const key = checkKey(tabId, inputId);
+  const run = (checkRuns.get(key) ?? 0) + 1;
+  checkRuns.set(key, run);
+  const chunks = sentenceChunks(text);
+  const diagnostics: R_SyntaxDiagnostic[] = [];
+  const styleDiagnostics: R_SyntaxDiagnostic[] = [];
+  let offset = 0;
+  for (let i = 0; i < chunks.length; i++) {
+    if (checkRuns.get(key) !== run) {
+      return { diagnostics: [], style: [] };
+    }
+    const chunk = chunks[i];
+    const r = await spellCall({
+      type: 'check-grammar-style',
+      idx,
+      text: chunk.text,
+      syntax,
+      style,
+    });
+    if (r.type !== 'check-grammar-style') {
+      throw new Error('worker returned unexpected response');
+    }
+    for (const diagnostic of r.diagnostics) {
+      diagnostics.push(shiftDiagnostic(diagnostic, offset));
+    }
+    for (const diagnostic of r.style) {
+      styleDiagnostics.push(shiftDiagnostic(diagnostic, offset));
+    }
+    offset += chunk.text.length;
+    if (tabId != null) {
+      api.tabs.sendMessage(tabId, {
+        type: 'torille:check-progress',
+        inputId,
+        done: i + 1,
+        total: chunks.length,
+      }).catch(() => { /* tab closed */ });
+    }
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  }
+  if (checkRuns.get(key) !== run) {
+    return { diagnostics: [], style: [] };
+  }
+  return { diagnostics, style: styleDiagnostics };
+}
+
 // Serve a `check-batch` against the shared `wordCache` first; the
 // remaining words go to the wasm worker in a single `check-batch` call.
 // The worker's response is zipped back into the caller's item order,
@@ -539,7 +710,7 @@ function setupContextMenus(): void {
 // opens it. The site-level message does the same for the
 // "Älä tarkasta tällä sivulla" item when the user right-clicks
 // somewhere that isn't a textbox.
-api.runtime.onMessage.addListener((message: unknown) => {
+api.runtime.onMessage.addListener((message: unknown, sender: { tab?: { id?: number } }) => {
   const m = message as
     | R_Check
     | R_CheckFast
@@ -554,6 +725,8 @@ api.runtime.onMessage.addListener((message: unknown) => {
     | R_SuggestWithState
     | R_CheckSyntax
     | R_CheckStyle
+    | R_CheckGrammarStyle
+    | R_CancelCheck
     | R_ContextMenuFired
     | R_SiteContextMenuFired
     | R_Debug;
@@ -715,44 +888,43 @@ api.runtime.onMessage.addListener((message: unknown) => {
     })();
   }
 
-  // On-demand grammar check. The content script sends the current text
-  // and its per-textarea state handle; the worker converts byte offsets
-  // to UTF-16 before returning the diagnostics.
-  if (m?.type === 'torille:check-syntax') {
-    return (async (): Promise<R_CheckSyntaxResponse> => {
+  // On-demand grammar/style check. The background chunks the text into
+  // sentence batches, posts progress to the content script and stops the
+  // loop when a newer edit bumps this input's generation.
+  if (m?.type === 'torille:check-syntax'
+      || m?.type === 'torille:check-style'
+      || m?.type === 'torille:check-grammar-style') {
+    return (async (): Promise<
+      R_CheckSyntaxResponse | R_CheckStyleResponse | R_CheckGrammarStyleResponse
+    > => {
+      const syntax = m.type !== 'torille:check-style';
+      const style = m.type !== 'torille:check-syntax';
       try {
         await ensureSpellWorkerForRequest();
-        const r = await spellCall({
-          type: 'check-syntax', idx: m.idx, text: m.text,
-        });
-        if (r.type !== 'check-syntax') {
-          throw new Error('worker returned unexpected response');
-        }
-        return { diagnostics: r.diagnostics };
+        const r = await checkGrammarStyle(
+          m.inputId, m.idx, m.text, syntax, style, sender?.tab?.id,
+        );
+        if (m.type === 'torille:check-grammar-style') return r;
+        return {
+          diagnostics: m.type === 'torille:check-style' ? r.style : r.diagnostics,
+        };
       } catch (e) {
-        dbg('background', 'check-syntax route error', String(e));
+        dbg('background', `${m.type} route error`, String(e));
+        if (m.type === 'torille:check-grammar-style') {
+          return { diagnostics: [], style: [] };
+        }
         return { diagnostics: [] };
       }
     })();
   }
 
-  // On-demand style check. It uses the overlay's state so the worker can
-  // share the morphology cache with the grammar pass; the worker converts
-  // byte offsets to UTF-16.
-  if (m?.type === 'torille:check-style') {
-    return (async (): Promise<R_CheckStyleResponse> => {
-      try {
-        await ensureSpellWorkerForRequest();
-        const r = await spellCall({ type: 'check-style', idx: m.idx, text: m.text });
-        if (r.type !== 'check-style') {
-          throw new Error('worker returned unexpected response');
-        }
-        return { diagnostics: r.diagnostics };
-      } catch (e) {
-        dbg('background', 'check-style route error', String(e));
-        return { diagnostics: [] };
-      }
-    })();
+  // An edit cancels the running check for that input. The background
+  // checks the generation before each batch; the content script also
+  // discards any result whose text changed.
+  if (m?.type === 'torille:cancel-check') {
+    const key = checkKey(sender?.tab?.id, m.inputId);
+    checkRuns.set(key, (checkRuns.get(key) ?? 0) + 1);
+    return;
   }
 
   // Debug flag from the content script. Route it to whichever host

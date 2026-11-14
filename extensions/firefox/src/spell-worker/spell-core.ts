@@ -145,7 +145,12 @@ export type CoreResponse =
   | { type: 'analyze-text'; hits: AnalyzeHit[]; stateValid: boolean }
   | { type: 'suggest-with-state'; suggestions: string[] }
   | { type: 'check-syntax'; diagnostics: R_SyntaxDiagnostic[] }
-  | { type: 'check-style'; diagnostics: R_SyntaxDiagnostic[] };
+  | { type: 'check-style'; diagnostics: R_SyntaxDiagnostic[] }
+  | {
+      type: 'check-grammar-style';
+      diagnostics: R_SyntaxDiagnostic[];
+      style: R_SyntaxDiagnostic[];
+    };
 
 // ───────────────────────────────────────────────────────────────────────
 // §5  Handlers
@@ -423,6 +428,18 @@ function handleCheckStyle(
   return { type: 'check-style', diagnostics };
 }
 
+function handleCheckGrammarStyle(
+  msg: Extract<R_WorkerInbound, { type: 'check-grammar-style' }>,
+): CoreResponse {
+  const raw = bg.check_grammar_style_with_state(
+    msg.idx, msg.text, msg.syntax, msg.style);
+  return {
+    type: 'check-grammar-style',
+    diagnostics: toContentDiagnostics(msg.text, raw.diagnostics ?? []),
+    style: toContentDiagnostics(msg.text, raw.style ?? []),
+  };
+}
+
 // ───────────────────────────────────────────────────────────────────────
 // §6  Public surface
 // ───────────────────────────────────────────────────────────────────────
@@ -465,6 +482,7 @@ export function createSpellCore(): SpellCore {
         case 'suggest-with-state': return handleSuggestWithState(msg);
         case 'check-syntax': return handleCheckSyntax(msg);
         case 'check-style': return handleCheckStyle(msg);
+        case 'check-grammar-style': return handleCheckGrammarStyle(msg);
         default: {
           const unknown = msg as { type?: string };
           throw new Error(`unknown message type: ${unknown.type ?? '?'}`);

@@ -229,7 +229,7 @@ export function createWorkerClient(opts: { dbg: DebugFn; inputId: number }) {
       const idx = await stateIdx();
       if (idx === null) return null;
       const r = await send<R_CheckSyntaxResponse>({
-        type: 'torille:check-syntax', idx, text,
+        type: 'torille:check-syntax', idx, inputId, text,
       });
       return Array.isArray(r?.diagnostics) ? r.diagnostics : null;
     },
@@ -240,9 +240,17 @@ export function createWorkerClient(opts: { dbg: DebugFn; inputId: number }) {
       const idx = await stateIdx();
       if (idx === null) return null;
       const r = await send<R_CheckStyleResponse>({
-        type: 'torille:check-style', idx, text,
+        type: 'torille:check-style', idx, inputId, text,
       });
       return Array.isArray(r?.diagnostics) ? r.diagnostics : null;
+    },
+    // Stop the background's batch loop for this input. Called on every
+    // edit so a long check does not keep the worker busy after its
+    // offsets have gone stale.
+    cancelCheckAsync(): void {
+      api.runtime.sendMessage({
+        type: 'torille:cancel-check', inputId,
+      } as R_CancelCheck).catch(() => { /* background down */ });
     },
     // Free the wasm-side slot. Called from the scanner's
     // detach path so a per-overlay slot doesn't outlive the

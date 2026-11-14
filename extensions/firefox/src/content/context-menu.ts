@@ -1,4 +1,5 @@
 import { api, describeInput, type DebugFn, type DescribeInput } from './shared';
+import { updateCheckProgress } from './grammar-panel';
 
 // ─────────────────────────────────────────────────────────────────────
 // §7  Per-textbox toggle factory
@@ -49,6 +50,10 @@ export function createTextboxToggle(opts: {
 
   api.runtime.onMessage.addListener((message: unknown) => {
     const m = message as R_ContentInboundMessage;
+    if (m?.type === 'torille:check-progress') {
+      updateCheckProgress(m.inputId, m.done, m.total);
+      return;
+    }
     if (m?.type === 'torille:check-grammar-pending-input') {
       const input = pendingInput;
       if (input) opts.checkGrammar(input);
