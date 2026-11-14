@@ -166,7 +166,7 @@ The two-pass latency budget is:
 | Garbage flagged immediately | `probe-sylvi.mjs` | 6 garbage words (qwerty, asdfg, …) all underlined |
 | Surgical diff: typing one character doesn't re-check unchanged words | `probe-surgical.mjs` | typing 1 char → `reused=N toCheck=0` for unchanged misspell positions |
 | Caret aligns with text | `probe-cursor.mjs` | caret x/y/height within 2 px of underlay text at same byte index |
-| Grammar/style runs in sentence batches with progress and cancellation | `probe-grammar-chunk.mjs` | first progress <2 s; final counts match the whole-text baseline (71 grammar, 14 style); editing cancels without stale diagnostics |
+| Grammar/style runs in sentence batches with progress and cancellation | `probe-grammar-chunk.mjs` | first progress <2 s; final counts match the whole-text baseline (69 grammar, 14 style); editing cancels without stale diagnostics |
 | No regression on Rust core | `cargo test --release --workspace` | green |
 
 Run all probes after a demo change:
@@ -194,8 +194,8 @@ needs the full timeline.
 Down from "1-2 s" before the candidate/demote split.
 
 ✅ **Grammar/style chunking** — `probe-grammar-chunk.mjs`:
-  * first progress ~224 ms on the 1,959-word perf page;
-  * final 71 grammar / 14 style, matching the whole-text wasm check;
+  * first progress ~160 ms on the 1,959-word perf page;
+  * final 69 grammar / 14 style, matching the whole-text wasm check;
   * editing during the run cancels it and clears to 0 diagnostics;
   * the longest batch is still ~200 ms (5 sentences), so the
     ≤50 ms per-task target remains open.

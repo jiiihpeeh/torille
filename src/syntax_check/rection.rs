@@ -153,7 +153,7 @@ fn argument(
         if !matches!(
             syntax.role,
             SyntacticRole::Object | SyntacticRole::Subject | SyntacticRole::Unknown
-        ) || is_marker(&tokens[index].text)
+        ) || is_marker(&analysis.tokens[index].key)
         {
             continue;
         }

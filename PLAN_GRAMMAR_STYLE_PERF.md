@@ -1,6 +1,6 @@
 # PLAN_GRAMMAR_STYLE_PERF — one morphology pass for grammar and style
 
-Status: **Phase 0–1, 2 (cold path) and 5 (chunking) landed; Phase 3/4/6/7 next** · 2026-11-13 · branch `syntax` · baseline `2e5f13c`
+Status: **Phase 0–1, 2 (cold path), 3 (warm rule pass) and 5 (chunking) landed; Phase 4/6/7 next** · 2026-11-14 · branch `syntax` · baseline `2e5f13c`
 
 This is the performance plan for the two opt-in analysis layers:
 
@@ -45,6 +45,20 @@ Landed:
   validated by `modifier_is_known` (which reads the classless CSV rows and the
   bound prefixes `esi-`, `lempi-`, `ensi-`, ...), and the whole is inflected
   with `head_inflections`. No new prefix list is added.
+- **Phase 3** — warm rule pass: `TokenSyntax.key` / `WordInfo.key` cache the
+  lowercased surface, the agreement scan asks for an attribute shape before
+  the degree lookup, the shape helpers use a two-slot fold instead of
+  `Vec`+sort, style phrases are lowercased once and gated by a generated
+  first-word set, the long-sentence metric is one token pass, and correction
+  paradigms are cached per (lemma, inflections, wanted tags, POS). Measured on
+  the fixture: rules **13.9 → 1.4 ms**, style **5.0 → 2.5 ms**, warm all
+  **23.5 → 6.9 ms**.
+- **Shallow closed-class fix** — a pronoun base named by the cheap gate
+  (`jossa` → `joka`) is verified across every sanalista row, so relative
+  pronoun forms no longer fall to `Unknown`. The attribute rule now skips
+  relative-pronoun lemmas, which removes three false `attribute_agreement`
+  findings on the perf fixture (71 → 69 grammar diagnostics). The syntax
+  corpus's `two_tuli` case is green again.
 
 Measured on the committed fixture, single-thread (wasm shape):
 
@@ -52,10 +66,14 @@ Measured on the committed fixture, single-thread (wasm shape):
 |---|---:|---:|
 | 20-word cold | 3.0 s | 0.14 s |
 | 96-word cold | 11.5 s | 0.76 s |
-| 1,959-word cold | ~120 s (1,722-word baseline) | 25.6 s |
-| 1,959-word warm style | 6–13 ms | 6.4 ms |
-| 1,959-word warm grammar+style | ~33–41 ms | ~34 ms |
+| 1,959-word cold morphology | ~120 s (1,722-word baseline) | 2.5 s |
+| 1,959-word warm rule pass | 13.9 ms | 1.4 ms |
+| 1,959-word warm style | 6–13 ms | 2.5 ms |
+| 1,959-word warm grammar+style | ~33–41 ms | 6.9 ms |
 | 17-word bound-form fixture, cold | 620 ms | 79 ms |
+
+The full 1,959-word page is 3.08 s in the release wasm (Phase 7), and the
+chunked worker shows first progress at ~160 ms (Phase 5).
 
 Bound forms are no longer a hotspot. The 17-word fixture
 (`esimerkki`, `leikkimielisyys`, `salaperäinen`, `täysi-ikäinen`,
@@ -70,9 +88,11 @@ cold, and every item is under 3 ms: `nuoren-isännän` fell from 250 ms to
 The synthetic 20-word slice is now near the interactive target. The full page
 is still dominated by a long tail of names, derived adjectives and archaic
 forms (`palajakaan`, `pariskunnan` at the time of measurement, `kulettivat`,
-`kivuloinen`, `kenoveeva*`); the page is 20.9 s after the bound-form fix. The partitive-plural stem-shape filter, the agreement rule
-pass, the sentence cache and the worker chunking remain. The cold page target
-is not met yet.
+`kivuloinen`, `kenoveeva*`); the page was 20.9 s before the later phases. The
+partitive-plural stem-shape filter and the warm rule pass have landed, and the
+worker chunks the check with progress and cancellation. The sentence cache
+(Phase 4) remains. The cold page target is not met yet: the release wasm is
+3.08 s for the whole page, with first progress at ~160 ms.
 
 ## 1. The measured problem
 
@@ -761,13 +781,29 @@ Acceptance: ≥95% of page tokens resolve without the head-1 walk; cold 20-word
 ≤ 100 ms (wasm shape); cold 2,000-word page ≤ 3 s; `lasta`/`lapsi` has an
 explicit test; the 20-word fixture's diagnostics are unchanged.
 
-### Phase 3 — warm rule pass (2 days)
+### Phase 3 — warm rule pass (2 days) — landed
 
 - §5.1 agreement reorder and candidate indices.
 - §5.2 shared helpers use `WordInfo.case`/`number`.
 - §5.3 style uses `MorphologyAnalysis` and sentence spans.
 
+**Landed:** the lowercased surface is cached on `WordInfo` and copied to
+`TokenSyntax.key`, so the agreement, rection, argument and object-case rules
+stop allocating a `String` per token. The attribute scan asks for an
+unambiguous shape before the degree lookup, and the shape helpers fold two
+slots instead of collecting, sorting and deduplicating a `Vec`. Style
+lowercases each token once, skips the phrase-length loop unless the word is a
+generated phrase start, and computes long-sentence word/predicate counts in one
+token pass. Correction paradigms are cached per (lemma, inflections, wanted
+tags, POS); the first pass still builds them, and every warm re-check reads
+them back.
+
+A correction cache hit is the difference between 7.3 ms and 0.07 ms for the
+fixture's ten agreement corrections, which is why the warm rule pass drops from
+13.9 ms to 1.4 ms.
+
 Acceptance: rule pass ≤ 5 ms/page; style ≤ 3 ms/page; warm total ≤ 10 ms/page.
+All three are met on the fixture: **1.4 / 2.5 / 6.9 ms**.
 
 ### Phase 4 — sentence cache (3–4 days)
 
@@ -789,7 +825,7 @@ a 100-word page in ≤ 2 ms; diagnostics are identical to a full re-check.
 quote-balanced sentence chunker in the demo worker, `check-progress`
 envelopes, generation-based cancellation, and a single panel resource that
 renders both streams. `probe-grammar-chunk.mjs` on the 1,959-word perf page:
-first progress **224 ms**, final **71 grammar / 14 style** (identical to the
+first progress **~160 ms**, final **69 grammar / 14 style** (identical to the
 whole-text wasm check), and an edit during the run cancels to 0 diagnostics.
 The longest batch is still ~200 ms, so the 50 ms per-task target is not met;
 the extension workers, word budget and reader enablement remain.

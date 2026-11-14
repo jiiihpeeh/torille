@@ -22,16 +22,42 @@ pub(super) fn check(
     morphology: &MorphologyAnalysis,
     existing: &[StyleDiagnostic],
 ) -> Vec<StyleDiagnostic> {
-    let mut diagnostics = Vec::new();
-    for span in &morphology.sentences {
-        let word_count = tokens
-            .iter()
-            .filter(|token| token.is_word() && span.start <= token.start && token.end <= span.end)
-            .count();
-        if word_count <= LONG_SENTENCE_WORDS {
+    let sentences = &morphology.sentences;
+    let mut word_counts = vec![0usize; sentences.len()];
+    let mut has_predicate = vec![false; sentences.len()];
+
+    // One pass over the token stream. `sentences` is ordered and disjoint, so
+    // a moving sentence cursor replaces the per-sentence token scan.
+    let mut sentence = 0usize;
+    for (index, token) in tokens.iter().enumerate() {
+        while sentence < sentences.len() && token.start >= sentences[sentence].end {
+            sentence += 1;
+        }
+        if sentence >= sentences.len() {
+            break;
+        }
+        let span = &sentences[sentence];
+        if token.start < span.start || token.end > span.end {
             continue;
         }
-        if !has_finite_predicate(tokens, morphology, span.start..span.end) {
+        if token.is_word() {
+            word_counts[sentence] += 1;
+        }
+        if !has_predicate[sentence]
+            && morphology
+                .word(index)
+                .is_some_and(|info| info.readings.iter().any(is_finite_predicate))
+        {
+            has_predicate[sentence] = true;
+        }
+    }
+
+    let mut diagnostics = Vec::new();
+    for (index, span) in sentences.iter().enumerate() {
+        if word_counts[index] <= LONG_SENTENCE_WORDS {
+            continue;
+        }
+        if !has_predicate[index] {
             continue;
         }
         if existing
@@ -50,20 +76,6 @@ pub(super) fn check(
         diagnostics.push(diagnostic);
     }
     diagnostics
-}
-
-fn has_finite_predicate(
-    tokens: &[Token],
-    morphology: &MorphologyAnalysis,
-    span: Range<usize>,
-) -> bool {
-    tokens.iter().enumerate().any(|(index, token)| {
-        span.start <= token.start
-            && token.end <= span.end
-            && morphology
-                .word(index)
-                .is_some_and(|info| info.readings.iter().any(is_finite_predicate))
-    })
 }
 
 fn range_contains(outer: Range<usize>, inner: &Range<usize>) -> bool {

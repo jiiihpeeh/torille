@@ -120,6 +120,10 @@ pub struct CacheStats {
 /// at insert time so a rule does not rescan `readings` on every call.
 #[derive(Debug, Clone, Default)]
 pub struct WordInfo {
+    /// The lowercased surface this entry was resolved for. Rules compare
+    /// against lowercase table keys; storing it once keeps a rule from
+    /// allocating a new `String` per token per pass.
+    pub(crate) key: String,
     pub(crate) lemma: Option<String>,
     /// The lemma of a finite-verb reading, when one exists. `tuli` is both a
     /// noun and a past-tense verb; the context decides which, so both are
@@ -378,6 +382,7 @@ pub fn analyze_morphology(tokens: &[Token], cache: &mut MorphologyCache) -> Morp
                 &token.text,
                 name,
                 crate::expand::proper_names::case(&token.text),
+                &lower,
             ))
         } else {
             info
@@ -610,6 +615,14 @@ fn resolve_word_fast(cat: &Catalogues, lower: &str) -> Option<WordInfo> {
         if let Some(info) = resolve_compound_surface(lower, &base, cat) {
             return Some(info);
         }
+        // Closed-class words (pronouns) are not in the noun/verb stem maps.
+        // A cheap gate still names their base, so verify the one paradigm
+        // instead of sending every relative-pronoun form to the deep walk.
+        if is_closed_class_base(&base)
+            && let Some(info) = resolve_from_base_surface(lower, &base, cat)
+        {
+            return Some(info);
+        }
     }
 
     // A partitive plural can be a form of several lemmas (`kirjoja` belongs
@@ -683,6 +696,21 @@ fn resolve_word_fast(cat: &Catalogues, lower: &str) -> Option<WordInfo> {
     Some(out)
 }
 
+/// Whether the lexicon lists the base as a closed-class pronoun.
+///
+/// The stem maps cover nouns and verbs only. A pronoun's inflected form can be
+/// named by the cheap gate (`jossa` -> `joka`) but has no stem-map entry, so
+/// the shallow resolver verifies the single paradigm instead of leaving the
+/// form unknown.
+fn is_closed_class_base(word: &str) -> bool {
+    crate::kotus::sanalista().by_word(word).any(|row| {
+        matches!(
+            PartOfSpeech::parse_all(row.part_of_speech()).first(),
+            Some(PartOfSpeech::Pronoun)
+        )
+    })
+}
+
 /// Whether the lexicon lists the base without an inflection class.
 ///
 /// A classless row is a compound: Kotus omits the type because it declines
@@ -700,21 +728,32 @@ fn resolve_from_base_surface(surface: &str, base: &str, cat: &Catalogues) -> Opt
     if base == surface {
         return None;
     }
-    let row = crate::kotus::sanalista().by_word(base).next()?;
-    let pos = PartOfSpeech::parse_all(row.part_of_speech())
-        .first()
-        .copied()
+    let rows: Vec<_> = crate::kotus::sanalista().by_word(base).collect();
+    if rows.is_empty() {
+        return None;
+    }
+    let pos = rows
+        .iter()
+        .find_map(|row| {
+            PartOfSpeech::parse_all(row.part_of_speech())
+                .first()
+                .copied()
+        })
         .unwrap_or(PartOfSpeech::Unknown);
+    // A lemma can have more than one sanalista row (`joka` is class 99 and
+    // class 101). Collect every row's inflections: the first row alone can be
+    // an irregular model that does not spell the surface.
+    let inflections: Vec<_> = rows.iter().flat_map(|row| row.inflections()).collect();
     // A classless compound row has no class of its own. `add_forms_from_lemma`
     // with an empty inflection list runs the classless-compound path
     // (`compound_head_forms`), which covers both a free head (`pariskunta` =
     // `paris` + `kunta`) and a bound suffix head (`salaperäinen` =
     // `sala` + `‑peräinen`). `head_inflections` deliberately refuses the
     // bound head, so it is not the right source here.
-    let inflections: Vec<_> = if row.inflections().next().is_none() {
+    let inflections: Vec<_> = if inflections.is_empty() {
         Vec::new()
     } else {
-        row.inflections().collect()
+        inflections
     };
     let mut out = WordInfo {
         lemma: Some(base.to_string()),
@@ -1148,6 +1187,10 @@ fn add_possessive_readings(out: &mut WordInfo, lower: &str, cat: &Catalogues) {
 }
 
 fn finish(out: &mut WordInfo, depth: Depth, lower: &str) {
+    if out.key != lower {
+        out.key.clear();
+        out.key.push_str(lower);
+    }
     fill_case_number(out);
     out.part_of_speech = out
         .readings
@@ -1331,7 +1374,13 @@ fn direct_reading(row: &crate::kotus::EmbeddedLemma) -> Tags {
 ///
 /// The entry is not inserted into the cache: the key is the lowercased
 /// surface, and a name's reading depends on the token's capitalization.
-fn proper_name_word(info: &WordInfo, surface: &str, name: &str, case: Option<Case>) -> WordInfo {
+fn proper_name_word(
+    info: &WordInfo,
+    surface: &str,
+    name: &str,
+    case: Option<Case>,
+    key: &str,
+) -> WordInfo {
     let mut readings = info.readings.clone();
     add_reading(&mut readings, proper_name_reading(surface, name, case));
     let mut lemmas = info.lemmas.clone();
@@ -1339,6 +1388,7 @@ fn proper_name_word(info: &WordInfo, surface: &str, name: &str, case: Option<Cas
         lemmas.push(name.to_string());
     }
     let mut out = WordInfo {
+        key: String::new(),
         lemma: Some(name.to_string()),
         verb_lemma: info.verb_lemma.clone(),
         nominal_lemma: Some(name.to_string()),
@@ -1353,7 +1403,7 @@ fn proper_name_word(info: &WordInfo, surface: &str, name: &str, case: Option<Cas
         derivation: None,
         depth: Depth::ProperName,
     };
-    finish(&mut out, Depth::ProperName, surface);
+    finish(&mut out, Depth::ProperName, key);
     out
 }
 
@@ -1383,6 +1433,22 @@ mod tests {
         let mut cache = MorphologyCache::new();
         let morphology = analyze_morphology(&tokens, &mut cache);
         (morphology, cache)
+    }
+
+    #[test]
+    fn a_closed_class_pronoun_form_resolves_in_the_shallow_pass() {
+        // `joka` has two sanalista rows (99 and 101). The first row alone does
+        // not spell `jossa`, and pronouns are absent from the stem maps, so
+        // the shallow resolver must verify every row of the cheap base.
+        let (morphology, _) = analyzed("jossa");
+        let info = morphology.word(0).expect("jossa resolved");
+        assert_eq!(info.lemma(), Some("joka"));
+        let inessive_pronoun = info.readings().iter().any(|reading| {
+            reading.part_of_speech == Some(PartOfSpeech::Pronoun)
+                && reading.case == Some(Case::Inessive)
+        });
+        assert!(inessive_pronoun);
+        assert_eq!(info.depth(), Depth::StemMap);
     }
 
     #[test]
@@ -1481,7 +1547,7 @@ mod tests {
             .tokens
             .iter()
             .filter_map(|token| token.as_deref())
-            .last()
+            .next_back()
             .expect("lasta resolved");
         assert!(
             info.readings()

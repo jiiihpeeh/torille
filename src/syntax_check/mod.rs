@@ -68,3 +68,21 @@ pub fn check_analysis(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<Syntax
     diagnostics.extend(arguments::check(tokens, analysis));
     rank::resolve(diagnostics)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The correction-form cache must not change a single diagnostic. The
+    /// first pass builds each paradigm; the second reads it back.
+    #[test]
+    fn a_warm_rule_pass_matches_the_first_pass() {
+        let text = "Minä olet väsynyt. He tulee.";
+        let tokens = crate::tokenise::tokenise(text);
+        let analysis = crate::syntax::analyze(&tokens);
+        let first = check_analysis(&tokens, &analysis);
+        assert!(!first.is_empty(), "the sample must exercise a correction");
+        let second = check_analysis(&tokens, &analysis);
+        assert_eq!(first, second);
+    }
+}

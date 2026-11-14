@@ -24,8 +24,8 @@ pub(super) fn check(
     tokens: &[Token],
     morphology: &MorphologyAnalysis,
     covered: &[Range<usize>],
+    contexts: &[sentence::TokenContext],
 ) -> Vec<StyleDiagnostic> {
-    let contexts = sentence::analyze(tokens);
     let mut diagnostics = Vec::new();
     let mut sentence_index = 0;
     let mut word_position: usize = 0;

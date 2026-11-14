@@ -73,12 +73,13 @@ pub fn check_tokens_with_morphology(
     tokens: &[Token],
     morphology: &MorphologyAnalysis,
 ) -> StyleAnalysis {
-    let mut diagnostics = phrases::check(tokens);
+    let contexts = crate::sentence::analyze(tokens);
+    let mut diagnostics = phrases::check_with_contexts(tokens, &contexts);
     let covered: Vec<std::ops::Range<usize>> = diagnostics
         .iter()
         .map(|diagnostic| diagnostic.span.clone())
         .collect();
-    diagnostics.extend(repetition::check(tokens, morphology, &covered));
+    diagnostics.extend(repetition::check(tokens, morphology, &covered, &contexts));
     let long_sentences = length::check(tokens, morphology, &diagnostics);
     diagnostics.extend(long_sentences);
     diagnostics.sort_by(|a, b| {

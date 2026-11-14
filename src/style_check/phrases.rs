@@ -10,22 +10,39 @@ use crate::tokenise::Token;
 
 use super::{StyleDiagnostic, lexicon};
 
+#[cfg(test)]
 pub(super) fn check(tokens: &[Token]) -> Vec<StyleDiagnostic> {
     let contexts = sentence::analyze(tokens);
+    check_with_contexts(tokens, &contexts)
+}
+
+/// The same scan with sentence context the caller already computed.
+pub(super) fn check_with_contexts(
+    tokens: &[Token],
+    contexts: &[sentence::TokenContext],
+) -> Vec<StyleDiagnostic> {
     let words: Vec<usize> = tokens
         .iter()
         .enumerate()
         .filter(|(_, token)| token.is_word())
         .map(|(index, _)| index)
         .collect();
+    // Lowercase each word token once. The scan tries every phrase length at
+    // each position, so lowercasing inside that loop repeats the same work.
+    let keys: Vec<Option<String>> = tokens.iter().map(Token::lower_word).collect();
 
     let mut diagnostics = Vec::new();
     let mut position = 0;
     while position < words.len() {
         let first = words[position];
+        let first_key = keys[first].as_deref().unwrap_or("");
+        let can_start_phrase = lexicon::starts_phrase(first_key);
         let sentence_index = contexts[first].sentence_index;
         let mut matched = None;
         for length in (1..=lexicon::MAX_PHRASE_WORDS).rev() {
+            if length > 1 && !can_start_phrase {
+                continue;
+            }
             let last_position = position + length - 1;
             if last_position >= words.len() {
                 continue;
@@ -34,11 +51,13 @@ pub(super) fn check(tokens: &[Token]) -> Vec<StyleDiagnostic> {
             if contexts[last].sentence_index != sentence_index {
                 continue;
             }
-            let key = words[position..=last_position]
-                .iter()
-                .map(|&index| tokens[index].text.to_lowercase())
-                .collect::<Vec<_>>()
-                .join(" ");
+            let mut key = String::new();
+            for (offset, &index) in words[position..=last_position].iter().enumerate() {
+                if offset > 0 {
+                    key.push(' ');
+                }
+                key.push_str(keys[index].as_deref().unwrap_or(""));
+            }
             let entry = if length == 1 {
                 lexicon::word(&key).or_else(|| lexicon::phrase(&key))
             } else {

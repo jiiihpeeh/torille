@@ -127,6 +127,9 @@ pub struct Clause {
 /// What one token is doing, plus the morphology behind the choice.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TokenSyntax {
+    /// The lowercased surface, so a rule can compare against a table key
+    /// without allocating a `String` per token.
+    pub key: String,
     pub role: SyntacticRole,
     pub confidence: RoleConfidence,
     /// Index into [`SyntaxAnalysis::clauses`], or 0 when the text has no
@@ -152,6 +155,7 @@ pub struct TokenSyntax {
 impl Default for TokenSyntax {
     fn default() -> Self {
         Self {
+            key: String::new(),
             role: SyntacticRole::Unknown,
             confidence: RoleConfidence::Weak,
             clause: 0,
@@ -233,6 +237,7 @@ pub fn analyze_syntax(tokens: &[Token], morphology: &MorphologyAnalysis) -> Synt
             lemma = Some(nominal_lemma.clone());
         }
         out[index] = TokenSyntax {
+            key: info.key.clone(),
             role,
             confidence,
             clause: 0,

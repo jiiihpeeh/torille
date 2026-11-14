@@ -1328,7 +1328,8 @@ class Harness:
             cname, nm, pnm = cell_key(places[0])
             cell_expected = [r[0] for r in self.lexicon.execute(
                 "SELECT form FROM forms WHERE lemma=? AND [case]=? AND number=? "
-                "AND possessive=? AND ok='both'", (lemma, cname, nm, pnm))]
+                "AND possessive=? AND ok='both'", (lemma, cname, nm, pnm))
+                if r[0]]
             if cell_expected:
                 if pnm == "third person" and any(
                         self.same_third_person(word, want)

@@ -52,53 +52,58 @@ pub(super) fn nominal_case(token: &TokenSyntax) -> Option<Case> {
     if let Some(case) = token.case {
         return Some(case);
     }
-    let mut cases: Vec<Case> = token
-        .readings
-        .iter()
-        .filter(|reading| {
-            matches!(
-                reading.part_of_speech,
-                Some(
-                    PartOfSpeech::Noun
-                        | PartOfSpeech::Adjective
-                        | PartOfSpeech::Pronoun
-                        | PartOfSpeech::Ordinal
-                )
+    let mut found: Option<Case> = None;
+    for reading in &token.readings {
+        if !matches!(
+            reading.part_of_speech,
+            Some(
+                PartOfSpeech::Noun
+                    | PartOfSpeech::Adjective
+                    | PartOfSpeech::Pronoun
+                    | PartOfSpeech::Ordinal
             )
-        })
-        .filter_map(|reading| reading.case)
-        .collect();
-    cases.sort_unstable();
-    cases.dedup();
-    match cases.as_slice() {
-        [case] => Some(*case),
-        _ => None,
+        ) {
+            continue;
+        }
+        let Some(case) = reading.case else {
+            continue;
+        };
+        match found {
+            None => found = Some(case),
+            Some(seen) if seen == case => {}
+            Some(_) => return None,
+        }
     }
+    found
 }
 
 /// The token's number when every reading in `case` agrees.
 pub(super) fn candidate_number(token: &TokenSyntax, case: Case) -> Option<Number> {
-    let mut numbers: Vec<Number> = token
-        .readings
-        .iter()
-        .filter(|reading| reading.case == Some(case))
-        .filter_map(|reading| reading.number)
-        .collect();
-    numbers.sort_unstable();
-    numbers.dedup();
-    match numbers.as_slice() {
-        [number] => Some(*number),
-        _ => None,
+    let mut found: Option<Number> = None;
+    for reading in &token.readings {
+        if reading.case != Some(case) {
+            continue;
+        }
+        let Some(number) = reading.number else {
+            continue;
+        };
+        match found {
+            None => found = Some(number),
+            Some(seen) if seen == number => {}
+            Some(_) => return None,
+        }
     }
+    found
 }
 
 /// A coordinator, subordinator or relative pronoun that must not be read as an
 /// argument merely because the lexicon also gives it a nominal reading.
-pub(super) fn is_marker(word: &str) -> bool {
-    let lower = word.to_lowercase();
-    crate::syntax::is_coordinating(&lower)
-        || crate::syntax::is_subordinator(&lower)
-        || matches!(lower.as_str(), "joka" | "mikä" | "ken" | "kuka")
+///
+/// `key` is the token's lowercased surface (`TokenSyntax::key`).
+pub(super) fn is_marker(key: &str) -> bool {
+    crate::syntax::is_coordinating(key)
+        || crate::syntax::is_subordinator(key)
+        || matches!(key, "joka" | "mikä" | "ken" | "kuka")
 }
 
 /// A finite verb reading in the punctuation sense.

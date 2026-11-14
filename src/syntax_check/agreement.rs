@@ -54,7 +54,7 @@ fn check_subject_predicate(
         // kotiin`) has unreliable roles: the complement of the subordinate
         // verb looks like the main subject. The punctuation rule handles the
         // missing comma; agreement stays out of it.
-        if starts_with_subordinator(clause, tokens)
+        if starts_with_subordinator(clause, tokens, analysis)
             && clause
                 .tokens
                 .clone()
@@ -147,11 +147,15 @@ fn check_subject_predicate(
 /// comparison.
 fn check_attributes(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
     let mut diagnostics = Vec::new();
+    let has_predicate: Vec<bool> = analysis
+        .clauses
+        .iter()
+        .map(|clause| clause.predicate.is_some())
+        .collect();
     for (index, syntax) in analysis.tokens.iter().enumerate() {
-        let predicate_less = analysis
-            .clauses
+        let predicate_less = has_predicate
             .get(syntax.clause)
-            .is_none_or(|clause| clause.predicate.is_none());
+            .is_none_or(|has_predicate| !has_predicate);
         if !tokens[index].is_word()
             || !(matches!(
                 syntax.role,
@@ -160,12 +164,24 @@ fn check_attributes(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         {
             continue;
         }
-        if crate::expand::degree_base(&tokens[index].text.to_lowercase()).is_some() {
+        // A relative pronoun (`joka`, `jotka`, `jossa`, ...) introduces a
+        // clause; it is not an attributive modifier and has no head to agree
+        // with. The rule is for adjectives, ordinals and demonstratives.
+        if syntax
+            .lemma
+            .as_deref()
+            .is_some_and(is_relative_pronoun_lemma)
+        {
             continue;
         }
+        // Ask for an unambiguous attribute shape first: a token that is not an
+        // adjective, ordinal or demonstrative never needs the degree lookup.
         let Some((attribute_case, attribute_number)) = attribute_shape(syntax) else {
             continue;
         };
+        if crate::expand::degree_base(&syntax.key).is_some() {
+            continue;
+        }
         if attribute_case == Case::Genitive {
             continue;
         }
@@ -214,33 +230,39 @@ fn check_attributes(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
 }
 
 fn attribute_shape(token: &TokenSyntax) -> Option<(Case, Number)> {
-    let mut shapes: Vec<(Case, Number)> = token
-        .readings
-        .iter()
-        .filter(|reading| is_attribute_pos(reading.part_of_speech))
-        .filter_map(|reading| Some((reading.case?, reading.number?)))
-        .collect();
-    shapes.sort_unstable();
-    shapes.dedup();
-    match shapes.as_slice() {
-        [shape] => Some(*shape),
-        _ => None,
+    let mut shape: Option<(Case, Number)> = None;
+    for reading in &token.readings {
+        if !is_attribute_pos(reading.part_of_speech) {
+            continue;
+        }
+        let Some(candidate) = reading.case.zip(reading.number) else {
+            continue;
+        };
+        match shape {
+            None => shape = Some(candidate),
+            Some(seen) if seen == candidate => {}
+            Some(_) => return None,
+        }
     }
+    shape
 }
 
 fn head_shape(token: &TokenSyntax) -> Option<(Case, Number)> {
-    let mut shapes: Vec<(Case, Number)> = token
-        .readings
-        .iter()
-        .filter(|reading| is_head_pos(reading.part_of_speech))
-        .filter_map(|reading| Some((reading.case?, reading.number?)))
-        .collect();
-    shapes.sort_unstable();
-    shapes.dedup();
-    match shapes.as_slice() {
-        [shape] => Some(*shape),
-        _ => None,
+    let mut shape: Option<(Case, Number)> = None;
+    for reading in &token.readings {
+        if !is_head_pos(reading.part_of_speech) {
+            continue;
+        }
+        let Some(candidate) = reading.case.zip(reading.number) else {
+            continue;
+        };
+        match shape {
+            None => shape = Some(candidate),
+            Some(seen) if seen == candidate => {}
+            Some(_) => return None,
+        }
     }
+    shape
 }
 
 fn attribute_pos(token: &TokenSyntax) -> Option<PartOfSpeech> {
@@ -257,6 +279,13 @@ fn is_attribute_pos(pos: Option<PartOfSpeech>) -> bool {
         pos,
         Some(PartOfSpeech::Adjective | PartOfSpeech::Ordinal | PartOfSpeech::Pronoun)
     )
+}
+
+/// A relative pronoun, whose forms introduce a clause rather than modify a
+/// head. The lexicon gives it the same `Pronoun` part of speech as a
+/// demonstrative, so the lemma is the only distinction available here.
+fn is_relative_pronoun_lemma(lemma: &str) -> bool {
+    matches!(lemma, "joka" | "mikä" | "ken" | "kuka")
 }
 
 fn is_head_pos(pos: Option<PartOfSpeech>) -> bool {
@@ -288,14 +317,16 @@ fn attribute_head(
         .find(|&candidate| candidate > index && tokens[candidate].is_word())
 }
 
-fn starts_with_subordinator(clause: &crate::syntax::Clause, tokens: &[Token]) -> bool {
+fn starts_with_subordinator(
+    clause: &crate::syntax::Clause,
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+) -> bool {
     clause
         .tokens
         .clone()
         .find(|&index| tokens[index].is_word())
-        .is_some_and(|index| {
-            crate::syntax::is_subordinator(&tokens[index].text.to_lowercase())
-        })
+        .is_some_and(|index| crate::syntax::is_subordinator(&analysis.tokens[index].key))
 }
 
 /// The subject of a clause, including a shared subject from a preceding
@@ -352,14 +383,14 @@ fn subject_of(
     }
 
     if indices.len() > 1 {
-        if !has_coordinator(tokens, indices[0], *indices.last()?) {
+        if !has_coordinator(tokens, analysis, indices[0], *indices.last()?) {
             return None;
         }
         // Coordinated first/second-person subjects need a person-resolution
         // rule that this phase does not have. Do not guess.
         if indices.iter().any(|&index| {
             matches!(
-                pronoun_person_number(&tokens[index].text),
+                pronoun_person_number(&analysis.tokens[index].key),
                 Some((Person::First | Person::Second, _))
             )
         }) {
@@ -374,7 +405,7 @@ fn subject_of(
 
     let index = indices[0];
     let token = &analysis.tokens[index];
-    if let Some((person, number)) = pronoun_person_number(&tokens[index].text) {
+    if let Some((person, number)) = pronoun_person_number(&token.key) {
         return Some(Subject {
             index,
             person,
@@ -508,7 +539,12 @@ fn pronoun_person_number(word: &str) -> Option<(Person, Number)> {
     })
 }
 
-fn has_coordinator(tokens: &[Token], left: usize, right: usize) -> bool {
+fn has_coordinator(
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+    left: usize,
+    right: usize,
+) -> bool {
     let (start, end) = if left < right {
         (left + 1, right)
     } else {
@@ -516,6 +552,7 @@ fn has_coordinator(tokens: &[Token], left: usize, right: usize) -> bool {
     };
     tokens[start..end]
         .iter()
-        .filter(|token| token.is_word())
-        .any(|token| matches!(token.text.to_lowercase().as_str(), "ja" | "sekä"))
+        .enumerate()
+        .filter(|(_, token)| token.is_word())
+        .any(|(offset, _)| matches!(analysis.tokens[start + offset].key.as_str(), "ja" | "sekä"))
 }

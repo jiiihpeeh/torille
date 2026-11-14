@@ -2,7 +2,7 @@
 //
 // Verifies the worker's sentence-batch path:
 //   * progress appears before the whole 1,959-word page finishes;
-//   * the chunked result matches the whole-text baseline (71 grammar,
+//   * the chunked result matches the whole-text baseline (69 grammar,
 //     14 style) for the perf fixture, including quote-spanning sentences;
 //   * editing while a check is running cancels the old run and leaves no
 //     stale diagnostics.
@@ -15,7 +15,7 @@ import puppeteer from 'puppeteer-core';
 import { readFile } from 'node:fs/promises';
 
 const FIXTURE = new URL('../../tests/fixtures/perf/page-2000.txt', import.meta.url);
-const EXPECTED_GRAMMAR = 71;
+const EXPECTED_GRAMMAR = 69;
 const EXPECTED_STYLE = 14;
 const SHORT = 'Koira nukkuu.';
 
@@ -99,7 +99,7 @@ console.log(`  progress PASS:  ${progressPass}`);
 console.log(`  counts PASS:    ${countsPass}`);
 
 // Cancel a running check by editing the text. The new short text has no
-// grammar diagnostics; the old 71 must not survive.
+// grammar diagnostics; the old diagnostics must not survive.
 await page.evaluate((short) => window.__torille.panels[0].setText(short), SHORT);
 let cancelled = { grammar: -1, style: -1, progress: 'pending' };
 for (let i = 0; i < 300; i++) {

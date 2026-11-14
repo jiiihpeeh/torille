@@ -73,7 +73,7 @@ fn missing_argument(
     if ends_with_ellipsis(clause, tokens) {
         return None;
     }
-    if has_argument_nominal(predicate, words, tokens, analysis) {
+    if has_argument_nominal(predicate, words, analysis) {
         // Either the argument is present, or it is present in the wrong case
         // and rection owns the finding. Do not double-report.
         return None;
@@ -121,7 +121,7 @@ fn extra_argument(
             // The object belongs to the next predicate, not this one.
             break;
         }
-        if is_marker(&tokens[index].text)
+        if is_marker(&analysis.tokens[index].key)
             || nominal_case(syntax).is_none()
             || nominal_pos(syntax).is_none()
         {
@@ -192,7 +192,6 @@ fn subject_agrees(predicate: usize, candidate: usize, analysis: &SyntaxAnalysis)
 fn has_argument_nominal(
     predicate: usize,
     words: &[usize],
-    tokens: &[Token],
     analysis: &SyntaxAnalysis,
 ) -> bool {
     let Some(predicate_position) = words.iter().position(|&index| index == predicate) else {
@@ -212,7 +211,7 @@ fn has_argument_nominal(
             && syntax.role != SyntacticRole::Auxiliary
             && syntax.role != SyntacticRole::Modifier
             && !(index < predicate && syntax.role == SyntacticRole::Subject)
-            && !is_marker(&tokens[index].text)
+            && !is_marker(&analysis.tokens[index].key)
             && nominal_case(syntax).is_some()
             && nominal_pos(syntax).is_some()
     })

@@ -164,7 +164,7 @@ mod tests {
             for form in crate::expand::inflect_all(
                 lemma.word,
                 &lemma.inflections,
-                &cat,
+                cat,
                 Some(&index),
                 crate::tags::PartOfSpeech::Noun,
                 true,
@@ -206,7 +206,7 @@ mod tests {
             for form in crate::expand::inflect_all(
                 word,
                 &lemma.inflections,
-                &cat,
+                cat,
                 None,
                 crate::tags::PartOfSpeech::Noun,
                 true,

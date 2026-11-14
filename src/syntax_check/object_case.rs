@@ -109,8 +109,20 @@ fn aspect_suggestion(
     }
     let number = candidate_number(syntax, case)?;
     let words = clause_words(clause, tokens);
-    let progressive = cue_present(&words, tokens, clause.tokens.start, PROGRESSIVE_CUES);
-    let completive = cue_present(&words, tokens, clause.tokens.start, COMPLETIVE_CUES);
+    let progressive = cue_present(
+        &words,
+        tokens,
+        analysis,
+        clause.tokens.start,
+        PROGRESSIVE_CUES,
+    );
+    let completive = cue_present(
+        &words,
+        tokens,
+        analysis,
+        clause.tokens.start,
+        COMPLETIVE_CUES,
+    );
     // Neither cue, or two contradictory cues: do not guess.
     if progressive == completive {
         return None;
@@ -253,6 +265,7 @@ fn is_nominal_pos(pos: Option<PartOfSpeech>) -> bool {
 fn cue_present(
     words: &[usize],
     tokens: &[Token],
+    analysis: &SyntaxAnalysis,
     clause_start: usize,
     cues: &[&str],
 ) -> bool {
@@ -263,7 +276,7 @@ fn cue_present(
         }
         words.windows(cue_words.len()).any(|window| {
             window.iter().zip(&cue_words).all(|(&index, expected)| {
-                tokens[index].text.to_lowercase() == *expected
+                analysis.tokens[index].key == *expected
             }) && window
                 .iter()
                 .all(|&index| !inside_brackets(tokens, clause_start, index))
@@ -284,7 +297,7 @@ fn argument(
         if !matches!(
             syntax.role,
             SyntacticRole::Object | SyntacticRole::Subject | SyntacticRole::Unknown
-        ) || is_marker(&tokens[index].text)
+        ) || is_marker(&analysis.tokens[index].key)
         {
             continue;
         }

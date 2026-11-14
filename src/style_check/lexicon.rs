@@ -15,6 +15,16 @@ static PHRASES: StemMap = StemMap::new(include_bytes!(concat!(
 )));
 static WORDS: StemMap = StemMap::new(include_bytes!(concat!(env!("OUT_DIR"), "/style_words.bin")));
 
+include!(concat!(env!("OUT_DIR"), "/style_phrase_first.rs"));
+
+/// True when `key` is the first word of a curated multi-word phrase.
+///
+/// The matcher uses this to skip the phrase-length loop for the vast majority
+/// of words, which cannot start a phrase at all.
+pub(super) fn starts_phrase(key: &str) -> bool {
+    !PHRASE_FIRST_KNOWN || PHRASE_FIRST_WORDS.binary_search(&key).is_ok()
+}
+
 /// Longest phrase the matcher tries. Kept in step with the build writer, which
 /// rejects a longer row.
 pub(super) const MAX_PHRASE_WORDS: usize = 4;

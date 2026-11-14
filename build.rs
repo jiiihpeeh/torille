@@ -42,7 +42,7 @@ use csv_builders::catalogue::emit_catalogue;
 use csv_builders::sanalista::generate;
 use csv_builders::string_map::{
     emit_adj_degrees, emit_adverbi, emit_connegatives, emit_connectives, emit_lexical_adverbs,
-    emit_style_table,
+    emit_style_table, write_style_phrase_first,
 };
 use map_builders::front_coded::{
     emit_empty_set, emit_front_coded_set, emit_proper_name_cases, emit_proper_name_lemmas,
@@ -200,6 +200,10 @@ fn main() {
     emit_map(&out_dir, &precomputed, "style_words.bin", |raw| {
         emit_style_table(&style_words_csv, raw, "style words")
     });
+    write_style_phrase_first(
+        &style_phrases_csv,
+        &out_dir.join("style_phrase_first.rs"),
+    );
 
     // Stem maps: `(stem, bases)` pairs from
     // `data/stem_to_base_map.csv` (nouns) and
