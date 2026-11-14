@@ -1,6 +1,6 @@
 # PLAN_GRAMMAR_STYLE_PERF — one morphology pass for grammar and style
 
-Status: **Phase 0–6 decided (reverse index not shipped; cold-word p90 open); final docs/versioning next** · 2026-11-14 · branch `syntax` · baseline `2e5f13c`
+Status: **Phase 0–7 landed/decided; cold-page ≤500 ms open (new design needed); extension browser e2e gap** · 2026-11-14 · branch `syntax` · baseline `2e5f13c`
 
 This is the performance plan for the two opt-in analysis layers:
 
@@ -44,7 +44,10 @@ Landed:
   machine (`check_normal_fast` → `suggest::known::compound`), the modifier is
   validated by `modifier_is_known` (which reads the classless CSV rows and the
   bound prefixes `esi-`, `lempi-`, `ensi-`, ...), and the whole is inflected
-  with `head_inflections`. No new prefix list is added.
+  with `head_inflections`. No new prefix list is added. Cold page: **~2.4 s
+  native / 3.08 s wasm**; the 20/96-word targets are met, the 2,000-word
+  wasm target is just above 3 s, and the ≤500 ms target was deferred to
+  Phase 6 and remains open.
 - **Phase 3** — warm rule pass: `TokenSyntax.key` / `WordInfo.key` cache the
   lowercased surface, the agreement scan asks for an attribute shape before
   the degree lookup, the shape helpers use a two-slot fold instead of
@@ -69,6 +72,9 @@ Landed:
   subsets. No subset met both 95% page coverage and 3 MB compressed; the
   largest under-budget blob covers 86.6%, and the full 104k-lemma map is
   17.3 M rows. **Not shipped**; the §4.2/§4.3 ladder stays.
+- **Phase 7** — `GutenbergReader` runs grammar/style with progress and
+  cancellation; `docs/syntax_checker.md` records the sentence-cache path.
+  The extension browser-level e2e for the progress/cancel path remains.
 - **Shallow closed-class fix** — a pronoun base named by the cheap gate
   (`jossa` → `joka`) is verified across every sanalista row, so relative
   pronoun forms no longer fall to `Unknown`. The attribute rule now skips
@@ -784,7 +790,7 @@ Acceptance: warm grammar+style adds ≤ 3 ms over warm grammar alone; the exact
 fixtures are unchanged; `MorphologyCache` stats show a hit rate above 95% on a
 re-check.
 
-### Phase 2 — cold path (3–5 days) — in progress
+### Phase 2 — cold path (3–5 days) — partial
 
 - §4.1 shallow/deep split and bounded walks.
 - §4.2 base-source ladder: direct, stem map, closed spelling, clitic,
@@ -796,6 +802,13 @@ re-check.
 Acceptance: ≥95% of page tokens resolve without the head-1 walk; cold 20-word
 ≤ 100 ms (wasm shape); cold 2,000-word page ≤ 3 s; `lasta`/`lapsi` has an
 explicit test; the 20-word fixture's diagnostics are unchanged.
+
+**Landed:** the shallow/deep split, base-source ladder, stem-shape filter,
+clitic/possessive reuse, numeral upgrade, compound fallback and depth
+metrics. Cold page: **~2.4 s native / 3.08 s wasm**. The 20- and 96-word
+targets are met; the 2,000-word wasm page is just above the 3 s target. The
+≤500 ms target was deferred to Phase 6, which rejected the reverse index, so
+it remains open and needs a different cold-path design.
 
 ### Phase 3 — warm rule pass (2 days) — landed
 
@@ -859,7 +872,7 @@ Acceptance: a 2,000-word page with one edited sentence re-checks in ≤ 5 ms;
 a 100-word page in ≤ 2 ms; diagnostics are identical to a full re-check. All
 three are met.
 
-### Phase 5 — wasm and worker (3 days) — partial
+### Phase 5 — wasm and worker (3 days) — landed (p90 target and browser e2e open)
 
 - §6.1 diagnostics-only and combined export; update both workers and the
   glue `.d.ts`.

@@ -37,6 +37,12 @@ Phase 2 · related: [`PERFORMANCE_TODO.md`](PERFORMANCE_TODO.md) P1.3/P1.4/P3.1
   upgrades, and the numeral-governed partitive (`kaksi lasta`) is the only
   automatic one. The exact-output fixtures are unchanged.
 
+**Final parent-plan status (2026-11-14):** the parent plan's Phase 6 evaluated
+a reverse index and decided **not to ship** it, so the ≤500 ms cold page
+remains open. The parent Phase 3 landed the warm allocation cleanup, leaving
+this plan's Phase 6 reduced to the two-generation eviction (still deferred).
+This plan's Phase 2 (clitic host reuse) also remains deferred.
+
 Measured after Phase 1 (same commands, release, single-thread unless noted):
 
 | workload | before | after | change |
