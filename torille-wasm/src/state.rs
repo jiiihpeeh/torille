@@ -83,6 +83,10 @@ pub struct TextAreaState {
     /// base search. Morphology is text-independent; the cache is cleared by
     /// [`clear`](Self::clear).
     pub(crate) syntax_cache: torille::syntax::AnalysisCache,
+    /// Grammar diagnostics per sentence, keyed by the sentence text. A warm
+    /// re-check reuses every unchanged sentence and runs the rules only for
+    /// the edited one.
+    pub(crate) sentence_cache: torille::syntax_check::SentenceCache,
 }
 
 /// Cap on the cross-render lexical cache. A paste can contain tens of
@@ -113,6 +117,7 @@ impl TextAreaState {
             generation: 0,
             known: HashMap::new(),
             syntax_cache: torille::syntax::AnalysisCache::new(),
+            sentence_cache: torille::syntax_check::SentenceCache::new(),
         }
     }
 
@@ -192,6 +197,7 @@ impl TextAreaState {
         self.proper_nouns.clear();
         self.phrases.clear();
         self.syntax_cache.clear();
+        self.sentence_cache.clear();
         self.generation += 1;
     }
 
@@ -588,6 +594,25 @@ mod tests {
         assert!(words > 0);
         st.clear();
         assert!(st.syntax_cache.is_empty());
+    }
+
+    #[test]
+    fn the_sentence_cache_survives_a_rerender_and_clears_with_the_state() {
+        let mut st = TextAreaState::new();
+        let text = "Sami söi puuron. Kissa istuu.";
+        let tokens = torille::tokenise::tokenise(text);
+        let TextAreaState {
+            sentence_cache,
+            syntax_cache,
+            ..
+        } = &mut st;
+        let morphology = torille::morphology::analyze_morphology(&tokens, syntax_cache);
+        let first = sentence_cache.check(text, &tokens, &morphology, syntax_cache);
+        let second = sentence_cache.check(text, &tokens, &morphology, syntax_cache);
+        assert_eq!(first, second);
+        assert!(!sentence_cache.is_empty());
+        st.clear();
+        assert!(st.sentence_cache.is_empty());
     }
 
     #[test]

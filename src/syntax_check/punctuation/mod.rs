@@ -18,14 +18,44 @@ use crate::tokenise::Token;
 
 use super::diagnostic::SyntaxDiagnostic;
 
+#[cfg(test)]
 pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
     let contexts = sentence::analyze(tokens);
+    let mut diagnostics = check_without_quote_with_contexts(tokens, analysis, &contexts);
+    diagnostics.extend(quote(tokens, &contexts));
+    diagnostics
+}
+
+/// The punctuation rules that are local to one sentence.
+///
+/// The unbalanced-quote warning is document-global (it reads the quote depth
+/// at the end of the whole text), so the sentence cache runs it once outside
+/// the per-sentence pass.
+///
+/// `contexts` is the sentence pass the caller already computed; the sentence
+/// cache seeds it with the quote depth at the sentence start.
+pub(super) fn check_without_quote_with_contexts(
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+    contexts: &[sentence::TokenContext],
+) -> Vec<SyntaxDiagnostic> {
     let mut diagnostics = lists::list_diagnostics(tokens, analysis);
     diagnostics.extend(comma::clause_diagnostics(tokens, analysis));
     diagnostics.extend(question::question_diagnostics(tokens, analysis));
-    diagnostics.extend(quote::quote_diagnostics(tokens, &contexts));
-    diagnostics.extend(parenthetical::parenthetical_diagnostics(tokens, analysis, &contexts));
+    diagnostics.extend(parenthetical::parenthetical_diagnostics(
+        tokens,
+        analysis,
+        contexts,
+    ));
     diagnostics
+}
+
+/// The document-global unbalanced-quote warning.
+pub(super) fn quote(
+    tokens: &[Token],
+    contexts: &[sentence::TokenContext],
+) -> Vec<SyntaxDiagnostic> {
+    quote::quote_diagnostics(tokens, contexts)
 }
 
 // ── lists ────────────────────────────────────────────────────────────────

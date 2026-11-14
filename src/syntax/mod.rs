@@ -212,6 +212,18 @@ pub fn analyze_with_cache(tokens: &[Token], cache: &mut AnalysisCache) -> Syntax
 /// style layer can reuse the same [`MorphologyAnalysis`].
 pub fn analyze_syntax(tokens: &[Token], morphology: &MorphologyAnalysis) -> SyntaxAnalysis {
     let contexts = sentence::analyze(tokens);
+    analyze_syntax_with_contexts(tokens, morphology, &contexts)
+}
+
+/// The same analysis with sentence contexts the caller already computed.
+///
+/// The sentence cache uses this to seed the quote depth of a sentence that
+/// starts inside a quotation.
+pub(crate) fn analyze_syntax_with_contexts(
+    tokens: &[Token],
+    morphology: &MorphologyAnalysis,
+    contexts: &[sentence::TokenContext],
+) -> SyntaxAnalysis {
     let sentences = morphology.sentences.clone();
 
     let mut out = vec![TokenSyntax::default(); tokens.len()];
@@ -249,7 +261,7 @@ pub fn analyze_syntax(tokens: &[Token], morphology: &MorphologyAnalysis) -> Synt
         };
     }
 
-    let groups = clause_groups(tokens, &contexts);
+    let groups = clause_groups(tokens, contexts);
 
     let mut clauses: Vec<Clause> = Vec::new();
     let mut clause_groups_of: Vec<usize> = Vec::new();
@@ -257,7 +269,7 @@ pub fn analyze_syntax(tokens: &[Token], morphology: &MorphologyAnalysis) -> Synt
         if words.is_empty() {
             continue;
         }
-        for segment in segment_clause_words(words, tokens, &out, &contexts) {
+        for segment in segment_clause_words(words, tokens, &out, contexts) {
             let Some(&first) = segment.first() else {
                 continue;
             };

@@ -17,12 +17,14 @@ mod object_case;
 mod punctuation;
 mod rank;
 mod rection;
+mod sentence_cache;
 
 pub mod diagnostic;
 
 pub use diagnostic::{
     Correction, DiagnosticConfidence, DiagnosticKind, Edit, Severity, SyntaxDiagnostic,
 };
+pub use sentence_cache::{SentenceCache, SentenceCacheStats};
 
 use crate::syntax::{AnalysisCache, SyntaxAnalysis};
 use crate::tokenise::Token;
@@ -61,8 +63,26 @@ pub fn check_with_cache(text: &str, cache: &mut AnalysisCache) -> SyntaxCheck {
 /// This is the testable core: a caller that already has tokens and an analysis
 /// does not pay for a second parse.
 pub fn check_analysis(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
+    let contexts = crate::sentence::analyze(tokens);
+    let mut diagnostics = check_analysis_without_quote(tokens, analysis, &contexts);
+    diagnostics.extend(punctuation::quote(tokens, &contexts));
+    rank::resolve(diagnostics)
+}
+
+/// The sentence-local rules. The unbalanced-quote warning is document-global
+/// and is added by [`check_analysis`] or by the sentence cache.
+///
+/// `contexts` is the sentence pass the caller already computed; the sentence
+/// cache seeds it with the quote depth at the sentence start.
+pub(crate) fn check_analysis_without_quote(
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+    contexts: &[crate::sentence::TokenContext],
+) -> Vec<SyntaxDiagnostic> {
     let mut diagnostics = agreement::check(tokens, analysis);
-    diagnostics.extend(punctuation::check(tokens, analysis));
+    diagnostics.extend(punctuation::check_without_quote_with_contexts(
+        tokens, analysis, contexts,
+    ));
     diagnostics.extend(rection::check(tokens, analysis));
     diagnostics.extend(object_case::check(tokens, analysis));
     diagnostics.extend(arguments::check(tokens, analysis));

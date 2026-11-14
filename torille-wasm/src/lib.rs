@@ -520,11 +520,14 @@ pub fn check_grammar_style_with_state(
     let tokens = torille::tokenise::tokenise(text);
     let mut slots = states().lock().expect("states mutex poisoned");
     if let Some(Some(state)) = slots.get_mut(idx as usize) {
-        let morphology =
-            torille::morphology::analyze_morphology(&tokens, &mut state.syntax_cache);
+        let TextAreaState {
+            sentence_cache,
+            syntax_cache,
+            ..
+        } = state;
+        let morphology = torille::morphology::analyze_morphology(&tokens, syntax_cache);
         let diagnostics = if syntax {
-            let analysis = torille::syntax::analyze_syntax(&tokens, &morphology);
-            torille::syntax_check::check_analysis(&tokens, &analysis)
+            sentence_cache.check(text, &tokens, &morphology, syntax_cache)
         } else {
             Vec::new()
         };

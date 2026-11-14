@@ -137,6 +137,19 @@ impl Analyzer {
         }
     }
 
+    /// An analyzer at the start of a sentence inside `quote_depth` quotes.
+    ///
+    /// The sentence cache analyses one sentence at a time; a sentence that
+    /// starts inside an open quotation must see the depth the whole-document
+    /// pass would have given it, or a parenthetical/relative word inside the
+    /// quote can be misread.
+    pub(crate) fn with_quote_depth(quote_depth: u16) -> Self {
+        Self {
+            quote_depth,
+            ..Self::new()
+        }
+    }
+
     /// Consume one token and return its sentence context.
     pub fn push(&mut self, token: &Token) -> TokenContext {
         if token.is_word() {
@@ -184,12 +197,25 @@ pub fn analyze(tokens: &[Token]) -> Vec<TokenContext> {
     tokens.iter().map(|token| analyzer.push(token)).collect()
 }
 
+/// The same contexts with the analyzer starting inside `quote_depth` quotes.
+///
+/// Used by the sentence cache when a sentence starts inside a quotation.
+pub(crate) fn analyze_with_quote_depth(tokens: &[Token], quote_depth: u16) -> Vec<TokenContext> {
+    let mut analyzer = Analyzer::with_quote_depth(quote_depth);
+    tokens.iter().map(|token| analyzer.push(token)).collect()
+}
+
 /// Sentence spans derived from [`analyze`]. The spans partition
 /// `[0, tokens.last().end]`: the first starts at 0, the last ends at the
 /// end of the text, and every boundary is the first word of the next
 /// sentence.
 pub fn spans(tokens: &[Token]) -> Vec<SentenceSpan> {
     let contexts = analyze(tokens);
+    spans_from_contexts(tokens, &contexts)
+}
+
+/// The same spans from contexts the caller already computed.
+pub(crate) fn spans_from_contexts(tokens: &[Token], contexts: &[TokenContext]) -> Vec<SentenceSpan> {
     let Some(text_end) = tokens.last().map(|t| t.end) else {
         return Vec::new();
     };

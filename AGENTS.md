@@ -360,8 +360,9 @@ MorphologyCache, WordInfo, Depth, CacheStats}`; `syntax::{analyze,
 analyze_syntax, SyntaxAnalysis, Clause, TokenSyntax, SyntacticRole,
 RoleConfidence}`; `syntax_list::{List, ListItem, ListKind, ListItemKind}`;
 `Suggestion` / `SuggestionSource` under `suggest`; `syntax_check::{check,
-check_with_cache, check_analysis, SyntaxCheck, SyntaxDiagnostic,
-DiagnosticKind, Severity, Correction}`; `style_check::{check, check_with_cache,
+check_with_cache, check_analysis, SentenceCache, SentenceCacheStats,
+SyntaxCheck, SyntaxDiagnostic, DiagnosticKind, Severity, Correction}`;
+`style_check::{check, check_with_cache,
 check_tokens_with_morphology, StyleAnalysis, StyleDiagnostic, StyleKind}`;
 `check_all`, `check_all_with_cache`, `CheckAll`.
 

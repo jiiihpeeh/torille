@@ -119,8 +119,10 @@ dominated by the first morphology pass over a text, not by the rules.
 `syntax_check::check_with_cache` and `torille::check_all_with_cache` share a
 per-textarea `morphology::MorphologyCache`; each `WordInfo` caches the readings
 plus the agreed case/number, part of speech, clitic and possessive, and the
-style layer reads the same pass. The measured baseline, the remaining
-cold-path pruning, the sentence-level incremental cache and the worker
+style layer reads the same pass. The wasm combined export runs the grammar
+rules through `sentence_cache::SentenceCache`: an unchanged sentence is a hash
+probe, and one edited sentence re-checks in ~2.6–3.7 ms on the 1,959-word
+fixture. The measured baseline, the remaining cold-path pruning and the worker
 chunking plan are in
 [`PLAN_GRAMMAR_STYLE_PERF.md`](../PLAN_GRAMMAR_STYLE_PERF.md).
 

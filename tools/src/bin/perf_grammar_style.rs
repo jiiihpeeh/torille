@@ -9,14 +9,16 @@
 //! takes the first N word tokens of it. `--single-thread` measures the wasm
 //! shape. Cold means a fresh morphology cache; the process-level engine
 //! caches (the paradigm cache inside `emits_form`) are warm after the first
-//! pass, which is the same shape a worker has after its first document.
+//! pass, which is the same shape a worker has after its first document. The
+//! sentence-cache section measures a whole pass, an all-hit pass and a
+//! one-sentence edit through `syntax_check::SentenceCache`.
 
 use std::time::Instant;
 
 use torille::check::check_all_with_cache;
 use torille::morphology::{CacheStats, Depth, MorphologyCache, analyze_morphology};
 use torille::syntax::analyze_syntax;
-use torille::syntax_check::check_analysis;
+use torille::syntax_check::{SentenceCache, check_analysis};
 
 const DEFAULT_FIXTURE: &str = "tests/fixtures/perf/page-2000.txt";
 
@@ -98,6 +100,19 @@ fn median(mut values: Vec<f64>) -> f64 {
     values[values.len() / 2]
 }
 
+/// Change one sentence by inserting a letter at its first word.
+///
+/// The edit is deliberately tiny: the sentence cache should miss exactly one
+/// sentence and reuse every other hash.
+fn edit_one_sentence(text: &str, sentences: &[torille::sentence::SentenceSpan]) -> String {
+    let Some(span) = sentences.get(sentences.len() / 2) else {
+        return text.to_string();
+    };
+    let mut edited = text.to_string();
+    edited.insert(span.start, 'x');
+    edited
+}
+
 /// `direct=3 stem_map=12 ...` for the text report.
 fn depths(stats: &CacheStats) -> String {
     Depth::ALL
@@ -164,6 +179,40 @@ fn main() {
         warm_all.push(ms(t.elapsed()));
     }
 
+    // Sentence-cache shape: one whole pass, an all-hit pass, then one
+    // edited sentence. Morphology stays warm, as it does in the textarea.
+    let mut sentence_cache = SentenceCache::new();
+    let mut sentence_words = MorphologyCache::new();
+    let sentence_morphology = analyze_morphology(&tokens, &mut sentence_words);
+    let t = Instant::now();
+    let _ = sentence_cache.check(&text, &tokens, &sentence_morphology, &mut sentence_words);
+    let sentence_cold = ms(t.elapsed());
+    let t = Instant::now();
+    let _ = sentence_cache.check(&text, &tokens, &sentence_morphology, &mut sentence_words);
+    let sentence_warm = ms(t.elapsed());
+
+    let edited = edit_one_sentence(&text, &sentence_morphology.sentences);
+    let t = Instant::now();
+    let edited_tokens = torille::tokenise::tokenise(&edited);
+    let edited_morphology = analyze_morphology(&edited_tokens, &mut sentence_words);
+    let sentence_edit_prep = ms(t.elapsed());
+    let before_edit = sentence_cache.stats();
+    let t = Instant::now();
+    let _ = sentence_cache.check(
+        &edited,
+        &edited_tokens,
+        &edited_morphology,
+        &mut sentence_words,
+    );
+    let sentence_edit = ms(t.elapsed());
+    let after_edit = sentence_cache.stats();
+    let t = Instant::now();
+    let _ = torille::style_check::check_tokens_with_morphology(&edited_tokens, &edited_morphology);
+    let sentence_edit_style = ms(t.elapsed());
+    let edit_hits = after_edit.hits - before_edit.hits;
+    let edit_misses = after_edit.misses - before_edit.misses;
+    let sentence_edit_total = sentence_edit_prep + sentence_edit + sentence_edit_style;
+
     // Fresh cache for the style-only cold shape; the engine's paradigm cache
     // is warm by now, so this is a lower bound on a truly cold process.
     let mut fresh = MorphologyCache::new();
@@ -201,6 +250,12 @@ fn main() {
              \"morphology_warm_ms\":{:.2},\"syntax_ms\":{:.2},\
              \"rules_ms\":{:.2},\"style_ms\":{:.2},\"all_ms\":{:.2},\
              \"style_fresh_cache_ms\":{:.2},\
+             \"sentence_cache_cold_ms\":{:.2},\"sentence_cache_warm_ms\":{:.2},\
+             \"sentence_cache_edit_ms\":{:.2},\"sentence_cache_edit_style_ms\":{:.2},\
+             \"sentence_cache_edit_prep_ms\":{:.2},\
+             \"sentence_cache_edit_total_ms\":{:.2},\
+             \"sentence_cache_entries\":{},\"sentence_cache_edit_hits\":{},\
+             \"sentence_cache_edit_misses\":{},\
              \"cold_cache\":{{\"words\":{},\"hits\":{},\"misses\":{}}},\
              \"cold_depths\":{{{}}},\"cold_deep_upgrades\":{},\"cold_proper_names\":{},\
              \"warm_cache\":{{\"words\":{},\"hits\":{},\"misses\":{}}},\
@@ -217,6 +272,15 @@ fn main() {
             median(warm_style),
             median(warm_all),
             style_fresh_cache_ms,
+            sentence_cold,
+            sentence_warm,
+            sentence_edit,
+            sentence_edit_style,
+            sentence_edit_prep,
+            sentence_edit_total,
+            sentence_cache.stats().entries,
+            edit_hits,
+            edit_misses,
             cold_stats.words,
             cold_stats.hits,
             cold_stats.misses,
@@ -246,6 +310,22 @@ fn main() {
     println!("warm style:     {:9.2} ms", median(warm_style));
     println!("warm all:       {:9.2} ms", median(warm_all));
     println!("style, fresh cache: {style_fresh_cache_ms:9.2} ms");
+    println!(
+        "sentence cache: cold {:9.2} ms, warm {:9.2} ms, edit {:9.2} ms, edit+prep+style {:9.2} ms (prep {:.2}, rules {:.2}, style {:.2})",
+        sentence_cold,
+        sentence_warm,
+        sentence_edit,
+        sentence_edit_total,
+        sentence_edit_prep,
+        sentence_edit,
+        sentence_edit_style
+    );
+    println!(
+        "sentence cache: {} entries, edit hits {}, misses {}",
+        sentence_cache.stats().entries,
+        edit_hits,
+        edit_misses
+    );
     println!(
         "cold cache: {} words, {} hits, {} misses",
         cold_stats.words, cold_stats.hits, cold_stats.misses

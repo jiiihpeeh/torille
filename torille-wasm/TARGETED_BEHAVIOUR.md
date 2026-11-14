@@ -167,6 +167,7 @@ The two-pass latency budget is:
 | Surgical diff: typing one character doesn't re-check unchanged words | `probe-surgical.mjs` | typing 1 char → `reused=N toCheck=0` for unchanged misspell positions |
 | Caret aligns with text | `probe-cursor.mjs` | caret x/y/height within 2 px of underlay text at same byte index |
 | Grammar/style runs in sentence batches with progress and cancellation | `probe-grammar-chunk.mjs` | first progress <2 s; final counts match the whole-text baseline (69 grammar, 14 style); editing cancels without stale diagnostics |
+| Sentence cache reuses unchanged sentences | `probe-sentence-cache.mjs` | warm result matches cold; one edited sentence matches a fresh whole-text check |
 | No regression on Rust core | `cargo test --release --workspace` | green |
 
 Run all probes after a demo change:
@@ -179,6 +180,7 @@ node probe-sylvi.mjs                    # real-Finnish stress
 node probe-surgical.mjs                 # surgical diff
 node probe-cursor.mjs                   # caret alignment
 node probe-grammar-chunk.mjs            # chunked grammar/style + progress
+node probe-sentence-cache.mjs           # sentence reuse + edit parity
 ```
 
 `probe-debug.mjs` is a general-purpose page + worker console
@@ -199,6 +201,12 @@ Down from "1-2 s" before the candidate/demote split.
   * editing during the run cancels it and clears to 0 diagnostics;
   * the longest batch is still ~200 ms (5 sentences), so the
     ≤50 ms per-task target remains open.
+
+✅ **Sentence cache** — `probe-sentence-cache.mjs`:
+  * the all-hit wasm pass returns the same diagnostics as the cold pass;
+  * one edited sentence returns exactly the fresh whole-text result;
+  * native single-thread re-check: 2.6–3.7 ms for the 1,959-word page,
+    1.8 ms for the 96-word page.
 
 ✅ **Surgical diff** — `probe-surgical.mjs`:
   * baseline 5 misspellings → 5 dispatched to suggestion pool

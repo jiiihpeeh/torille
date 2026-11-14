@@ -1,6 +1,6 @@
 # PLAN_GRAMMAR_STYLE_PERF — one morphology pass for grammar and style
 
-Status: **Phase 0–1, 2 (cold path), 3 (warm rule pass) and 5 (chunking) landed; Phase 4/6/7 next** · 2026-11-14 · branch `syntax` · baseline `2e5f13c`
+Status: **Phase 0–1, 2 (cold path), 3 (warm rule pass), 4 (sentence cache) and 5 (chunking) landed; Phase 6/7 next** · 2026-11-14 · branch `syntax` · baseline `2e5f13c`
 
 This is the performance plan for the two opt-in analysis layers:
 
@@ -53,6 +53,11 @@ Landed:
   paradigms are cached per (lemma, inflections, wanted tags, POS). Measured on
   the fixture: rules **13.9 → 1.4 ms**, style **5.0 → 2.5 ms**, warm all
   **23.5 → 6.9 ms**.
+- **Phase 4** — `SentenceCache` keys each sentence by its exact text and
+  reuses its diagnostics across edits. The document quote rule stays global.
+  The wasm state owns the cache; one edited sentence on the 1,959-word page
+  costs **2.6–3.7 ms** including tokenise, morphology and style, and a 96-word
+  page costs **1.8 ms**. Diagnostics are identical to a full re-check.
 - **Shallow closed-class fix** — a pronoun base named by the cheap gate
   (`jossa` → `joka`) is verified across every sanalista row, so relative
   pronoun forms no longer fall to `Unknown`. The attribute rule now skips
@@ -805,14 +810,43 @@ fixture's ten agreement corrections, which is why the warm rule pass drops from
 Acceptance: rule pass ≤ 5 ms/page; style ≤ 3 ms/page; warm total ≤ 10 ms/page.
 All three are met on the fixture: **1.4 / 2.5 / 6.9 ms**.
 
-### Phase 4 — sentence cache (3–4 days)
+### Phase 4 — sentence cache (3–4 days) — landed
 
 - §5.4 sentence hash, relative spans, merge and invalidation.
 - A test for the sentence-locality invariant.
 - Cap and clear rules.
 
+**Landed:** `src/syntax_check/sentence_cache.rs` keys each sentence by a hash
+of its exact text, its byte length and its starting quote depth, and stores
+diagnostics with spans and correction edits relative to the sentence start.
+An unchanged sentence is a hash probe and a shift; a changed one tokenises the
+slice and runs only the sentence-local rules. The starting quote depth is part
+of the key and seeds the sentence analyzer, so a sentence inside a quotation
+sees the same depth as the whole-document pass. The document-global
+`unbalanced_quote` warning runs once outside the per-sentence pass. The wasm
+textarea state owns the cache and the combined export uses it, so the chunked
+worker reuses unchanged sentences across chunks and across edits. The cache is
+capped at 2,000 sentences and is cleared by `clear_state` with the morphology
+cache.
+
+`perf_grammar_style` now reports cold, all-hit and one-edited-sentence timings.
+On the 1,959-word fixture, with warm morphology and style on:
+
+| workload | result |
+|---|---:|
+| all-hit sentence pass | **0.1 ms** |
+| one edited sentence, rules only | **0.1–0.3 ms** |
+| one edited sentence, tokenise + morphology + rules + style | **2.6–3.7 ms** |
+| 96-word page, one edited sentence, full re-check | **1.8 ms** |
+
+The edit reuses 308 of 309 sentences; exactly one sentence is re-analysed. The
+sentence-cache result is byte-identical to the whole-text rule pass on the
+clean corpus, bracket-merged spans, quotes, relative clauses and coordinated
+subjects.
+
 Acceptance: a 2,000-word page with one edited sentence re-checks in ≤ 5 ms;
-a 100-word page in ≤ 2 ms; diagnostics are identical to a full re-check.
+a 100-word page in ≤ 2 ms; diagnostics are identical to a full re-check. All
+three are met.
 
 ### Phase 5 — wasm and worker (3 days) — partial
 
@@ -824,7 +858,9 @@ a 100-word page in ≤ 2 ms; diagnostics are identical to a full re-check.
 **Landed:** the combined `check_grammar_style_with_state` export, a
 quote-balanced sentence chunker in the demo worker, `check-progress`
 envelopes, generation-based cancellation, and a single panel resource that
-renders both streams. `probe-grammar-chunk.mjs` on the 1,959-word perf page:
+renders both streams. The combined export runs the grammar rules through the
+per-state `SentenceCache`, so a re-check reuses every unchanged sentence
+across chunks. `probe-grammar-chunk.mjs` on the 1,959-word perf page:
 first progress **~160 ms**, final **69 grammar / 14 style** (identical to the
 whole-text wasm check), and an edit during the run cancels to 0 diagnostics.
 The longest batch is still ~200 ms, so the 50 ms per-task target is not met;
