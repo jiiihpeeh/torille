@@ -595,21 +595,15 @@ fn resolve_word_fast(cat: &Catalogues, lower: &str) -> Option<WordInfo> {
         return Some(out);
     }
 
-    // A surface the cheap gates can name as one base is verified with one
-    // paradigm when it carries a possessive/clitic or the base is itself a
-    // classless compound: `kalojani` is `kala`, `veneeni` is `vene`,
-    // `pariskunnan` is `pariskunta`. The ambiguous partitive plural is
-    // excluded because its second base can change a rule's correction
-    // (`kirjoja` belongs to `kirja` and `kirjo`).
-    if !needs_full_base_search(lower)
+    // A surface that carries a possessive/clitic suffix needs the cheap gate
+    // first: the stem map indexes the host, not the suffixed surface. The
+    // same gate names a classless compound. A plain word goes straight to the
+    // stem map below, which is the common case and avoids paying
+    // `check_normal_fast` (and its paradigm walk) twice.
+    if surface_carries_suffix(lower)
         && let Some(base) = cheap_base(lower)
     {
-        let suffix = strip_possessive(lower).is_some()
-            || !crate::expand::clitic::strip_all_clitics(lower).1.is_empty();
-        let compound = is_classless_lemma(&base);
-        if (suffix || compound)
-            && let Some(info) = resolve_from_base_surface(lower, &base, cat)
-        {
+        if let Some(info) = resolve_from_base_surface(lower, &base, cat) {
             return Some(info);
         }
         if let Some(info) = resolve_compound_surface(lower, &base, cat) {
@@ -660,7 +654,7 @@ fn resolve_word_fast(cat: &Catalogues, lower: &str) -> Option<WordInfo> {
         }
     }
     if bases.is_empty() {
-        return None;
+        return resolve_cheap_fallback(lower, cat);
     }
 
     let mut out = WordInfo::default();
@@ -685,7 +679,7 @@ fn resolve_word_fast(cat: &Catalogues, lower: &str) -> Option<WordInfo> {
         }
     }
     if !matched_any {
-        return None;
+        return resolve_cheap_fallback(lower, cat);
     }
     if out.lemma.is_none() {
         out.lemma = bases.first().cloned();
@@ -694,6 +688,30 @@ fn resolve_word_fast(cat: &Catalogues, lower: &str) -> Option<WordInfo> {
     add_negation(&mut out, lower);
     finish(&mut out, Depth::StemMap, lower);
     Some(out)
+}
+
+/// The fallback when the stem map names no base or names one that cannot
+/// emit the surface.
+///
+/// A classless compound and a closed-class pronoun have no stem-map entry, and
+/// a suffixed surface is indexed by its host. The cheap gate names those, and
+/// the single-paradigm verification keeps the result a reading, not a guess.
+fn resolve_cheap_fallback(lower: &str, cat: &Catalogues) -> Option<WordInfo> {
+    let base = cheap_base(lower)?;
+    if is_classless_lemma(&base)
+        && let Some(info) = resolve_from_base_surface(lower, &base, cat)
+    {
+        return Some(info);
+    }
+    if let Some(info) = resolve_compound_surface(lower, &base, cat) {
+        return Some(info);
+    }
+    if is_closed_class_base(&base)
+        && let Some(info) = resolve_from_base_surface(lower, &base, cat)
+    {
+        return Some(info);
+    }
+    None
 }
 
 /// Whether the lexicon lists the base as a closed-class pronoun.

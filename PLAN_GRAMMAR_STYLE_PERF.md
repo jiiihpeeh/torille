@@ -45,7 +45,7 @@ Landed:
   validated by `modifier_is_known` (which reads the classless CSV rows and the
   bound prefixes `esi-`, `lempi-`, `ensi-`, ...), and the whole is inflected
   with `head_inflections`. No new prefix list is added. Cold page: **~2.4 s
-  native / 3.08 s wasm**; the 20/96-word targets are met, the 2,000-word
+  native / ~3.1 s wasm**; the 20/96-word targets are met, the 2,000-word
   wasm target is just above 3 s, and the ≤500 ms target was deferred to
   Phase 6 and remains open.
 - **Phase 3** — warm rule pass: `TokenSyntax.key` / `WordInfo.key` cache the
@@ -79,7 +79,8 @@ Landed:
   (`jossa` → `joka`) is verified across every sanalista row, so relative
   pronoun forms no longer fall to `Unknown`. The attribute rule now skips
   relative-pronoun lemmas, which removes three false `attribute_agreement`
-  findings on the perf fixture (71 → 69 grammar diagnostics). The syntax
+  findings on the perf fixture; the stem-map-first reorder also removes one
+  false `verb_rection` on `korkean` (71 → 68 grammar diagnostics). The syntax
   corpus's `two_tuli` case is green again.
 
 Measured on the committed fixture, single-thread (wasm shape):
@@ -94,7 +95,7 @@ Measured on the committed fixture, single-thread (wasm shape):
 | 1,959-word warm grammar+style | ~33–41 ms | 6.9 ms |
 | 17-word bound-form fixture, cold | 620 ms | 79 ms |
 
-The full 1,959-word page is 3.08 s in the release wasm (Phase 7), and the
+The full 1,959-word page is ~3.1 s in the release wasm (Phase 7), and the
 chunked worker shows first progress at ~160 ms (Phase 5).
 
 Bound forms are no longer a hotspot. The 17-word fixture
@@ -114,7 +115,7 @@ forms (`palajakaan`, `pariskunnan` at the time of measurement, `kulettivat`,
 partitive-plural stem-shape filter and the warm rule pass have landed, and the
 worker chunks the check with progress and cancellation. The sentence cache
 (Phase 4) remains. The cold page target is not met yet: the release wasm is
-3.08 s for the whole page, with first progress at ~160 ms.
+~3.1 s for the whole page, with first progress at ~30–70 ms.
 
 ## 1. The measured problem
 
@@ -805,8 +806,9 @@ explicit test; the 20-word fixture's diagnostics are unchanged.
 
 **Landed:** the shallow/deep split, base-source ladder, stem-shape filter,
 clitic/possessive reuse, numeral upgrade, compound fallback and depth
-metrics. Cold page: **~2.4 s native / 3.08 s wasm**. The 20- and 96-word
-targets are met; the 2,000-word wasm page is just above the 3 s target. The
+metrics. A stem-map-first reorder removed the duplicate `cheap_base` pass for
+plain words, taking the native cold page from ~2.4–2.6 s to **~2.1 s**. The
+20- and 96-word targets are met; the 2,000-word wasm page is ~3.1 s. The
 ≤500 ms target was deferred to Phase 6, which rejected the reverse index, so
 it remains open and needs a different cold-path design.
 
@@ -885,7 +887,7 @@ envelopes, generation-based cancellation, and a single panel resource that
 renders both streams. The combined export runs the grammar rules through the
 per-state `SentenceCache`, so a re-check reuses every unchanged sentence
 across chunks. `probe-grammar-chunk.mjs` on the 1,959-word perf page:
-first progress **~30–70 ms**, final **69 grammar / 14 style** (identical to the
+first progress **~30–70 ms**, final **68 grammar / 14 style** (identical to the
 whole-text wasm check), and an edit during the run cancels to 0 diagnostics.
 The batch is now one sentence; the remaining p90 cost and the extension/reader
 work are in the leftovers below.
@@ -915,7 +917,7 @@ work are in the leftovers below.
    resource as `TextPanel`: `checkGrammarStyle`, progress, cancellation,
    diagnostics on the `Editor`, and a `__torille.panels` hook.
    `probe-reader-grammar.mjs` sets both the free-text panel and the reader to
-   the 1,959-word fixture and gets **69 grammar / 14 style** from both, with
+   the 1,959-word fixture and gets **68 grammar / 14 style** from both, with
    grammar/style spans in the reader underlay and a clean cancel to 0.
 4. **Multi-panel generation.** The demo worker's cancellation token is now
    per textarea state (`Map<idx, generation>`) instead of one global counter.
@@ -975,7 +977,7 @@ was added and nothing is embedded in the crate.
 
 **Landed:** the reader now runs the same chunked grammar/style resource as
 `TextPanel`, with progress, cancellation, diagnostics on the `Editor` and a
-`__torille.panels` hook. `probe-reader-grammar.mjs` gets 69 grammar / 14 style
+`__torille.panels` hook. `probe-reader-grammar.mjs` gets 68 grammar / 14 style
 from both the free-text panel and the reader, shows the reader underlay spans,
 and cancels to 0. `docs/syntax_checker.md` records the sentence-cache path.
 The reader was enabled on the chunked-progress branch of the condition, not

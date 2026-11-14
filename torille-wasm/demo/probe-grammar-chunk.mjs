@@ -2,7 +2,7 @@
 //
 // Verifies the worker's sentence-batch path:
 //   * progress appears before the whole 1,959-word page finishes;
-//   * the chunked result matches the whole-text baseline (69 grammar,
+//   * the chunked result matches the whole-text baseline (68 grammar,
 //     14 style) for the perf fixture, including quote-spanning sentences;
 //   * editing while a check is running cancels the old run and leaves no
 //     stale diagnostics.
@@ -15,7 +15,7 @@ import puppeteer from 'puppeteer-core';
 import { readFile } from 'node:fs/promises';
 
 const FIXTURE = new URL('../../tests/fixtures/perf/page-2000.txt', import.meta.url);
-const EXPECTED_GRAMMAR = 69;
+const EXPECTED_GRAMMAR = 68;
 const EXPECTED_STYLE = 14;
 const SHORT = 'Koira nukkuu.';
 

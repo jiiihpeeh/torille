@@ -14,7 +14,7 @@ import { readFile } from 'node:fs/promises';
 
 const FIXTURE = new URL('../../tests/fixtures/perf/page-2000.txt', import.meta.url);
 const SHORT = 'Koira nukkuu.';
-const EXPECTED_GRAMMAR = 69;
+const EXPECTED_GRAMMAR = 68;
 const EXPECTED_STYLE = 14;
 
 const text = await readFile(FIXTURE, 'utf8');
@@ -100,8 +100,6 @@ const spans = await page.evaluate(() => ({
     '.gutenberg-reader .underlay .style-suggestion').length,
 }));
 
-const areas = await page.evaluate(() => [...document.querySelectorAll('textarea')].map((a) => ({ len: a.value.length, head: a.value.slice(0, 24) })));
-console.log('textareas', areas);
 console.log('=== reader grammar/style ===');
 console.log(`  first progress: ${firstProgress} ms`);
 console.log(`  free text:      ${final[0].grammar} grammar, ${final[0].style} style`);
