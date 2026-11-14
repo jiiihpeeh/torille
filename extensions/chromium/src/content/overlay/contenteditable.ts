@@ -4,6 +4,7 @@ import {
 } from '../shared';
 import { isIgnored, isInsideCodeDom, maskIgnored } from '../ignore-ranges';
 import { appendSuggestionButtons } from './popup';
+import { hideGrammarPanel } from '../grammar-panel';
 import type { Overlay, OverlayOptions } from './index';
 
 // Overlay for `[contenteditable]` elements: there's no single
@@ -481,6 +482,7 @@ export function createContentEditableOverlay(opts: OverlayOptions): Overlay {
       dbg('content', 'input:hit', { target: (e.target as Node).nodeName });
       workerClient.cancelCheckAsync();
       clearDiagnosticHighlights();
+      hideGrammarPanel();
       scheduleCheck();
       if (HIGHLIGHTS_SUPPORTED) void renderMisspellHighlights();
     }

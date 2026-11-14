@@ -171,6 +171,7 @@ The two-pass latency budget is:
 | Reader runs grammar/style with progress and cancellation | `probe-reader-grammar.mjs` | free-text panel and reader both report 68 grammar / 14 style; reader underlay has grammar/style spans; replacing the text clears to 0 |
 | Extension grammar threads setting | options page | `grammarThreads` 1–4, default 4; Firefox uses the morphology pool, Chromium's service worker forces 1 |
 | Extension background morphology pool | `extensions/firefox/e2e/pool.mjs` | 4 workers -> 68 grammar / 14 style; 2-worker setting recreates the pool; 1 thread uses the chunked path; a newer check cancels the long one |
+| Content script + panel through the real background | `extensions/firefox/e2e/pool-content.mjs` | context-menu grammar gives a 68-row panel and 49 underlines; style gives 14/14; the 48-group progress toast reaches the content; editing cancels and clears the panel and underlines |
 | No regression on Rust core | `cargo test --release --workspace` | green |
 
 Run all probes after a demo change:

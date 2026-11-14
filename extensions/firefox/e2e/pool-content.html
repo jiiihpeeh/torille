@@ -1,0 +1,143 @@
+<!doctype html>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<title>torille content-panel pool e2e</title>
+<style>
+  body { font: 14px sans-serif; padding: 1em; max-width: 720px; }
+  textarea { width: 100%; height: 220px; font: 14px/1.5 monospace; }
+</style>
+<textarea id="t">Kirjoitusvirhee talossa. Koira juoksee.</textarea>
+<script type="module">
+  // Load the real background and the real content script in one page. Only
+  // the extension APIs are stubbed; the spell worker, the morphology pool and
+  // the wasm are the built artefacts under /dist/.
+  const progress = [];
+  const workerUrls = [];
+  const backgroundListeners = [];
+  const contentListeners = [];
+  const storageListeners = [];
+  const store = { 'torille-grammar-threads': 4, blacklist: [] };
+  let owner = 'background';
+  let contextMenuHandler = null;
+
+  const RealWorker = window.Worker;
+  window.Worker = class extends RealWorker {
+    constructor(url, options) {
+      workerUrls.push(String(url));
+      super(url, options);
+    }
+  };
+
+  const storage = {
+    local: {
+      get: async (key) => {
+        if (key === undefined || key === null) return { ...store };
+        if (Array.isArray(key)) {
+          const out = {};
+          for (const k of key) out[k] = store[k];
+          return out;
+        }
+        if (typeof key === 'object') {
+          const out = {};
+          for (const [k, fallback] of Object.entries(key)) {
+            out[k] = store[k] === undefined ? fallback : store[k];
+          }
+          return out;
+        }
+        return { [key]: store[key] };
+      },
+      set: async (values) => {
+        const changes = {};
+        for (const [k, value] of Object.entries(values)) {
+          changes[k] = { oldValue: store[k], newValue: value };
+          store[k] = value;
+        }
+        for (const listener of storageListeners) listener(changes, 'local');
+      },
+    },
+    onChanged: { addListener: (listener) => storageListeners.push(listener) },
+  };
+
+  const api = {
+    storage,
+    runtime: {
+      getURL: (path) => `/dist/${path}`,
+      onMessage: {
+        addListener: (listener) => {
+          if (owner === 'background') backgroundListeners.push(listener);
+          else contentListeners.push(listener);
+        },
+      },
+      sendMessage: async (message) => {
+        const handler = backgroundListeners[0];
+        if (!handler) throw new Error('background listener missing');
+        return handler(message, { tab: { id: 1 } });
+      },
+      onInstalled: { addListener: () => {} },
+    },
+    tabs: {
+      query: async () => [],
+      sendMessage: async (_tabId, message) => {
+        if (message?.type === 'torille:check-progress') progress.push(message);
+        for (const listener of contentListeners) {
+          const result = listener(message, { tab: { id: 1 } });
+          if (result && typeof result.then === 'function') await result;
+        }
+        return {};
+      },
+    },
+    contextMenus: {
+      create: () => {},
+      update: () => {},
+      onClicked: { addListener: (listener) => { contextMenuHandler = listener; } },
+    },
+  };
+
+  globalThis.browser = api;
+  window.browser = api;
+
+  owner = 'background';
+  await import('/dist/background/background.js');
+
+  owner = 'content';
+  await new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = '/dist/content/content.js';
+    script.onload = resolve;
+    script.onerror = reject;
+    document.body.append(script);
+  });
+
+  const shadow = () =>
+    document.querySelector('.torille-overlay-host')?.shadowRoot ?? null;
+
+  window.__e2e = {
+    ready: true,
+    progress,
+    workerUrls,
+    contextMenu: (menuItemId) => {
+      if (!contextMenuHandler) throw new Error('context menu listener missing');
+      return contextMenuHandler({ menuItemId }, { id: 1 });
+    },
+    setThreads: (value) => {
+      store['torille-grammar-threads'] = value;
+      for (const listener of storageListeners) {
+        listener({ 'torille-grammar-threads': { newValue: value } }, 'local');
+      }
+    },
+    morphologyWorkerCount: () =>
+      workerUrls.filter((url) => url.includes('morphology-worker')).length,
+    toastText: () =>
+      document.querySelector('.torille-check-progress')?.textContent ?? null,
+    panelCount: () =>
+      document.querySelectorAll('.torille-grammar-panel li').length,
+    panelPresent: () => Boolean(document.querySelector('.torille-grammar-panel')),
+    grammarUnderlines: () =>
+      shadow()?.querySelectorAll(
+        '.grammar-error, .grammar-warning, .grammar-suggestion',
+      ).length ?? 0,
+    styleUnderlines: () =>
+      shadow()?.querySelectorAll('.style-suggestion').length ?? 0,
+    overlayText: () => shadow()?.querySelector('.overlay')?.textContent ?? null,
+  };
+</script>

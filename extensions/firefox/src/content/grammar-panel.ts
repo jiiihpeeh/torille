@@ -44,6 +44,11 @@ export function hideCheckProgress(inputId: number): void {
   checkProgress.delete(inputId);
 }
 
+/// Close the grammar/style panel on an edit; its offsets are stale.
+export function hideGrammarPanel(): void {
+  document.querySelector('.torille-grammar-panel')?.remove();
+}
+
 export function syntaxKindLabel(kind: string): string {
   switch (kind) {
     case 'subject_predicate_agreement': return 'subjektin ja predikaatin kongruenssi';

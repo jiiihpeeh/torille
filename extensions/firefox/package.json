@@ -7,7 +7,8 @@
     "build": "tsc -p tsconfig.json && node build.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.options.json",
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
-    "test:e2e:pool": "node e2e/pool.mjs"
+    "test:e2e:pool": "node e2e/pool.mjs",
+    "test:e2e:panel": "node e2e/pool-content.mjs"
   },
   "keywords": [],
   "author": "",

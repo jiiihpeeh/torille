@@ -1,6 +1,6 @@
 # PLAN_GRAMMAR_STYLE_PERF — one morphology pass for grammar and style
 
-Status: **Phase 0–7 landed/decided; 256-bit stem-shape filter and 4-worker morphology pool landed; cold page ~1.4 s wasm; ≤500 ms open; background pool e2e landed, content-panel e2e gap** · 2026-11-14 · branch `syntax` · baseline `2e5f13c`
+Status: **Phase 0–7 landed/decided; 256-bit stem-shape filter and 4-worker morphology pool landed; cold page ~1.4 s wasm; ≤500 ms open; background and content-panel e2e landed** · 2026-11-14 · branch `syntax` · baseline `2e5f13c`
 
 This is the performance plan for the two opt-in analysis layers:
 
@@ -81,7 +81,7 @@ Landed:
 - **Phase 7** — `GutenbergReader` runs grammar/style with progress and
   cancellation; `docs/syntax_checker.md` records the sentence-cache path.
   The background pool e2e is `extensions/firefox/e2e/pool.mjs`; the
-  content-panel browser e2e remains.
+  content-panel e2e is `extensions/firefox/e2e/pool-content.mjs`.
 - **Shallow closed-class fix** — a pronoun base named by the cheap gate
   (`jossa` → `joka`) is verified across every sanalista row, so relative
   pronoun forms no longer fall to `Unknown`. The attribute rule now skips

@@ -4,7 +4,7 @@ import {
 } from '../shared';
 import { isIgnored, maskIgnored } from '../ignore-ranges';
 import { partitionUnderlines, type Underline } from '../underline';
-import { applySyntaxEdits } from '../grammar-panel';
+import { applySyntaxEdits, hideGrammarPanel } from '../grammar-panel';
 import { appendSuggestionButtons } from './popup';
 import type { Overlay, OverlayOptions } from './index';
 
@@ -608,6 +608,7 @@ export function createTextareaOverlay(opts: OverlayOptions): Overlay {
   function onInput(): void {
     workerClient.cancelCheckAsync();
     clearDiagnosticUnderlines();
+    hideGrammarPanel();
     scheduleRender();
   }
 
