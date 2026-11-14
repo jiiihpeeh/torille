@@ -26,12 +26,14 @@ Temporary instrumentation of the cold pass (representative run, 2.78 s):
 | deep walk (`resolve_word_slow`) | 12 | 528 ms |
 
 The rest is the direct path, stem-map base collection, possessive/proper-name
-handling and allocation. The important finding is the **double walk**: the
-stem-map gate builds a paradigm word set through `emits_form`, then
-`form_readings` walks the same paradigm again for the readings. Sharing those
-two walks is the next candidate; it can remove the ~400 ms `form_readings`
-half, but the first walk per lemma (~800 ms) remains. The 12 deep walks are
-~528 ms for a handful of rare words.
+handling and allocation. The important finding was the **double walk**: the
+stem-map gate built a paradigm word set through `emits_form`, then
+`form_readings` walked the same paradigm again for the readings. The reorder
+below removed that double walk for plain words. After it, only the
+suffixed/compound surfaces overlap, so a shared `emits_form`/`form_readings`
+cache is no longer the ~400 ms lever; the remaining `form_readings` cost is
+one walk per plain lemma. The 12 deep walks are ~528 ms for a handful of rare
+words.
 
 **Conclusion:** a separate form cache is not the answer. Even a shared
 `emits_form`/`form_readings` cache leaves the first-walk cost and the deep
