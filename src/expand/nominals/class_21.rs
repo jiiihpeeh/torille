@@ -23,7 +23,8 @@ pub const CLASS: &str = "21";
 
 /// Foreign words whose spelling ends in `y` but which the reference reads as
 /// back-harmonic (`cowboyta`, not `cowboytä`), which the orthographic harmony
-/// would get wrong.
+/// would get wrong. `jersey` is not one: it is read `tsöösi`, with the front
+/// `ö`, so the orthographic front harmony is the right one.
 const BACK_HARMONY: &[&str] = &[
     "cowboy",
     "jockey",

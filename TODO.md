@@ -1721,5 +1721,9 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   and keep the reduced `tainta`/`lunta`; `verta` and `miss` are rejected as
   class-99 variants; and the class-51 `uusikuu` catalogue illative is
   `uuteenkuuhun`. The raw 5-lemma evidence report has 321 illegal rows, all
-  explained, with no unmatched, ambiguous or stale rule. The default report
-  is 79,316 confirmed / 8 missing / 9 not-plain / 0 illegal.
+  explained, with no unmatched, ambiguous or stale rule. `kuve`'s and `live`'s
+  oracle spellings are `missing` evidence rules, so the default report is
+  79,316 confirmed / 0 missing / 8 oracle-only / 9 not-plain / 0 illegal.
+  The nine `not_plain` rows are `jersey`'s back-harmony forms: `jersey` is read
+  `tsöösi`, so the front `jerseyiltä` column is the plain one and the back
+  column stays `Repaired`.
