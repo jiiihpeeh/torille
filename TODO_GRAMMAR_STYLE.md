@@ -498,10 +498,14 @@ analysis refinements”.
   trained and no production grammar code is changed.
   Run `cargo run --release -p torille-tools --bin ud_coverage -- --file
   corpus.conllu`.
-- [ ] **Phase 2 exact no-op sidecar.** Add `Disambiguation`/`ReadingDecision`
-  with neural inference off, and prove byte-for-byte equivalence for
-  `TokenSyntax`, clauses, diagnostics, spans, corrections and style output.
-  Include model/schema/activation state in the sentence-cache key.
+- [x] **Phase 2 exact no-op sidecar.** `src/disambiguation.rs` adds
+  `Disambiguation`/`ReadingDecision`/`CandidateView` with a disabled
+  `disambiguate`; the syntax, combined, sentence-cache and wasm owner paths
+  consume it. `tests/disambiguation_noop.rs` proves identical `TokenSyntax`,
+  clauses, diagnostics, spans, corrections, lists, style output and combined
+  output with neural inference off. The sentence-cache key includes the
+  disambiguation cache key (model/schema/activation). No decisions affect
+  roles or severities yet.
 
 ## Deliberate boundaries
 
@@ -585,3 +589,10 @@ intended/competing interpretation pair that fails.
   reports 11 word tokens / 100% exact+partial coverage; a UD Finnish-FTB smoke
   run reports 13,904 word tokens / 80.6% coverage, with mapping and candidate
   categories reported separately.
+- 2026-11-15: implemented Phase 2 of the neural-disambiguation plan.
+  Added the disabled `Disambiguation`/`ReadingDecision`/`CandidateView` seam,
+  threaded it through syntax, the combined pass, `SentenceCache` and the wasm
+  owner paths, and added the exact no-op gate over tokens, clauses,
+  diagnostics, spans, corrections, lists, style and combined output. The
+  sentence cache now includes the model/schema/activation key. No model is
+  active and no role, severity or diagnostic changed.

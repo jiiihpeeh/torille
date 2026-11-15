@@ -7,11 +7,12 @@
 
 use std::collections::BTreeMap;
 
+use torille::disambiguation::{CandidateView, LemmaProvenance, Provenance};
 use torille::expand::{LexiconIndex, form_readings};
 use torille::kotus::{lemmas, sanalista};
 use torille::morphology::{Depth, MorphologyCache, analyze_morphology};
 use torille::syntax::{TokenSyntax, analyze_syntax};
-use torille::tags::{Confidence, Tags};
+use torille::tags::Tags;
 use torille::tokenise::{Token, TokenKind};
 
 use super::mapping::{GoldReading, MappingStatus, UD_MAPPING_VERSION, map_token};
@@ -95,32 +96,6 @@ impl Counts {
             (self.candidate_exact + self.candidate_partial) as f64 / denominator as f64
         })
     }
-}
-
-/// Provenance of a candidate reading's lemma.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum LemmaProvenance<'a> {
-    /// One or more lemmas emit this exact reading. Never assume the length is
-    /// one; the model must not pick a unique lemma without checking.
-    Known(Vec<&'a str>),
-    Unavailable { reason: &'static str },
-}
-
-/// A value that the current `WordInfo` either provides or cannot provide.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Provenance<T> {
-    Known(T),
-    Unavailable { reason: &'static str },
-}
-
-/// The adapter between `WordInfo.readings` and the model's candidate features.
-#[derive(Debug, Clone)]
-pub struct CandidateView<'a> {
-    pub token_index: usize,
-    pub reading_index: usize,
-    pub tags: Tags,
-    pub lemma_provenance: LemmaProvenance<'a>,
-    pub source_confidence: Provenance<Confidence>,
 }
 
 /// A single UD coverage report.

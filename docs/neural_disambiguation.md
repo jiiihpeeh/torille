@@ -1100,16 +1100,34 @@ quality.
 
 **Exit:** candidate coverage is implemented and measurable; no model yet.
 
-### Phase 2 — integration seam, no model
+### Phase 2 — integration seam, no model (implemented)
 
-- add `Disambiguation`/`ReadingDecision` and `CandidateView` types;
-- add `disambiguate` with a no-op/heuristic implementation;
-- thread the sidecar through `analyze_syntax_with_contexts`,
-  `SentenceCache`, and the wasm owner path;
-- keep the feature flag off.
+Implemented as `src/disambiguation.rs` plus call-site seams:
 
-**Exact no-op gate.** With neural inference disabled, the new path must be
-**byte-for-byte equivalent** to the existing pipeline. The gate compares:
+- `Disambiguation`, `ReadingDecision`, `CandidateView`, `LemmaProvenance` and
+  `Provenance` live in the engine; tools consume the same adapter.
+- `disambiguate(tokens, &MorphologyAnalysis)` returns
+  `Disambiguation::disabled()` (no decisions, `cache_key() == 0`).
+- `syntax::analyze_syntax_with_decisions` and
+  `analyze_syntax_with_contexts_and_decisions` accept the sidecar but do not
+  use it in Phase 2.
+- `check_all_tokens_with_decisions` and `check_all_with_cache` thread the
+  sidecar through the combined pass.
+- `syntax_check::check_with_cache` runs morphology, the disabled
+  disambiguator, then `analyze_syntax_with_decisions`.
+- `SentenceCache::check_with_decisions` keys each sentence by
+  `sentence text + length + quote depth + disambiguation.cache_key()`.
+  `check` delegates with the disabled policy. A changed sentence recomputes
+  its own `disambiguate` after its sentence morphology; an unchanged sentence
+  with the same key is not reprocessed.
+- The wasm `analyze_syntax_with_state`, `check_syntax_with_state`,
+  `check_grammar_style_with_state` and
+  `check_grammar_style_from_morphology` owner paths use the sidecar. The
+  morphology pool workers still do not run it.
+
+**Exact no-op gate.** `tests/disambiguation_noop.rs` compares baseline and
+disabled-sidecar paths over the committed syntax corpus, a set of focused
+ambiguous cases, and the 2,000-word prose fixture. It compares:
 
 - every `TokenSyntax` field: `key`, `role`, `confidence`, `clause`, `head`,
   `case`, `lemma`, `lemmas`, `readings`;
@@ -1120,14 +1138,12 @@ quality.
 - list structures and sentence spans;
 - every `StyleDiagnostic`;
 - the public combined `CheckAll` output;
-- the wasm diagnostic object (at least in a native/wasm-shape test).
+- the stateless, cache and sentence-cache paths.
 
-Run the comparison over the exact-output fixture, the ambiguity fixture, the
-prose fixture, and the 2,000-word perf fixture. Any difference is a failed
-Phase 2.
+Any difference is a failed Phase 2. The gate is green.
 
 **Exit:** the sidecar is wired without changing a single diagnostic, clause,
-role, span, correction or style output.
+role, span, correction or style output; no model is active.
 
 ### Phase 3 — M0 feature MLP experiments
 
@@ -1326,7 +1342,9 @@ Result: clean.
 
 These are the numbers a model must not regress.
 
-## 14. Phase 1 implementation verification
+## 14. Phase 1 and Phase 2 implementation verification
+
+### Phase 1 — data and coverage harness
 
 Implemented without touching production grammar code, public APIs or model
 training:
@@ -1418,6 +1436,44 @@ about 30 seconds. It is a coverage smoke test, not a model result.
 No model was trained or run; no production grammar behaviour or public API was
 modified by Phase 1.
 
+### Phase 2 — exact no-op sidecar
+
+Implemented:
+
+| path | change |
+|---|---|
+| `src/disambiguation.rs` | `Disambiguation`, `ReadingDecision`, `CandidateView`, `LemmaProvenance`, `Provenance`, disabled `disambiguate` |
+| `src/syntax/mod.rs` | `analyze_syntax_with_decisions`, context-aware internal seam |
+| `src/check.rs` | `check_all_tokens_with_decisions`; combined cache path runs the disabled disambiguator |
+| `src/syntax_check/mod.rs` | cache path runs morphology → disabled disambiguator → syntax |
+| `src/syntax_check/sentence_cache.rs` | `check_with_decisions`; disambiguation key joins the sentence hash |
+| `torille-wasm/src/lib.rs` | owner state/combined paths use the sidecar; pool workers do not |
+| `tests/disambiguation_noop.rs` | exact no-op gate |
+
+```bash
+cargo test --release -p torille --test disambiguation_noop
+```
+
+Result: **3 passed, 0 failed**. The gate compares baseline and disabled-sidecar
+`TokenSyntax`, clauses, diagnostics, spans, corrections, lists, style output,
+combined `CheckAll` and sentence-cache output over the syntax corpus and the
+2,000-word prose fixture.
+
+```bash
+cargo test --release --workspace
+```
+
+Result: **52 test binaries, 1,282 tests passed, 0 failed**.
+
+```bash
+cargo clippy --workspace --all-targets -- -D warnings
+```
+
+Result: clean.
+
+Phase 2 does not use a decision to change any role, clause, severity or
+diagnostic. No model is active; `Disambiguation::disabled().cache_key()` is 0.
+
 ## 15. References
 
 - UD Finnish-TDT: <https://universaldependencies.org/treebanks/fi_tdt/>
@@ -1443,5 +1499,6 @@ modified by Phase 1.
 
 ---
 
-*Architecture audit plus Phase 1 tooling only. No production grammar code,
-public API or model training was changed for this document.*
+*Architecture audit, Phase 1 tooling and the disabled Phase 2 sidecar. No
+production grammar behaviour, model training or active neural inference was
+changed for this document.*

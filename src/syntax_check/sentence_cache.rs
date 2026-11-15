@@ -12,6 +12,7 @@
 
 use std::collections::HashMap;
 
+use crate::disambiguation::Disambiguation;
 use crate::morphology::{MorphologyAnalysis, MorphologyCache};
 use crate::tokenise::{Token, tokenise};
 
@@ -40,6 +41,8 @@ struct CachedSentence {
     /// Quotation depth at the sentence start; the rules that read quote depth
     /// must not reuse a sentence cached under a different depth.
     quote_depth: u16,
+    /// Disambiguation policy key: model/schema/activation state.
+    disambiguation: u64,
     /// Diagnostics with spans and edits relative to the sentence start.
     diagnostics: Vec<SyntaxDiagnostic>,
 }
@@ -92,9 +95,33 @@ impl SentenceCache {
         morphology: &MorphologyAnalysis,
         cache: &mut MorphologyCache,
     ) -> Vec<SyntaxDiagnostic> {
+        self.check_with_decisions(
+            text,
+            tokens,
+            morphology,
+            cache,
+            &Disambiguation::disabled(),
+        )
+    }
+
+    /// The same check with an explicit disambiguation policy.
+    ///
+    /// The policy key (model version, feature schema and activation state) is
+    /// part of the sentence key. A disabled policy is key 0 and preserves the
+    /// pre-sidecar behaviour. With a policy enabled, an unchanged sentence
+    /// still hits the cache; a policy change is a miss.
+    pub fn check_with_decisions(
+        &mut self,
+        text: &str,
+        tokens: &[Token],
+        morphology: &MorphologyAnalysis,
+        cache: &mut MorphologyCache,
+        decisions: &Disambiguation,
+    ) -> Vec<SyntaxDiagnostic> {
         // One document pass gives the quote depth at each sentence start and
         // the document-global unbalanced-quote warning.
         let contexts = crate::sentence::analyze(tokens);
+        let decision_key = decisions.cache_key();
         let mut token_cursor = 0usize;
         let mut diagnostics = Vec::new();
         for span in &morphology.sentences {
@@ -109,11 +136,15 @@ impl SentenceCache {
             let Some(slice) = text.get(span.start..span.end) else {
                 continue;
             };
-            let hash = sentence_hash(slice, quote_depth);
+            let hash = sentence_hash(slice, quote_depth, decision_key);
             let cached = self
                 .entries
                 .get(&hash)
-                .filter(|entry| entry.len == slice.len() && entry.quote_depth == quote_depth)
+                .filter(|entry| {
+                    entry.len == slice.len()
+                        && entry.quote_depth == quote_depth
+                        && entry.disambiguation == decision_key
+                })
                 .cloned();
             let relative = match cached {
                 Some(entry) => {
@@ -129,10 +160,13 @@ impl SentenceCache {
                         crate::morphology::analyze_morphology(&sentence_tokens, cache);
                     sentence_morphology.sentences =
                         crate::sentence::spans_from_contexts(&sentence_tokens, &sentence_contexts);
-                    let analysis = crate::syntax::analyze_syntax_with_contexts(
+                    let sentence_decisions =
+                        crate::disambiguation::disambiguate(&sentence_tokens, &sentence_morphology);
+                    let analysis = crate::syntax::analyze_syntax_with_contexts_and_decisions(
                         &sentence_tokens,
                         &sentence_morphology,
                         &sentence_contexts,
+                        Some(&sentence_decisions),
                     );
                     let found = super::check_analysis_without_quote(
                         &sentence_tokens,
@@ -147,6 +181,7 @@ impl SentenceCache {
                         CachedSentence {
                             len: slice.len(),
                             quote_depth,
+                            disambiguation: decision_key,
                             diagnostics: found.clone(),
                         },
                     );
@@ -181,12 +216,13 @@ fn shift(diagnostic: &mut SyntaxDiagnostic, offset: usize) {
 
 /// A hash of the exact sentence text, its byte length and the starting quote
 /// depth.
-fn sentence_hash(text: &str, quote_depth: u16) -> u64 {
+fn sentence_hash(text: &str, quote_depth: u16, disambiguation: u64) -> u64 {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     text.hash(&mut hasher);
     text.len().hash(&mut hasher);
     quote_depth.hash(&mut hasher);
+    disambiguation.hash(&mut hasher);
     hasher.finish()
 }
 

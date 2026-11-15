@@ -4,9 +4,10 @@
 //! caller uses when it wants both streams: the per-textarea wasm state, the
 //! combined worker request, or a CLI. It never runs in the keystroke path.
 
+use crate::disambiguation::{Disambiguation, disambiguate};
 use crate::morphology::{MorphologyAnalysis, MorphologyCache, analyze_morphology};
 use crate::style_check::{StyleAnalysis, check_tokens_with_morphology};
-use crate::syntax::analyze_syntax;
+use crate::syntax::analyze_syntax_with_decisions;
 use crate::syntax_check::{SyntaxCheck, check_analysis};
 use crate::tokenise::{Token, tokenise};
 
@@ -33,12 +34,26 @@ pub fn check_all(text: &str) -> CheckAll {
 pub fn check_all_with_cache(text: &str, cache: &mut MorphologyCache) -> CheckAll {
     let tokens = tokenise(text);
     let morphology = analyze_morphology(&tokens, cache);
-    check_all_tokens(&tokens, &morphology)
+    let decisions = disambiguate(&tokens, &morphology);
+    check_all_tokens_with_decisions(&tokens, &morphology, &decisions)
 }
 
 /// Check an existing token stream and morphology pass.
 pub fn check_all_tokens(tokens: &[Token], morphology: &MorphologyAnalysis) -> CheckAll {
-    let analysis = analyze_syntax(tokens, morphology);
+    check_all_tokens_with_decisions(tokens, morphology, &Disambiguation::disabled())
+}
+
+/// Check from an existing morphology pass and an explicit disambiguation
+/// sidecar.
+///
+/// Phase 2 uses [`Disambiguation::disabled`]; the path is byte-for-byte the
+/// same as [`check_all_tokens`]. The sidecar is not allowed to change style.
+pub fn check_all_tokens_with_decisions(
+    tokens: &[Token],
+    morphology: &MorphologyAnalysis,
+    decisions: &Disambiguation,
+) -> CheckAll {
+    let analysis = analyze_syntax_with_decisions(tokens, morphology, decisions);
     let diagnostics = check_analysis(tokens, &analysis);
     let style = check_tokens_with_morphology(tokens, morphology);
     CheckAll {

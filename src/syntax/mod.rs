@@ -215,6 +215,22 @@ pub fn analyze_syntax(tokens: &[Token], morphology: &MorphologyAnalysis) -> Synt
     analyze_syntax_with_contexts(tokens, morphology, &contexts)
 }
 
+/// The same analysis with an explicit (currently no-op) disambiguation
+/// sidecar.
+///
+/// Phase 2 threads the seam without using a decision: with disabled neural
+/// inference the output is identical to [`analyze_syntax`]. A later model may
+/// let the role selectors consult `decisions`, but it must never assign roles
+/// itself.
+pub fn analyze_syntax_with_decisions(
+    tokens: &[Token],
+    morphology: &MorphologyAnalysis,
+    _decisions: &crate::disambiguation::Disambiguation,
+) -> SyntaxAnalysis {
+    let contexts = sentence::analyze(tokens);
+    analyze_syntax_with_contexts_and_decisions(tokens, morphology, &contexts, Some(_decisions))
+}
+
 /// The same analysis with sentence contexts the caller already computed.
 ///
 /// The sentence cache uses this to seed the quote depth of a sentence that
@@ -223,6 +239,19 @@ pub(crate) fn analyze_syntax_with_contexts(
     tokens: &[Token],
     morphology: &MorphologyAnalysis,
     contexts: &[sentence::TokenContext],
+) -> SyntaxAnalysis {
+    analyze_syntax_with_contexts_and_decisions(tokens, morphology, contexts, None)
+}
+
+/// The shared implementation for the baseline and sidecar paths.
+///
+/// The `decisions` parameter is deliberately unused in Phase 2. It exists so
+/// the exact no-op gate can prove that adding the seam changed nothing.
+pub(crate) fn analyze_syntax_with_contexts_and_decisions(
+    tokens: &[Token],
+    morphology: &MorphologyAnalysis,
+    contexts: &[sentence::TokenContext],
+    _decisions: Option<&crate::disambiguation::Disambiguation>,
 ) -> SyntaxAnalysis {
     let sentences = morphology.sentences.clone();
 

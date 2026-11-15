@@ -235,7 +235,13 @@ pub fn analyze_syntax_with_state(idx: u32, text: &str) -> js_sys::Object {
     let tokens = torille::tokenise::tokenise(text);
     let mut slots = states().lock().expect("states mutex poisoned");
     if let Some(Some(state)) = slots.get_mut(idx as usize) {
-        let analysis = torille::syntax::analyze_with_cache(&tokens, &mut state.syntax_cache);
+        let morphology = torille::morphology::analyze_morphology(&tokens, &mut state.syntax_cache);
+        let decisions = torille::disambiguation::disambiguate(&tokens, &morphology);
+        let analysis = torille::syntax::analyze_syntax_with_decisions(
+            &tokens,
+            &morphology,
+            &decisions,
+        );
         return syntax_object(&tokens, &analysis);
     }
     drop(slots);
@@ -489,8 +495,13 @@ pub fn check_syntax_with_state(idx: u32, text: &str) -> js_sys::Object {
     let tokens = torille::tokenise::tokenise(text);
     let mut slots = states().lock().expect("states mutex poisoned");
     if let Some(Some(state)) = slots.get_mut(idx as usize) {
-        let analysis =
-            torille::syntax::analyze_with_cache(&tokens, &mut state.syntax_cache);
+        let morphology = torille::morphology::analyze_morphology(&tokens, &mut state.syntax_cache);
+        let decisions = torille::disambiguation::disambiguate(&tokens, &morphology);
+        let analysis = torille::syntax::analyze_syntax_with_decisions(
+            &tokens,
+            &morphology,
+            &decisions,
+        );
         let diagnostics = torille::syntax_check::check_analysis(&tokens, &analysis);
         let obj = syntax_object(&tokens, &analysis);
         set(
@@ -579,8 +590,15 @@ pub fn check_grammar_style_from_morphology(
             ..
         } = state;
         let morphology = torille::morphology::analyze_morphology(&tokens, syntax_cache);
+        let decisions = torille::disambiguation::disambiguate(&tokens, &morphology);
         let diagnostics = if syntax {
-            sentence_cache.check(text, &tokens, &morphology, syntax_cache)
+            sentence_cache.check_with_decisions(
+                text,
+                &tokens,
+                &morphology,
+                syntax_cache,
+                &decisions,
+            )
         } else {
             Vec::new()
         };
@@ -636,8 +654,15 @@ pub fn check_grammar_style_with_state(
             ..
         } = state;
         let morphology = torille::morphology::analyze_morphology(&tokens, syntax_cache);
+        let decisions = torille::disambiguation::disambiguate(&tokens, &morphology);
         let diagnostics = if syntax {
-            sentence_cache.check(text, &tokens, &morphology, syntax_cache)
+            sentence_cache.check_with_decisions(
+                text,
+                &tokens,
+                &morphology,
+                syntax_cache,
+                &decisions,
+            )
         } else {
             Vec::new()
         };

@@ -28,7 +28,9 @@ pub use diagnostic::{
 };
 pub use sentence_cache::{SentenceCache, SentenceCacheStats};
 
-use crate::syntax::{AnalysisCache, SyntaxAnalysis};
+use crate::disambiguation::{Disambiguation, disambiguate};
+use crate::morphology::analyze_morphology;
+use crate::syntax::{AnalysisCache, SyntaxAnalysis, analyze_syntax_with_decisions};
 use crate::tokenise::Token;
 
 /// The analysis plus the diagnostics found in it.
@@ -50,10 +52,24 @@ pub fn check(text: &str) -> SyntaxCheck {
 }
 
 /// The same check through a caller-owned word cache.
+///
+/// The morphology pass and the (currently disabled) disambiguation sidecar are
+/// shared with the combined grammar/style path. With neural inference off the
+/// output is identical to the pre-sidecar path.
 pub fn check_with_cache(text: &str, cache: &mut AnalysisCache) -> SyntaxCheck {
     let tokens = crate::tokenise::tokenise(text);
-    let analysis = crate::syntax::analyze_with_cache(&tokens, cache);
-    let diagnostics = check_analysis(&tokens, &analysis);
+    let morphology = analyze_morphology(&tokens, cache);
+    let decisions = disambiguate(&tokens, &morphology);
+    check_with_morphology_and_decisions(&tokens, &morphology, &decisions)
+}
+
+fn check_with_morphology_and_decisions(
+    tokens: &[Token],
+    morphology: &crate::morphology::MorphologyAnalysis,
+    decisions: &Disambiguation,
+) -> SyntaxCheck {
+    let analysis = analyze_syntax_with_decisions(tokens, morphology, decisions);
+    let diagnostics = check_analysis(tokens, &analysis);
     SyntaxCheck {
         analysis,
         diagnostics,
