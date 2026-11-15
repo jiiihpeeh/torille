@@ -34,6 +34,10 @@ the `torille-maps` build-dependency; see
 [`maps/README.md`](maps/README.md#automatic-fetch-on-first-build) for the
 remote, the offline switches, and what happens when the fetch fails.
 
+Both remotes (GitLab `origin` and the GitHub mirror) and the procedure for
+keeping the normal and `maps` branches in sync are in
+[`docs/remotes.md`](docs/remotes.md).
+
 The wasm demo and the browser extensions are separate builds:
 
 ```bash

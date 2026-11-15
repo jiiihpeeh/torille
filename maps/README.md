@@ -58,6 +58,10 @@ branch always has exactly one commit with the current blobs. The previous
 commit becomes unreachable; GitLab prunes it during its next housekeeping
 (run the project's *Clean up* job to do it immediately).
 
+`publish` updates one remote, `origin` by default. The GitHub mirror is updated
+separately; see [`docs/remotes.md`](../docs/remotes.md) for the exact
+force-push and the check that both remotes hold the same `maps` commit.
+
 `build.rs` decompresses the fetched copies into `OUT_DIR`; the compiler
 embeds the plain bytes. The maps are the only generated artefacts treated
 this way — `data/*.csv` and `data/*.sqlite` have their own rules below.
