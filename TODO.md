@@ -132,17 +132,18 @@ still open.
   derivation layer so the whole class gains it.
 
 - [ ] **An oblique form that is not `Plain` gets no possessive**
-  **14026 missing forms across 101 classes**, the largest gap left. Most of it
-  is not a possessive bug: `add_possessives` hangs a possessive off every
-  `Plain` oblique and skips the rest, so an oblique the engine is unsure of
-  takes its whole possessive grid with it. Of the 1659 (lemma, case) pairs with
-  a gap, 1092 have a bare oblique that is produced but not `Plain`, 495 have one
-  that is `Plain` but on the wrong stem (see the item above, `allergiko` vs
-  `allergikko`), and 72 have no bare form at all (`joki` has no essive).
+  The `demote_contested` gating is now bypassed for the unmarked member of a
+  two-stem class: class 7 `ovi`/`lovi` take the shallow `ove` stem and offer
+  `ovessa` and `ovella` as `Plain`; `joki` keeps the deeper `joe` only with its
+  `7*D` flag. `check_word_against_omorfi.py lovi ovi joki` now reports
+  **all 153 confirmed forms plain** for each.
 
-  The `demote_contested` rule added in an earlier round is what does this, so
-  the fix is in `src/grammar/noun.rs`, not in the possessive code. It gates the
-  next item.
+  The current 20-lemma noun sample is 226,153 confirmed, 681 missing, 139
+  not-plain, 790 illegal. **563 of the missing rows are possessive cells**, but
+  they are mostly bare-stem gaps rather than the possessive builder: class 7*D
+  `laki`, class 99 and class 51 dominate. The next fix is those stems, not
+  another possessive filter. The older 14,026 figure predates the possessive
+  rounds and the current sample.
 
   Evidence: `docs/harness.md` → Known defects → A.
 
@@ -1677,3 +1678,10 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   blobs. The remaining prose-sample candidates were checked against Voikko and
   are not words; `narrineen` is a misspelling of the already-suggested
   `narreineen`.
+
+- 2026-11-15: started the possessive-gap round. `grammar::noun` now chooses the
+  shallow stem of a two-stem class when the lemma has no gradation flag, so
+  class 7 `ovi`/`lovi` offer `ovessa`/`ovella` as Plain and `joki` still takes
+  `joe` under `7*D`. `check_word_against_omorfi.py lovi ovi joki` is 153/153
+  plain. The remaining possessive missing rows are concentrated in class 7*D
+  `laki`, 99 and 51 and are bare-stem gaps, not the possessive builder.

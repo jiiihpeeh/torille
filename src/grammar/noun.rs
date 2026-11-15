@@ -249,6 +249,7 @@ pub fn oblique(
     // built from the fallback entry are guesses however right they look: that
     // is where `lapsi` would offer `lapsilla` beside the `lapsella` the class
     // means.
+    let preferred_genitive = preferred_unmarked(&genitive_specs, lemma, is_model, gradation);
     let genitive_readings = readings_for(&genitive_specs, lemma, is_model);
     for spec in genitive_specs {
         // A `ks` reading is the reading of the `-us`/`-ys`/`-nas` nouns alone,
@@ -264,7 +265,8 @@ pub fn oblique(
         {
             continue;
         }
-        let this_reading = forced_reading(&genitive_readings, spec);
+        let this_reading = forced_reading(&genitive_readings, spec)
+            && preferred_genitive.is_none_or(|preferred| preferred == spec);
         let Some(mut genitive) = stem_of(spec) else {
             continue;
         };
@@ -597,9 +599,11 @@ pub fn oblique(
     // `joki` is `7*D` and takes the deeper cut `jo` (`joessa`), while `ovi` is
     // a plain `7` and keeps both readings, so neither is certain.
     let inessive_specs = choose_genitive_stems(inessive_specs, gradation);
+    let preferred_inessive = preferred_unmarked(&inessive_specs, lemma, is_model, gradation);
     let inessive_readings = readings_for(&inessive_specs, lemma, is_model);
     for spec in inessive_specs {
-        let this_reading = forced_reading(&inessive_readings, spec);
+        let this_reading = forced_reading(&inessive_readings, spec)
+            && preferred_inessive.is_none_or(|preferred| preferred == spec);
         let Some(mut stem) = stem_of(spec) else {
             continue;
         };
@@ -989,6 +993,57 @@ fn licensed(licence: Licence, r: &Reading<'_>, lemma: &str) -> bool {
         Licence::Plural => r.is_plural(),
         Licence::Reading => false,
     }
+}
+
+/// The parts of a stem rule that identify a gradation state: everything but
+/// the number of letters dropped.
+type StemState = (Option<&'static str>, Option<(char, char)>, Option<&'static str>);
+
+/// The unmarked reading when a class holds two gradation states.
+///
+/// Class 7 lists `ove` for `ovi` and the deeper `joe` for `joki`. A lemma with
+/// no gradation flag is the unmarked member, so its shallow cut is the one the
+/// class is sure of; the deeper cut is still generated as a guess. The pair is
+/// recognised by agreeing in every part of the stem rule except the number of
+/// letters dropped, which is what distinguishes a gradation state. A class
+/// whose readings differ by suffix or substitution (`ananas`'s `nas` rule) has
+/// no unmarked pair and returns `None`.
+fn preferred_unmarked(
+    specs: &[Stem],
+    lemma: &str,
+    is_model: bool,
+    gradation: Option<Gradation>,
+) -> Option<Stem> {
+    if gradation.is_some() {
+        return None;
+    }
+    let live: Vec<Stem> = specs
+        .iter()
+        .filter(|s| is_cut(**s) && rule_applies(**s, lemma, is_model))
+        .copied()
+        .collect();
+    // Class 7's inessive list also carries the bare plural basis `jo`, which
+    // agrees with neither genitive state. Group the cut rules by everything
+    // except the drop length and take the largest group that has more than one
+    // member; that is the gradation pair.
+    let mut groups: Vec<(StemState, Vec<Stem>)> = Vec::new();
+    for spec in &live {
+        let Stem::Rule(rule) = spec else { return None };
+        let key = (rule.add, rule.sub, rule.suffix);
+        match groups.iter_mut().find(|(known, _)| *known == key) {
+            Some((_, members)) => members.push(*spec),
+            None => groups.push((key, vec![*spec])),
+        }
+    }
+    let pair = groups
+        .into_iter()
+        .filter(|(_, members)| members.len() > 1)
+        .max_by_key(|(_, members)| members.len())?
+        .1;
+    pair.into_iter().min_by_key(|s| match s {
+        Stem::Rule(rule) => rule.drop,
+        Stem::Fixed(_) => u8::MAX,
+    })
 }
 
 ///
@@ -1955,17 +2010,19 @@ mod tests {
     }
 
     #[test]
-    fn a_class_that_holds_two_members_cannot_settle_a_slot() {
-        // Class 7 holds `ovi` and `joki`, whose genitive readings are `ove` and
-        // `joe`, and each of `ovessa` and `joessa` is the inessive of one of
-        // them. Without the flag the class cannot say which lemma it is
-        // inflecting, so neither reading is offered.
-        assert!(!has_plain(7, "ovi", "ovessa"), "ovessa is offered");
+    fn the_unmarked_member_of_a_two_stem_class_is_offered() {
+        // Class 7 holds `ovi` and `joki`, whose genitive stems are `ove` and
+        // `joe`. Without a gradation flag the lemma is the unmarked member, so
+        // the shallow `ove` is the one the class is sure of and `ovessa` and
+        // `ovella` are offered. `joki`'s deeper `joe` stays a guess without its
+        // flag.
+        assert!(has_plain(7, "ovi", "ovessa"), "ovessa is not offered");
+        assert!(has_plain(7, "ovi", "ovella"), "ovella is not offered");
         assert!(!has_plain(7, "joki", "joessa"), "joessa is offered");
-        assert!(!has_plain(7, "ovi", "ovella"), "ovella is offered");
-        // The flag settles it: `joki` is `7*D`, where the `k` gradates away and
-        // the genitive stem is the deeper cut, so `joella` is the adessive and
-        // is offered, and `ovella` is a reading of the other member.
+        // The flag settles the gradated member: `joki` is `7*D`, where the `k`
+        // gradates away and the genitive stem is the deeper cut, so `joella` is
+        // the adessive and is offered, and `ovella` is a reading of the other
+        // member.
         let grad = Gradation::from_letter('D').expect("D is a gradation");
         assert!(
             has_grad_plain(7, grad, "joki", "joella"),
