@@ -1,0 +1,185 @@
+{
+  "_comment": [
+    "Intended vs competing interpretations for role-selection regressions.",
+    "`roles` pins the winning reading; `forbidden_roles` pins the reading that",
+    "must not win. `diagnostics` is the expected syntax_check kind list, so a",
+    "clean false-positive case can be pinned without a second fixture.",
+    "Word lookups are case-insensitive and take the first matching word token."
+  ],
+  "cases": [
+    {
+      "id": "joka_paiva_frequency",
+      "text": "Joka päivä juon kahvia.",
+      "clauses": 1,
+      "subject": "none",
+      "predicate": "juon",
+      "roles": [
+        { "word": "päivä", "role": "adverbial", "case": "nominative" },
+        { "word": "juon", "role": "predicate" },
+        { "word": "kahvia", "role": "object", "case": "partitive" }
+      ],
+      "forbidden_roles": [
+        { "word": "päivä", "role": "subject" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "joka_mies_subject",
+      "text": "Joka mies tietää sen.",
+      "clauses": 1,
+      "subject": "mies",
+      "predicate": "tietää",
+      "roles": [
+        { "word": "mies", "role": "subject", "case": "nominative" },
+        { "word": "sen", "role": "object", "case": "genitive" }
+      ],
+      "forbidden_roles": [
+        { "word": "mies", "role": "adverbial" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "joka_paiva_subject",
+      "text": "Joka päivä on kaunis.",
+      "clauses": 1,
+      "subject": "päivä",
+      "predicate": "on",
+      "roles": [
+        { "word": "päivä", "role": "subject", "case": "nominative" },
+        { "word": "kaunis", "role": "complement", "case": "nominative" }
+      ],
+      "forbidden_roles": [
+        { "word": "päivä", "role": "adverbial" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "ilman_rahaa",
+      "text": "Ilman rahaa en tule.",
+      "clauses": 1,
+      "subject": "none",
+      "predicate": "tule",
+      "roles": [
+        { "word": "Ilman", "role": "adverbial" },
+        { "word": "rahaa", "role": "complement", "case": "partitive" }
+      ],
+      "forbidden_roles": [
+        { "word": "Ilman", "role": "subject" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "ilman_sinua_subject",
+      "text": "Ilman sinua minä en tule.",
+      "clauses": 1,
+      "subject": "minä",
+      "predicate": "tule",
+      "roles": [
+        { "word": "sinua", "role": "complement", "case": "partitive" },
+        { "word": "minä", "role": "subject", "case": "nominative" }
+      ],
+      "forbidden_roles": [
+        { "word": "sinua", "role": "modifier" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "ennen_minua",
+      "text": "Ennen minua hän tuli.",
+      "clauses": 1,
+      "subject": "hän",
+      "predicate": "tuli",
+      "roles": [
+        { "word": "minua", "role": "complement", "case": "partitive" },
+        { "word": "hän", "role": "subject", "case": "nominative" }
+      ],
+      "forbidden_roles": [
+        { "word": "minua", "role": "modifier" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "sen_object",
+      "text": "Tarvitsen sen.",
+      "clauses": 1,
+      "subject": "none",
+      "predicate": "Tarvitsen",
+      "roles": [
+        { "word": "sen", "role": "object", "case": "genitive" }
+      ],
+      "forbidden_roles": [
+        { "word": "sen", "role": "adverbial" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "sinut_accusative_object",
+      "text": "Autan sinut sisään.",
+      "clauses": 1,
+      "subject": "none",
+      "predicate": "Autan",
+      "roles": [
+        { "word": "sinut", "role": "object", "case": "accusative" }
+      ],
+      "forbidden_roles": [
+        { "word": "sinut", "role": "subject" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "pitaa_puheen",
+      "text": "Hän pitää puheen.",
+      "clauses": 1,
+      "subject": "Hän",
+      "predicate": "pitää",
+      "roles": [
+        { "word": "puheen", "role": "object", "case": "genitive" }
+      ],
+      "forbidden_roles": [
+        { "word": "puheen", "role": "adverbial" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "pidan_sinusta",
+      "text": "Pidän sinusta.",
+      "clauses": 1,
+      "subject": "none",
+      "predicate": "Pidän",
+      "roles": [
+        { "word": "sinusta", "role": "adverbial", "case": "elative" }
+      ],
+      "forbidden_roles": [
+        { "word": "sinusta", "role": "object" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "merkitse_joka_esine",
+      "text": "Merkitse joka esine kirjaan.",
+      "clauses": 1,
+      "subject": "none",
+      "predicate": "Merkitse",
+      "roles": [
+        { "word": "esine", "role": "object", "case": "nominative" }
+      ],
+      "forbidden_roles": [
+        { "word": "joka", "role": "predicate" },
+        { "word": "kirjaan", "role": "predicate" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "relative_joka_comma",
+      "text": "Mies, joka tuli, söi.",
+      "clauses": 3,
+      "diagnostics": []
+    },
+    {
+      "id": "relative_joka_no_comma",
+      "text": "Mies joka kirjan luki.",
+      "clauses": 2,
+      "diagnostics": []
+    }
+  ]
+}

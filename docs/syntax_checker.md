@@ -68,7 +68,10 @@ Ship fewer rules, not more guesses.
 ## Evaluation
 
 `tests/fixtures/syntax_eval.json` is the aggregate corpus; the exact-output
-gate is `tests/fixtures/syntax_diagnostics.json`.
+gate is `tests/fixtures/syntax_diagnostics.json`. The
+`tests/fixtures/syntax_ambiguity.json` gate pins the intended reading and the
+competing reading that must not win for ambiguous surfaces (`joka päivä`,
+`ilman`, `sen`, `sinut`, and the determiner/relative split).
 
 Current baseline (2026-11-15):
 
@@ -80,7 +83,7 @@ cases 52: every emitted kind precision 1.00, recall 1.00
 Run both gates:
 
 ```bash
-cargo test --release -p torille --test syntax_check --test syntax_eval
+cargo test --release -p torille --test syntax_check --test syntax_eval --test syntax_ambiguity
 ```
 
 The evaluation test prints the per-kind table; the exact-output fixture checks

@@ -57,20 +57,21 @@ most likely to lose trust.
 The recent fixes were all interpretation bugs, not missing rules. Make that
 class of bug a permanent test category.
 
-- [ ] **Add an ambiguity fixture**, either
-  `tests/fixtures/syntax_ambiguity.json` or a dedicated `mod tests` beside
-  `src/syntax/roles.rs`. Each case pins the intended interpretation and at
-  least one competing interpretation that must not win.
-- [ ] **Require the pair for every new role rule.** A rule that says "this is
-  a subject" must also say which nearby nominal is *not* the subject.
-- [ ] **Cover the readings that actually collide:**
+- [x] **Add an ambiguity fixture** — landed as
+  `tests/fixtures/syntax_ambiguity.json` + `tests/syntax_ambiguity.rs`.
+  Each case pins the intended interpretation and at least one competing
+  interpretation that must not win.
+- [x] **Require the pair for every new role rule.** A rule that says "this is
+  a subject" must also say which nearby nominal is *not* the subject. Add the
+  pair to the fixture in the same commit.
+- [x] **Cover the readings that actually collide:**
   - noun vs verb (`tuli`, `kirjaan`, `sen`);
   - pronoun vs adverb (`sen`, `ne`);
   - preposition/postposition vs noun (`ilman`, `ennen`);
   - nominative vs genitive/accusative on the same surface (`sinut`);
   - determiner vs relative pronoun (`joka`);
-  - subject vs adverbial (`joka päivä`, `koko päivä`).
-- [ ] **Gate the suite in the same way as the exact-output fixture.** A role
+  - subject vs adverbial (`joka päivä`).
+- [x] **Gate the suite in the same way as the exact-output fixture.** A role
   change that silently flips a competing reading fails the suite.
 
 Suggested cases:
@@ -143,6 +144,13 @@ before the next rule lands.
   Area: `src/syntax/roles.rs`, `src/syntax/segments.rs`,
   `src/syntax/predicates.rs`.
 
+- [ ] **Verify `koko` + temporal noun**
+  `Koko päivä juoksin.` currently reads `päivä` as the subject and offers
+  `juoksi`. Standard Finnish more often uses `koko päivän`, so do not extend
+  the frequency-determiner pass until the construction is checked against
+  Kielitoimisto. If it is accepted, add it to the determiners and the ambiguity
+  fixture.
+
 - [x] **Prepositions and their complements** — landed.
   `Ilman rahaa en tule.`, `Ilman sinua en tule.`, `Ilman sinua minä en tule.`
   and `Ennen minua hän tuli.` are clean. `mark_adpositions` handles
@@ -169,9 +177,9 @@ before the next rule lands.
   Area: `src/syntax/roles.rs` (`classify`), `arguments.rs`.
 
 - [x] **`joka` + noun must not split a relative clause** — landed.
-  `Merkitse joka esine kirjaan.` is one clause: `esine` is the object,
-  `kirjaan` is an adverbial. `joka` is a determiner when followed by a
-  nominative noun and not preceded by a comma.
+  `Merkitse joka esine kirjaan.` is one clause: `esine` is the object and
+  `kirjaan` is not read as a predicate. `joka` is a determiner when followed by
+  a nominative noun and not preceded by a comma.
   Area: `src/syntax/segments.rs`, `src/syntax/predicates.rs`.
 
 ## P1 — shared diagnostic contract, confidence and explainability
@@ -441,7 +449,7 @@ analysis refinements”.
 Current gates:
 
 ```bash
-cargo test --release -p torille --test syntax_check --test syntax_eval --test style_check --test style_eval
+cargo test --release -p torille --test syntax_check --test syntax_eval --test syntax_ambiguity --test style_check --test style_eval
 cargo test --release -p torille
 cargo clippy -p torille --all-targets -- -D warnings
 ./target/release/check_syntax "Joka päivä juon kahvia."
@@ -449,10 +457,9 @@ cargo clippy -p torille --all-targets -- -D warnings
 ./target/release/check_style "Tämä on on hyvä."
 ```
 
-After P0-A/P0-B land, add:
+After P0-B lands, add:
 
 ```bash
-cargo test --release -p torille --test syntax_ambiguity
 cargo test --release -p torille --test syntax_prose
 ```
 
@@ -473,4 +480,8 @@ intended/competing interpretation pair that fails.
   adjudicated-prose gates, a shared diagnostic/confidence contract,
   detection-vs-correction confidence, explainability, subsystem grouping,
   conservative duplicate-word policy, and a future long-distance syntax list.
+- 2026-11-15: landed P0-A. Added `tests/fixtures/syntax_ambiguity.json` and
+  `tests/syntax_ambiguity.rs`; the suite pins the intended role, the rejected
+  competing role, and the clean diagnostic list for thirteen ambiguous
+  constructions. Updated the verification gate.
   Moved adjudicated prose before the P1 rule expansion.
