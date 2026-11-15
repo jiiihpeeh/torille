@@ -334,6 +334,20 @@ const RULES: &[Rule] = &[
         inherit_gradation: false,
         stem: StemRule::DropSuffix(&["aa", "ää"]),
     },
+    // VERB -> VERB: liikahtaa -> liikahdella (class 67). The `-ahtaa`/`-ähtää`
+    // verbs take the `-della` frequentative: the `t` voices to `d`.
+    Rule {
+        code: "FREQ_AHTAA",
+        input: PartOfSpeech::Verb,
+        output: PartOfSpeech::Verb,
+        suffix_back: "ella",
+        suffix_front: "ellä",
+        class: 67,
+        gradation: None,
+        input_classes: &[],
+        inherit_gradation: false,
+        stem: StemRule::Replace(&[("ahtaa", "ahd"), ("ähtää", "ähd")]),
+    },
     // VERB -> VERB: lukea -> lueskella (class 67).
     Rule {
         code: "FREQ_SKELLA",
@@ -744,6 +758,20 @@ const RULES: &[Rule] = &[
         input_classes: &[],
         inherit_gradation: false,
         stem: StemRule::DropSuffix(&["la", "lä"]),
+    },
+    // VERB -> NOUN: liikahdella -> liikahtelu (class 2). The `-della`
+    // frequentative voices its `d` back to `t` before the action `-u`.
+    Rule {
+        code: "ACTION_ELU",
+        input: PartOfSpeech::Verb,
+        output: PartOfSpeech::Noun,
+        suffix_back: "u",
+        suffix_front: "y",
+        class: 2,
+        gradation: None,
+        input_classes: &[],
+        inherit_gradation: false,
+        stem: StemRule::Replace(&[("della", "tel"), ("dellä", "tel")]),
     },
     // VERB -> NOUN: koodata -> koodaamo (class 2).
     Rule {
@@ -1394,6 +1422,18 @@ mod tests {
             Some("kaunistaa")
         );
         assert_eq!(step("raha", find("PRIV_TON")).as_deref(), Some("rahaton"));
+        assert_eq!(
+            step("kiilata", find("FREQ_ILLA")).as_deref(),
+            Some("kiilailla")
+        );
+        assert_eq!(
+            step("liikahtaa", find("FREQ_AHTAA")).as_deref(),
+            Some("liikahdella")
+        );
+        assert_eq!(
+            step("liikahdella", find("ACTION_ELU")).as_deref(),
+            Some("liikahtelu")
+        );
         assert_eq!(
             step("vastata", find("ACTION_US_TA")).as_deref(),
             Some("vastaus")

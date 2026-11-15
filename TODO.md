@@ -104,7 +104,7 @@ still open.
 
   Evidence: `docs/harness.md` → Known defects → C.
 
-- [ ] **Recognise the prose sample's real forms and stop the bad suggestions**
+- [x] **Recognise the prose sample's real forms and stop the bad suggestions**
   A running-text sample turned up a cluster of false negatives and three
   suggestions that replace a reported real form with something else. These are
   not words to whitelist: each points at a compound, a derivation, or a
@@ -117,23 +117,19 @@ still open.
   `limonadipullojen`, `halveksivasti`, `valittavasti`, `loitommalla` and
   `ympyröinti`; the old `kekkeritn` is rejected and not suggested.
 
-  Still open, and confirmed by Voikko/Omorfi: `kiilaili` (verb derivation),
-  `kyynelettömin` (privative `-tön` and its possessive/instructive forms),
-  and `liikahtelua` (deverbal action noun). Still unconfirmed — check these
-  before treating them as gates: `saunoittaa`, `hurjistelu`, `narrineen`
-  (probably `narreineen`), `herpaisevan`, `harjautuneet` and `ilmeenny`.
+  The remaining confirmed forms are now reached by productive derivation
+  chains on the sanalista rows, not by suffix strips: `kiilata` ->
+  `kiilailla` (`FREQ_ILLA`), and `liikahtaa` -> `liikahdella` ->
+  `liikahtelu` (`FREQ_AHTAA` > `ACTION_ELU`), so `kiilaili` and
+  `liikahtelua` resolve through `find_bases_with` and `inflect_all`.
+  `kyynelettömin` was already reached by the privative `-tön` recogniser.
 
-  Wrong suggestion direction still open: `harjautuneet` → `harjaantuneet`
-  and `ilmeenny` → `ilmesty`. `ympäröinnyt` was a misspelling of
-  `ympyröinti`, which is now recognised.
-
-  Confirm each against `tools/check_word_against_omorfi.py` / Voikko before
-  turning the list into a gate. The likely owners are the verb-derivation
-  and deverbal-noun classes (`kiilaili`, `liikahtelua`), the privative
-  adjective rule (`kyynelettömin`), and compound expansion for any remaining
-  compound. Do not add another suffix strip to `is_known_word`; make
-  `find_bases_with` and `inflect_all` reach the form so the whole class
-  gains it.
+  The other candidates are not words: Voikko rejects `hurjistelu`,
+  `herpaisevan`, `harjautuneet`, `ilmeenny` and `saunoittaa`; `narrineen`
+  is a misspelling of `narreineen`, which the engine already suggests. There
+  is therefore no remaining wrong-suggestion gate in this slice. Do not add
+  another suffix strip to `is_known_word`; every fixed form goes through the
+  derivation layer so the whole class gains it.
 
 - [ ] **An oblique form that is not `Plain` gets no possessive**
   **14026 missing forms across 101 classes**, the largest gap left. Most of it
@@ -1674,3 +1670,10 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
 - The `GAPS` table in `tests/catalogue.rs` is now empty: every Wiktionary form
   of every model word is offered or generated. If a class's stems change, the
   test re-opens the holes automatically.
+- 2026-11-15: added `FREQ_AHTAA` and `ACTION_ELU` derivation rules and flagged
+  `kiilata` and `liikahtaa` in the sanalista. `kiilaili` resolves to
+  `kiilailla` and `liikahtelua` to `liikahtelu` through the normal
+  `find_bases_with`/`inflect_all` path. `gen_derived` regenerated the derived
+  blobs. The remaining prose-sample candidates were checked against Voikko and
+  are not words; `narrineen` is a misspelling of the already-suggested
+  `narreineen`.

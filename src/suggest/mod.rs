@@ -1425,6 +1425,30 @@ mod tests {
     }
 
     #[test]
+    fn the_derivation_chains_of_kiilata_and_liikahtaa_are_known() {
+        // `kiilata` -> `kiilailla` (`FREQ_ILLA`) and
+        // `liikahtaa` -> `liikahdella` -> `liikahtelu`
+        // (`FREQ_AHTAA` > `ACTION_ELU`). These are flagged derivation
+        // chains on the sanalista rows, not lexical entries.
+        for (word, base) in [
+            ("kiilailla", "kiilailla"),
+            ("kiilaili", "kiilailla"),
+            ("liikahdella", "liikahdella"),
+            ("liikahtelu", "liikahtelu"),
+            ("liikahtelua", "liikahtelu"),
+        ] {
+            assert_eq!(is_known_word(word).as_deref(), Some(base), "{word}");
+            assert_eq!(
+                is_known_word_fast(word).as_deref(),
+                Some(base),
+                "{word}"
+            );
+        }
+        assert!(check_fast("kiilaili", &HashSet::new()).is_some());
+        assert!(check_fast("liikahtelua", &HashSet::new()).is_some());
+    }
+
+    #[test]
     fn the_frequentative_illa_of_avata_is_known() {
         // `availla` is the productive frequentative of `avata` (`FREQ_ILLA`),
         // not a Kotus lemma. The base row carries the flag so the derived

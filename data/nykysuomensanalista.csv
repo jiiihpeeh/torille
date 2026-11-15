@@ -28169,7 +28169,7 @@ kiilakivi		substantiivi
 kiilakorko		substantiivi		
 kiilalause		substantiivi		
 kiilaliitos		substantiivi		
-kiilata		verbi	73	
+kiilata		verbi	73	FREQ_ILLA:67
 kiilaus		substantiivi	39	
 kiilautua		verbi	52*F	
 kiiliäinen		substantiivi	38	
@@ -40600,7 +40600,7 @@ liikahdus		substantiivi	39
 liikahduttaa		verbi	53*C	
 liikaherkkyys		substantiivi		
 liikaherkkä		adjektiivi		
-liikahtaa		verbi	53*F	
+liikahtaa		verbi	53*F	FREQ_AHTAA:67>ACTION_ELU:2
 liikajännitys		substantiivi		
 liikakalastus		substantiivi		
 liikakansoittua		verbi		
