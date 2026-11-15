@@ -225,9 +225,33 @@ fn nominals_authoritative_for(inflection: &Inflection) -> bool {
 // and `aprilli` is a noun the sanalista marks indeclinable. Their
 // classes (101, 99) have no model to work from, so nothing else could
 // make them.
-fn try_irregular(lemma: &str, out: &mut Vec<Generated>) -> bool {
+fn try_irregular(
+    lemma: &str,
+    possessives: bool,
+    pos: PartOfSpeech,
+    out: &mut Vec<Generated>,
+) -> bool {
     if crate::grammar::word_irregular(lemma).is_some() {
-        out.extend(crate::grammar::word_cases(lemma));
+        let forms: Vec<Generated> = crate::grammar::word_cases(lemma)
+            .into_iter()
+            .map(|form| form.of_pos(pos))
+            .collect();
+        // A hand-written noun or adjective takes the same possessive grid as
+        // a generated one. `aprilli` is the reason: its bare cases were
+        // spelled out but the owner suffixes were not. A pronoun's possessive
+        // is a different word (`minun`), so it is left alone.
+        let owned = possessives
+            && matches!(
+                pos,
+                PartOfSpeech::Noun
+                    | PartOfSpeech::Adjective
+                    | PartOfSpeech::Numeral
+                    | PartOfSpeech::Ordinal
+            );
+        if owned {
+            inflect::add_possessives(out, &forms, lemma);
+        }
+        out.extend(forms);
         dedup(out);
         true
     } else {
@@ -355,7 +379,7 @@ pub fn inflect_in(
     if lemma.is_empty() {
         return out;
     }
-    if try_irregular(lemma, &mut out) {
+    if try_irregular(lemma, possessives, pos, &mut out) {
         return out;
     }
     if try_compound_marker(lemma, inflection, cat, lexicon, pos, possessives, &mut out) {
@@ -856,6 +880,29 @@ mod tests {
         super::inflect::plural_stems(para, word, cls, grad.map(Gradation))
             .first()
             .map_or_else(String::new, |(weak, _)| weak.clone())
+    }
+
+    #[test]
+    fn a_handwritten_noun_takes_its_possessive_grid() {
+        // `aprilli` is class 99 and spelled out by hand. The bare cases are in
+        // the table; the owner suffixes are built from them, and the plural
+        // nominative must not take one (`aprillitni` is not a word).
+        let cat = cat();
+        let inf = Inflection {
+            class: 99,
+            gradation: None,
+        };
+        let forms = inflect("aprilli", inf, &cat, PartOfSpeech::Noun, true);
+        assert!(
+            forms
+                .iter()
+                .any(|form| form.word == "aprillini" && form.plain()),
+            "aprillini is missing"
+        );
+        assert!(
+            !forms.iter().any(|form| form.word == "aprillitni"),
+            "plural nominative took a possessive"
+        );
     }
 
     #[test]

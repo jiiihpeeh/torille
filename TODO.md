@@ -1690,6 +1690,8 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   them: `haava` to 9, `kitti` to 5*C, `kuti` to 5*F, `kuulema`/`tietämä` to
   10, and `käsikoukku` to 1*A. The class-99 20-lemma sample moves from
   confirmed 466 / missing 916 / illegal 969 to confirmed 1232 / missing 151 /
-  illegal 52. The remaining class-99 gap is `aprilli`'s possessive grid (the
-  hand-written irregular table has the bare cases only) plus a few small
-  closed-class words.
+  illegal 52. The hand-written irregular nouns now build their possessive grid
+  from the bare cases too, and the plural nominative takes none, so `aprilli`
+  reaches confirmed 1360 / missing 23 / illegal 52. The remaining class-99
+  rows are a handful of `-u`/`-is` words (`kukku`, `karku`, `ulko`, `tarvis`,
+  `vaari`) whose class-99 marker hides a real class.

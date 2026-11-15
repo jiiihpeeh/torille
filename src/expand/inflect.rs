@@ -790,7 +790,7 @@ pub(super) fn inflect_from(
 /// a correction that wastes their time.
 ///
 /// For the rest, see [`add_possessives_for`], which builds the suffixes.
-fn add_possessives(out: &mut Vec<Generated>, forms: &[Generated], lemma: &str) {
+pub(super) fn add_possessives(out: &mut Vec<Generated>, forms: &[Generated], lemma: &str) {
     for form in forms {
         // A possessive is only offered for a form the oblique is sure of. The
         // fallback stem of a class (`nainen`'s bare lemma, which gives
@@ -800,8 +800,16 @@ fn add_possessives(out: &mut Vec<Generated>, forms: &[Generated], lemma: &str) {
         if form.confidence != Confidence::Plain {
             continue;
         }
+        // The plural nominative has no possessive of its own: `talot` is
+        // `taloni` only through the singular, and `talotni` is not a word.
+        // Generated nouns never hand this slot to the possessive builder,
+        // but the hand-written irregular paradigms do.
+        let tags = form.union();
+        if tags.number == Some(Number::Plural) && tags.case == Some(Case::Nominative) {
+            continue;
+        }
         if matches!(
-            form.union().case,
+            tags.case,
             Some(Case::Instructive | Case::Comitative)
         ) {
             continue;
