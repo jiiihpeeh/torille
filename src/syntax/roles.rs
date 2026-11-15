@@ -44,7 +44,14 @@ pub(super) fn classify(readings: &[Tags]) -> (SyntacticRole, RoleConfidence, Opt
         .iter()
         .filter(|reading| matches!(reading.part_of_speech, Some(PartOfSpeech::Adverb)))
         .count();
-    if adverbs > 0 {
+    // `sen`/`ne` carry an adverb homonym (`sen verran`) beside the pronoun's
+    // genitive/accusative object reading. The adverb reading must not win
+    // before the object pass can see `Tarvitsen sen`.
+    let pronoun_object = readings.iter().any(|reading| {
+        reading.part_of_speech == Some(PartOfSpeech::Pronoun)
+            && matches!(reading.case, Some(Case::Genitive | Case::Accusative))
+    });
+    if adverbs > 0 && !pronoun_object {
         let confidence = if adverbs == readings.len() {
             RoleConfidence::Likely
         } else {
@@ -188,6 +195,9 @@ pub(super) fn resolve_clause(
     // A postposition and its genitive modifier (`Pöydän alla`) must be a
     // locative phrase before the existential test runs.
     mark_adpositions(&words, predicate, out);
+    // `joka päivä` may look like a nominative subject to the agreement rule
+    // when the real subject is the dropped 1st/2nd-person pronoun.
+    mark_frequency_determiners(&words, tokens, out);
 
     let passive = predicate_is_passive(predicate, out);
     // The negative auxiliary is the only thing that makes a clause negative.
@@ -217,22 +227,21 @@ pub(super) fn resolve_clause(
         .iter()
         .chain(after)
         .any(|&index| is_locative_adverbial(index, tokens, out));
-    let nominative_after = after.iter().any(|&index| {
-        is_nominal(&out[index]) && has_case(&out[index], &[Case::Nominative, Case::Partitive])
-    });
+    let nominative_after = after
+        .iter()
+        .any(|&index| nominal_has_case(&out[index], &[Case::Nominative, Case::Partitive]));
     // A nominative before the predicate is the subject of a copula
     // (`Helsingissä asuva mies on opettaja`), not an existential's postverbal
     // subject. Without this gate the locative of a modifying phrase would make
     // every `on` clause existential.
     let nominative_before = before
         .iter()
-        .any(|&index| is_nominal(&out[index]) && has_case(&out[index], &[Case::Nominative]));
+        .any(|&index| nominal_has_case(&out[index], &[Case::Nominative]));
     clause.existential = is_olla && locative && nominative_after && !nominative_before;
 
     let genitive_before = before.iter().rev().copied().find(|&index| {
         out[index].role == SyntacticRole::Unknown
-            && is_nominal(&out[index])
-            && has_case(&out[index], &[Case::Genitive])
+            && nominal_has_case(&out[index], &[Case::Genitive])
             && !is_clause_marker(index, tokens, out)
     });
     let necessity = is_olla && genitive_before.is_some() && necessity_complement(after, out);
@@ -251,8 +260,7 @@ pub(super) fn resolve_clause(
         if clause.existential {
             subject = after.iter().copied().find(|&index| {
                 out[index].role == SyntacticRole::Unknown
-                    && is_nominal(&out[index])
-                    && has_case(&out[index], &[Case::Nominative, Case::Partitive])
+                    && nominal_has_case(&out[index], &[Case::Nominative, Case::Partitive])
                     && !is_clause_marker(index, tokens, out)
             });
         } else if necessity || necessive {
@@ -271,16 +279,14 @@ pub(super) fn resolve_clause(
                         .as_deref()
                         .and_then(|lemma| lemma.chars().next())
                         .is_some_and(|first| first.is_uppercase())
-                    && is_nominal(&out[index])
-                    && has_case(&out[index], &[Case::Nominative, Case::Partitive])
+                    && nominal_has_case(&out[index], &[Case::Nominative, Case::Partitive])
                     && !is_clause_marker(index, tokens, out)
             });
         }
         if subject.is_none() {
             subject = before.iter().rev().copied().find(|&index| {
                 out[index].role == SyntacticRole::Unknown
-                    && is_nominal(&out[index])
-                    && has_case(&out[index], &[Case::Nominative])
+                    && nominal_has_case(&out[index], &[Case::Nominative])
                     && !is_clause_marker(index, tokens, out)
             });
         }
@@ -296,8 +302,7 @@ pub(super) fn resolve_clause(
     if subject.is_none() && !passive && !passive_construction && !imperative && !is_olla {
         subject = after.iter().copied().find(|&index| {
             out[index].role == SyntacticRole::Unknown
-                && is_nominal(&out[index])
-                && has_case(&out[index], &[Case::Nominative])
+                && nominal_has_case(&out[index], &[Case::Nominative])
                 && !is_clause_marker(index, tokens, out)
         });
     }
@@ -333,16 +338,14 @@ pub(super) fn resolve_clause(
     let object = if passive || passive_construction {
         before.iter().chain(after).copied().find(|&index| {
             out[index].role == SyntacticRole::Unknown
-                && is_nominal(&out[index])
-                && has_case(&out[index], object_cases)
+                && nominal_has_case(&out[index], object_cases)
                 && !is_clause_marker(index, tokens, out)
         })
     } else if !is_olla && !is_change {
         after.iter().copied().find(|&index| {
             Some(index) != subject
                 && out[index].role == SyntacticRole::Unknown
-                && is_nominal(&out[index])
-                && has_case(&out[index], object_cases)
+                && nominal_has_case(&out[index], object_cases)
                 && !is_clause_marker(index, tokens, out)
         })
     } else {
@@ -374,8 +377,7 @@ pub(super) fn resolve_clause(
             matches!(
                 out[index].role,
                 SyntacticRole::Unknown | SyntacticRole::Adverbial
-            ) && is_nominal(&out[index])
-                && has_case(&out[index], complement_cases)
+            ) && nominal_has_case(&out[index], complement_cases)
                 && !is_clause_marker(index, tokens, out)
         });
         if let Some(index) = complement {
@@ -403,8 +405,7 @@ pub(super) fn resolve_clause(
         let complement = after.iter().copied().find(|&index| {
             Some(index) != subject
                 && out[index].role == SyntacticRole::Unknown
-                && is_nominal(&out[index])
-                && has_case(&out[index], complement_cases)
+                && nominal_has_case(&out[index], complement_cases)
                 && !is_clause_marker(index, tokens, out)
         });
         // A participle after `olla` is the complement too: `Minun on mentävä`,
@@ -462,27 +463,50 @@ fn passive_participle_after(after: &[usize], out: &[TokenSyntax]) -> bool {
     })
 }
 
-/// Mark a postposition and its genitive modifier as one locative phrase.
+/// Mark an adposition phrase as one locative/adverbial unit.
 ///
 /// `Pöydän alla` is a postposition phrase, not a nominative `alla` subject:
 /// `alla` is the adverbial the predicate governs, and `Pöydän` is its
 /// genitive modifier. The genitive is caught here before the object pass
 /// would offer it to a verb.
+///
+/// `ilman rahaa` and `ennen minua` are the mirror image: the preposition is
+/// the adverbial and the following nominative/partitive nominal is its
+/// complement. Without this pass `ilman`'s noun homonym (`ilma`) and the
+/// preposition's nominative reading make it look like a subject.
 fn mark_adpositions(words: &[usize], predicate: usize, out: &mut [TokenSyntax]) {
     for (position, &index) in words.iter().enumerate() {
-        if out[index].role != SyntacticRole::Unknown
-            || !out[index]
-                .readings
-                .iter()
-                .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Postposition))
-        {
+        let (preposition, postposition) = adposition_kind(index, out);
+        let next_nominal = words.get(position + 1).copied().filter(|&next| {
+            out[next].role == SyntacticRole::Unknown && is_nominal(&out[next])
+        });
+        if preposition {
+            if let Some(complement) = next_nominal {
+                out[complement].role = SyntacticRole::Complement;
+                out[complement].confidence = RoleConfidence::Likely;
+                out[complement].case = out[complement]
+                    .readings
+                    .iter()
+                    .find_map(|reading| reading.case);
+                out[complement].head = Some(index);
+            }
+            out[index].role = SyntacticRole::Adverbial;
+            out[index].confidence = RoleConfidence::Likely;
+            out[index].case = None;
+            out[index].head = Some(predicate);
+            // A token that is also a postposition (`ennen`, `kautta`) falls
+            // through only when it has no following nominal to govern.
+            if next_nominal.is_some() {
+                continue;
+            }
+        }
+        if out[index].role != SyntacticRole::Unknown || !postposition {
             continue;
         }
         if position > 0 {
             let modifier = words[position - 1];
             if out[modifier].role == SyntacticRole::Unknown
-                && is_nominal(&out[modifier])
-                && has_case(&out[modifier], &[Case::Genitive])
+                && nominal_has_case(&out[modifier], &[Case::Genitive])
             {
                 out[modifier].role = SyntacticRole::Modifier;
                 out[modifier].confidence = RoleConfidence::Likely;
@@ -495,6 +519,135 @@ fn mark_adpositions(words: &[usize], predicate: usize, out: &mut [TokenSyntax]) 
         out[index].case = None;
         out[index].head = Some(predicate);
     }
+}
+
+/// Whether a token is lexically a preposition and/or postposition.
+///
+/// The morphology layer keeps one part of speech per reading, so `ennen`
+/// (listed as `adverbi, prepositio, postpositio`) is read only as an adverb.
+/// The closed-class row is the authority here, but it is consulted only for a
+/// token that already has an adverb/adposition reading.
+fn adposition_kind(index: usize, out: &[TokenSyntax]) -> (bool, bool) {
+    let Some(syntax) = out.get(index) else {
+        return (false, false);
+    };
+    let candidate = syntax.readings.iter().any(|reading| {
+        matches!(
+            reading.part_of_speech,
+            Some(PartOfSpeech::Adverb | PartOfSpeech::Preposition | PartOfSpeech::Postposition)
+        )
+    });
+    if !candidate {
+        return (false, false);
+    }
+    let lower = syntax.key.as_str();
+    let mut preposition = syntax
+        .readings
+        .iter()
+        .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Preposition));
+    let mut postposition = syntax
+        .readings
+        .iter()
+        .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Postposition));
+    for row in crate::kotus::sanalista().by_word(lower) {
+        for pos in PartOfSpeech::parse_all(row.part_of_speech()) {
+            match pos {
+                PartOfSpeech::Preposition => preposition = true,
+                PartOfSpeech::Postposition => postposition = true,
+                _ => {}
+            }
+        }
+    }
+    (preposition, postposition)
+}
+
+/// Temporal nouns that form a frequency adverbial with `joka`/`jokainen`.
+///
+/// The list is deliberately closed. A determiner before a non-temporal noun
+/// (`joka mies`) leaves the noun as the subject, so a real number error still
+/// fires.
+const FREQUENCY_NOUNS: &[&str] = &[
+    "aamu",
+    "ilta",
+    "kesä",
+    "kerta",
+    "kevät",
+    "kuukausi",
+    "lauantai",
+    "maanantai",
+    "minuutti",
+    "perjantai",
+    "päivä",
+    "sekunti",
+    "sunnuntai",
+    "syksy",
+    "talvi",
+    "tiistai",
+    "torstai",
+    "tunti",
+    "viikko",
+    "viikonloppu",
+    "vuosi",
+    "yö",
+];
+
+/// Mark `joka päivä` / `jokainen päivä` as a frequency adverbial.
+///
+/// `Joka päivä juon kahvia` has no overt subject. Without this pass `päivä`
+/// is read as a 3rd-person subject and the agreement rule offers `juo`. The
+/// pass stays out of 3rd-person clauses (`Joka päivä on kaunis`,
+/// `Joka mies tietää sen`) so the noun can still be a real subject there.
+fn mark_frequency_determiners(words: &[usize], tokens: &[Token], out: &mut [TokenSyntax]) {
+    if !words
+        .iter()
+        .any(|&index| non_third_person(index, tokens, out))
+    {
+        return;
+    }
+    for (position, &index) in words.iter().enumerate() {
+        let lower = tokens[index].text.to_lowercase();
+        if !matches!(lower.as_str(), "joka" | "jokainen") {
+            continue;
+        }
+        let Some(&noun) = words.get(position + 1) else {
+            continue;
+        };
+        if out[noun].role != SyntacticRole::Unknown
+            || !nominal_has_case(&out[noun], &[Case::Nominative])
+            || comma_between(tokens, index, noun)
+        {
+            continue;
+        }
+        let Some(lemma) = out[noun].lemma.as_deref() else {
+            continue;
+        };
+        if !FREQUENCY_NOUNS.contains(&lemma.to_lowercase().as_str()) {
+            continue;
+        }
+        out[index].role = SyntacticRole::Modifier;
+        out[index].confidence = RoleConfidence::Likely;
+        out[index].head = Some(noun);
+        out[noun].role = SyntacticRole::Adverbial;
+        out[noun].confidence = RoleConfidence::Likely;
+        out[noun].case = Some(Case::Nominative);
+    }
+}
+
+/// Whether this token's finite reading (or negative auxiliary) is 1st/2nd
+/// person, which is when a dropped subject is normal in Finnish.
+fn non_third_person(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
+    if out[index].readings.iter().any(|reading| {
+        is_finite_predicate(reading)
+            && matches!(reading.person, Some(Person::First | Person::Second))
+    }) {
+        return true;
+    }
+    out[index]
+        .readings
+        .iter()
+        .any(|reading| reading.part_of_speech == Some(PartOfSpeech::NegativeVerb))
+        && crate::expand::negation::person_number(&tokens[index].text)
+            .is_some_and(|(person, _)| matches!(person, Person::First | Person::Second))
 }
 
 /// Attributes, genitive modifiers, titles, and appositions.
@@ -531,7 +684,7 @@ fn mark_modifiers(
             .copied()
             .find(|&other| other > index && other != predicate);
         if let Some(next) = next.filter(|&other| other != predicate) {
-            let genitive = has_case(&out[index], &[Case::Genitive]);
+            let genitive = nominal_has_case(&out[index], &[Case::Genitive]);
             let next_is_nominal = is_nominal(&out[next]);
             if genitive && next_is_nominal {
                 out[index].role = SyntacticRole::Modifier;
@@ -566,8 +719,7 @@ fn mark_numeral_complement(head: usize, words: &[usize], out: &mut [TokenSyntax]
         return;
     };
     if out[next].role == SyntacticRole::Unknown
-        && is_nominal(&out[next])
-        && has_case(&out[next], &[Case::Partitive])
+        && nominal_has_case(&out[next], &[Case::Partitive])
     {
         out[next].role = SyntacticRole::Modifier;
         out[next].confidence = RoleConfidence::Likely;
@@ -596,8 +748,7 @@ fn mark_coordinated_objects(
     for &index in after {
         if index == object
             || out[index].role != SyntacticRole::Unknown
-            || !is_nominal(&out[index])
-            || !has_case(&out[index], object_cases)
+            || !nominal_has_case(&out[index], object_cases)
             || is_clause_marker(index, tokens, out)
         {
             continue;
@@ -632,8 +783,7 @@ fn mark_coordinated_subjects(
     for &index in before {
         if index == subject
             || out[index].role == SyntacticRole::Subject
-            || !is_nominal(&out[index])
-            || !has_case(&out[index], &[Case::Nominative])
+            || !nominal_has_case(&out[index], &[Case::Nominative])
             || is_clause_marker(index, tokens, out)
         {
             continue;

@@ -961,7 +961,7 @@ The exact-output fixture proves individual rules; it does not measure how
 often the checker is wrong on real prose. `tests/fixtures/syntax_eval.json` is
 the second, larger corpus for aggregate evaluation:
 
-- 164 sentences at the current baseline: 112 clean and 52 with expected
+- 184 sentences at the current baseline: 132 clean and 52 with expected
   diagnostics;
 - one row per sentence, with the expected kind(s);
 - every emitted kind represented, plus the guards named in §13;
@@ -1461,10 +1461,11 @@ Tasks:
 - [x] Record the first baseline here.
 - [x] Gate zero `Error` on clean rows; keep suggestions ungated at first.
 
-First baseline (2026-11-12):
+First baseline (2026-11-12); clean rows updated after the 2026-11-15
+false-positive regressions:
 
 ```text
-clean rows 112: 0 errors, 0 warnings, 0 suggestions
+clean rows 132: 0 errors, 0 warnings, 0 suggestions
 cases 52: every emitted kind precision 1.00, recall 1.00
 ```
 

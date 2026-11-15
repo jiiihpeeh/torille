@@ -33,8 +33,8 @@ use crate::tokenise::Token;
 
 pub use crate::morphology::MorphologyCache as AnalysisCache;
 pub(crate) use predicates::{
-    is_coordinating, is_finite_predicate, is_nominal_pos, is_relative_word, is_subordinator,
-    is_verb_reading, predicate_is_passive,
+    is_coordinating, is_finite_predicate, is_nominal_pos, is_subordinator, is_verb_reading,
+    predicate_is_passive, starts_relative_clause,
 };
 use roles::{classify, resolve_clause, share_clause_roles};
 use segments::{build_clause_tree, clause_groups, segment_clause_words};
@@ -753,5 +753,64 @@ mod tests {
         let (_, analysis) = analyzed("Kun tulin, söin.");
         assert!(analysis.clauses.iter().all(|clause| clause.parent.is_none()));
         assert!(analysis.clauses.iter().all(|clause| clause.children.is_empty()));
+    }
+
+    #[test]
+    fn a_frequency_joka_phrase_is_not_the_subject() {
+        let (tokens, analysis) = analyzed("Joka päivä juon kahvia.");
+        let paiva = word_index(&tokens, "päivä");
+        let juon = word_index(&tokens, "juon");
+        assert_eq!(analysis.clauses[0].subject, None);
+        assert_eq!(analysis.clauses[0].predicate, Some(juon));
+        assert_eq!(analysis.tokens[paiva].role, SyntacticRole::Adverbial);
+    }
+
+    #[test]
+    fn a_joka_mies_can_still_be_the_subject() {
+        let (tokens, analysis) = analyzed("Joka mies tietää sen.");
+        let mies = word_index(&tokens, "mies");
+        assert_eq!(analysis.tokens[mies].role, SyntacticRole::Subject);
+    }
+
+    #[test]
+    fn a_third_person_joka_phrase_keeps_its_subject_reading() {
+        let (tokens, analysis) = analyzed("Joka päivä on kaunis.");
+        let paiva = word_index(&tokens, "päivä");
+        assert_eq!(analysis.tokens[paiva].role, SyntacticRole::Subject);
+    }
+
+    #[test]
+    fn a_preposition_phrase_is_not_the_subject() {
+        let (tokens, analysis) = analyzed("Ilman rahaa en tule.");
+        let ilman = word_index(&tokens, "Ilman");
+        let rahaa = word_index(&tokens, "rahaa");
+        assert_eq!(analysis.tokens[ilman].role, SyntacticRole::Adverbial);
+        assert_eq!(analysis.tokens[rahaa].role, SyntacticRole::Complement);
+        assert_eq!(analysis.clauses[0].subject, None);
+    }
+
+    #[test]
+    fn a_preposition_phrase_keeps_the_overt_subject() {
+        let (tokens, analysis) = analyzed("Ilman sinua minä en tule.");
+        let mina = word_index(&tokens, "minä");
+        let sinua = word_index(&tokens, "sinua");
+        assert_eq!(analysis.tokens[mina].role, SyntacticRole::Subject);
+        assert_eq!(analysis.tokens[sinua].role, SyntacticRole::Complement);
+    }
+
+    #[test]
+    fn a_determiner_joka_does_not_split_its_clause() {
+        let (tokens, analysis) = analyzed("Merkitse joka esine kirjaan.");
+        assert_eq!(analysis.clauses.len(), 1);
+        let esine = word_index(&tokens, "esine");
+        assert_eq!(analysis.tokens[esine].role, SyntacticRole::Object);
+    }
+
+    #[test]
+    fn a_pronoun_object_beats_its_adverb_homonym() {
+        let (tokens, analysis) = analyzed("Tarvitsen sen.");
+        let sen = word_index(&tokens, "sen");
+        assert_eq!(analysis.tokens[sen].role, SyntacticRole::Object);
+        assert_eq!(analysis.tokens[sen].case, Some(Case::Genitive));
     }
 }

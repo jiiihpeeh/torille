@@ -70,10 +70,10 @@ Ship fewer rules, not more guesses.
 `tests/fixtures/syntax_eval.json` is the aggregate corpus; the exact-output
 gate is `tests/fixtures/syntax_diagnostics.json`.
 
-Current baseline (2026-11-12):
+Current baseline (2026-11-15):
 
 ```text
-clean rows 112: 0 errors, 0 warnings, 0 suggestions
+clean rows 132: 0 errors, 0 warnings, 0 suggestions
 cases 52: every emitted kind precision 1.00, recall 1.00
 ```
 

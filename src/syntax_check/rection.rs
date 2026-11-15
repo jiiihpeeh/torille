@@ -37,6 +37,15 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         if frames.contains(&case) {
             continue;
         }
+        // A partitive object frame for these verbs is aspectual, not lexical:
+        // `Katson elokuvaa` and `Katson elokuvan` are both correct, and
+        // `Hän pitää puheen` is a total-object frame the table does not list.
+        // A genitive/accusative argument is therefore not evidence of a
+        // rection error. A bare nominative object stays an error because it
+        // needs an imperative/passive/necessive context.
+        if aspectual_total_object(lemma, case) {
+            continue;
+        }
         let syntax = &analysis.tokens[argument];
         if nominal_or_numeral_pos(syntax).is_none() {
             continue;
@@ -137,6 +146,29 @@ fn correction_bases(syntax: &crate::syntax::TokenSyntax) -> Vec<(&str, crate::ta
         }
     }
     out
+}
+
+/// Verbs whose table frame is aspectual rather than lexical.
+///
+/// The table records the partitive object these verbs commonly take, but
+/// Finnish also allows the total object when the action is completive:
+/// `Katson elokuvaa` / `Katson elokuvan`, `Hän pitää kirjaa` /
+/// `Hän pitää kirjan`. A genitive or accusative argument is therefore not a
+/// rection error. This is a stopgap until the CSV carries a frame kind.
+const ASPECTUAL_OBJECT_VERBS: &[&str] = &[
+    "auttaa",
+    "etsiä",
+    "katsoa",
+    "kuunnella",
+    "käyttää",
+    "odottaa",
+    "pitää",
+    "tarvita",
+];
+
+fn aspectual_total_object(lemma: &str, case: Case) -> bool {
+    matches!(case, Case::Genitive | Case::Accusative)
+        && ASPECTUAL_OBJECT_VERBS.contains(&lemma)
 }
 
 /// The first post-predicate nominal that can be the governed argument.

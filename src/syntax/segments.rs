@@ -5,7 +5,7 @@ use crate::tokenise::Token;
 
 use super::predicates::{
     is_coordinating, is_infinitive, is_nominal, is_predicate_candidate, is_relative_word,
-    is_subordinator,
+    is_subordinator, starts_relative_clause,
 };
 use super::{Clause, TokenSyntax};
 
@@ -109,7 +109,7 @@ pub(super) fn segment_clause_words(
             continue;
         }
         let lower = tokens[words[position]].text.to_lowercase();
-        if is_relative_word(words[position], tokens, out) {
+        if starts_relative_clause(words[position], tokens, out) {
             starts.push(position);
             continue;
         }
@@ -178,7 +178,7 @@ pub(super) fn build_clause_tree(
     for (index, clause) in clauses.iter().enumerate() {
         let group = groups[index];
         let first = clause.tokens.start;
-        if first < tokens.len() && is_relative_word(first, tokens, out) {
+        if first < tokens.len() && starts_relative_clause(first, tokens, out) {
             parents[index] = last_in_group[group];
         }
         last_in_group[group] = Some(index);

@@ -83,6 +83,20 @@ pub(super) fn is_nominal(syntax: &TokenSyntax) -> bool {
         .any(|reading| is_nominal_pos(reading.part_of_speech))
 }
 
+/// Whether one reading is both nominal and in one of `cases`.
+///
+/// Asking [`is_nominal`] and [`has_case`] separately can combine two readings:
+/// `Ilman` has a `Preposition/Nominative` reading and a `Noun/Genitive` one,
+/// and `sinut` has an `Unknown/Nominative` reading plus a `Pronoun/Accusative`
+/// one. Subject and object selection must not take the case from the reading
+/// that is not the nominal.
+pub(super) fn nominal_has_case(syntax: &TokenSyntax, cases: &[Case]) -> bool {
+    syntax.readings.iter().any(|reading| {
+        is_nominal_pos(reading.part_of_speech)
+            && reading.case.is_some_and(|case| cases.contains(&case))
+    })
+}
+
 /// A nominal role is only `Likely` when the word is not also a verb.
 pub(super) fn nominal_confidence(syntax: &TokenSyntax) -> RoleConfidence {
     let has_verb = syntax.readings.iter().any(is_verb_reading);
@@ -92,15 +106,6 @@ pub(super) fn nominal_confidence(syntax: &TokenSyntax) -> RoleConfidence {
     } else {
         RoleConfidence::Likely
     }
-}
-
-/// Whether a token has a reading in one of `cases`.
-pub(super) fn has_case(syntax: &TokenSyntax, cases: &[Case]) -> bool {
-    syntax
-        .readings
-        .iter()
-        .filter_map(|reading| reading.case)
-        .any(|case| cases.contains(&case))
 }
 
 /// The first case from `cases` that the token actually has.
@@ -233,6 +238,57 @@ pub(crate) fn is_relative_word(index: usize, tokens: &[Token], out: &[TokenSynta
     matches!(lemma, "joka" | "mikä" | "ken" | "kuka")
 }
 
+/// Whether `joka`/`jokainen` is a determiner before a nominative noun.
+///
+/// `Joka päivä juon kahvia` and `Merkitse joka esine kirjaan` use `joka` as
+/// “every”, not as a relative pronoun. A relative pronoun is followed by a
+/// verb, an adverb or a non-nominative argument, or it is preceded by a comma.
+/// The missing-comma construction `Mies joka kirjan luki` still has a genitive
+/// noun after the pronoun, so it stays relative and the punctuation rule can
+/// suggest the comma.
+fn is_determiner_joka(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
+    let lower = tokens[index].text.to_lowercase();
+    if !matches!(lower.as_str(), "joka" | "jokainen") {
+        return false;
+    }
+    let Some(next) = (index + 1..tokens.len()).find(|&candidate| tokens[candidate].is_word())
+    else {
+        return false;
+    };
+    if !nominal_has_case(&out[next], &[Case::Nominative]) {
+        return false;
+    }
+    !comma_before(tokens, index) && !comma_between(tokens, index, next)
+}
+
+/// Whether this token opens a relative clause rather than acting as a
+/// determiner (`joka päivä`, `joka esine`).
+pub(crate) fn starts_relative_clause(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
+    is_relative_word(index, tokens, out) && !is_determiner_joka(index, tokens, out)
+}
+
+/// Whether a comma sits in the separators immediately before `index`.
+fn comma_before(tokens: &[Token], index: usize) -> bool {
+    for token in tokens[..index].iter().rev() {
+        if token.is_word() {
+            break;
+        }
+        if token.text.contains(',') {
+            return true;
+        }
+    }
+    false
+}
+
+/// Whether a comma sits between two word tokens.
+pub(super) fn comma_between(tokens: &[Token], left: usize, right: usize) -> bool {
+    tokens
+        .iter()
+        .skip(left + 1)
+        .take(right.saturating_sub(left + 1))
+        .filter(|token| !token.is_word())
+        .any(|token| token.text.contains(','))
+}
 
 /// A function word that must not be mistaken for a subject or object merely
 /// because the lexicon also gives it a noun reading (`ja`, `kun`).

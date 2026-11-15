@@ -23,7 +23,7 @@ pub(super) fn clause_kind(clause: &Clause, tokens: &[Token], analysis: &SyntaxAn
     if crate::syntax::is_subordinator(&lower) {
         return ClauseKind::Subordinate;
     }
-    if crate::syntax::is_relative_word(first, tokens, &analysis.tokens) {
+    if crate::syntax::starts_relative_clause(first, tokens, &analysis.tokens) {
         return ClauseKind::Relative;
     }
     if crate::syntax::is_coordinating(&lower) {
