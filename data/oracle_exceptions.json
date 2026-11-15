@@ -359,66 +359,13 @@
       "note": "the head is the participle särkynyt (broken), which is not a sanalista lemma; the class-47 engine inflects it, so the paradigm is särkyneensydämen, särkyneetsydämet, särkyneittäsydämittä. The oracle's expected set is a split of unrelated parts (särkynytöillämerillä, särkynyillesärjöille)"
     },
     {
-      "id": "lemma-5b-appi-5b-colloquial",
-      "classes": ["5*B"],
-      "lemmas": ["appi"],
-      "predicate": "lemma",
-      "source": "https://en.wiktionary.org/wiki/appi",
-      "note": "appi is two words: the 5B informal app (apit, appeja, apeissa, apeitta) and the 7B father-in-law (apet, appia, apissa, apitta). The oracle reads only the 7B paradigm under this homonym; the 5B forms are real per Wiktionary."
-    },
-    {
-      "id": "lemma-7f-vyyhti-5f-forms",
-      "classes": ["7*F"],
-      "lemmas": ["vyyhti"],
-      "predicate": "lemma",
-      "source": "https://en.wiktionary.org/wiki/vyyhti",
-      "note": "vyyhti is one sanalista row carrying both 7*F and 5*F. The 7F report sees the 5F forms (vyyhdeittä, vyyhdeissä, ...) too; Wiktionary gives both declensions, so they are real, not invented."
-    },
-    {
-      "id": "lemma-49-autere-ihin-illative",
-      "classes": ["49"],
-      "lemmas": ["autere"],
-      "predicate": "lemma",
-      "cell": {"case": "ILL", "number": "PL"},
-      "source": "https://en.wiktionary.org/wiki/autere",
-      "note": "autere is the alternative spelling of auer (Kotus type 49*/askel, t-gradation). Wiktionary's paradigm gives both autereisiin and autereihin as plural illatives; Voikko lists only autereisiin for this spelling, so the oracle's cell looks single-valued when the language is not."
-    },
-    {
-      "id": "lemma-50-villikaniini-e-plural-genitive",
-      "classes": ["50"],
-      "lemmas": ["villikaniini"],
-      "predicate": "lemma",
-      "cell": {"case": "GEN", "number": "PL"},
-      "source": "https://en.wiktionary.org/wiki/villikaniini",
-      "note": "villikaniini is villi + kaniini and declines with the paperi template (Kotus type 6), exactly like its head kaniini. That gives villikaniinien, villikaniineiden and villikaniineitten. The compound oracle only generated the i-plural, so the e-plurals are an oracle gap, not invented forms."
-    },
-    {
-      "id": "lemma-50-villikaniini-e-plural-partitive",
-      "classes": ["50"],
-      "lemmas": ["villikaniini"],
-      "predicate": "lemma",
-      "cell": {"case": "PAR", "number": "PL"},
-      "source": "https://en.wiktionary.org/wiki/villikaniini",
-      "note": "the paperi template gives both villikaniineita and villikaniineja for villikaniini (the head kaniini confirms the same pair); the compound oracle generated only villikaniineja."
-    },
-    {
-      "id": "lemma-50-kevytsinko-weak-ablative",
-      "classes": ["50"],
-      "lemmas": ["kevytsinko"],
-      "predicate": "lemma",
-      "cell": {"case": "ABL", "number": "PL"},
-      "source": "https://en.wiktionary.org/wiki/kevytsinko",
-      "note": "kevytsinko is kevyt + sinko and uses the valo template with nk-ng gradation (kevytsi|nk|ng|o|a), like its head sinko. Wiktionary's paradigm gives the weak-grade plural locals, kevytsingoilta among them; the oracle's kevytsinkoilta keeps the strong grade and is the odd one out."
-    },
-    {
       "id": "class-22-genitive-instructive-homonym",
       "classes": ["22"],
       "predicate": "case-less",
       "cell": {"case": "NOM", "number": "SG"},
       "source": "https://en.wiktionary.org/wiki/nougat",
       "note": "a consonant-final loan builds the plural instructive as i-stem + -n (gourmetin, nougatin), which is the same word as the genitive singular. Merging the two readings leaves the form with neither case tag, and the report's least-assuming candidate is the nominative cell. Both readings are correct, so the case-less form is not an invented nominative."
-    }
-,
+    },
     {
       "id": "lemma-51-aavameri-elative",
       "classes": ["51"],
@@ -440,14 +387,42 @@
       "note": "Wiktionary lists hienojensokerien, hienojensokereiden and hienojensokereitten; the oracle keeps only the first two, so hienojensokereiden is an oracle omission."
     },
     {
-      "id": "lemma-51-isosisar-genitive-plural",
-      "classes": ["51"],
-      "lemmas": ["isosisar"],
+      "id": "lemma-24-hopeakuusi-genitive-plural",
+      "classes": ["24"],
+      "lemmas": ["hopeakuusi"],
       "predicate": "lemma",
       "cell": {"case": "GEN", "number": "PL"},
-      "sample": 20,
+      "source": "https://en.wiktionary.org/wiki/kuusi",
+      "note": "kuusi has both kuusien and kuusten in the genitive plural; hopeakuusi inherits both, so hopeakuusten is not an engine defect."
+    },
+    {
+      "id": "lemma-48e-kuve-ablative-plural",
+      "classes": ["48*E"],
+      "lemmas": ["kuve"],
+      "predicate": "lemma",
+      "cell": {"case": "ABL", "number": "PL"},
+      "source": "https://en.wiktionary.org/wiki/kuve",
+      "note": "kuve gradates v -> p and its plural ablative is kupeilta; live Voikko analyses kupeilta as a form of kuve. The oracle's kuveilta is a different word/entry."
+    },
+    {
+      "id": "lemma-51-mustamies-genitive-plural",
+      "classes": ["51"],
+      "lemmas": ["mustamies"],
+      "predicate": "lemma",
+      "cell": {"case": "GEN", "number": "PL"},
+      "source": "https://en.wiktionary.org/wiki/mies",
+      "note": "mies has both miesten and miehien genitive plurals, so mustienmiehien and mustienmiesten are both valid compound forms."
+    }
+,
+    {
+      "id": "lemma-51-isosisar-genitive-plural-form",
+      "classes": ["51"],
+      "lemmas": ["isosisar"],
+      "predicate": "form",
+      "forms": ["isojensisarien"],
+      "cell": {"case": "GEN", "number": "PL"},
       "source": "https://en.wiktionary.org/wiki/isosisar",
-      "note": "isosisar is iso + sisar; the modifier-inflected genitive plural isojensisarien uses the head isojen with the tail's isosisarien, and live Voikko accepts it. The oracle records only isojensisarten."
+      "note": "isosisar is iso + sisar; the modifier-inflected genitive plural isojensisarien uses the head isojen with the tail's isosisarien, and live Voikko accepts it. The oracle records only isojensisarten; the other two spellings in this cell are covered by compound-51-fixed-prefix."
     }
   ]
 }

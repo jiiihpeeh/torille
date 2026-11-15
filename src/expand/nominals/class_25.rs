@@ -13,7 +13,7 @@
 
 #![allow(dead_code)]
 
-use crate::tags::{Case, Form, Number, PartOfSpeech};
+use crate::tags::{Case, Confidence, Form, Number, PartOfSpeech};
 
 use super::utility::{Builder, Decl, Entry, cell, e_stem, nominal_tags, plain, possessed};
 
@@ -81,24 +81,34 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
             cell(Case::Abessive, pl, istem, ["tta", "ttä"], true),
             plain(Case::Instructive, pl, istem, ["n", "n"]),
         ]);
-    // `liemi` confirms only the reduced partitive `lientä`; the e-stem
-    // `liemeä` is not a form of that word (live Voikko rejects it), though
+    // `liemi`, `taimi` and `lumi` confirm only the reduced partitive
+    // (`lientä`, `tainta`, `lunta`); the e-stem `liemeä`, `taimea` and
+    // `lumea` are not forms of those words (live Voikko rejects them), though
     // the other class members accept their full partitive.
-    if lemma == "liemi" {
-        decl.entries.retain(|entry| {
-            !matches!(entry, Entry::Cell(c)
-                if c.case == Case::Partitive
-                    && c.number == sg
-                    && c.stem == estem)
-        });
-    }
     b.decline(
         &decl,
         |case, number, poss| nominal_tags(PartOfSpeech::Noun, case, number, poss),
     );
     b.comitative(istem);
 
-    b.into_forms()
+    let mut forms = b.into_forms();
+    if matches!(lemma, "liemi" | "taimi" | "lumi") {
+        for form in &mut forms {
+            let partitive_singular = form.readings().iter().any(|reading| {
+                reading.case == Some(Case::Partitive) && reading.number == Some(Number::Singular)
+            });
+            // The whole e-stem partitive column goes with the bare form: the
+            // possessive `taimeani` is built from `taimea` and is no more a
+            // word of `taimi` than the base is.
+            if partitive_singular
+                && form.word.starts_with(&estem)
+                && !form.word.starts_with(&rstem)
+            {
+                form.confidence = Confidence::Repaired;
+            }
+        }
+    }
+    forms
 }
 
 #[cfg(test)]
@@ -107,6 +117,14 @@ mod tests {
 
     fn words(lemma: &str) -> Vec<String> {
         inflect(lemma, true).into_iter().map(|f| f.word).collect()
+    }
+
+    fn plain_words(lemma: &str) -> Vec<String> {
+        inflect(lemma, true)
+            .into_iter()
+            .filter(|f| f.plain())
+            .map(|f| f.word)
+            .collect()
     }
 
     /// The class is the two partitives: the reduced one on the `m -> n` stem and
@@ -119,7 +137,7 @@ mod tests {
         assert!(w.contains(&"lientä".to_string())); // part sg, reduced stem
         // `liemi` is the one member whose full partitive the reference does
         // not confirm; live Voikko rejects `liemeä`.
-        assert!(!w.contains(&"liemeä".to_string()));
+        assert!(!plain_words("liemi").contains(&"liemeä".to_string()));
         assert!(words("niemi").contains(&"niemeä".to_string())); // other words do
         assert!(w.contains(&"liemien".to_string())); // gen pl, i-stem
         assert!(w.contains(&"lienten".to_string())); // and the reduced stem's
@@ -131,6 +149,8 @@ mod tests {
     fn the_reduced_stem_feeds_exactly_two_cells() {
         assert!(words("taimi").contains(&"tainta".to_string()));
         assert!(words("taimi").contains(&"tainten".to_string()));
+        assert!(!plain_words("taimi").contains(&"taimea".to_string()));
+        assert!(!plain_words("lumi").contains(&"lumea".to_string()));
         // `niemi` is front, so the reduced endings harmonise.
         assert!(words("niemi").contains(&"nientä".to_string()));
         assert!(words("niemi").contains(&"nienten".to_string()));

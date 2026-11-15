@@ -1714,3 +1714,12 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   `aavoistameristä`, `hienosokeri`'s third genitive plural
   `hienojensokereiden`, and `isosisar`'s `isojensisarien` are all accepted by
   Wiktionary/Voikko and the oracle's expected cells are wrong.
+
+- 2026-11-16: cleared the illegal-evidence gate. Class-18 short words now take
+  the `-hVn` illative (`puuseehen`, `puuceehen`); class-25 `taimi`/`lumi`
+  demote the full e-stem partitive column (`taimea`, `lumea`) to `Repaired`
+  and keep the reduced `tainta`/`lunta`; `verta` and `miss` are rejected as
+  class-99 variants; and the class-51 `uusikuu` catalogue illative is
+  `uuteenkuuhun`. The raw 5-lemma evidence report has 321 illegal rows, all
+  explained, with no unmatched, ambiguous or stale rule. The default report
+  is 79,316 confirmed / 8 missing / 9 not-plain / 0 illegal.

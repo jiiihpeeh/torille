@@ -32,6 +32,8 @@ explains: `["illegal"]` (the default) for a wrong engine form, `["missing"]`
 for an oracle spelling that is not a word. `predicate` is one of:
 
 * `lemma` -- the class/lemma filter is the whole rule.
+* `form` -- the engine form is one of `forms`, for a disagreement that is
+  narrower than a whole cell.
 * `also-class` -- the lemma also belongs to one of `also_classes`, which is how
   a dual-class word (`omakuva` is 51 and 10) is handled without naming it.
 * `oblique-stem` -- the engine form starts with the class's oblique stem
@@ -74,7 +76,7 @@ REPO = Path(__file__).resolve().parent.parent
 DEFAULT_PATH = REPO / "data" / "oracle_exceptions.json"
 
 PREDICATES = {
-    "lemma", "also-class", "oblique-stem", "shorter-than-expected",
+    "lemma", "form", "also-class", "oblique-stem", "shorter-than-expected",
     "shorter", "fixed-prefix", "case-less", "plural-only-t",
     "strong-comparative", "plural-only-iset",
 }
@@ -93,7 +95,7 @@ WEAK_COMPARATIVE_CASES = {
 }
 RULE_FIELDS = {
     "id", "classes", "lemmas", "exclude_lemmas", "cell", "predicate",
-    "source", "note", "also_classes", "sample", "applies_to",
+    "source", "note", "also_classes", "forms", "sample", "applies_to",
 }
 
 #: The per-class sample a rule is expected to be exercised by. The baseline
@@ -206,6 +208,12 @@ def validate(rules: list[dict]) -> None:
         if predicate == "lemma" and not lemmas:
             raise EvidenceError(
                 f"{where}: predicate 'lemma' needs 'lemmas'")
+        if predicate == "form":
+            forms = rule.get("forms")
+            if (not isinstance(forms, list) or not forms
+                    or not all(isinstance(form, str) and form for form in forms)):
+                raise EvidenceError(
+                    f"{where}: predicate 'form' needs a non-empty 'forms' list")
         if predicate == "also-class":
             also = rule.get("also_classes")
             if (not isinstance(also, list) or not also
@@ -339,6 +347,8 @@ def matches(rule: dict, finding, cls: str, class_of=None) -> bool:
     predicate = rule["predicate"]
     if predicate == "lemma":
         return True
+    if predicate == "form":
+        return finding.form in rule["forms"]
     if predicate == "also-class":
         if class_of is None:
             raise EvidenceError(

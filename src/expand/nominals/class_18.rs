@@ -67,7 +67,7 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     // short word (maa, aamunkoi, hai) inflects like class 17's long-vowel nouns.
     let is_abbrev = lemma.chars().all(|c| !c.is_lowercase());
     if !is_abbrev {
-        return super::class_17::inflect(lemma, possessives);
+        return super::class_17::inflect_from_class_18(lemma, possessives);
     }
     let fi = if FRONT_ABBREV.contains(&lemma) {
         true
@@ -217,6 +217,23 @@ mod tests {
             ],
             "no plain illative is invented"
         );
+    }
+
+    /// A lowercase class-18 short word takes the `-hVn` illative.
+    ///
+    /// Wiktionary's `puucee` (type 18/maa) gives `puuceehen` and `puuceihin`,
+    /// and `puusee` is the same shape: the class-17 `-seen` illative is wrong
+    /// for these words.
+    #[test]
+    fn a_lower_case_class_18_short_word_takes_the_h_illative() {
+        let puusee = words("puusee");
+        assert!(puusee.contains(&"puuseehen".to_string()));
+        assert!(puusee.contains(&"puuseihin".to_string()));
+        assert!(!puusee.iter().any(|f| f == "puuseeseen"));
+        let puucee = words("puucee");
+        assert!(puucee.contains(&"puuceehen".to_string()));
+        assert!(puucee.contains(&"puuceihin".to_string()));
+        assert!(!puucee.iter().any(|f| f == "puuceeseen"));
     }
 
     /// A word with a lowercase letter is not an abbreviation and is class 17's.

@@ -50,6 +50,11 @@ committed files are what a build uses.
 | `oracle_exceptions.json` | curated | evidence for the harness (`tools/test_illegal_evidence.py`) |
 | `wiktionary-taivutukset.txt` | Wiktionary | fetched paradigms used by `tests/catalogue.rs` |
 
+`catalogue.csv` is oracle-generated, but it carries one curated correction:
+class 51 `uusikuu` has the illative `uuteenkuuhun`, not the oracle's
+`uuteenkuuseen` (which is a form of `kuusi`). Wiktionary confirms
+`uuteenkuuhun`.
+
 ## Curated style tables
 
 These are optional, suggestion-only data for the style layer

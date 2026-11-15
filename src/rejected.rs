@@ -35,6 +35,14 @@ pub(crate) const LEMMAS: &[&str] = &[
     // `eltaantua` (and `eltaantuminen`). Keeping the variant would hide the
     // standard spelling from the suggester.
     "elttaantua",
+    // `verta` is the partitive of `veri`, not a lemma of its own. The sanalista
+    // lists it as class 99, where the i-loan grid invented `vertaiaan`; the
+    // class-27 `veri` row already supplies the real form.
+    "verta",
+    // `miss` is a class-99 variant of `missi` (class 5). The i-loan grid
+    // invented `misseiden`/`misseitä`; rejecting the variant leaves the
+    // standard `missi` paradigm and lets the suggester offer it.
+    "miss",
 ];
 
 /// Whether a sanalista lemma is rejected.

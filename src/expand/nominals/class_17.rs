@@ -24,6 +24,16 @@ pub const CLASS: &str = "17";
 
 /// Inflect a class-17 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
+    inflect_mode(lemma, possessives, false)
+}
+
+/// Class-18 short words that reach the class-17 long-vowel grid take the
+/// `-hVn` illative (`puuseehen`, `rokokoohon`), not class 17's `-seen`.
+pub fn inflect_from_class_18(lemma: &str, possessives: bool) -> Vec<Form> {
+    inflect_mode(lemma, possessives, true)
+}
+
+fn inflect_mode(lemma: &str, possessives: bool, short_h: bool) -> Vec<Form> {
     let mut b = Builder::new(lemma, possessives);
     let stem = lemma;
     let (sg, pl) = (Number::Singular, Number::Plural);
@@ -44,7 +54,7 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     const SHORT_H: &[&str] = &["kyy", "pelakuu"];
     let (ill_v, ill_base): (String, String) = if last_v == 'i' {
         ("hin".to_string(), "hi".to_string())
-    } else if SHORT_H.contains(&lemma) {
+    } else if short_h || SHORT_H.contains(&lemma) {
         (format!("h{last_v}n"), format!("h{last_v}"))
     } else {
         ("seen".to_string(), "see".to_string())
@@ -62,7 +72,7 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     // words (`ehtoisiin`) but not for the `-i` words that reach here from class
     // 18 (`aamunkoi` has only `aamunkoihin`), so it is repaired there.
     let isiin = cell(Case::Illative, pl, &pstem, "isiin", false).on_ending("isii");
-    let isiin = if stem.ends_with('i') || SHORT_H.contains(&lemma) {
+    let isiin = if stem.ends_with('i') || short_h || SHORT_H.contains(&lemma) {
         isiin.as_rare()
     } else {
         isiin
