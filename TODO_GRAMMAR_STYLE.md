@@ -522,18 +522,25 @@ analysis refinements”.
   `Error` `object_case` on adjudicated clean prose. The weak-hint consumer
   keeps confident and adverbial baseline roles and re-reads only weak
   predicates; it returns adjudicated clean prose to 0 diagnostics. The stack
-  variant reaches candidate top-1 0.9043 and role accuracy 0.6643 -> 0.6694
+  variant reaches candidate top-1 0.9043 and role accuracy 0.6644 -> 0.6696
   overall (0.6697 -> 0.6885 decided), with 127 role changes (71 improve, 26
-  worsen). Page-2000 diagnostics still move 67 -> 71 with 44 role changes.
+  worsen). Page-2000 diagnostics still move 65 -> 69 with 44 role changes.
   Decision: do not activate. The next step is role/clause hardening, not a
   larger model.
-- [ ] **Role/clause hardening.** Split coordinated/subordinate finite clauses
-  (for example at `sillä`), make predicate selection coherent when a clause has
-  more than one finite candidate, keep the negated-clause object rule from
-  treating subjects or predicate complements as objects, and pin the
-  adverb/nominal interaction. These are grammar-checker bugs independent of
-  M0. Re-run `ud_m0_eval` and `m0_prose_eval` after the fixes; a larger model
-  remains blocked meanwhile.
+- [x] **First role/clause hardening.** `sillä` now starts a clause when the
+  next word is a personal pronoun, a non-bare negative auxiliary, or a
+  nominative nominal. `sillä on väliä`, `sillä ei ole väliä`, `sillä välin`,
+  `sillä tavalla` and `sillä aikaa` stay one clause. This fixed the two
+  reviewed `sillä` rows (moved to `clean`) and page-2000 diagnostics 67 -> 65.
+  The connegative rule now accepts a past participle after a negative
+  auxiliary even when the class engine gives it no negative-polarity reading
+  (`eivät uupuneet`), removing a false positive the new split exposed.
+- [ ] **Remaining role/clause hardening.** `sillä` splitting and the
+  negative-past participle are fixed. Still open: predicate selection when a
+  clause has more than one finite candidate, the negated-clause object rule
+  beyond the reviewed `sillä` rows, and the adverb/nominal interaction. These
+  are grammar-checker bugs independent of M0. Re-run `ud_m0_eval` and
+  `m0_prose_eval` after each fix; a larger model remains blocked meanwhile.
 
 ## Deliberate boundaries
 
@@ -634,13 +641,20 @@ intended/competing interpretation pair that fails.
   inference, `classify_with_preference`, `ud_m0_eval` and `m0_prose_eval`.
   The aggressive consumer added an `Error` on adjudicated clean prose; the
   weak-hint consumer fixed that and kept adjudicated prose at baseline, with
-  UD role accuracy 0.6643 -> 0.6661 overall (0.6697 -> 0.6803 decided). The
-  page-2000 smoke still moves 67 -> 72, so the model stays off by default and
+  UD role accuracy 0.6644 -> 0.6662 overall (0.6697 -> 0.6803 decided). The
+  page-2000 smoke still moves 65 -> 70, so the model stays off by default and
   the default build remains an exact no-op.
 - 2026-11-15: added the deterministic-context stack variant. `train_m0.py`
   now supports `--variants stack`, `combine_m0.py` measures reading-order
   prior fusion (it hurts: model 0.8867 -> 0.8829 test at best), and
   `models/m0-stack-v1.bin` is embedded behind `neural-m0-stack`. Three-seed
   stack test top-1 is 0.9027 mean (0.9015–0.9043), and the weak-hint consumer
-  reaches UD role accuracy 0.6694 overall / 0.6885 decided. Adjudicated prose
-  stays at baseline; page-2000 diagnostics move 67 -> 71. Still not activated.
+  reaches UD role accuracy 0.6696 overall / 0.6885 decided. Adjudicated prose
+  stays at baseline; page-2000 diagnostics move 65 -> 69. Still not activated.
+- 2026-11-15: first role/clause hardening. `sillä` starts a clause only when
+  the next word can open one, so `sillä välin` and `sillä tavalla` stay
+  adverbial. The split moves two reviewed `sillä` rows from known false
+  positives to clean and reduces page-2000 diagnostics 67 -> 65. The
+  connegative rule now accepts the negative past/perfect participle
+  (`eivät uupuneet`) even when the class engine omits the negative-polarity
+  reading, removing the false positive the split exposed.

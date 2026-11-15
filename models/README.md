@@ -41,12 +41,12 @@ predicate. It is **not activated**.
 | metric | baseline | tags | stack |
 |---|---:|---:|---:|
 | candidate top-1 | 0.5074 | 0.8867 | **0.9043** |
-| UD role accuracy, all mapped tokens | 0.6643 | 0.6661 | **0.6694** |
+| UD role accuracy, all mapped tokens | 0.6644 | 0.6662 | **0.6696** |
 | UD role accuracy, decided tokens | 0.6697 | 0.6803 | **0.6885** |
 | adjudicated clean rows with a diagnostic | 0 | 0 | 0 |
 | adjudicated true positives with exact kinds | 1/1 | 1/1 | 1/1 |
-| adjudicated known-FP rows unchanged | 10/10 | 10/10 | 10/10 |
-| page-2000 grammar diagnostics | 67 | 72 | 71 |
+| adjudicated known-FP rows unchanged | 8/8 | 8/8 | 8/8 |
+| page-2000 grammar diagnostics | 65 | 70 | 69 |
 
 An earlier aggressive consumer let the preferred reading win outright and
 regressed adjudicated clean prose with an `Error` `object_case`. The weak-hint

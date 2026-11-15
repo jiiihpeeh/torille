@@ -81,6 +81,14 @@ fn run() -> Result<(), String> {
         let expected = expected_kinds(row)?;
         summary.known_rows += 1;
         summary.known_words += word_count(row);
+        if kinds.base != expected {
+            println!(
+                "known row {row_index} baseline {:?} expected {:?}: {}",
+                kinds.base,
+                expected,
+                row_text(row)?
+            );
+        }
         if kinds.base == expected {
             summary.known_baseline += 1;
         }

@@ -1205,7 +1205,8 @@ second uncalibrated probability multiplied into the model.
 `src/syntax/roles.rs` now has `classify_with_preference`. The first version let
 the preferred reading win outright: preferred finite -> `Predicate`, preferred
 adverb/adverbial case -> `Adverbial`, preferred nominal -> `Unknown`, all with
-`Likely` confidence. That version produced the first product measurement:
+`Likely` confidence. That version produced the first product measurement
+(before the clause and connegative hardening below):
 
 | metric | baseline | aggressive M0 |
 |---|---:|---:|
@@ -1244,7 +1245,7 @@ UD Finnish-FTB test, weak-hint model on versus baseline:
 | metric | baseline | tags | stack |
 |---|---:|---:|---:|
 | candidate top-1 | 0.5074 | 0.8867 | **0.9043** |
-| role accuracy, all mapped tokens | 0.6643 | 0.6661 | **0.6694** |
+| role accuracy, all mapped tokens | 0.6644 | 0.6662 | **0.6696** |
 | role accuracy, tokens with a decision | 0.6697 | 0.6803 | **0.6885** |
 | role changes | — | 147 | 127 |
 
@@ -1258,10 +1259,14 @@ Adjudicated prose (`tests/fixtures/prose/adjudicated.json`):
 |---|---:|---:|---:|
 | clean rows with a diagnostic | 0 | 0 | 0 |
 | true positives with exact kinds | 1/1 | 1/1 | 1/1 |
-| known false-positive rows unchanged | 10/10 | 10/10 | 10/10 |
+| known false-positive rows unchanged | 8/8 | 8/8 | 8/8 |
+
+The clause split and connegative fix moved two reviewed `sillä` rows from
+`known_false_positives` to `clean`; the adjudicated clean set is now 17 rows /
+237 words and the known-FP set 8 rows / 144 words.
 
 On the 2,000-word `tests/fixtures/perf/page-2000.txt`, diagnostics move from
-67 to 72 for tags and 67 to 71 for stack, with 66 and 44 role changes
+65 to 70 for tags and 65 to 69 for stack, with 66 and 44 role changes
 respectively. The stack increase is spread across existing kinds:
 `attribute_agreement` 12 -> 15, `object_case` 4 -> 6, `comma_missing` 13 -> 14,
 with `subject_predicate_agreement` 9 -> 8 and `verb_rection` 21 -> 20. The page
@@ -1667,12 +1672,12 @@ Results (weak-hint stack consumer):
 | metric | baseline | M0 stack |
 |---|---:|---:|
 | UD candidate top-1 | 0.5074 | 0.9043 |
-| UD role accuracy, all mapped tokens | 0.6643 | 0.6694 |
+| UD role accuracy, all mapped tokens | 0.6644 | 0.6696 |
 | UD role accuracy, decided tokens | 0.6697 | 0.6885 |
 | adjudicated clean rows with a diagnostic | 0 | 0 |
 | adjudicated true positives with exact kinds | 1/1 | 1/1 |
-| adjudicated known-FP rows unchanged | 10/10 | 10/10 |
-| page-2000 grammar diagnostics | 67 | 71 |
+| adjudicated known-FP rows unchanged | 8/8 | 8/8 |
+| page-2000 grammar diagnostics | 65 | 69 |
 | page-2000 role changes | — | 44 |
 
 The weak-hint consumer removes the earlier adjudicated clean regression and
@@ -1684,8 +1689,8 @@ remains an exact no-op.
 cargo test --release --workspace
 ```
 
-Result: **55 test binaries, 1,287 tests passed, 0 failed** (four new role
-preference tests).
+Result: **55 test binaries, 1,291 tests passed, 0 failed** (role-preference,
+`sillä` segmentation and negative-past participle tests).
 
 ```bash
 cargo clippy --workspace --all-targets -- -D warnings

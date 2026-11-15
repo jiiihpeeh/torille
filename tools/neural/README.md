@@ -117,7 +117,7 @@ cargo run --release -p torille-tools --features neural-m0-stack --bin m0_prose_e
 The weak-hint stack consumer reaches candidate top-1 0.9043 and decided-token
 role accuracy 0.6697 -> 0.6885. Adjudicated clean prose stays at 0 diagnostics
 and the true-positive/known-FP rows are unchanged, but page-2000 diagnostics
-move 67 -> 71. The models remain off by default; see
+move 65 -> 69. The models remain off by default; see
 [`docs/neural_disambiguation.md`](../../docs/neural_disambiguation.md) Phase 3b.
 
 Candidate top-1 is **not** product quality. The next work is role/clause

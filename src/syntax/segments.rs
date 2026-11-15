@@ -4,8 +4,9 @@ use crate::sentence;
 use crate::tokenise::Token;
 
 use super::predicates::{
-    is_coordinating, is_infinitive, is_nominal, is_predicate_candidate, is_relative_word,
-    is_subordinator, starts_relative_clause,
+    is_coordinating, is_infinitive, is_negative_auxiliary, is_nominal,
+    is_predicate_candidate, is_relative_word, is_subordinator, nominal_has_case,
+    starts_relative_clause,
 };
 use super::{Clause, TokenSyntax};
 
@@ -109,6 +110,10 @@ pub(super) fn segment_clause_words(
             continue;
         }
         let lower = tokens[words[position]].text.to_lowercase();
+        if lower == "sillä" && starts_silla_clause(words, position, tokens, out) {
+            starts.push(position);
+            continue;
+        }
         if starts_relative_clause(words[position], tokens, out) {
             starts.push(position);
             continue;
@@ -156,6 +161,48 @@ pub(super) fn segment_clause_words(
         }
     }
     segments
+}
+
+/// `sillä` is both “because” and an adessive pronoun (“on it”).
+///
+/// Split only when the next word can start a clause: a predicate, a personal
+/// pronoun, or a nominative nominal (`sillä Jumala hellytti ...`). Adverbial
+/// phrases (`sillä välin`, `sillä tavalla`, `sillä aikaa`) have a genitive,
+/// adessive or partitive next word and keep their single clause. A following
+/// subordinator is the actual clause opener, so do not split twice.
+fn starts_silla_clause(
+    words: &[usize],
+    position: usize,
+    tokens: &[Token],
+    out: &[TokenSyntax],
+) -> bool {
+    let Some(&next) = words.get(position + 1) else {
+        return false;
+    };
+    let next_lower = tokens[next].text.to_lowercase();
+    if is_subordinator(&next_lower) {
+        return false;
+    }
+    if negative_auxiliary_opens_clause(next, tokens, out) {
+        return true;
+    }
+    if matches!(
+        next_lower.as_str(),
+        "minä" | "sinä" | "hän" | "me" | "te" | "he"
+    ) {
+        return true;
+    }
+    nominal_has_case(&out[next], &[crate::tags::Case::Nominative])
+}
+
+/// Whether a negative auxiliary clearly has a subject other than `sillä`.
+///
+/// `sillä ei ole väliä` can mean “it does not matter”, with `sillä` as the
+/// subject. The bare 3sg `ei` is therefore not a clause opener. Every other
+/// negative-auxiliary surface (`ethän`, `eivät`, `emme`, ...) disagrees with
+/// `sillä` in person or number and can only be the conjunction's clause.
+fn negative_auxiliary_opens_clause(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
+    is_negative_auxiliary(index, out) && tokens[index].text.to_lowercase() != "ei"
 }
 
 /// Link each relative clause to the host segment it interrupts.
@@ -316,4 +363,33 @@ fn top_level_semicolon(
         }
     }
     false
+}
+
+#[cfg(test)]
+mod tests {
+    fn clauses(text: &str) -> usize {
+        let tokens = crate::tokenise::tokenise(text);
+        crate::syntax::analyze(&tokens).clauses.len()
+    }
+
+    #[test]
+    fn silla_because_starts_a_new_clause() {
+        assert_eq!(
+            clauses("Tein sen keveällä sydämellä, sillä ethän ole kuollut."),
+            2
+        );
+        assert_eq!(
+            clauses("Ei, sillä Jumala hellytti pyövelien sydämet."),
+            2
+        );
+    }
+
+    #[test]
+    fn silla_adverbial_keeps_one_clause() {
+        assert_eq!(clauses("Sillä välin hän nukkui."), 1);
+        assert_eq!(clauses("Sillä tavalla se onnistuu."), 1);
+        assert_eq!(clauses("Sillä aikaa lapset leikkivät."), 1);
+        assert_eq!(clauses("Sillä on väliä."), 1);
+        assert_eq!(clauses("Sillä ei ole väliä."), 1);
+    }
 }

@@ -27,7 +27,9 @@
     "Täytyy kaivaa esiin kaikki kellarista ullakolle asti ja merkitä joka esine kirjaan ja panna niille raha-arvo.",
     "Aamulla varhain ja illalla myöhään hän kantoi sairaille virvoituksia.",
     "Sikri ja Kenoveeva elivät onnellisesti ja rauhallisesti Sikrin linnassa muutaman viikon.",
-    "He veivät Kenoveevan suureen synkkään metsään."
+    "He veivät Kenoveevan suureen synkkään metsään.",
+    "Ei, sillä Jumala hellytti pyövelien sydämet.",
+    "Sinä löysit sen kerran ullakolta vanhasta kirjavasusta ja luit sen yhteen menoon siinä polvillasi niillä sijoillasi ja osasit sen melkein ulkoa kertoessasi pojille uudestaan ja aina uudestaan, sillä he eivät uupuneet sitä kuuntelemasta, ja olivat siitä yhtä ihastuneita ja järkytettyjä kuin minä ja siskoni lapsuudessamme."
   ],
   "errors": [
     {
@@ -41,11 +43,6 @@
       "text": "Me suuremmat istumme tuoleilla, kyynärpäät pöytään nojaten ja leuat käsien varassa, pikkusisar pyrkii Annin syliin ja kietoo käsivartensa hänen kaulaansa, ettei häntä pelottaisi.",
       "kinds": ["attribute_agreement", "subject_predicate_agreement", "object_case"],
       "note": "Apposition Me suuremmat is not a subject+attribute pair; pelottaa is an experiencer verb, not a partitive-object error."
-    },
-    {
-      "text": "Sinä löysit sen kerran ullakolta vanhasta kirjavasusta ja luit sen yhteen menoon siinä polvillasi niillä sijoillasi ja osasit sen melkein ulkoa kertoessasi pojille uudestaan ja aina uudestaan, sillä he eivät uupuneet sitä kuuntelemasta, ja olivat siitä yhtä ihastuneita ja järkytettyjä kuin minä ja siskoni lapsuudessamme.",
-      "kinds": ["object_case", "attribute_agreement"],
-      "note": "he is the subject of a negated clause; the complement after uupuneet is not an attribute of a singular head."
     },
     {
       "text": "Meille on niinkuin usein ennenkin haettu kotimieheksi Laukkasen Anni, Satu-Anni, koulumestarin kivuloinen ja kalpea tyttö, joka ei milloinkaan leiki eikä hymyile.",
@@ -81,11 +78,6 @@
       "text": "Kenoveeva kiiruhti torniin ja katseli sieltä rakkaan puolisonsa jälkeen, sitten hän sulkeutui huoneeseensa eikä koko päivänä maistanut eineen muruakaan.",
       "kinds": ["object_case", "attribute_agreement"],
       "note": "jälkeen governs the genitive puolisonsa; koko päivänä is an adverbial, not an essive attribute."
-    },
-    {
-      "text": "Ei, sillä Jumala hellytti pyövelien sydämet.",
-      "kinds": ["object_case"],
-      "note": "sydämet is a total object; the clause is affirmative."
     }
   ]
 }

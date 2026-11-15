@@ -14,7 +14,7 @@
 //! are not the declarative present connegative.
 
 use crate::syntax::{RoleConfidence, SyntaxAnalysis, is_verb_reading};
-use crate::tags::{Mood, Number, PartOfSpeech, Person, Polarity, Tags};
+use crate::tags::{Mood, Number, PartOfSpeech, Person, Polarity, Tags, Tense};
 use crate::tokenise::Token;
 
 use super::analysis::clause_words;
@@ -62,6 +62,17 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
             .iter()
             .any(|reading| is_verb_reading(reading) && reading.polarity == Polarity::Negative)
         {
+            continue;
+        }
+        // A past participle after the negative auxiliary is the negative past
+        // or perfect (`eivät uupuneet`, `en ole tullut`), not an affirmative
+        // finite error. Some class engines do not give the plural participle a
+        // negative-polarity reading, so accept the form itself.
+        if token.readings.iter().any(|reading| {
+            is_verb_reading(reading)
+                && reading.mood.is_none()
+                && reading.tense == Some(Tense::Past)
+        }) {
             continue;
         }
         let Some(reading) = affirmative_reading(token) else {
@@ -180,6 +191,12 @@ mod tests {
         let found = diagnostics("En menin.");
         assert_eq!(found.len(), 1, "{found:#?}");
         assert_eq!(found[0].corrections[0].edits[0].replacement, "mennyt");
+    }
+
+    #[test]
+    fn a_negative_past_participle_is_quiet() {
+        assert!(diagnostics("He eivät uupuneet.").is_empty());
+        assert!(diagnostics("En tullut.").is_empty());
     }
 
     #[test]
