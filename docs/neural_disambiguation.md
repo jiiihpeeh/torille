@@ -1,0 +1,1070 @@
+# Neural morphological disambiguation — architecture audit
+
+Status: **audit only, model not implemented** · 2026-11-15 ·
+scope: `morphology`, `syntax`, `syntax_check`, `style_check`, native and
+WASM deployment.
+
+This document asks one question: where can a small neural model score
+competing morphological readings in torille without replacing the parser,
+duplicating the lexicon, or changing existing grammar behaviour by default?
+
+The answer, in one sentence: **add a context-aware re-ranking pass between
+`analyze_morphology` and `analyze_syntax`, store its decisions in a per-analysis
+sidecar, and leave `WordInfo.readings` and every existing rule untouched.**
+
+The rest of this document explains why, what must change to preserve the
+alternative readings, which corpora and runtimes are realistic, and what the
+smallest useful first milestone is.
+
+## 0. Summary of the recommendation
+
+| Question | Recommendation |
+|---|---|
+| Integration point | New `disambiguate(tokens, &MorphologyAnalysis)` pass after morphology, before syntax/style |
+| What it outputs | One `ReadingDecision` per token: candidate scores, preferred reading index, confidence, abstain flag |
+| What it must not do | Mutate `WordInfo` in the shared surface cache; drop `Tags`; replace `classify` or the clause parser |
+| First model | Candidate-conditioned one-hidden-layer MLP over local/context features (the M0 neural baseline) |
+| Later model | 1-layer BiLSTM (128 hidden) or 2-layer compact Transformer (d=128, 4 heads); compare empirically |
+| Runtime | Hand-written fixed-weight inference for M0; `tract` or `rten` for ONNX in M1; do not start with `ort`, Candle or Burn |
+| Training data | UD Finnish-FTB (CC BY 4.0) first; UD Finnish-TDT (CC BY-SA 4.0) with licence review; OOD/PUD for test only |
+| Evaluation | Frozen candidate-level test set + UD OOD/PUD + the existing adjudicated prose corpus |
+| Rollout | Compile-time/runtime feature flag, off by default; heuristic fallback on low confidence or missing candidate |
+| Smallest viable milestone | M0: sidecar + feature MLP + frozen ambiguity set + no behaviour change when the model is off |
+
+## 1. Current architecture
+
+### 1.1 Workspace and embedded data
+
+The relevant crates are:
+
+| path | role |
+|---|---|
+| `src/` (`torille`) | morphology, syntax, grammar and style logic |
+| `tools/` | CLI drivers and the external Omorfi/Voikko harness |
+| `bindings/` | PyO3 extension used by the Python harness |
+| `torille-wasm/` | wasm-bindgen exports, textarea state, morphology codec |
+| `torille-wasm-leptos/` | Leptos demo |
+| `extensions/firefox/`, `extensions/chromium/` | browser surfaces and worker pool |
+
+The engine embeds the Kotus sanalista (`data/nykysuomensanalista.csv`) and the
+paradigm catalogue. It has no runtime data files. Morphology is generated from
+the lexicon and catalogue; there is no statistical model in the current
+pipeline.
+
+### 1.2 Morphology
+
+`src/morphology/mod.rs` is the layer below syntax:
+
+- `WordInfo` (`src/morphology/mod.rs:124`) holds the lowercased key, chosen
+  `lemma`, `verb_lemma`, `nominal_lemma`, `lemmas`, **`readings: Vec<Tags>`**,
+  agreed `case`/`number`, `part_of_speech`, clitic, possessive, a possible
+  derivation, and the `Depth` at which the surface was recognised.
+- `MorphologyCache` (`:216`) is keyed by lowercased surface and capped at 4096
+  entries. It stores `Arc<WordInfo>` so a long document does not copy readings.
+- `MorphologyAnalysis` (`:364`) is a token-aligned vector of
+  `Option<Arc<WordInfo>>` plus sentence spans.
+- `analyze_morphology` (`:379`) tokenises, resolves every word through the
+  cache, applies the proper-name overlay, and applies the numeral-governed
+  partitive upgrade.
+- `resolve_word` (`:629`) is the shallow ladder: direct lemma, stem map,
+  clitic/possessive host, connegative table, negation. `resolve_word_slow`
+  (`:1109`) runs the head/tail and prefix walks only when a rule asks for the
+  deep result.
+
+The shallow/deep split matters for a model: a shallow `WordInfo` may miss a
+reading that the deep walk would find. A reranker can only score candidates
+that are present. Candidate recall is therefore a first-class metric, not an
+implementation detail.
+
+`WordInfo` is surface-level, not context-level. Two occurrences of `tuli` share
+the same cached readings regardless of whether one is the noun “fire” and the
+other the past tense of `tulla`. This is deliberate and must remain true.
+
+### 1.3 Tags, Forms and confidence
+
+`src/tags.rs`:
+
+- `Tags` is a compact, `Copy` reading: optional `part_of_speech`, `case`,
+  `number`, `person`, `tense`, `mood`, `voice`, `possessive`, `clitic`, plus
+  `polarity`.
+- `Form` (`:892`) holds a surface, `Vec<Tags>`, and a `Confidence`
+  (`Guessed` < `Repaired` < `Plain`).
+- `add_reading` (`:36`) collapses readings that subsume one another. This keeps
+  the reading set small, but it means a form’s **source lemma and generation
+  confidence are not retained per reading** once the reading is copied into
+  `WordInfo`.
+- `agreed` (`:57`) and `Tags::unite` (`:815`) collapse dimensions where the
+  readings disagree. They are useful for display and indexing, but they are
+  exactly the wrong input for a candidate reranker: a missing dimension means
+  “readings disagree”, not “unknown”.
+- `Tags::matches` (`:844`) treats a missing dimension as a wildcard. Corrections
+  rely on this; a model must not reuse that wildcard semantics when scoring
+  candidates.
+
+### 1.4 Syntax
+
+`src/syntax/mod.rs`:
+
+- `TokenSyntax` (`:129`) holds `key`, `role`, `confidence`, clause index,
+  governor, licensed `case`, **one chosen `lemma`**, `lemmas` (all bases), and
+  **`readings` (all Tags)**.
+- `SyntaxAnalysis` (`:173`) holds sentence spans, clauses, lists and
+  token-aligned `TokenSyntax`.
+- `analyze_syntax` (`:213`) is pure: it consumes an existing
+  `MorphologyAnalysis` and never searches the lexicon.
+- `analyze_syntax_with_contexts` (`:222`) copies `info.readings`,
+  `info.lemmas`, `info.lemma`, and `info.verb_lemma`/`nominal_lemma` into
+  `TokenSyntax`, then calls `classify` and `resolve_clause`.
+
+The choices made here are heuristic:
+
+- `src/syntax/roles.rs:classify` (`:18`) decides predicate/adverbial/unknown
+  from the **set** of readings. It does not have a probability.
+- `choose_predicate` picks the first likely finite predicate, then a weak one,
+  then an infinitive, then any predicate.
+- `resolve_clause` chooses subject, object, complement and modifiers with
+  ordered heuristics (`nominal_has_case`, coordination, numeral complements,
+  adposition phrases). It reads **all** readings, not a top-1.
+- `TokenSyntax.lemma` is a single chosen lemma. Alternatives remain in
+  `lemmas` and `readings`, but a rule that only looks at `lemma` sees one
+  answer.
+
+This is the seam a neural model should influence. It should not write a new
+parser; it should make the existing heuristic selectors better informed.
+
+### 1.5 Grammar and style checkers
+
+`syntax_check` (`src/syntax_check/mod.rs`) consumes `SyntaxAnalysis`:
+
+- `check_analysis` (`:67`) runs agreement, connegative, numeral, punctuation,
+  rection, object-case and argument rules.
+- Rules read `TokenSyntax.readings`, `case`, `role`, `clause`, `head`,
+  `predicate`, `subject`, `object`, `complement`, and the token spans.
+- `sentence_cache::check` (`src/syntax_check/sentence_cache.rs:88`) re-analyses
+  only changed sentences. It runs `analyze_morphology` on the sentence, then
+  `analyze_syntax_with_contexts`, then the sentence-local rules.
+
+`style_check` (`src/style_check/mod.rs`) consumes `MorphologyAnalysis`
+directly:
+
+- `check_tokens_with_morphology` (`:72`) runs phrase tables, repetition and
+  length.
+- Repetition uses `WordInfo.readings` for content-word filtering and
+  `WordInfo.lemma` for the repeated lemma (`src/style_check/repetition.rs:90`).
+- Style never builds clauses or roles.
+
+The key consequence: a model that changes only `TokenSyntax` will affect
+grammar but not style. A model that mutates `WordInfo.lemma` would affect style
+but poison the surface cache. The correct design is a shared per-analysis
+decision layer that both layers may consume, with style staying on the old
+heuristic until the model is evaluated.
+
+### 1.6 Combined pass and WASM
+
+`src/check.rs`:
+
+- `check_all_with_cache` (`:33`) runs `analyze_morphology` once and then
+  `check_all_tokens`.
+- `check_all_tokens` (`:40`) runs `analyze_syntax`, `check_analysis`, and
+  `style_check::check_tokens_with_morphology` from the same morphology.
+
+WASM (`torille-wasm/src/lib.rs`):
+
+- `analyze_syntax`, `check_syntax`, `check_style`, and their `_with_state`
+  variants run stateless or through a textarea cache.
+- `check_grammar_style_with_state` (`:624`) and
+  `check_grammar_style_from_morphology` (`:555`) are the combined entry points.
+- `TextAreaState` (`torille-wasm/src/state.rs:67`) owns `syntax_cache`
+  (`MorphologyCache`) and `sentence_cache` (`SentenceCache`).
+- The Firefox morphology pool (`extensions/firefox/src/spell-worker/morphology-worker.ts`)
+  resolves disjoint surface groups through `morphology_chunk`; the owning
+  worker seeds the rows and runs syntax/style once. Chromium’s MV3 service
+  worker uses the chunked single-thread path.
+- `src/morphology/codec.rs` is the worker transport (`TMOR`, version 1). It
+  serialises the whole `WordInfo`, including every reading.
+
+The pool is surface-partitioned. It has no sentence context. A neural reranker
+cannot live in the morphology workers; it must run on the owning thread after
+the rows are merged, before syntax/style.
+
+### 1.7 Baseline
+
+The audit baseline is recorded in §13. Current relevant numbers from the
+repository:
+
+- native/wasm cold page: ~2.1–2.3 s native, ~3.0 s wasm single-thread,
+  ~1.4 s wasm with the 4-worker pool;
+- warm grammar+style rule pass: ~6.9 ms on the 1,959-word fixture;
+- wasm artifact: ~31 MB raw (roughly 3–4 MB gzipped in the shipped build);
+- syntax evaluation: 154 clean rows / 61 cases, all emitted kinds precision
+  and recall 1.00;
+- adjudicated prose seed: 381 correct words, 17 known false positives
+  (44.6 per 1,000 words, tracked as a seed, not a stable rate).
+
+## 2. Morphological reading lifecycle
+
+This is the exact path a reading takes today, and the places where a model
+could act.
+
+```
+text
+  → tokenise::tokenise
+  → analyze_morphology(tokens, MorphologyCache)
+       → MorphologyCache::resolve / resolve_deep
+            → resolve_word_fast / resolve_word_slow
+            → find_bases_for_analysis
+            → expand::form_readings / forms_of
+            → WordInfo { readings, lemmas, case, number, lemma, ... }
+       → proper-name overlay
+       → numeral-governed partitive upgrade
+  → MorphologyAnalysis { sentences, tokens: Vec<Option<Arc<WordInfo>>> }
+  → analyze_syntax_with_contexts
+       → TokenSyntax { readings, lemmas, lemma, case, role, ... }
+       → classify / resolve_clause
+  → syntax_check::check_analysis
+  → style_check::check_tokens_with_morphology
+  → diagnostics
+```
+
+### 2.1 Stage by stage
+
+| stage | data | what is decided | what is preserved |
+|---|---|---|---|
+| tokenise | `Token` | word vs separator, byte spans | exact surface, case |
+| surface resolution | `WordInfo` | candidate readings and preferred lemma fields | all `Tags` in `readings`, all `lemmas` |
+| context upgrades | `WordInfo` | proper name, numeral partitive | readings are replaced only by a deeper resolved `WordInfo`; the token-level entry is updated |
+| syntax | `TokenSyntax` | role, clause, one chosen lemma, licensed case | `readings` and `lemmas` copied; chosen lemma is one of them |
+| grammar | `SyntaxDiagnostic` | correctness findings | diagnostics, corrections, spans |
+| style | `StyleDiagnostic` | optional style findings | no change to morphology |
+
+### 2.2 Where alternative readings are already preserved
+
+- `WordInfo.readings` keeps every `Tags` reading the resolver produced.
+- `WordInfo.lemmas` keeps every base lemma that produced a reading.
+- `TokenSyntax.readings` and `TokenSyntax.lemmas` keep the alternatives after
+  syntax has chosen a role.
+- `Form.readings` keeps multiple readings for a generated surface before the
+  morphology reader collapses them into `WordInfo`.
+- `Tags::matches` and `Form::readings_matching` exist for callers that have
+  context.
+
+### 2.3 Where alternatives are currently collapsed or lost
+
+These are the changes any model work must account for.
+
+1. **`WordInfo.readings` stores only `Tags`.** `expand::form_readings` returns
+   `Vec<Tags>` (`src/expand/mod.rs:601`); the `Confidence` and source lemma on
+   the underlying `Form` are not retained per reading. A model that wants
+   “this reading came from a `Repaired` form” or “this reading came from lemma
+   X” cannot see it today.
+2. **`WordInfo.lemma` / `verb_lemma` / `nominal_lemma` are singletons.** They
+   are preferences, not alternatives. `TokenSyntax.lemma` is also one string.
+   A model must not be asked to “pick the lemma” by overwriting these without a
+   preserved candidate list.
+3. **`WordInfo.case` / `number` are agreed values.** They are `None` when the
+   readings disagree (`fill_case_number`, `:1228`). A candidate scorer must
+   read the individual `Tags`, not the agreed summary.
+4. **`add_reading` subsumes readings.** `add_reading` (`src/tags.rs:36`)
+   removes a reading subsumed by a more specific one. This is correct for the
+   current consumers, but it means candidate identity is not stable across
+   merges unless the surviving reading is given a stable index.
+5. **`agreed` / `Tags::unite` collapse dimensions.** They are for display and
+   indexing; a model must use the individual readings.
+6. **`MorphologyCache` is surface-keyed and shared.** Any context-dependent
+   score or preferred reading stored in `WordInfo` would leak from one
+   occurrence to another. This is the single most important reason for a
+   sidecar decision table.
+7. **`TokenSyntax` has public fields.** Adding `reading_scores` or
+   `preferred_reading` directly is a public API break for callers that build
+   the struct literally. Prefer a sidecar/accessor or `#[non_exhaustive]` when
+   the time comes.
+8. **`MorphologyAnalysis` has public fields.** Adding a decisions field is also
+   a public API break. Return a separate `Disambiguation` object, or add a
+   constructor/accessor rather than a public field in the first version.
+9. **`morphology::codec` version 1.** If per-reading source/confidence is added
+   to `WordInfo`, the worker transport must bump `VERSION` and encode the new
+   fields; otherwise pool workers and the owning thread disagree about the
+   candidate representation.
+10. **`sentence_cache` caches diagnostics.** If a model changes a sentence’s
+    decisions, the cache key must include the model identity/version (and the
+    feature flag state). A model update must invalidate the sentence cache.
+11. **Correction paths re-run base searches.** `rection::correction_bases`
+    (`src/syntax_check/rection.rs`) and the object-case ambiguity helper can
+    look up alternative lemmas again. A model’s preferred reading and the
+    correction’s candidate base must come from the same candidate list, or the
+    diagnostic and the correction can disagree.
+12. **Style uses `WordInfo.lemma`.** It will not see a `TokenSyntax`-only
+    decision. Either pass the sidecar to style later or keep style on the
+    heuristic path for v1.
+
+### 2.4 Reading identity
+
+A model output must identify a candidate by **token index + reading index**,
+not by surface or lemma. The reading vector can contain different readings for
+different occurrences of the same surface? No: the current `WordInfo` is shared
+per surface, so the reading vector is identical for the same lowercased
+surface in one analysis. But the model’s **choice** is per occurrence. The
+decision table must be token-indexed.
+
+If candidate provenance is added, the stable key should be:
+
+```text
+(token_index, reading_index)
+```
+
+and never `(surface, lemma)`, because a lemma can have multiple readings and a
+surface can be a form of several lemmas.
+
+## 3. Candidate integration points
+
+### 3.1 Rejected points
+
+| point | why not |
+|---|---|
+| Inside `MorphologyCache::resolve` | Cache key is the lowercased surface; no sentence context. A decision would be reused for every occurrence and poison later analyses. |
+| Inside `resolve_word_fast` / `resolve_word_slow` | These produce candidates, not context choices. Adding context there duplicates the syntax stage and breaks the surface cache. |
+| Inside `analyze_morphology` per token | The whole sentence is available, but `WordInfo` is still cached per surface; writing scores there is the same poisoning problem. A separate decision pass is safer. |
+| Inside `syntax_check` rules | Each rule would need its own model call or its own selection logic. That is exactly the “second parser” the architecture is trying to avoid. |
+| After diagnostics | Too late: roles, cases and corrections have already been chosen. |
+| In the morphology pool workers | Workers see surface groups, not sentences. They cannot score context. |
+
+### 3.2 Recommended point
+
+**After `analyze_morphology` and before `analyze_syntax` /
+`style_check::check_tokens_with_morphology`.**
+
+That pass has:
+
+- the full token stream and sentence spans;
+- the complete `MorphologyAnalysis`;
+- every candidate reading, without needing to search the lexicon again;
+- no clauses or roles yet, so it cannot duplicate the parser;
+- a natural place to expose a sidecar that syntax and style may consume.
+
+Call sites to wire:
+
+| call site | current code | change |
+|---|---|---|
+| `check_all_with_cache` / `check_all_tokens` | `src/check.rs:33–50` | `analyze_morphology` → `disambiguate` → `analyze_syntax`/style |
+| `syntax::analyze` / `analyze_with_cache` | `src/syntax/mod.rs:190–210` | add an internal `analyze_syntax_with_decisions` or an optional decision parameter |
+| `syntax_check::check_with_cache` | `src/syntax_check/mod.rs:53–62` | consume the decided path |
+| `SentenceCache::check` | `src/syntax_check/sentence_cache.rs:88–150` | disambiguate the sentence slice before `analyze_syntax_with_contexts` |
+| `style_check::check_with_cache` | `src/style_check/mod.rs:56–80` | optional: pass decisions to repetition; otherwise keep heuristic |
+| wasm `check_grammar_style_with_state` | `torille-wasm/src/lib.rs:624` | run model on owner after morphology, before sentence cache |
+| wasm `check_grammar_style_from_morphology` | `torille-wasm/src/lib.rs:555` | run after seeding pooled rows |
+| wasm `analyze_syntax_with_state` / `check_syntax_with_state` | `:234`, `:488` | route through the decided analysis |
+| wasm `analyze_syntax` / `check_syntax` | `:222`, `:431` | stateless path uses the same internal decided analysis |
+| Firefox morphology workers | `morphology-worker.ts` | no model; only surface rows |
+
+### 3.3 Proposed seam type
+
+Keep `MorphologyAnalysis` unchanged. Add a new, per-analysis type:
+
+```rust
+pub struct Disambiguation {
+    /// One entry per input token; separators and single-candidate words are None.
+    pub decisions: Vec<Option<ReadingDecision>>,
+    pub model_version: u32,
+}
+
+pub struct ReadingDecision {
+    /// Index into WordInfo.readings. Never a new reading.
+    pub preferred: usize,
+    /// One score per reading, in the same order as WordInfo.readings.
+    pub scores: Vec<f32>,
+    /// Margin and entropy are for abstention and diagnostic confidence.
+    pub margin: f32,
+    pub entropy: f32,
+    /// True when the model declines to choose.
+    pub abstain: bool,
+}
+```
+
+`disambiguate` takes `&[Token]` and `&MorphologyAnalysis`, never `&mut
+MorphologyCache`. It may return `None` for a token with one candidate, an
+unknown word, or an empty reading set.
+
+A consumer reads `decision.preferred` only where it needs a context choice;
+all other code continues to see `WordInfo.readings`/`TokenSyntax.readings`.
+
+### 3.4 How the existing selectors use the decision
+
+Do not replace `classify` or `resolve_clause`. Add a narrow preference:
+
+- `classify`: if there is a preferred reading, prefer its part of speech for
+  the role family, but keep the full reading set for ambiguity fallback.
+- `choose_predicate`: prefer a preferred finite reading over a first-reading
+  heuristic.
+- `subject_of` / object selection: prefer a preferred nominal case when the
+  current reading-consistent helpers have more than one viable candidate.
+- `TokenSyntax.lemma`: set from the preferred reading’s lemma when the model
+  is confident; keep `lemmas` and `readings`.
+- `syntax_check` rules: unchanged, except that model confidence may lower an
+  `Error` to `Warning` or suppress when the decision is `Ambiguous`.
+
+No rule should call the model. The model is one pass, before the rules.
+
+## 4. Proposed model input/output schema
+
+### 4.1 Inputs
+
+The model is a **candidate reranker**, not a tagger. It sees the sentence and
+the candidate set for each token.
+
+Per token:
+
+| field | source | notes |
+|---|---|---|
+| `token_index` | token stream | stable for the analysis |
+| `surface` / `lower` | `Token` | casing is a signal |
+| `position`, `sentence_length` | token/sentence pass | relative position |
+| `prev_surface`, `next_surface` | neighbours | local context |
+| `capitalized` | `Token` | name signal |
+| `candidate_count` | `WordInfo.readings.len()` | skip K<=1 |
+| `depth` | `WordInfo.depth` | direct vs compound vs proper name |
+
+Per candidate:
+
+| field | source | notes |
+|---|---|---|
+| `reading_index` | position in `WordInfo.readings` | output label |
+| `lemma` | source or `WordInfo.lemmas` | needs per-reading lemma provenance |
+| `part_of_speech` | `Tags` | categorical |
+| `case`, `number` | `Tags` | categorical |
+| `person`, `tense`, `mood`, `voice` | `Tags` | categorical |
+| `polarity` | `Tags` | categorical |
+| `possessive`, `clitic` | `Tags` | categorical |
+| `source_confidence` | `Form.confidence` | **needs to be retained** |
+| `source_lemma` | `SourcedForm.lemma` | **needs to be retained** |
+| `source_depth` | resolver depth | token-level today |
+
+### 4.2 Tensor shape
+
+A compact first model can use:
+
+```text
+token_ids        [batch, seq_len]
+char_ids         [batch, seq_len, max_char]
+token_features   [batch, seq_len, F_token]
+candidate_feats  [batch, seq_len, max_candidates, F_candidate]
+candidate_mask   [batch, seq_len, max_candidates]
+```
+
+Output:
+
+```text
+logits           [batch, seq_len, max_candidates]
+scores           [batch, seq_len, max_candidates]  # softmax over real candidates
+preferred        [batch, seq_len]                  # argmax or -1 for abstain
+margin           [batch, seq_len]
+entropy          [batch, seq_len]
+```
+
+The model must emit `-1`/`None` for tokens with no candidate or where it
+abstains. It must never emit a candidate that is not in the input list.
+
+### 4.3 JSON shape for fixtures and debugging
+
+```json
+{
+  "tokens": [
+    {
+      "surface": "tuli",
+      "lower": "tuli",
+      "sentence": 0,
+      "position": 3,
+      "candidates": [
+        {
+          "reading_index": 0,
+          "lemma": "tuli",
+          "pos": "noun",
+          "case": "nominative",
+          "number": "singular"
+        },
+        {
+          "reading_index": 1,
+          "lemma": "tulla",
+          "pos": "verb",
+          "mood": "indicative",
+          "tense": "past",
+          "voice": "active",
+          "polarity": "affirmative"
+        }
+      ]
+    }
+  ],
+  "decision": {
+    "model": "m0-mlp",
+    "version": 1,
+    "preferred": 1,
+    "scores": [0.12, 0.88],
+    "margin": 0.76,
+    "entropy": 0.21
+  }
+}
+```
+
+### 4.4 Calibration and abstention
+
+The model should output calibrated probabilities with temperature scaling on a
+held-out dev set. The consumer uses:
+
+- `preferred` when the margin is above a threshold and the model is not
+  out-of-domain;
+- `abstain` when entropy is high, candidate coverage is low, the surface is
+  unknown, or the model version is unsupported;
+- a `Warning` rather than an `Error` when the model preference conflicts with a
+  heuristic but the margin is below the high-confidence threshold.
+
+The threshold is a product decision; it must be frozen with the model and
+tested against the adjudicated prose corpus.
+
+## 5. Dataset and annotation strategy
+
+### 5.1 Candidate corpora
+
+Sizes and licences below are from the public treebank/resource pages checked
+for this audit. “Independent” means not produced by torille and not simply a
+copy of its outputs.
+
+| corpus | size | annotation | licence | use | caveats |
+|---|---:|---|---|---|---|
+| UD Finnish-TDT | ~202k tokens, ~15k sentences | syntax manual; morphology disambiguated from OMorfi + ML, converted to UD | CC BY-SA 4.0 | train/dev/test | Morphology is not purely manual; share-alike review needed for model weights |
+| UD Finnish-FTB | ~159k words, ~18.7k sentences | manual native morphology/syntax, converted to UD | CC BY 4.0 | train/dev/test | Grammar-example domain; best permissive licence |
+| UD Finnish-OOD | ~19.4k tokens, 2,122 sentences | manual native UD | CC BY-SA 4.0 | test only | Out-of-domain web/clinical/social/poetry; not for training |
+| UD Finnish-PUD | ~15.8k tokens, 1,000 sentences | manual native UD | CC BY-SA 4.0 | test only | Parallel news/wiki test set |
+| ArkiSyn | ~279k word tokens, ~44.6k sentences | manual morphosyntax | CC BY-ND 4.0 | evaluation only, with legal review | No derivatives; contains personal data; do not train |
+| Finnish Dialect Corpus | ~1.08M words, ~70k sentences | manual morphosyntax | CC BY-ND 4.0 | dialect evaluation only, with permission | No derivatives; personal data; not standard Finnish |
+| DMA | ~404k dialect clauses | morphologically coded dialect | CC BY 4.0 | robustness/evaluation | Dialect, clause-level, not UD; mapping needed |
+| LAS2 | ~288k tokens, ~22k sentences | manual morphosyntax | CLARIN RES + NC + no redistribution | not for shipping | Research plan, personal data, non-commercial |
+| Finnish Internet Parsebank | ~6.2B tokens | automatic morphology/syntax | research distribution; check terms | unlabelled/weak supervision only | Not gold; underlying text copyright; research-only |
+| UniMorph Finnish | ~2.49M forms, 57k lemmas | lexicon paradigms | Creative Commons (check exact version) | candidate coverage, lemma embeddings | No sentence context |
+| Hutmegs | ~1.4M Finnish words | morphological segmentation gold | FINTWOL component is commercial | do not use | Not free for a shipped model |
+| Gutenberg / Wikipedia | large | unlabelled | public domain / CC BY-SA | unlabelled pretraining | No gold reading labels |
+
+### 5.2 Independence and label quality
+
+- **UD Finnish-FTB** is the cleanest starting point: manual native annotation,
+  permissive CC BY 4.0, but its domain is grammar examples rather than general
+  prose.
+- **UD Finnish-TDT** is the largest broad-coverage resource, but the TDT paper
+  describes the morphological layer as automatically disambiguated from
+  OMorfi using syntactic features, not fully manually annotated morphology.
+  It is independent of torille but not independent of OMorfi. Treat it as
+  silver-plus for fine-grained readings, not as a pure manual gold.
+- **UD Finnish-OOD** and **PUD** are manual native UD; keep them as frozen
+  external tests. Do not train on them.
+- **ArkiSyn**, **Dialect Corpus**, **LAS2** are manually annotated but their
+  licences (ND/RES/NC) make them unsuitable for model training or shipping
+  without an explicit agreement. They can inform a manually adjudicated
+  evaluation set only after legal review.
+- **Parsebank** is automatically annotated and research-distributed. It is not
+  a gold standard and should not be the first training source.
+- **Hutmegs** is segmentation, not contextual disambiguation, and the Finnish
+  component is commercial. Exclude.
+
+### 5.3 Mapping UD to torille `Tags`
+
+A candidate label must be matched against torille’s candidate set. The mapping
+must be explicit and versioned:
+
+| UD | torille |
+|---|---|
+| `UPOS=NOUN/ADJ/PRON/NUM/VERB/AUX/ADV/ADP/...` | `PartOfSpeech` |
+| `Case=Nom/Gen/Par/Ill/Ine/Ela/Ade/Abl/All/Ess/Tra/Abe/Com/Ins/Acc` | `Case` |
+| `Number=Sing/Plur` | `Number` |
+| `Person=1/2/3` | `Person`; `Person=0` -> `None` |
+| `Tense=Pres/Past` | `Tense` |
+| `Mood=Ind/Cnd/Imp/Pot` | `Mood` |
+| `Voice=Act/Pass` | `Voice` |
+| `Polarity=Neg` / `Connegative=Yes` | `Polarity::Negative` |
+| `Poss` / `Number[psor]` / `Person[psor]` | `Possessive` |
+| `Clitic` | `Clitic` |
+| `VerbForm=Fin/Inf/Part` | mood/tense/infinitive mapping; not one-to-one |
+| `Degree`, `NumType`, `PronType`, `Derivation`, `PartForm`, `InfForm` | not represented in `Tags` today |
+
+The mapper must be a separate, tested module. A relaxed match on the fields
+that `Tags` actually stores is safer than inventing dimensions. Record every
+unmatched gold reading as a **candidate-coverage miss**, not as a model error.
+
+### 5.4 Candidate coverage harness
+
+Before training:
+
+1. Run torille morphology on the UD sentence.
+2. Map the UD gold reading to the `Tags` subset above.
+3. Find candidates in `WordInfo.readings` that match. If none, record:
+   `surface`, `gold tags`, `candidate tags`, `depth`, `sentence id`.
+4. Report coverage overall and by POS/case/depth.
+5. Fix only clear candidate-generation gaps in the engine; do not add
+   gold-only candidates to the model input.
+
+This harness is the first dataset milestone and can be built without any
+model.
+
+### 5.5 Training and test splits
+
+- Train on UD Finnish-FTB train (and optionally TDT train after licence review).
+- Tune on FTB dev and a frozen manually adjudicated hard set.
+- Test on FTB test, TDT dev/test if used, Finnish-OOD, Finnish-PUD, and the
+  existing adjudicated prose corpus.
+- Split by document, not sentence, to avoid near-duplicate leakage.
+- Keep a final **never-touched** test set for the first release decision.
+
+### 5.6 Manual hard-ambiguity set
+
+UD only gives one gold reading, not a ranked candidate set. Add a small manual
+set focused on the ambiguities that actually break torille:
+
+- `tuli` (noun vs past verb), `kirjaa` (noun partitive vs verb), `sen`/`ne`
+  (pronoun vs adverb), `joka` (determiner vs relative), `ilman`/`ennen`
+  (preposition vs noun/adverb), `kuusi` (numeral vs spruce), `kaksi`/`kaksi`
+  numeral government, `hän`/`hänen`, `ole`/`olen`/`on`, `mene`/`menen`.
+- 500–1,000 tokens is enough for the first evaluation; annotate the **preferred
+  reading index**, a confidence/acceptability judgement, and an `abstain`
+  option.
+- Double-annotate a subset; record agreement. If annotators cannot agree, the
+  model should abstain, not guess.
+
+### 5.7 Licence strategy
+
+The engine is MIT/Apache-2.0 and the repository carefully separates GPL
+oracle tools. A trained model adds a new licensing question:
+
+- CC BY 4.0 (FTB) requires attribution; model cards/weights must carry it.
+- CC BY-SA 4.0 (TDT/OOD/PUD) may make model weights an adapted work; obtain a
+  legal review before shipping a model trained on it. Safer first release:
+  train on FTB only, evaluate on TDT/OOD/PUD.
+- CC BY-ND (ArkiSyn, Dialect Corpus) prohibits sharing adapted material; do
+  not train or ship a derivative without permission.
+- CLARIN RES/NC (LAS2) prohibits redistribution and commercial use; do not use
+  for a shipped model.
+- Research-only Parsebank is not a commercial training source.
+- Do not train on OMorfi/Voikko/Kotus-generated labels; that would recreate
+  the existing oracle and undermine independent evaluation.
+
+The model artifact should live outside `maps/` unless it is treated like a
+published map. A `models/` directory with a model card, source corpus list,
+licence notice, checksum, and version is the clean shape. If the model is
+derived from CC BY-SA data, its licence must be stated separately from the
+engine’s MIT/Apache licence.
+
+## 6. Architecture comparison
+
+| architecture | parameters (rough) | context | data need | native latency | wasm | size | risk |
+|---|---:|---|---:|---:|---|---:|---|
+| current heuristic | 0 | set of readings | 0 | baseline | baseline | 0 | no probabilities |
+| candidate MLP (M0) | 10k–100k | local window + candidate features | small | <1 ms / 1k tokens | negligible | <100 KB | weak long context |
+| BiLSTM + candidate scorer | 0.3–2M | full sentence, sequential | 100k–1M tokens | 1–5 ms / sentence | 5–20 ms / sentence | 0.3–2 MB int8 | sequential, data-hungry |
+| compact Transformer (2–4 layers, d=128) | 0.5–4M | full sentence, parallel | 200k–2M tokens | 1–5 ms / sentence | 5–25 ms / sentence | 0.5–4 MB int8 | more parameters, attention memory |
+| char CNN + candidate scorer | 0.2–1M | local + morphology | 100k+ | 1–3 ms / sentence | 5–15 ms | 0.2–1 MB | weaker syntax |
+| fine-tuned FinBERT/base | 100M+ | full sentence | huge | 10–50 ms/ sentence native | not viable | 100–400 MB | size, latency, licence |
+
+### 6.1 BiLSTM
+
+Strengths:
+
+- data-efficient for a small treebank;
+- natural fit for a sequence of tokens and a per-token candidate set;
+- small parameter count at 128 hidden units;
+- easy to export as a fixed graph or implement manually.
+
+Weaknesses:
+
+- sequential inference; wasm per-step overhead;
+- long sentences need truncation/windowing;
+- less parallel than a Transformer.
+
+Feasibility: **high**. A 1-layer bidirectional LSTM with word/char embeddings
+and a candidate MLP is a realistic first neural model. It fits the 1–2 MB
+budget and is trainable on FTB/TDT.
+
+### 6.2 Compact Transformer
+
+Strengths:
+
+- parallel over tokens; good matrix-op utilization in Rust/wasm;
+- better long-distance context in principle;
+- easy to export through ONNX/tract/rten;
+- can share a tokenizer with the existing token stream (no new tokenizer
+  needed for word-level features; char features can be a small CNN).
+
+Weaknesses:
+
+- more parameters for the same data;
+- attention memory and shape handling in wasm;
+- overfitting on a 160k–200k-token treebank unless regularized.
+
+Feasibility: **high**, but it is the challenger, not the first model. A
+2-layer, 4-head, d=128 model is small enough for wasm. Compare it to the BiLSTM
+on the same frozen set; do not choose by architecture preference.
+
+### 6.3 Why not a full tagger or FinBERT
+
+A full tagger over a fixed tagset is the wrong abstraction: torille’s
+candidates are lexicon-specific and sparse, and a fixed tagset would discard
+candidate identity. Fine-tuned FinBERT is far outside the wasm size/latency
+budget and would require a separate tokenizer and runtime. A candidate
+reranker is the only architecture that preserves the existing parser and the
+alternative readings.
+
+## 7. Rust/WASM runtime options
+
+| runtime | wasm | ONNX | native | binary cost | effort | recommendation |
+|---|---|---|---|---|---|---|
+| hand-written fixed weights | yes | no | yes | smallest | medium | **M0 first** |
+| `tract` | yes (pure Rust, browser/WASI) | yes | yes | moderate; loaders can be trimmed | medium | **recommended M1** |
+| `rten` | yes (wasm SIMD; `wasm_api`) | yes (`.onnx`/`.rten`) | yes | moderate | low–medium | strong alternative for Transformer |
+| `candle` | yes (browser examples) | partial / own model code | yes | larger | medium | possible, not first |
+| `burn` + burn-onnx | yes (ndarray/wgpu/flex) | yes, codegen | yes | larger build | medium–high | possible if typed model code is preferred |
+| `ort` / ONNX Runtime | native only; `ort-web` is JS | yes | best | large C++ | high for wasm | not for the embedded bundle |
+| `ort-tract` / `ort-candle` | via alternative backend | yes | yes | experimental | high | not first |
+
+### 7.1 Recommended runtime path
+
+1. **M0:** a small MLP with fixed f32/int8 weights implemented directly in
+   Rust. No inference dependency, no model loader, no wasm size surprise.
+2. **M1:** export the BiLSTM/Transformer to ONNX and use `tract` or `rten`.
+   Both are pure Rust and wasm-capable; `tract` has the broader loader story,
+   `rten` is a simpler small-model runtime with wasm SIMD.
+3. **Do not** start with `ort`: it links a C++ runtime and its wasm path is a
+   separate JS/ONNX Runtime Web stack, which does not fit torille’s
+   self-contained Rust wasm worker.
+4. **Do not** start with Candle/Burn unless the team wants their tensor APIs
+   in the engine. They are viable but add build weight for a 1–2 MB model.
+
+### 7.2 Packaging and workers
+
+The current wasm module is ~31 MB raw. The extension instantiates it in the
+primary spell worker and in up to four morphology workers. If the model is
+embedded in that module, every worker carries it.
+
+Options:
+
+- **A. Embed in the main wasm** — simplest loader; multiplies model memory by
+  the number of worker instances. Acceptable only for a very small M0.
+- **B. Separate `neural` wasm module** — only the owning grammar/style worker
+  instantiates it; morphology workers stay small. Requires a second loader and
+  a wasm-bindgen boundary, but is the clean long-term shape.
+- **C. Native-only first** — run M0/M1 on native tools and the demo, not in the
+  extension; defer the wasm packaging decision until the accuracy is proven.
+
+Recommendation: **C for M0, B for M1 if the model survives evaluation.**
+Do not put the model in the morphology pool workers.
+
+### 7.3 Model loading and versioning
+
+- Model bytes should be content-addressed (hash) and versioned.
+- `TextAreaState` or the model owner should hold the loaded plan once.
+- `SentenceCache` keys or state generation must include the model version.
+- A missing/corrupt model must fall back to the heuristic path, not fail the
+  checker.
+- The model card must name the training corpus, licence, version, and
+  evaluation set.
+
+## 8. Performance considerations
+
+### 8.1 Budget
+
+The checker is on demand, not in the keystroke path. The model can be
+noticeable on the first check but should not dominate it.
+
+| workload | current | model budget |
+|---|---:|---:|
+| 2,000-word page, cold wasm pool | ~1.4 s | +≤250 ms |
+| 2,000-word page, warm rules | ~6.9 ms | +≤10 ms |
+| one edited sentence | 2.6–3.7 ms | +≤5 ms |
+| 96-word page | 1.8 ms | +≤2 ms |
+
+These are targets, not measurements. The model must be benchmarked on the
+committed `tests/fixtures/perf/page-2000.txt`.
+
+### 8.2 Cost control
+
+- **Only run on ambiguous tokens.** K<=1 is the majority; skip them entirely.
+- **Only disambiguate sentences with a minimum ambiguity density.** A sentence
+  with one ambiguous token out of 20 may still need it, but batch and cap.
+- **Truncate/window to 128 tokens.** Long sentences can be split with
+  overlap; the syntax layer already has sentence spans.
+- **Use the sentence cache.** An unchanged sentence does not rerun the model.
+  A changed sentence reruns only that sentence.
+- **Batch by sentence.** One plan run per sentence, padded to a fixed max
+  length; avoid per-token calls.
+- **Quantize.** int8 weights, f32 activations; measure top-1 loss.
+- **Avoid dynamic allocations** in the hot loop; reuse buffers and masks.
+- **Use wasm SIMD.** Compile with SIMD128 and provide a scalar fallback.
+
+### 8.3 Memory
+
+A 1–2 MB model is small, but wasm linear memory and four worker instances are
+not. The model should live in the owner only. If embedded in the main module,
+measure the worker-pool memory before shipping. A separate module is the safer
+default for a non-trivial model.
+
+### 8.4 Cache interaction
+
+- `MorphologyCache` remains surface-only.
+- `Disambiguation` is per analysis; do not cache it in `MorphologyCache`.
+- `SentenceCache` caches diagnostics, not decisions; decisions are recomputed
+  for a changed sentence or reconstructed from a cached sentence.
+- If the model version changes, clear the sentence cache and the analysis
+  state.
+
+## 9. Risks and fallback strategy
+
+| risk | impact | mitigation |
+|---|---|---|
+| CC BY-SA / ND / RES licence conflict | cannot ship | FTB-only first; legal review; model card; separate model licence |
+| Gold reading not in candidate set | model cannot learn; silent bias | candidate-coverage harness; report misses; fix engine gaps separately |
+| Surface-cache poisoning | context bleed across occurrences | sidecar `Disambiguation`; never write scores into `WordInfo` |
+| Public API break | downstream consumers | sidecar/accessor; `#[non_exhaustive]`; do not add public fields in v1 |
+| Model overconfidence | wrong grammar `Error` | calibration, margin threshold, `Error` only above high confidence |
+| Domain shift | poor prose performance | OOD/PUD tests; adjudicated prose; no training on OOD/PUD |
+| Wasm size/latency | slow first check | owner-only module; int8; ambiguity-only; sentence cache |
+| Worker multiplication | memory | separate module; owner only; measure pool |
+| Sentence cache stale | wrong diagnostics after model change | model version in cache key/state generation |
+| Training on oracle outputs | inflated metrics | independent UD corpora only; no Omorfi/Voikko/Kotus labels |
+| Annotation disagreement | noisy labels | double annotation; `abstain`; report agreement |
+| Model drift vs engine changes | candidates change | versioned candidate schema; retrain/evaluate after morphology changes |
+
+### 9.1 Fallback ladder
+
+1. **Feature flag off** (default): byte-for-byte current behaviour.
+2. **Model unavailable / version mismatch:** current heuristic path.
+3. **No candidate or K<=1:** current heuristic path.
+4. **Low margin / high entropy:** use the heuristic; if the model is
+   consulted, suppress rather than emit an `Error`.
+5. **Unknown word / depth Unknown:** heuristic path.
+6. **Model crash or load failure:** log once, disable the model for the
+   session, keep the checker working.
+
+The model is an advisor, not a gatekeeper. It may change which reading the
+syntax layer prefers; it may not remove a reading or a diagnostic rule’s
+evidence.
+
+## 10. Phased implementation proposal
+
+### Phase 0 — audit and baseline (this document)
+
+- architecture and reading-lifecycle audit;
+- corpus/licence survey;
+- runtime survey;
+- baseline tests recorded.
+
+**Exit:** this document reviewed; no production behaviour changed.
+
+### Phase 1 — data and candidate-coverage harness
+
+- UD reader and `Tags` mapper;
+- run torille morphology on FTB/TDT/OOD/PUD;
+- report candidate coverage by corpus, POS, case, depth;
+- build the manual hard-ambiguity set (500–1,000 tokens);
+- freeze splits and a test set.
+
+**Exit:** candidate coverage is known; no model yet.
+
+### Phase 2 — integration seam, no model
+
+- add `Disambiguation`/`ReadingDecision` types;
+- add `disambiguate` with a no-op/heuristic implementation;
+- thread the sidecar through `analyze_syntax_with_contexts`,
+  `SentenceCache`, and the wasm owner path;
+- keep feature flag off; exact-output tests must be unchanged.
+
+**Exit:** the sidecar is wired without changing a single diagnostic.
+
+### Phase 3 — M0 feature MLP
+
+- candidate features + local context;
+- one hidden layer (32–64 units); fixed weights in Rust;
+- train offline on FTB (and TDT only after licence review);
+- evaluate on frozen hard set, OOD/PUD, prose corpus;
+- run only on ambiguous tokens; measure latency and size;
+- feature flag on in tests, off by default in shipping.
+
+**Exit:** top-1 improvement over the heuristic on the frozen set; no clean
+prose regression; no public API change; model <100 KB.
+
+### Phase 4 — M1 BiLSTM / compact Transformer
+
+- 1-layer BiLSTM (128 hidden) or 2-layer Transformer (d=128, 4 heads);
+- word/char embeddings + candidate scorer;
+- export ONNX; compare `tract` and `rten`;
+- int8 quantization; calibrate; benchmark native and wasm;
+- choose one architecture on measured accuracy/latency, not preference.
+
+**Exit:** a model that is better than M0 by a meaningful margin and fits the
+budget; otherwise keep M0 or stop.
+
+### Phase 5 — WASM packaging and rollout
+
+- owner-only module or feature-gated build;
+- model version in sentence-cache key;
+- options/UI flag and fallback telemetry;
+- extension/demo e2e; memory measurement;
+- staged rollout with a kill switch.
+
+**Exit:** cold/warm budgets met; no regression on the prose corpus; rollback
+verified.
+
+### Phase 6 — maintenance
+
+- retrain on new adjudicated data;
+- review candidate coverage after morphology changes;
+- keep a frozen test set;
+- publish model card/licence with each version.
+
+## 11. Architectural recommendation
+
+**Integrate at the morphology→syntax boundary with a per-analysis sidecar.**
+
+- Call `disambiguate(tokens, &MorphologyAnalysis)` once after
+  `analyze_morphology`.
+- Store `ReadingDecision` per token, not in `WordInfo`.
+- Keep `WordInfo.readings`, `TokenSyntax.readings`, `TokenSyntax.lemmas` and
+  all existing rules intact.
+- Let `classify`, `choose_predicate`, subject/object selection and
+  `TokenSyntax.lemma` consult `preferred` only when the model is confident.
+- Keep `style_check` on the heuristic lemma for v1; pass the sidecar later
+  only after measuring the divergence.
+
+**Model:** start with the M0 candidate MLP, then compare a 1-layer BiLSTM with
+a 2-layer compact Transformer on the same frozen set. Do not start with a
+full tagger or FinBERT.
+
+**Runtime:** fixed-weight Rust for M0; `tract` or `rten` for M1; owner-only
+wasm module for M1. Avoid ONNX Runtime/Candle/Burn for the first milestone.
+
+**Data:** FTB (CC BY 4.0) first; TDT (CC BY-SA 4.0) only after licence review;
+OOD/PUD as frozen tests; ArkiSyn/Dialect/LAS2/Parsebank not for training or
+shipping without explicit permission. Never train on Omorfi/Voikko/torille
+outputs.
+
+## 12. Smallest viable first implementation milestone
+
+**M0 — a candidate-preference MLP behind a flag, with no wasm behaviour
+change.**
+
+Deliverables:
+
+1. A UD→`Tags` mapper and candidate-coverage report on FTB dev/train.
+2. A frozen 500-token hard-ambiguity set with adjudicated preferred readings.
+3. A `Disambiguation`/`ReadingDecision` sidecar and a no-op `disambiguate`
+   pass wired through `check_all_with_cache`, `SentenceCache`, and the wasm
+   owner path. With the flag off, diagnostics must be byte-identical.
+4. A one-hidden-layer MLP (candidate features + local context) trained
+   offline, exported as fixed weights, and run in Rust natively.
+5. Evaluation: top-1 candidate accuracy on ambiguous tokens vs the current
+   heuristic, candidate coverage, latency on 2,000 words, model size, and
+   the existing clean-prose gate.
+6. A model card with corpus/licence/version.
+
+Exit criteria:
+
+- no diagnostic change with the model disabled;
+- no `Error` regression on the adjudicated clean prose;
+- measured top-1 improvement on the frozen hard set;
+- model <100 KB, native inference <1 ms per 1,000 tokens;
+- every alternative reading still present in `WordInfo`/`TokenSyntax`;
+- a clear decision to proceed to BiLSTM/Transformer or stop.
+
+This milestone is deliberately not “train a neural parser”. It proves the
+seam, the labels, the candidate coverage and the evaluation before any wasm
+size or runtime risk is taken.
+
+## 13. Baseline tests recorded for this audit
+
+Run on 2026-11-15, before any code change for this plan.
+
+### Full engine
+
+```bash
+cargo test --release -p torille
+```
+
+Result: **1051 library tests + 142 integration/doc tests = 1193 passed,
+0 failed**. Integration groups: candidate generation 4, catalogue 26,
+hyphenation 9, style_check 16, style_eval 2, syntax_ambiguity 1, syntax_check
+43, syntax_corpus 34, syntax_eval 2, syntax_prose 3, wiktionary 1, doctest 1.
+
+### Morphology
+
+```bash
+cargo test --release -p torille --lib morphology::
+```
+
+Result: **17 passed, 0 failed** (including codec round-trip and seeded-cache
+equivalence).
+
+### Syntax/style gates
+
+```bash
+cargo test --release -p torille \
+  --test syntax_check --test syntax_eval \
+  --test syntax_ambiguity --test syntax_prose
+```
+
+Result: **43 + 2 + 1 + 3 passed, 0 failed**.
+
+Baseline contents:
+
+- syntax evaluation: **154 clean rows / 61 cases**, every emitted kind
+  precision 1.00, recall 1.00;
+- adjudicated prose seed: **15 clean rows (186 words) + 5 known
+  false-positive rows (195 words) = 381 correct words; 17 known errors;
+  44.6 per 1,000 words** (seed size, not a stable rate);
+- exact-output and ambiguity fixtures unchanged.
+
+### Workspace
+
+```bash
+cargo test --release --workspace
+```
+
+Result: **50 test binaries, 1256 tests passed, 0 failed**.
+
+### Lint
+
+```bash
+cargo clippy --workspace --all-targets -- -D warnings
+```
+
+Result: clean.
+
+### Relevant performance baseline from the repository
+
+- 1,959-word page, cold: ~2.1–2.3 s native / ~3.0 s wasm single-thread /
+  ~1.4 s wasm with 4 morphology workers;
+- 1,959-word page, warm grammar+style: ~6.9 ms;
+- 96-word page warm: ~1.8 ms;
+- wasm artifact: ~31 MB raw (roughly 3–4 MB gzipped).
+
+These are the numbers a model must not regress.
+
+## 14. References
+
+- UD Finnish-TDT: <https://universaldependencies.org/treebanks/fi_tdt/>
+- UD Finnish-FTB: <https://universaldependencies.org/treebanks/fi_ftb/>
+- UD Finnish-OOD: <https://universaldependencies.org/treebanks/fi_ood/>
+- UD Finnish-PUD: <https://universaldependencies.org/treebanks/fi_pud/>
+- UD licensing overview: <https://universaldependencies.org/contributing/licensing.html>
+- TDT paper (morphology from OMorfi + ML): <https://link.springer.com/article/10.1007/s10579-013-9244-1>
+- ArkiSyn (CC BY-ND): <https://www.utu.fi/en/university/faculty-of-humanities/school-of-languages-and-translation-studies/research/utu-digilang/arkisyn-database-of-finnish-conversational-discourse>
+- Finnish Dialect Corpus (CC BY-ND): <https://www.kielipankki.fi/lic/la-murre-eng/>
+- DMA (CC BY 4.0): <https://www.kielipankki.fi/corpora/dma/>
+- LAS2 (CLARIN RES/NC): <https://www.kielipankki.fi/lic/las2/>
+- Finnish Internet Parsebank: <https://turkunlp.org/finnish_nlp.html>
+- UniMorph: <https://unimorph.github.io/>
+- Hutmegs (commercial FINTWOL component): <http://users.ics.aalto.fi/mcreutz/papers/Creutz04tr.pdf>
+- Hoya Quecedo et al., neural disambiguation of lemma/POS: <https://aclanthology.org/2020.lrec-1.439.pdf>
+- Silfverberg & Hulden, data-driven Finnish morphology: <https://aclanthology.org/W18-0209.pdf>
+- `tract`: <https://github.com/sonos/tract>
+- `rten`: <https://docs.rs/rten/latest/rten/>
+- Candle: <https://github.com/huggingface/candle>
+- Burn ONNX import: <https://burn.dev/burn-book/import/onnx-model.html>
+- `ort` backends: <https://ort.pyke.io/backends>
+
+---
+
+*Audit only. No production code, public API, grammar rule or existing behaviour
+was changed for this document.*

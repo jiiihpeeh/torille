@@ -482,6 +482,17 @@ work is trustworthy. The current analysis is deliberately local and advisory.
 Area: `src/syntax/`, `src/syntax_list.rs`, `PLAN_SYNTAX.md` §“Remaining
 analysis refinements”.
 
+## Follow-up plan — neural reading disambiguation
+
+- [ ] **Audit the neural reranker integration.** The architecture audit is
+  [`docs/neural_disambiguation.md`](docs/neural_disambiguation.md). It proposes a
+  per-analysis `Disambiguation` sidecar between `analyze_morphology` and
+  `analyze_syntax`, preserving every existing `WordInfo.readings` candidate.
+  The smallest viable milestone is an M0 candidate-preference MLP behind a
+  feature flag, evaluated on UD Finnish-FTB and a frozen hard-ambiguity set;
+  the BiLSTM/compact-Transformer choice comes only after that baseline.
+  No model is implemented yet.
+
 ## Deliberate boundaries
 
 - Word order is not checked; Finnish order is information structure.
