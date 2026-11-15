@@ -266,6 +266,29 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     if lemma == "pommi" {
         return super::class_5::inflect(lemma, possessives);
     }
+    // Three more class-99 rows are duplicates of a real class row:
+    // `haava` (9), `kitti` (5*C) and `kuti` (5*F). The class-99 i-loan grid
+    // invented forms the real class already spells correctly. Delegate, as
+    // `viisi` and `pommi` do.
+    if lemma == "haava" {
+        return super::class_9::inflect(lemma, possessives);
+    }
+    if lemma == "kitti" {
+        return super::class_5C::inflect(lemma, possessives);
+    }
+    if lemma == "kuti" {
+        return super::class_5F::inflect(lemma, possessives);
+    }
+    // `kuulema` and `tietämä` are agent-participle nouns with the class-10
+    // `koira` shape (`kuuleman`, `kuulemaa`, `kuulemia`), not i-loans.
+    if matches!(lemma, "kuulema" | "tietämä") {
+        return super::class_10::inflect(lemma, possessives);
+    }
+    // `käsikoukku` is `käsi` + `koukku`; the class-99 marker suppressed the
+    // compound head, so inflect it as the class-1 noun its head is.
+    if lemma == "käsikoukku" {
+        return super::class_1A::inflect(lemma, possessives);
+    }
     if lemma == "tenä" {
         // Wiktionary: "Sana taipuu vain harvoissa sijoissa" -- only the
         // nominative and a few oblique/plural forms. Live Voikko confirms
@@ -337,6 +360,28 @@ mod tests {
         let pommi = inflect("pommi", true);
         assert!(pommi.iter().any(|f| f.word == "pommien" && f.plain()));
         assert!(!pommi.iter().any(|f| f.word == "pommeiden" && f.plain()));
+        // `haava` (9), `kitti` (5*C) and `kuti` (5*F) are the same shape:
+        // a class-99 marker beside a real class row.
+        let haava = inflect("haava", true);
+        assert!(haava.iter().any(|f| f.word == "haavoja" && f.plain()));
+        let kitti = inflect("kitti", true);
+        assert!(kitti.iter().any(|f| f.word == "kittejä" && f.plain()));
+        let kuti = inflect("kuti", true);
+        assert!(kuti.iter().any(|f| f.word == "kuteja" && f.plain()));
+        // Agent-participle nouns and a compound with a class-99 marker.
+        let kuulema = inflect("kuulema", true);
+        assert!(kuulema.iter().any(|f| f.word == "kuuleman" && f.plain()));
+        assert!(!kuulema.iter().any(|f| f.word == "kuulemaeiden"));
+        let tietämä = inflect("tietämä", true);
+        assert!(tietämä.iter().any(|f| f.word == "tietämän" && f.plain()));
+        assert!(!tietämä.iter().any(|f| f.word == "tietämäeiden"));
+        let käsikoukku = inflect("käsikoukku", true);
+        assert!(
+            käsikoukku
+                .iter()
+                .any(|f| f.word == "käsikoukun" && f.plain())
+        );
+        assert!(!käsikoukku.iter().any(|f| f.word == "käsikoukkueiden"));
     }
 
     #[test]

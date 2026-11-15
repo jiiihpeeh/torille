@@ -1685,3 +1685,11 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   `joe` under `7*D`. `check_word_against_omorfi.py lovi ovi joki` is 153/153
   plain. The remaining possessive missing rows are concentrated in class 7*D
   `laki`, 99 and 51 and are bare-stem gaps, not the possessive builder.
+
+- 2026-11-15: class-99 duplicate rows now delegate to the real class beside
+  them: `haava` to 9, `kitti` to 5*C, `kuti` to 5*F, `kuulema`/`tietämä` to
+  10, and `käsikoukku` to 1*A. The class-99 20-lemma sample moves from
+  confirmed 466 / missing 916 / illegal 969 to confirmed 1232 / missing 151 /
+  illegal 52. The remaining class-99 gap is `aprilli`'s possessive grid (the
+  hand-written irregular table has the bare cases only) plus a few small
+  closed-class words.
