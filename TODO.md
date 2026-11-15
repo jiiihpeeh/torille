@@ -1709,7 +1709,8 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   A class-51 head may only be a `Plain` form; repaired head plurals such as
   `isoiden`/`isoitten` were being joined into compounds. With the plain-only
   head and the Wiktionary checks, the class-51 20-lemma sample is confirmed
-  2740, missing 0, illegal 9. Those 9 are oracle omissions, not engine
-  errors: `aavameri`'s elative `aavoistameristä`, `hienosokeri`'s third
-  genitive plural `hienojensokereiden`, and `isosisar`'s `isojensisarien`
-  are all accepted by Wiktionary/Voikko.
+  2749, missing 0, illegal 0. The remaining oracle disagreements are recorded
+  in `data/oracle_exceptions.json`: `aavameri`'s elative
+  `aavoistameristä`, `hienosokeri`'s third genitive plural
+  `hienojensokereiden`, and `isosisar`'s `isojensisarien` are all accepted by
+  Wiktionary/Voikko and the oracle's expected cells are wrong.

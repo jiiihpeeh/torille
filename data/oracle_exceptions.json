@@ -418,5 +418,36 @@
       "source": "https://en.wiktionary.org/wiki/nougat",
       "note": "a consonant-final loan builds the plural instructive as i-stem + -n (gourmetin, nougatin), which is the same word as the genitive singular. Merging the two readings leaves the form with neither case tag, and the report's least-assuming candidate is the nominative cell. Both readings are correct, so the case-less form is not an invented nominative."
     }
+,
+    {
+      "id": "lemma-51-aavameri-elative",
+      "classes": ["51"],
+      "lemmas": ["aavameri"],
+      "predicate": "lemma",
+      "cell": {"case": "ELA", "number": "PL"},
+      "sample": 20,
+      "source": "https://en.wiktionary.org/wiki/aavameri",
+      "note": "Wiktionary gives the plural elative as aavoistameristä; the oracle expects the inessive aavoissamerissä for the same cell. The engine form is the recorded elative."
+    },
+    {
+      "id": "lemma-51-hienosokeri-genitive-plural",
+      "classes": ["51"],
+      "lemmas": ["hienosokeri"],
+      "predicate": "lemma",
+      "cell": {"case": "GEN", "number": "PL"},
+      "sample": 20,
+      "source": "https://en.wiktionary.org/wiki/hienosokeri",
+      "note": "Wiktionary lists hienojensokerien, hienojensokereiden and hienojensokereitten; the oracle keeps only the first two, so hienojensokereiden is an oracle omission."
+    },
+    {
+      "id": "lemma-51-isosisar-genitive-plural",
+      "classes": ["51"],
+      "lemmas": ["isosisar"],
+      "predicate": "lemma",
+      "cell": {"case": "GEN", "number": "PL"},
+      "sample": 20,
+      "source": "https://en.wiktionary.org/wiki/isosisar",
+      "note": "isosisar is iso + sisar; the modifier-inflected genitive plural isojensisarien uses the head isojen with the tail's isosisarien, and live Voikko accepts it. The oracle records only isojensisarten."
+    }
   ]
 }
