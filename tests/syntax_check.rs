@@ -25,6 +25,7 @@ fn kind(name: &str) -> DiagnosticKind {
     [
         DiagnosticKind::SubjectPredicateAgreement,
         DiagnosticKind::AttributeAgreement,
+        DiagnosticKind::PredicativeAgreement,
         DiagnosticKind::VerbRection,
         DiagnosticKind::CaseSelection,
         DiagnosticKind::ObjectCase,

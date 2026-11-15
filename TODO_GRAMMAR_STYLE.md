@@ -300,12 +300,20 @@ prose-corpus review.
 
 ### Agreement
 
-- [ ] **Predicative/complement agreement**
-  `Talot ovat punainen.`, `Talo on punaisia.` and `Lapset ovat väsynyt.` are
-  silent. `attribute_agreement` covers attributes, not a copula complement.
-  A number-only rule is safe; case is not (`Talot ovat punaisia` and
-  `Talot ovat punaiset` are both legitimate).
-  Area: `src/syntax_check/agreement.rs`; reuse `Clause.complement`.
+- [x] **Predicative adjective agreement** — landed for number.
+  `Talot ovat punainen.` and `Talo on punaisia.` now emit
+  `predicative_agreement`; `Talot ovat punaisia.`, `Talot ovat punaiset.` and
+  `Talo on punainen.` are clean. The rule is number-only and adjective-only:
+  `Talot ovat punaisia` (partitive plural) and `Talot ovat punaiset`
+  (nominative plural) are both legitimate, so case is not a correctness claim.
+  Area: `src/syntax_check/agreement.rs`; `Clause.complement`.
+
+- [ ] **Predicative noun/participle complements**
+  `Lapset ovat väsynyt.` and `He ovat opettaja.` are still silent:
+  `väsynyt` is read as a participle, and the noun complement's
+  partitive/nominative choice is semantic. Add only after the adjective rule
+  has survived the prose corpus; do not fold it into the number-only rule.
+  Area: `src/syntax_check/agreement.rs`.
 
 - [ ] **Connegative main verb after the negative auxiliary**
   `En menen.` and `Hän ei menee.` are silent, while `Minä ei tule.` already
@@ -517,3 +525,10 @@ intended/competing interpretation pair that fails.
   quiet or a known row changes, so a fix must move the row rather than leave a
   stale baseline.
   Moved adjudicated prose before the P1 rule expansion.
+- 2026-11-15: landed the first P1 rule, predicative adjective agreement.
+  `Talot ovat punainen.` and `Talo on punaisia.` emit
+  `predicative_agreement` with adjective number corrections; the clean corpus
+  adds `Talot ovat punaisia.`, `Talot ovat punaiset.`, `Talo on punainen.`,
+  `Lapset ovat väsyneitä.`, `Hän on väsynyt.` and `He ovat opettajia.`.
+  Added exact-output and ambiguity cases, updated the UI labels and the rule
+  catalogue. The prose corpus recorded no new false positives.

@@ -37,6 +37,7 @@ struct Bearer {
 pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
     let mut diagnostics = check_subject_predicate(tokens, analysis);
     diagnostics.extend(check_attributes(tokens, analysis));
+    diagnostics.extend(check_complements(tokens, analysis));
     diagnostics
 }
 
@@ -227,6 +228,110 @@ fn check_attributes(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         diagnostics.push(diagnostic);
     }
     diagnostics
+}
+
+/// A predicative adjective agrees with the subject in number.
+///
+/// `Talot ovat punainen` and `Talo on punaisia` are the common learner errors.
+/// The rule is number-only: `Talot ovat punaisia` (partitive plural) and
+/// `Talot ovat punaiset` (nominative plural) are both legitimate, so the case
+/// is not a correctness claim. Coordinated subjects, noun complements,
+/// participles, degree forms and existential clauses are skipped.
+fn check_complements(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
+    let mut diagnostics = Vec::new();
+    for clause in &analysis.clauses {
+        if clause.existential {
+            continue;
+        }
+        let Some(predicate) = clause.predicate else {
+            continue;
+        };
+        if analysis.tokens[predicate].lemma.as_deref() != Some("olla") {
+            continue;
+        }
+        let Some(complement) = clause.complement else {
+            continue;
+        };
+        let Some((complement_case, complement_number)) =
+            adjective_shape(&analysis.tokens[complement])
+        else {
+            continue;
+        };
+        if crate::expand::degree_base(&analysis.tokens[complement].key).is_some() {
+            continue;
+        }
+        // A coordinated subject phrase is collapsed to a plural controller by
+        // `subject_of`; it returns `None` when the person cannot be resolved.
+        let Some(subject) = subject_of(clause, tokens, analysis) else {
+            continue;
+        };
+        if subject.number == complement_number {
+            continue;
+        }
+        let Some(lemma) = analysis.tokens[complement].lemma.as_deref() else {
+            continue;
+        };
+        let target_case = if subject.number == Number::Singular {
+            Case::Nominative
+        } else {
+            complement_case
+        };
+        let corrections = correction::attribute_agreement_corrections(
+            lemma,
+            &tokens[complement],
+            target_case,
+            subject.number,
+            PartOfSpeech::Adjective,
+            crate::spec::Catalogues::embedded(),
+        )
+        .into_iter()
+        .map(|mut correction| {
+            correction.note = "predicative_agreement";
+            correction
+        })
+        .collect();
+        let confident = analysis.tokens[subject.index].confidence == RoleConfidence::Likely
+            && analysis.tokens[complement].confidence == RoleConfidence::Likely;
+        let (severity, confidence) = if confident {
+            (Severity::Error, DiagnosticConfidence::High)
+        } else {
+            (Severity::Warning, DiagnosticConfidence::Medium)
+        };
+        let mut diagnostic = SyntaxDiagnostic::new(
+            DiagnosticKind::PredicativeAgreement,
+            severity,
+            confidence,
+            tokens[complement].start..tokens[complement].end,
+            "predicative_agreement",
+        );
+        diagnostic.expected = Some(format!(
+            "{} {}",
+            target_case.name(),
+            subject.number.name()
+        ));
+        diagnostic.corrections = corrections;
+        diagnostics.push(diagnostic);
+    }
+    diagnostics
+}
+
+/// The unambiguous adjective case/number of a predicate complement.
+fn adjective_shape(token: &TokenSyntax) -> Option<(Case, Number)> {
+    let mut shape: Option<(Case, Number)> = None;
+    for reading in &token.readings {
+        if reading.part_of_speech != Some(PartOfSpeech::Adjective) {
+            continue;
+        }
+        let Some(candidate) = reading.case.zip(reading.number) else {
+            continue;
+        };
+        match shape {
+            None => shape = Some(candidate),
+            Some(seen) if seen == candidate => {}
+            Some(_) => return None,
+        }
+    }
+    shape
 }
 
 fn attribute_shape(token: &TokenSyntax) -> Option<(Case, Number)> {

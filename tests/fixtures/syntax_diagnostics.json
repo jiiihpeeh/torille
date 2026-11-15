@@ -191,6 +191,32 @@
       ]
     },
     {
+      "id": "predicative_plural_subject_singular_complement",
+      "text": "Talot ovat punainen.",
+      "diagnostics": [
+        {
+          "kind": "predicative_agreement",
+          "severity": "error",
+          "start": 11,
+          "end": 19,
+          "corrections": ["punaiset"]
+        }
+      ]
+    },
+    {
+      "id": "predicative_singular_subject_plural_complement",
+      "text": "Talo on punaisia.",
+      "diagnostics": [
+        {
+          "kind": "predicative_agreement",
+          "severity": "error",
+          "start": 8,
+          "end": 16,
+          "corrections": ["punainen"]
+        }
+      ]
+    },
+    {
       "id": "list_missing_separator",
       "text": "Ostin omenoita appelsiineja, banaaneja ja päärynöitä.",
       "diagnostics": [
@@ -549,6 +575,12 @@
     "Talo on rakennettu.",
     "Talo on kaunis.",
     "Talot ovat kauniita.",
+    "Talot ovat punaisia.",
+    "Talot ovat punaiset.",
+    "Talo on punainen.",
+    "Lapset ovat väsyneitä.",
+    "Hän on väsynyt.",
+    "He ovat opettajia.",
     "Minun täytyy mennä.",
     "Hänen pitää mennä.",
     "Minun on mentävä.",

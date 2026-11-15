@@ -31,6 +31,7 @@ the checker only when the user presses the grammar button.
 |---|---|---|
 | `subject_predicate_agreement` | subject and finite predicate agree in person and number | `Error`, or `Warning` when a role is weak |
 | `attribute_agreement` | attributive adjective/demonstrative agrees with its head | `Error` for number, `Warning` for case |
+| `predicative_agreement` | a predicative adjective agrees with its subject in number | `Error` for a clear number mismatch, `Warning` when a role is weak |
 | `verb_rection` | curated valency frame requires a case the argument lacks | `Error` with a likely predicate, otherwise `Warning` |
 | `object_case` | negative clause requires a partitive object; aspect cues suggest partitive/total | `Error` for negation, `Suggestion` for aspect |
 | `missing_argument` | an obligatory slot from `data/verb_arguments.csv` is absent | `Warning` |
@@ -79,8 +80,8 @@ positives pin the current bugs so a fix has to move the row.
 Current baseline (2026-11-15):
 
 ```text
-clean rows 132: 0 errors, 0 warnings, 0 suggestions
-cases 52: every emitted kind precision 1.00, recall 1.00
+clean rows 138: 0 errors, 0 warnings, 0 suggestions
+cases 54: every emitted kind precision 1.00, recall 1.00
 ```
 
 Run both gates:
@@ -154,6 +155,10 @@ obligatory argument from a suffix or a dictionary class.
 ## Known limitations
 
 - **Word order** is not checked.
+- **Predicative agreement is number-only and adjective-only.** `Talot ovat
+  punainen` and `Talo on punaisia` are caught; noun complements and participle
+  complements are not, because their agreement/case behaviour needs a separate
+  rule.
 - **Ambiguous partitive plurals stay quiet.** A plural completive suggestion
   is offered when every noun base names the same total form (`autoja →
   autot`); a homonymous surface such as `kirjoja` (`kirja`/`kirjo`) stays

@@ -16,6 +16,7 @@ use torille::syntax_check::{self, DiagnosticKind, Severity};
 const EMITTED_KINDS: &[DiagnosticKind] = &[
     DiagnosticKind::SubjectPredicateAgreement,
     DiagnosticKind::AttributeAgreement,
+    DiagnosticKind::PredicativeAgreement,
     DiagnosticKind::VerbRection,
     DiagnosticKind::ObjectCase,
     DiagnosticKind::MissingArgument,

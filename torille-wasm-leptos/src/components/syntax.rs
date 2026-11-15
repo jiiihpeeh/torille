@@ -162,6 +162,7 @@ fn kind_label(kind: DiagnosticKind) -> &'static str {
     match kind {
         DiagnosticKind::SubjectPredicateAgreement => "subjektin ja predikaatin kongruenssi",
         DiagnosticKind::AttributeAgreement => "attribuutin kongruenssi",
+        DiagnosticKind::PredicativeAgreement => "predikatiivin kongruenssi",
         DiagnosticKind::VerbRection => "verbien rektio",
         DiagnosticKind::CaseSelection => "sijan valinta",
         DiagnosticKind::ObjectCase => "objektin sija",

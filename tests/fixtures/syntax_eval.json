@@ -12,6 +12,12 @@
     "Talo on rakennettu.",
     "Talo on kaunis.",
     "Talot ovat kauniita.",
+    "Talot ovat punaisia.",
+    "Talot ovat punaiset.",
+    "Talo on punainen.",
+    "Lapset ovat väsyneitä.",
+    "Hän on väsynyt.",
+    "He ovat opettajia.",
     "Minun täytyy mennä.",
     "Hänen pitää mennä.",
     "Minun on mentävä.",
@@ -236,6 +242,20 @@
       "text": "Punaisessa auto.",
       "kinds": [
         "attribute_agreement"
+      ]
+    },
+    {
+      "id": "predicative_plural_subject_singular_complement",
+      "text": "Talot ovat punainen.",
+      "kinds": [
+        "predicative_agreement"
+      ]
+    },
+    {
+      "id": "predicative_singular_subject_plural_complement",
+      "text": "Talo on punaisia.",
+      "kinds": [
+        "predicative_agreement"
       ]
     },
     {

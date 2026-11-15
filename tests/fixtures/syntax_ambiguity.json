@@ -180,6 +180,30 @@
       "text": "Mies joka kirjan luki.",
       "clauses": 2,
       "diagnostics": []
+    },
+    {
+      "id": "predicative_plural_complement",
+      "text": "Talot ovat punaisia.",
+      "clauses": 1,
+      "subject": "Talot",
+      "predicate": "ovat",
+      "roles": [
+        { "word": "Talot", "role": "subject", "case": "nominative" },
+        { "word": "punaisia", "role": "complement", "case": "partitive" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "predicative_number_mismatch",
+      "text": "Talot ovat punainen.",
+      "clauses": 1,
+      "subject": "Talot",
+      "predicate": "ovat",
+      "roles": [
+        { "word": "Talot", "role": "subject", "case": "nominative" },
+        { "word": "punainen", "role": "complement", "case": "nominative" }
+      ],
+      "diagnostics": ["predicative_agreement"]
     }
   ]
 }

@@ -53,6 +53,7 @@ export function syntaxKindLabel(kind: string): string {
   switch (kind) {
     case 'subject_predicate_agreement': return 'subjektin ja predikaatin kongruenssi';
     case 'attribute_agreement': return 'attribuutin kongruenssi';
+    case 'predicative_agreement': return 'predikatiivin kongruenssi';
     case 'verb_rection': return 'verbien rektio';
     case 'case_selection': return 'sijan valinta';
     case 'object_case': return 'objektin sija';

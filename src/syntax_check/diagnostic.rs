@@ -54,6 +54,7 @@ impl DiagnosticConfidence {
 pub enum DiagnosticKind {
     SubjectPredicateAgreement,
     AttributeAgreement,
+    PredicativeAgreement,
     VerbRection,
     CaseSelection,
     ObjectCase,
@@ -80,6 +81,7 @@ impl DiagnosticKind {
         match self {
             DiagnosticKind::SubjectPredicateAgreement => "subject_predicate_agreement",
             DiagnosticKind::AttributeAgreement => "attribute_agreement",
+            DiagnosticKind::PredicativeAgreement => "predicative_agreement",
             DiagnosticKind::VerbRection => "verb_rection",
             DiagnosticKind::CaseSelection => "case_selection",
             DiagnosticKind::ObjectCase => "object_case",
