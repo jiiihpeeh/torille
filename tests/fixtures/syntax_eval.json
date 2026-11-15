@@ -40,6 +40,14 @@
     "Hän antoi kirjan.",
     "En lue kirjaa.",
     "Minä en tule.",
+    "En mene.",
+    "Hän ei mene.",
+    "En ole.",
+    "En mennyt.",
+    "En tullut.",
+    "Älä mene.",
+    "Älkää menkö.",
+    "En voi mennä.",
     "Hän ei tule.",
     "Minä olen lukenut.",
     "Hän on lukenut.",
@@ -143,7 +151,15 @@
     "Omena, kuten päärynä, on hedelmä.",
     "Omena kuten päärynä, on hedelmä.",
     "Kuten tiedät, omena on hyvä.",
-    "Hän puhui kuten asiantuntija."
+    "Hän puhui kuten asiantuntija.",
+    "Kaksi lasta tuli.",
+    "Yksi lapsi tuli.",
+    "Kahdet kengät.",
+    "Kaksi pientä lasta.",
+    "Kaksi kolmesta.",
+    "Sata autoa.",
+    "Kaksikymmentä lasta.",
+    "Ostin kaksi kirjaa."
   ],
   "cases": [
     {
@@ -256,6 +272,48 @@
       "text": "Talo on punaisia.",
       "kinds": [
         "predicative_agreement"
+      ]
+    },
+    {
+      "id": "connegative_present",
+      "text": "En menen.",
+      "kinds": [
+        "connegative"
+      ]
+    },
+    {
+      "id": "connegative_third_person",
+      "text": "Hän ei menee.",
+      "kinds": [
+        "connegative"
+      ]
+    },
+    {
+      "id": "connegative_past",
+      "text": "En menin.",
+      "kinds": [
+        "connegative"
+      ]
+    },
+    {
+      "id": "numeral_nominative_singular",
+      "text": "Kaksi lapsi tuli.",
+      "kinds": [
+        "case_selection"
+      ]
+    },
+    {
+      "id": "numeral_partitive_plural",
+      "text": "Kaksi lapsia tuli.",
+      "kinds": [
+        "case_selection"
+      ]
+    },
+    {
+      "id": "numeral_object_nominative",
+      "text": "Ostin kaksi kirja.",
+      "kinds": [
+        "case_selection"
       ]
     },
     {

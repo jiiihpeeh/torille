@@ -315,11 +315,16 @@ prose-corpus review.
   has survived the prose corpus; do not fold it into the number-only rule.
   Area: `src/syntax_check/agreement.rs`.
 
-- [ ] **Connegative main verb after the negative auxiliary**
-  `En menen.` and `Hän ei menee.` are silent, while `Minä ei tule.` already
-  corrects the auxiliary. The main verb must carry a connegative/negative
-  reading after a negative auxiliary.
-  Area: `src/syntax_check/agreement.rs`, `src/syntax/predicates.rs`.
+- [x] **Connegative main verb after the negative auxiliary** — landed.
+  `En menen.`, `Hän ei menee.` and the negative past (`En menin.` →
+  `mennyt`) now emit `connegative`. `En mene.`, `Hän ei mene.`, `En ole.`,
+  `En mennyt.`, `En tullut.`, `Älä mene.`, `Älkää menkö.` and `En voi mennä.`
+  are clean. The rule checks only the verb adjacent to the auxiliary, accepts
+  a negative reading (present connegative or past participle), and treats the
+  3sg conditional as the conditional connegative. Imperative findings are
+  label-only; the potential is left quiet.
+  Area: `src/syntax_check/connegative.rs`, `src/syntax_check/correction.rs`,
+  `src/syntax/predicates.rs`.
 
 - [ ] **Compound-tense participle agreement**
   `Me olemme lukenut.`, `Minä olen lukeneet.` and `Hän on lukeneet.` are
@@ -336,11 +341,16 @@ prose-corpus review.
 
 ### Case government
 
-- [ ] **Numeral government**
-  `Kaksi lapsi tuli.` is silent; `kaksi lasta` requires the partitive
-  singular. `mark_numeral_complement` already identifies the counted noun.
-  Guard the plural/`kahdet` and lexicalised exceptions.
-  Area: `src/syntax_check/`, `src/syntax/roles.rs`.
+- [x] **Numeral government** — landed.
+  `Kaksi lapsi tuli.`, `Kaksi lapsia tuli.` and `Ostin kaksi kirja.` now emit
+  `case_selection` with the partitive singular. `Kaksi lasta tuli.`,
+  `Kaksi miestä tuli.`, `Yksi lapsi tuli.`, `Kahdet kengät.`,
+  `Kaksi pientä lasta.`, `Kaksi kolmesta.`, `Sata autoa.`,
+  `Kaksikymmentä lasta.` and `Ostin kaksi kirjaa.` are clean. The rule is
+  narrow: only a nominative complement or partitive plural is flagged; `yksi`,
+  plural numerals, `toinen` and other non-cardinals are skipped. The adjective
+  guard also removes the old `Kaksi pientä lasta` attribute false positive.
+  Area: `src/syntax_check/numeral.rs`, `src/syntax_check/agreement.rs`.
 
 - [ ] **Adposition case government**
   `Pöytä alla on kissa.` (should be `Pöydän alla`) is silent. Add a small
@@ -532,3 +542,17 @@ intended/competing interpretation pair that fails.
   `Lapset ovat väsyneitä.`, `Hän on väsynyt.` and `He ovat opettajia.`.
   Added exact-output and ambiguity cases, updated the UI labels and the rule
   catalogue. The prose corpus recorded no new false positives.
+- 2026-11-15: landed the connegative rule. `En menen.` and `Hän ei menee.`
+  now emit `connegative` with `mene`; `En menin.` offers `mennyt`. Clean rows
+  cover `En mene.`, `Hän ei mene.`, `En ole.`, `En mennyt.`, `En tullut.`,
+  `Älä mene.`, `Älkää menkö.` and `En voi mennä.` The rule required two prose
+  corrections during development: it now checks only the verb adjacent to the
+  auxiliary (so `Ei, sillä ...` is not an auxiliary) and accepts the 3sg
+  conditional as the conditional connegative (`ettei häntä pelottaisi`).
+- 2026-11-15: landed numeral government. `Kaksi lapsi tuli.`,
+  `Kaksi lapsia tuli.` and `Ostin kaksi kirja.` now emit `case_selection`
+  with the partitive singular. Clean rows cover `Kaksi lasta tuli.`,
+  `Yksi lapsi tuli.`, `Kahdet kengät.`, `Kaksi pientä lasta.`,
+  `Kaksi kolmesta.`, `Sata autoa.` and `Kaksikymmentä lasta.`. The same work
+  added a numeral-phrase guard to `attribute_agreement`, removing the
+  `Kaksi pientä lasta` false positive.

@@ -183,6 +183,13 @@ fn check_attributes(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         if crate::expand::degree_base(&syntax.key).is_some() {
             continue;
         }
+        // `Kaksi pientä lasta`: the adjective belongs to a cardinal numeral
+        // phrase and is partitive by numeral government. The counted head may
+        // lack its partitive reading in this context, so the ordinary
+        // attribute comparison would offer a nominative by mistake.
+        if in_cardinal_phrase(index, tokens, syntax, analysis) {
+            continue;
+        }
         if attribute_case == Case::Genitive {
             continue;
         }
@@ -313,6 +320,38 @@ fn check_complements(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxD
         diagnostics.push(diagnostic);
     }
     diagnostics
+}
+
+/// Whether an attribute sits immediately after a cardinal numeral.
+///
+/// `yksi` and the plural numerals (`kahdet`) are excluded: they do not govern
+/// the partitive singular.
+fn in_cardinal_phrase(
+    index: usize,
+    tokens: &[Token],
+    syntax: &TokenSyntax,
+    analysis: &SyntaxAnalysis,
+) -> bool {
+    let Some(clause) = analysis.clauses.get(syntax.clause) else {
+        return false;
+    };
+    let words: Vec<usize> = clause
+        .tokens
+        .clone()
+        .filter(|&candidate| tokens[candidate].is_word())
+        .collect();
+    let Some(position) = words.iter().position(|&candidate| candidate == index) else {
+        return false;
+    };
+    let Some(&previous) = position.checked_sub(1).and_then(|at| words.get(at)) else {
+        return false;
+    };
+    let token = &analysis.tokens[previous];
+    token.lemma.as_deref() != Some("yksi")
+        && token.readings.iter().any(|reading| {
+            reading.part_of_speech == Some(crate::tags::PartOfSpeech::Numeral)
+                && reading.number != Some(Number::Plural)
+        })
 }
 
 /// The unambiguous adjective case/number of a predicate complement.

@@ -12,7 +12,9 @@
 mod agreement;
 mod analysis;
 mod arguments;
+mod connegative;
 mod correction;
+mod numeral;
 mod object_case;
 mod punctuation;
 mod rank;
@@ -80,6 +82,8 @@ pub(crate) fn check_analysis_without_quote(
     contexts: &[crate::sentence::TokenContext],
 ) -> Vec<SyntaxDiagnostic> {
     let mut diagnostics = agreement::check(tokens, analysis);
+    diagnostics.extend(connegative::check(tokens, analysis));
+    diagnostics.extend(numeral::check(tokens, analysis));
     diagnostics.extend(punctuation::check_without_quote_with_contexts(
         tokens, analysis, contexts,
     ));

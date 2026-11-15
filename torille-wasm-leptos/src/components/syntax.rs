@@ -161,6 +161,7 @@ fn severity_class(severity: Severity) -> &'static str {
 fn kind_label(kind: DiagnosticKind) -> &'static str {
     match kind {
         DiagnosticKind::SubjectPredicateAgreement => "subjektin ja predikaatin kongruenssi",
+        DiagnosticKind::Connegative => "kieltomuoto",
         DiagnosticKind::AttributeAgreement => "attribuutin kongruenssi",
         DiagnosticKind::PredicativeAgreement => "predikatiivin kongruenssi",
         DiagnosticKind::VerbRection => "verbien rektio",

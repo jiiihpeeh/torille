@@ -52,6 +52,7 @@ export function hideGrammarPanel(): void {
 export function syntaxKindLabel(kind: string): string {
   switch (kind) {
     case 'subject_predicate_agreement': return 'subjektin ja predikaatin kongruenssi';
+    case 'connegative': return 'kieltomuoto';
     case 'attribute_agreement': return 'attribuutin kongruenssi';
     case 'predicative_agreement': return 'predikatiivin kongruenssi';
     case 'verb_rection': return 'verbien rektio';

@@ -30,8 +30,10 @@ the checker only when the user presses the grammar button.
 | kind | rule | severity |
 |---|---|---|
 | `subject_predicate_agreement` | subject and finite predicate agree in person and number | `Error`, or `Warning` when a role is weak |
+| `connegative` | the main verb after a negative auxiliary is in the connegative form | `Error` |
 | `attribute_agreement` | attributive adjective/demonstrative agrees with its head | `Error` for number, `Warning` for case |
 | `predicative_agreement` | a predicative adjective agrees with its subject in number | `Error` for a clear number mismatch, `Warning` when a role is weak |
+| `case_selection` | a cardinal numeral above one governs the partitive singular | `Error` for a clear complement, `Warning` when a role is weak |
 | `verb_rection` | curated valency frame requires a case the argument lacks | `Error` with a likely predicate, otherwise `Warning` |
 | `object_case` | negative clause requires a partitive object; aspect cues suggest partitive/total | `Error` for negation, `Suggestion` for aspect |
 | `missing_argument` | an obligatory slot from `data/verb_arguments.csv` is absent | `Warning` |
@@ -45,9 +47,9 @@ the checker only when the user presses the grammar button.
 | `list_comma_before_conjunction` | a comma before the final `ja`/`tai`/`sekä` | `Suggestion` |
 | `list_introducer_comma` | a comma directly after a list-introducing colon | `Error` |
 
-Reserved but not emitted: `CaseSelection`, `ClauseStructure`, `WordOrder`,
-`CommaExtra`. Word order is deliberately deferred: Finnish order is
-information structure, not a fixed rule.
+Reserved but not emitted: `ClauseStructure`, `WordOrder`, `CommaExtra`. Word
+order is deliberately deferred: Finnish order is information structure, not a
+fixed rule.
 
 ## False-positive policy
 
@@ -80,8 +82,8 @@ positives pin the current bugs so a fix has to move the row.
 Current baseline (2026-11-15):
 
 ```text
-clean rows 138: 0 errors, 0 warnings, 0 suggestions
-cases 54: every emitted kind precision 1.00, recall 1.00
+clean rows 154: 0 errors, 0 warnings, 0 suggestions
+cases 61: every emitted kind precision 1.00, recall 1.00
 ```
 
 Run both gates:
@@ -159,6 +161,15 @@ obligatory argument from a suffix or a dictionary class.
   punainen` and `Talo on punaisia` are caught; noun complements and participle
   complements are not, because their agreement/case behaviour needs a separate
   rule.
+- **Connegative findings are safest in declarative clauses.** `en mene`,
+  `hän ei menee` and the negative past are covered. Imperative auxiliaries
+  (`älä`, `älkää`) are detected but currently get no automatic correction; the
+  conditional connegative is accepted as the 3sg conditional surface, and the
+  potential is left quiet.
+- **Numeral government is deliberately narrow.** Only a nominative complement
+  or a partitive plural is flagged; a non-nominative, non-partitive complement
+  (`kaksi kolmesta`) is left alone. `yksi`, plural numerals (`kahdet`) and
+  non-cardinal numerals (`toinen`) are skipped.
 - **Ambiguous partitive plurals stay quiet.** A plural completive suggestion
   is offered when every noun base names the same total form (`autoja →
   autot`); a homonymous surface such as `kirjoja` (`kirja`/`kirjo`) stays

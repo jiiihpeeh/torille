@@ -217,6 +217,110 @@
       ]
     },
     {
+      "id": "connegative_present",
+      "text": "En menen.",
+      "diagnostics": [
+        {
+          "kind": "connegative",
+          "severity": "error",
+          "start": 3,
+          "end": 8,
+          "corrections": ["mene"]
+        }
+      ]
+    },
+    {
+      "id": "connegative_third_person",
+      "text": "Hän ei menee.",
+      "diagnostics": [
+        {
+          "kind": "connegative",
+          "severity": "error",
+          "start": 8,
+          "end": 13,
+          "corrections": ["mene"]
+        }
+      ]
+    },
+    {
+      "id": "connegative_past",
+      "text": "En menin.",
+      "diagnostics": [
+        {
+          "kind": "connegative",
+          "severity": "error",
+          "start": 3,
+          "end": 8,
+          "corrections": ["mennyt"]
+        }
+      ]
+    },
+    {
+      "id": "connegative_imperative",
+      "text": "Älä menet.",
+      "diagnostics": [
+        {
+          "kind": "connegative",
+          "severity": "error",
+          "start": 6,
+          "end": 11,
+          "corrections": []
+        }
+      ]
+    },
+    {
+      "id": "numeral_nominative_singular",
+      "text": "Kaksi lapsi tuli.",
+      "diagnostics": [
+        {
+          "kind": "case_selection",
+          "severity": "error",
+          "start": 6,
+          "end": 11,
+          "corrections": ["lasta"]
+        }
+      ]
+    },
+    {
+      "id": "numeral_partitive_plural",
+      "text": "Kaksi lapsia tuli.",
+      "diagnostics": [
+        {
+          "kind": "case_selection",
+          "severity": "error",
+          "start": 6,
+          "end": 12,
+          "corrections": ["lasta"]
+        }
+      ]
+    },
+    {
+      "id": "numeral_object_nominative",
+      "text": "Ostin kaksi kirja.",
+      "diagnostics": [
+        {
+          "kind": "case_selection",
+          "severity": "error",
+          "start": 12,
+          "end": 17,
+          "corrections": ["kirjaa"]
+        }
+      ]
+    },
+    {
+      "id": "numeral_attribute_nominative",
+      "text": "Kaksi pieni lapsi.",
+      "diagnostics": [
+        {
+          "kind": "case_selection",
+          "severity": "warning",
+          "start": 6,
+          "end": 11,
+          "corrections": ["pientä"]
+        }
+      ]
+    },
+    {
       "id": "list_missing_separator",
       "text": "Ostin omenoita appelsiineja, banaaneja ja päärynöitä.",
       "diagnostics": [
@@ -627,6 +731,14 @@
     "Hän antoi kirjan.",
     "En lue kirjaa.",
     "Minä en tule.",
+    "En mene.",
+    "Hän ei mene.",
+    "En ole.",
+    "En mennyt.",
+    "En tullut.",
+    "Älä mene.",
+    "Älkää menkö.",
+    "En voi mennä.",
     "Hän ei tule.",
     "Minä olen lukenut.",
     "Hän on lukenut.",
@@ -713,6 +825,14 @@
     "Omena kuten päärynä, on hedelmä.",
     "Kuten tiedät, omena on hyvä.",
     "Hän puhui kuten asiantuntija.",
-    "Luin kirjoja loppuun."
+    "Luin kirjoja loppuun.",
+    "Kaksi lasta tuli.",
+    "Yksi lapsi tuli.",
+    "Kahdet kengät.",
+    "Kaksi pientä lasta.",
+    "Kaksi kolmesta.",
+    "Sata autoa.",
+    "Kaksikymmentä lasta.",
+    "Ostin kaksi kirjaa."
   ]
 }

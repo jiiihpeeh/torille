@@ -53,6 +53,7 @@ impl DiagnosticConfidence {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum DiagnosticKind {
     SubjectPredicateAgreement,
+    Connegative,
     AttributeAgreement,
     PredicativeAgreement,
     VerbRection,
@@ -80,6 +81,7 @@ impl DiagnosticKind {
     pub fn name(self) -> &'static str {
         match self {
             DiagnosticKind::SubjectPredicateAgreement => "subject_predicate_agreement",
+            DiagnosticKind::Connegative => "connegative",
             DiagnosticKind::AttributeAgreement => "attribute_agreement",
             DiagnosticKind::PredicativeAgreement => "predicative_agreement",
             DiagnosticKind::VerbRection => "verb_rection",

@@ -204,6 +204,50 @@
         { "word": "punainen", "role": "complement", "case": "nominative" }
       ],
       "diagnostics": ["predicative_agreement"]
+    },
+    {
+      "id": "connegative_present",
+      "text": "En menen.",
+      "clauses": 1,
+      "subject": "none",
+      "predicate": "menen",
+      "roles": [
+        { "word": "menen", "role": "predicate" }
+      ],
+      "diagnostics": ["connegative"]
+    },
+    {
+      "id": "connegative_correct",
+      "text": "En mene.",
+      "clauses": 1,
+      "subject": "none",
+      "predicate": "mene",
+      "roles": [
+        { "word": "mene", "role": "predicate" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "numeral_nominative",
+      "text": "Kaksi lapsi tuli.",
+      "clauses": 1,
+      "subject": "lapsi",
+      "predicate": "tuli",
+      "roles": [
+        { "word": "lapsi", "role": "subject", "case": "nominative" }
+      ],
+      "diagnostics": ["case_selection"]
+    },
+    {
+      "id": "numeral_partitive",
+      "text": "Kaksi lasta tuli.",
+      "clauses": 1,
+      "subject": "lasta",
+      "predicate": "tuli",
+      "roles": [
+        { "word": "lasta", "role": "subject" }
+      ],
+      "diagnostics": []
     }
   ]
 }

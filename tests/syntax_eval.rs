@@ -15,9 +15,11 @@ use torille::syntax_check::{self, DiagnosticKind, Severity};
 /// absent: presence here is a coverage requirement for the evaluation corpus.
 const EMITTED_KINDS: &[DiagnosticKind] = &[
     DiagnosticKind::SubjectPredicateAgreement,
+    DiagnosticKind::Connegative,
     DiagnosticKind::AttributeAgreement,
     DiagnosticKind::PredicativeAgreement,
     DiagnosticKind::VerbRection,
+    DiagnosticKind::CaseSelection,
     DiagnosticKind::ObjectCase,
     DiagnosticKind::MissingArgument,
     DiagnosticKind::ExtraArgument,

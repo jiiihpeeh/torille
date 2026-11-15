@@ -24,6 +24,7 @@ fn case_by_id<'a>(root: &'a Value, id: &str) -> &'a Value {
 fn kind(name: &str) -> DiagnosticKind {
     [
         DiagnosticKind::SubjectPredicateAgreement,
+        DiagnosticKind::Connegative,
         DiagnosticKind::AttributeAgreement,
         DiagnosticKind::PredicativeAgreement,
         DiagnosticKind::VerbRection,
