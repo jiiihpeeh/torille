@@ -128,14 +128,6 @@ pub(super) fn compound_paradigm(
         };
         for t in tail_forms {
             let tags = t.union();
-            // A class-51 tail possessive that does not name its case is
-            // ambiguous between the nominative and the genitive, and joining
-            // it to either head gives one real and one unconfirmed word, so
-            // it is left out rather than guessed. A class-50 prefix is fixed,
-            // so the ambiguity does not arise there.
-            if class == 51 && tags.case.is_none() {
-                continue;
-            }
             // A plural-only compound's tail is the nominative plural of its
             // base (`vanhemmat` against `vanhempi`), so the compound has no
             // singular at all: `isovanhemmat` is the whole lemma, and
@@ -150,6 +142,19 @@ pub(super) fn compound_paradigm(
             let heads: Vec<String> = if class == 51 {
                 let mut v: Vec<String> = Vec::new();
                 for ((c, n), h) in &head_cells {
+                    // A possessive tail whose case is not named is ambiguous
+                    // between the nominative and the genitive (`isäntäni`).
+                    // The compound's unmarked reading has the head in the
+                    // nominative: `vanhaisäntäni`, not the unconfirmed
+                    // `vanhanisäntäni`.
+                    if tags.case.is_none() {
+                        if *c == Case::Nominative
+                            && *n == tags.number.unwrap_or(Number::Singular)
+                        {
+                            v.extend(h.iter().cloned());
+                        }
+                        continue;
+                    }
                     // The head's case must be the reading's own: an
                     // ambiguous tail possessive combined with the wrong head
                     // case is a different word (`aavanmereni` vs the
@@ -176,13 +181,24 @@ pub(super) fn compound_paradigm(
                 // `nuoret-isännät`, not the closed spelling a generic
                 // compound would use. The separator is not part of either
                 // part, so it is chosen here.
-                let separator = if class == 51 && prefix == "-" {
+                let tail_surface = shape.surface(&t.word);
+                // An `i` + `i` boundary is written with a hyphen:
+                // `vanhaksi-isännäksi`, `vanhoiksi-isänniksi`. Finnish does
+                // not close `vanhaksiisännäksi` into one written word, and the
+                // oracle rejects it. Not every identical-vowel boundary takes
+                // one: `isotaivot` keeps the established `isojaaivoja` closed,
+                // so the rule stays on the pair the reference distinguishes.
+                let boundary_hyphen = class == 51
+                    && prefix != "-"
+                    && h.ends_with('i')
+                    && tail_surface.starts_with('i');
+                let separator = if class == 51 && (prefix == "-" || boundary_hyphen) {
                     "-"
                 } else {
                     ""
                 };
                 out.push(Form {
-                    word: format!("{h}{separator}{}", shape.surface(&t.word)),
+                    word: format!("{h}{separator}{tail_surface}"),
                     readings: t.readings.clone(),
                     confidence: t.confidence,
                 });

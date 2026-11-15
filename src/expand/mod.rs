@@ -1608,6 +1608,50 @@ mod tests {
         }
     }
 
+    /// A class-51 boundary between identical vowels takes a hyphen.
+    ///
+    /// `vanhaisäntä` is written closed in the nominative, but the inflected
+    /// modifier creates an `i` + `i` boundary: `vanhaksi-isännäksi`,
+    /// `vanhoiksi-isänniksi`. Finnish does not write `vanhaksiisännäksi`.
+    /// The head-only nominative possessive is `vanhaisäntäni`.
+    #[cfg(feature = "generated-nominals")]
+    #[test]
+    fn a_class_51_compound_hyphenates_an_identical_vowel_boundary() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let forms: Vec<String> = inflect_in(
+            "vanhaisäntä",
+            Inflection {
+                class: 51,
+                gradation: None,
+            },
+            &cat,
+            Some(&LexiconIndex::new(&lexicon)),
+            PartOfSpeech::Noun,
+            true,
+        )
+        .into_iter()
+        .map(|g| g.word)
+        .collect();
+        for expected in [
+            "vanhaisäntä",
+            "vanhaisäntäni",
+            "vanhaksi-isännäksi",
+            "vanhoiksi-isänniksi",
+        ] {
+            assert!(
+                forms.iter().any(|f| f == expected),
+                "{expected} is missing from vanhaisäntä"
+            );
+        }
+        for wrong in ["vanhaksiisännäksi", "vanhoiksiisänniksi"] {
+            assert!(
+                !forms.iter().any(|f| f == wrong),
+                "{wrong} must not be written without the boundary hyphen"
+            );
+        }
+    }
+
     /// The adjective prefixes in class-50 compounds stay uninflected.
     ///
     /// `kevyt` is a prefix in `kevytsora`, not a word that agrees with `sora`,

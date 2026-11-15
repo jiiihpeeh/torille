@@ -1697,3 +1697,11 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   class-99 sample to confirmed 1373 / missing 11 / illegal 18. Only `kukku`
   remains; no Kotus class reproduces its oracle mix of `kukun`/`kukut` and
   `kukkuja`, so it is left as an i-loan rather than guessed.
+
+- 2026-11-15: class-51 compound agreement. An identical-vowel boundary now
+  takes a hyphen (`vanhaksi-isännäksi`, `vanhoiksi-isänniksi`) instead of the
+  unreadable closed spelling, and a case-less possessive tail joins the
+  nominative head (`vanhaisäntäni`). Class-51 20-lemma sample: confirmed
+  2645 -> 2708, missing 86 -> 41, illegal 53 -> 46. The remaining
+  `vanhaisäntä` rows are the oracle's unusual `vanhaaisäntää...` partitive
+  possessives.
