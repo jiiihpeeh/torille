@@ -130,11 +130,13 @@ struct Summary {
     known_model: usize,
 }
 
+type Detail = (String, String);
+
 struct Comparison {
     base: Vec<String>,
     model: Vec<String>,
-    base_details: Vec<(String, String)>,
-    model_details: Vec<(String, String)>,
+    base_details: Vec<Detail>,
+    model_details: Vec<Detail>,
     roles: Vec<(usize, String, String, String)>,
     base_clauses: Vec<String>,
     model_clauses: Vec<String>,
@@ -256,16 +258,12 @@ fn run_text(path: &str, text: &str) -> Result<(), String> {
             println!("{kind}\t{base}\t{model}");
         }
     }
-    for (kind, (base, model)) in &counts {
-        if model <= base {
-            continue;
-        }
-        println!("increased {kind}: {base} -> {model}");
-        for (detail_kind, message) in &comparison.model_details {
-            if detail_kind == kind {
-                println!("  model {detail_kind}: {message}");
-            }
-        }
+    let (added, removed) = detail_difference(&comparison.base_details, &comparison.model_details);
+    for (kind, message) in added {
+        println!("added {kind}: {message}");
+    }
+    for (kind, message) in removed {
+        println!("removed {kind}: {message}");
     }
     println!("role changes: {}", comparison.roles.len());
     for (index, before, after, preferred) in &comparison.roles {
@@ -299,7 +297,7 @@ fn clauses(
         .collect()
 }
 
-fn details(diagnostics: &[SyntaxDiagnostic], text: &str) -> Vec<(String, String)> {
+fn details(diagnostics: &[SyntaxDiagnostic], text: &str) -> Vec<Detail> {
     diagnostics
         .iter()
         .map(|diagnostic| {
@@ -313,6 +311,34 @@ fn details(diagnostics: &[SyntaxDiagnostic], text: &str) -> Vec<(String, String)
             )
         })
         .collect()
+}
+
+/// Multiset difference over `(kind, message)` details, where the message
+/// already carries the source span.
+fn detail_difference(base: &[Detail], model: &[Detail]) -> (Vec<Detail>, Vec<Detail>) {
+    let mut remaining: BTreeMap<(&str, &str), usize> = BTreeMap::new();
+    for (kind, message) in base {
+        *remaining.entry((kind, message)).or_default() += 1;
+    }
+    let mut added = Vec::new();
+    for (kind, message) in model {
+        let key = (kind.as_str(), message.as_str());
+        match remaining.get_mut(&key) {
+            Some(count) if *count > 0 => *count -= 1,
+            _ => added.push((kind.clone(), message.clone())),
+        }
+    }
+    let mut removed = Vec::new();
+    for (kind, message) in base {
+        let key = (kind.as_str(), message.as_str());
+        if let Some(count) = remaining.get_mut(&key)
+            && *count > 0
+        {
+            *count -= 1;
+            removed.push((kind.clone(), message.clone()));
+        }
+    }
+    (added, removed)
 }
 
 fn kinds(diagnostics: &[SyntaxDiagnostic]) -> Vec<String> {
