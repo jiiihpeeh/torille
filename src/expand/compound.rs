@@ -141,27 +141,30 @@ pub(super) fn compound_paradigm(
             // a wildcard, never a disqualification.
             let heads: Vec<String> = if class == 51 {
                 let mut v: Vec<String> = Vec::new();
-                for ((c, n), h) in &head_cells {
-                    // A possessive tail whose case is not named is ambiguous
-                    // between the nominative and the genitive (`isäntäni`).
-                    // The compound's unmarked reading has the head in the
-                    // nominative: `vanhaisäntäni`, not the unconfirmed
-                    // `vanhanisäntäni`.
-                    if tags.case.is_none() {
-                        if *c == Case::Nominative
-                            && *n == tags.number.unwrap_or(Number::Singular)
-                        {
+                // A possessive tail whose case is not named is ambiguous
+                // between readings that share a surface. `isäntäni` is
+                // nominative or genitive, so the unmarked compound head is the
+                // nominative: `vanhaisäntäni`. `isäntääni` is partitive or
+                // illative, and the partitive reading also takes a partitive
+                // modifier: `vanhaaisäntääni`.
+                if tags.case.is_none() {
+                    let mut head_cases = vec![(Case::Nominative, Number::Singular)];
+                    if t.readings().iter().any(|reading| {
+                        reading.case == Some(Case::Partitive)
+                            && reading.number == Some(Number::Singular)
+                    }) {
+                        head_cases.push((Case::Partitive, Number::Singular));
+                    }
+                    for ((c, n), h) in &head_cells {
+                        if head_cases.iter().any(|(case, number)| case == c && number == n) {
                             v.extend(h.iter().cloned());
                         }
-                        continue;
                     }
-                    // The head's case must be the reading's own: an
-                    // ambiguous tail possessive combined with the wrong head
-                    // case is a different word (`aavanmereni` vs the
-                    // unconfirmed `aavamerini`).
-                    if tags.case.is_none_or(|cs| cs == *c) && tags.number.is_none_or(|nu| nu == *n)
-                    {
-                        v.extend(h.iter().cloned());
+                } else {
+                    for ((c, n), h) in &head_cells {
+                        if tags.case == Some(*c) && tags.number.is_none_or(|nu| nu == *n) {
+                            v.extend(h.iter().cloned());
+                        }
                     }
                 }
                 v.sort();
@@ -182,16 +185,17 @@ pub(super) fn compound_paradigm(
                 // compound would use. The separator is not part of either
                 // part, so it is chosen here.
                 let tail_surface = shape.surface(&t.word);
-                // An `i` + `i` boundary is written with a hyphen:
-                // `vanhaksi-isännäksi`, `vanhoiksi-isänniksi`. Finnish does
-                // not close `vanhaksiisännäksi` into one written word, and the
-                // oracle rejects it. Not every identical-vowel boundary takes
-                // one: `isotaivot` keeps the established `isojaaivoja` closed,
-                // so the rule stays on the pair the reference distinguishes.
+                // An identical-vowel boundary is written with a hyphen:
+                // `vanhaksi-isännäksi`, `vanhoiksi-isänniksi`, and, per
+                // Wiktionary's `isotaivot`, `isoja-aivoja`, `isoissa-aivoissa`
+                // and `isoilta-aivoilta`. A different vowel stays closed:
+                // `isoilleaivoille`, `isoiksiaivoiksi`, `isojen aivojen`
+                // without the space (`isojenaivojen`).
+                let head_last = h.chars().last();
                 let boundary_hyphen = class == 51
                     && prefix != "-"
-                    && h.ends_with('i')
-                    && tail_surface.starts_with('i');
+                    && head_last.is_some_and(crate::is_vowel)
+                    && head_last == tail_surface.chars().next();
                 let separator = if class == 51 && (prefix == "-" || boundary_hyphen) {
                     "-"
                 } else {

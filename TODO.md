@@ -1701,7 +1701,10 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
 - 2026-11-15: class-51 compound agreement. An identical-vowel boundary now
   takes a hyphen (`vanhaksi-isännäksi`, `vanhoiksi-isänniksi`) instead of the
   unreadable closed spelling, and a case-less possessive tail joins the
-  nominative head (`vanhaisäntäni`). Class-51 20-lemma sample: confirmed
-  2645 -> 2708, missing 86 -> 41, illegal 53 -> 46. The remaining
-  `vanhaisäntä` rows are the oracle's unusual `vanhaaisäntää...` partitive
-  possessives.
+  nominative head (`vanhaisäntäni`). The hyphen rule is the identical-vowel
+  boundary, checked against Wiktionary's `isotaivot` (`isoja-aivoja`,
+  `isoissa-aivoissa`, `isoilta-aivoilta`) while `isoilleaivoille`,
+  `isoiksiaivoiksi` and `isojenaivojen` stay closed. A partitive tail
+  possessive also takes the partitive modifier (`vanhaaisäntääni`).
+  Class-51 20-lemma sample: confirmed 2645 -> 2752, missing 86 -> 0,
+  illegal 53 -> 46.

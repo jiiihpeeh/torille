@@ -1986,7 +1986,9 @@ mod tests {
     /// `isotaivot` is `isot` + `aivot`, not `iso` + `taivot`: the first part is
     /// the nominative plural of `iso`, so the ordinary head scan finds no tail.
     /// The compound is plural-only, like `isovanhemmat`, and both parts carry
-    /// the plural case: `isojenaivojen`, `isojaaivoja`, `isoissaaivoissa`.
+    /// the plural case: `isojenaivojen`, `isoja-aivoja`,
+    /// `isoissa-aivoissa`. Wiktionary's `isotaivot` entry is the reference;
+    /// the hyphen appears exactly where the same vowel meets at the boundary.
     #[test]
     fn a_plural_head_inflects_both_parts_in_the_plural() {
         let cat = cat();
@@ -2011,8 +2013,12 @@ mod tests {
 
         for (word, expected) in [
             ("isotaivot", "isojenaivojen"),
-            ("isotaivot", "isojaaivoja"),
-            ("isotaivot", "isoissaaivoissa"),
+            ("isotaivot", "isoja-aivoja"),
+            ("isotaivot", "isoissa-aivoissa"),
+            ("isotaivot", "isoilta-aivoilta"),
+            ("isotaivot", "isojenaivojen"),
+            ("isotaivot", "isoilleaivoille"),
+            ("isotaivot", "isoiksiaivoiksi"),
             ("pitkäthousut", "pitkienhousujen"),
             ("pitkäthousut", "pitkiähousuja"),
             ("pitkäthousut", "pitkissähousuissa"),
