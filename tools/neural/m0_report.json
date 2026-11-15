@@ -1,0 +1,45 @@
+{
+  "corpus": "UD Finnish-FTB",
+  "corpus_license": "CC BY 4.0",
+  "mapping_version": "fi-ud-tags-1",
+  "data": {
+    "train": {"sentences": 14981, "ambiguous_tokens": 16738, "candidates": 41537},
+    "dev": {"sentences": 1875, "ambiguous_tokens": 2119, "candidates": 5187},
+    "test": {"sentences": 1867, "ambiguous_tokens": 2101, "candidates": 5290}
+  },
+  "model": {
+    "feature_dim": 512,
+    "hidden": 32,
+    "epochs": 24,
+    "batch": 64,
+    "learning_rate": 0.01,
+    "seeds": [13, 17, 29]
+  },
+  "baseline": {
+    "first_candidate_test_top1": 0.5074
+  },
+  "variants": {
+    "morph": {
+      "dev_top1": [0.8849, 0.8834, 0.8872],
+      "test_top1": [0.8915, 0.8820, 0.8924],
+      "test_mean": 0.8886,
+      "test_min": 0.8820,
+      "test_max": 0.8924
+    },
+    "local": {
+      "dev_top1": [0.9023, 0.8995, 0.9000],
+      "test_top1": [0.8801, 0.8858, 0.8934],
+      "test_mean": 0.8864,
+      "test_min": 0.8801,
+      "test_max": 0.8934
+    },
+    "sentence": {
+      "dev_top1": [0.8811, 0.8820, 0.8830],
+      "test_top1": [0.8829, 0.8753, 0.8739],
+      "test_mean": 0.8774,
+      "test_min": 0.8739,
+      "test_max": 0.8829
+    }
+  },
+  "decision": "Morphology-only is the most robust test variant. Local context improves dev but not test consistently; sentence context is worse. Do not proceed to BiLSTM/Transformer on context gain alone."
+}

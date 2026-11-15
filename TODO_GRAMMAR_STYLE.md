@@ -506,6 +506,17 @@ analysis refinements”.
   output with neural inference off. The sentence-cache key includes the
   disambiguation cache key (model/schema/activation). No decisions affect
   roles or severities yet.
+- [x] **Phase 3 M0 experiments.** `tools/src/ud/m0.rs`,
+  `tools/src/bin/ud_m0_features.rs` and `tools/neural/train_m0.py` compare
+  morphology-only, local-context and sentence-context MLPs on UD Finnish-FTB.
+  Three seeds: morph test top-1 0.8886 mean, local 0.8864, sentence 0.8774,
+  first-candidate baseline 0.5074. Local wins dev but not test; sentence
+  context is worse. Decision: do not start BiLSTM/Transformer on context gain;
+  no M0 weights are embedded and no diagnostics changed.
+- [ ] **Optional M0 runtime/product evaluation.** Only if a product-quality
+  evaluation on role accuracy and adjudicated-prose diagnostics supports the
+  morph M0. Requires reproducible per-reading lemma provenance in the
+  production path; do not activate by candidate top-1 alone.
 
 ## Deliberate boundaries
 
@@ -596,3 +607,9 @@ intended/competing interpretation pair that fails.
   diagnostics, spans, corrections, lists, style and combined output. The
   sentence cache now includes the model/schema/activation key. No model is
   active and no role, severity or diagnostic changed.
+- 2026-11-15: implemented Phase 3 M0 experiments. Added M0 feature extraction,
+  a numpy-only three-variant trainer and `tools/neural/m0_report.json`.
+  UD Finnish-FTB results across three seeds: morph test top-1 0.8886 mean,
+  local 0.8864, sentence 0.8774, first-candidate baseline 0.5074. Local
+  improves dev but not test, so the project stops before BiLSTM/Transformer
+  and does not embed M0 weights. No production diagnostics changed.

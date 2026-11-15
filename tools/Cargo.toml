@@ -87,6 +87,12 @@ path = "src/bin/check_style.rs"
 name = "ud_coverage"
 path = "src/bin/ud_coverage.rs"
 
+[[bin]]
+# Phase 3 M0 feature extraction: write one JSONL row per ambiguous UD token
+# whose gold reading is a torille candidate. No model is trained here.
+name = "ud_m0_features"
+path = "src/bin/ud_m0_features.rs"
+
 [dependencies]
 torille = { path = ".." }
 # The Phase 1 UD coverage harness reads CoNLL-U plus the manual ambiguity

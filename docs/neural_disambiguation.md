@@ -1145,31 +1145,54 @@ Any difference is a failed Phase 2. The gate is green.
 **Exit:** the sidecar is wired without changing a single diagnostic, clause,
 role, span, correction or style output; no model is active.
 
-### Phase 3 — M0 feature MLP experiments
+### Phase 3 — M0 feature MLP experiments (implemented; no production runtime)
 
-- compare three controlled variants on the same candidates/labels/splits:
-  1. morphology-only candidate MLP;
-  2. local-context candidate MLP (window + position);
-  3. sentence-context candidate MLP (pooled/sequence encoder);
-- one hidden layer (32–64 units) for the first two; keep the sentence-context
-  variant deliberately small;
-- fixed weights in Rust;
-- train offline on FTB (and TDT only after licence review);
-- evaluate on frozen hard set, OOD/PUD, prose corpus;
-- run only on ambiguous tokens; measure latency and size;
-- feature flag on in tests, off by default in shipping.
+Implemented:
 
-**Conservative activation.** The model may change the preferred reading used
-by the syntax selectors. It must **not** automatically lower, raise or suppress
-an existing grammar diagnostic in M0. Evaluate the diagnostic effect of changed
-reading preferences separately, with the same rules and severities.
+- `tools/src/ud/m0.rs` and `tools/src/bin/ud_m0_features.rs` emit one JSONL
+  row per ambiguous token with all candidates, the gold label index, local
+  context, sentence context and morphology depth;
+- `tools/neural/train_m0.py` trains three one-hidden-layer candidate scorers
+  with numpy only;
+- `tools/neural/m0_report.json` records the experiment.
 
-**Exit:** morphology-only vs local-context vs sentence-context shows whether
-context provides a measurable gain; no clean prose regression; no public API
-change; model <100 KB. If sentence context does not beat local context, do not
-proceed to BiLSTM/Transformer on architecture grounds alone.
+Data: UD Finnish-FTB (CC BY 4.0), `fi-ud-tags-1`.
 
-### Phase 4 — M1 BiLSTM / compact Transformer
+| split | sentences | ambiguous tokens | candidates |
+|---|---:|---:|---:|
+| train | 14,981 | 16,738 | 41,537 |
+| dev | 1,875 | 2,119 | 5,187 |
+| test | 1,867 | 2,101 | 5,290 |
+
+Model: 512 hashed features, 32 hidden units, three seeds (13, 17, 29).
+
+| variant | context | dev top-1 | test top-1 mean | test range |
+|---|---|---:|---:|---:|
+| first candidate | — | — | 0.5074 | — |
+| `morph` | candidate morphology + surface | 0.883–0.887 | **0.8886** | 0.8820–0.8924 |
+| `local` | morph + prev/next + position | 0.900–0.902 | 0.8864 | 0.8801–0.8934 |
+| `sentence` | local + hashed sentence bag | 0.881–0.883 | 0.8774 | 0.8739–0.8829 |
+
+**Decision:** do not proceed to BiLSTM/Transformer on context gain alone.
+Local context improves dev but not consistently on test; sentence context is
+worse. The morphology-only MLP is the current candidate baseline. Its weights
+are not integrated into the production path: candidate top-1 is not product
+quality, and syntactic-role and diagnostic precision/recall have not yet been
+measured. The Phase 2 sidecar remains disabled.
+
+**Exit:** M0 experiments are complete and the context question is answered.
+No production model was activated, no diagnostics changed, and no model
+artifact is embedded in the crate.
+
+### Phase 4 — M1 BiLSTM / compact Transformer (blocked by M0)
+
+Do not start this phase from architecture preference. It requires either:
+
+- a demonstrated context gain over the morph M0 on a frozen test set, or
+- a separate product evaluation showing that the morph M0 improves role and
+  diagnostic quality enough to justify a runtime integration.
+
+If that happens:
 
 - 1-layer BiLSTM (128 hidden) or 2-layer Transformer (d=128, 4 heads);
 - word/char embeddings + candidate scorer;
@@ -1474,6 +1497,53 @@ Result: clean.
 Phase 2 does not use a decision to change any role, clause, severity or
 diagnostic. No model is active; `Disambiguation::disabled().cache_key()` is 0.
 
+### Phase 3 — M0 experiment verification
+
+Feature extraction:
+
+```bash
+cargo run --release -p torille-tools --bin ud_m0_features -- \
+  --train /tmp/fi_ftb-ud-train.conllu \
+  --dev /tmp/fi_ftb-ud-dev.conllu \
+  --test /tmp/fi_ftb-ud-test.conllu \
+  --out /tmp/m0
+```
+
+Result: 16,738 / 2,119 / 2,101 ambiguous train/dev/test tokens and 41,537 /
+5,187 / 5,290 candidates.
+
+Training:
+
+```bash
+python3 tools/neural/train_m0.py --data /tmp/m0 --out /tmp/m0-run \
+  --hidden 32 --dim 512
+```
+
+Result (three seeds in `tools/neural/m0_report.json`):
+
+| variant | dev top-1 | test top-1 mean |
+|---|---:|---:|
+| morph | 0.883–0.887 | **0.8886** |
+| local | 0.900–0.902 | 0.8864 |
+| sentence | 0.881–0.883 | 0.8774 |
+| first candidate | — | 0.5074 |
+
+The experiment supports stopping before BiLSTM/Transformer: local context
+improves dev but not test, and sentence context is worse. No M0 weights are
+embedded in the crate and no production diagnostics changed.
+
+```bash
+cargo test --release --workspace
+```
+
+Result: **53 test binaries, 1,283 tests passed, 0 failed**.
+
+```bash
+cargo clippy --workspace --all-targets -- -D warnings
+```
+
+Result: clean.
+
 ## 15. References
 
 - UD Finnish-TDT: <https://universaldependencies.org/treebanks/fi_tdt/>
@@ -1499,6 +1569,6 @@ diagnostic. No model is active; `Disambiguation::disabled().cache_key()` is 0.
 
 ---
 
-*Architecture audit, Phase 1 tooling and the disabled Phase 2 sidecar. No
-production grammar behaviour, model training or active neural inference was
-changed for this document.*
+*Architecture audit, Phase 1/2 tooling and the disabled Phase 3 M0
+experiments. No production grammar behaviour, active neural inference or
+diagnostic severity was changed for this document.*

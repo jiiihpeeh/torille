@@ -189,13 +189,19 @@ pub fn coverage(sentences: &[UdSentence]) -> CoverageReport {
     report
 }
 
-fn classify(
-    syntax: &TokenSyntax,
+/// Candidate readings compatible with the gold mapping's claimed dimensions.
+///
+/// The returned views are the candidates a model could choose. The boolean is
+/// true when at least one compatible reading could not be attributed to a
+/// lemma; that token is reported as partial/unknown provenance, not as a
+/// model error.
+pub(crate) fn matching_views<'a>(
+    syntax: &'a TokenSyntax,
     token_index: usize,
     gold: &GoldReading,
     cat: &torille::spec::Catalogues,
     index: &LexiconIndex<'_>,
-) -> (CandidateOutcome, bool) {
+) -> (Vec<CandidateView<'a>>, bool) {
     let mut matches = Vec::new();
     let mut provenance_unavailable = false;
     for reading_index in 0..syntax.readings.len() {
@@ -220,6 +226,41 @@ fn classify(
             break;
         }
     }
+    (matches, provenance_unavailable)
+}
+
+/// Every reading of one token as a candidate view, with provenance.
+pub(crate) fn all_candidate_views<'a>(
+    syntax: &'a TokenSyntax,
+    token_index: usize,
+    cat: &torille::spec::Catalogues,
+    index: &LexiconIndex<'_>,
+) -> Vec<CandidateView<'a>> {
+    (0..syntax.readings.len())
+        .map(|reading_index| {
+            let tags = syntax.readings[reading_index];
+            CandidateView {
+                token_index,
+                reading_index,
+                tags,
+                lemma_provenance: lemma_provenance(syntax, &tags, cat, index),
+                source_confidence: Provenance::Unavailable {
+                    reason: "WordInfo does not retain Form::confidence per reading",
+                },
+            }
+        })
+        .collect()
+}
+
+fn classify(
+    syntax: &TokenSyntax,
+    token_index: usize,
+    gold: &GoldReading,
+    cat: &torille::spec::Catalogues,
+    index: &LexiconIndex<'_>,
+) -> (CandidateOutcome, bool) {
+    let (matches, mut provenance_unavailable) =
+        matching_views(syntax, token_index, gold, cat, index);
 
     let outcome = match matches.len() {
         0 => CandidateOutcome::Missing,
@@ -313,7 +354,7 @@ fn lemma_provenance<'a>(
 /// re-tokenise `# text`: multiword rows and punctuation would make the
 /// alignment ambiguous. Separators are omitted; sentence analysis only needs
 /// the word tokens, and each UD sentence is processed independently.
-fn synthetic_tokens(sentence: &UdSentence) -> (Vec<Token>, Vec<(usize, Option<usize>)>) {
+pub(crate) fn synthetic_tokens(sentence: &UdSentence) -> (Vec<Token>, Vec<(usize, Option<usize>)>) {
     let mut tokens = Vec::new();
     let mut aligned = Vec::with_capacity(sentence.tokens.len());
     let mut offset = 0usize;
