@@ -106,6 +106,7 @@ path = "src/bin/m0_prose_eval.rs"
 
 [features]
 neural-m0 = ["torille/neural-m0"]
+neural-m0-stack = ["torille/neural-m0-stack"]
 
 [dependencies]
 torille = { path = ".." }

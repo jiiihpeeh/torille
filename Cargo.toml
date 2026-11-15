@@ -27,6 +27,9 @@ generated-verbs = []
 # Optional M0 reading reranker. Off by default; enabling it embeds the
 # models/m0-tags-v1.bin artifact and lets `disambiguate` produce decisions.
 neural-m0 = []
+# The deterministic-context stack variant. Off by default; embeds
+# models/m0-stack-v1.bin. Do not enable together with neural-m0.
+neural-m0-stack = []
 
 [workspace.metadata]
 # wasm-pack needs to know which target the index crate was built against;

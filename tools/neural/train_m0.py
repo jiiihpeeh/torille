@@ -52,7 +52,7 @@ def feature_keys(row: dict, candidate: dict, variant: str) -> list[str]:
         value = candidate.get(field)
         if value is not None:
             keys.append(f"cand:{field}={value}")
-    if variant != "tags":
+    if variant not in ("tags", "stack"):
         for lemma in candidate.get("lemmas", []):
             keys.append(f"cand:lemma={lemma}")
         if not candidate.get("provenance_known", False):
@@ -68,6 +68,23 @@ def feature_keys(row: dict, candidate: dict, variant: str) -> list[str]:
             if index != row["position"]:
                 keys.append(f"sent:{word}")
         keys.append(f"sent:length={row['sentence_length']}")
+    if variant == "stack":
+        # Deterministic morphology and context features. These are proxies for
+        # the engine's own evidence; they are not model output.
+        index = candidate.get("index", 0)
+        keys.append(f"det:index={index}")
+        keys.append(f"det:first={1 if index == 0 else 0}")
+        keys.append(f"det:candidate_count={row['candidate_count']}")
+        keys.append(f"det:depth={row['depth']}")
+        for side in ("prev", "next"):
+            for field in ("pos", "case", "number"):
+                value = row.get(f"{side}_{field}")
+                keys.append(f"det:{side}_{field}={value}")
+                if value is not None and candidate.get(field) is not None:
+                    agree = candidate[field] == value
+                    keys.append(
+                        f"det:agree_{side}_{field}={str(agree).lower()}"
+                    )
     return keys
 
 
@@ -223,7 +240,7 @@ def main() -> int:
         "--variants",
         nargs="+",
         default=["morph", "local", "sentence"],
-        choices=["morph", "local", "sentence", "tags"],
+        choices=["morph", "local", "sentence", "tags", "stack"],
     )
     args = parser.parse_args()
 

@@ -1,56 +1,153 @@
 {
-  "corpus": "UD Finnish-FTB",
-  "corpus_license": "CC BY 4.0",
-  "mapping_version": "fi-ud-tags-1",
-  "data": {
-    "train": {"sentences": 14981, "ambiguous_tokens": 16738, "candidates": 41537},
-    "dev": {"sentences": 1875, "ambiguous_tokens": 2119, "candidates": 5187},
-    "test": {"sentences": 1867, "ambiguous_tokens": 2101, "candidates": 5290}
-  },
-  "model": {
-    "feature_dim": 512,
-    "hidden": 32,
-    "epochs": 24,
-    "batch": 64,
-    "learning_rate": 0.01,
-    "seeds": [13, 17, 29]
-  },
   "baseline": {
     "first_candidate_test_top1": 0.5074
   },
-  "runtime_tags": {
-    "variant": "tags",
-    "hash": "fnv1a-32",
-    "dev_top1": [0.8773, 0.8797, 0.8820],
-    "test_top1": [0.8848, 0.8872, 0.8867],
-    "test_mean": 0.8862,
-    "test_min": 0.8848,
-    "test_max": 0.8872,
-    "artifact": "models/m0-tags-v1.bin",
-    "artifact_bytes": 65812
-  },
-  "variants": {
-    "morph": {
-      "dev_top1": [0.8849, 0.8834, 0.8872],
-      "test_top1": [0.8915, 0.8820, 0.8924],
-      "test_mean": 0.8886,
-      "test_min": 0.8820,
-      "test_max": 0.8924
+  "corpus": "UD Finnish-FTB",
+  "corpus_license": "CC BY 4.0",
+  "data": {
+    "dev": {
+      "ambiguous_tokens": 2119,
+      "candidates": 5187,
+      "sentences": 1875
     },
-    "local": {
-      "dev_top1": [0.9023, 0.8995, 0.9000],
-      "test_top1": [0.8801, 0.8858, 0.8934],
-      "test_mean": 0.8864,
-      "test_min": 0.8801,
-      "test_max": 0.8934
+    "test": {
+      "ambiguous_tokens": 2101,
+      "candidates": 5290,
+      "sentences": 1867
     },
-    "sentence": {
-      "dev_top1": [0.8811, 0.8820, 0.8830],
-      "test_top1": [0.8829, 0.8753, 0.8739],
-      "test_mean": 0.8774,
-      "test_min": 0.8739,
-      "test_max": 0.8829
+    "train": {
+      "ambiguous_tokens": 16738,
+      "candidates": 41537,
+      "sentences": 14981
     }
   },
-  "decision": "Morphology-only is the most robust test variant. Local context improves dev but not test consistently; sentence context is worse. Do not proceed to BiLSTM/Transformer on context gain alone."
+  "decision": "Morphology-only is the most robust context variant; local context improves dev but not test consistently and sentence context is worse, so BiLSTM/Transformer is not justified. The runtime stack variant, adding deterministic reading order and neighbour morphology to tags, reaches 0.9027 test top-1. Candidate top-1 is not product quality: the weak-hint consumer keeps adjudicated prose at baseline but page-2000 diagnostics still rise, so no model is activated.",
+  "mapping_version": "fi-ud-tags-1",
+  "model": {
+    "batch": 64,
+    "epochs": 24,
+    "feature_dim": 512,
+    "hidden": 32,
+    "learning_rate": 0.01,
+    "seeds": [
+      13,
+      17,
+      29
+    ]
+  },
+  "runtime_stack": {
+    "artifact": "models/m0-stack-v1.bin",
+    "artifact_bytes": 65812,
+    "dev_top1": [
+      0.9113,
+      0.9108,
+      0.9155
+    ],
+    "hash": "fnv1a-32",
+    "test_max": 0.9043,
+    "test_mean": 0.9027,
+    "test_min": 0.9015,
+    "test_top1": [
+      0.9015,
+      0.9024,
+      0.9043
+    ],
+    "variant": "stack"
+  },
+  "runtime_tags": {
+    "artifact": "models/m0-tags-v1.bin",
+    "artifact_bytes": 65812,
+    "dev_top1": [
+      0.8773,
+      0.8797,
+      0.882
+    ],
+    "hash": "fnv1a-32",
+    "test_max": 0.8872,
+    "test_mean": 0.8862,
+    "test_min": 0.8848,
+    "test_top1": [
+      0.8848,
+      0.8872,
+      0.8867
+    ],
+    "variant": "tags"
+  },
+  "variants": {
+    "local": {
+      "dev_top1": [
+        0.9023,
+        0.8995,
+        0.9
+      ],
+      "test_max": 0.8934,
+      "test_mean": 0.8864,
+      "test_min": 0.8801,
+      "test_top1": [
+        0.8801,
+        0.8858,
+        0.8934
+      ]
+    },
+    "morph": {
+      "dev_top1": [
+        0.8849,
+        0.8834,
+        0.8872
+      ],
+      "test_max": 0.8924,
+      "test_mean": 0.8886,
+      "test_min": 0.882,
+      "test_top1": [
+        0.8915,
+        0.882,
+        0.8924
+      ]
+    },
+    "sentence": {
+      "dev_top1": [
+        0.8811,
+        0.882,
+        0.883
+      ],
+      "test_max": 0.8829,
+      "test_mean": 0.8774,
+      "test_min": 0.8739,
+      "test_top1": [
+        0.8829,
+        0.8753,
+        0.8739
+      ]
+    },
+    "stack": {
+      "dev_top1": [
+        0.9113,
+        0.9108,
+        0.9155
+      ],
+      "test_max": 0.9043,
+      "test_mean": 0.9027,
+      "test_min": 0.9015,
+      "test_top1": [
+        0.9015,
+        0.9024,
+        0.9043
+      ]
+    },
+    "tags": {
+      "dev_top1": [
+        0.8773,
+        0.8797,
+        0.882
+      ],
+      "test_max": 0.8872,
+      "test_mean": 0.8862,
+      "test_min": 0.8848,
+      "test_top1": [
+        0.8848,
+        0.8872,
+        0.8867
+      ]
+    }
+  }
 }

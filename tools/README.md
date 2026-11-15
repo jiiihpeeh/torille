@@ -66,8 +66,8 @@ Everyday probes:
 | `suggest_correct` | print ranked suggestions for a misspelling |
 | `ud_coverage` | Phase 1 neural-disambiguation harness: read CoNLL-U, map UD morphology to `Tags`, report candidate coverage by POS, case and depth |
 | `ud_m0_features` | Phase 3 M0 feature extraction for the neural candidate-reranking experiments |
-| `ud_m0_eval` | M0 candidate top-1 and UD role accuracy (requires `--features neural-m0`) |
-| `m0_prose_eval` | M0 grammar-diagnostic comparison on adjudicated prose or a text file (requires `--features neural-m0`) |
+| `ud_m0_eval` | M0 candidate top-1 and UD role accuracy (requires `--features neural-m0` or `--features neural-m0-stack`) |
+| `m0_prose_eval` | M0 grammar-diagnostic comparison on adjudicated prose or a text file (requires `--features neural-m0` or `--features neural-m0-stack`) |
 
 Corpus and code generation:
 

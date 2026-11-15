@@ -80,31 +80,49 @@ pub(super) fn classify(readings: &[Tags]) -> (SyntacticRole, RoleConfidence, Opt
 /// Assign the initial role with an optional preferred reading.
 ///
 /// The preference is a hint from the disambiguation sidecar, never an
-/// assignment: it may make one of the token's existing readings win the
-/// morphological decision, but it cannot create a role the readings do not
-/// support. A preferred nominal deliberately stays [`SyntacticRole::Unknown`]
-/// so the clause-level subject/object selection still decides from context,
-/// and any preference outside the cases below falls back to the full reading
-/// set. Passing `None` is exactly [`classify`].
+/// assignment. The baseline morphological classification stays authoritative
+/// whenever it is [`RoleConfidence::Likely`] or adverbial: the adverb policy
+/// deliberately protects pronoun objects (`Tarvitsen sen`). A decision may
+/// refine only a weak predicate, re-reading it as a nominal
+/// ([`SyntacticRole::Unknown`]) or as an adverbial, and the refined role is
+/// always `Weak`. It cannot create a second confident predicate, and a
+/// preferred nominal stays `Unknown` so the clause subject/object passes still
+/// decide from context. Passing `None` is exactly [`classify`].
 pub(super) fn classify_with_preference(
     readings: &[Tags],
     preferred: Option<&Tags>,
 ) -> (SyntacticRole, RoleConfidence, Option<Case>) {
-    if let Some(preferred) = preferred {
-        if is_finite_predicate(preferred) {
-            return (SyntacticRole::Predicate, RoleConfidence::Likely, None);
-        }
-        if preferred.part_of_speech == Some(PartOfSpeech::Adverb) {
-            return (SyntacticRole::Adverbial, RoleConfidence::Likely, None);
-        }
-        if let Some(case) = preferred.case.filter(|case| is_adverbial_case(*case)) {
-            return (SyntacticRole::Adverbial, RoleConfidence::Likely, Some(case));
-        }
-        if is_nominal_pos(preferred.part_of_speech) {
-            return (SyntacticRole::Unknown, RoleConfidence::Weak, None);
-        }
+    let baseline = classify(readings);
+    let Some(preferred) = preferred else {
+        return baseline;
+    };
+    if baseline.1 == RoleConfidence::Likely || baseline.0 == SyntacticRole::Adverbial {
+        return baseline;
     }
-    classify(readings)
+    let Some((role, case)) = preferred_role(preferred) else {
+        return baseline;
+    };
+    if role == baseline.0 {
+        return baseline;
+    }
+    (role, RoleConfidence::Weak, case)
+}
+
+/// The role a single preferred reading supports, without clause context.
+fn preferred_role(preferred: &Tags) -> Option<(SyntacticRole, Option<Case>)> {
+    if is_finite_predicate(preferred) {
+        return Some((SyntacticRole::Predicate, None));
+    }
+    if preferred.part_of_speech == Some(PartOfSpeech::Adverb) {
+        return Some((SyntacticRole::Adverbial, None));
+    }
+    if let Some(case) = preferred.case.filter(|case| is_adverbial_case(*case)) {
+        return Some((SyntacticRole::Adverbial, Some(case)));
+    }
+    if is_nominal_pos(preferred.part_of_speech) {
+        return Some((SyntacticRole::Unknown, None));
+    }
+    None
 }
 
 /// The first finite predicate candidate in a clause, preferring an
@@ -990,28 +1008,44 @@ mod tests {
     }
 
     #[test]
-    fn a_preferred_finite_reading_is_the_predicate() {
+    fn a_confident_baseline_role_is_not_overridden() {
+        let adverb = Tags::UNKNOWN.of_pos(PartOfSpeech::Adverb);
         let noun = Tags::nominal(Case::Nominative).of_pos(PartOfSpeech::Noun);
-        let verb = finite_verb();
-        let (role, confidence, _) = classify_with_preference(&[noun, verb], Some(&verb));
-        assert_eq!(role, SyntacticRole::Predicate);
+        let (role, confidence, _) =
+            classify_with_preference(&[adverb, adverb], Some(&noun));
+        assert_eq!(role, SyntacticRole::Adverbial);
         assert_eq!(confidence, RoleConfidence::Likely);
     }
 
     #[test]
-    fn a_preferred_nominal_stays_unknown_for_the_clause_passes() {
+    fn a_weak_predicate_can_be_resolved_to_a_nominal() {
         let verb = finite_verb();
         let noun = Tags::nominal(Case::Nominative).of_pos(PartOfSpeech::Noun);
-        let (role, _, _) = classify_with_preference(&[verb, noun], Some(&noun));
+        let (role, confidence, _) = classify_with_preference(&[verb, noun], Some(&noun));
         assert_eq!(role, SyntacticRole::Unknown);
+        assert_eq!(confidence, RoleConfidence::Weak);
     }
 
     #[test]
-    fn a_preferred_adverb_is_adverbial() {
-        let noun = Tags::nominal(Case::Genitive).of_pos(PartOfSpeech::Noun);
-        let adverb = Tags::UNKNOWN.of_pos(PartOfSpeech::Adverb);
-        let (role, _, _) = classify_with_preference(&[noun, adverb], Some(&adverb));
-        assert_eq!(role, SyntacticRole::Adverbial);
+    fn a_weak_predicate_preference_keeps_the_baseline_role() {
+        let verb = finite_verb();
+        let noun = Tags::nominal(Case::Nominative).of_pos(PartOfSpeech::Noun);
+        let (role, confidence, _) =
+            classify_with_preference(&[verb, noun], Some(&verb));
+        assert_eq!(role, SyntacticRole::Predicate);
+        assert_eq!(confidence, RoleConfidence::Weak);
+    }
+
+    #[test]
+    fn a_weak_adverbial_keeps_the_baseline_role() {
+        let partitive = Tags::nominal(Case::Partitive).of_pos(PartOfSpeech::Noun);
+        let inessive = Tags::nominal(Case::Inessive).of_pos(PartOfSpeech::Noun);
+        let illative = Tags::nominal(Case::Illative).of_pos(PartOfSpeech::Noun);
+        let readings = [partitive, inessive, illative];
+        assert_eq!(
+            classify_with_preference(&readings, Some(&illative)),
+            classify(&readings)
+        );
     }
 
     #[test]
@@ -1020,6 +1054,9 @@ mod tests {
             Tags::nominal(Case::Nominative).of_pos(PartOfSpeech::Noun),
             Tags::UNKNOWN.of_pos(PartOfSpeech::Adverb),
         ];
-        assert_eq!(classify_with_preference(&readings, None), classify(&readings));
+        assert_eq!(
+            classify_with_preference(&readings, None),
+            classify(&readings)
+        );
     }
 }

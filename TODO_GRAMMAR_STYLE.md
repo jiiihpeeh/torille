@@ -511,23 +511,29 @@ analysis refinements”.
   morphology-only, local-context and sentence-context MLPs on UD Finnish-FTB.
   Three seeds: morph test top-1 0.8886 mean, local 0.8864, sentence 0.8774,
   first-candidate baseline 0.5074. Local wins dev but not test; sentence
-  context is worse. Decision: do not start BiLSTM/Transformer on context gain;
-  the tags-only weights are embedded only behind the off-by-default
-  `neural-m0` feature and are not activated.
-- [x] **M0 runtime/product evaluation (implemented; negative).** The tags-only
-  model is embedded behind `neural-m0` and `classify_with_preference` consumes
-  decisions. On UD test the model reaches candidate top-1 0.8867 (baseline
-  0.5074) and decided-token role accuracy 0.6697 -> 0.6899. On adjudicated
-  prose it adds one `Error` `object_case` on clean text (0 -> 1 clean rows with
-  a diagnostic) while removing two known false positives; page-2000 grammar
-  diagnostics move 67 -> 70 with 144 role changes. Decision: do not activate.
-  The next step is a safer consumer or role/clause hardening, not a larger
-  model.
-- [ ] **M0 consumer hardening.** Make a decision affect only role dimensions
-  the clause layer can absorb without cascading, or harden predicate,
-  nominal/adverb and clause-boundary selection first. Re-run
-  `ud_m0_eval` and `m0_prose_eval`; require no clean-prose regression before
-  considering M1.
+  context is worse. Decision: do not start BiLSTM/Transformer on context gain.
+  The tags and deterministic-context stack weights are embedded only behind
+  the off-by-default `neural-m0` / `neural-m0-stack` features and are not
+  activated.
+- [x] **M0 runtime/product evaluation (implemented; negative).** The tags and
+  deterministic-context stack models are embedded behind `neural-m0` and
+  `neural-m0-stack`. The aggressive consumer reached UD candidate top-1
+  0.8867 and decided-token role accuracy 0.6697 -> 0.6899, but added an
+  `Error` `object_case` on adjudicated clean prose. The weak-hint consumer
+  keeps confident and adverbial baseline roles and re-reads only weak
+  predicates; it returns adjudicated clean prose to 0 diagnostics. The stack
+  variant reaches candidate top-1 0.9043 and role accuracy 0.6643 -> 0.6694
+  overall (0.6697 -> 0.6885 decided), with 127 role changes (71 improve, 26
+  worsen). Page-2000 diagnostics still move 67 -> 71 with 44 role changes.
+  Decision: do not activate. The next step is role/clause hardening, not a
+  larger model.
+- [ ] **Role/clause hardening.** Split coordinated/subordinate finite clauses
+  (for example at `sillä`), make predicate selection coherent when a clause has
+  more than one finite candidate, keep the negated-clause object rule from
+  treating subjects or predicate complements as objects, and pin the
+  adverb/nominal interaction. These are grammar-checker bugs independent of
+  M0. Re-run `ud_m0_eval` and `m0_prose_eval` after the fixes; a larger model
+  remains blocked meanwhile.
 
 ## Deliberate boundaries
 
@@ -626,7 +632,15 @@ intended/competing interpretation pair that fails.
 - 2026-11-15: implemented the optional M0 runtime/product evaluation. Added the
   tags-only `models/m0-tags-v1.bin`, the `neural-m0` feature with embedded
   inference, `classify_with_preference`, `ud_m0_eval` and `m0_prose_eval`.
-  UD candidate top-1 0.8867 and decided-token role accuracy 0.6697 -> 0.6899,
-  but adjudicated clean prose gains an `Error` `object_case` and page-2000
-  diagnostics move 67 -> 70. The model stays off by default; the default build
-  remains an exact no-op.
+  The aggressive consumer added an `Error` on adjudicated clean prose; the
+  weak-hint consumer fixed that and kept adjudicated prose at baseline, with
+  UD role accuracy 0.6643 -> 0.6661 overall (0.6697 -> 0.6803 decided). The
+  page-2000 smoke still moves 67 -> 72, so the model stays off by default and
+  the default build remains an exact no-op.
+- 2026-11-15: added the deterministic-context stack variant. `train_m0.py`
+  now supports `--variants stack`, `combine_m0.py` measures reading-order
+  prior fusion (it hurts: model 0.8867 -> 0.8829 test at best), and
+  `models/m0-stack-v1.bin` is embedded behind `neural-m0-stack`. Three-seed
+  stack test top-1 is 0.9027 mean (0.9015–0.9043), and the weak-hint consumer
+  reaches UD role accuracy 0.6694 overall / 0.6885 decided. Adjudicated prose
+  stays at baseline; page-2000 diagnostics move 67 -> 71. Still not activated.

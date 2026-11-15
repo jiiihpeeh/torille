@@ -48,6 +48,8 @@ candidate scorers:
 | `morph` | candidate morphology + surface only |
 | `local` | morph + previous/next token and position |
 | `sentence` | local + hashed bag of the sentence's other tokens |
+| `tags` | candidate tags + surface; no lemma provenance |
+| `stack` | tags + reading index, candidate count, depth and neighbour morphology |
 
 `tools/neural/m0_report.json` records three seeds (13, 17, 29). Results:
 
@@ -57,41 +59,66 @@ candidate scorers:
 | morph | 0.883–0.887 | **0.8886** | 0.8820–0.8924 |
 | local | 0.900–0.902 | 0.8864 | 0.8801–0.8934 |
 | sentence | 0.881–0.883 | 0.8774 | 0.8739–0.8829 |
+| tags | 0.877–0.882 | 0.8862 | 0.8848–0.8872 |
+| stack | 0.911–0.916 | **0.9027** | 0.9015–0.9043 |
 
 The local model wins on dev but not consistently on test; the sentence model is
 worse. This is why the project does not proceed to BiLSTM/Transformer on
 context gain alone. The morph M0 is the current candidate baseline.
 
-The runtime variant is tags-only, so it does not need per-reading lemma
-provenance:
+The runtime variants avoid per-reading lemma provenance. Train and export
+both:
 
 ```bash
 python3 tools/neural/train_m0.py --data /tmp/m0 --out /tmp/m0-tags-29 \
   --hidden 32 --dim 512 --hash fnv --variants tags --seed 29
 python3 tools/neural/export_m0.py /tmp/m0-tags-29/m0-tags.npz \
   /tmp/m0-tags.bin
+
+python3 tools/neural/train_m0.py --data /tmp/m0 --out /tmp/m0-stack-29 \
+  --hidden 32 --dim 512 --hash fnv --variants stack --seed 29
+python3 tools/neural/export_m0.py /tmp/m0-stack-29/m0-stack.npz \
+  /tmp/m0-stack.bin
 ```
 
-`tools/neural/m0_report.json` records the three context variants. The tags-only
-three-seed test mean is 0.8862.
+The tags-only three-seed test mean is 0.8862; the deterministic-context stack
+variant reaches 0.9027.
+
+## Combining with a deterministic prior
+
+`combine_m0.py` tests whether the model should be multiplied with the
+engine's reading order. It loads an exported tags model, sweeps a prior weight
+on dev, and reports test:
+
+```bash
+python3 tools/neural/combine_m0.py --data /tmp/m0 \
+  --model /tmp/m0-tags-29/m0-tags.npz
+```
+
+Result: the model alone wins. Test top-1 drops from 0.8867 to 0.8829 at the
+best dev-selected weight, 0.8734 for a product (`w=1`) and 0.8772 for a square
+root (`w=0.5`). Reading order is already covered by the stack features; a
+naive probability product is not useful.
 
 ## Product evaluation
 
-Build with `--features neural-m0` to run the embedded model:
+Build with `--features neural-m0` or `--features neural-m0-stack` to run an
+embedded model:
 
 ```bash
-cargo run --release -p torille-tools --features neural-m0 --bin ud_m0_eval \
+cargo run --release -p torille-tools --features neural-m0-stack --bin ud_m0_eval \
   -- --file /tmp/fi_ftb-ud-test.conllu
-cargo run --release -p torille-tools --features neural-m0 --bin m0_prose_eval \
+cargo run --release -p torille-tools --features neural-m0-stack --bin m0_prose_eval \
   -- --file tests/fixtures/prose/adjudicated.json
-cargo run --release -p torille-tools --features neural-m0 --bin m0_prose_eval \
+cargo run --release -p torille-tools --features neural-m0-stack --bin m0_prose_eval \
   -- --text tests/fixtures/perf/page-2000.txt
 ```
 
-Result: candidate top-1 0.8867 and decided-token role accuracy 0.6697 -> 0.6899,
-but adjudicated clean prose gains an `Error` `object_case` and page-2000
-diagnostics move 67 -> 70. The model remains off by default; see
+The weak-hint stack consumer reaches candidate top-1 0.9043 and decided-token
+role accuracy 0.6697 -> 0.6885. Adjudicated clean prose stays at 0 diagnostics
+and the true-positive/known-FP rows are unchanged, but page-2000 diagnostics
+move 67 -> 71. The models remain off by default; see
 [`docs/neural_disambiguation.md`](../../docs/neural_disambiguation.md) Phase 3b.
 
-Candidate top-1 is **not** product quality. The next work is a safer consumer
-or role/clause hardening, not a larger model.
+Candidate top-1 is **not** product quality. The next work is role/clause
+hardening, not a larger model.

@@ -218,11 +218,12 @@ pub fn analyze_syntax(tokens: &[Token], morphology: &MorphologyAnalysis) -> Synt
 /// The same analysis with an explicit disambiguation sidecar.
 ///
 /// With disabled neural inference the output is identical to
-/// [`analyze_syntax`]. With an enabled model the role selectors may let a
-/// decision's preferred reading win the morphological classification, but the
-/// model still never assigns a role: it only chooses among readings the
-/// morphology layer already produced, and a preferred nominal stays unknown
-/// until the clause-level subject/object passes resolve it.
+/// [`analyze_syntax`]. With an enabled model the role selectors may use a
+/// decision as a weak hint over a weak predicate, but the model never assigns
+/// a role: it only chooses among readings the morphology layer already
+/// produced, confident and adverbial baseline roles stay authoritative, and a
+/// preferred nominal stays unknown until the clause-level subject/object
+/// passes resolve it.
 pub fn analyze_syntax_with_decisions(
     tokens: &[Token],
     morphology: &MorphologyAnalysis,

@@ -1172,78 +1172,119 @@ Model: 512 hashed features, 32 hidden units, three seeds (13, 17, 29).
 | `morph` | candidate morphology + surface | 0.883–0.887 | **0.8886** | 0.8820–0.8924 |
 | `local` | morph + prev/next + position | 0.900–0.902 | 0.8864 | 0.8801–0.8934 |
 | `sentence` | local + hashed sentence bag | 0.881–0.883 | 0.8774 | 0.8739–0.8829 |
+| `tags` | candidate tags + surface | 0.877–0.882 | 0.8862 | 0.8848–0.8872 |
+| `stack` | tags + reading index, candidate count, depth, neighbour morphology | 0.911–0.916 | **0.9027** | 0.9015–0.9043 |
 
 **Decision:** do not proceed to BiLSTM/Transformer on context gain alone.
 Local context improves dev but not consistently on test; sentence context is
-worse. The morphology-only MLP is the candidate baseline.
+worse. The morphology-only MLP is the earlier candidate baseline.
 
-A tags-only variant (`--variants tags --hash fnv`) was trained for runtime use
-because the production path has no reliable per-reading lemma provenance. Its
-three-seed test mean is 0.8862 (range 0.8848–0.8872) against the same 0.5074
-first-candidate baseline. Seed 29 was exported to `models/m0-tags-v1.bin`
-(65,812 bytes) and is embedded only with the `neural-m0` Cargo feature. The
-model card is `models/README.md`.
+Two runtime-feasible variants avoid per-reading lemma provenance:
+
+- `tags` (`--variants tags --hash fnv`) is the tags-only model. Seed 29 was
+  exported to `models/m0-tags-v1.bin` (65,812 bytes) and is embedded with the
+  `neural-m0` Cargo feature.
+- `stack` adds deterministic reading order, candidate count, depth and the
+  first reading of the previous/next word. Seed 29 was exported to
+  `models/m0-stack-v1.bin` (65,812 bytes) and is embedded with the
+  `neural-m0-stack` Cargo feature.
+
+The stack variant is the better candidate ranker: three-seed test mean 0.9027
+against tags 0.8862 and the 0.5074 first-candidate baseline. The model card is
+`models/README.md`.
+
+`tools/neural/combine_m0.py` tests the other obvious combination: multiply the
+tags model by a prior derived from the engine's reading order. It does not help.
+The model alone reaches 0.8867 test top-1; the best dev-selected prior weight
+reaches 0.8829, a product (`w=1`) 0.8734, and a square root (`w=0.5`) 0.8772.
+Deterministic evidence is useful as **features** (the stack variant), not as a
+second uncalibrated probability multiplied into the model.
 
 ### Phase 3b — M0 runtime/product evaluation (implemented; feature-gated, not activated)
 
-`src/syntax/roles.rs` now has `classify_with_preference`. It treats a model
-decision as a hint over the token's existing readings:
+`src/syntax/roles.rs` now has `classify_with_preference`. The first version let
+the preferred reading win outright: preferred finite -> `Predicate`, preferred
+adverb/adverbial case -> `Adverbial`, preferred nominal -> `Unknown`, all with
+`Likely` confidence. That version produced the first product measurement:
 
-- preferred finite verb -> `Predicate`;
-- preferred non-finite verb (connegative, infinitive, participle) -> `Unknown`,
-  so it cannot promote another finite reading;
-- preferred adverb or adverbial case -> `Adverbial`;
-- preferred nominal -> `Unknown`, so the clause subject/object passes still
-  decide from context.
+| metric | baseline | aggressive M0 |
+|---|---:|---:|
+| candidate top-1 | 0.5074 | 0.8867 |
+| role accuracy, all mapped tokens | 0.6643 | 0.6683 |
+| role accuracy, tokens with a decision | 0.6697 | 0.6899 |
+| adjudicated clean rows with a diagnostic | 0 | **1** |
+| adjudicated true positives with exact kinds | 1/1 | 1/1 |
+| adjudicated known-FP rows unchanged | 10/10 | 8/10 |
+| page-2000 grammar diagnostics | 67 | 70 |
+
+The clean regression was an `Error` `object_case` on `kuollut` in
+`Tein sen keveällä sydämellä, sillä ethän ole kuollut.` The model correctly
+preferred `Tein` as the finite predicate, but the sentence is still one clause,
+so the post-predicate nominative selection took `kuollut` as a subject and the
+negated-clause rule treated it as an object. On page-2000, 144 roles changed
+and wrong preferences cascaded into new diagnostics.
+
+The current implementation is the **weak-hint consumer**:
+
+- the baseline role stays authoritative when it is `Likely`;
+- an adverbial baseline always stays baseline, protecting the deliberate
+  adverb/pronoun-object policy (`Tarvitsen sen`);
+- only a `Weak` predicate may be re-read, as a nominal (`Unknown`) or as an
+  adverbial, and the refined role is always `Weak`;
+- a preferred nominal stays `Unknown`, so the subject/object passes still
+  decide from context;
+- a preference can never create a second confident predicate.
 
 `Disambiguation::disabled()` keeps the exact Phase 2 no-op. The evaluation
 tools are `tools/src/bin/ud_m0_eval.rs` (UD top-1 and role accuracy) and
 `tools/src/bin/m0_prose_eval.rs` (adjudicated prose and full-page diagnostics).
 
-UD Finnish-FTB test, model on versus baseline:
+UD Finnish-FTB test, weak-hint model on versus baseline:
 
-| metric | baseline | M0 |
-|---|---:|---:|
-| candidate top-1 | 0.5074 | 0.8867 |
-| role accuracy, all mapped tokens | 0.6643 | 0.6683 |
-| role accuracy, tokens with a decision | 0.6697 | 0.6899 |
+| metric | baseline | tags | stack |
+|---|---:|---:|---:|
+| candidate top-1 | 0.5074 | 0.8867 | **0.9043** |
+| role accuracy, all mapped tokens | 0.6643 | 0.6661 | **0.6694** |
+| role accuracy, tokens with a decision | 0.6697 | 0.6803 | **0.6885** |
+| role changes | — | 147 | 127 |
 
-The model changes 305 roles: 135 improve, 100 worsen, 70 are neutral.
+The stack model changes 127 roles: 71 improve, 26 worsen, 30 are neutral. The
+extra deterministic features therefore improve both candidate ranking and the
+role consumer, not just top-1.
 
 Adjudicated prose (`tests/fixtures/prose/adjudicated.json`):
 
-| group | baseline | M0 |
-|---|---:|---:|
-| clean rows with a diagnostic | 0 | 1 |
-| true positives with exact kinds | 1/1 | 1/1 |
-| known false-positive rows unchanged | 10/10 | 8/10 |
-
-The clean regression is an `Error` `object_case` on `kuollut` in
-`Tein sen keveällä sydämellä, sillä ethän ole kuollut.` The model correctly
-prefers `Tein` as the finite predicate, but the sentence is still one clause,
-so the post-predicate nominative selection takes `kuollut` as a subject and the
-negated-clause rule treats it as an object. The two known-FP improvements are
-side effects of the same role reshuffling, not evidence of better grammar.
+| group | baseline | tags | stack |
+|---|---:|---:|---:|
+| clean rows with a diagnostic | 0 | 0 | 0 |
+| true positives with exact kinds | 1/1 | 1/1 | 1/1 |
+| known false-positive rows unchanged | 10/10 | 10/10 | 10/10 |
 
 On the 2,000-word `tests/fixtures/perf/page-2000.txt`, diagnostics move from
-67 to 70 and 144 roles change, many of them clearly wrong (adverbs promoted to
-subjects/objects, finite predicates demoted by a nominal preference).
+67 to 72 for tags and 67 to 71 for stack, with 66 and 44 role changes
+respectively. The stack increase is spread across existing kinds:
+`attribute_agreement` 12 -> 15, `object_case` 4 -> 6, `comma_missing` 13 -> 14,
+with `subject_predicate_agreement` 9 -> 8 and `verb_rection` 21 -> 20. The page
+is a performance fixture, not adjudicated clean prose, but the net increase is
+still a failed smoke gate.
 
-**Decision:** do not activate M0 in any default path. Candidate top-1,
-0.8867, does not survive product evaluation: model mistakes cascade through
-greedy role selection and the current clause segmentation, and the net effect
-on adjudicated prose is a new `Error` on correct text. The feature stays off,
-`Disambiguation` stays disabled unless the feature is compiled in, and no
+**Decision:** do not activate M0 in any default path. The weak-hint consumer
+removes the adjudicated clean-prose regression and the stack features improve
+UD candidate ranking and role accuracy, but adjudicated prose is unchanged and
+the page-2000 diagnostic count still rises. The features stay off,
+`Disambiguation` stays disabled unless a feature is compiled in, and no
 diagnostic severity is lowered or suppressed.
 
-The next step is not a larger model. It is either a safer consumer (consult a
-decision only where the role layer is insensitive to a wrong preference) or
-hardening role selection and clause segmentation first, with a larger
-adjudicated-prose set. Until then M1/BiLSTM/Transformer remains blocked.
+The next step is not a larger model and not a looser consumer. It is
+role/clause hardening: clause splitting at `sillä`/coordinated finite clauses,
+predicate selection when a clause has more than one finite candidate, the
+negated-clause object rule treating subjects and predicate complements as
+objects, and adverb/nominal interaction. Those are grammar-checker bugs with
+or without a model. M1/BiLSTM/Transformer remains blocked.
 
-**Exit:** the product evaluation is complete and negative. No model is active
-by default, no diagnostics changed in the default build, and the Phase 2 no-op
-gate stays green.
+**Exit:** the product evaluation is complete. No model is active by default, no
+diagnostics changed in the default build, and the Phase 2 no-op gate stays
+green.
 
 ### Phase 4 — M1 BiLSTM / compact Transformer (blocked by M0 product evaluation)
 
@@ -1253,9 +1294,10 @@ Do not start this phase from architecture preference. It requires either:
 - a product evaluation showing that the M0 runtime integration improves role
   and diagnostic quality enough to justify activation.
 
-The Phase 3b evaluation did not meet the second condition. Start M1 only after
-a safer M0 consumer or role-layer hardening has made the product metrics
-non-negative on adjudicated prose.
+The Phase 3b weak-hint consumer kept adjudicated prose non-negative but still
+increased the page-2000 diagnostic count. Start M1 only after role/clause
+hardening has made the broader smoke metrics non-negative; a larger model is
+not the next lever.
 
 If that happens:
 
@@ -1612,29 +1654,31 @@ embedded only with the `neural-m0` feature.
 Runtime and product evaluation:
 
 ```bash
-cargo run --release -p torille-tools --features neural-m0 --bin ud_m0_eval \
+cargo run --release -p torille-tools --features neural-m0-stack --bin ud_m0_eval \
   -- --file /tmp/fi_ftb-ud-test.conllu
-cargo run --release -p torille-tools --features neural-m0 --bin m0_prose_eval \
+cargo run --release -p torille-tools --features neural-m0-stack --bin m0_prose_eval \
   -- --file tests/fixtures/prose/adjudicated.json
-cargo run --release -p torille-tools --features neural-m0 --bin m0_prose_eval \
+cargo run --release -p torille-tools --features neural-m0-stack --bin m0_prose_eval \
   -- --text tests/fixtures/perf/page-2000.txt
 ```
 
-Results:
+Results (weak-hint stack consumer):
 
-| metric | baseline | M0 |
+| metric | baseline | M0 stack |
 |---|---:|---:|
-| UD candidate top-1 | 0.5074 | 0.8867 |
-| UD role accuracy, all mapped tokens | 0.6643 | 0.6683 |
-| UD role accuracy, decided tokens | 0.6697 | 0.6899 |
-| adjudicated clean rows with a diagnostic | 0 | 1 |
+| UD candidate top-1 | 0.5074 | 0.9043 |
+| UD role accuracy, all mapped tokens | 0.6643 | 0.6694 |
+| UD role accuracy, decided tokens | 0.6697 | 0.6885 |
+| adjudicated clean rows with a diagnostic | 0 | 0 |
 | adjudicated true positives with exact kinds | 1/1 | 1/1 |
-| adjudicated known-FP rows unchanged | 10/10 | 8/10 |
-| page-2000 grammar diagnostics | 67 | 70 |
-| page-2000 role changes | — | 144 |
+| adjudicated known-FP rows unchanged | 10/10 | 10/10 |
+| page-2000 grammar diagnostics | 67 | 71 |
+| page-2000 role changes | — | 44 |
 
-The clean regression is an `Error` `object_case` on correct text. The model is
-not activated by default and the default build remains an exact no-op.
+The weak-hint consumer removes the earlier adjudicated clean regression and
+keeps adjudicated prose at baseline, but the page-2000 smoke still increases
+diagnostics. The model is not activated by default and the default build
+remains an exact no-op.
 
 ```bash
 cargo test --release --workspace

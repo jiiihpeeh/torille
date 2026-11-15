@@ -1,10 +1,10 @@
 //! M0 fixed-weight candidate reranker.
 //!
-//! This is the runtime half of the Phase 3 `tags` experiment. It reads a
-//! 65 KB artifact exported by `tools/neural/export_m0.py`; the feature set is
-//! intentionally tags-only so it does not depend on per-reading lemma
-//! provenance. It is compiled only with the `neural-m0` Cargo feature and is
-//! off by default.
+//! This is the runtime half of the Phase 3 experiments. The `neural-m0`
+//! feature embeds the tags-only model; `neural-m0-stack` embeds the stack
+//! variant, which adds deterministic reading-order, morphology and
+//! neighbour-reading features on top of the same tags. Neither model depends
+//! on per-reading lemma provenance, and both are off by default.
 
 use std::sync::OnceLock;
 
@@ -15,8 +15,19 @@ use crate::tokenise::Token;
 
 const MAGIC: &[u8; 4] = b"TDM0";
 const MODEL_VERSION: u32 = 1;
-const FEATURE_SCHEMA_VERSION: u32 = 1;
 const HASH_FNV: u8 = 1;
+
+#[cfg(all(feature = "neural-m0", feature = "neural-m0-stack"))]
+compile_error!("enable either neural-m0 or neural-m0-stack, not both");
+
+#[cfg(feature = "neural-m0-stack")]
+const FEATURE_SCHEMA_VERSION: u32 = 2;
+#[cfg(all(feature = "neural-m0", not(feature = "neural-m0-stack")))]
+const FEATURE_SCHEMA_VERSION: u32 = 1;
+
+#[cfg(feature = "neural-m0-stack")]
+const MODEL_BYTES: &[u8] = include_bytes!("../../models/m0-stack-v1.bin");
+#[cfg(all(feature = "neural-m0", not(feature = "neural-m0-stack")))]
 const MODEL_BYTES: &[u8] = include_bytes!("../../models/m0-tags-v1.bin");
 
 struct Model {
@@ -26,6 +37,40 @@ struct Model {
     b1: Vec<f32>,
     w2: Vec<f32>,
     b2: f32,
+}
+
+/// The first reading of a neighbouring word, as deterministic context.
+#[derive(Default)]
+struct Neighbor {
+    part_of_speech: Option<&'static str>,
+    case: Option<&'static str>,
+    number: Option<&'static str>,
+}
+
+/// Deterministic sentence context for one token.
+struct Context {
+    prev: Neighbor,
+    next: Neighbor,
+}
+
+impl Context {
+    fn new(index: usize, morphology: &MorphologyAnalysis) -> Self {
+        Self {
+            prev: neighbor(index.checked_sub(1).and_then(|at| morphology.word(at))),
+            next: neighbor(morphology.word(index + 1)),
+        }
+    }
+}
+
+fn neighbor(info: Option<&WordInfo>) -> Neighbor {
+    let Some(tags) = info.and_then(|info| info.readings().first()) else {
+        return Neighbor::default();
+    };
+    Neighbor {
+        part_of_speech: tags.part_of_speech.map(|value| value.name()),
+        case: tags.case.map(|value| value.name()),
+        number: tags.number.map(|value| value.name()),
+    }
 }
 
 fn model() -> Option<&'static Model> {
@@ -99,10 +144,14 @@ pub(crate) fn disambiguate(tokens: &[Token], morphology: &MorphologyAnalysis) ->
         if info.readings().len() < 2 {
             continue;
         }
+        let context = Context::new(index, morphology);
         let scores: Vec<f32> = info
             .readings()
             .iter()
-            .map(|tags| model.score(token, info, tags))
+            .enumerate()
+            .map(|(reading_index, tags)| {
+                model.score(token, reading_index, info, tags, &context)
+            })
             .collect();
         let probabilities = softmax(&scores);
         let preferred = argmax(&scores);
@@ -125,8 +174,15 @@ pub(crate) fn disambiguate(tokens: &[Token], morphology: &MorphologyAnalysis) ->
 }
 
 impl Model {
-    fn score(&self, token: &Token, info: &WordInfo, tags: &Tags) -> f32 {
-        let keys = feature_keys(token, info, tags);
+    fn score(
+        &self,
+        token: &Token,
+        index: usize,
+        info: &WordInfo,
+        tags: &Tags,
+        context: &Context,
+    ) -> f32 {
+        let keys = feature_keys(token, index, info, tags, context);
         let mut input = vec![0.0f32; self.dim];
         for key in keys {
             input[(fnv1a(&key) % self.dim as u32) as usize] = 1.0;
@@ -148,7 +204,13 @@ impl Model {
     }
 }
 
-fn feature_keys(token: &Token, info: &WordInfo, tags: &Tags) -> Vec<String> {
+fn feature_keys(
+    token: &Token,
+    index: usize,
+    info: &WordInfo,
+    tags: &Tags,
+    context: &Context,
+) -> Vec<String> {
     let mut keys = vec![
         format!("tok:surface={}", token.text),
         format!("tok:lower={}", token.text.to_lowercase()),
@@ -183,7 +245,58 @@ fn feature_keys(token: &Token, info: &WordInfo, tags: &Tags) -> Vec<String> {
     if let Some(value) = tags.clitic {
         keys.push(format!("cand:clitic={}", clitic_name(value)));
     }
+    #[cfg(feature = "neural-m0-stack")]
+    append_stack_keys(&mut keys, index, info, tags, context);
     keys
+}
+
+/// Deterministic features for the stack model.
+///
+/// These mirror `tools/neural/train_m0.py --variants stack`: reading order,
+/// candidate count, morphology depth and the first reading of the previous and
+/// next words. They are cheap and do not need per-reading lemma provenance.
+#[cfg(feature = "neural-m0-stack")]
+fn append_stack_keys(
+    keys: &mut Vec<String>,
+    index: usize,
+    info: &WordInfo,
+    tags: &Tags,
+    context: &Context,
+) {
+    keys.push(format!("det:index={index}"));
+    keys.push(format!(
+        "det:first={}",
+        if index == 0 { 1 } else { 0 }
+    ));
+    keys.push(format!("det:candidate_count={}", info.readings().len()));
+    keys.push(format!("det:depth={}", info.depth().label()));
+    for (side, neighbor) in [("prev", &context.prev), ("next", &context.next)] {
+        let fields = [
+            (
+                "pos",
+                tags.part_of_speech.map(|value| value.name()),
+                neighbor.part_of_speech,
+            ),
+            ("case", tags.case.map(|value| value.name()), neighbor.case),
+            (
+                "number",
+                tags.number.map(|value| value.name()),
+                neighbor.number,
+            ),
+        ];
+        for (field, candidate, neighbor) in fields {
+            keys.push(format!(
+                "det:{side}_{field}={}",
+                neighbor.unwrap_or("None")
+            ));
+            if let (Some(candidate), Some(neighbor)) = (candidate, neighbor) {
+                keys.push(format!(
+                    "det:agree_{side}_{field}={}",
+                    if candidate == neighbor { "true" } else { "false" }
+                ));
+            }
+        }
+    }
 }
 
 fn case_name(case: Case) -> &'static str {
@@ -269,6 +382,22 @@ mod tests {
         assert_eq!(model.dim, 512);
         assert_eq!(model.hidden, 32);
         assert_eq!(model.w1.len(), 512 * 32);
+    }
+
+    #[cfg(feature = "neural-m0-stack")]
+    #[test]
+    fn stack_features_use_the_candidate_index_and_neighbour_context() {
+        let tokens = tokenise("Tuli sammui.");
+        let mut cache = crate::morphology::MorphologyCache::new();
+        let morphology = crate::morphology::analyze_morphology(&tokens, &mut cache);
+        let info = morphology.word(0).expect("Tuli should resolve");
+        assert!(info.readings().len() >= 2);
+        let context = Context::new(0, &morphology);
+        let first = feature_keys(&tokens[0], 0, info, &info.readings()[0], &context);
+        let second = feature_keys(&tokens[0], 1, info, &info.readings()[1], &context);
+        assert!(first.contains(&"det:index=0".to_string()));
+        assert!(second.contains(&"det:index=1".to_string()));
+        assert!(second.iter().any(|key| key.starts_with("det:next_pos=")));
     }
 
     #[test]

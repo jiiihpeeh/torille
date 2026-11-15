@@ -10,6 +10,7 @@
 //! m0_prose_eval --file tests/fixtures/prose/adjudicated.json
 //! ```
 
+use std::collections::BTreeMap;
 use std::process::ExitCode;
 
 use serde_json::Value;
@@ -233,6 +234,30 @@ fn run_text(path: &str, text: &str) -> Result<(), String> {
             continue;
         }
         println!("removed {kind}: {message}");
+    }
+    let mut counts: BTreeMap<String, (usize, usize)> = BTreeMap::new();
+    for kind in &comparison.base {
+        counts.entry(kind.clone()).or_default().0 += 1;
+    }
+    for kind in &comparison.model {
+        counts.entry(kind.clone()).or_default().1 += 1;
+    }
+    println!("kind\tbaseline\tmodel");
+    for (kind, (base, model)) in &counts {
+        if base != model {
+            println!("{kind}\t{base}\t{model}");
+        }
+    }
+    for (kind, (base, model)) in &counts {
+        if model <= base {
+            continue;
+        }
+        println!("increased {kind}: {base} -> {model}");
+        for (detail_kind, message) in &comparison.model_details {
+            if detail_kind == kind {
+                println!("  model {detail_kind}: {message}");
+            }
+        }
     }
     println!("role changes: {}", comparison.roles.len());
     for (index, before, after, preferred) in &comparison.roles {

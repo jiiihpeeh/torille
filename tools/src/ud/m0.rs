@@ -26,6 +26,14 @@ pub struct M0Example {
     pub sentence_length: usize,
     pub prev: Option<String>,
     pub next: Option<String>,
+    /// The first reading of the previous/next word, when it has one. These are
+    /// deterministic context features, not model output.
+    pub prev_pos: Option<String>,
+    pub prev_case: Option<String>,
+    pub prev_number: Option<String>,
+    pub next_pos: Option<String>,
+    pub next_case: Option<String>,
+    pub next_number: Option<String>,
     pub depth: String,
     pub candidate_count: usize,
     pub label: usize,
@@ -104,6 +112,11 @@ pub fn examples(sentences: &[UdSentence]) -> Vec<M0Example> {
             let position = token_index;
             let prev = position.checked_sub(1).map(|at| tokens[at].text.to_lowercase());
             let next = tokens.get(position + 1).map(|token| token.text.to_lowercase());
+            let prev_features = neighbor_features(
+                position.checked_sub(1).and_then(|at| morphology.word(at)),
+            );
+            let next_features =
+                neighbor_features(morphology.word(position + 1));
             let depth = morphology
                 .word(token_index)
                 .map_or(Depth::Unknown, |info| info.depth())
@@ -118,6 +131,12 @@ pub fn examples(sentences: &[UdSentence]) -> Vec<M0Example> {
                 sentence_length: tokens.len(),
                 prev,
                 next,
+                prev_pos: prev_features.0,
+                prev_case: prev_features.1,
+                prev_number: prev_features.2,
+                next_pos: next_features.0,
+                next_case: next_features.1,
+                next_number: next_features.2,
                 depth,
                 candidate_count: syntax_token.readings.len(),
                 label,
@@ -130,6 +149,20 @@ pub fn examples(sentences: &[UdSentence]) -> Vec<M0Example> {
         }
     }
     out
+}
+
+/// The first reading of a neighbouring word as deterministic context.
+fn neighbor_features(
+    info: Option<&torille::morphology::WordInfo>,
+) -> (Option<String>, Option<String>, Option<String>) {
+    let Some(tags) = info.and_then(|info| info.readings().first()) else {
+        return (None, None, None);
+    };
+    (
+        tags.part_of_speech.map(|pos| pos.name().to_string()),
+        tags.case.map(|case| case.name().to_string()),
+        tags.number.map(|number| number.name().to_string()),
+    )
 }
 
 fn candidate_from_view(view: CandidateView<'_>) -> M0Candidate {
