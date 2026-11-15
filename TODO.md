@@ -1706,5 +1706,10 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   `isoissa-aivoissa`, `isoilta-aivoilta`) while `isoilleaivoille`,
   `isoiksiaivoiksi` and `isojenaivojen` stay closed. A partitive tail
   possessive also takes the partitive modifier (`vanhaaisäntääni`).
-  Class-51 20-lemma sample: confirmed 2645 -> 2752, missing 86 -> 0,
-  illegal 53 -> 46.
+  A class-51 head may only be a `Plain` form; repaired head plurals such as
+  `isoiden`/`isoitten` were being joined into compounds. With the plain-only
+  head and the Wiktionary checks, the class-51 20-lemma sample is confirmed
+  2740, missing 0, illegal 9. Those 9 are oracle omissions, not engine
+  errors: `aavameri`'s elative `aavoistameristä`, `hienosokeri`'s third
+  genitive plural `hienojensokereiden`, and `isosisar`'s `isojensisarien`
+  are all accepted by Wiktionary/Voikko.

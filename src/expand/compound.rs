@@ -81,7 +81,11 @@ pub(super) fn compound_paradigm(
             };
             for h in head_forms {
                 let tags = h.union();
-                if tags.possessive.is_some() {
+                // Only a plain head form may be offered. The class engine keeps
+                // repaired plurals such as `isoiden` and `isoitten` beside the
+                // plain `isojen`; joining those into a compound makes a
+                // non-word (`isoidensisarien`).
+                if !h.plain() || tags.possessive.is_some() {
                     continue;
                 }
                 if let (Some(c), Some(n)) = (tags.case, tags.number) {

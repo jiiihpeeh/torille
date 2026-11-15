@@ -2019,6 +2019,11 @@ mod tests {
             ("isotaivot", "isojenaivojen"),
             ("isotaivot", "isoilleaivoille"),
             ("isotaivot", "isoiksiaivoiksi"),
+            ("isotaivot", "isoihinaivoihin"),
+            ("isotaivot", "isoista-aivoista"),
+            ("isotaivot", "isoina-aivoina"),
+            ("isotaivot", "isoitta-aivoitta"),
+            ("isotaivot", "isoinaivoin"),
             ("pitkäthousut", "pitkienhousujen"),
             ("pitkäthousut", "pitkiähousuja"),
             ("pitkäthousut", "pitkissähousuissa"),
@@ -2036,6 +2041,106 @@ mod tests {
             !forms.iter().any(|w| w == "isonaivo"),
             "a plural-head compound produced a singular: {forms:?}"
         );
+        // Wiktionary's `isotaivot` is the authority for the boundary: these
+        // closed or wrongly hyphenated spellings are not words.
+        for forbidden in [
+            "isojaaivoja",
+            "isoissaaivoissa",
+            "isoiltaaivoilta",
+            "isoille-aivoille",
+            "isoiksi-aivoiksi",
+            "isojen-aivojen",
+        ] {
+            assert!(
+                !forms.iter().any(|w| w == forbidden),
+                "{forbidden} must not be offered for isotaivot"
+            );
+        }
+    }
+
+    /// Wiktionary's `aavameri` is the authority for this class-51 compound.
+    ///
+    /// It has a partitive singular `aavaamerta`, the plural genitive pair
+    /// `aavojenmerien`/`aavojenmerten`, and the expected local series:
+    /// inessive `aavoissamerissä`, elative `aavoistameristä`, illative
+    /// `aavoihinmeriin`.
+    #[cfg(feature = "generated-nominals")]
+    #[test]
+    fn aavameri_follows_the_wiktionary_paradigm() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let forms: Vec<String> = inflect_in(
+            "aavameri",
+            Inflection {
+                class: 51,
+                gradation: None,
+            },
+            &cat,
+            Some(&LexiconIndex::new(&lexicon)),
+            PartOfSpeech::Noun,
+            false,
+        )
+        .into_iter()
+        .map(|g| g.word)
+        .collect();
+        for expected in [
+            "aavameri",
+            "aavaamerta",
+            "aavojenmerien",
+            "aavojenmerten",
+            "aavojameriä",
+            "aavoissamerissä",
+            "aavoistameristä",
+            "aavoihinmeriin",
+            "aavoillamerillä",
+            "aavoiltameriltä",
+            "aavoillemerille",
+            "aavoinamerinä",
+            "aavoiksimeriksi",
+            "aavoittamerittä",
+            "aavoinmerin",
+        ] {
+            assert!(
+                forms.iter().any(|f| f == expected),
+                "{expected} is missing from aavameri"
+            );
+        }
+    }
+
+    /// Wiktionary's `hienosokeri` accepts three genitive plural spellings.
+    ///
+    /// The oracle records only two of them, so the third is an oracle
+    /// omission, not an engine error: `hienojensokerien`,
+    /// `hienojensokereiden` and `hienojensokereitten` are all real.
+    #[cfg(feature = "generated-nominals")]
+    #[test]
+    fn hienosokeri_keeps_all_three_wiktionary_genitive_plurals() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let forms: Vec<String> = inflect_in(
+            "hienosokeri",
+            Inflection {
+                class: 51,
+                gradation: None,
+            },
+            &cat,
+            Some(&LexiconIndex::new(&lexicon)),
+            PartOfSpeech::Noun,
+            false,
+        )
+        .into_iter()
+        .map(|g| g.word)
+        .collect();
+        for expected in [
+            "hienojensokerien",
+            "hienojensokereiden",
+            "hienojensokereitten",
+        ] {
+            assert!(
+                forms.iter().any(|f| f == expected),
+                "{expected} is missing from hienosokeri"
+            );
+        }
     }
 
     /// A class-51 head that is a participle.
