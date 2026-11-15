@@ -99,15 +99,21 @@ The clean gates are constructed sentences. `tests/fixtures/perf/page-2000.txt`
 reports grammar diagnostics, but they are counted, not judged. Add a small
 public-domain prose sample with reviewed findings and provenance.
 
-- [ ] **Choose a small sample** (roughly 1,000–3,000 tokens) with a clear
-  provenance and licence note. A Gutenberg slice is acceptable; record the
-  source and the token count.
-- [ ] **Adjudicate every diagnostic** as true positive, false positive, or
-  deliberate/acceptable. Include the corrected form only when it is safe.
-- [ ] **Separate rows by severity:** a clean row must not carry an `Error`;
-  warnings and suggestions get a budget rather than a zero target.
-- [ ] **Add the ambiguity corpus** from P0-A to the same run.
-- [ ] **Keep the constructed exact-output fixtures** as the per-rule gate.
+- [x] **Choose a small sample with provenance.** Seeded with a reviewed
+  Project Gutenberg excerpt via `tests/fixtures/perf/page-2000.txt` (ebook
+  9082, public domain). The first slice is 381 adjudicated correct words plus
+  one true-positive sentence. Grow it before treating the rate as stable.
+- [x] **Adjudicate every diagnostic** as true positive, false positive, or
+  deliberate/acceptable. The seed is
+  `tests/fixtures/prose/adjudicated.json`: 15 clean rows, 5 known
+  false-positive rows, and 1 true-positive row.
+- [x] **Separate rows by severity/status:** `clean`, `errors`, and
+  `known_false_positives`. A fix to a known row makes the suite fail so it can
+  be moved to `clean` or `errors`.
+- [x] **Add the ambiguity corpus** from P0-A to the same run.
+- [x] **Keep the constructed exact-output fixtures** as the per-rule gate.
+- [ ] **Grow the prose sample to at least 1,000 correct words** and keep the
+  known-false-positive rate per 1,000 words as the baseline.
 
 Track these metrics:
 
@@ -181,6 +187,31 @@ before the next rule lands.
   `kirjaan` is not read as a predicate. `joka` is a determiner when followed by
   a nominative noun and not preceded by a comma.
   Area: `src/syntax/segments.rs`, `src/syntax/predicates.rs`.
+
+Prose-corpus findings now pinned as `known_false_positives` in
+`tests/fixtures/prose/adjudicated.json`:
+
+- [ ] **Apposition and subject phrase:** `Me suuremmat istumme ...` produces
+  `attribute_agreement`, `subject_predicate_agreement` and `object_case`.
+  The pronoun is the subject head; `suuremmat` is an apposition.
+- [ ] **Experiencer and total-object verbs:** `ettei häntä pelottaisi`,
+  `he eivät uupuneet sitä kuuntelemasta`, and `Jumala hellytti pyövelien
+  sydämet` are read as partitive-object errors. `pelottaa` is an experiencer
+  verb, `häntä` is the pronoun (not `häntä` “tail”), and `sydämet` is a total
+  object in an affirmative clause.
+- [ ] **Coordination scope:** `Kenoveeva kehräsi ja lauloi, Sikri soitti ...`
+  reports plural agreement on three singular predicates. Each coordinated
+  clause keeps its own subject.
+- [ ] **Modifier vs head:** `Nämä hurskaan miehen sanat` reports
+  `attribute_agreement` on `Nämä`. The genitive `hurskaan miehen` modifies
+  `sanat`; `Nämä` agrees with the head, not with the genitive.
+- [ ] **Postposition and adverbial:** `rakkaan puolisonsa jälkeen` reports an
+  `object_case` error on the genitive governed by `jälkeen`;
+  `koko päivänä` is read as an essive attribute and corrected to `kokona`.
+- [ ] **Punctuation boundaries:** sentence-initial `Ja kun ...` asks for a
+  comma after `Ja`; a final relative clause (`..., joka ei ...`) is reported
+  as an unbalanced comma pair; `--kun ...` and the `jos` conditional ask for a
+  second comma. All are pinned false positives.
 
 ## P1 — shared diagnostic contract, confidence and explainability
 
@@ -449,7 +480,7 @@ analysis refinements”.
 Current gates:
 
 ```bash
-cargo test --release -p torille --test syntax_check --test syntax_eval --test syntax_ambiguity --test style_check --test style_eval
+cargo test --release -p torille --test syntax_check --test syntax_eval --test syntax_ambiguity --test syntax_prose --test style_check --test style_eval
 cargo test --release -p torille
 cargo clippy -p torille --all-targets -- -D warnings
 ./target/release/check_syntax "Joka päivä juon kahvia."
@@ -457,14 +488,8 @@ cargo clippy -p torille --all-targets -- -D warnings
 ./target/release/check_style "Tämä on on hyvä."
 ```
 
-After P0-B lands, add:
-
-```bash
-cargo test --release -p torille --test syntax_prose
-```
-
-The prose gate prints the per-kind precision/recall table and the
-false-positives-per-1,000-tokens baseline; the ambiguity gate prints each
+Run the prose suite with `-- --nocapture` to print the adjudicated word count
+and the known false-positive rate. The ambiguity gate prints each
 intended/competing interpretation pair that fails.
 
 ## Work log
@@ -483,5 +508,12 @@ intended/competing interpretation pair that fails.
 - 2026-11-15: landed P0-A. Added `tests/fixtures/syntax_ambiguity.json` and
   `tests/syntax_ambiguity.rs`; the suite pins the intended role, the rejected
   competing role, and the clean diagnostic list for thirteen ambiguous
-  constructions. Updated the verification gate.
+  constructions.
+- 2026-11-15: landed the P0-B seed. Added
+  `tests/fixtures/prose/adjudicated.json` and `tests/syntax_prose.rs`:
+  15 clean rows, 5 known-false-positive rows and 1 true-positive row
+  (381 adjudicated correct words, 17 known false-positive errors, 44.6 per
+  1,000 words at this seed size). The suite fails if a clean row stops being
+  quiet or a known row changes, so a fix must move the row rather than leave a
+  stale baseline.
   Moved adjudicated prose before the P1 rule expansion.

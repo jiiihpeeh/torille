@@ -1,0 +1,91 @@
+{
+  "_comment": [
+    "Adjudicated Finnish prose for the grammar checker.",
+    "`clean` rows must produce no diagnostics at all.",
+    "`errors` rows are true positives and must produce exactly the listed kinds.",
+    "`known_false_positives` rows are reviewed bugs: they must produce exactly",
+    "the listed kinds, and a fix makes this entry fail so it can be moved to",
+    "`clean` (or to `errors`). The suite prints the false-positive rate over",
+    "the clean word count.",
+    "The excerpt is from the committed Project Gutenberg slice",
+    "tests/fixtures/perf/page-2000.txt (ebook 9082); it is public domain."
+  ],
+  "source": "Project Gutenberg ebook 9082, via tests/fixtures/perf/page-2000.txt",
+  "license": "Public domain (Project Gutenberg); excerpt, not a new work",
+  "clean": [
+    "Olemme kaikki lapset yksin kotona talvisena sunnuntai-iltana.",
+    "Vanhemmat ovat jossain vieraisilla.",
+    "On kova pyry ulkona, lumi räiskyy ikkunoihin ja koivut kohisevat talon ympärillä, jäisten oksien raapiessa salin seiniä.",
+    "Hän istuu kynttilän ääressä lukien milloin mitäkin mukanaan tuomaansa tai meiltä löytämäänsä kirjaa.",
+    "Kokoonnumme hänen ympärilleen puolipimeään saliin, jonka pöydällä tuikkii yksi ainoa räiskyvä talikynttilä.",
+    "Jo ennenkuin Anni alkaakaan, meidät valtaa väristys, meitä pelottaa vähän, mutta on suloista samalla, sillä me tiedämme, että kaikki, mitä Anni kertoo, päättyy niin, että aina lopulta on hyvä olla.",
+    "Löysin nyt taas sen siitä samasta vasusta ja minulle loiskahti vastaani laine voimakkaimpia lapsuuteni muistoja.",
+    "Hän odottaa, että olemme leikkineet loppuun ja telmineet itsemme uuvuksiin ja pyydämme häntä kertomaan 'juttuja'.",
+    "Ja tämähän on tavallaan perunkirjoittamista tämäkin, mitä kirjoitan, kalleimman omaisuuteni arvioimista, ainoan, mitä minulla oikeastaan enää on: muistojeni.",
+    "Tein sen keveällä sydämellä, sillä ethän ole kuollut.",
+    "Sinunkin kultasi, hopeasi, sormukset, vaatteet.",
+    "Täytyy kaivaa esiin kaikki kellarista ullakolle asti ja merkitä joka esine kirjaan ja panna niille raha-arvo.",
+    "Aamulla varhain ja illalla myöhään hän kantoi sairaille virvoituksia.",
+    "Sikri ja Kenoveeva elivät onnellisesti ja rauhallisesti Sikrin linnassa muutaman viikon.",
+    "He veivät Kenoveevan suureen synkkään metsään."
+  ],
+  "errors": [
+    {
+      "text": "Muistatko--muistatko sen vanhan kirjan, Genovevan, joka oli kulunut minun käsissäni ja joka myöskin kului meidän lastemme käsissä.",
+      "kinds": ["question_mark_missing"],
+      "note": "Direct -ko question; the period should be a question mark."
+    }
+  ],
+  "known_false_positives": [
+    {
+      "text": "Me suuremmat istumme tuoleilla, kyynärpäät pöytään nojaten ja leuat käsien varassa, pikkusisar pyrkii Annin syliin ja kietoo käsivartensa hänen kaulaansa, ettei häntä pelottaisi.",
+      "kinds": ["attribute_agreement", "subject_predicate_agreement", "object_case"],
+      "note": "Apposition Me suuremmat is not a subject+attribute pair; pelottaa is an experiencer verb, not a partitive-object error."
+    },
+    {
+      "text": "Sinä löysit sen kerran ullakolta vanhasta kirjavasusta ja luit sen yhteen menoon siinä polvillasi niillä sijoillasi ja osasit sen melkein ulkoa kertoessasi pojille uudestaan ja aina uudestaan, sillä he eivät uupuneet sitä kuuntelemasta, ja olivat siitä yhtä ihastuneita ja järkytettyjä kuin minä ja siskoni lapsuudessamme.",
+      "kinds": ["object_case", "attribute_agreement"],
+      "note": "he is the subject of a negated clause; the complement after uupuneet is not an attribute of a singular head."
+    },
+    {
+      "text": "Meille on niinkuin usein ennenkin haettu kotimieheksi Laukkasen Anni, Satu-Anni, koulumestarin kivuloinen ja kalpea tyttö, joka ei milloinkaan leiki eikä hymyile.",
+      "kinds": ["comma_pair_unbalanced"],
+      "note": "A relative clause at the end of the sentence needs no closing comma."
+    },
+    {
+      "text": "Tein sen melkein hauskuudekseni--kun ajattelin niitä arvoja, mitkä niillä on maailmalle ja mitkä minulle.",
+      "kinds": ["comma_missing"],
+      "note": "The dash already marks the boundary before kun."
+    },
+    {
+      "text": "Mitä vaivaisveroa tulisinkaan maksamaan, jos panisin niihin niiden todellisen arvon, niiden ainoan, sen, mikä niillä on minulle.",
+      "kinds": ["comma_missing"],
+      "note": "The conditional jos already has its comma; the rule asks for a second boundary."
+    },
+    {
+      "text": "Ja kun hän kasvoi täysikasvuiseksi, oli hän yhtä viaton ja herttainen kuin kaunis ja häntä mainittiin kaikkien hyvien avujen esikuvana.",
+      "kinds": ["comma_missing", "attribute_agreement"],
+      "note": "Sentence-initial Ja does not take a comma; herttainen is a predicate complement, not an attribute of a plural head."
+    },
+    {
+      "text": "Eräänä iltana myöhään istuivat molemmat illallisen jälkeen arkihuoneessa; Kenoveeva kehräsi ja lauloi, Sikri soitti kanteletta ja säesti Kenoveevan laulua.",
+      "kinds": ["subject_predicate_agreement", "subject_predicate_agreement", "subject_predicate_agreement"],
+      "note": "Each coordinated clause has its own singular subject; the shared-subject rule is over-firing."
+    },
+    {
+      "text": "Nämä hurskaan miehen sanat täyttivät kaikkien läsnäolevien mielen kummallisella aavistuksella.",
+      "kinds": ["attribute_agreement"],
+      "note": "Nämä modifies sanat; hurskaan miehen is a genitive modifier, not the agreement head."
+    },
+    {
+      "text": "Kenoveeva kiiruhti torniin ja katseli sieltä rakkaan puolisonsa jälkeen, sitten hän sulkeutui huoneeseensa eikä koko päivänä maistanut eineen muruakaan.",
+      "kinds": ["object_case", "attribute_agreement"],
+      "note": "jälkeen governs the genitive puolisonsa; koko päivänä is an adverbial, not an essive attribute."
+    },
+    {
+      "text": "Ei, sillä Jumala hellytti pyövelien sydämet.",
+      "kinds": ["object_case"],
+      "note": "sydämet is a total object; the clause is affirmative."
+    }
+  ]
+}

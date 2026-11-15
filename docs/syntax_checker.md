@@ -72,6 +72,9 @@ gate is `tests/fixtures/syntax_diagnostics.json`. The
 `tests/fixtures/syntax_ambiguity.json` gate pins the intended reading and the
 competing reading that must not win for ambiguous surfaces (`joka päivä`,
 `ilman`, `sen`, `sinut`, and the determiner/relative split).
+`tests/fixtures/prose/adjudicated.json` is the reviewed-prose gate: clean rows
+must stay quiet, true positives must match their kinds, and known false
+positives pin the current bugs so a fix has to move the row.
 
 Current baseline (2026-11-15):
 
@@ -83,7 +86,7 @@ cases 52: every emitted kind precision 1.00, recall 1.00
 Run both gates:
 
 ```bash
-cargo test --release -p torille --test syntax_check --test syntax_eval --test syntax_ambiguity
+cargo test --release -p torille --test syntax_check --test syntax_eval --test syntax_ambiguity --test syntax_prose
 ```
 
 The evaluation test prints the per-kind table; the exact-output fixture checks
