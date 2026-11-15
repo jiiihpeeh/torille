@@ -1145,15 +1145,15 @@ Any difference is a failed Phase 2. The gate is green.
 **Exit:** the sidecar is wired without changing a single diagnostic, clause,
 role, span, correction or style output; no model is active.
 
-### Phase 3 — M0 feature MLP experiments (implemented; no production runtime)
+### Phase 3 — M0 feature MLP experiments (implemented)
 
 Implemented:
 
 - `tools/src/ud/m0.rs` and `tools/src/bin/ud_m0_features.rs` emit one JSONL
   row per ambiguous token with all candidates, the gold label index, local
   context, sentence context and morphology depth;
-- `tools/neural/train_m0.py` trains three one-hidden-layer candidate scorers
-  with numpy only;
+- `tools/neural/train_m0.py` trains one-hidden-layer candidate scorers with
+  numpy only;
 - `tools/neural/m0_report.json` records the experiment.
 
 Data: UD Finnish-FTB (CC BY 4.0), `fi-ud-tags-1`.
@@ -1175,22 +1175,87 @@ Model: 512 hashed features, 32 hidden units, three seeds (13, 17, 29).
 
 **Decision:** do not proceed to BiLSTM/Transformer on context gain alone.
 Local context improves dev but not consistently on test; sentence context is
-worse. The morphology-only MLP is the current candidate baseline. Its weights
-are not integrated into the production path: candidate top-1 is not product
-quality, and syntactic-role and diagnostic precision/recall have not yet been
-measured. The Phase 2 sidecar remains disabled.
+worse. The morphology-only MLP is the candidate baseline.
 
-**Exit:** M0 experiments are complete and the context question is answered.
-No production model was activated, no diagnostics changed, and no model
-artifact is embedded in the crate.
+A tags-only variant (`--variants tags --hash fnv`) was trained for runtime use
+because the production path has no reliable per-reading lemma provenance. Its
+three-seed test mean is 0.8862 (range 0.8848–0.8872) against the same 0.5074
+first-candidate baseline. Seed 29 was exported to `models/m0-tags-v1.bin`
+(65,812 bytes) and is embedded only with the `neural-m0` Cargo feature. The
+model card is `models/README.md`.
 
-### Phase 4 — M1 BiLSTM / compact Transformer (blocked by M0)
+### Phase 3b — M0 runtime/product evaluation (implemented; feature-gated, not activated)
+
+`src/syntax/roles.rs` now has `classify_with_preference`. It treats a model
+decision as a hint over the token's existing readings:
+
+- preferred finite verb -> `Predicate`;
+- preferred non-finite verb (connegative, infinitive, participle) -> `Unknown`,
+  so it cannot promote another finite reading;
+- preferred adverb or adverbial case -> `Adverbial`;
+- preferred nominal -> `Unknown`, so the clause subject/object passes still
+  decide from context.
+
+`Disambiguation::disabled()` keeps the exact Phase 2 no-op. The evaluation
+tools are `tools/src/bin/ud_m0_eval.rs` (UD top-1 and role accuracy) and
+`tools/src/bin/m0_prose_eval.rs` (adjudicated prose and full-page diagnostics).
+
+UD Finnish-FTB test, model on versus baseline:
+
+| metric | baseline | M0 |
+|---|---:|---:|
+| candidate top-1 | 0.5074 | 0.8867 |
+| role accuracy, all mapped tokens | 0.6643 | 0.6683 |
+| role accuracy, tokens with a decision | 0.6697 | 0.6899 |
+
+The model changes 305 roles: 135 improve, 100 worsen, 70 are neutral.
+
+Adjudicated prose (`tests/fixtures/prose/adjudicated.json`):
+
+| group | baseline | M0 |
+|---|---:|---:|
+| clean rows with a diagnostic | 0 | 1 |
+| true positives with exact kinds | 1/1 | 1/1 |
+| known false-positive rows unchanged | 10/10 | 8/10 |
+
+The clean regression is an `Error` `object_case` on `kuollut` in
+`Tein sen keveällä sydämellä, sillä ethän ole kuollut.` The model correctly
+prefers `Tein` as the finite predicate, but the sentence is still one clause,
+so the post-predicate nominative selection takes `kuollut` as a subject and the
+negated-clause rule treats it as an object. The two known-FP improvements are
+side effects of the same role reshuffling, not evidence of better grammar.
+
+On the 2,000-word `tests/fixtures/perf/page-2000.txt`, diagnostics move from
+67 to 70 and 144 roles change, many of them clearly wrong (adverbs promoted to
+subjects/objects, finite predicates demoted by a nominal preference).
+
+**Decision:** do not activate M0 in any default path. Candidate top-1,
+0.8867, does not survive product evaluation: model mistakes cascade through
+greedy role selection and the current clause segmentation, and the net effect
+on adjudicated prose is a new `Error` on correct text. The feature stays off,
+`Disambiguation` stays disabled unless the feature is compiled in, and no
+diagnostic severity is lowered or suppressed.
+
+The next step is not a larger model. It is either a safer consumer (consult a
+decision only where the role layer is insensitive to a wrong preference) or
+hardening role selection and clause segmentation first, with a larger
+adjudicated-prose set. Until then M1/BiLSTM/Transformer remains blocked.
+
+**Exit:** the product evaluation is complete and negative. No model is active
+by default, no diagnostics changed in the default build, and the Phase 2 no-op
+gate stays green.
+
+### Phase 4 — M1 BiLSTM / compact Transformer (blocked by M0 product evaluation)
 
 Do not start this phase from architecture preference. It requires either:
 
 - a demonstrated context gain over the morph M0 on a frozen test set, or
-- a separate product evaluation showing that the morph M0 improves role and
-  diagnostic quality enough to justify a runtime integration.
+- a product evaluation showing that the M0 runtime integration improves role
+  and diagnostic quality enough to justify activation.
+
+The Phase 3b evaluation did not meet the second condition. Start M1 only after
+a safer M0 consumer or role-layer hardening has made the product metrics
+non-negative on adjudicated prose.
 
 If that happens:
 
@@ -1230,9 +1295,11 @@ verified.
 - Store `ReadingDecision` per token, not in `WordInfo`.
 - Keep `WordInfo.readings`, `TokenSyntax.readings`, `TokenSyntax.lemmas` and
   all existing rules intact.
-- Let `classify`, `choose_predicate`, subject/object selection and
-  `TokenSyntax.lemma` consult `preferred` only when the model is confident.
-  The selectors still assign roles; the model never does.
+- Let `classify_with_preference`, `choose_predicate`, subject/object selection
+  and `TokenSyntax.lemma` consult `preferred` only when the model is
+  confident. The selectors still assign roles; the model never does. Phase 3b's
+  measured result is that the current greedy selectors amplify a wrong
+  preference, so this path is evaluated but not activated.
 - `TokenSyntax.lemma` changes only when `CandidateView` provenance is known
   and unique. A preferred reading with several lemmas or unavailable
   provenance leaves the existing lemma in place.
@@ -1529,14 +1596,52 @@ Result (three seeds in `tools/neural/m0_report.json`):
 | first candidate | — | 0.5074 |
 
 The experiment supports stopping before BiLSTM/Transformer: local context
-improves dev but not test, and sentence context is worse. No M0 weights are
-embedded in the crate and no production diagnostics changed.
+improves dev but not test, and sentence context is worse.
+
+Tags-only runtime training and export:
+
+```bash
+python3 tools/neural/train_m0.py --data /tmp/m0 --out /tmp/m0-tags-29 \
+  --hidden 32 --dim 512 --hash fnv --variants tags --seed 29
+python3 tools/neural/export_m0.py /tmp/m0-tags-29/m0-tags.npz models/m0-tags-v1.bin
+```
+
+Result: 65,812-byte artifact, three-seed test mean 0.8862. The artifact is
+embedded only with the `neural-m0` feature.
+
+Runtime and product evaluation:
+
+```bash
+cargo run --release -p torille-tools --features neural-m0 --bin ud_m0_eval \
+  -- --file /tmp/fi_ftb-ud-test.conllu
+cargo run --release -p torille-tools --features neural-m0 --bin m0_prose_eval \
+  -- --file tests/fixtures/prose/adjudicated.json
+cargo run --release -p torille-tools --features neural-m0 --bin m0_prose_eval \
+  -- --text tests/fixtures/perf/page-2000.txt
+```
+
+Results:
+
+| metric | baseline | M0 |
+|---|---:|---:|
+| UD candidate top-1 | 0.5074 | 0.8867 |
+| UD role accuracy, all mapped tokens | 0.6643 | 0.6683 |
+| UD role accuracy, decided tokens | 0.6697 | 0.6899 |
+| adjudicated clean rows with a diagnostic | 0 | 1 |
+| adjudicated true positives with exact kinds | 1/1 | 1/1 |
+| adjudicated known-FP rows unchanged | 10/10 | 8/10 |
+| page-2000 grammar diagnostics | 67 | 70 |
+| page-2000 role changes | — | 144 |
+
+The clean regression is an `Error` `object_case` on correct text. The model is
+not activated by default and the default build remains an exact no-op.
 
 ```bash
 cargo test --release --workspace
 ```
 
-Result: **53 test binaries, 1,283 tests passed, 0 failed**.
+Result: **55 test binaries, 1,287 tests passed, 0 failed** (four new role
+preference tests).
 
 ```bash
 cargo clippy --workspace --all-targets -- -D warnings
@@ -1569,6 +1674,7 @@ Result: clean.
 
 ---
 
-*Architecture audit, Phase 1/2 tooling and the disabled Phase 3 M0
-experiments. No production grammar behaviour, active neural inference or
-diagnostic severity was changed for this document.*
+*Architecture audit, Phase 1/2 tooling, Phase 3 M0 experiments and the
+feature-gated Phase 3b runtime/product evaluation. No production grammar
+behaviour or diagnostic severity changed in the default build; the M0 model is
+compiled only with `--features neural-m0` and is not activated.*

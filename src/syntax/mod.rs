@@ -36,7 +36,7 @@ pub(crate) use predicates::{
     is_coordinating, is_finite_predicate, is_nominal_pos, is_subordinator, is_verb_reading,
     predicate_is_passive, starts_relative_clause,
 };
-use roles::{classify, resolve_clause, share_clause_roles};
+use roles::{classify_with_preference, resolve_clause, share_clause_roles};
 use segments::{build_clause_tree, clause_groups, segment_clause_words};
 
 /// What a token is doing in its sentence.
@@ -215,20 +215,21 @@ pub fn analyze_syntax(tokens: &[Token], morphology: &MorphologyAnalysis) -> Synt
     analyze_syntax_with_contexts(tokens, morphology, &contexts)
 }
 
-/// The same analysis with an explicit (currently no-op) disambiguation
-/// sidecar.
+/// The same analysis with an explicit disambiguation sidecar.
 ///
-/// Phase 2 threads the seam without using a decision: with disabled neural
-/// inference the output is identical to [`analyze_syntax`]. A later model may
-/// let the role selectors consult `decisions`, but it must never assign roles
-/// itself.
+/// With disabled neural inference the output is identical to
+/// [`analyze_syntax`]. With an enabled model the role selectors may let a
+/// decision's preferred reading win the morphological classification, but the
+/// model still never assigns a role: it only chooses among readings the
+/// morphology layer already produced, and a preferred nominal stays unknown
+/// until the clause-level subject/object passes resolve it.
 pub fn analyze_syntax_with_decisions(
     tokens: &[Token],
     morphology: &MorphologyAnalysis,
-    _decisions: &crate::disambiguation::Disambiguation,
+    decisions: &crate::disambiguation::Disambiguation,
 ) -> SyntaxAnalysis {
     let contexts = sentence::analyze(tokens);
-    analyze_syntax_with_contexts_and_decisions(tokens, morphology, &contexts, Some(_decisions))
+    analyze_syntax_with_contexts_and_decisions(tokens, morphology, &contexts, Some(decisions))
 }
 
 /// The same analysis with sentence contexts the caller already computed.
@@ -245,13 +246,13 @@ pub(crate) fn analyze_syntax_with_contexts(
 
 /// The shared implementation for the baseline and sidecar paths.
 ///
-/// The `decisions` parameter is deliberately unused in Phase 2. It exists so
-/// the exact no-op gate can prove that adding the seam changed nothing.
+/// A decision is consulted only to choose among the token's existing readings.
+/// A disabled sidecar has no decisions, so the baseline path is unchanged.
 pub(crate) fn analyze_syntax_with_contexts_and_decisions(
     tokens: &[Token],
     morphology: &MorphologyAnalysis,
     contexts: &[sentence::TokenContext],
-    _decisions: Option<&crate::disambiguation::Disambiguation>,
+    decisions: Option<&crate::disambiguation::Disambiguation>,
 ) -> SyntaxAnalysis {
     let sentences = morphology.sentences.clone();
 
@@ -269,7 +270,11 @@ pub(crate) fn analyze_syntax_with_contexts_and_decisions(
         let lemmas = info.lemmas.clone();
         let mut lemma = info.lemma.clone();
         nominal_lemmas[index] = info.nominal_lemma.clone();
-        let (role, confidence, case) = classify(&readings);
+        let preferred = decisions
+            .and_then(|decisions| decisions.decision(index))
+            .filter(|decision| !decision.abstain)
+            .and_then(|decision| readings.get(decision.preferred));
+        let (role, confidence, case) = classify_with_preference(&readings, preferred);
         if role == SyntacticRole::Predicate {
             if let Some(verb_lemma) = &info.verb_lemma {
                 lemma = Some(verb_lemma.clone());

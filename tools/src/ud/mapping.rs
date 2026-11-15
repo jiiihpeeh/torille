@@ -471,6 +471,8 @@ mod tests {
                 .iter()
                 .map(|(key, value)| ((*key).to_string(), (*value).to_string()))
                 .collect::<BTreeMap<_, _>>(),
+            head: None,
+            deprel: "_".to_string(),
         }
     }
 

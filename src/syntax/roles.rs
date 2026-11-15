@@ -77,6 +77,36 @@ pub(super) fn classify(readings: &[Tags]) -> (SyntacticRole, RoleConfidence, Opt
     (SyntacticRole::Unknown, RoleConfidence::Weak, None)
 }
 
+/// Assign the initial role with an optional preferred reading.
+///
+/// The preference is a hint from the disambiguation sidecar, never an
+/// assignment: it may make one of the token's existing readings win the
+/// morphological decision, but it cannot create a role the readings do not
+/// support. A preferred nominal deliberately stays [`SyntacticRole::Unknown`]
+/// so the clause-level subject/object selection still decides from context,
+/// and any preference outside the cases below falls back to the full reading
+/// set. Passing `None` is exactly [`classify`].
+pub(super) fn classify_with_preference(
+    readings: &[Tags],
+    preferred: Option<&Tags>,
+) -> (SyntacticRole, RoleConfidence, Option<Case>) {
+    if let Some(preferred) = preferred {
+        if is_finite_predicate(preferred) {
+            return (SyntacticRole::Predicate, RoleConfidence::Likely, None);
+        }
+        if preferred.part_of_speech == Some(PartOfSpeech::Adverb) {
+            return (SyntacticRole::Adverbial, RoleConfidence::Likely, None);
+        }
+        if let Some(case) = preferred.case.filter(|case| is_adverbial_case(*case)) {
+            return (SyntacticRole::Adverbial, RoleConfidence::Likely, Some(case));
+        }
+        if is_nominal_pos(preferred.part_of_speech) {
+            return (SyntacticRole::Unknown, RoleConfidence::Weak, None);
+        }
+    }
+    classify(readings)
+}
+
 /// The first finite predicate candidate in a clause, preferring an
 /// unambiguous one over an ambiguous noun/verb word.
 fn choose_predicate(words: &[usize], out: &[TokenSyntax]) -> Option<usize> {
@@ -948,4 +978,48 @@ fn is_local_case(case: Case) -> bool {
             | Case::Ablative
             | Case::Allative
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tags::{Number, Person, Tense};
+
+    fn finite_verb() -> Tags {
+        Tags::finite(Tense::Past, Person::Third, Number::Singular).of_pos(PartOfSpeech::Verb)
+    }
+
+    #[test]
+    fn a_preferred_finite_reading_is_the_predicate() {
+        let noun = Tags::nominal(Case::Nominative).of_pos(PartOfSpeech::Noun);
+        let verb = finite_verb();
+        let (role, confidence, _) = classify_with_preference(&[noun, verb], Some(&verb));
+        assert_eq!(role, SyntacticRole::Predicate);
+        assert_eq!(confidence, RoleConfidence::Likely);
+    }
+
+    #[test]
+    fn a_preferred_nominal_stays_unknown_for_the_clause_passes() {
+        let verb = finite_verb();
+        let noun = Tags::nominal(Case::Nominative).of_pos(PartOfSpeech::Noun);
+        let (role, _, _) = classify_with_preference(&[verb, noun], Some(&noun));
+        assert_eq!(role, SyntacticRole::Unknown);
+    }
+
+    #[test]
+    fn a_preferred_adverb_is_adverbial() {
+        let noun = Tags::nominal(Case::Genitive).of_pos(PartOfSpeech::Noun);
+        let adverb = Tags::UNKNOWN.of_pos(PartOfSpeech::Adverb);
+        let (role, _, _) = classify_with_preference(&[noun, adverb], Some(&adverb));
+        assert_eq!(role, SyntacticRole::Adverbial);
+    }
+
+    #[test]
+    fn no_preference_is_the_baseline_classifier() {
+        let readings = [
+            Tags::nominal(Case::Nominative).of_pos(PartOfSpeech::Noun),
+            Tags::UNKNOWN.of_pos(PartOfSpeech::Adverb),
+        ];
+        assert_eq!(classify_with_preference(&readings, None), classify(&readings));
+    }
 }

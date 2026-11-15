@@ -93,6 +93,20 @@ path = "src/bin/ud_coverage.rs"
 name = "ud_m0_features"
 path = "src/bin/ud_m0_features.rs"
 
+[[bin]]
+# Phase 3 product smoke test: morphology top-1 and role accuracy with the M0
+# model enabled (requires --features neural-m0).
+name = "ud_m0_eval"
+path = "src/bin/ud_m0_eval.rs"
+
+[[bin]]
+# Phase 3 diagnostic comparison on adjudicated prose, model on vs off.
+name = "m0_prose_eval"
+path = "src/bin/m0_prose_eval.rs"
+
+[features]
+neural-m0 = ["torille/neural-m0"]
+
 [dependencies]
 torille = { path = ".." }
 # The Phase 1 UD coverage harness reads CoNLL-U plus the manual ambiguity

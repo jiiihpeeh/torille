@@ -46,8 +46,9 @@ pub fn check_all_tokens(tokens: &[Token], morphology: &MorphologyAnalysis) -> Ch
 /// Check from an existing morphology pass and an explicit disambiguation
 /// sidecar.
 ///
-/// Phase 2 uses [`Disambiguation::disabled`]; the path is byte-for-byte the
-/// same as [`check_all_tokens`]. The sidecar is not allowed to change style.
+/// Without the `neural-m0` feature the caller passes
+/// [`Disambiguation::disabled`] and the path is byte-for-byte the same as
+/// [`check_all_tokens`]. The sidecar is not allowed to change style.
 pub fn check_all_tokens_with_decisions(
     tokens: &[Token],
     morphology: &MorphologyAnalysis,

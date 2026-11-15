@@ -53,9 +53,9 @@ pub fn check(text: &str) -> SyntaxCheck {
 
 /// The same check through a caller-owned word cache.
 ///
-/// The morphology pass and the (currently disabled) disambiguation sidecar are
-/// shared with the combined grammar/style path. With neural inference off the
-/// output is identical to the pre-sidecar path.
+/// The morphology pass and the disambiguation sidecar are shared with the
+/// combined grammar/style path. Without the `neural-m0` feature the sidecar is
+/// disabled and the output is identical to the pre-sidecar path.
 pub fn check_with_cache(text: &str, cache: &mut AnalysisCache) -> SyntaxCheck {
     let tokens = crate::tokenise::tokenise(text);
     let morphology = analyze_morphology(&tokens, cache);

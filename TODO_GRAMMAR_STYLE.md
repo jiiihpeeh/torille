@@ -512,11 +512,22 @@ analysis refinements”.
   Three seeds: morph test top-1 0.8886 mean, local 0.8864, sentence 0.8774,
   first-candidate baseline 0.5074. Local wins dev but not test; sentence
   context is worse. Decision: do not start BiLSTM/Transformer on context gain;
-  no M0 weights are embedded and no diagnostics changed.
-- [ ] **Optional M0 runtime/product evaluation.** Only if a product-quality
-  evaluation on role accuracy and adjudicated-prose diagnostics supports the
-  morph M0. Requires reproducible per-reading lemma provenance in the
-  production path; do not activate by candidate top-1 alone.
+  the tags-only weights are embedded only behind the off-by-default
+  `neural-m0` feature and are not activated.
+- [x] **M0 runtime/product evaluation (implemented; negative).** The tags-only
+  model is embedded behind `neural-m0` and `classify_with_preference` consumes
+  decisions. On UD test the model reaches candidate top-1 0.8867 (baseline
+  0.5074) and decided-token role accuracy 0.6697 -> 0.6899. On adjudicated
+  prose it adds one `Error` `object_case` on clean text (0 -> 1 clean rows with
+  a diagnostic) while removing two known false positives; page-2000 grammar
+  diagnostics move 67 -> 70 with 144 role changes. Decision: do not activate.
+  The next step is a safer consumer or role/clause hardening, not a larger
+  model.
+- [ ] **M0 consumer hardening.** Make a decision affect only role dimensions
+  the clause layer can absorb without cascading, or harden predicate,
+  nominal/adverb and clause-boundary selection first. Re-run
+  `ud_m0_eval` and `m0_prose_eval`; require no clean-prose regression before
+  considering M1.
 
 ## Deliberate boundaries
 
@@ -611,5 +622,11 @@ intended/competing interpretation pair that fails.
   a numpy-only three-variant trainer and `tools/neural/m0_report.json`.
   UD Finnish-FTB results across three seeds: morph test top-1 0.8886 mean,
   local 0.8864, sentence 0.8774, first-candidate baseline 0.5074. Local
-  improves dev but not test, so the project stops before BiLSTM/Transformer
-  and does not embed M0 weights. No production diagnostics changed.
+  improves dev but not test, so the project stops before BiLSTM/Transformer.
+- 2026-11-15: implemented the optional M0 runtime/product evaluation. Added the
+  tags-only `models/m0-tags-v1.bin`, the `neural-m0` feature with embedded
+  inference, `classify_with_preference`, `ud_m0_eval` and `m0_prose_eval`.
+  UD candidate top-1 0.8867 and decided-token role accuracy 0.6697 -> 0.6899,
+  but adjudicated clean prose gains an `Error` `object_case` and page-2000
+  diagnostics move 67 -> 70. The model stays off by default; the default build
+  remains an exact no-op.

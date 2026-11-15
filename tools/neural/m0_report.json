@@ -18,6 +18,17 @@
   "baseline": {
     "first_candidate_test_top1": 0.5074
   },
+  "runtime_tags": {
+    "variant": "tags",
+    "hash": "fnv1a-32",
+    "dev_top1": [0.8773, 0.8797, 0.8820],
+    "test_top1": [0.8848, 0.8872, 0.8867],
+    "test_mean": 0.8862,
+    "test_min": 0.8848,
+    "test_max": 0.8872,
+    "artifact": "models/m0-tags-v1.bin",
+    "artifact_bytes": 65812
+  },
   "variants": {
     "morph": {
       "dev_top1": [0.8849, 0.8834, 0.8872],

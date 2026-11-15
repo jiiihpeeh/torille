@@ -195,7 +195,7 @@ pub fn coverage(sentences: &[UdSentence]) -> CoverageReport {
 /// true when at least one compatible reading could not be attributed to a
 /// lemma; that token is reported as partial/unknown provenance, not as a
 /// model error.
-pub(crate) fn matching_views<'a>(
+pub fn matching_views<'a>(
     syntax: &'a TokenSyntax,
     token_index: usize,
     gold: &GoldReading,
@@ -230,7 +230,7 @@ pub(crate) fn matching_views<'a>(
 }
 
 /// Every reading of one token as a candidate view, with provenance.
-pub(crate) fn all_candidate_views<'a>(
+pub fn all_candidate_views<'a>(
     syntax: &'a TokenSyntax,
     token_index: usize,
     cat: &torille::spec::Catalogues,
@@ -354,7 +354,7 @@ fn lemma_provenance<'a>(
 /// re-tokenise `# text`: multiword rows and punctuation would make the
 /// alignment ambiguous. Separators are omitted; sentence analysis only needs
 /// the word tokens, and each UD sentence is processed independently.
-pub(crate) fn synthetic_tokens(sentence: &UdSentence) -> (Vec<Token>, Vec<(usize, Option<usize>)>) {
+pub fn synthetic_tokens(sentence: &UdSentence) -> (Vec<Token>, Vec<(usize, Option<usize>)>) {
     let mut tokens = Vec::new();
     let mut aligned = Vec::with_capacity(sentence.tokens.len());
     let mut offset = 0usize;

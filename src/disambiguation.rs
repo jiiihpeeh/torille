@@ -1,17 +1,22 @@
 //! The seam for context-dependent morphological reading disambiguation.
 //!
-//! Phase 2 introduces the sidecar types only. No model is trained or run:
-//! [`disambiguate`] returns [`Disambiguation::disabled`] and the existing
-//! syntax/checker pipeline is intentionally unchanged.
+//! Phase 2 introduces the sidecar types and threads them through the syntax
+//! and checker paths. Without the `neural-m0` Cargo feature [`disambiguate`]
+//! returns [`Disambiguation::disabled`] and the output is bit-for-bit the
+//! baseline. With the feature enabled the M0 model ranks the readings that
+//! [`crate::morphology::WordInfo`] already produced; the syntax layer may let
+//! the preferred reading win its morphological classification.
 //!
-//! A future model scores the readings that [`crate::morphology::WordInfo`]
-//! already produced. It must not remove a reading, assign a syntactic role or
-//! change a diagnostic by itself. Decisions are per token, not stored in the
-//! shared surface cache.
+//! A model must not remove a reading, assign a syntactic role or change a
+//! diagnostic by itself. Decisions are per token, not stored in the shared
+//! surface cache.
 
 use std::hash::{Hash, Hasher};
 
 use crate::tags::{Confidence, Tags};
+
+#[cfg(feature = "neural-m0")]
+mod m0;
 
 /// One token's ranking over its existing morphological readings.
 #[derive(Debug, Clone, PartialEq)]
@@ -92,7 +97,14 @@ pub fn disambiguate(
     _tokens: &[crate::tokenise::Token],
     _morphology: &crate::morphology::MorphologyAnalysis,
 ) -> Disambiguation {
-    Disambiguation::disabled()
+    #[cfg(feature = "neural-m0")]
+    {
+        m0::disambiguate(_tokens, _morphology)
+    }
+    #[cfg(not(feature = "neural-m0"))]
+    {
+        Disambiguation::disabled()
+    }
 }
 
 /// Provenance of a candidate reading's lemma.

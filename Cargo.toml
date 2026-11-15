@@ -24,6 +24,9 @@ generated-nominals = []
 # 0 illegal, and its forms are additive until every class it covers is
 # complete enough to supersede the type engine.
 generated-verbs = []
+# Optional M0 reading reranker. Off by default; enabling it embeds the
+# models/m0-tags-v1.bin artifact and lets `disambiguate` produce decisions.
+neural-m0 = []
 
 [workspace.metadata]
 # wasm-pack needs to know which target the index crate was built against;

@@ -62,6 +62,36 @@ The local model wins on dev but not consistently on test; the sentence model is
 worse. This is why the project does not proceed to BiLSTM/Transformer on
 context gain alone. The morph M0 is the current candidate baseline.
 
-Candidate top-1 is **not** product quality. The next evaluation must also
-measure syntactic-role accuracy and diagnostic precision/recall on adjudicated
-prose before any production activation.
+The runtime variant is tags-only, so it does not need per-reading lemma
+provenance:
+
+```bash
+python3 tools/neural/train_m0.py --data /tmp/m0 --out /tmp/m0-tags-29 \
+  --hidden 32 --dim 512 --hash fnv --variants tags --seed 29
+python3 tools/neural/export_m0.py /tmp/m0-tags-29/m0-tags.npz \
+  /tmp/m0-tags.bin
+```
+
+`tools/neural/m0_report.json` records the three context variants. The tags-only
+three-seed test mean is 0.8862.
+
+## Product evaluation
+
+Build with `--features neural-m0` to run the embedded model:
+
+```bash
+cargo run --release -p torille-tools --features neural-m0 --bin ud_m0_eval \
+  -- --file /tmp/fi_ftb-ud-test.conllu
+cargo run --release -p torille-tools --features neural-m0 --bin m0_prose_eval \
+  -- --file tests/fixtures/prose/adjudicated.json
+cargo run --release -p torille-tools --features neural-m0 --bin m0_prose_eval \
+  -- --text tests/fixtures/perf/page-2000.txt
+```
+
+Result: candidate top-1 0.8867 and decided-token role accuracy 0.6697 -> 0.6899,
+but adjudicated clean prose gains an `Error` `object_case` and page-2000
+diagnostics move 67 -> 70. The model remains off by default; see
+[`docs/neural_disambiguation.md`](../../docs/neural_disambiguation.md) Phase 3b.
+
+Candidate top-1 is **not** product quality. The next work is a safer consumer
+or role/clause hardening, not a larger model.

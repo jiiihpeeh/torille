@@ -52,10 +52,11 @@ def feature_keys(row: dict, candidate: dict, variant: str) -> list[str]:
         value = candidate.get(field)
         if value is not None:
             keys.append(f"cand:{field}={value}")
-    for lemma in candidate.get("lemmas", []):
-        keys.append(f"cand:lemma={lemma}")
-    if not candidate.get("provenance_known", False):
-        keys.append("cand:provenance=unavailable")
+    if variant != "tags":
+        for lemma in candidate.get("lemmas", []):
+            keys.append(f"cand:lemma={lemma}")
+        if not candidate.get("provenance_known", False):
+            keys.append("cand:provenance=unavailable")
 
     if variant in ("local", "sentence"):
         keys.append(f"ctx:prev={row.get('prev')}")
@@ -70,18 +71,30 @@ def feature_keys(row: dict, candidate: dict, variant: str) -> list[str]:
     return keys
 
 
-def hash_keys(keys: list[str], dim: int) -> list[int]:
+def fnv1a(key: str) -> int:
+    value = 2166136261
+    for byte in key.encode("utf-8"):
+        value ^= byte
+        value = (value * 16777619) & 0xFFFFFFFF
+    return value
+
+
+def hash_keys(keys: list[str], dim: int, hash_name: str) -> list[int]:
+    if hash_name == "fnv":
+        return [fnv1a(key) % dim for key in keys]
     return [zlib.crc32(key.encode("utf-8")) % dim for key in keys]
 
 
-def build_dataset(rows: list[dict], variant: str, dim: int):
+def build_dataset(rows: list[dict], variant: str, dim: int, hash_name: str):
     feature_ids: list[list[int]] = []
     groups: list[tuple[np.ndarray, int]] = []
     for row in rows:
         candidate_ids = []
         for candidate in row["candidates"]:
             candidate_ids.append(len(feature_ids))
-            feature_ids.append(hash_keys(feature_keys(row, candidate, variant), dim))
+            feature_ids.append(
+                hash_keys(feature_keys(row, candidate, variant), dim, hash_name)
+            )
         groups.append((np.asarray(candidate_ids, dtype=np.int32), int(row["label"])))
     x = np.zeros((len(feature_ids), dim), dtype=np.float32)
     for row_index, ids in enumerate(feature_ids):
@@ -128,10 +141,10 @@ def evaluate(x, groups, params, first_candidate_baseline: bool = False):
     return correct / len(groups), first_correct / len(groups), len(groups)
 
 
-def train_variant(train_rows, dev_rows, variant, dim, hidden, epochs, batch, lr, seed=13):
+def train_variant(train_rows, dev_rows, variant, dim, hidden, epochs, batch, lr, seed=13, hash_name="zlib"):
     rng = np.random.default_rng(seed)
-    x_train, groups_train = build_dataset(train_rows, variant, dim)
-    x_dev, groups_dev = build_dataset(dev_rows, variant, dim)
+    x_train, groups_train = build_dataset(train_rows, variant, dim, hash_name)
+    x_dev, groups_dev = build_dataset(dev_rows, variant, dim, hash_name)
     params = init_params(rng, dim, hidden)
     m = {key: np.zeros_like(value) for key, value in params.items()}
     v = {key: np.zeros_like(value) for key, value in params.items()}
@@ -205,11 +218,12 @@ def main() -> int:
     parser.add_argument("--batch", type=int, default=DEFAULT_BATCH)
     parser.add_argument("--lr", type=float, default=DEFAULT_LR)
     parser.add_argument("--seed", type=int, default=13)
+    parser.add_argument("--hash", choices=["zlib", "fnv"], default="zlib")
     parser.add_argument(
         "--variants",
         nargs="+",
         default=["morph", "local", "sentence"],
-        choices=["morph", "local", "sentence"],
+        choices=["morph", "local", "sentence", "tags"],
     )
     args = parser.parse_args()
 
@@ -232,6 +246,7 @@ def main() -> int:
         "batch": args.batch,
         "learning_rate": args.lr,
         "seed": args.seed,
+        "hash": args.hash,
         "train_tokens": len(train_rows),
         "dev_tokens": len(dev_rows),
         "test_tokens": len(test_rows),
@@ -250,12 +265,13 @@ def main() -> int:
             args.batch,
             args.lr,
             args.seed,
+            args.hash,
         )
-        x_test, groups_test = build_dataset(test_rows, variant, args.dim)
+        x_test, groups_test = build_dataset(test_rows, variant, args.dim, args.hash)
         test_acc, test_first, test_tokens = evaluate(
             x_test, groups_test, params, first_candidate_baseline=True
         )
-        x_dev, groups_dev = build_dataset(dev_rows, variant, args.dim)
+        x_dev, groups_dev = build_dataset(dev_rows, variant, args.dim, args.hash)
         dev_acc2, dev_first, _ = evaluate(
             x_dev, groups_dev, params, first_candidate_baseline=True
         )

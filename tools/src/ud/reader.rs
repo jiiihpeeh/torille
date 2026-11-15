@@ -23,6 +23,10 @@ pub struct UdToken {
     pub upos: String,
     /// `FEATS` decoded into key/value pairs.
     pub feats: BTreeMap<String, String>,
+    /// `HEAD` token id, when present.
+    pub head: Option<usize>,
+    /// Universal dependency relation.
+    pub deprel: String,
 }
 
 impl UdToken {
@@ -150,6 +154,8 @@ pub fn read_str(text: &str) -> Result<Vec<UdSentence>, UdError> {
             lemma: columns[2].to_string(),
             upos: columns[3].to_string(),
             feats: parse_feats(columns[5], line_number)?,
+            head: columns[6].parse::<usize>().ok(),
+            deprel: columns[7].to_string(),
         });
     }
     finish_sentence(&mut sentences, &mut current, &mut current_lines);
