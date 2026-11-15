@@ -64,6 +64,7 @@ Everyday probes:
 | `derive` | derivational forms of a base word |
 | `lookup_recall` | score lookup against `(form, lemma)` pairs on stdin; writes the ranked first base |
 | `suggest_correct` | print ranked suggestions for a misspelling |
+| `ud_coverage` | Phase 1 neural-disambiguation harness: read CoNLL-U, map UD morphology to `Tags`, report candidate coverage by POS, case and depth |
 
 Corpus and code generation:
 

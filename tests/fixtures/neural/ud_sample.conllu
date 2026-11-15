@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Hand-authored CoNLL-U sample for the Phase 1 candidate-coverage harness.
+# It is not copied from UD; it exercises NOUN, VERB, NUM, PRON, ADP and PUNCT.
+# sent_id = sample-1
+# text = Kissa istuu.
+1	Kissa	kissa	NOUN	_	Case=Nom|Number=Sing	2	nsubj	_	_
+2	istuu	istua	VERB	_	Mood=Ind|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+3	.	.	PUNCT	_	_	2	punct	_	_
+
+# sent_id = sample-2
+# text = Kaksi lasta tuli.
+1	Kaksi	kaksi	NUM	_	Case=Nom|Number=Sing	3	nsubj	_	_
+2	lasta	lapsi	NOUN	_	Case=Par|Number=Sing	3	nsubj	_	_
+3	tuli	tulla	VERB	_	Mood=Ind|Person=3|Tense=Past|VerbForm=Fin	0	root	_	_
+4	.	.	PUNCT	_	_	3	punct	_	_
+
+# sent_id = sample-3
+# text = Tarvitsen sen.
+1	Tarvitsen	tarvita	VERB	_	Mood=Ind|Person=1|Tense=Pres|VerbForm=Fin	0	root	_	_
+2	sen	se	PRON	_	Case=Gen|Number=Sing|PronType=Prs	1	obj	_	_
+3	.	.	PUNCT	_	_	1	punct	_	_
+
+# sent_id = sample-4
+# text = Ilman rahaa en tule.
+1	Ilman	ilman	ADP	_	AdpType=Prep	2	case	_	_
+2	rahaa	raha	NOUN	_	Case=Par|Number=Sing	4	obl	_	_
+3	en	ei	AUX	_	Polarity=Neg|VerbForm=Fin	4	aux	_	_
+4	tule	tulla	VERB	_	Connegative=Yes|Mood=Ind|VerbForm=Fin	0	root	_	_
+5	.	.	PUNCT	_	_	4	punct	_	_

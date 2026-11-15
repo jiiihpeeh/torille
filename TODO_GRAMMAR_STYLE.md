@@ -484,14 +484,24 @@ analysis refinements”.
 
 ## Follow-up plan — neural reading disambiguation
 
-- [ ] **Audit the neural reranker integration.** The architecture audit is
+- [x] **Audit the neural reranker integration.** The architecture audit is
   [`docs/neural_disambiguation.md`](docs/neural_disambiguation.md). It proposes a
   per-analysis `Disambiguation` sidecar between `analyze_morphology` and
   `analyze_syntax`, preserving every existing `WordInfo.readings` candidate.
   The smallest viable milestone is an M0 candidate-preference MLP behind a
   feature flag, evaluated on UD Finnish-FTB and a frozen hard-ambiguity set;
   the BiLSTM/compact-Transformer choice comes only after that baseline.
-  No model is implemented yet.
+- [x] **Phase 1 data and coverage harness.** `tools/src/ud/` reads CoNLL-U,
+  maps UD morphology to versioned `fi-ud-tags-1` `Tags`, reports
+  exact/partial/ambiguous/missing/unavailable coverage by POS, case and depth,
+  and validates the initial manual ambiguity fixture format. No model is
+  trained and no production grammar code is changed.
+  Run `cargo run --release -p torille-tools --bin ud_coverage -- --file
+  corpus.conllu`.
+- [ ] **Phase 2 exact no-op sidecar.** Add `Disambiguation`/`ReadingDecision`
+  with neural inference off, and prove byte-for-byte equivalence for
+  `TokenSyntax`, clauses, diagnostics, spans, corrections and style output.
+  Include model/schema/activation state in the sentence-cache key.
 
 ## Deliberate boundaries
 
@@ -567,3 +577,11 @@ intended/competing interpretation pair that fails.
   `Kaksi kolmesta.`, `Sata autoa.` and `Kaksikymmentä lasta.`. The same work
   added a numeral-phrase guard to `attribute_agreement`, removing the
   `Kaksi pientä lasta` false positive.
+- 2026-11-15: implemented Phase 1 of the neural-disambiguation plan.
+  Added the CoNLL-U reader, versioned `fi-ud-tags-1` UD→`Tags` mapping,
+  candidate/lemma-provenance adapter, coverage report by POS/case/depth, the
+  manual ambiguity fixture format, and `ud_coverage`. No model was trained and
+  no production grammar code or public API changed. The committed sample
+  reports 11 word tokens / 100% exact+partial coverage; a UD Finnish-FTB smoke
+  run reports 13,904 word tokens / 80.6% coverage, with mapping and candidate
+  categories reported separately.

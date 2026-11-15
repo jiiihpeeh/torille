@@ -77,8 +77,22 @@ path = "src/bin/probe_koirissa.rs"
 name = "profile_hot"
 path = "src/bin/profile_hot.rs"
 
+[[bin]]
+name = "check_style"
+path = "src/bin/check_style.rs"
+
+[[bin]]
+# Phase 1 neural-disambiguation harness: read CoNLL-U, map UD morphology to
+# torille Tags, and report candidate coverage by POS, case and depth.
+name = "ud_coverage"
+path = "src/bin/ud_coverage.rs"
+
 [dependencies]
 torille = { path = ".." }
+# The Phase 1 UD coverage harness reads CoNLL-U plus the manual ambiguity
+# fixture. No model or inference dependency is introduced here.
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 # The map writers gzip their output with the same best-level settings the
 # engine's `build.rs` uses.
 flate2 = { version = "1", default-features = false, features = ["rust_backend"] }

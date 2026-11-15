@@ -21,8 +21,12 @@ smallest useful first milestone is.
 | Question | Recommendation |
 |---|---|
 | Integration point | New `disambiguate(tokens, &MorphologyAnalysis)` pass after morphology, before syntax/style |
-| What it outputs | One `ReadingDecision` per token: candidate scores, preferred reading index, confidence, abstain flag |
-| What it must not do | Mutate `WordInfo` in the shared surface cache; drop `Tags`; replace `classify` or the clause parser |
+| What it outputs | One `ReadingDecision` per token: candidate scores, preferred reading index, morphological confidence, abstain flag |
+| What it must not do | Mutate `WordInfo` in the shared surface cache; drop `Tags`; assign roles, clauses, subjects, objects or predicates; lower/suppress existing diagnostics in M0 |
+| Morphological vs syntactic confidence | The model ranks readings only. Role confidence and diagnostic severity remain the syntax/checker layer’s decision. |
+| Candidate identity | A reading index may map to zero, one or several lemmas; use a `CandidateView` adapter with explicit `Unavailable` provenance |
+| Evaluation | Candidate coverage, morphological accuracy, syntactic-role accuracy and diagnostic precision are separate gates |
+| M0 experiments | Compare morphology-only, local-context and sentence-context candidate MLPs on the same candidates and labels |
 | First model | Candidate-conditioned one-hidden-layer MLP over local/context features (the M0 neural baseline) |
 | Later model | 1-layer BiLSTM (128 hidden) or 2-layer compact Transformer (d=128, 4 heads); compare empirically |
 | Runtime | Hand-written fixed-weight inference for M0; `tract` or `rten` for ONNX in M1; do not start with `ort`, Candle or Burn |
@@ -297,23 +301,96 @@ These are the changes any model work must account for.
     decision. Either pass the sidecar to style later or keep style on the
     heuristic path for v1.
 
-### 2.4 Reading identity
+### 2.4 Reading identity and candidate-to-lemma provenance
 
 A model output must identify a candidate by **token index + reading index**,
-not by surface or lemma. The reading vector can contain different readings for
-different occurrences of the same surface? No: the current `WordInfo` is shared
-per surface, so the reading vector is identical for the same lowercased
-surface in one analysis. But the model’s **choice** is per occurrence. The
-decision table must be token-indexed.
+not by surface or lemma. The current `WordInfo` is shared per surface, so the
+reading vector is identical for the same lowercased surface in one analysis,
+but the model’s **choice** is per occurrence. The decision table must be
+token-indexed.
 
-If candidate provenance is added, the stable key should be:
+The reading index does **not** carry a reliable lemma. `WordInfo.readings` is
+a `Vec<Tags>`; `WordInfo.lemmas` is a token-level list of every base that
+produced a reading. There is no per-reading source pointer. Consequences:
 
-```text
-(token_index, reading_index)
+- one reading can be produced by more than one lemma (`tuli` as noun `tuli`
+  and as a form of `tulla`);
+- one lemma can produce more than one reading of the same surface;
+- a surface can be a clitic/possessive/compound form whose source is not the
+  chosen `lemma`;
+- `TokenSyntax.lemma` is a **preference**, not proof of the reading’s source.
+
+Do not assume that `preferred` identifies a unique lemma. Use an adapter:
+
+```rust
+pub struct CandidateView<'a> {
+    pub token_index: usize,
+    pub reading_index: usize,
+    pub tags: Tags,
+    /// Known(lemmas) may contain more than one lemma; Unavailable means the
+    /// engine cannot attribute this reading without re-inflection.
+    pub lemma_provenance: LemmaProvenance<'a>,
+    /// WordInfo does not retain Form::confidence per reading today.
+    pub source_confidence: Provenance<Confidence>,
+}
+
+pub enum LemmaProvenance<'a> {
+    Known(Vec<&'a str>), // one or more; never assume len() == 1
+    Unavailable { reason: &'static str },
+}
+
+pub enum Provenance<T> {
+    Known(T),
+    Unavailable { reason: &'static str },
+}
 ```
 
-and never `(surface, lemma)`, because a lemma can have multiple readings and a
-surface can be a form of several lemmas.
+**Attribution adapter.** For a single-lemma token, `TokenSyntax.lemmas` is
+already a reliable one-element source. For a multi-lemma token, the Phase 1
+harness re-runs `expand::form_readings` for each candidate lemma and records
+which lemmas emit the exact `Tags`. If none do, `LemmaProvenance::Unavailable`
+is reported; it is **not** a model error. The production path should later
+store provenance during reading construction rather than re-inflecting, but
+Phase 1 must not add a public API or mutate the cache.
+
+**Matching rule.** An exact candidate match requires:
+
+- the gold mapping status is `Exact`;
+- the candidate’s supported `Tags` match the gold tags;
+- the gold lemma is a member of `LemmaProvenance::Known`.
+
+If provenance is `Unavailable`, the match can only be `Partial`, and the
+report records `provenance_unavailable`. A preferred reading with ambiguous
+provenance is not a licence to pick a lemma.
+
+The stable identity key remains:
+
+```text
+(token_index, reading_index, mapping_version)
+```
+
+and never `(surface, lemma)`.
+
+### 2.5 Morphological confidence is not syntactic confidence
+
+The model’s confidence is **morphological**: how sure it is that reading *r*
+is the intended reading of token *t*. It is not:
+
+- a role confidence (`Subject` vs `Object` vs `Adverbial`);
+- a clause-structure confidence;
+- a diagnostic severity;
+- permission to lower or suppress an existing grammar finding.
+
+`classify`, `choose_predicate`, `resolve_clause`, `agreement`, `rection`,
+`object_case`, `arguments` and the punctuation rules remain the owners of
+syntax and correctness. The model may give those selectors a better preferred
+reading; it must not emit roles or rewrite clauses.
+
+In M0 the model’s confidence is reported separately from
+`DiagnosticConfidence`. The first integration milestone must **not** use model
+uncertainty to downgrade an `Error` or suppress a diagnostic. The effect of
+changed reading preferences on diagnostics is measured as an experiment, not
+applied as a policy.
 
 ## 3. Candidate integration points
 
@@ -393,14 +470,22 @@ Do not replace `classify` or `resolve_clause`. Add a narrow preference:
 
 - `classify`: if there is a preferred reading, prefer its part of speech for
   the role family, but keep the full reading set for ambiguity fallback.
+  The model still does not assign a role.
 - `choose_predicate`: prefer a preferred finite reading over a first-reading
-  heuristic.
+  heuristic; the selector, not the model, decides that a predicate exists.
 - `subject_of` / object selection: prefer a preferred nominal case when the
-  current reading-consistent helpers have more than one viable candidate.
-- `TokenSyntax.lemma`: set from the preferred reading’s lemma when the model
-  is confident; keep `lemmas` and `readings`.
-- `syntax_check` rules: unchanged, except that model confidence may lower an
-  `Error` to `Warning` or suppress when the decision is `Ambiguous`.
+  current reading-consistent helpers have more than one viable candidate; the
+  selector still owns subject/object/complement assignment.
+- `TokenSyntax.lemma`: set from the preferred reading **only when**
+  `CandidateView.lemma_provenance` is `Known` with exactly one lemma. If
+  provenance has several lemmas or is `Unavailable`, keep the existing chosen
+  lemma and record the ambiguity. A preferred reading is not proof of a unique
+  lemma.
+- `syntax_check` rules: unchanged. **M0 must not lower, raise or suppress a
+  diagnostic because of model confidence.** The first integration milestone
+  keeps the existing severity and diagnostic emission exactly as it is. The
+  effect of changed reading preferences on diagnostics is a separate
+  experiment, not an activation policy.
 
 No rule should call the model. The model is one pass, before the rules.
 
@@ -410,6 +495,10 @@ No rule should call the model. The model is one pass, before the rules.
 
 The model is a **candidate reranker**, not a tagger. It sees the sentence and
 the candidate set for each token.
+
+The input builder must use the `CandidateView` adapter from §2.4. It must not
+read `TokenSyntax.lemma` as if it were the source of every reading and must not
+invent a `source_confidence` that `WordInfo` does not carry.
 
 Per token:
 
@@ -428,14 +517,13 @@ Per candidate:
 | field | source | notes |
 |---|---|---|
 | `reading_index` | position in `WordInfo.readings` | output label |
-| `lemma` | source or `WordInfo.lemmas` | needs per-reading lemma provenance |
+| `lemma_provenance` | `CandidateView` adapter | `Known(Vec<lemma>)` or `Unavailable`; may be several lemmas |
 | `part_of_speech` | `Tags` | categorical |
 | `case`, `number` | `Tags` | categorical |
 | `person`, `tense`, `mood`, `voice` | `Tags` | categorical |
 | `polarity` | `Tags` | categorical |
 | `possessive`, `clitic` | `Tags` | categorical |
-| `source_confidence` | `Form.confidence` | **needs to be retained** |
-| `source_lemma` | `SourcedForm.lemma` | **needs to be retained** |
+| `source_confidence` | `WordInfo` today | **always Unavailable** in Phase 1; do not infer it |
 | `source_depth` | resolver depth | token-level today |
 
 ### 4.2 Tensor shape
@@ -476,14 +564,14 @@ abstains. It must never emit a candidate that is not in the input list.
       "candidates": [
         {
           "reading_index": 0,
-          "lemma": "tuli",
+          "lemma_provenance": {"known": ["tuli"]},
           "pos": "noun",
           "case": "nominative",
           "number": "singular"
         },
         {
           "reading_index": 1,
-          "lemma": "tulla",
+          "lemma_provenance": {"known": ["tulla"]},
           "pos": "verb",
           "mood": "indicative",
           "tense": "past",
@@ -512,9 +600,12 @@ held-out dev set. The consumer uses:
 - `preferred` when the margin is above a threshold and the model is not
   out-of-domain;
 - `abstain` when entropy is high, candidate coverage is low, the surface is
-  unknown, or the model version is unsupported;
-- a `Warning` rather than an `Error` when the model preference conflicts with a
-  heuristic but the margin is below the high-confidence threshold.
+  unknown, or the model version is unsupported.
+
+The model confidence is **morphological**. In M0 it only decides whether to
+use a preferred reading or abstain. It does not change a diagnostic’s severity,
+does not lower an `Error` and does not suppress a finding. That is a separate
+experiment after the reading-preference effect has been measured.
 
 The threshold is a product decision; it must be frozen with the model and
 tested against the adjudicated prose corpus.
@@ -587,22 +678,79 @@ The mapper must be a separate, tested module. A relaxed match on the fields
 that `Tags` actually stores is safer than inventing dimensions. Record every
 unmatched gold reading as a **candidate-coverage miss**, not as a model error.
 
-### 5.4 Candidate coverage harness
+### 5.4 Candidate coverage, mapping outcomes and evaluation gates
 
-Before training:
+Before training, run a coverage harness:
 
-1. Run torille morphology on the UD sentence.
-2. Map the UD gold reading to the `Tags` subset above.
-3. Find candidates in `WordInfo.readings` that match. If none, record:
-   `surface`, `gold tags`, `candidate tags`, `depth`, `sentence id`.
-4. Report coverage overall and by POS/case/depth.
-5. Fix only clear candidate-generation gaps in the engine; do not add
-   gold-only candidates to the model input.
+1. Run torille morphology/syntax on the UD sentence (the candidate set plus
+   the token-level lemma list).
+2. Map the UD gold reading to the `Tags` subset above using a versioned
+   mapper.
+3. Attribute each reading to its lemma(s) with the `CandidateView` adapter.
+4. Classify the token into exactly one outcome:
 
-This harness is the first dataset milestone and can be built without any
-model.
+| outcome | meaning | counted as model error? |
+|---|---|---|
+| `exact` | gold mapping is exact; one candidate matches the supported tags; gold lemma is in `LemmaProvenance::Known` | yes |
+| `partial` | gold mapping is partial, or lemma provenance is unavailable; a candidate matches all supported tags | yes, but reported separately |
+| `ambiguous` | more than one candidate matches, or the UD feature mapping itself is ambiguous (e.g. `Poss=Yes` without person/number) | no; separate bucket |
+| `missing` | no candidate matches the supported gold fields | yes; candidate-generation/recall gap |
+| `unavailable` | the gold reading needs a feature torille does not represent (`Degree`, `NumType`, `PronType`, `Derivation`, `PartForm`, `InfForm`, unsupported POS, missing lemma) | **never**; excluded from the model-error denominator |
 
-### 5.5 Training and test splits
+The report must use the categories explicitly:
+
+- **candidate coverage** = `(exact + partial) / (exact + partial + missing)`
+  over available gold readings; `ambiguous` and `unavailable` are reported
+  separately, not folded into misses;
+- **morphological accuracy** = top-1 reading accuracy on `exact` and `partial`
+  tokens, per POS/case/depth, with calibration and abstention;
+- **syntactic-role accuracy** = subject/object/predicate/adverbial role
+  accuracy against UD, measured only after the model changes role preferences;
+  this is not implied by morphological top-1;
+- **diagnostic precision/recall** = the adjudicated-prose gate, per
+  `DiagnosticKind` and per severity; a candidate top-1 gain is not product
+  quality if it makes the checker noisier.
+
+Never count an `unavailable` gold reading as a model prediction error. Never
+report a headline “accuracy” that mixes `exact`, `partial`, `ambiguous` and
+`missing` without the denominator.
+
+The report is grouped by:
+
+- UD POS (`UPOS`);
+- gold case (`Case` or `none`);
+- morphology depth (`Depth::label()`);
+- mapping status (`exact/partial/ambiguous/unavailable`);
+- candidate outcome (`exact/partial/ambiguous/missing`);
+- `provenance_unavailable` count.
+
+Fix only clear candidate-generation gaps in the engine; do not add gold-only
+candidates to the model input.
+
+### 5.5 M0 experiments
+
+The first neural milestone is not one architecture but a controlled comparison
+on the same candidate set, labels and splits:
+
+1. **Morphology-only MLP** — candidate features only; no neighbouring tokens.
+2. **Local-context MLP** — candidate features plus a fixed window (for example
+   two tokens left/right) and sentence position.
+3. **Sentence-context MLP** — candidate features plus a sentence encoder
+   (mean-pooled or a small recurrent/attention encoder).
+
+All three use the same input candidates and the same gold labels. Compare:
+
+- morphological top-1 accuracy on `exact`/`partial` tokens;
+- calibration and abstention rate;
+- syntactic-role accuracy after applying the preference;
+- diagnostic precision/recall on the adjudicated prose;
+- latency and model size.
+
+Only proceed to BiLSTM/Transformer if sentence context shows a measurable gain
+over the local-context MLP. If it does not, the smaller M0 model is the
+answer.
+
+### 5.6 Training and test splits
 
 - Train on UD Finnish-FTB train (and optionally TDT train after licence review).
 - Tune on FTB dev and a frozen manually adjudicated hard set.
@@ -611,7 +759,7 @@ model.
 - Split by document, not sentence, to avoid near-duplicate leakage.
 - Keep a final **never-touched** test set for the first release decision.
 
-### 5.6 Manual hard-ambiguity set
+### 5.7 Manual hard-ambiguity set
 
 UD only gives one gold reading, not a ranked candidate set. Add a small manual
 set focused on the ambiguities that actually break torille:
@@ -626,7 +774,7 @@ set focused on the ambiguities that actually break torille:
 - Double-annotate a subset; record agreement. If annotators cannot agree, the
   model should abstain, not guess.
 
-### 5.7 Licence strategy
+### 5.8 Licence strategy
 
 The engine is MIT/Apache-2.0 and the repository carefully separates GPL
 oracle tools. A trained model adds a new licensing question:
@@ -807,8 +955,25 @@ default for a non-trivial model.
 - `Disambiguation` is per analysis; do not cache it in `MorphologyCache`.
 - `SentenceCache` caches diagnostics, not decisions; decisions are recomputed
   for a changed sentence or reconstructed from a cached sentence.
-- If the model version changes, clear the sentence cache and the analysis
-  state.
+- The sentence-cache key must include all of:
+
+  ```text
+  sentence text hash + byte length + quote depth
+  + model_version
+  + feature_schema_version
+  + activation_state   // off / on (and later model weights hash)
+  ```
+
+  With activation off, the old path is used and the model fields are absent.
+  With activation on, an unchanged sentence with the same tuple is a cache
+  hit: **do not rerun morphology, the model, syntax or the rules for it**.
+  Changing the model version, feature schema or activation state invalidates
+  the relevant entries (or bumps the state generation and clears the cache).
+  A cached sentence’s diagnostics are shifted by span only; the model is not
+  called for it.
+- A model update must clear the sentence cache and the per-textarea state
+  generation. A morphology/engine change that changes candidate ids also
+  invalidates the feature schema and the cache.
 
 ## 9. Risks and fallback strategy
 
@@ -832,8 +997,8 @@ default for a non-trivial model.
 1. **Feature flag off** (default): byte-for-byte current behaviour.
 2. **Model unavailable / version mismatch:** current heuristic path.
 3. **No candidate or K<=1:** current heuristic path.
-4. **Low margin / high entropy:** use the heuristic; if the model is
-   consulted, suppress rather than emit an `Error`.
+4. **Low margin / high entropy:** use the heuristic and record an abstention.
+   Do not suppress or downgrade an existing diagnostic in M0.
 5. **Unknown word / depth Unknown:** heuristic path.
 6. **Model crash or load failure:** log once, disable the model for the
    session, keep the checker working.
@@ -853,37 +1018,140 @@ evidence.
 
 **Exit:** this document reviewed; no production behaviour changed.
 
-### Phase 1 — data and candidate-coverage harness
+### Phase 1 — data and candidate-coverage harness (implemented)
 
-- UD reader and `Tags` mapper;
-- run torille morphology on FTB/TDT/OOD/PUD;
-- report candidate coverage by corpus, POS, case, depth;
-- build the manual hard-ambiguity set (500–1,000 tokens);
-- freeze splits and a test set.
+Implemented as `tools/src/ud/`:
 
-**Exit:** candidate coverage is known; no model yet.
+| file | purpose |
+|---|---|
+| `reader.rs` | CoNLL-U reader; skips multiword/empty nodes, parses FEATS, reports line errors |
+| `mapping.rs` | versioned `UD_MAPPING_VERSION = "fi-ud-tags-1"`; exact/partial/ambiguous/unavailable statuses, feature mask |
+| `coverage.rs` | candidate views, lemma-provenance adapter, exact/partial/ambiguous/missing/unavailable outcome, POS/case/depth tables |
+| `ambiguity.rs` | initial manual fixture format and validator |
+| `../bin/ud_coverage.rs` | `ud_coverage --file corpus.conllu [--ambiguity fixture.json]` |
+
+The candidate adapter is explicit about what the current engine cannot
+provide:
+
+- `LemmaProvenance::Known(Vec<&str>)` may contain more than one lemma; a
+  single-lemma token is attributed directly, a multi-lemma token is
+  re-inflected through `form_readings` to find the exact source(s);
+- `LemmaProvenance::Unavailable` means the harness cannot attribute the
+  reading; it is reported separately and never treated as a model error;
+- `source_confidence` is `Provenance::Unavailable` because `WordInfo` does not
+  retain `Form::confidence` per reading.
+
+The mapping statuses are the ones used by the model-error denominator:
+
+- `exact`: all claimed UD dimensions represented exactly;
+- `partial`: usable, but one or more dimensions approximated or absent from
+  `Tags`;
+- `ambiguous`: a UD feature has more than one torille interpretation
+  (`UPOS=ADP` without `AdpType`, `Case=Acc` across
+  Accusative/Genitive/Nominative, `Poss=Yes` without person/number);
+- `unavailable`: a required feature is not representable (`DET`, `PART`,
+  `Case=Lat`, etc.).
+
+The manual fixture format is candidate-signature based, not reading-index
+based:
+
+```json
+{
+  "format_version": 1,
+  "mapping_version": "fi-ud-tags-1",
+  "cases": [
+    {
+      "id": "tuli_fire_noun",
+      "sentence": "Tuli sammui.",
+      "token_index": 0,
+      "surface": "Tuli",
+      "preferred": {"lemma": "tuli", "pos": "noun", "case": "nominative", "number": "singular"},
+      "acceptable": [{"lemma": "tuli", "pos": "noun", "case": "nominative", "number": "singular"}],
+      "abstain_ok": false,
+      "note": "fire"
+    }
+  ]
+}
+```
+
+Seed files:
+
+- `tests/fixtures/neural/ud_sample.conllu` — hand-authored CoNLL-U smoke
+  fixture, MIT/Apache-2.0;
+- `tests/fixtures/neural/manual_ambiguity.json` — six initial ambiguity
+  cases, mapped to `fi-ud-tags-1`.
+
+A smoke run on the committed sample gives 11 word tokens, 9 exact, 2 partial,
+0 ambiguous, 0 missing, 0 unavailable; candidate coverage 100% over the
+available gold. A downloaded UD Finnish-FTB test run (not committed) gave
+13,904 word tokens:
+
+```text
+gold mapping:     exact 8,320  partial 4,320  ambiguous 276  unavailable 988
+candidate outcome: exact 7,636  partial 2,554  ambiguous 4    missing 2,446
+candidate coverage (exact+partial): 80.6%
+```
+
+That FTB run is a smoke observation, not a gate: FTB’s `ADP` rows generally
+lack `AdpType`, so all adpositions are classified `ambiguous`; `DET`/`PART`/
+`Lat` readings are `unavailable`; and multi-lemma provenance re-inflection
+makes the run about 30 seconds. The headline rate must not be read as product
+quality.
+
+**Exit:** candidate coverage is implemented and measurable; no model yet.
 
 ### Phase 2 — integration seam, no model
 
-- add `Disambiguation`/`ReadingDecision` types;
+- add `Disambiguation`/`ReadingDecision` and `CandidateView` types;
 - add `disambiguate` with a no-op/heuristic implementation;
 - thread the sidecar through `analyze_syntax_with_contexts`,
   `SentenceCache`, and the wasm owner path;
-- keep feature flag off; exact-output tests must be unchanged.
+- keep the feature flag off.
 
-**Exit:** the sidecar is wired without changing a single diagnostic.
+**Exact no-op gate.** With neural inference disabled, the new path must be
+**byte-for-byte equivalent** to the existing pipeline. The gate compares:
 
-### Phase 3 — M0 feature MLP
+- every `TokenSyntax` field: `key`, `role`, `confidence`, `clause`, `head`,
+  `case`, `lemma`, `lemmas`, `readings`;
+- every `Clause` field: ranges, predicate, subject, object, complement,
+  negative, existential, parent/children, antecedent;
+- every diagnostic: kind, severity, confidence, span, message, expected;
+- every correction: edit order, spans, replacement, score, note;
+- list structures and sentence spans;
+- every `StyleDiagnostic`;
+- the public combined `CheckAll` output;
+- the wasm diagnostic object (at least in a native/wasm-shape test).
 
-- candidate features + local context;
-- one hidden layer (32–64 units); fixed weights in Rust;
+Run the comparison over the exact-output fixture, the ambiguity fixture, the
+prose fixture, and the 2,000-word perf fixture. Any difference is a failed
+Phase 2.
+
+**Exit:** the sidecar is wired without changing a single diagnostic, clause,
+role, span, correction or style output.
+
+### Phase 3 — M0 feature MLP experiments
+
+- compare three controlled variants on the same candidates/labels/splits:
+  1. morphology-only candidate MLP;
+  2. local-context candidate MLP (window + position);
+  3. sentence-context candidate MLP (pooled/sequence encoder);
+- one hidden layer (32–64 units) for the first two; keep the sentence-context
+  variant deliberately small;
+- fixed weights in Rust;
 - train offline on FTB (and TDT only after licence review);
 - evaluate on frozen hard set, OOD/PUD, prose corpus;
 - run only on ambiguous tokens; measure latency and size;
 - feature flag on in tests, off by default in shipping.
 
-**Exit:** top-1 improvement over the heuristic on the frozen set; no clean
-prose regression; no public API change; model <100 KB.
+**Conservative activation.** The model may change the preferred reading used
+by the syntax selectors. It must **not** automatically lower, raise or suppress
+an existing grammar diagnostic in M0. Evaluate the diagnostic effect of changed
+reading preferences separately, with the same rules and severities.
+
+**Exit:** morphology-only vs local-context vs sentence-context shows whether
+context provides a measurable gain; no clean prose regression; no public API
+change; model <100 KB. If sentence context does not beat local context, do not
+proceed to BiLSTM/Transformer on architecture grounds alone.
 
 ### Phase 4 — M1 BiLSTM / compact Transformer
 
@@ -925,12 +1193,18 @@ verified.
   all existing rules intact.
 - Let `classify`, `choose_predicate`, subject/object selection and
   `TokenSyntax.lemma` consult `preferred` only when the model is confident.
+  The selectors still assign roles; the model never does.
+- `TokenSyntax.lemma` changes only when `CandidateView` provenance is known
+  and unique. A preferred reading with several lemmas or unavailable
+  provenance leaves the existing lemma in place.
 - Keep `style_check` on the heuristic lemma for v1; pass the sidecar later
   only after measuring the divergence.
+- M0 does not lower, raise or suppress diagnostics. Diagnostic-severity
+  effects are evaluated separately after reading-preference effects are known.
 
-**Model:** start with the M0 candidate MLP, then compare a 1-layer BiLSTM with
-a 2-layer compact Transformer on the same frozen set. Do not start with a
-full tagger or FinBERT.
+**Model:** start with the three M0 candidate MLP variants (morphology-only,
+local-context, sentence-context). Only advance to BiLSTM/Transformer if
+sentence context shows a measurable gain over local context.
 
 **Runtime:** fixed-weight Rust for M0; `tract` or `rten` for M1; owner-only
 wasm module for M1. Avoid ONNX Runtime/Candle/Burn for the first milestone.
@@ -947,25 +1221,36 @@ change.**
 
 Deliverables:
 
-1. A UD→`Tags` mapper and candidate-coverage report on FTB dev/train.
-2. A frozen 500-token hard-ambiguity set with adjudicated preferred readings.
-3. A `Disambiguation`/`ReadingDecision` sidecar and a no-op `disambiguate`
+1. A UD→`Tags` mapper with a versioned mapping status and explicit
+   `unavailable`/`ambiguous`/`partial` outcomes, plus candidate coverage on
+   FTB dev/train.
+2. A `CandidateView` adapter with `LemmaProvenance::{Known(Vec<lemma>), Unavailable}`
+   and explicit unavailable `source_confidence`.
+3. A frozen 500-token hard-ambiguity set with adjudicated preferred readings.
+4. A `Disambiguation`/`ReadingDecision` sidecar and a no-op `disambiguate`
    pass wired through `check_all_with_cache`, `SentenceCache`, and the wasm
-   owner path. With the flag off, diagnostics must be byte-identical.
-4. A one-hidden-layer MLP (candidate features + local context) trained
-   offline, exported as fixed weights, and run in Rust natively.
-5. Evaluation: top-1 candidate accuracy on ambiguous tokens vs the current
-   heuristic, candidate coverage, latency on 2,000 words, model size, and
-   the existing clean-prose gate.
-6. A model card with corpus/licence/version.
+   owner path. With the flag off, all analysis and diagnostic output must be
+   identical.
+5. Three controlled M0 experiments (morphology-only, local-context,
+   sentence-context) trained offline, exported as fixed weights, and run in
+   Rust natively.
+6. Evaluation separated into candidate coverage, morphological accuracy,
+   syntactic-role accuracy and diagnostic precision. Do not use candidate
+   top-1 as a substitute for product quality.
+7. A model card with corpus/licence/version.
 
 Exit criteria:
 
-- no diagnostic change with the model disabled;
+- no diagnostic, clause, role, span, correction or style change with the
+  model disabled (Phase 2 exact no-op gate);
 - no `Error` regression on the adjudicated clean prose;
-- measured top-1 improvement on the frozen hard set;
+- a measurable morphological gain on the frozen hard set, reported separately
+  from candidate coverage and role accuracy;
+- M0 shows whether local/sentence context beats morphology-only; if not, stop
+  before BiLSTM/Transformer;
 - model <100 KB, native inference <1 ms per 1,000 tokens;
 - every alternative reading still present in `WordInfo`/`TokenSyntax`;
+- no automatic lowering/suppression of existing diagnostics;
 - a clear decision to proceed to BiLSTM/Transformer or stop.
 
 This milestone is deliberately not “train a neural parser”. It proves the
@@ -1041,7 +1326,99 @@ Result: clean.
 
 These are the numbers a model must not regress.
 
-## 14. References
+## 14. Phase 1 implementation verification
+
+Implemented without touching production grammar code, public APIs or model
+training:
+
+| path | change |
+|---|---|
+| `tools/src/ud/reader.rs` | CoNLL-U reader |
+| `tools/src/ud/mapping.rs` | versioned UD→`Tags` mapping |
+| `tools/src/ud/coverage.rs` | candidate/lemma adapter and coverage report |
+| `tools/src/ud/ambiguity.rs` | manual ambiguity fixture format and validator |
+| `tools/src/bin/ud_coverage.rs` | CLI |
+| `tests/fixtures/neural/ud_sample.conllu` | hand-authored smoke corpus |
+| `tests/fixtures/neural/manual_ambiguity.json` | six initial ambiguity cases |
+| `tools/Cargo.toml`, `tools/src/lib.rs` | module and test dependencies |
+
+### Commands and results
+
+```bash
+cargo test --release -p torille-tools --lib ud::
+```
+
+Result: **21 passed, 0 failed** (reader, mapping, provenance, coverage and
+fixture validation).
+
+```bash
+cargo test --release -p torille-tools
+```
+
+Result: **21 passed, 0 failed** (the other tool binaries contain no unit tests).
+
+```bash
+cargo test --release --workspace
+```
+
+Result: **51 test binaries, 1,277 tests passed, 0 failed**.
+
+```bash
+cargo test --release -p torille \
+  --test syntax_check --test syntax_eval \
+  --test syntax_ambiguity --test syntax_prose \
+  --test style_check --test style_eval
+```
+
+Result: **43 + 2 + 1 + 3 + 16 + 2 passed, 0 failed**. No existing syntax,
+style or prose output changed.
+
+```bash
+cargo clippy --workspace --all-targets -- -D warnings
+```
+
+Result: clean.
+
+### Smoke report
+
+```bash
+cargo run --release -p torille-tools --bin ud_coverage -- \
+  --file tests/fixtures/neural/ud_sample.conllu \
+  --ambiguity tests/fixtures/neural/manual_ambiguity.json
+```
+
+Result on the committed sample:
+
+```text
+word tokens: 11
+gold mapping:      exact=9 partial=2 ambiguous=0 unavailable=0
+candidate outcome: exact=9 partial=2 ambiguous=0 missing=0
+candidate coverage (exact+partial): 100.0%
+provenance unavailable: 0
+```
+
+The report includes POS, case and depth tables. `--mapping-version` prints
+`fi-ud-tags-1`.
+
+A downloaded, uncommitted UD Finnish-FTB test run was also used as a smoke
+observation:
+
+```text
+word tokens: 13,904
+gold mapping:      exact 8,320  partial 4,320  ambiguous 276  unavailable 988
+candidate outcome: exact 7,636  partial 2,554  ambiguous 4    missing 2,446
+candidate coverage over available gold: 80.6%
+```
+
+That number is not a product-quality gate. FTB `ADP` rows generally lack
+`AdpType`, so all adpositions become `ambiguous`; `DET`/`PART`/`Lat` readings
+are `unavailable`; and multi-lemma provenance re-inflection makes the run
+about 30 seconds. It is a coverage smoke test, not a model result.
+
+No model was trained or run; no production grammar behaviour or public API was
+modified by Phase 1.
+
+## 15. References
 
 - UD Finnish-TDT: <https://universaldependencies.org/treebanks/fi_tdt/>
 - UD Finnish-FTB: <https://universaldependencies.org/treebanks/fi_ftb/>
@@ -1066,5 +1443,5 @@ These are the numbers a model must not regress.
 
 ---
 
-*Audit only. No production code, public API, grammar rule or existing behaviour
-was changed for this document.*
+*Architecture audit plus Phase 1 tooling only. No production grammar code,
+public API or model training was changed for this document.*

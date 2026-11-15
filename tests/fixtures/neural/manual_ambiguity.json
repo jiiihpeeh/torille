@@ -1,0 +1,148 @@
+{
+  "_comment": [
+    "Initial manual ambiguity fixture for Phase 1.",
+    "Labels are candidate signatures, not reading indices: a reading index is",
+    "an implementation detail that can change when candidates are regenerated.",
+    "`preferred` is the intended reading; `acceptable` lists other readings a",
+    "reviewer would accept; `abstain_ok` says the checker may decline to choose.",
+    "A resolver must not assume a preferred signature identifies one lemma."
+  ],
+  "format_version": 1,
+  "mapping_version": "fi-ud-tags-1",
+  "cases": [
+    {
+      "id": "tuli_fire_noun",
+      "sentence": "Tuli sammui.",
+      "token_index": 0,
+      "surface": "Tuli",
+      "preferred": {
+        "lemma": "tuli",
+        "pos": "noun",
+        "case": "nominative",
+        "number": "singular"
+      },
+      "acceptable": [
+        {
+          "lemma": "tuli",
+          "pos": "noun",
+          "case": "nominative",
+          "number": "singular"
+        }
+      ],
+      "abstain_ok": false,
+      "note": "The fire went out; the noun reading is the intended one."
+    },
+    {
+      "id": "kirjaa_partitive_object",
+      "sentence": "Luen kirjaa.",
+      "token_index": 1,
+      "surface": "kirjaa",
+      "preferred": {
+        "lemma": "kirja",
+        "pos": "noun",
+        "case": "partitive",
+        "number": "singular"
+      },
+      "acceptable": [
+        {
+          "lemma": "kirja",
+          "pos": "noun",
+          "case": "partitive",
+          "number": "singular"
+        }
+      ],
+      "abstain_ok": false,
+      "note": "Partitive object of an irresultative reading."
+    },
+    {
+      "id": "sen_genitive_object",
+      "sentence": "Tarvitsen sen.",
+      "token_index": 1,
+      "surface": "sen",
+      "preferred": {
+        "lemma": "se",
+        "pos": "pronoun",
+        "case": "genitive",
+        "number": "singular"
+      },
+      "acceptable": [
+        {
+          "lemma": "se",
+          "pos": "pronoun",
+          "case": "genitive",
+          "number": "singular"
+        }
+      ],
+      "abstain_ok": false,
+      "note": "Pronoun object; the adverb homonym is not intended."
+    },
+    {
+      "id": "joka_frequency_determiner",
+      "sentence": "Joka päivä juon kahvia.",
+      "token_index": 0,
+      "surface": "Joka",
+      "preferred": {
+        "lemma": "joka",
+        "pos": "pronoun",
+        "case": "nominative",
+        "number": "singular"
+      },
+      "acceptable": [
+        {
+          "lemma": "joka",
+          "pos": "pronoun",
+          "case": "nominative",
+          "number": "singular"
+        }
+      ],
+      "abstain_ok": true,
+      "note": "Determiner use; the reading is clear, but a parser may abstain on role."
+    },
+    {
+      "id": "ilman_preposition",
+      "sentence": "Ilman rahaa en tule.",
+      "token_index": 0,
+      "surface": "Ilman",
+      "preferred": {
+        "lemma": "ilman",
+        "pos": "preposition"
+      },
+      "acceptable": [
+        {
+          "lemma": "ilman",
+          "pos": "preposition"
+        }
+      ],
+      "abstain_ok": false,
+      "note": "Preposition, not the genitive of ilma."
+    },
+    {
+      "id": "kuusi_numeral",
+      "sentence": "Kuusi lasta tuli.",
+      "token_index": 0,
+      "surface": "Kuusi",
+      "preferred": {
+        "lemma": "kuusi",
+        "pos": "numeral",
+        "case": "nominative",
+        "number": "singular"
+      },
+      "acceptable": [
+        {
+          "lemma": "kuusi",
+          "pos": "numeral",
+          "case": "nominative",
+          "number": "singular"
+        },
+        {
+          "lemma": "kuusi",
+          "pos": "noun",
+          "case": "nominative",
+          "number": "singular"
+        }
+      ],
+      "abstain_ok": true,
+      "note": "Six children vs. the spruce reading; context selects the numeral."
+    }
+  ]
+}

@@ -12,6 +12,7 @@ pub mod der1;
 pub mod front_coded;
 pub mod gzip;
 pub mod stem_key;
+pub mod ud;
 
 use torille::spec::Catalogues;
 use torille::tags::PartOfSpeech;
