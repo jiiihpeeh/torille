@@ -6,6 +6,9 @@ ordered by user-facing impact. Update as items are done.
 The closed-spelling table cleanup has its own checklist:
 [`TODO_CLOSED_SPELLINGS.md`](TODO_CLOSED_SPELLINGS.md).
 
+The grammar, syntax and style layers have their own roadmap and gap list:
+[`TODO_GRAMMAR_STYLE.md`](TODO_GRAMMAR_STYLE.md).
+
 ## High priority
 
 Ordered by user-facing impact, which is not the same as gap size: an engine that
