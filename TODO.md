@@ -1692,6 +1692,8 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   confirmed 466 / missing 916 / illegal 969 to confirmed 1232 / missing 151 /
   illegal 52. The hand-written irregular nouns now build their possessive grid
   from the bare cases too, and the plural nominative takes none, so `aprilli`
-  reaches confirmed 1360 / missing 23 / illegal 52. The remaining class-99
-  rows are a handful of `-u`/`-is` words (`kukku`, `karku`, `ulko`, `tarvis`,
-  `vaari`) whose class-99 marker hides a real class.
+  reaches confirmed 1360 / missing 23 / illegal 52. The remaining small
+  `-u`/`-is` delegations (`vaari` 5, `karku`/`ulko` 1, `tarvis` 33) bring the
+  class-99 sample to confirmed 1373 / missing 11 / illegal 18. Only `kukku`
+  remains; no Kotus class reproduces its oracle mix of `kukun`/`kukut` and
+  `kukkuja`, so it is left as an i-loan rather than guessed.

@@ -289,6 +289,18 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     if lemma == "käsikoukku" {
         return super::class_1A::inflect(lemma, possessives);
     }
+    // The remaining small class-99 nouns have a real class beside the marker:
+    // `vaari` is 5, `karku`/`ulko` are 1, and `tarvis` is the class-33
+    // `-is` noun (`tarvista`, not the i-loan `tarvisia`).
+    if lemma == "vaari" {
+        return super::class_5::inflect(lemma, possessives);
+    }
+    if matches!(lemma, "karku" | "ulko") {
+        return super::class_1::inflect(lemma, possessives);
+    }
+    if lemma == "tarvis" {
+        return super::class_33::inflect(lemma, possessives);
+    }
     if lemma == "tenä" {
         // Wiktionary: "Sana taipuu vain harvoissa sijoissa" -- only the
         // nominative and a few oblique/plural forms. Live Voikko confirms
@@ -382,6 +394,15 @@ mod tests {
                 .any(|f| f.word == "käsikoukun" && f.plain())
         );
         assert!(!käsikoukku.iter().any(|f| f.word == "käsikoukkueiden"));
+        // The last small marker pairs: 5, 1, 1 and 33.
+        let vaari = inflect("vaari", true);
+        assert!(vaari.iter().any(|f| f.word == "vaarin" && f.plain()));
+        let karku = inflect("karku", true);
+        assert!(karku.iter().any(|f| f.word == "karkuun" && f.plain()));
+        let ulko = inflect("ulko", true);
+        assert!(ulko.iter().any(|f| f.word == "ulkon" && f.plain()));
+        let tarvis = inflect("tarvis", true);
+        assert!(tarvis.iter().any(|f| f.word == "tarvista" && f.plain()));
     }
 
     #[test]
