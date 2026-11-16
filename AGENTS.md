@@ -44,6 +44,11 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
 - `data/README.md` — the per-file inventory of `data/` and each producer.
 - `PLAN_COMPOUND.md` — the compound engine: what the spec asks for, what
   already exists, and the phases for the inflection-mode/compound-kind model.
+- `PLAN_N1000.md` — the full-lexicon noun sweep closure plan: homonym-aware
+  reporting first, then the class-10 colon and class-48 stem-vowel engines, the
+  class-50 agent-tail regression, twin paradigms and rare-alternate evidence.
+  Wiktionary's Finnish entry is the final authority; the plan records the API
+  recipe and the validation gates.
 
 ## Repository map
 

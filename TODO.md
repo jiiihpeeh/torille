@@ -1842,3 +1842,12 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   `kiiru`/`ori`, class 5 `sini`/`palvi`/`silkkivuori`, class 9
   `parka`/`kysta`/`lyyra`/`koala`, class 9*D `nahka`, and the class-50
   `kovametalli` not-plain column.
+
+- 2026-11-16: the systematic closure plan for the `n=1000` sweep is
+  `PLAN_N1000.md`. It puts homonym-aware reporting first, then the class-10
+  colon abbreviations, class-48 stem-vowel words, the class-50 agent-tail
+  regression, twin paradigms and rare-alternate evidence. Wiktionary's Finnish
+  entry (`https://en.wiktionary.org/wiki/<word>#Finnish`) is the final
+  authority. The class-50 agent allow-list from the previous batch is not
+  finished: `kevytsukeltaja` and `omahoitaja` need the normal `-i-` plural,
+  while `vapaamatkustaja` keeps `-oi-`.
