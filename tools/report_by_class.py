@@ -100,7 +100,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     )
     p.add_argument("-n", "--per-class", type=int, default=5,
                    help="lemmas to check per class (default: 5)")
-    p.add_argument("--pos", choices=("noun", "adjective"), default="noun",
+    p.add_argument("--pos",
+                   choices=("noun", "adjective", "pronoun", "numeral"),
+                   default="noun",
                    help="part of speech to audit (default: noun)")
     p.add_argument("-c", "--classes", default="all",
                    help="comma-separated class numbers to report, or 'all'")
@@ -390,7 +392,12 @@ def main(argv: list[str]) -> int:
             # run: the curated rules would still be applied, but the live
             # second opinion would be missing without saying so.
             return 2
-    part_of_speech = "adjektiivi" if args.pos == "adjective" else "substantiivi"
+    part_of_speech = {
+        "noun": "substantiivi",
+        "adjective": "adjektiivi",
+        "pronoun": "pronomini",
+        "numeral": "numeraali",
+    }[args.pos]
     buckets = harness.words_in_class(part_of_speech, args.classless)
 
     def class_key(c: str) -> tuple[int, int, str]:

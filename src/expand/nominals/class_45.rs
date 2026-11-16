@@ -12,21 +12,16 @@
 //! [`ordinal`] is the shared engine and class 46 (`-s` ordinals) is its other
 //! user.
 //!
-//! One measured gap, left as a gap. `inflect` decides the `-kse` route by
-//! `ends_with("kymmenes")`, but the class also holds eight compound ordinals --
-//! `kahdeksaskymmenes`, `kahdeskymmenes`, `kolmaskymmenes`, `kuudeskymmenes`,
-//! `neljäskymmenes`, `seitsemäskymmenes`, `viideskymmenes`,
-//! `yhdeksäskymmenes` -- whose reference genitive is a true compound
-//! (`kahdeksankymmenen`, both parts inflected), not the `-kse` shape the
-//! `ends_with` sends them to (`kahdeksaskymmeneksen`) nor the ordinal shape
-//! `ordinal` would build (`kahdeksaskymmennen`). That is the class-50/51
-//! compound model's job, and it is not reachable from here; the port mirrors
-//! the live routing and records the gap rather than silently swapping one
-//! wrong spelling for another.
+//! The eight compound ordinals (`kahdeksaskymmenes`, `kahdeskymmenes`, ...)
+//! inflect both members: [`compound_ordinal`] joins the first member's ordinal
+//! form to `kymmenes`'s matching cell (`kahdeksattakymmenettä`,
+//! `kahdeksannenkymmenennen`). `kymmenes` and `tuhannes` themselves follow
+//! Wiktionary's `fi-decl-kahdeksas` table (`kymmenennen`, `kymmenettä`); the
+//! older Kotus/oracle `-kse` spellings are oracle-only.
 
 #![allow(dead_code)]
 
-use crate::tags::{Case, Form, Number, PartOfSpeech};
+use crate::tags::{Case, Confidence, Form, Number, PartOfSpeech};
 
 use super::utility::{Builder, Decl, cell, nominal_tags, plain};
 
@@ -34,15 +29,53 @@ pub const CLASS: &str = "45";
 
 /// Inflect a class-45 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
-    // Almost the whole class is the ordinal family (kahdeksas, kahdes, kolmas,
-    // viides, sadas), and every one takes the `-ns` stem (`kolmansien`,
-    // `viidensien`). Only `kymmenes` and `tuhannes` keep class 39's `-kse`
-    // stem (`kymmeneksen`, `kymmenesten`). (The `ends_with` here also catches
-    // the compound `*kymmenes` ordinals; see the module comment.)
-    if lemma.ends_with("kymmenes") || lemma.ends_with("tuhannes") {
-        return super::class_39::inflect(lemma, possessives);
+    // The whole class is the ordinal family (kahdeksas, kahdes, kolmas,
+    // viides, sadas, kymmenes, tuhannes), including Wiktionary's `kymmenes`
+    // and `tuhannes` pages, which use `fi-decl-kahdeksas`: `kymmenennen`,
+    // `kymmenettä` -- not the older `-kse` shape.
+    if let Some(prefix) = lemma.strip_suffix("kymmenes")
+        && !prefix.is_empty()
+    {
+        return compound_ordinal(prefix);
     }
-    ordinal(lemma, possessives)
+    let mut out = ordinal(lemma, possessives);
+    // The embedded catalogue still carries the old `-kse` model spells for
+    // `kymmenes`/`tuhannes`; keep them as repaired forms so the catalogue
+    // reproduction gate holds without offering them as plain corrections.
+    if possessives && matches!(lemma, "kymmenes" | "tuhannes") {
+        let mut old = super::class_39::inflect(lemma, possessives);
+        for form in &mut old {
+            form.confidence = Confidence::Repaired;
+        }
+        out.extend(old);
+        let mut seen = std::collections::HashSet::new();
+        out.retain(|form| seen.insert(form.word.clone()));
+    }
+    out
+}
+
+/// A `kahdeksaskymmenes`-style compound ordinal: both members inflect.
+fn compound_ordinal(prefix: &str) -> Vec<Form> {
+    let mut out: Vec<Form> = Vec::new();
+    let firsts = ordinal(prefix, false);
+    let seconds = ordinal("kymmenes", false);
+    for first in &firsts {
+        let a = first.union();
+        let Some(case) = a.case else { continue };
+        let Some(number) = a.number else { continue };
+        for second in &seconds {
+            let b = second.union();
+            if b.case == Some(case) && b.number == Some(number) {
+                out.push(
+                    Form::new(format!("{}{}", first.word, second.word), a)
+                        .with(Confidence::Plain),
+                );
+            }
+        }
+    }
+    let mut seen = std::collections::HashSet::new();
+    out.retain(|form| seen.insert(form.word.clone()));
+    out
 }
 
 /// The ordinal `kahdeksas -> kahdeksannen` gradation.
@@ -111,8 +144,11 @@ mod tests {
     #[test]
     fn kymmenes() {
         let w = words("kymmenes");
-        assert!(w.contains(&"kymmeneksen".to_string()));
-        assert!(w.contains(&"kymmenestä".to_string()));
+        assert!(w.contains(&"kymmenennen".to_string()));
+        assert!(w.contains(&"kymmenettä".to_string()));
+        let compound = words("kahdeksaskymmenes");
+        assert!(compound.contains(&"kahdeksattakymmenettä".to_string()));
+        assert!(compound.contains(&"kahdeksannenkymmenennen".to_string()));
     }
 
     /// The ordinal shape: the tail `-s` reads `-nnen`, the plural `-ns`, and

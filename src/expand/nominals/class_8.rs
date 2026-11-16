@@ -40,8 +40,53 @@ use super::utility::{Builder, Decl, Ending, cell, nominal_tags, plain};
 
 pub const CLASS: &str = "8";
 
+/// The `kolme` numeral: singular on `kolme`, plural on `kolmi` except the
+/// nominative.
+fn kolme_grid(possessives: bool) -> Vec<Form> {
+    let mut b = Builder::new("kolme", possessives);
+    let (sg, pl) = (Number::Singular, Number::Plural);
+    b.decline(
+        &Decl::new(vec![
+            cell(Case::Nominative, sg, "kolme", ["", ""], false).on_stem(),
+            cell(Case::Genitive, sg, "kolme", ["n", "n"], false).on_stem(),
+            cell(Case::Partitive, sg, "kolme", ["a", "ä"], true),
+            cell(Case::Essive, sg, "kolme", ["na", "nä"], true),
+            cell(Case::Translative, sg, "kolme", ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
+            cell(Case::Inessive, sg, "kolme", ["ssa", "ssä"], true),
+            cell(Case::Elative, sg, "kolme", ["sta", "stä"], true),
+            cell(Case::Illative, sg, "kolme", ["en", "en"], false).on_ending(["e", "e"]),
+            cell(Case::Adessive, sg, "kolme", ["lla", "llä"], true),
+            cell(Case::Ablative, sg, "kolme", ["lta", "ltä"], true),
+            cell(Case::Allative, sg, "kolme", ["lle", "lle"], true),
+            cell(Case::Abessive, sg, "kolme", ["tta", "ttä"], true),
+            cell(Case::Nominative, pl, "kolme", ["t", "t"], false).on_stem(),
+            cell(Case::Genitive, pl, "kolmi", ["en", "en"], false).on_ending(["e", "e"]),
+            cell(Case::Partitive, pl, "kolmi", ["a", "ä"], true),
+            cell(Case::Essive, pl, "kolmi", ["na", "nä"], true),
+            cell(Case::Translative, pl, "kolmi", ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
+            cell(Case::Inessive, pl, "kolmi", ["ssa", "ssä"], true),
+            cell(Case::Elative, pl, "kolmi", ["sta", "stä"], true),
+            cell(Case::Illative, pl, "kolmi", ["in", "in"], false).on_ending(["i", "i"]),
+            cell(Case::Adessive, pl, "kolmi", ["lla", "llä"], true),
+            cell(Case::Ablative, pl, "kolmi", ["lta", "ltä"], true),
+            cell(Case::Allative, pl, "kolmi", ["lle", "lle"], true),
+            cell(Case::Abessive, pl, "kolmi", ["tta", "ttä"], true),
+            plain(Case::Instructive, pl, "kolmi", ["n", "n"]),
+        ]),
+        |case, number, poss| nominal_tags(PartOfSpeech::Numeral, case, number, poss),
+    );
+    b.comitative("kolmi");
+    b.into_forms()
+}
+
 /// Inflect a class-8 noun (stem = the lemma, no gradation).
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
+    // `kolme` is the class-8 *numeral*, not an `-e` loanword: its plural stem
+    // is `kolmi` (kolmien, kolmia, kolmiin), not the loanword `kolmejen`.
+    // Wiktionary gives the ovi/7-adjacent numeral table for it.
+    if lemma == "kolme" {
+        return kolme_grid(possessives);
+    }
     let mut b = Builder::new(lemma, possessives);
     let stem = lemma;
     let (sg, pl) = (Number::Singular, Number::Plural);

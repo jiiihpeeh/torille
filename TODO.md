@@ -1888,3 +1888,11 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   the adjective `perin` to the class-36 superlative (`perimmän`, `perimmät`).
   The four remaining sample findings were Wiktionary-sourced rare alternates
   (`silkin`, `ubiikkein`, `taajin`, `vajaahan`, `kalliihin`, `kauniihin`).
+
+- 2026-11-17: numeral coverage is measurable through `report_by_class.py
+  --pos numeral --bare`. The n=1000 run is 838 confirmed / 0 missing / 0
+  illegal / 0 not-plain, with 62 oracle-only rows. Fixed `kolme` (kolmien,
+  kolmia), `kymmenen` (kymmenen, kymmentä, kymmeneen), and the compound
+  ordinals (`kahdeksattakymmenettä`, `kahdeksannenkymmenennen`). Wiktionary's
+  `kymmenes`/`tuhannes` ordinal table and `iltakuusi`'s käsi table are recorded
+  as oracle-only against the older Kotus spellings.

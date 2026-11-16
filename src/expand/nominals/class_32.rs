@@ -21,7 +21,51 @@ pub const CLASS: &str = "32";
 
 /// Inflect a class-32 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
+    // `kymmenen` is the numeral, not the consonant-final noun model: its
+    // oblique stem is `kymmen` (`kymmenen`, `kymmentä`, `kymmeneen`), not
+    // `kymmenene`. Wiktionary gives `fi-decl-sisar`.
+    if lemma == "kymmenen" {
+        return kymmenen_grid(possessives);
+    }
     inflect_with_estem(lemma, possessives, &format!("{lemma}e"))
+}
+
+/// The `kymmenen` numeral grid.
+fn kymmenen_grid(possessives: bool) -> Vec<Form> {
+    let mut b = Builder::new("kymmenen", possessives);
+    let (sg, pl) = (Number::Singular, Number::Plural);
+    b.decline(
+        &Decl::new(vec![
+            cell(Case::Nominative, sg, "kymmen", ["en", "en"], false).on_stem(),
+            cell(Case::Genitive, sg, "kymmen", ["en", "en"], false).on_stem(),
+            cell(Case::Partitive, sg, "kymmen", ["tä", "tä"], true),
+            cell(Case::Essive, sg, "kymmen", ["enä", "enä"], true),
+            cell(Case::Translative, sg, "kymmen", ["eksi", "eksi"], true).on_ending(["ekse", "ekse"]),
+            cell(Case::Inessive, sg, "kymmen", ["essä", "essä"], true),
+            cell(Case::Elative, sg, "kymmen", ["estä", "estä"], true),
+            cell(Case::Illative, sg, "kymmen", ["een", "een"], false).on_ending(["e", "e"]),
+            cell(Case::Adessive, sg, "kymmen", ["ellä", "ellä"], true),
+            cell(Case::Ablative, sg, "kymmen", ["eltä", "eltä"], true),
+            cell(Case::Allative, sg, "kymmen", ["elle", "elle"], true),
+            cell(Case::Abessive, sg, "kymmen", ["että", "että"], true),
+            cell(Case::Nominative, pl, "kymmen", ["et", "et"], false).on_stem(),
+            cell(Case::Genitive, pl, "kymmen", ["ien", "ien"], false).on_ending(["ie", "ie"]),
+            cell(Case::Partitive, pl, "kymmen", ["iä", "iä"], true),
+            cell(Case::Essive, pl, "kymmen", ["inä", "inä"], true),
+            cell(Case::Translative, pl, "kymmen", ["iksi", "iksi"], true).on_ending(["ikse", "ikse"]),
+            cell(Case::Inessive, pl, "kymmen", ["issä", "issä"], true),
+            cell(Case::Elative, pl, "kymmen", ["istä", "istä"], true),
+            cell(Case::Illative, pl, "kymmen", ["iin", "iin"], false).on_ending(["ii", "ii"]),
+            cell(Case::Adessive, pl, "kymmen", ["illä", "illä"], true),
+            cell(Case::Ablative, pl, "kymmen", ["iltä", "iltä"], true),
+            cell(Case::Allative, pl, "kymmen", ["ille", "ille"], true),
+            cell(Case::Abessive, pl, "kymmen", ["ittä", "ittä"], true),
+            plain(Case::Instructive, pl, "kymmen", ["in", "in"]),
+        ]),
+        |case, number, poss| nominal_tags(PartOfSpeech::Numeral, case, number, poss),
+    );
+    b.comitative("kymmen");
+    b.into_forms()
 }
 
 /// The class-32 consonant word, given its oblique `e`-stem (ahvene,

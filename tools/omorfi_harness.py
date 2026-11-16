@@ -832,7 +832,11 @@ class Harness:
                 for f in self.engine.inflect(
                     lemma,
                     klass=klass,
-                    pos="adjektiivi" if self.pos == "adjective" else "substantiivi",
+                    pos={
+                        "adjective": "adjektiivi",
+                        "pronoun": "pronomini",
+                        "numeral": "numeraali",
+                    }.get(self.pos, "substantiivi"),
                 )
             ]
         return self._torille_forms_via_binary(lemma, klass)
@@ -1310,7 +1314,12 @@ class Harness:
         # rows (`veto` is 1*F, 1*F and 1). `inflect(lemma)` without a class
         # picks one row, so build the union token by token instead. Then a
         # form owned by the other class is not reported as missing here.
-        tokens = self.class_tokens(lemma, part_of_speech="substantiivi")
+        part_of_speech = {
+            "adjective": "adjektiivi",
+            "pronoun": "pronomini",
+            "numeral": "numeraali",
+        }.get(self.pos, "substantiivi")
+        tokens = self.class_tokens(lemma, part_of_speech=part_of_speech)
         if strict:
             tokens = [klass] if klass else tokens
         if tokens:

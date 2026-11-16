@@ -559,6 +559,26 @@
       "note": "Wiktionary marks the plural illative kalliihin/kauniihin as a rare alternate beside kalliisiin/kauniisiin; the engine keeps it repaired, which is correct."
     },
     {
+      "id": "lemma-45-kymmenes-tuhannes-ordinal",
+      "classes": ["45"],
+      "lemmas": ["kymmenes", "tuhannes"],
+      "predicate": "lemma",
+      "sample": 1000,
+      "applies_to": ["missing"],
+      "source": "https://en.wiktionary.org/wiki/kymmenes#Finnish",
+      "note": "Wiktionary uses fi-decl-kahdeksas for kymmenes and tuhannes: kymmenennen, kymmenettä. The materialised Kotus/oracle rows keep the older -kse shape (kymmeneksen), which is the oracle spelling, not a missing engine form."
+    },
+    {
+      "id": "lemma-27-iltakuusi-oracle",
+      "classes": ["27"],
+      "lemmas": ["iltakuusi"],
+      "predicate": "lemma",
+      "sample": 1000,
+      "applies_to": ["missing"],
+      "source": "https://en.wiktionary.org/wiki/iltakuusi#Finnish",
+      "note": "Wiktionary declines iltakuusi with the käsi table: iltakuuden, iltakuutta, iltakuudessa. The oracle's iltakuusen/iltakuusella forms are not the Wiktionary paradigm."
+    },
+    {
       "id": "lemma-9a-silkka-wrong-instructive",
       "classes": ["9*A"],
       "lemmas": ["silkka"],
