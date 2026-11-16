@@ -138,13 +138,13 @@ still open.
   `7*D` flag. `check_word_against_omorfi.py lovi ovi joki` now reports
   **all 153 confirmed forms plain** for each.
 
-  The current 20-lemma noun sample is 226,859 confirmed, 0 missing, 106
-  oracle-only, 0 not-plain, 11 illegal. The remaining illegal rows are class
-  27 (7), 49 (2), 21 (1) and 41 (1); the oracle-only rows are the documented
-  homonym artifacts (`laki` 76, `kuusi` 18, `pahahenki` 4) plus the earlier
-  `kuve`/`live`/`jersey` rows. The next fix is those stems, not another
-  possessive filter. The older 14,026 figure predates the possessive rounds
-  and the current sample.
+  The current 20-lemma noun sample is 226,862 confirmed, 0 missing, 106
+  oracle-only, 0 not-plain, 0 illegal (12,997 unsupported). The oracle-only
+  rows are the documented homonym artifacts (`laki` 76, `kuusi` 18,
+  `pahahenki` 4) plus the earlier `kuve`/`live`/`jersey` rows. The
+  `unsupported` rows are cells the oracle has no confirmed form for; they are
+  not precision defects. The older 14,026 figure predates the possessive
+  rounds and the current sample.
 
   Evidence: `docs/harness.md` → Known defects → A.
 
@@ -1773,3 +1773,13 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   genuinely both-harmonic (`fi-decl-risti` with `a` and `ä`), so class 5*F now
   emits both columns. The 20-lemma sample is 226,859 confirmed / 0 missing /
   106 oracle-only / 0 not-plain / 11 illegal.
+
+- 2026-11-16: the last n=20 defects cleared against Wiktionary. `tosi`/`täysi`
+  take `tosien`/`täysien`, and the `-ten` genitive plural (`totten`,
+  `täytten`) and all its possessives are rare, so they are `Repaired`.
+  `valmis` takes `valmiisiin`; `valmiihin` is rare, so it is `Repaired`.
+  `autere`/`mantere` give `-isiin`/`-ihin`/`-iin` in the plural illative, so
+  `autereihin`/`mantereihin` are evidence-confirmed alternates. `cowboy` gives
+  both `cowboyhin`/`cowboyhyn` and both third-person possessives, so
+  `cowboyhynsa` is evidence-confirmed. The 20-lemma sample is 226,862
+  confirmed / 0 missing / 106 oracle-only / 0 not-plain / 0 illegal.

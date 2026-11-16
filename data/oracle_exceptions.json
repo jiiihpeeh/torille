@@ -511,6 +511,29 @@
       "applies_to": ["illegal"],
       "source": "https://en.wiktionary.org/wiki/porina#Finnish",
       "note": "Wiktionary's katiska declension gives porina both plural families: genitive plural porinoiden/porinoitten/porinojen and partitive plural porinoita/porinoja. The oracle lists only the i-plural, so the vowel-plural porinojen/porinoja is real but not ok='both'."
+    },
+    {
+      "id": "class-49-autere-mantere-ihin-alternate",
+      "classes": ["49"],
+      "lemmas": ["autere", "mantere"],
+      "predicate": "stems",
+      "stems": ["autereih", "mantereih"],
+      "sample": 20,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/autere#Finnish",
+      "note": "Wiktionary's askel table gives the plural illative as autereisiin/autereihin/auteriin, and mantereisiin/mantereihin/manteriin. The oracle lists only the -isiin spelling, so the -ihin alternates are real but not ok='both'."
+    },
+    {
+      "id": "lemma-21-cowboy-hyn-possessive",
+      "classes": ["21"],
+      "lemmas": ["cowboy"],
+      "cell": {"case": "ILL", "number": "SG", "possessive": "3"},
+      "predicate": "form",
+      "forms": ["cowboyhynsa"],
+      "sample": 20,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/cowboy#Finnish",
+      "note": "Wiktionary's rosé table gives both singular illatives cowboyhin and cowboyhyn, and both third-person possessives cowboyhinsa and cowboyhynsa. The oracle lists only the -hin spelling."
     }
   ]
 }

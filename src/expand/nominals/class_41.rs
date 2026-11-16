@@ -15,7 +15,7 @@
 #![allow(dead_code)]
 
 use crate::kotus::{Gradation, Grade};
-use crate::tags::{Case, Form, Number, PartOfSpeech};
+use crate::tags::{Case, Confidence, Form, Number, PartOfSpeech};
 
 use super::utility::{Builder, Decl, cell, nominal_tags, plain};
 
@@ -179,7 +179,20 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     }
     let short = base_stem(lemma);
     let long = long_stem(&short);
-    a_stem_inflect(lemma, possessives, &long, &short, true, None)
+    let mut forms = a_stem_inflect(lemma, possessives, &long, &short, true, None);
+    // Wiktionary's vieras table gives `valmiisiin` as the plural illative and
+    // marks `valmiihin` rare. The shared class-41 grid offers both plainly for
+    // the family (`ahnaihin`/`ahnaisiin`), so demote the `-ihin` column here
+    // for this word only.
+    if lemma == "valmis" {
+        let ihin = format!("{short}ihin");
+        for form in &mut forms {
+            if form.word.starts_with(&ihin) {
+                form.confidence = Confidence::Repaired;
+            }
+        }
+    }
+    forms
 }
 
 /// The non-plural-only `-as`/`-ät` grid. Class 44 (`kevät`) is a singular
@@ -282,6 +295,26 @@ mod tests {
         assert!(w.contains(&"ahnaat".to_string()));
         assert!(w.contains(&"ahnaiden".to_string()));
         assert!(w.contains(&"ahnaita".to_string()));
+    }
+
+    /// Wiktionary's vieras table gives `valmiisiin` as the plural illative and
+    /// marks `valmiihin` rare.
+    #[test]
+    fn valmis_takes_the_isiin_illative_plainly() {
+        let forms = inflect("valmis", true);
+        let plain: Vec<&str> = forms
+            .iter()
+            .filter(|f| f.confidence == Confidence::Plain)
+            .map(|f| f.word.as_str())
+            .collect();
+        assert!(plain.contains(&"valmiisiin"), "{plain:?}");
+        assert!(!plain.contains(&"valmiihin"), "{plain:?}");
+        assert!(
+            forms
+                .iter()
+                .any(|f| f.word == "valmiihin" && f.confidence == Confidence::Repaired),
+            "valmiihin is not repaired"
+        );
     }
 
     /// The plural carries two genitive alternants and two illatives, and the

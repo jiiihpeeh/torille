@@ -161,10 +161,9 @@ mod tests {
         assert!(!w.contains(&"kanneni".to_string()), "kanneni emitted");
     }
 
-    /// The `-ten` genitive plural is plain across the whole family -- every one
-    /// of the 30 lemmas in 27/28*J/29/30 attests it. The `ten_rare` flag that
-    /// used to demote it for class 27's `tosi`/`täysi` was demoting a form the
-    /// reference gives (`totten`, `täytten`) and is gone.
+    /// The `-ten` genitive plural is plain across the family here, for
+    /// `kansi`. Class 27 overrides it for `tosi`/`täysi`, whose Wiktionary
+    /// käsi tables mark the `-ten` spelling rare (`tosien`/`totten rare`).
     #[test]
     fn the_ten_genitive_plural_is_plain_for_the_family() {
         let s = stems("kansi");
