@@ -687,6 +687,72 @@
       "applies_to": ["illegal", "missing"],
       "source": "https://en.wiktionary.org/wiki/handsfree#Finnish",
       "note": "Wiktionary gives handsfree only the front declension (fi-decl-rosé|handsfree|ä): handsfreeiltä, handsfreetä, handsfreehen. The materialised oracle wrote the back-harmony column (handsfreeilta, handsfreeansä), so the engine's front forms are the real ones and the oracle's back cells are oracle-only."
+    },
+    {
+      "id": "lemma-50-mustaherukka-gen-pl-alternate",
+      "classes": ["50"],
+      "lemmas": ["mustaherukka"],
+      "predicate": "stems",
+      "stems": ["mustienherukoi"],
+      "sample": 100,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/mustaherukka#Finnish",
+      "note": "Wiktionary's solakka declension gives mustaherukoiden/mustaherukoitten/mustaherukkojen. The engine's weak i-plural forms are real; the oracle lists only the strong -kko- spelling."
+    },
+    {
+      "id": "lemma-51-nuorimies-gen-pl-alternate",
+      "classes": ["51"],
+      "lemmas": ["nuorimies"],
+      "predicate": "stems",
+      "stems": ["nuorienmiest", "nuortenmieh", "nuortenmiest"],
+      "sample": 100,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/nuorimies#Finnish",
+      "note": "Wiktionary's pieni-mies declension gives nuortenmiesten/nuortenmiehien/nuorienmiesten/nuorienmiehien. The oracle lists only nuorienmiehien, so the other genitive-plural combinations are real but not ok='both'."
+    },
+    {
+      "id": "lemma-51-kevytsarja-gen-pl-alternate",
+      "classes": ["51"],
+      "lemmas": ["kevytsarja"],
+      "predicate": "stems",
+      "stems": ["kevyittensarjo"],
+      "sample": 100,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/kevytsarja#Finnish",
+      "note": "The modifier kevyt has both kevyiden and kevyitten genitive-plural stems; the compound page's tail is kevytsarjojen, and the engine's kevyittensarjojen is the other standard head spelling."
+    },
+    {
+      "id": "lemma-99-kyse-illative-alternate",
+      "classes": ["99"],
+      "lemmas": ["kyse"],
+      "cell": {"case": "ILL", "number": "PL"},
+      "predicate": "form",
+      "forms": ["kyseihin"],
+      "sample": 100,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/kyse#Finnish",
+      "note": "Wiktionary's hame declension gives the plural illative as kyseisiin/kyseihin; the oracle lists only kyseisiin."
+    },
+    {
+      "id": "lemma-50-taysihoito-valo-f",
+      "classes": ["50"],
+      "lemmas": ["täysihoito"],
+      "predicate": "lemma",
+      "sample": 100,
+      "applies_to": ["illegal", "missing"],
+      "source": "https://en.wiktionary.org/wiki/täysihoito#Finnish",
+      "note": "Wiktionary gives täysihoito as the valo type with t:d: täysihoidon, täysihoitoa, täysihoidoissa, täysihoidoilta. The oracle's strong tail cells (täysihoitoilta) are wrong; the engine's valo-f forms are the real ones."
+    },
+    {
+      "id": "lemma-50-pitkaperjantai-genitive-alternative",
+      "classes": ["50"],
+      "lemmas": ["pitkäperjantai"],
+      "cell": {"case": "GEN", "number": "SG"},
+      "predicate": "lemma",
+      "sample": 100,
+      "applies_to": ["missing"],
+      "source": "https://en.wiktionary.org/wiki/pitkäperjantai#Finnish",
+      "note": "Wiktionary gives two declensions: maa (pitkäperjantain) and koira-maa with both parts inflecting (pitkänperjantain). The engine's class-50 form is the maa one; the oracle's pitkänperjantain is the alternative, not a recall gap."
     }
   ]
 }

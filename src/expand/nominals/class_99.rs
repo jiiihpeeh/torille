@@ -235,11 +235,15 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     }
     let mut out = Vec::new();
     // Four class-99 rows have a real class on Wiktionary that the marker hides:
-    // `kukku` is 3 `valo` with kk:k and still needs a graded class-3 grid;
-    // `kultanen` is 38 `nainen`
+    // `kukku` is Kotus 1*F `valo` with kk:k, which is the class-1*A `akku`
+    // grid (`kukun`, `kukkua`, `kukkujen`, `kukkuja`, `kukuissa`); `kultanen`
+    // is 38 `nainen`
     // (kultasen, kultasta), `kyse` is 48 `hame` (kyseen, kyseessä), and
     // `soopa` is 10*E `koira` with p:v (soovan, soopaa). The i-loan grid
     // invented `kultanenin`, `kysein` and `soopaia`.
+    if lemma == "kukku" {
+        return super::class_1A::inflect(lemma, possessives);
+    }
     if lemma == "kultanen" {
         return super::class_38::inflect(lemma, possessives);
     }
@@ -464,6 +468,11 @@ mod tests {
                 .map(|form| form.word)
                 .collect()
         };
+        let kukku = plain("kukku");
+        assert!(kukku.contains(&"kukun".to_string()));
+        assert!(kukku.contains(&"kukkua".to_string()));
+        assert!(kukku.contains(&"kukkujen".to_string()));
+        assert!(!kukku.contains(&"kukkuin".to_string()));
         let kultanen = plain("kultanen");
         assert!(kultanen.contains(&"kultasen".to_string()));
         assert!(kultanen.contains(&"kultasta".to_string()));

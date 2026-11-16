@@ -226,20 +226,27 @@ pub(super) fn compound_paradigm(
             }
         }
     }
-    // Wiktionary's `uusivuosi` table gives `uusienvuosien` as the genitive
-    // plural and marks the other head/tail combinations (`uusienvuotten`,
-    // `uuttenvuosien`, `uuttenvuotten`) rare. The compound grid joins every
-    // head and tail form, so demote the rare combinations here.
-    if lemma == "uusivuosi" {
+    // Several -vuosi/-kuu compounds have one standard genitive plural; the
+    // other head/tail combinations are rare. The compound grid joins every
+    // head and tail form, so keep only the standard stem (bare and possessive
+    // forms share it) and demote the rest.
+    let standard_gen_pl: &[&str] = match lemma {
+        "uusivuosi" => &["uusienvuosie"],
+        "uusikuu" => &["uusienkuide"],
+        "täysikuu" => &["täysienkuide"],
+        "puolikuu" => &["puolienkuide", "puoltenkuide"],
+        _ => &[],
+    };
+    if !standard_gen_pl.is_empty() {
         for form in &mut out {
             let genitive_plural = form.readings.iter().any(|reading| {
                 reading.case == Some(Case::Genitive)
                     && reading.number == Some(Number::Plural)
             });
             if genitive_plural
-                && (form.word.starts_with("uusienvuotten")
-                    || form.word.starts_with("uuttenvuosien")
-                    || form.word.starts_with("uuttenvuotten"))
+                && !standard_gen_pl
+                    .iter()
+                    .any(|prefix| form.word.starts_with(prefix))
             {
                 form.confidence = Confidence::Repaired;
             }

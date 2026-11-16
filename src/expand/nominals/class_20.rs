@@ -41,6 +41,17 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     // a rare alternant elsewhere. The ending is already two vowels, so the cell
     // is stated as a stem of its own rather than as `stem` plus an ending.
     let hen = cell(Case::Illative, sg, &format!("{stem}he"), ["n", "n"], false).on_stem();
+    // `filee` gives `-hyn` for the front `-yy`/`-öö` words (`fondyyhyn`,
+    // `revyyhyn`) and `-han` for the back `-aa` word (`nugaahan`). The rest of
+    // the class keeps them as rare alternants.
+    let hyn = cell(Case::Illative, sg, &format!("{stem}hy"), ["n", "n"], false).on_stem();
+    let hyn = if matches!(lemma, "fondyy" | "revyy") {
+        hyn
+    } else {
+        hyn.as_rare()
+    };
+    let han = cell(Case::Illative, sg, &format!("{stem}ha"), ["n", "n"], false).on_stem();
+    let han = if lemma == "nugaa" { han } else { han.as_rare() };
 
     b.decline(
         &Decl::new(vec![
@@ -58,13 +69,8 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
             } else {
                 hen.as_rare()
             },
-            // `-hyn` and `-han` are confirmed for nobody in the class.
-            cell(Case::Illative, sg, &format!("{stem}hy"), ["n", "n"], false)
-                .on_stem()
-                .as_rare(),
-            cell(Case::Illative, sg, &format!("{stem}ha"), ["n", "n"], false)
-                .on_stem()
-                .as_rare(),
+            hyn,
+            han,
             cell(Case::Inessive, sg, stem, ["ssa", "ssä"], true),
             cell(Case::Elative, sg, stem, ["sta", "stä"], true),
             cell(Case::Adessive, sg, stem, ["lla", "llä"], true),
@@ -118,6 +124,27 @@ mod tests {
             })
             .map(|f| (f.word, f.confidence))
             .collect()
+    }
+
+    /// `filee` confirms `-hyn` for the front `-yy` words and `-han` for the
+    /// back `-aa` word.
+    #[test]
+    fn yy_and_aa_words_take_hyn_and_han() {
+        for (lemma, illative) in [
+            ("fondyy", "fondyyhyn"),
+            ("revyy", "revyyhyn"),
+            ("nugaa", "nugaahan"),
+        ] {
+            let plain: Vec<String> = illatives(lemma)
+                .into_iter()
+                .filter(|(_, c)| *c == Confidence::Plain)
+                .map(|(w, _)| w)
+                .collect();
+            assert!(
+                plain.contains(&illative.to_string()),
+                "{lemma}: {illative} not plain in {plain:?}"
+            );
+        }
     }
 
     /// The long form of the class: the singular is the lemma, the partitive is

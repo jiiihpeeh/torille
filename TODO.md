@@ -1815,3 +1815,13 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   Remaining: class 99 `kukku` (and one `kyse` cell), class 50 `täysihoito`,
   `mustaherukka`, `puolikuu`, class 51 `nuorimies`/`uusikuu`/`täysikuu`/
   `kevytsarja`, and the class-20 `fondyy`/`revyy`/`nugaa` not-plain column.
+
+- 2026-11-16: `n=100` is clean. Class 20 confirms `-hyn` for `fondyy`/`revyy`
+  and `-han` for `nugaa`; class 99 delegates `kukku` to the class-1*A
+  `valo`/`akku` kk:k grid and records `kyseihin`; the `-vuosi`/`-kuu`
+  compounds keep only their standard genitive plural; `pitkäperjantai`'s
+  alternative `pitkänperjantain` is oracle-only; `mustaherukka`,
+  `nuorimies` and `kevytsarja` record their genitive-plural alternates;
+  `täysihoito` is the `valo` type with t:d; `pH` is a back-harmony dot
+  abbreviation. The 100-lemma sample is 679,381 confirmed / 0 missing /
+  0 illegal / 0 not-plain / 268 oracle-only / 30,008 unsupported.
