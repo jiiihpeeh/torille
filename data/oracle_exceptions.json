@@ -556,6 +556,137 @@
       "applies_to": ["illegal"],
       "source": "https://en.wiktionary.org/wiki/lämminruoka#Finnish",
       "note": "Wiktionary lists both the lämminruo- and lämminru- (ruu-) koira paradigms, and the materialised oracle confirms one variant per cell. Both the ruo- and ruu- forms are real, so the other variant is not an engine error."
+    },
+    {
+      "id": "lemma-18-hiv-also-class-5",
+      "classes": ["18"],
+      "lemmas": ["HIV"],
+      "predicate": "also-class",
+      "also_classes": ["5"],
+      "sample": 100,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/HIV#Finnish",
+      "note": "Wiktionary gives HIV two pronunciations and paradigms: /hiʋ/ as 5 risti (HIVin, HIVittä) and /hoːiːʋeː/ as the filee-dot abbreviation (HIV:n, HIV:ttä). The sanalista row is 18,5, so the class-5 spellings are real forms of the same word, not class-18 errors."
+    },
+    {
+      "id": "lemma-5b-appi-also-7b",
+      "classes": ["5*B"],
+      "lemmas": ["appi"],
+      "predicate": "also-class",
+      "also_classes": ["7*B"],
+      "sample": 100,
+      "applies_to": ["illegal", "missing"],
+      "source": "https://en.wiktionary.org/wiki/appi#Finnish",
+      "note": "Wiktionary gives two appi etymologies: the father-in-law as 7*B ovi (apen, appea) and the informal app as 5*B risti (apin, appia). The oracle's homonym rows share one form set, so the 5*B bucket sees the 7*B spellings as expected and the 5*B spellings as extra. Both paradigms are real."
+    },
+    {
+      "id": "lemma-5f-lahti-also-7f",
+      "classes": ["5*F"],
+      "lemmas": ["lahti"],
+      "predicate": "also-class",
+      "also_classes": ["7*F"],
+      "sample": 100,
+      "applies_to": ["illegal", "missing"],
+      "source": "https://en.wiktionary.org/wiki/lahti#Finnish",
+      "note": "Wiktionary gives two lahti etymologies: the bay as 7*F ovi (lahden, lahtea) and the second noun as 5*F risti (lahdin, lahtia). The oracle's homonym rows share one form set, so the 5*F bucket sees the 7*F spellings as expected and the 5*F spellings as extra. Both paradigms are real."
+    },
+    {
+      "id": "lemma-13-suurima-i-plural",
+      "classes": ["13"],
+      "lemmas": ["suurima"],
+      "predicate": "stems",
+      "stems": ["suurimoi"],
+      "sample": 100,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/suurima#Finnish",
+      "note": "Wiktionary's katiska declension gives suurimoiden/suurimoitten/suurimojen, so the i-plural spellings are real even though the oracle lists only suurimojen."
+    },
+    {
+      "id": "lemma-13-kohina-family-vowel-plural",
+      "classes": ["13"],
+      "lemmas": ["kohina", "marina", "kahina", "kuhina", "rahina"],
+      "predicate": "stems",
+      "stems": ["kohinoj", "marinoj", "kahinoj", "kuhinoj", "rahinoj"],
+      "sample": 100,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/kohina#Finnish",
+      "note": "Wiktionary's katiska declension gives both families for these -hina words: kohinoiden/kohinoitten/kohinojen, marinoiden/marinoitten/marinojen, kahinoiden/kahinoitten/kahinojen, kuhinoiden/kuhinoitten/kuhinojen and rahinoiden/rahinoitten/rahinojen. The oracle lists only the i-plural, so the vowel-plural spellings are real but not ok='both'."
+    },
+    {
+      "id": "lemma-4a-poliitikko-weak-plural",
+      "classes": ["4*A"],
+      "lemmas": ["poliitikko"],
+      "predicate": "stems",
+      "stems": ["poliitikoi"],
+      "sample": 100,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/poliitikko#Finnish",
+      "note": "Wiktionary's laatikko table gives both the strong poliitikkojen/poliitikkoja/poliitikkoihin and the weak poliitikoiden/poliitikoitten/poliitikoita/poliitikoihin. The oracle lists only the strong, so the weak i-plural and illative are real but not ok='both'; the weak essive poliitikoina is not in the table and is repaired."
+    },
+    {
+      "id": "lemma-2-huitaisu-i-plural",
+      "classes": ["2"],
+      "lemmas": ["huitaisu"],
+      "predicate": "stems",
+      "stems": ["huitaisui"],
+      "sample": 100,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/huitaisu#Finnish",
+      "note": "Wiktionary's palvelu declension gives huitaisujen/huitaisuiden/huitaisuitten and huitaisuja/huitaisuita; the oracle lists only the vowel-plural, so the i-plural spellings are real but not ok='both'."
+    },
+    {
+      "id": "lemma-50-kylmakalle-nalle-paradigm",
+      "classes": ["50"],
+      "lemmas": ["kylmäkalle"],
+      "predicate": "lemma",
+      "sample": 100,
+      "applies_to": ["illegal", "missing"],
+      "source": "https://en.wiktionary.org/wiki/kylmäkalle#Finnish",
+      "note": "Wiktionary gives kylmäkalle as the nalle type: kylmäkallen, kylmäkallea, kylmäkalleja. The oracle's kylmäkalleen/kylmäkalletta cells are the hame type, not this word; the engine's nalle forms are the real ones."
+    },
+    {
+      "id": "lemma-4a-eksentrikko-weak-plural",
+      "classes": ["4*A"],
+      "lemmas": ["eksentrikko"],
+      "predicate": "stems",
+      "stems": ["eksentrikoi"],
+      "sample": 100,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/eksentrikko#Finnish",
+      "note": "Wiktionary's laatikko table gives both the strong eksentrikkojen/eksentrikkoja/eksentrikkoihin and the weak eksentrikoiden/eksentrikoitten/eksentrikoita/eksentrikoihin. The oracle lists only the strong, so the weak i-plural and illative are real but not ok='both'; the weak essive eksentrikoina is not in the table and is repaired."
+    },
+    {
+      "id": "class-49-penkere-kyynele-ihin-alternate",
+      "classes": ["49"],
+      "lemmas": ["penkere", "kyynele"],
+      "predicate": "stems",
+      "stems": ["penkereih", "kyyneleih"],
+      "sample": 100,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/penkere#Finnish",
+      "note": "Wiktionary's askel table gives the plural illative as penkereisiin/penkereihin/penkereisiin and kyyneleisiin/kyyneleihin; the oracle lists only the -isiin spelling, so the -ihin alternates are real but not ok='both'."
+    },
+    {
+      "id": "lemma-21-playboy-hyn-possessive",
+      "classes": ["21"],
+      "lemmas": ["playboy"],
+      "cell": {"case": "ILL", "number": "SG", "possessive": "3"},
+      "predicate": "form",
+      "forms": ["playboyhynsa"],
+      "sample": 100,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/playboy#Finnish",
+      "note": "Wiktionary's rosé declension gives both singular illatives playboyhin and playboyhyn, and both third-person possessives playboyhinsa and playboyhynsa. The oracle lists only the -hin spelling."
+    },
+    {
+      "id": "lemma-21-handsfree-front-only",
+      "classes": ["21"],
+      "lemmas": ["handsfree"],
+      "predicate": "lemma",
+      "sample": 100,
+      "applies_to": ["illegal", "missing"],
+      "source": "https://en.wiktionary.org/wiki/handsfree#Finnish",
+      "note": "Wiktionary gives handsfree only the front declension (fi-decl-rosé|handsfree|ä): handsfreeiltä, handsfreetä, handsfreehen. The materialised oracle wrote the back-harmony column (handsfreeilta, handsfreeansä), so the engine's front forms are the real ones and the oracle's back cells are oracle-only."
     }
   ]
 }

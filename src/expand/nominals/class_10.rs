@@ -35,11 +35,7 @@ use super::utility::{Base, Builder, Cell, Decl, Ending, Entry, cell, nominal_tag
 
 pub const CLASS: &str = "10";
 
-/// Graded words that do not actually gradate (rukka keeps its kk), so they run
-/// through the plain non-graded paradigm.
-const NON_GRADATING: &[&str] = &["rukka"];
-
-/// Words whose doubled third-person essive singular (`-aanaan`/`-äyänä`) is
+/// Class-10 lemmas whose doubled third-person essive singular (`-aanaan`/`-äyänä`) is
 /// not backed by the reference: Voikko's dictionary confirms only the `-nsa`
 /// spelling (`sopanansa`), so the doubled `sopanaan` is an unconfirmed
 /// alternate and must not be offered as plain.
@@ -242,12 +238,6 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
 /// `poikia`), weak for nominative (`pojat`), translative, locals and
 /// instructive.
 pub fn inflect_graded(lemma: &str, possessives: bool, grad: Gradation) -> Vec<Form> {
-    // A rare graded `-a` word may not actually gradate (rukka keeps its kk and
-    // the reference lists only the strong rukkasta); route it through the plain
-    // non-graded class-10 paradigm.
-    if NON_GRADATING.contains(&lemma) {
-        return inflect(lemma, possessives);
-    }
     let weak = grad.apply(lemma, Grade::Weak);
     inflect_graded_with(lemma, possessives, &weak)
 }
@@ -530,17 +520,16 @@ mod tests {
     /// `rukka` is filed as graded but keeps its `kk`, so it runs the plain
     /// paradigm: no weak `ruk` anywhere, and the whole plural on the `i`-stem.
     #[test]
-    fn a_word_that_does_not_actually_gradate_runs_the_plain_grid() {
+    fn a_graded_word_uses_its_weak_stem() {
         let w: Vec<String> = inflect_graded("rukka", true, Gradation(1))
             .into_iter()
             .map(|f| f.word)
             .collect();
-        assert!(
-            w.contains(&"rukkat".to_string()),
-            "the nominative plural is missing"
-        );
-        assert!(w.contains(&"rukkien".to_string()));
-        assert!(!w.iter().any(|f| f.starts_with("ruj")), "{:?}", w);
+        assert!(w.contains(&"rukka".to_string()));
+        assert!(w.contains(&"rukan".to_string()));
+        assert!(w.contains(&"rukkaa".to_string()));
+        assert!(w.contains(&"rukitta".to_string()));
+        assert!(!w.contains(&"rukkan".to_string()));
     }
 
     /// The alternative `-oi-` plural is lexical, not derivable.

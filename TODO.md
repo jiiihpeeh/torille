@@ -1793,9 +1793,25 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   own compound page gives (`harmaanieriä`, `mustaviinimarja`).
   `kultainennoutaja`'s second genitive plural and `lämminruoka`'s two koira
   paradigms are evidence; `uusivuosi`'s rare genitive-plural combinations are
-  repaired. The post-fix `n=100` totals are 677,653 confirmed / 1,256 missing /
-  106 oracle-only / 361 not-plain / 1,485 illegal; the largest remaining
-  clusters are class 18 abbreviations (`www`, `oy`, `tv`), class 10*A `rukka`,
-  class 5*B/5*F `appi`/`lahti`, class 13 plural policy, class 99, class 4*A
-  `eksentrikko`, class 41, class 2 `huitaisu`, and the class-21
-  `jockey`/`maahockey`/`spray` harmony.
+  repaired. After that batch the `n=100` totals were 677,653 confirmed / 1,256
+  missing / 106 oracle-only / 361 not-plain / 1,485 illegal; the remaining
+  clusters were class 18 abbreviations, class 10*A `rukka`, class 5*B/5*F
+  `appi`/`lahti`, class 13, class 99, class 4*A, class 41, class 2 and the
+  class-21 harmony.
+
+- 2026-11-16: `n=100` follow-up using Wiktionary as the authority. Class 18
+  now treats lowercase and mixed-case dot initials (`atk`, `oy`, `oyj`, `tv`,
+  `ry`, `www`, `pH`) as abbreviations and carries their confirmed illatives.
+  Class 10*A `rukka` gradates kk:k. Class 5*B/5*F `appi`/`lahti` are the
+  evidence-confirmed two-paradigm homonyms. Class 13 puts `media`/`mörinä` on
+  the i-plural and records the katiska family's vowel plurals. Class 99
+  delegates `kultanen` (38), `kyse` (48) and `soopa` (10*E). Class 41's `-is`
+  words take `-isiin` and repair `-ihin`. Class 4*A records the weak
+  `eksentrikko`/`poliitikko` plurals. Class 2 `huitaisu` records the i-plural.
+  Class 21 makes `jockey`/`maahockey`/`spray` both-harmony, `handsfree`
+  front-only, and records `playboy`'s `hyn` possessive. Class 50
+  `kylmäkalle` is the nalle paradigm. The `n=100` totals are 679,343
+  confirmed / 19 missing / 260 oracle-only / 18 not-plain / 37 illegal.
+  Remaining: class 99 `kukku` (and one `kyse` cell), class 50 `täysihoito`,
+  `mustaherukka`, `puolikuu`, class 51 `nuorimies`/`uusikuu`/`täysikuu`/
+  `kevytsarja`, and the class-20 `fondyy`/`revyy`/`nugaa` not-plain column.

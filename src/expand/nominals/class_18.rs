@@ -1,9 +1,10 @@
 //! Class 18 (the ADHD/abbreviation type) inflection, written by hand.
 //!
 //! Class 18 is two things in one. A word with no lowercase letter is an
-//! abbreviation and takes `:` before every ending (`ADHD:tä`); a word that has
-//! one is an ordinary short word and is class 17's, so this module hands those
-//! straight over.
+//! abbreviation and takes `:` before every ending (`ADHD:tä`); a lowercase
+//! initialism (`oy`, `tv`, `www`) is on the [`DOT_ABBREV`] list and takes the
+//! colon too. Any other word with a lowercase letter is an ordinary short word
+//! and is class 17's, so this module hands those straight over.
 //!
 //! The abbreviation half is mostly the short-vowel grid, and what it adds is
 //! restraint about the illative. Each abbreviation confirms exactly one of
@@ -32,6 +33,19 @@ pub const CLASS: &str = "18";
 /// letter hides in the spelling (`ADHD`, `ALV`).
 const FRONT_ABBREV: &[&str] = &["ADHD", "ALV"];
 
+/// Lowercase initialisms that still take the `:` before every ending.
+///
+/// The uppercase rule catches `ADHD`/`EU`; these are written in lower case
+/// (`oy:n`, `tv:n`, `www:n`) and Wiktionary's `maa-dot`/`filee-dot`
+/// declensions confirm the colon. They are not ordinary short words, so the
+/// class-17 hand-off must not see them.
+const DOT_ABBREV: &[&str] = &["atk", "oy", "oyj", "pH", "tv", "ry", "www"];
+
+/// Mixed-case abbreviations the orthographic harmony reads front but the
+/// reference reads back. `pH` is `pH:ta`, `pH:ssa`, `pH:hon`, not the front
+/// spellings the default (no front vowel) would choose.
+const BACK_ABBREV: &[&str] = &["pH"];
+
 /// The single confirmed illative vowel for each full abbreviation (the third
 /// person only takes the `-nsa`/`-nsä` form, so the doubled `-Vn` does not
 /// apply). Each abbreviation confirms exactly one, and only that one is offered
@@ -45,13 +59,27 @@ const ILLATIVE: &[(&str, &str)] = &[
     ("ADHD", "hen"),
     ("ALV", "hen"),
     ("AMK", "hon"),
+    ("CD", "hen"),
+    ("CV", "hen"),
     ("DJ", "hin"),
     ("DNA", "han"),
+    ("DVD", "hen"),
     ("EKG", "hen"),
     ("EU", "hun"),
+    ("HIV", "hen"),
+    ("IT", "hen"),
     ("LSD", "hen"),
     ("RNA", "han"),
     ("UV", "hen"),
+    ("WC", "hen"),
+    ("ÄO", "hon"),
+    ("atk", "hon"),
+    ("pH", "hon"),
+    ("oy", "hyn"),
+    ("oyj", "hin"),
+    ("tv", "hen"),
+    ("ry", "hyn"),
+    ("www", "hen"),
 ];
 
 /// Inflect a class-18 word.
@@ -63,14 +91,18 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     {
         return plural_only(inflect(base, possessives));
     }
-    // An abbreviation (all uppercase) takes `:` before every ending; a regular
-    // short word (maa, aamunkoi, hai) inflects like class 17's long-vowel nouns.
-    let is_abbrev = lemma.chars().all(|c| !c.is_lowercase());
+    // An abbreviation (all uppercase, or a listed lowercase initialism) takes
+    // `:` before every ending; a regular short word (maa, aamunkoi, hai)
+    // inflects like class 17's long-vowel nouns.
+    let is_abbrev =
+        lemma.chars().all(|c| !c.is_lowercase()) || DOT_ABBREV.contains(&lemma);
     if !is_abbrev {
         return super::class_17::inflect_from_class_18(lemma, possessives);
     }
     let fi = if FRONT_ABBREV.contains(&lemma) {
         true
+    } else if BACK_ABBREV.contains(&lemma) {
+        false
     } else {
         front(lemma)
     };
@@ -163,6 +195,33 @@ mod tests {
         assert!(w.contains(&"ADHD:tä".to_string()));
         assert!(w.contains(&"ADHD:ni".to_string()));
         assert!(w.contains(&"ADHD:iden".to_string()));
+    }
+
+    /// Lowercase initialisms take the colon too: Wiktionary's `maa-dot` and
+    /// `filee-dot` tables give `oy:n`, `tv:n`, `www:n`, and their confirmed
+    /// illatives are `oy:hyn`, `tv:hen`, `www:hen`.
+    #[test]
+    fn lowercase_dot_abbreviations_take_the_colon() {
+        for (lemma, genitive, ill) in [
+            ("atk", "atk:n", "atk:hon"),
+            ("oy", "oy:n", "oy:hyn"),
+            ("pH", "pH:n", "pH:hon"),
+            ("oyj", "oyj:n", "oyj:hin"),
+            ("tv", "tv:n", "tv:hen"),
+            ("ry", "ry:n", "ry:hyn"),
+            ("www", "www:n", "www:hen"),
+        ] {
+            let w = words(lemma);
+            assert!(
+                w.contains(&genitive.to_string()),
+                "{lemma}: {genitive} missing"
+            );
+            assert!(w.contains(&ill.to_string()), "{lemma}: {ill} missing");
+            assert!(
+                !w.iter().any(|f| f == &format!("{lemma}n")),
+                "{lemma} was inflected without the colon"
+            );
+        }
     }
 
     /// The restraint this class is for: an abbreviation confirms exactly one

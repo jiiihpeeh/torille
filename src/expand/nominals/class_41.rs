@@ -181,11 +181,15 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     let long = long_stem(&short);
     let mut forms = a_stem_inflect(lemma, possessives, &long, &short, true, None);
     // Wiktionary's vieras table gives `valmiisiin` as the plural illative and
-    // marks `valmiihin` rare. The shared class-41 grid offers both plainly for
-    // the family (`ahnaihin`/`ahnaisiin`), so demote the `-ihin` column here
-    // for this word only.
-    if lemma == "valmis" {
-        let ihin = format!("{short}ihin");
+    // marks `valmiihin` rare; the same `-is` words (`saalis`, `ruumis`,
+    // `kauris`, `nauris`) have the same split. The shared class-41 grid offers
+    // both plainly for the `-as` family (`ahnaihin`/`ahnaisiin`), so demote the
+    // `-ihin` column for `-is` lemmas only.
+    if lemma.ends_with("is") {
+        // The possessive forms replace the final `n` (`saaliihimme`), so the
+        // prefix is the stem plus `ihi`, which covers both the bare cell and
+        // its possessive column.
+        let ihin = format!("{short}ihi");
         for form in &mut forms {
             if form.word.starts_with(&ihin) {
                 form.confidence = Confidence::Repaired;
@@ -298,23 +302,29 @@ mod tests {
     }
 
     /// Wiktionary's vieras table gives `valmiisiin` as the plural illative and
-    /// marks `valmiihin` rare.
+    /// marks `valmiihin` rare; the same holds for the other `-is` words.
     #[test]
-    fn valmis_takes_the_isiin_illative_plainly() {
-        let forms = inflect("valmis", true);
-        let plain: Vec<&str> = forms
-            .iter()
-            .filter(|f| f.confidence == Confidence::Plain)
-            .map(|f| f.word.as_str())
-            .collect();
-        assert!(plain.contains(&"valmiisiin"), "{plain:?}");
-        assert!(!plain.contains(&"valmiihin"), "{plain:?}");
-        assert!(
-            forms
+    fn an_is_word_takes_the_isiin_illative_plainly() {
+        for (lemma, isiin, ihin) in [
+            ("valmis", "valmiisiin", "valmiihin"),
+            ("saalis", "saaliisiin", "saaliihin"),
+            ("ruumis", "ruumiisiin", "ruumiihin"),
+        ] {
+            let forms = inflect(lemma, true);
+            let plain: Vec<&str> = forms
                 .iter()
-                .any(|f| f.word == "valmiihin" && f.confidence == Confidence::Repaired),
-            "valmiihin is not repaired"
-        );
+                .filter(|f| f.confidence == Confidence::Plain)
+                .map(|f| f.word.as_str())
+                .collect();
+            assert!(plain.contains(&isiin), "{lemma}: {isiin} not plain");
+            assert!(!plain.contains(&ihin), "{lemma}: {ihin} is still plain");
+            assert!(
+                forms
+                    .iter()
+                    .any(|f| f.word == ihin && f.confidence == Confidence::Repaired),
+                "{lemma}: {ihin} is not repaired"
+            );
+        }
     }
 
     /// The plural carries two genitive alternants and two illatives, and the

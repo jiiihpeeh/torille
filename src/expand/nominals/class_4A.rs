@@ -38,6 +38,16 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     let weak = weak_stem(lemma);
     let last = strong.chars().last().unwrap();
     let (sg, pl) = (Number::Singular, Number::Plural);
+    // Wiktionary's laatikko table gives only the strong essive plural
+    // (`eksentrikkoina`, `poliitikkoina`); the weak `eksentrikoina`/
+    // `poliitikoina` is not confirmed. `aallokko` and the other -kko words keep
+    // it.
+    let weak_essive = cell(Case::Essive, pl, &weak, ["ina", "inä"], true);
+    let weak_essive = if matches!(lemma, "eksentrikko" | "poliitikko") {
+        weak_essive.as_rare()
+    } else {
+        weak_essive
+    };
 
     b.decline(
         &Decl::new(vec![
@@ -71,7 +81,7 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
             cell(Case::Essive, pl, strong, ["ina", "inä"], true),
             cell(Case::Illative, pl, strong, ["ihin", "ihin"], false).on_ending(["ihi", "ihi"]),
             // ---- plural, the weak-grade alternants of the essive and illative ----
-            cell(Case::Essive, pl, &weak, ["ina", "inä"], true),
+            weak_essive,
             cell(Case::Illative, pl, &weak, ["ihin", "ihin"], false).on_ending(["ihi", "ihi"]),
             // ---- plural, the `i`-plural on the weak grade ----
             cell(Case::Genitive, pl, &weak, ["iden", "iden"], false).on_ending(["ide", "ide"]),
@@ -130,5 +140,27 @@ mod tests {
         assert!(w.contains(&"aallokoina".to_string())); // weak essive plural
         assert!(w.contains(&"aallokkoihin".to_string())); // strong illative plural
         assert!(w.contains(&"aallokoihin".to_string())); // weak illative plural
+    }
+
+    /// `eksentrikko` confirms only the strong essive plural, while both
+    /// illative plurals are in Wiktionary's laatikko table.
+    #[test]
+    fn eksentrikko_weak_essive_is_repaired() {
+        let forms = inflect("eksentrikko", true);
+        let plain: Vec<&str> = forms
+            .iter()
+            .filter(|form| form.confidence == crate::tags::Confidence::Plain)
+            .map(|form| form.word.as_str())
+            .collect();
+        assert!(plain.contains(&"eksentrikkoina"), "{plain:?}");
+        assert!(!plain.contains(&"eksentrikoina"), "{plain:?}");
+        assert!(
+            forms.iter().any(|form| {
+                form.word == "eksentrikoina"
+                    && form.confidence == crate::tags::Confidence::Repaired
+            }),
+            "weakened essive is not repaired"
+        );
+        assert!(plain.contains(&"eksentrikoihin"), "{plain:?}");
     }
 }

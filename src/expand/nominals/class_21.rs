@@ -42,12 +42,17 @@ const BACK_HARMONY: &[&str] = &[
 /// front. `reggae` is pronounced `regee`, and Wiktionary's Finnish entry gives
 /// the front column (`reggaetä`, `reggaessä`, `reggaeitä`, `reggaettä`), not
 /// the back `reggaeta` the spelling would suggest.
-const FRONT_HARMONY: &[&str] = &["reggae"];
+const FRONT_HARMONY: &[&str] = &["handsfree", "reggae"];
 
 /// Words Wiktionary gives one harmony only. The other column is not a spelling
 /// of the word, so it is not emitted even as repaired: `jersey` is read
 /// `tsöösi`, and `reggae` is read `regee`.
-const FRONT_ONLY: &[&str] = &["jersey", "reggae"];
+const FRONT_ONLY: &[&str] = &["handsfree", "jersey", "reggae"];
+
+/// Words Wiktionary gives in both harmonies. Both columns are plain; the
+/// `BACK_HARMONY` list only decides which one the orthographic default would
+/// pick, not which columns the word has.
+const BOTH_HARMONY: &[&str] = &["jockey", "maahockey", "spray"];
 
 /// The illative spellings live Voikko confirms for a class-21 word when the
 /// oracle lists all three. A word outside these lists keeps the oracle's three
@@ -142,9 +147,13 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
         return out;
     }
     // The other harmony is a real spelling for some words; offer it repaired.
+    // For the words Wiktionary gives in both harmonies, both columns are
+    // plain instead.
     let mut other = paradigm(lemma, possessives, !is_front);
-    for f in &mut other {
-        f.confidence = Confidence::Repaired;
+    if !BOTH_HARMONY.contains(&lemma) {
+        for f in &mut other {
+            f.confidence = Confidence::Repaired;
+        }
     }
     out.extend(other);
     // de-duplicate identical spellings across the two runs.
@@ -251,6 +260,43 @@ mod tests {
                 "{back} must not be emitted at all"
             );
         }
+    }
+
+    /// `jockey`, `maahockey` and `spray` are given in both harmonies by
+    /// Wiktionary, so both columns are plain.
+    #[test]
+    fn both_harmony_words_are_plain_in_both_columns() {
+        for lemma in ["jockey", "maahockey", "spray"] {
+            let forms = inflect(lemma, true);
+            let plain: Vec<&str> = forms
+                .iter()
+                .filter(|f| f.confidence == Confidence::Plain)
+                .map(|f| f.word.as_str())
+                .collect();
+            let back = format!("{lemma}ilta");
+            let front = format!("{lemma}iltä");
+            assert!(
+                plain.contains(&back.as_str()),
+                "{lemma}: {back} not plain"
+            );
+            assert!(
+                plain.contains(&front.as_str()),
+                "{lemma}: {front} not plain"
+            );
+        }
+    }
+
+    /// `handsfree` is front-only in Wiktionary (`{{fi-decl-rosé|handsfree|ä}}`).
+    #[test]
+    fn handsfree_is_front_only() {
+        let forms = inflect("handsfree", true);
+        let plain: Vec<&str> = forms
+            .iter()
+            .filter(|f| f.confidence == Confidence::Plain)
+            .map(|f| f.word.as_str())
+            .collect();
+        assert!(plain.contains(&"handsfreetä"), "{plain:?}");
+        assert!(!forms.iter().any(|f| f.word == "handsfreeta"));
     }
 
     /// `brie`'s front partitive is plain; the back one is repaired.

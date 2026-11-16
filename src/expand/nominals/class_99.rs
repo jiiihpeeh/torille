@@ -234,6 +234,21 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
         return out;
     }
     let mut out = Vec::new();
+    // Four class-99 rows have a real class on Wiktionary that the marker hides:
+    // `kukku` is 3 `valo` with kk:k and still needs a graded class-3 grid;
+    // `kultanen` is 38 `nainen`
+    // (kultasen, kultasta), `kyse` is 48 `hame` (kyseen, kyseessä), and
+    // `soopa` is 10*E `koira` with p:v (soovan, soopaa). The i-loan grid
+    // invented `kultanenin`, `kysein` and `soopaia`.
+    if lemma == "kultanen" {
+        return super::class_38::inflect(lemma, possessives);
+    }
+    if lemma == "kyse" {
+        return super::class_48::inflect(lemma, possessives);
+    }
+    if lemma == "soopa" {
+        return super::class_10E::inflect(lemma, possessives);
+    }
     if no_inflect(lemma) {
         // A genuinely indeclinable word has no paradigm and no possessives:
         // it is offered exactly as the lemma.
@@ -437,6 +452,30 @@ mod tests {
             !plain.iter().any(|word| word.starts_with("kypsei")),
             "the i-loan plural must not be offered: {plain:?}"
         );
+    }
+
+    /// Four class-99 rows have a real Wiktionary class the marker hides.
+    #[test]
+    fn class_99_duplicates_delegate_to_their_real_classes() {
+        let plain = |lemma: &str| -> Vec<String> {
+            inflect(lemma, true)
+                .into_iter()
+                .filter(Form::plain)
+                .map(|form| form.word)
+                .collect()
+        };
+        let kultanen = plain("kultanen");
+        assert!(kultanen.contains(&"kultasen".to_string()));
+        assert!(kultanen.contains(&"kultasta".to_string()));
+        assert!(!kultanen.contains(&"kultanenia".to_string()));
+        let kyse = plain("kyse");
+        assert!(kyse.contains(&"kyseen".to_string()));
+        assert!(kyse.contains(&"kyseessä".to_string()));
+        assert!(!kyse.contains(&"kyseiä".to_string()));
+        let soopa = plain("soopa");
+        assert!(soopa.contains(&"soopaa".to_string()));
+        assert!(soopa.contains(&"soovan".to_string()));
+        assert!(!soopa.contains(&"soopaia".to_string()));
     }
 
     #[test]
