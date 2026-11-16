@@ -33,7 +33,7 @@ use torille::hyphenation::{
     BreakSource, CompoundAnalyzer, Exceptions, HyphenationOptions, LexicalCompoundAnalyzer,
     NoCompoundAnalyzer, VowelBreaks, positions_with,
 };
-use torille::kotus::{Inflection, Lemma};
+use torille::kotus::{Inflection, Lemma, normalize_apostrophe};
 use torille::spec::Catalogues;
 use torille::tags::{Confidence, PartOfSpeech};
 
@@ -407,8 +407,9 @@ impl Engine {
     /// them. Empty when the lemma is not in the sanalista.
     #[pyo3(signature = (lemma))]
     fn lookup(&self, lemma: &str) -> Vec<(String, String)> {
+        let key = normalize_apostrophe(lemma);
         self.index
-            .get(lemma)
+            .get(key.as_ref())
             .map(|entries| {
                 entries
                     .iter()
@@ -538,7 +539,8 @@ impl Engine {
         // the class, so `inflect(word, class="1")` raised the very error that
         // told the caller to do that. An unknown word simply contributes no
         // lexicon rows, and with no `pos` either, no possessive suffixes.
-        let found: Vec<&Lemma> = match self.index.get(lemma) {
+        let key = normalize_apostrophe(lemma);
+        let found: Vec<&Lemma> = match self.index.get(key.as_ref()) {
             Some(entries) => entries.iter().map(|i| &self.data.lexicon[*i]).collect(),
             None if class.is_some() => Vec::new(),
             None => return Err(PlanError::UnknownLemma(lemma.to_string())),

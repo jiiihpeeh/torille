@@ -47,6 +47,7 @@
 use std::sync::OnceLock;
 
 use crate::expand::{BasesReport, ClassPrior, find_bases_for_check, rank_lemma_bases};
+use crate::kotus::normalize_apostrophe;
 
 mod candidates;
 mod casing;
@@ -112,6 +113,8 @@ fn check_common(word: &str) -> CheckOutcome {
     if word.is_empty() {
         return CheckOutcome::Unknown;
     }
+    let normalized = normalize_apostrophe(word);
+    let word = normalized.as_ref();
     let cat = catalogue();
     let lexicon = lexicon();
     // A standard hyphenated spelling (`linja-auto`) is not optional; the
@@ -484,6 +487,23 @@ mod tests {
         // is not the standard spelling.
         for word in ["texaslainen", "quebeclainen", "hessenlainen"] {
             assert_eq!(is_known_word(word), None, "{word} should stay unknown");
+        }
+    }
+
+    /// Both apostrophe spellings resolve to the same sanalista row.
+    #[test]
+    fn both_apostrophe_spellings_are_the_same_word() {
+        for word in ["liu'uttaa", "liu’uttaa"] {
+            assert!(
+                matches!(check(word), CheckOutcome::Lemma),
+                "{word} should be a lemma"
+            );
+        }
+        for word in ["liu'utettu", "liu’utettu"] {
+            assert!(
+                matches!(check(word), CheckOutcome::Inflected(_)),
+                "{word} should be an inflected form"
+            );
         }
     }
 

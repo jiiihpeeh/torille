@@ -22,6 +22,7 @@
 //!   kalaihin
 //!   ```
 
+use std::borrow::Cow;
 use std::fmt;
 use std::path::Path;
 use std::sync::OnceLock;
@@ -532,6 +533,19 @@ impl EmbeddedLemma {
 /// the way there. The expensive part -- splitting 104 743 rows
 /// into `Lemma`s, ~31 ms and ~420 000 allocations -- is done
 /// once by `build.rs` instead of once per process.
+/// Normalise the two Finnish apostrophe spellings to the sanalista's U+2019.
+///
+/// Kotus writes the glottal-stop marker as `’` (`liu’uttaa`), while
+/// Wiktionary and ordinary typing use ASCII `'` (`liu'uttaa`). They are the
+/// same word; lookups must not depend on which keyboard produced the mark.
+pub fn normalize_apostrophe(word: &str) -> Cow<'_, str> {
+    if word.contains('\'') {
+        Cow::Owned(word.replace('\'', "’"))
+    } else {
+        Cow::Borrowed(word)
+    }
+}
+
 impl Sanalista {
     /// How many rows the lexicon holds. Read from the blob's
     /// header.
@@ -563,7 +577,9 @@ impl Sanalista {
     /// word is not in the lexicon. This replaces the old per-headword
     /// `phf::Map`, which duplicated every word in the binary.
     #[inline]
-    pub fn by_word<'w>(&'w self, word: &'w str) -> impl Iterator<Item = EmbeddedLemma> + 'w {
+    pub fn by_word<'w>(&'w self, word: &str) -> impl Iterator<Item = EmbeddedLemma> + 'w {
+        let word = normalize_apostrophe(word);
+        let word = word.as_ref();
         let order = self.word_order();
         let (mut lo, mut hi) = (0usize, order.len());
         while lo < hi {
@@ -744,6 +760,16 @@ mod tests {
     /// 39's model word is a different word: running it yields `koirakseen` where
     /// the reference confirms `koiraaseen`. Adding it would put 2 310 forms into
     /// the fingerprint for three lemmas' worth of confirmed ones.
+    #[test]
+    fn both_apostrophe_spellings_find_the_same_row() {
+        for word in ["liu’uttaa", "liu'uttaa"] {
+            assert!(
+                sanalista().by_word(word).next().is_some(),
+                "{word} not found"
+            );
+        }
+    }
+
     #[test]
     fn a_bracket_is_read_only_when_it_is_the_whole_field() {
         let classes = |field: &str| -> Vec<(u16, Option<Gradation>)> {

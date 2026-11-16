@@ -6,6 +6,7 @@
 use std::collections::HashSet;
 
 use crate::expand::{BasesReport, find_any_base_with};
+use crate::kotus::normalize_apostrophe;
 
 use super::casing::{capitalize, match_case};
 use super::known::{
@@ -26,6 +27,8 @@ use super::{CheckOutcome, classify, suggest, suggest_detailed};
 /// future caller can ask "which lemma inflects to this?" without
 /// having to redo the work.
 pub fn check_fast(word: &str, proper_nouns: &HashSet<String>) -> Option<CheckOutcome> {
+    let normalized = normalize_apostrophe(word);
+    let word = normalized.as_ref();
     let lower = word.to_lowercase();
     if lemma_set().contains(lower.as_str()) {
         return Some(CheckOutcome::Lemma);

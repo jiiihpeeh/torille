@@ -1532,13 +1532,12 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   across one paradigm — so there is no rule to copy and no table entry worth
   writing for a word that is not Finnish. `ajettua`, its class-mate, is regular.
 
-- [ ] **The reference's apostrophe is dropped, we keep it**
-  `liu'uttaa`, `poi'ittaa` and `rei'ittaa` (U+2019) are 1188 forms each, all of
-  them ours: both generators normalise the glottal-stop marker away, so the
-  reference has `liuutettu` where we have `liu'utettu`. Reproducing a
-  normalising bug is not what the engine is for; the noun side strips the
-  marker on the way in (`docs/lexicon.md`), which is where the disagreement
-  comes from.
+- [x] **The reference's apostrophe is dropped, we keep it**
+  Fixed as a lookup-normalisation: `Sanalista::by_word`, the Python binding's
+  `lookup`/`plan`, and both `check` paths map ASCII `'` to the sanalista's
+  U+2019, so `liu'uttaa` and `liu’uttaa` find the same row. The engine keeps
+  the caller's apostrophe in its output forms rather than reproducing the
+  reference's normalising bug.
 
 - [ ] **21 lemmas where Omorfi does not gradate**
   `kurmottaa`, `mesettää`, `panikoitua`, `raskautua`, `voimaantua` and 16 more:
