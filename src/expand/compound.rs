@@ -14,7 +14,7 @@ use super::Generated;
 use super::inflect::{inflect_from, spellings};
 use super::lexicon_index::LexiconIndex;
 use crate::tags::PartOfSpeech;
-use crate::tags::{Case, Form, Number};
+use crate::tags::{Case, Confidence, Form, Number};
 use std::collections::HashMap;
 
 /// The full paradigm of a class 50/51 compound, built from its parts.
@@ -132,6 +132,23 @@ pub(super) fn compound_paradigm(
         };
         for t in tail_forms {
             let tags = t.union();
+            // A class-10 agent tail (`noutaja`, `ampuja`, `varaaja`) has an
+            // alternative `-oi-` plural beside its normal `-i-` plural. The
+            // compound templates use the normal one
+            // (`kultaisittanoutajitta`, `tarkka-ampujia`,
+            // `kylmävaraajia`), not the standalone agent noun's `-oi-`
+            // alternate (`noutajoitta`, `ampujoita`). Native class-10 tails
+            // (`nieriä`) and class-9 `marja` keep the plural their compound
+            // page gives (`harmaanieriöittä`, `mustaviinimarjoitta`).
+            let i_plural_tail = tail.inflections.iter().any(|inf| inf.class == 10)
+                && (tail.word.ends_with("ja") || tail.word.ends_with("jä"));
+            if i_plural_tail
+                && tags.number == Some(Number::Plural)
+                && oi_plural_prefix(tail.word)
+                    .is_some_and(|prefix| t.word.starts_with(&prefix))
+            {
+                continue;
+            }
             // A plural-only compound's tail is the nominative plural of its
             // base (`vanhemmat` against `vanhempi`), so the compound has no
             // singular at all: `isovanhemmat` is the whole lemma, and
@@ -209,12 +226,47 @@ pub(super) fn compound_paradigm(
             }
         }
     }
+    // Wiktionary's `uusivuosi` table gives `uusienvuosien` as the genitive
+    // plural and marks the other head/tail combinations (`uusienvuotten`,
+    // `uuttenvuosien`, `uuttenvuotten`) rare. The compound grid joins every
+    // head and tail form, so demote the rare combinations here.
+    if lemma == "uusivuosi" {
+        for form in &mut out {
+            let genitive_plural = form.readings.iter().any(|reading| {
+                reading.case == Some(Case::Genitive)
+                    && reading.number == Some(Number::Plural)
+            });
+            if genitive_plural
+                && (form.word.starts_with("uusienvuotten")
+                    || form.word.starts_with("uuttenvuosien")
+                    || form.word.starts_with("uuttenvuotten"))
+            {
+                form.confidence = Confidence::Repaired;
+            }
+        }
+    }
     out
 }
 
 /// Whether a class is one of the compound markers.
 fn compound_class(class: u16) -> bool {
     class == 50 || class == 51
+}
+
+/// The `-oi-`/`-öi-` plural prefix of a class-10 tail, if it has one.
+///
+/// `noutaja` -> `noutajoi`, `ampuja` -> `ampujoi`. Used only to skip the
+/// standalone word's alternative plural inside a compound; the normal `-i-`
+/// plural (`noutajitta`, `ampujia`) is the one the compound templates use.
+fn oi_plural_prefix(lemma: &str) -> Option<String> {
+    let mut chars = lemma.chars();
+    let last = chars.next_back()?;
+    if last != 'a' && last != 'ä' {
+        return None;
+    }
+    let mut prefix = chars.as_str().to_string();
+    prefix.push_str(if last == 'ä' { "öi" } else { "oi" });
+    Some(prefix)
 }
 
 /// The first part of a class-51 compound.

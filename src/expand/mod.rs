@@ -1622,6 +1622,111 @@ mod tests {
         }
     }
 
+    /// A class-10 compound tail uses its normal `-i-` plural, not the
+    /// standalone word's `-oi-` alternate.
+    ///
+    /// `kultainennoutaja` is `kultainen` + `noutaja` (Wiktionary's
+    /// `nainen-koira` template with `space=`), and its abessive plural is
+    /// `kultaisittanoutajitta`, not `kultaisittanoutajoitta`. `tarkka-ampuja`
+    /// is the class-50 counterpart.
+    #[cfg(feature = "generated-nominals")]
+    #[test]
+    fn a_compound_tail_uses_its_normal_plural_not_the_oi_alternate() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let forms = |lemma: &str, class: u16| -> Vec<String> {
+            inflect_in(
+                lemma,
+                Inflection {
+                    class,
+                    gradation: None,
+                },
+                &cat,
+                Some(&LexiconIndex::new(&lexicon)),
+                PartOfSpeech::Noun,
+                false,
+            )
+            .into_iter()
+            .map(|g| g.word)
+            .collect()
+        };
+        let koiranoutaja = forms("kultainennoutaja", 51);
+        assert!(
+            koiranoutaja.contains(&"kultaisittanoutajitta".to_string()),
+            "kultaisittanoutajitta missing"
+        );
+        assert!(
+            !koiranoutaja.iter().any(|word| word.contains("noutajoi")),
+            "the -oi- alternate leaked into the compound"
+        );
+        let ampuja = forms("tarkka-ampuja", 50);
+        assert!(
+            ampuja.contains(&"tarkka-ampujia".to_string()),
+            "tarkka-ampujia missing"
+        );
+        assert!(
+            !ampuja.iter().any(|word| word.contains("ampujoi")),
+            "the -oi- alternate leaked into the compound"
+        );
+        let varaaja = forms("kylmävaraaja", 50);
+        assert!(
+            varaaja.contains(&"kylmävaraajia".to_string()),
+            "kylmävaraajia missing"
+        );
+        assert!(
+            !varaaja.iter().any(|word| word.contains("varaajoi")),
+            "the -oi- alternate leaked into the compound"
+        );
+        // The exception is per compound: a tail whose own compound page gives
+        // the `-oi-` plural keeps it.
+        let nieria = forms("harmaanieriä", 50);
+        assert!(
+            nieria.contains(&"harmaanieriöittä".to_string()),
+            "harmaanieriöittä missing"
+        );
+        let marja = forms("mustaviinimarja", 51);
+        assert!(
+            marja.contains(&"mustittaviinimarjoitta".to_string()),
+            "mustittaviinimarjoitta missing"
+        );
+    }
+
+    /// `uusivuosi` gives one standard genitive plural; Wiktionary marks the
+    /// other head/tail combinations rare.
+    #[cfg(feature = "generated-nominals")]
+    #[test]
+    fn uusivuosi_keeps_only_the_standard_genitive_plural() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let forms = inflect_in(
+            "uusivuosi",
+            Inflection {
+                class: 51,
+                gradation: None,
+            },
+            &cat,
+            Some(&LexiconIndex::new(&lexicon)),
+            PartOfSpeech::Noun,
+            false,
+        );
+        let plain: Vec<&str> = forms
+            .iter()
+            .filter(|form| form.confidence == crate::tags::Confidence::Plain)
+            .map(|form| form.word.as_str())
+            .collect();
+        assert!(plain.contains(&"uusienvuosien"), "{plain:?}");
+        for rare in ["uusienvuotten", "uuttenvuosien", "uuttenvuotten"] {
+            assert!(!plain.contains(&rare), "{rare} is still plain");
+            assert!(
+                forms.iter().any(|form| {
+                    form.word == rare
+                        && form.confidence == crate::tags::Confidence::Repaired
+                }),
+                "{rare} is not repaired"
+            );
+        }
+    }
+
     /// A class-51 boundary between identical vowels takes a hyphen.
     ///
     /// `vanhaisäntä` is written closed in the nominative, but the inflected

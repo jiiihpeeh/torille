@@ -534,6 +534,28 @@
       "applies_to": ["illegal"],
       "source": "https://en.wiktionary.org/wiki/cowboy#Finnish",
       "note": "Wiktionary's rosé table gives both singular illatives cowboyhin and cowboyhyn, and both third-person possessives cowboyhinsa and cowboyhynsa. The oracle lists only the -hin spelling."
+    },
+    {
+      "id": "lemma-51-kultainennoutaja-gen-pl-alternate",
+      "classes": ["51"],
+      "lemmas": ["kultainennoutaja"],
+      "cell": {"case": "GEN", "number": "PL"},
+      "predicate": "form",
+      "forms": ["kultaisiennoutajien"],
+      "sample": 100,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/kultainennoutaja#Finnish",
+      "note": "Wiktionary's nainen-koira template gives the genitive plural as kultaistennoutajien/kultaisiennoutajien; the oracle lists only the first."
+    },
+    {
+      "id": "lemma-51-lamminruoka-both-koira-paradigms",
+      "classes": ["51"],
+      "lemmas": ["lämminruoka"],
+      "predicate": "lemma",
+      "sample": 100,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/lämminruoka#Finnish",
+      "note": "Wiktionary lists both the lämminruo- and lämminru- (ruu-) koira paradigms, and the materialised oracle confirms one variant per cell. Both the ruo- and ruu- forms are real, so the other variant is not an engine error."
     }
   ]
 }

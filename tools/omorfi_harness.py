@@ -552,6 +552,29 @@ class Harness:
                     return parts[3] if len(parts) >= 4 else ""
         return ""
 
+    def classes_of(self, lemma: str) -> list[str]:
+        """Every non-empty class string the sanalista gives the lemma.
+
+        One entry per sanalista row, so a verb-and-noun homonym (`panna` is
+        67 and 9) and a two-class noun (`lahti` is 7*F and 5*F) both show two.
+        The oracle's `base` table is noun-only, so it cannot answer this for a
+        verb homonym.
+        """
+        if self.engine is not None:
+            return [
+                classes
+                for classes, _pos in self.engine.lookup(lemma)
+                if classes
+            ]
+        out: list[str] = []
+        with open(SANALISTA, encoding="utf-8") as fh:
+            next(fh, None)
+            for line in fh:
+                parts = line.rstrip("\n").split("\t")
+                if parts and parts[0] == lemma and len(parts) >= 4 and parts[3]:
+                    out.append(parts[3])
+        return out
+
     def words_in_class(
         self,
         part_of_speech: str = "substantiivi",
@@ -1227,10 +1250,10 @@ class Harness:
         # A lemma can be two homonym rows in different classes (`taata` is a
         # class-73 verb and a class-9 noun; `lahti` is 7*F and 5*F). A class
         # report must read only the reported class's forms, or the other
-        # class's paradigm looks like an illegal form of this one.
-        multi_class = self.lexicon.execute(
-            "SELECT count(DISTINCT class) FROM base WHERE lemma=?", (lemma,)
-        ).fetchone()[0] > 1
+        # class's paradigm looks like an illegal form of this one. Read the
+        # sanalista, not the oracle's `base` table: that table is noun-only, so
+        # it cannot see a verb homonym such as `panna` (67 + 9).
+        multi_class = len(set(self.classes_of(lemma))) > 1
         effective_klass = klass if multi_class else None
         try:
             forms = self.torille_forms(lemma, effective_klass)

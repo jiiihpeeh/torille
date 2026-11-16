@@ -1783,3 +1783,19 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   both `cowboyhin`/`cowboyhyn` and both third-person possessives, so
   `cowboyhynsa` is evidence-confirmed. The 20-lemma sample is 226,862
   confirmed / 0 missing / 106 oracle-only / 0 not-plain / 0 illegal.
+
+- 2026-11-16: the first `n=100` sweep (14,600 lemmas) is triaged. The harness
+  now decides a lemma's homonyms from the sanalista rather than the noun-only
+  oracle table, which clears the verb/noun `panna` (991 illegal). Class 10*A
+  `rukka` is a separate `NON_GRADATING` issue, not a homonym. Class-50/51 compounds whose tail is a class-10
+  agent noun in `-ja`/`-jä` use the normal `-i-` plural (`kultainennoutaja`,
+  `tarkka-ampuja`, `kylmävaraaja`), while native tails keep the plural their
+  own compound page gives (`harmaanieriä`, `mustaviinimarja`).
+  `kultainennoutaja`'s second genitive plural and `lämminruoka`'s two koira
+  paradigms are evidence; `uusivuosi`'s rare genitive-plural combinations are
+  repaired. The post-fix `n=100` totals are 677,653 confirmed / 1,256 missing /
+  106 oracle-only / 361 not-plain / 1,485 illegal; the largest remaining
+  clusters are class 18 abbreviations (`www`, `oy`, `tv`), class 10*A `rukka`,
+  class 5*B/5*F `appi`/`lahti`, class 13 plural policy, class 99, class 4*A
+  `eksentrikko`, class 41, class 2 `huitaisu`, and the class-21
+  `jockey`/`maahockey`/`spray` harmony.
