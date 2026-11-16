@@ -122,6 +122,13 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     // back, which is what the reference confirms.
     let is_front = !BACK_HARMONY.contains(&lemma) && front(lemma);
     let mut out = paradigm(lemma, possessives, is_front);
+    // `jersey` is front-only: Wiktionary's Finnish entry has only the
+    // `jerseyiltä` column, and the English `y` does not license a back
+    // harmony here. Emitting the back column as repaired only creates forms
+    // the oracle mistakes for real ones.
+    if lemma == "jersey" {
+        return out;
+    }
     // The other harmony is a real spelling for some words; offer it repaired.
     let mut other = paradigm(lemma, possessives, !is_front);
     for f in &mut other {
@@ -175,6 +182,23 @@ mod tests {
         assert!(w.contains(&"cowboyilla".to_string()));
         assert!(w.contains(&"cowboyta".to_string()));
         assert!(w.contains(&"cowboyhinsä".to_string()) || w.contains(&"cowboyhinsa".to_string()));
+    }
+
+    /// `jersey` is front-only. Wiktionary records `jerseyiltä`, not the
+    /// English-spelling back `jerseyilta`, so the back column is not emitted
+    /// even as repaired.
+    #[test]
+    fn jersey_is_front_only() {
+        let forms = inflect("jersey", true);
+        let plain: Vec<&str> = forms
+            .iter()
+            .filter(|f| f.confidence == Confidence::Plain)
+            .map(|f| f.word.as_str())
+            .collect();
+        assert!(plain.contains(&"jerseyiltä"));
+        assert!(plain.contains(&"jerseynä"));
+        assert!(!forms.iter().any(|f| f.word == "jerseyilta"));
+        assert!(!forms.iter().any(|f| f.word == "jerseynansa"));
     }
 
     /// `brie`'s front partitive is plain; the back one is repaired.

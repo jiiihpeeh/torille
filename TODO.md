@@ -1723,7 +1723,7 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   `uuteenkuuhun`. The raw 5-lemma evidence report has 321 illegal rows, all
   explained, with no unmatched, ambiguous or stale rule. `kuve`'s and `live`'s
   oracle spellings are `missing` evidence rules, so the default report is
-  79,316 confirmed / 0 missing / 8 oracle-only / 9 not-plain / 0 illegal.
-  The nine `not_plain` rows are `jersey`'s back-harmony forms: `jersey` is read
-  `tsöösi`, so the front `jerseyiltä` column is the plain one and the back
-  column stays `Repaired`.
+  79,316 confirmed / 0 missing / 8 oracle-only / 0 not-plain / 0 illegal.
+  `jersey` is front-only: Wiktionary's Finnish entry gives `jerseyiltä` and
+  `jerseynä`, not the English-spelling back column, and the engine no longer
+  emits that back column even as repaired.
