@@ -7,7 +7,8 @@ but only where `data/oracle_exceptions.json` says so. This gate asserts two
 things about the fixed 5-lemma sample:
 
 1. every `illegal` row matches exactly one evidence rule;
-2. every evidence rule still matches at least one row.
+2. every evidence rule still matches at least one row (including the
+   `missing`, `unsupported` and `not_plain` rules).
 
 The second check is the staleness guard: when an engine fix or an oracle
 rebuild removes a disagreement, its rule stops matching and this gate goes red.
@@ -206,6 +207,20 @@ def main(argv: list[str]) -> int:
             for rule in illegal_evidence.match(rules, finding, cls, class_of):
                 hits[rule["id"]] += 1
 
+    # The `not_plain` side: a rule can say the oracle's form is a real rare
+    # alternant the engine deliberately keeps out of the plain set. Fed to the
+    # same staleness count as the other three statuses.
+    not_plain = 0
+    for entry in report:
+        cls = entry.get("class", "")
+        for row in entry.get("findings", []):
+            if row.get("status") not in ("not plain", "not_plain"):
+                continue
+            not_plain += 1
+            finding = as_finding(row)
+            for rule in illegal_evidence.match(rules, finding, cls, class_of):
+                hits[rule["id"]] += 1
+
     stale = [
         rule["id"] for rule in rules
         if illegal_evidence.sample_of(rule) <= args.per_class
@@ -215,6 +230,7 @@ def main(argv: list[str]) -> int:
     print(f"illegal rows: {illegal}")
     print(f"missing rows: {missing}")
     print(f"unsupported rows: {unsupported}")
+    print(f"not-plain rows: {not_plain}")
     print(f"evidence rules: {len(rules)} "
           f"(checked for staleness at n={args.per_class})")
 
