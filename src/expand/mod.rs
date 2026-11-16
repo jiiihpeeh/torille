@@ -1689,6 +1689,11 @@ mod tests {
             marja.contains(&"mustittaviinimarjoitta".to_string()),
             "mustittaviinimarjoitta missing"
         );
+        let matkustaja = forms("vapaamatkustaja", 50);
+        assert!(
+            matkustaja.contains(&"vapaamatkustajoitta".to_string()),
+            "vapaamatkustajoitta missing"
+        );
     }
 
     /// `uusivuosi` gives one standard genitive plural; Wiktionary marks the

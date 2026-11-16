@@ -604,9 +604,9 @@
     {
       "id": "lemma-13-kohina-family-vowel-plural",
       "classes": ["13"],
-      "lemmas": ["kohina", "marina", "kahina", "kuhina", "rahina"],
+      "lemmas": ["kohina", "marina", "kahina", "kuhina", "rahina", "kopina", "reppana"],
       "predicate": "stems",
-      "stems": ["kohinoj", "marinoj", "kahinoj", "kuhinoj", "rahinoj"],
+      "stems": ["kohinoj", "marinoj", "kahinoj", "kuhinoj", "rahinoj", "kopinoj", "reppanoj"],
       "sample": 100,
       "applies_to": ["illegal"],
       "source": "https://en.wiktionary.org/wiki/kohina#Finnish",
@@ -626,9 +626,9 @@
     {
       "id": "lemma-2-huitaisu-i-plural",
       "classes": ["2"],
-      "lemmas": ["huitaisu"],
+      "lemmas": ["huitaisu", "maestro", "teemasto", "sohaisu", "fiasko", "kitkerö"],
       "predicate": "stems",
-      "stems": ["huitaisui"],
+      "stems": ["huitaisui", "maestroi", "teemastoi", "sohaisui", "fiaskoi", "kitkeröj", "kitkeröi"],
       "sample": 100,
       "applies_to": ["illegal"],
       "source": "https://en.wiktionary.org/wiki/huitaisu#Finnish",
@@ -753,6 +753,17 @@
       "applies_to": ["missing"],
       "source": "https://en.wiktionary.org/wiki/pitkäperjantai#Finnish",
       "note": "Wiktionary gives two declensions: maa (pitkäperjantain) and koira-maa with both parts inflecting (pitkänperjantain). The engine's class-50 form is the maa one; the oracle's pitkänperjantain is the alternative, not a recall gap."
+    },
+    {
+      "id": "class-4a-weak-plural-alternates",
+      "classes": ["4*A"],
+      "lemmas": ["loogikko", "koirakko", "suolakko"],
+      "predicate": "stems",
+      "stems": ["loogikoi", "koirakoi", "suolakoi"],
+      "sample": 1000,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/loogikko#Finnish",
+      "note": "Wiktionary's laatikko table gives both the strong loogikkojen/loogikkoja/loogikkoihin and the weak loogikoiden/loogikoitten/loogikoita/loogikoihin (and likewise koirakko, suolakko). The oracle lists only the strong, so the weak i-plural and illative are real; the weak essive is repaired by the class engine."
     }
   ]
 }

@@ -38,12 +38,14 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     let weak = weak_stem(lemma);
     let last = strong.chars().last().unwrap();
     let (sg, pl) = (Number::Singular, Number::Plural);
-    // Wiktionary's laatikko table gives only the strong essive plural
-    // (`eksentrikkoina`, `poliitikkoina`); the weak `eksentrikoina`/
-    // `poliitikoina` is not confirmed. `aallokko` and the other -kko words keep
-    // it.
+    // Wiktionary's laatikko table gives only the strong essive plural for
+    // these words (`eksentrikkoina`, `loogikkoina`); the weak
+    // `eksentrikoina`/`loogikoina` is not in their tables. Other -kko words
+    // (`aallokko`) confirm the weak essive, so the exception is per word.
+    const WEAK_ESSIVE_RARE: &[&str] =
+        &["eksentrikko", "koirakko", "loogikko", "poliitikko", "suolakko"];
     let weak_essive = cell(Case::Essive, pl, &weak, ["ina", "inä"], true);
-    let weak_essive = if matches!(lemma, "eksentrikko" | "poliitikko") {
+    let weak_essive = if WEAK_ESSIVE_RARE.contains(&lemma) {
         weak_essive.as_rare()
     } else {
         weak_essive

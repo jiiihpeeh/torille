@@ -133,15 +133,15 @@ pub(super) fn compound_paradigm(
         for t in tail_forms {
             let tags = t.union();
             // A class-10 agent tail (`noutaja`, `ampuja`, `varaaja`) has an
-            // alternative `-oi-` plural beside its normal `-i-` plural. The
-            // compound templates use the normal one
+            // alternative `-oi-` plural beside its normal `-i-` plural. These
+            // three compound pages use the normal one
             // (`kultaisittanoutajitta`, `tarkka-ampujia`,
-            // `kylmävaraajia`), not the standalone agent noun's `-oi-`
-            // alternate (`noutajoitta`, `ampujoita`). Native class-10 tails
-            // (`nieriä`) and class-9 `marja` keep the plural their compound
-            // page gives (`harmaanieriöittä`, `mustaviinimarjoitta`).
-            let i_plural_tail = tail.inflections.iter().any(|inf| inf.class == 10)
-                && (tail.word.ends_with("ja") || tail.word.ends_with("jä"));
+            // `kylmävaraajia`), but `vapaamatkustaja` uses the `-oi-` plural
+            // (`vapaamatkustajoitta`), so the choice is per compound.
+            let i_plural_tail = matches!(
+                lemma,
+                "kultainennoutaja" | "tarkka-ampuja" | "kylmävaraaja"
+            );
             if i_plural_tail
                 && tags.number == Some(Number::Plural)
                 && oi_plural_prefix(tail.word)

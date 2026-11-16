@@ -1825,3 +1825,20 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   `täysihoito` is the `valo` type with t:d; `pH` is a back-harmony dot
   abbreviation. The 100-lemma sample is 679,381 confirmed / 0 missing /
   0 illegal / 0 not-plain / 268 oracle-only / 30,008 unsupported.
+
+- 2026-11-16: first `n=1000` sweep. The initial totals are 2,314,088
+  confirmed / 1,464 missing / 2,091 illegal / 112 not-plain / 268
+  oracle-only / 75,963 unsupported. The sweep exposed a regression in the
+  class-10 agent-tail rule (`vapaamatkustaja` keeps the `-oi-` plural), so the
+  i-plural exception is now per compound (`kultainennoutaja`, `tarkka-ampuja`,
+  `kylmävaraaja`). Class 4*A keeps the weak essive except for `eksentrikko`,
+  `koirakko`, `loogikko`, `poliitikko` and `suolakko`, whose `laatikko` tables
+  omit it, and records their weak i-plural/illative. Class 2 records the
+  `palvelu` i-plural for `huitaisu`, `maestro`, `teemasto`, `sohaisu`,
+  `fiasko` and `kitkerö`, and delegates `koordinaatisto` to class 1. Class 13
+  records `kopina`/`reppana`. The next clusters are class 10 `PR`/`sora-r`
+  colon abbreviations and `säkä`, class 50 inflecting-modifier compounds
+  (`kuivamuona`, `raitisilma`, `puoliyö`), class 1 `veto`/`hepo`, class 48
+  `kiiru`/`ori`, class 5 `sini`/`palvi`/`silkkivuori`, class 9
+  `parka`/`kysta`/`lyyra`/`koala`, class 9*D `nahka`, and the class-50
+  `kovametalli` not-plain column.

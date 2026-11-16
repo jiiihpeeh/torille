@@ -35,6 +35,12 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     {
         return plural_only(inflect(base, possessives));
     }
+    // `koordinaatisto` is Kotus `valo` (type 1), not the class-2 `palvelu`
+    // shape: its plural is `koordinaatistojen`, with no i-plural. Delegate it
+    // to the class-1 engine.
+    if lemma == "koordinaatisto" {
+        return super::class_1::inflect(lemma, possessives);
+    }
     let mut b = Builder::new(lemma, possessives);
     let stem = lemma;
     let (sg, pl) = (Number::Singular, Number::Plural);
