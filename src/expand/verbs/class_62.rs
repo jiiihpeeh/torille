@@ -60,15 +60,37 @@
 
 #![allow(dead_code)]
 
-use crate::tags::Form;
+use crate::tags::{Confidence, Form, Number, Polarity, Voice};
 
-use super::utility::{Stems, paradigm};
+use super::utility::{Stems, paradigm, verb_tags};
 
 pub const CLASS: &str = "62";
 
 /// Inflect a class-62 verb into its whole paradigm.
 pub fn inflect(lemma: &str) -> Vec<Form> {
-    paradigm(&Stems::ida(lemma))
+    let mut forms = paradigm(&Stems::ida(lemma));
+    // `uida` is the class's only stem short enough for the bare third person
+    // (`ui`) to be two letters, which `VerbBuilder::push` refuses. Add that
+    // one confirmed word directly; the guard stays for the fragments it
+    // prevents elsewhere.
+    if lemma == "uida" {
+        forms.push(
+            Form::new(
+                "ui".to_string(),
+                verb_tags(
+                    None,
+                    None,
+                    None,
+                    Some(Number::Singular),
+                    Some(Voice::Active),
+                    None,
+                    Polarity::Affirmative,
+                ),
+            )
+            .with(Confidence::Plain),
+        );
+    }
+    forms
 }
 
 #[cfg(test)]
@@ -87,6 +109,13 @@ mod tests {
     /// ending is the stem's own last letter and the stem is the lemma less the
     /// whole ending. The third person present is the bare stem, so it is what
     /// pins the stem down.
+    /// `uida` has the two-letter third person `ui`, which the builder guard
+    /// would otherwise drop.
+    #[test]
+    fn the_two_letter_stem_is_offered() {
+        assert!(has("uida", "ui"));
+    }
+
     #[test]
     fn the_stem_is_the_lemma_less_the_whole_ending() {
         for (lemma, stem, inessive) in [

@@ -1456,7 +1456,12 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
     `jyllännee`). Both are fixed in `grammar::verb`; 225 lemmas no longer emit
     the one-`n` participle.
 
-- [ ] **`hälyyttää` and `rationoida` — class `100`, and `dispatch` has no arm for it**
+- [x] **`hälyyttää` and `rationoida` — class `100`, and `dispatch` has no arm for it**
+  Done. `class 100` is routed by shape: `hälyyttää` uses the `parata`/72
+  `-yttää` causative and `rationoida` the `voida`/62 `-oida` type (Wiktionary
+  gives `fi-conj-voida` for `rationoida`; `hälyyttää` has no Wiktionary entry,
+  so Kotus-Verbit is the fallback). Both now audit with 0 missing and the
+  class's usual six `-äkseen` union-only forms.
   The only two verbs the engine cannot inflect at all. `base.class` for each is
   `100` and nothing else: the sanalista writes `100` where `kotus-tyypit.txt`
   explains `99 = Sana on taipumaton tai vaillinaisesti taipuva`, so the flag
@@ -1488,7 +1493,11 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   implicit in a `match` arm. Either way: **read the flag before designing the
   arm**, because `100` looks like a paradigm and is not one.
 
-- [ ] **`uida` — `ui` is two letters and `VerbBuilder::push` drops it**
+- [x] **`uida` — `ui` is two letters and `VerbBuilder::push` drops it**
+  Done for the confirmed `ui` form: class 62 pushes it directly, while the
+  builder guard stays for the consonant fragments it prevents. The remaining
+  four `uida` rows are the class-wide repaired `-ko`/`-ne` cells, not a
+  two-letter problem.
   The 735th and last lemma of class `62` has the only stem of the class short
   enough to matter: `uida` is `ui` + `da`, so its third person present, its
   imperative second person and its past third person are all the two-letter word
@@ -1502,7 +1511,9 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   verb before they reach a `push`. Revisit when those classes are hand-written
   and the fragments go away; until then one real word is the cheaper price.
 
-- [ ] **`vuotaa` and `sortaa` — the reference uses the alternate class**
+- [x] **`vuotaa` and `sortaa` — the reference uses the alternate class**
+  Done: dispatch reads the `54` reading for these two (`vuosin`, `sorrin`),
+  matching the reference; the `53` reading's past is not confirmed.
   The sanalista gives them `53*F, (54*F)` and `53*K, (54*K)`, and both reference
   generators inflect them as 54: `vuodan` in the present but `vuosin` in the
   past, which is 54's `t` -> `s` past and not 53's `vuodin`. The engine keeps

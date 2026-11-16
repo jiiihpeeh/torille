@@ -86,6 +86,14 @@ pub fn dispatch(class: &str, lemma: &str) -> Option<Vec<Form>> {
     let inflection = parse_single(class)?;
     match inflection.class {
         52 => Some(class_52::inflect(lemma, inflection.gradation)),
+        53 if matches!(lemma, "vuotaa" | "sortaa") => {
+            // These two are `53*F, (54*F)` and `53*K, (54*K)`. Wiktionary
+            // gives both the muistaa/53 and soutaa/54 tables, but the
+            // materialised reference confirms the 54 past (`vuosin`,
+            // `sorrin`) and not the 53 one, so the 54 reading is the one the
+            // whole paradigm follows here.
+            Some(class_54::inflect(lemma, inflection.gradation))
+        }
         53 => Some(class_53::inflect(lemma, inflection.gradation)),
         54 => Some(class_54::inflect(lemma, inflection.gradation)),
         55 => Some(class_55::inflect(lemma, inflection.gradation)),
@@ -112,16 +120,37 @@ pub fn dispatch(class: &str, lemma: &str) -> Option<Vec<Form>> {
         76 => Some(class_76::inflect(lemma, inflection.gradation)),
         77 => Some(class_77::inflect(lemma)),
         78 => Some(class_78::inflect(lemma)),
+        // Class 100 is the sanalista's "uninflected or incompletely
+        // inflected" flag, not a paradigm. Two rows carry it and both have a
+        // regular reference paradigm: `hälyyttää` is a `-yttää` causative
+        // (the `parata`/72 shape) and `rationoida` is the `voida`/62
+        // `-oida` type (Wiktionary gives `fi-conj-voida` and marks it
+        // proscribed). Route those shapes explicitly rather than treating
+        // the flag as a paradigm.
+        100 if lemma.ends_with("oida") || lemma.ends_with("öidä") => {
+            Some(class_62::inflect(lemma))
+        }
+        100 if lemma.ends_with("yttää") => {
+            Some(class_72::inflect(lemma, inflection.gradation))
+        }
         _ => None,
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::suppresses_reading;
+    use super::{dispatch, suppresses_reading};
 
     /// The dual 72/74 lemmas keep one reading only; a single-class lemma of
     /// either type keeps its own.
+    /// The two class-100 rows are routed by shape: `hälyyttää` is the
+    /// `parata`/72 causative and `rationoida` the `voida`/62 `-oida` verb.
+    #[test]
+    fn class_100_rows_have_a_reference_paradigm() {
+        assert!(dispatch("100", "hälyyttää").is_some());
+        assert!(dispatch("100", "rationoida").is_some());
+    }
+
     #[test]
     fn a_dual_72_74_lemma_keeps_the_reference_reading() {
         for lemma in ["oieta", "raueta", "isota", "sietä", "sueta"] {
