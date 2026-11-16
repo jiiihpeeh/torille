@@ -435,6 +435,28 @@
       "applies_to": ["missing"],
       "source": "https://en.wiktionary.org/wiki/livet%C3%A4",
       "note": "livenne is a form of the verb livetä, not the noun live; the noun's gradating stem gives lipeenne. The oracle is mixing the verb into the noun's cell."
+    },
+    {
+      "id": "class-11-algebra-i-stem-plural",
+      "classes": ["11"],
+      "lemmas": ["algebra"],
+      "cell": {"number": "PL"},
+      "predicate": "stems",
+      "stems": ["algebri"],
+      "sample": 20,
+      "source": "https://en.wiktionary.org/wiki/algebra#Finnish",
+      "note": "Wiktionary's omena declension gives the i-stem plural beside the o-stem: algebrien, algebria, algebriin, algebrissa, algebrista, algebrilla, algebrilta, algebrille, algebrina, algebriksi, algebritta, algebroin. The oracle records those rows as Omorfi-only because Voikko's dictionary has only the o-stem, so the engine's i-stem column is real but not ok='both'."
+    },
+    {
+      "id": "class-7f-vyyhti-risti-plural",
+      "classes": ["7*F"],
+      "lemmas": ["vyyhti"],
+      "cell": {"number": "PL"},
+      "predicate": "stems",
+      "stems": ["vyyhde", "vyyhte", "vyyhdi"],
+      "sample": 20,
+      "source": "https://en.wiktionary.org/wiki/vyyhti#Finnish",
+      "note": "Wiktionary gives vyyhti both the 7*F ovi and the 5*F risti declension. The oracle generated only the 7*F column and wrote the 5*F plural (vyyhdit, vyyhteinä, vyyhteihin, vyyhdeittä, ...) as engine rows, so the engine's risti plural is real but not ok='both'."
     }
   ]
 }

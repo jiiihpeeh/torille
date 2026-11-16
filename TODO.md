@@ -138,12 +138,13 @@ still open.
   `7*D` flag. `check_word_against_omorfi.py lovi ovi joki` now reports
   **all 153 confirmed forms plain** for each.
 
-  The current 20-lemma noun sample is 226,153 confirmed, 681 missing, 139
-  not-plain, 790 illegal. **563 of the missing rows are possessive cells**, but
-  they are mostly bare-stem gaps rather than the possessive builder: class 7*D
-  `laki`, class 99 and class 51 dominate. The next fix is those stems, not
-  another possessive filter. The older 14,026 figure predates the possessive
-  rounds and the current sample.
+  The current 20-lemma noun sample is 226,716 confirmed, 216 missing, 8
+  oracle-only, 0 not-plain, 61 illegal. The remaining missing rows are the
+  class-51 compound gap (116), the class-7*D `laki` homonym artifact (76) and
+  class 24 (18); the remaining illegal rows are class 13 (26), 24 (24), 27
+  (7), 49 (2), 21 (1) and 41 (1). The next fix is those stems, not another
+  possessive filter. The older 14,026 figure predates the possessive rounds
+  and the current sample.
 
   Evidence: `docs/harness.md` → Known defects → A.
 
@@ -1727,3 +1728,18 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   `jersey` is front-only: Wiktionary's Finnish entry gives `jerseyiltä` and
   `jerseynä`, not the English-spelling back column, and the engine no longer
   emits that back column even as repaired.
+
+- 2026-11-16: Wiktionary settled the four words the oracle and Voikko
+  disagreed on. `kypsi` is the dated noun and the historical inflection of
+  `kypsä`, so class 99 delegates it to class 29 (`lapsi`: `kypsen`, `kystä`,
+  `kypset`, `kypsiä`) instead of the i-loan grid (`kypseitä`, `kypseittä`).
+  `reggae` is front-only (`reggaetä`, `reggaessä`, `reggaeitä`), like
+  `jersey`, so the back column is no longer emitted at all. Two disagreements
+  are recorded as evidence rather than engine changes: Wiktionary's `omena`
+  declension gives `algebra` an i-stem plural (`algebrien`, `algebria`,
+  `algebritta`, ...) beside the o-stem, and its `vyyhti` entry gives both the
+  `7*F ovi` and `5*F risti` declensions. The oracle only has the o-stem and
+  the `7*F` column, so the two new `stems` rules explain the engine's real
+  alternate forms. The 20-lemma noun sample moves from 226,569 confirmed /
+  268 illegal / 107 not-plain to 226,716 confirmed / 61 illegal / 0
+  not-plain; class 11, 7*F and 99 are clean.

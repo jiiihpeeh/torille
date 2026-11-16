@@ -2,9 +2,11 @@
 //!
 //! Class 21 is the single-final-vowel `-e`/`-é`/`-y` foreign family (brie,
 //! brasserie, cowboy, jersey). It keeps the lemma whole as its stem. The
-//! foreign words harmonize inconsistently (`jersey` front but `cowboy`/`fondue`
-//! back), so one harmony is chosen as plain and the other is emitted repaired,
-//! and the two are merged with a first-wins dedup.
+//! foreign words harmonize inconsistently (`jersey`/`reggae` front but
+//! `cowboy`/`fondue` back), so one harmony is chosen as plain and the other is
+//! emitted repaired, and the two are merged with a first-wins dedup. A word
+//! Wiktionary gives in one harmony only (`jersey`, `reggae`) has no other
+//! column at all.
 //!
 //! [`paradigm`] builds one harmony's worth of the grid; `inflect` runs it
 //! twice. The singular partitive and the three singular illatives (`-hen`,
@@ -35,6 +37,17 @@ const BACK_HARMONY: &[&str] = &[
     "cosplay",
     "speedway",
 ];
+
+/// Foreign words the orthographic harmony reads back but the reference reads
+/// front. `reggae` is pronounced `regee`, and Wiktionary's Finnish entry gives
+/// the front column (`reggaetä`, `reggaessä`, `reggaeitä`, `reggaettä`), not
+/// the back `reggaeta` the spelling would suggest.
+const FRONT_HARMONY: &[&str] = &["reggae"];
+
+/// Words Wiktionary gives one harmony only. The other column is not a spelling
+/// of the word, so it is not emitted even as repaired: `jersey` is read
+/// `tsöösi`, and `reggae` is read `regee`.
+const FRONT_ONLY: &[&str] = &["jersey", "reggae"];
 
 /// The illative spellings live Voikko confirms for a class-21 word when the
 /// oracle lists all three. A word outside these lists keeps the oracle's three
@@ -120,13 +133,12 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     // plain correction the reference rejects (`briea` for `brietä`). The
     // orthographic harmony reads `brie`/`jersey` front and `cowboy`/`fondue`
     // back, which is what the reference confirms.
-    let is_front = !BACK_HARMONY.contains(&lemma) && front(lemma);
+    let is_front = FRONT_HARMONY.contains(&lemma)
+        || (!BACK_HARMONY.contains(&lemma) && front(lemma));
     let mut out = paradigm(lemma, possessives, is_front);
-    // `jersey` is front-only: Wiktionary's Finnish entry has only the
-    // `jerseyiltä` column, and the English `y` does not license a back
-    // harmony here. Emitting the back column as repaired only creates forms
-    // the oracle mistakes for real ones.
-    if lemma == "jersey" {
+    // A front-only word has no back column in Wiktionary, and emitting one as
+    // repaired only creates forms the oracle mistakes for real ones.
+    if FRONT_ONLY.contains(&lemma) {
         return out;
     }
     // The other harmony is a real spelling for some words; offer it repaired.
@@ -199,6 +211,46 @@ mod tests {
         assert!(plain.contains(&"jerseynä"));
         assert!(!forms.iter().any(|f| f.word == "jerseyilta"));
         assert!(!forms.iter().any(|f| f.word == "jerseynansa"));
+    }
+
+    /// `reggae` is read `regee`, so Wiktionary's Finnish entry gives the
+    /// front column even though the spelling's last vowel is `a`.
+    #[test]
+    fn reggae_is_front_harmonic() {
+        let forms = inflect("reggae", true);
+        let plain: Vec<&str> = forms
+            .iter()
+            .filter(|f| f.confidence == Confidence::Plain)
+            .map(|f| f.word.as_str())
+            .collect();
+        for want in [
+            "reggaetä",
+            "reggaessä",
+            "reggaestä",
+            "reggaellä",
+            "reggaeltä",
+            "reggaelle",
+            "reggaenä",
+            "reggaettä",
+            "reggaeitä",
+            "reggaeissä",
+            "reggaeistä",
+            "reggaeillä",
+            "reggaeiltä",
+            "reggaeille",
+            "reggaeinä",
+            "reggaeiksi",
+            "reggaeittä",
+            "reggaein",
+        ] {
+            assert!(plain.contains(&want), "{want} is not plain: {plain:?}");
+        }
+        for back in ["reggaeta", "reggaessa", "reggaeitta", "reggaena"] {
+            assert!(
+                !forms.iter().any(|f| f.word == back),
+                "{back} must not be emitted at all"
+            );
+        }
     }
 
     /// `brie`'s front partitive is plain; the back one is repaired.

@@ -26,7 +26,10 @@ pub const CLASS: &str = "99";
 /// words whose forms belong in the reverse index; indexing the guesses would
 /// add thousands of forms the reference confirms for none.
 pub fn has_real_paradigm(lemma: &str) -> bool {
-    matches!(lemma, "seesam" | "tenä" | "ainut" | "viisi" | "pommi")
+    matches!(
+        lemma,
+        "seesam" | "tenä" | "ainut" | "viisi" | "pommi" | "kypsi"
+    )
 }
 
 /// Class-99 words that do not inflect at all: indeclinable adverbs, particles
@@ -279,6 +282,14 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     if lemma == "kuti" {
         return super::class_5F::inflect(lemma, possessives);
     }
+    // `kypsi` is the dated noun and the historical inflection of `kypsä`, not
+    // an i-loan. Wiktionary's `kypsi` entry gives the class-29 `lapsi`
+    // declension (`{{fi-decl-lapsi|kyp|ä}}`): genitive `kypsen`, partitive
+    // `kystä`, plural `kypset`/`kypsien`/`kypsiä`. The shared i-loan grid
+    // invented `kypseiden`/`kypseittä` instead.
+    if lemma == "kypsi" {
+        return super::class_29::inflect(lemma, possessives);
+    }
     // `kuulema` and `tietämä` are agent-participle nouns with the class-10
     // `koira` shape (`kuuleman`, `kuulemaa`, `kuulemia`), not i-loans.
     if matches!(lemma, "kuulema" | "tietämä") {
@@ -403,6 +414,29 @@ mod tests {
         assert!(ulko.iter().any(|f| f.word == "ulkon" && f.plain()));
         let tarvis = inflect("tarvis", true);
         assert!(tarvis.iter().any(|f| f.word == "tarvista" && f.plain()));
+    }
+
+    /// `kypsi` is the dated noun and the historical inflection of `kypsä`,
+    /// not an i-loan. Wiktionary files it under the class-29 `lapsi` type
+    /// (`kypsen`, `kystä`, `kypset`, `kypsiä`), so the i-loan plural
+    /// (`kypseitä`, `kypseittä`) must not be offered.
+    #[test]
+    fn kypsi_declines_as_the_lapsi_type() {
+        let plain: Vec<String> = inflect("kypsi", true)
+            .into_iter()
+            .filter(Form::plain)
+            .map(|f| f.word)
+            .collect();
+        for want in [
+            "kypsi", "kypsen", "kystä", "kypseen", "kypset", "kypsien",
+            "kypsiä", "kypsittä",
+        ] {
+            assert!(plain.contains(&want.to_string()), "kypsi is missing {want}");
+        }
+        assert!(
+            !plain.iter().any(|word| word.starts_with("kypsei")),
+            "the i-loan plural must not be offered: {plain:?}"
+        );
     }
 
     #[test]
