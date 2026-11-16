@@ -127,8 +127,8 @@ work, or every later measurement mixes the two.
 - class 50's compound policy has the agent-tail regression above;
 - class 50 has no "the modifier also inflects" output for `puoliyö`, although
   Wiktionary gives both `pieni-suo` and `suo` tables;
-- `vikunja` is filed as class 9 but Wiktionary declines it as `koira` (class
-  10);
+- `vikunja` is filed as class 9 but Wiktionary declines it as `kulkija` (class
+  12);
 - `nahka` is `9*(D)` with both a graded and an ungraded table, and the current
   override keeps only the graded one.
 
@@ -150,10 +150,11 @@ These are not engine bugs. They need evidence rows, not new forms:
 
 ### D. Tail/compound cell mismatch
 
-The remaining class-50 rows are tails whose own class grid disagrees with the
-oracle in one cell (`lyhytnumero`, `harmaakaihi`, `valmisvaate`,
-`kevytsinko`, `raakanahka`). These are fixed by the tail's class, not by a new
-compound exception.
+The remaining class-50 rows are tail/whole-word cell disagreements
+(`lyhytnumero`, `harmaakaihi`, `valmisvaate`, `kevytsinko`, `raakanahka`).
+Some are tail-class bugs; some, like `lyhytnumero`, are the oracle putting a
+plural stem into a singular cell. Each one is settled by the compound's own
+Wiktionary template before a compound exception is written.
 
 ## Phase 0 — make the report measure the lemma, not one homonym
 
