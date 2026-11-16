@@ -74,11 +74,16 @@ fn paradigm(lemma: &str, possessives: bool, front: bool) -> Vec<Form> {
     let mut b = Builder::new_harmony(lemma, possessives, front);
     let s = lemma;
     let (sg, pl) = (Number::Singular, Number::Plural);
-    let hen_plain = !Y_ALL_THREE.contains(&lemma)
+    // `menu` is the one word whose Wiktionary entry gives only the
+    // `valo`/`rosé` illative `menuun`; the three foreign illatives are not
+    // confirmed for it, so they stay repaired.
+    let not_menu = lemma != "menu";
+    let hen_plain = not_menu
+        && !Y_ALL_THREE.contains(&lemma)
         && !Y_HYN_ONLY.contains(&lemma)
         && !HIN_ONLY.contains(&lemma);
-    let hyn_plain = !HEN_ONLY.contains(&lemma) && !HIN_ONLY.contains(&lemma);
-    let hin_plain = !HEN_ONLY.contains(&lemma) && !Y_HYN_ONLY.contains(&lemma);
+    let hyn_plain = not_menu && !HEN_ONLY.contains(&lemma) && !HIN_ONLY.contains(&lemma);
+    let hin_plain = not_menu && !HEN_ONLY.contains(&lemma) && !Y_HYN_ONLY.contains(&lemma);
 
     b.decline(
         &Decl::new(vec![

@@ -81,7 +81,7 @@ DEFAULT_PATH = REPO / "data" / "oracle_exceptions.json"
 PREDICATES = {
     "lemma", "form", "stems", "also-class", "oblique-stem",
     "shorter-than-expected", "shorter", "fixed-prefix", "case-less",
-    "plural-only-t", "strong-comparative", "plural-only-iset",
+    "plural-only-t", "strong-comparative", "plural-only-iset", "head-class",
 }
 CELL_FIELDS = {"case", "number", "possessive"}
 CASE_TAGS = {
@@ -98,8 +98,8 @@ WEAK_COMPARATIVE_CASES = {
 }
 RULE_FIELDS = {
     "id", "classes", "lemmas", "exclude_lemmas", "cell", "predicate",
-    "source", "note", "also_classes", "forms", "stems", "sample",
-    "applies_to",
+    "source", "note", "also_classes", "head_classes", "forms", "stems",
+    "sample", "applies_to",
 }
 
 #: The per-class sample a rule is expected to be exercised by. The baseline
@@ -191,11 +191,12 @@ def validate(rules: list[dict]) -> None:
         applies = rule.get("applies_to", ["illegal"])
         if (not isinstance(applies, list) or not applies
                 or not all(isinstance(s, str)
-                           and s in ("illegal", "missing", "unsupported")
+                           and s in ("illegal", "missing", "unsupported",
+                                     "not_plain")
                            for s in applies)):
             raise EvidenceError(
-                f"{where}: 'applies_to' must list 'illegal', 'missing' "
-                "and/or 'unsupported'")
+                f"{where}: 'applies_to' must list 'illegal', 'missing', "
+                "'unsupported' and/or 'not_plain'")
 
         cell = rule.get("cell")
         if cell is not None:
@@ -249,6 +250,11 @@ def validate(rules: list[dict]) -> None:
         if predicate == "plural-only-iset" and not classes:
             raise EvidenceError(
                 f"{where}: predicate 'plural-only-iset' needs classes")
+        if predicate == "head-class" and (
+                not classes or not rule.get("head_classes")):
+            raise EvidenceError(
+                f"{where}: predicate 'head-class' needs classes and "
+                "'head_classes'")
         if predicate in ("shorter-than-expected", "shorter"):
             if not classes:
                 raise EvidenceError(
@@ -276,6 +282,19 @@ def _is_subsequence(short: str, long: str) -> bool:
 def _oblique_stem(lemma: str) -> str:
     """The class-34*C genitive stem, mirroring the Rust engine."""
     return lemma.replace("ton", "ttoma").replace("tön", "ttömä")
+
+
+@functools.lru_cache(maxsize=None)
+def _sanalista_class(word: str) -> str:
+    """The sanalista inflection field for one headword, or ""."""
+    path = REPO / "data" / "nykysuomensanalista.csv"
+    with open(path, encoding="utf-8") as fh:
+        next(fh, None)
+        for line in fh:
+            parts = line.rstrip("\n").split("\t")
+            if parts and parts[0] == word:
+                return parts[3] if len(parts) >= 4 else ""
+    return ""
 
 
 @functools.lru_cache(maxsize=None)
@@ -311,6 +330,10 @@ def _compound_prefix(word: str) -> str:
     for i in range(len(word) - 1, 0, -1):
         if word[:i] in words and word[i:] in nouns:
             return word[:i]
+        # A hyphenated compound keeps the boundary character in the spelling
+        # (`vapaa-ajattelu`); the head after it is still a listed noun.
+        if word[i] == "-" and word[:i] in words and word[i + 1:] in nouns:
+            return word[:i + 1]
     return ""
 
 
@@ -347,8 +370,8 @@ def matches(rule: dict, finding, cls: str, class_of=None) -> bool:
     # A rule says which finding statuses it explains. Most explain an `illegal`
     # row (the engine's form is wrong); a few explain a `missing` row (the
     # oracle's form is wrong). The default keeps the older rules as they were.
-    if getattr(finding, "status", "illegal") not in rule.get(
-            "applies_to", ["illegal"]):
+    if getattr(finding, "status", "illegal").replace(" ", "_") not in (
+            rule.get("applies_to", ["illegal"])):
         return False
     cell = rule.get("cell")
     if cell is not None and not _cell_matches(cell, finding.cell):
@@ -387,16 +410,30 @@ def matches(rule: dict, finding, cls: str, class_of=None) -> bool:
         expected = [e for e in finding.expected.split("/") if e]
         return any(len(finding.form) < len(e) for e in expected)
     if predicate == "fixed-prefix":
+        prefix = _compound_prefix(finding.lemma)
+        if not prefix:
+            return False
+        head = finding.lemma[len(prefix):]
+        if not head:
+            return False
+        if getattr(finding, "status", "illegal") == "missing":
+            # The `missing` row's `form` is the oracle's expected spelling;
+            # there is no engine form to compare. If the oracle inflects the
+            # modifier (`kuivittamuonitta` for `kuivamuona`, or
+            # `puolittaöittä` for `puoliyö`), the engine's fixed-modifier
+            # reading is the other standard paradigm, not a recall gap. The
+            # nominative cell is included: its expected `kuivatmuonat` still
+            # has the inflected modifier.
+            if not finding.form.startswith(prefix):
+                return True
+            head_at = _head_index(finding.form, head)
+            return head_at < 0 or head_at > len(prefix)
         # A case-less nominative reading belongs to the `case-less` rule; the
         # prefix rule is for the forms whose case is known.
         if (finding.cell.case == "NOM"
                 and not any(tag in CASE_TAGS for tag in finding.tags)):
             return False
-        prefix = _compound_prefix(finding.lemma)
-        if not prefix:
-            return False
-        head = finding.lemma[len(prefix):]
-        if not head or not finding.form.startswith(prefix):
+        if not finding.form.startswith(prefix):
             return False
         engine_at = _head_index(finding.form, head)
         if engine_at < 0:
@@ -444,6 +481,26 @@ def matches(rule: dict, finding, cls: str, class_of=None) -> bool:
         return (
             finding.cell.number == "SG"
             and finding.lemma.endswith("set")
+        )
+    if predicate == "head-class":
+        # A class-50 compound whose head is class 2 (`paristo`, `varasto`,
+        # `kupari`) inherits the `palvelu` i-plural beside the `-jen` plural.
+        # The oracle's class-50 rows keep only `-jen`, so the i-plural is a
+        # real alternative. Restrict the rule to plural cells; a singular cell
+        # mismatch is a different defect.
+        if finding.cell.number != "PL":
+            return False
+        prefix = _compound_prefix(finding.lemma)
+        if not prefix:
+            return False
+        head = finding.lemma[len(prefix):]
+        if not head:
+            return False
+        field = _sanalista_class(head)
+        return any(
+            item.strip().strip("()").split("*")[0] in rule["head_classes"]
+            for item in field.split(",")
+            if item.strip()
         )
     return False
 

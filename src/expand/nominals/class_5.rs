@@ -43,7 +43,7 @@ pub const CLASS: &str = "5";
 /// The other two, `analyysi` and `kitaristi`, have no such twin in the
 /// catalogue but are genuinely ambiguous-harmony words in the language at
 /// large, so both are built on purpose rather than on the reference's word.
-const BOTH_HARMONY: &[&str] = &["analyysi", "design", "estrogeeni", "kitaristi"];
+const BOTH_HARMONY: &[&str] = &["analyysi", "estrogeeni", "kitaristi"];
 
 /// Native `-ppi` words the sanalista also lists under 5*B beside their real
 /// 7*B row. The loanword grid would give `apit`/`appini`; the native word takes
@@ -53,26 +53,25 @@ const NATIVE_SEVEN: &[&str] = &["soppi"];
 
 /// The class-5 loans that confirm the `-i`-plural, so its three alternants
 /// surface plainly (`glykoli -> glykoleiden`, not merely `glykolien`). These
-/// are the only 26 of the class's 3375 lemmas that do; everyone else is plain
+/// are the only 23 of the class's 3375 lemmas that do; everyone else is plain
 /// `aari`, takes only `-ien`/`-eja`, and their alternants stay repaired
 /// guesses.
 ///
 /// Measured, not curated: the list is every class-5 lemma whose reference gives
 /// a genitive plural in `-iden` and a partitive plural in `-ita`, and each of
-/// the 26 gives all three -- `-iden`, `-itten` and `-ita` alike.
+/// the 23 gives all three -- `-iden`, `-itten` and `-ita` alike. `groteski`,
+/// `ibuprofeeni` and `jargon` were removed after Wiktionary showed only the
+/// risti `-ien`/`-eja` table for them.
 const I_PLURAL: &[&str] = &[
     "epsilon",
     "fitness",
     "glykoli",
     "gooni",
     "grafeeni",
-    "groteski",
     "halal",
     "hanami",
     "humaani",
     "humidori",
-    "ibuprofeeni",
-    "jargon",
     "koolon",
     "makroni",
     "marsipaani",
@@ -155,7 +154,14 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     }
     // A few ambiguous loanwords (analyysi) are genuinely a/ä both, so both
     // spellings are built; otherwise the shared loanword harmony decides.
-    let nom_base = native_nom_base(lemma);
+    // `silkkivuori` is Wiktionary risti only; its class-26 `pieni` row must
+    // not pull the genitive possessives onto the e-stem (`silkkivuorensa`).
+    // The risti forms are `silkkivuorinsa`, `silkkivuorimme`, ...
+    let nom_base = if matches!(lemma, "silkkivuori" | "irtovuori") {
+        None
+    } else {
+        native_nom_base(lemma)
+    };
     if BOTH_HARMONY.contains(&lemma) {
         let mut out = build_i_loans_with_nom_base(
             lemma,
@@ -199,6 +205,14 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
                 form.confidence = form.confidence.min(Confidence::Repaired);
             }
         }
+    }
+    // `CD-ROM` is a colon abbreviation with a class-5/risti grid: the oracle
+    // confirms both `CD-ROMin` and `CD-ROM:n`, so keep the ordinary loanword
+    // forms and add the colon forms beside them.
+    if lemma == "CD-ROM" {
+        forms.extend(super::class_10::inflect_abbreviation(lemma, possessives));
+        let mut seen = std::collections::HashSet::new();
+        forms.retain(|form| seen.insert(form.word.clone()));
     }
     forms
 }
@@ -460,7 +474,7 @@ mod tests {
 
     /// A loanword the reference gives in all three `-i`-plural alternants takes
     /// them plainly; everyone else takes them as repairs. `glykoli` is one of
-    /// the 26 that do, `aari` is not one.
+    /// the 23 that do, `aari` is not one.
     #[test]
     fn the_i_plural_is_plain_only_where_the_reference_gives_it() {
         let confirmed = inflect("glykoli", true);
@@ -488,15 +502,18 @@ mod tests {
         assert!(all.contains(&"aareja"));
     }
 
-    /// The list is the reference's, not a curation: 26 words, and the whole
-    /// `-iden`/`-itten`/`-ita` group comes as a set. `fitness` is the word the
-    /// old code called `-itten`-less; the reference has `fitnessitten`.
+    /// The list is the reference's, less the two risti words Wiktionary gives
+    /// only `-ien` for. `fitness` is the word the old code called
+    /// `-itten`-less; the reference has `fitnessitten`.
     #[test]
-    fn the_i_plural_list_is_the_whole_group_of_twenty_six() {
-        assert_eq!(I_PLURAL.len(), 26);
+    fn the_i_plural_list_is_the_whole_group_of_twenty_three() {
+        assert_eq!(I_PLURAL.len(), 23);
         assert!(I_PLURAL.contains(&"fitness"));
         assert!(I_PLURAL.contains(&"epsilon") && I_PLURAL.contains(&"šaali"));
         assert!(!I_PLURAL.contains(&"aari") && !I_PLURAL.contains(&"argon"));
+        assert!(!I_PLURAL.contains(&"ibuprofeeni"));
+        assert!(!I_PLURAL.contains(&"groteski"));
+        assert!(!I_PLURAL.contains(&"jargon"));
     }
 
     #[test]

@@ -117,6 +117,13 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
         let short = e_grad(lemma, "v", "p");
         return e_stem_inflect(lemma, possessives, &short);
     }
+    // `kiiru` and `ori` are Wiktionary `hame` words with a non-`e` stem
+    // vowel (`kiir|||a|stem_vowel=u`, `or|||a|stem_vowel=i`). The short stem
+    // is the lemma itself, so the long stem is its final vowel doubled:
+    // `kiiruu`, `orii`. The grid is otherwise the class-48 grid.
+    if lemma == "kiiru" || lemma == "ori" {
+        return e_stem_inflect(lemma, possessives, lemma);
+    }
     let short = &lemma[..lemma.len() - 1]; // drop the final e -> aav
     let short = format!("{short}e"); // aave
     e_stem_inflect(lemma, possessives, &short)
@@ -138,6 +145,37 @@ mod tests {
         }
         for bad in ["tamineettta", "tamineetn"] {
             assert!(!w.contains(&bad.to_string()), "invented {bad}");
+        }
+    }
+
+    /// `kiiru` and `ori` are `hame` with a non-`e` stem vowel.
+    #[test]
+    fn hame_with_u_and_i_stem_vowels() {
+        let kiiru = words("kiiru");
+        for want in [
+            "kiiru",
+            "kiiruun",
+            "kiirutta",
+            "kiiruuseen",
+            "kiiruut",
+            "kiiruiden",
+            "kiiruita",
+            "kiiruitta",
+        ] {
+            assert!(kiiru.contains(&want.to_string()), "kiiru missing {want}");
+        }
+        let ori = words("ori");
+        for want in [
+            "ori",
+            "oriin",
+            "oritta",
+            "oriiseen",
+            "oriit",
+            "oriiden",
+            "oriita",
+            "oriitta",
+        ] {
+            assert!(ori.contains(&want.to_string()), "ori missing {want}");
         }
     }
 

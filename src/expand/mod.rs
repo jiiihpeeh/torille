@@ -1689,10 +1689,41 @@ mod tests {
             marja.contains(&"mustittaviinimarjoitta".to_string()),
             "mustittaviinimarjoitta missing"
         );
+        let puoliyo = forms("puoliyö", 50);
+        assert!(
+            puoliyo.contains(&"puoliöittä".to_string()),
+            "the fixed-modifier puoliyö reading is missing"
+        );
+        assert!(
+            puoliyo.contains(&"puolittaöittä".to_string()),
+            "the inflecting-modifier puoliyö reading is missing"
+        );
         let matkustaja = forms("vapaamatkustaja", 50);
         assert!(
             matkustaja.contains(&"vapaamatkustajoitta".to_string()),
             "vapaamatkustajoitta missing"
+        );
+        assert!(
+            !matkustaja.contains(&"vapaamatkustajitta".to_string()),
+            "the -i- alternate leaked into vapaamatkustaja"
+        );
+        let sukeltaja = forms("kevytsukeltaja", 50);
+        assert!(
+            sukeltaja.contains(&"kevytsukeltajitta".to_string()),
+            "kevytsukeltajitta missing"
+        );
+        assert!(
+            !sukeltaja.iter().any(|word| word.contains("sukeltajoi")),
+            "the -oi- alternate leaked into kevytsukeltaja"
+        );
+        let hoitaja = forms("omahoitaja", 50);
+        assert!(
+            hoitaja.contains(&"omahoitajilta".to_string()),
+            "omahoitajilta missing"
+        );
+        assert!(
+            !hoitaja.iter().any(|word| word.contains("hoitajoi")),
+            "the -oi- alternate leaked into omahoitaja"
         );
     }
 

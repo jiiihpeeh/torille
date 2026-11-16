@@ -133,21 +133,34 @@ pub(super) fn compound_paradigm(
         for t in tail_forms {
             let tags = t.union();
             // A class-10 agent tail (`noutaja`, `ampuja`, `varaaja`) has an
-            // alternative `-oi-` plural beside its normal `-i-` plural. These
-            // three compound pages use the normal one
-            // (`kultaisittanoutajitta`, `tarkka-ampujia`,
-            // `kylmävaraajia`), but `vapaamatkustaja` uses the `-oi-` plural
-            // (`vapaamatkustajoitta`), so the choice is per compound.
-            let i_plural_tail = matches!(
-                lemma,
-                "kultainennoutaja" | "tarkka-ampuja" | "kylmävaraaja"
-            );
-            if i_plural_tail
+            // alternative `-oi-` plural beside its normal `-i-` plural. The
+            // normal one is the compound default (`kevytsukeltajitta`,
+            // `omahoitajilta`, `kultaisittanoutajitta`). `vapaamatkustaja` is
+            // the lexical exception whose page gives the `-oi-` plural
+            // (`vapaamatkustajoitta`), so the policy is per compound.
+            let agent_tail = tail.inflections.iter().any(|inf| inf.class == 10)
+                && (tail.word.ends_with("ja") || tail.word.ends_with("jä"));
+            let agent_plural = if !agent_tail {
+                None
+            } else if lemma == "vapaamatkustaja" {
+                Some(AgentPlural::Oi)
+            } else {
+                Some(AgentPlural::NormalI)
+            };
+            if let Some(policy) = agent_plural
                 && tags.number == Some(Number::Plural)
-                && oi_plural_prefix(tail.word)
-                    .is_some_and(|prefix| t.word.starts_with(&prefix))
+                && let Some(oi_prefix) = oi_plural_prefix(tail.word)
             {
-                continue;
+                let is_oi = t.word.starts_with(&oi_prefix);
+                match policy {
+                    AgentPlural::NormalI if is_oi => continue,
+                    AgentPlural::Oi
+                        if !is_oi && tags.case != Some(Case::Nominative) =>
+                    {
+                        continue;
+                    }
+                    _ => {}
+                }
             }
             // A plural-only compound's tail is the nominative plural of its
             // base (`vanhemmat` against `vanhempi`), so the compound has no
@@ -252,6 +265,41 @@ pub(super) fn compound_paradigm(
             }
         }
     }
+    // `puoliyö` has two Wiktionary tables: `pieni-suo` inflects the modifier
+    // (`puolittaöittä`) and `suo` keeps it fixed (`puoliöittä`). The sanalista
+    // files it as class 50, so the fixed grid above is the default; add the
+    // class-51 reading as the second standard paradigm rather than forcing a
+    // choice the language does not make.
+    // `nuoripari`'s class-51 head has one bad `nuori` reading (`noilta`,
+    // `noilla`) beside the standard `nuorilta`, `nuorilla`. The sanalista also
+    // carries a class-5 fixed-modifier reading. Keep the standard class-51
+    // forms plain and demote the malformed head rather than offering it.
+    if lemma == "nuoripari" {
+        for form in &mut out {
+            if form.word.starts_with("noi") {
+                form.confidence = Confidence::Repaired;
+            }
+        }
+    }
+    // `isokierto` is filed as `50, 51`, but Wiktionary gives one `valo`
+    // table with the modifier fixed. Keep the class-51 reading as a repaired
+    // alternate rather than offering it as a plain compound.
+    if lemma == "isokierto" && class == 51 {
+        for form in &mut out {
+            form.confidence = Confidence::Repaired;
+        }
+    }
+    if lemma == "puoliyö" && class == 50 {
+        out.extend(compound_paradigm(
+            lemma,
+            Inflection {
+                class: 51,
+                gradation: inflection.gradation,
+            },
+            cat,
+            Some(lexicon),
+        ));
+    }
     out
 }
 
@@ -265,6 +313,14 @@ fn compound_class(class: u16) -> bool {
 /// `noutaja` -> `noutajoi`, `ampuja` -> `ampujoi`. Used only to skip the
 /// standalone word's alternative plural inside a compound; the normal `-i-`
 /// plural (`noutajitta`, `ampujia`) is the one the compound templates use.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum AgentPlural {
+    /// Use the class-10 tail's normal `-i-` plural; drop the `-oi-` alternate.
+    NormalI,
+    /// Use the tail's `-oi-` plural; drop the `-i-` plural obliques.
+    Oi,
+}
+
 fn oi_plural_prefix(lemma: &str) -> Option<String> {
     let mut chars = lemma.chars();
     let last = chars.next_back()?;

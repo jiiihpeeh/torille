@@ -119,6 +119,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                         "lexicon")
     p.add_argument("--only-failures", action="store_true",
                    help="omit the confirmed findings from the report")
+    p.add_argument("--class-strict", action="store_true",
+                   help="audit only the reported class's forms and oracle rows; "
+                        "the default judges the lemma as a whole, so a form owned "
+                        "by another homonym class is not reported as missing")
     p.add_argument("-o", "--output", help="write the JSON here instead of stdout")
     p.add_argument("--split", metavar="DIR",
                    help="also write one JSON file per class into DIR, named "
@@ -203,11 +207,12 @@ def check_class(
     evidence: list[dict] | None = None,
     strict_illegal: bool = False,
     raw_illegal: bool = False,
+    class_strict: bool = False,
 ) -> dict:
     findings: list[Finding] = []
     skipped = 0
     for lemma in lemmas:
-        rows = harness.audit(lemma, cells, cls)
+        rows = harness.audit(lemma, cells, cls, class_strict)
         if not rows:
             skipped += 1
             continue
@@ -262,7 +267,8 @@ def check_class(
             )
     elif evidence and not raw_illegal:
         for finding in findings:
-            if finding.status not in ("illegal", "unsupported"):
+            if finding.status.replace(" ", "_") not in (
+                    "illegal", "unsupported", "not_plain"):
                 continue
             matched = illegal_evidence.match(
                 evidence, finding, cls, class_of)
@@ -276,7 +282,7 @@ def check_class(
                     + ", ".join(r["id"] for r in matched[1:])
                     + ")"
                 )
-            was = finding.status
+            was = finding.status.replace(" ", "_")
             finding.status = "confirmed"
             if was == "illegal":
                 finding.detail = (
@@ -284,6 +290,13 @@ def check_class(
                     f"{rule['note']} "
                     f"[{rule['id']}; {rule['source']}]{extra}, while the "
                     f"materialised oracle expects {finding.expected}"
+                )
+            elif was == "not_plain":
+                finding.detail = (
+                    f"offered at {finding.confidence}; "
+                    f"{rule['note']} "
+                    f"[{rule['id']}; {rule['source']}]{extra}, so it is a real "
+                    "but deliberately non-plain form"
                 )
             else:
                 finding.detail = (
@@ -427,7 +440,7 @@ def main(argv: list[str]) -> int:
         return check_class(
             harness, cls, picked[cls], cells, args.only_failures,
             verifier, verifier_lock, evidence, args.strict_illegal,
-            args.raw_illegal,
+            args.raw_illegal, args.class_strict,
         )
 
     # Classes are independent, so the parallelism is over classes rather than

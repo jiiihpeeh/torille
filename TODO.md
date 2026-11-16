@@ -1851,3 +1851,14 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   authority. The class-50 agent allow-list from the previous batch is not
   finished: `kevytsukeltaja` and `omahoitaja` need the normal `-i-` plural,
   while `vapaamatkustaja` keeps `-oi-`.
+
+- 2026-11-16: `n=1000` is clean on every correctness axis: 2,318,849
+  confirmed / 0 missing / 0 illegal / 0 not-plain / 304 oracle-only /
+  76,116 unsupported. The homonym-aware report (`classes_of`/`class_tokens`,
+  per-class engine union) removed the false missing rows; the class-10 colon
+  grid handles `PR`/`sora-r`, class 48 handles `kiiru`/`ori`, class 5/9/10/26
+  twin paradigms and the class-50 fixed-modifier compounds are sourced by the
+  evidence file. The class-50 agent-tail policy now defaults to the normal
+  `-i-` plural and keeps `vapaamatkustaja` on `-oi-`. `n=20` and `n=100`
+  remain 0 missing / 0 illegal / 0 not-plain; the n=5 evidence gate passes
+  with 119 rules; clippy is clean; the strict engine-output comparison passes.

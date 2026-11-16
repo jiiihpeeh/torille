@@ -35,6 +35,9 @@ pub(crate) const CLASS: &[(&str, &str)] = &[
     // was marked 99 only because Kotus had no separate compound entry.
     ("kynkkä", "10*A"),
     ("käsikynkkä", "10*A"),
+    // Wiktionary `vikunja` is `kulkija` (Kotus 12): `vikunjoiden`,
+    // `vikunjoitten`, `vikunjoita`, not the class-9 `vikunjojen`/`vikunjoja`.
+    ("vikunja", "12"),
 ];
 
 /// The class expression to use instead of the source expression, when one

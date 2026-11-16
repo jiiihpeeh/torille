@@ -16,7 +16,7 @@
 
 #![allow(dead_code)]
 
-use crate::tags::{Case, Form, Number, PartOfSpeech};
+use crate::tags::{Case, Confidence, Form, Number, PartOfSpeech};
 
 use super::utility::{Builder, Decl, cell, doubled_stem, nominal_tags, plain, rare};
 
@@ -96,7 +96,17 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     });
     b.comitative(stem);
 
-    b.into_forms()
+    let mut forms = b.into_forms();
+    // `lento` and `hepo` are Wiktionary `valo` words with gradation only
+    // (`lennoitta`, `hevoitta`). The sanalista also carries an ungraded class-1
+    // row; keep that reading as a repaired alternate rather than offering
+    // `lentoitta`/`hepoitta` as plain corrections.
+    if matches!(lemma, "lento" | "hepo") {
+        for form in &mut forms {
+            form.confidence = Confidence::Repaired;
+        }
+    }
+    forms
 }
 
 #[cfg(test)]

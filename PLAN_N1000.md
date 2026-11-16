@@ -1,9 +1,9 @@
 # Full-lexicon noun sweep — systematic closure plan
 
-Status: **in progress.** The `n=20` and `n=100` samples are clean; the first
-full-lexicon (`n=1000`) sweep exposed both a real regression and a large set of
-latent defects. This plan is the order in which they get closed without
-putting the clean samples back into debt.
+Status: **implemented (2026-11-16).** The `n=20`, `n=100` and `n=1000` samples
+are clean on the correctness axes: `n=1000` is 2,318,849 confirmed / 0 missing
+/ 0 illegal / 0 not-plain / 304 oracle-only / 76,116 unsupported. The plan below
+is the record of how the sweep was closed.
 
 Baseline commit: `e34081f` (`fix(nominals): start the n=1000 sweep`).
 Baseline maps: `07af70f`.
@@ -575,3 +575,25 @@ row is explained by a rule that names its Wiktionary source.
   `src/expand/build.rs` are hand-formatted; format only the files touched.
 - **`report_by_class.py` must stay `-j 1`.** Parallel class workers corrupt
   the SQLite reader; the `-j 8` failures are not engine failures.
+
+
+## Outcome
+
+Phases 0–6 landed together:
+
+- the report now splits comma-separated class fields, unions the lemma's
+  per-class paradigms, and keeps `--class-strict` for single-paradigm
+  debugging;
+- class 10 has the colon grid (`PR`, `sora-r`, and the `CD-ROM` colon forms
+  used by class 5);
+- class 48 has the `hame` stem-vowel override (`kiiru`, `ori`);
+- class 5/9/10/26 twin paradigms are emitted and sourced by evidence rows;
+- class 50's agent tails default to the normal `-i-` plural, with
+  `vapaamatkustaja` the `-oi-` exception, and `puoliyö`, `isokierto`,
+  `nuoripari` and the fixed-prefix compounds have explicit policy;
+- `vikunja` is class 12 (`kulkija`), `nahka` emits both `9*(D)` tables, and
+  `CD-ROM` keeps both the colon and closed spellings.
+
+The final gates are `cargo test --release --workspace` (55 binaries, 1,315
+tests), clippy, the `n=5` evidence gate (119 rules), the `n=20`/`n=100`
+samples, and `tools/build/compare_engine_outputs.py --strict`.

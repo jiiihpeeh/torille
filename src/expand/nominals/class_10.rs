@@ -126,6 +126,13 @@ fn rare_genitive_plural(stem: &str) -> Entry {
 
 /// Inflect a class-10 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
+    // A colon abbreviation is spelled with the colon before every ending
+    // (`PR:n`, `sora-r:ään`). Kotus files the two under class 10, but the
+    // ordinary grid would append the endings to the whole citation
+    // (`PRR...`), so they take this separate orthographic mode.
+    if matches!(lemma, "PR" | "sora-r") {
+        return inflect_abbreviation(lemma, possessives);
+    }
     // Class 10 also carries plural-only lemmas (`käräjät`, `bänät`): the
     // citation form is the nominative plural, so decline the dropped-`t`
     // base and keep only its plural cells. `käräjä` gives `käräjät`,
@@ -224,6 +231,60 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
         add_oi_plural(&mut b, stem);
     }
 
+    b.into_forms()
+}
+
+/// The colon-abbreviation grid (`PR`, `sora-r`).
+///
+/// The colon is an orthographic boundary, not part of the stem: every
+/// inflected cell is `stem + ":" + ending`, while the nominative singular is
+/// the bare stem. The endings are the class-10 `koira` set, with the oracle's
+/// front-vowel spellings (`PR:ä`, `PR:ään`).
+pub(super) fn inflect_abbreviation(lemma: &str, possessives: bool) -> Vec<Form> {
+    // Both abbreviations take front-vowel endings (`PR:ä`, `sora-r:ään`),
+    // including the possessive suffixes (`sora-r:nsä`, not `sora-r:nsa`).
+    let mut b = Builder::new_harmony(lemma, possessives, true);
+    let c = format!("{lemma}:");
+    let ci = format!("{lemma}:i");
+    let (sg, pl) = (Number::Singular, Number::Plural);
+
+    let mut cells = vec![
+        // ---- singular ----
+        cell(Case::Nominative, sg, lemma, ["", ""], false)
+            .base_on(c.clone(), ["", ""]),
+        cell(Case::Genitive, sg, &c, ["n", "n"], false).on_stem(),
+        cell(Case::Partitive, sg, &c, ["ä", "ä"], false),
+        cell(Case::Partitive, sg, &c, ["ää", "ää"], false),
+        cell(Case::Essive, sg, &c, ["nä", "nä"], true),
+        cell(Case::Translative, sg, &c, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
+        cell(Case::Inessive, sg, &c, ["ssä", "ssä"], true),
+        cell(Case::Elative, sg, &c, ["stä", "stä"], true),
+        cell(Case::Illative, sg, &c, ["ään", "ään"], false).on_ending(["ää", "ää"]),
+        cell(Case::Adessive, sg, &c, ["llä", "llä"], true),
+        cell(Case::Ablative, sg, &c, ["ltä", "ltä"], true),
+        cell(Case::Allative, sg, &c, ["lle", "lle"], true),
+        cell(Case::Abessive, sg, &c, ["ttä", "ttä"], true),
+        // ---- plural ----
+        cell(Case::Nominative, pl, &c, ["t", "t"], false).on_stem(),
+        cell(Case::Genitive, pl, &ci, ["en", "en"], false).on_ending(["e", "e"]),
+        cell(Case::Partitive, pl, &ci, ["ä", "ä"], true),
+        cell(Case::Essive, pl, &ci, ["nä", "nä"], true),
+        cell(Case::Translative, pl, &ci, ["ksi", "ksi"], true).on_ending(["kse", "kse"]),
+        cell(Case::Illative, pl, &ci, ["hin", "hin"], false).on_ending(["i", "i"]),
+        cell(Case::Illative, pl, &ci, ["in", "in"], false).on_ending(["i", "i"]),
+        cell(Case::Inessive, pl, &ci, ["ssä", "ssä"], true),
+        cell(Case::Elative, pl, &ci, ["stä", "stä"], true),
+        cell(Case::Adessive, pl, &ci, ["llä", "llä"], true),
+        cell(Case::Ablative, pl, &ci, ["ltä", "ltä"], true),
+        cell(Case::Allative, pl, &ci, ["lle", "lle"], true),
+        cell(Case::Abessive, pl, &ci, ["ttä", "ttä"], true),
+        plain(Case::Instructive, pl, &ci, ["n", "n"]),
+    ];
+    cells.shrink_to_fit();
+    b.decline(&Decl::new(cells), |case, number, poss| {
+        nominal_tags(PartOfSpeech::Noun, case, number, poss)
+    });
+    b.comitative(&ci);
     b.into_forms()
 }
 

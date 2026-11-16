@@ -575,6 +575,52 @@ class Harness:
                     out.append(parts[3])
         return out
 
+    @staticmethod
+    def _split_class_field(field: str) -> list[str]:
+        """The individual classes in one sanalista field.
+
+        `50, 51` is two classes, and `9, 12, (10)` is two plus a parenthesised
+        alternative the parser drops beside the unbracketed ones. A field that
+        is *only* bracketed (`(1)`) is the class, as the parser reads it.
+        """
+        items = [item.strip() for item in field.split(",") if item.strip()]
+        unbracketed = [item for item in items if not item.startswith("(")]
+        if unbracketed:
+            return unbracketed
+        return [item.strip("()") for item in items]
+
+    def class_tokens(self, lemma: str,
+                     part_of_speech: str | None = None) -> list[str]:
+        """Every class the lemma may be inflected as, without duplicates.
+
+        Unlike `classes_of`, which keeps the raw sanalista field, this splits
+        `50, 51` and drops the parenthesised alternative beside an unbracketed
+        class. `part_of_speech` filters a verb homonym out of a noun report:
+        `panna` is 67 and 9, and the verb's forms are not noun recall.
+        """
+        fields: list[tuple[str, str]] = []
+        if self.engine is not None:
+            fields = [
+                (classes, pos)
+                for classes, pos in self.engine.lookup(lemma)
+                if classes
+            ]
+        else:
+            with open(SANALISTA, encoding="utf-8") as fh:
+                next(fh, None)
+                for line in fh:
+                    parts = line.rstrip("\n").split("\t")
+                    if parts and parts[0] == lemma and len(parts) >= 4 and parts[3]:
+                        fields.append((parts[3], parts[2] if len(parts) >= 3 else ""))
+        out: list[str] = []
+        for field, pos in fields:
+            if part_of_speech and part_of_speech not in pos:
+                continue
+            for token in self._split_class_field(field):
+                if token and token not in out:
+                    out.append(token)
+        return out
+
     def words_in_class(
         self,
         part_of_speech: str = "substantiivi",
@@ -1033,7 +1079,8 @@ class Harness:
         return [c for _, _, c in scored]
 
     def audit(self, lemma: str, cells: list[Cell],
-              klass: str | None = None) -> list[Finding]:
+              klass: str | None = None,
+              strict: bool = False) -> list[Finding]:
         """Every form of this lemma's paradigm, with the reading that explains it.
 
         One `Finding` per confirmed form, carrying every cell that expects it.
@@ -1054,7 +1101,7 @@ class Harness:
         with `expected: kissaksemme` rather than as an unexplained word.
         """
         if self.lexicon is not None:
-            return self._audit_lexicon(lemma, cells, klass)
+            return self._audit_lexicon(lemma, cells, klass, strict)
         if not self.has_class(lemma):
             return []
         try:
@@ -1229,7 +1276,8 @@ class Harness:
         return findings
 
     def _audit_lexicon(self, lemma: str, cells: list[Cell],
-                       klass: str | None = None) -> list[Finding]:
+                       klass: str | None = None,
+                       strict: bool = False) -> list[Finding]:
         """The per-form findings, read from a lexicon reference instead of live
         Omorfi + Voikko (see docs/lexicon.md).
 
@@ -1253,12 +1301,28 @@ class Harness:
         # class's paradigm looks like an illegal form of this one. Read the
         # sanalista, not the oracle's `base` table: that table is noun-only, so
         # it cannot see a verb homonym such as `panna` (67 + 9).
-        multi_class = len(set(self.classes_of(lemma))) > 1
-        effective_klass = klass if multi_class else None
-        try:
-            forms = self.torille_forms(lemma, effective_klass)
-        except (ValueError, subprocess.CalledProcessError):
-            return []
+        # A lemma is judged as a whole. A sanalista field can hold several
+        # classes (`50, 51`, `9, 12, (10)`) and a lemma can be several homonym
+        # rows (`veto` is 1*F, 1*F and 1). `inflect(lemma)` without a class
+        # picks one row, so build the union token by token instead. Then a
+        # form owned by the other class is not reported as missing here.
+        tokens = self.class_tokens(lemma, part_of_speech="substantiivi")
+        if strict:
+            tokens = [klass] if klass else tokens
+        if tokens:
+            forms: list[TorilleForm] = []
+            for token in tokens:
+                try:
+                    forms.extend(self.torille_forms(lemma, token))
+                except (ValueError, subprocess.CalledProcessError):
+                    continue
+            if not forms:
+                return []
+        else:
+            try:
+                forms = self.torille_forms(lemma)
+            except (ValueError, subprocess.CalledProcessError):
+                return []
         by_word: dict[str, list[TorilleForm]] = {}
         for form in forms:
             by_word.setdefault(form.word, []).append(form)
@@ -1279,9 +1343,9 @@ class Harness:
         # (`taanneitta`) look like missing noun forms.
         class_filter = ""
         params: list[str] = [lemma]
-        if effective_klass:
+        if strict and klass:
             class_filter = " AND b.class=?"
-            params.append(effective_klass)
+            params.append(klass)
         rows = self.lexicon.execute(
             "SELECT f.form, f.[case], f.number, f.possessive"
             " FROM forms f JOIN base b USING(lemma, homonym)"
@@ -1306,7 +1370,7 @@ class Harness:
         # Every form Omorfi so much as generated, whatever `ok`, so the
         # precision pass can tell "Omorfi asserts it but Voikko does not" from
         # "Omorfi never produced it".
-        all_params: list[str] = [lemma] + ([effective_klass] if effective_klass else [])
+        all_params: list[str] = [lemma] + ([klass] if strict and klass else [])
         all_forms = {r[0] for r in self.lexicon.execute(
             "SELECT f.form FROM forms f JOIN base b USING(lemma, homonym)"
             f" WHERE f.lemma=?{class_filter}", all_params)}
