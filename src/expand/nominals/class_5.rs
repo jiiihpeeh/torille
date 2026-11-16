@@ -53,19 +53,18 @@ const NATIVE_SEVEN: &[&str] = &["soppi"];
 
 /// The class-5 loans that confirm the `-i`-plural, so its three alternants
 /// surface plainly (`glykoli -> glykoleiden`, not merely `glykolien`). These
-/// are the only 23 of the class's 3375 lemmas that do; everyone else is plain
+/// are the only 17 of the class's 3375 lemmas that do; everyone else is plain
 /// `aari`, takes only `-ien`/`-eja`, and their alternants stay repaired
 /// guesses.
 ///
 /// Measured, not curated: the list is every class-5 lemma whose reference gives
 /// a genitive plural in `-iden` and a partitive plural in `-ita`, and each of
-/// the 23 gives all three -- `-iden`, `-itten` and `-ita` alike. `groteski`,
-/// `ibuprofeeni` and `jargon` were removed after Wiktionary showed only the
-/// risti `-ien`/`-eja` table for them.
+/// the 17 gives all three -- `-iden`, `-itten` and `-ita` alike. `groteski`,
+/// `ibuprofeeni`, `jargon`, `epsilon`, `glykoli`, `marsipaani`, `nokturni`,
+/// `teflon` and `tsunami` were removed after Wiktionary showed only the risti
+/// `-ien`/`-eja` table for them.
 const I_PLURAL: &[&str] = &[
-    "epsilon",
     "fitness",
-    "glykoli",
     "gooni",
     "grafeeni",
     "halal",
@@ -74,15 +73,11 @@ const I_PLURAL: &[&str] = &[
     "humidori",
     "koolon",
     "makroni",
-    "marsipaani",
-    "nokturni",
     "posteljooni",
     "refleksi",
     "shamaani",
     "spinning",
     "styyrpuuri",
-    "teflon",
-    "tsunami",
     "webinaari",
     "ypsilon",
     "šaali",
@@ -157,7 +152,7 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     // `silkkivuori` is Wiktionary risti only; its class-26 `pieni` row must
     // not pull the genitive possessives onto the e-stem (`silkkivuorensa`).
     // The risti forms are `silkkivuorinsa`, `silkkivuorimme`, ...
-    let nom_base = if matches!(lemma, "silkkivuori" | "irtovuori") {
+    let nom_base = if lemma.ends_with("vuori") {
         None
     } else {
         native_nom_base(lemma)
@@ -473,17 +468,17 @@ mod tests {
     }
 
     /// A loanword the reference gives in all three `-i`-plural alternants takes
-    /// them plainly; everyone else takes them as repairs. `glykoli` is one of
-    /// the 23 that do, `aari` is not one.
+    /// them plainly; everyone else takes them as repairs. `fitness` is one of
+    /// the 17 that do, `aari` is not one.
     #[test]
     fn the_i_plural_is_plain_only_where_the_reference_gives_it() {
-        let confirmed = inflect("glykoli", true);
+        let confirmed = inflect("fitness", true);
         let plain: Vec<&str> = confirmed
             .iter()
             .filter(|f| f.confidence == Confidence::Plain)
             .map(|f| f.word.as_str())
             .collect();
-        for form in ["glykoleiden", "glykoleitten", "glykoleita"] {
+        for form in ["fitnesseiden", "fitnesseitten", "fitnesseitä"] {
             assert!(plain.contains(&form), "{form} not plain in {plain:?}");
         }
         let ordinary = inflect("aari", true);
@@ -506,10 +501,10 @@ mod tests {
     /// only `-ien` for. `fitness` is the word the old code called
     /// `-itten`-less; the reference has `fitnessitten`.
     #[test]
-    fn the_i_plural_list_is_the_whole_group_of_twenty_three() {
-        assert_eq!(I_PLURAL.len(), 23);
+    fn the_i_plural_list_is_the_whole_group_of_seventeen() {
+        assert_eq!(I_PLURAL.len(), 17);
         assert!(I_PLURAL.contains(&"fitness"));
-        assert!(I_PLURAL.contains(&"epsilon") && I_PLURAL.contains(&"šaali"));
+        assert!(I_PLURAL.contains(&"humaani") && I_PLURAL.contains(&"šaali"));
         assert!(!I_PLURAL.contains(&"aari") && !I_PLURAL.contains(&"argon"));
         assert!(!I_PLURAL.contains(&"ibuprofeeni"));
         assert!(!I_PLURAL.contains(&"groteski"));

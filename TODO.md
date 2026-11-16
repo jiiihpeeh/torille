@@ -1862,3 +1862,11 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   `-i-` plural and keeps `vapaamatkustaja` on `-oi-`. `n=20` and `n=100`
   remain 0 missing / 0 illegal / 0 not-plain; the n=5 evidence gate passes
   with 119 rules; clippy is clean; the strict engine-output comparison passes.
+
+- 2026-11-16: exhaustive noun follow-up for the eight classes with more than
+  1,000 lemmas (`1, 2, 5, 6, 10, 12, 39, 40`), 18,148 audited lemmas and
+  2,049,728 confirmed forms. `5` and `39` exposed the last alternates
+  (`lämpövuori`/`välivuori`/`tikkivuori`, `uros`, `merirosvous`, and the
+  class-5 i-plural list); after sourcing them with Wiktionary, both are 0
+  missing / 0 illegal / 0 not-plain. The `n=1000`, `n=100` and `n=20`
+  samples remain clean; the n=5 evidence gate now has 121 rules.

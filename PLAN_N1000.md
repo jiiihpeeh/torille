@@ -597,3 +597,12 @@ Phases 0–6 landed together:
 The final gates are `cargo test --release --workspace` (55 binaries, 1,315
 tests), clippy, the `n=5` evidence gate (119 rules), the `n=20`/`n=100`
 samples, and `tools/build/compare_engine_outputs.py --strict`.
+
+
+### Exhaustive follow-up
+
+`n=1000` was a sample: eight noun classes have more than 1,000 lemmas. The
+exhaustive pass over `1, 2, 5, 6, 10, 12, 39, 40` audited 18,148 lemmas and
+2,049,728 forms. It found only the class-5 `vuori` compounds, `uros`/
+`merirosvous`, and the remaining class-5 i-plural promotions; all are closed.
+The smaller classes were already fully covered by `n=1000`.

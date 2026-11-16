@@ -252,6 +252,28 @@
       "note": "Wiktionary gives appi/lahti both the ovi/rsti tables and the 5/7 alternate (apeitta/apitta, lahdeitta/lahditta). The oracle's 7* rows keep the i-stem forms; the engine emits both."
     },
     {
+      "id": "lemma-5-vuori-compounds-risti-plural",
+      "classes": ["5", "26"],
+      "lemmas": ["lämpövuori", "välivuori", "tikkivuori"],
+      "predicate": "stems",
+      "stems": ["lämpövuor", "välivuor", "tikkivuor"],
+      "sample": 1000,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/lämpövuori#Finnish",
+      "note": "Wiktionary declines these compounds as risti (lämpövuorin, lämpövuoritta, lämpövuoreitta); the sanalista's class-26 pieni forms are the alternate."
+    },
+    {
+      "id": "lemma-39-uros-merirosvous-alternate",
+      "classes": ["39", "40", "41"],
+      "lemmas": ["uros", "merirosvous"],
+      "predicate": "stems",
+      "stems": ["uroo", "uroi", "merirosvou"],
+      "sample": 1000,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/uros#Finnish",
+      "note": "Wiktionary gives both vastaus (uroksen) and vieras (uroon) tables for uros, and both vastaus and kalleus tables for merirosvous. The oracle's class-39 rows keep the ks stems; the o stems are the second standard table."
+    },
+    {
       "id": "lemma-5-ripsi-sini-palvi-ovi-plural",
       "classes": ["5", "7"],
       "lemmas": ["ripsi", "sini", "palvi"],
