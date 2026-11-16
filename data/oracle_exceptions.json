@@ -468,6 +468,49 @@
       "applies_to": ["missing"],
       "source": "https://en.wiktionary.org/wiki/pahahenki#Finnish",
       "note": "Wiktionary's pahahenki entry is the closed alt form of paha henki, and its fi-decl-kala-ovi|space= table gives the weak nominative singular possessives pahahenkeni, pahahenkesi, pahahenkemme, pahahenkenne and pahahenkensä (the henki table agrees). The oracle's strong pahahenkini/pahahenkisi/pahahenkimme/pahahenkinne are Voikko-accepted alternates, not the standard forms, so they are oracle-only."
+    },
+    {
+      "id": "lemma-7d-laki-risti-missing",
+      "classes": ["7*D"],
+      "lemmas": ["laki"],
+      "predicate": "lemma",
+      "sample": 20,
+      "applies_to": ["missing"],
+      "source": "https://en.wiktionary.org/wiki/laki#Finnish",
+      "note": "Wiktionary gives laki two declensions: the law noun as 5*D risti (lain, lakia, laissa, laitta, lait, lakien, lakeja, lakeihin, laeissa, ...) and the summit/ceiling noun as 7*D ovi (laen, lakea, laessa, laetta, laet, lakien, lakia, lakiin, laissa, ...). The materialised oracle wrote the 5*D paradigm as ok='both' on both homonym rows and the 7*D forms as engine-only, so the 7*D bucket expects the 5*D forms. Both paradigms are real; the engine emits the 7*D one in this bucket."
+    },
+    {
+      "id": "lemma-24-kuusi-numeral-missing",
+      "classes": ["24"],
+      "lemmas": ["kuusi"],
+      "predicate": "stems",
+      "stems": ["kuud", "kuut"],
+      "sample": 20,
+      "applies_to": ["missing"],
+      "source": "https://en.wiktionary.org/wiki/kuusi#Finnish",
+      "note": "Wiktionary gives kuusi two paradigms: the numeral six as 27 käsi (kuuden, kuutta, kuudetta, ...) and the spruce noun as 24 uni (kuusen, kuusta, kuusetta, ...). The materialised oracle wrote the numeral forms as ok='both' on both homonym rows, so the class-24 bucket expects them. They belong to the class-27 numeral, which is reported separately."
+    },
+    {
+      "id": "lemma-24-kuusi-spruce-illegal",
+      "classes": ["24"],
+      "lemmas": ["kuusi"],
+      "predicate": "stems",
+      "stems": ["kuuse", "kuust"],
+      "sample": 20,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/kuusi#Finnish",
+      "note": "The engine's kuusen/kuusta/kuusetta column is the class-24 spruce paradigm (Wiktionary's fi-decl-uni|kuus|a). The oracle's expected kuuden/kuutta/kuudetta in the same cells are the class-27 numeral forms, which the same page gives as fi-decl-käsi. Both are real; this rule explains the cross-homonym spelling."
+    },
+    {
+      "id": "lemma-13-porina-vowel-plural",
+      "classes": ["13"],
+      "lemmas": ["porina"],
+      "predicate": "stems",
+      "stems": ["porinoj"],
+      "sample": 20,
+      "applies_to": ["illegal"],
+      "source": "https://en.wiktionary.org/wiki/porina#Finnish",
+      "note": "Wiktionary's katiska declension gives porina both plural families: genitive plural porinoiden/porinoitten/porinojen and partitive plural porinoita/porinoja. The oracle lists only the i-plural, so the vowel-plural porinojen/porinoja is real but not ok='both'."
     }
   ]
 }

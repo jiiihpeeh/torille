@@ -138,13 +138,13 @@ still open.
   `7*D` flag. `check_word_against_omorfi.py lovi ovi joki` now reports
   **all 153 confirmed forms plain** for each.
 
-  The current 20-lemma noun sample is 226,716 confirmed, 100 missing, 12
-  oracle-only, 0 not-plain, 61 illegal. The remaining missing rows are the
-  class-7*D `laki` homonym artifact (76), class 24's `kuusi` noun/numeral
-  homonym (18), class 5*D (5) and class 5*F (1); the remaining illegal rows
-  are class 13 (26), 24 (24), 27 (7), 49 (2), 21 (1) and 41 (1). The next fix
-  is those stems, not another possessive filter. The older 14,026 figure
-  predates the possessive rounds and the current sample.
+  The current 20-lemma noun sample is 226,859 confirmed, 0 missing, 106
+  oracle-only, 0 not-plain, 11 illegal. The remaining illegal rows are class
+  27 (7), 49 (2), 21 (1) and 41 (1); the oracle-only rows are the documented
+  homonym artifacts (`laki` 76, `kuusi` 18, `pahahenki` 4) plus the earlier
+  `kuve`/`live`/`jersey` rows. The next fix is those stems, not another
+  possessive filter. The older 14,026 figure predates the possessive rounds
+  and the current sample.
 
   Evidence: `docs/harness.md` → Known defects → A.
 
@@ -1757,3 +1757,19 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   `pahahenkensä`, which the engine already emits. Class 51 is now 0 missing and
   0 illegal; the 20-lemma sample is 226,716 confirmed / 100 missing / 12
   oracle-only / 61 illegal.
+
+- 2026-11-16: the homonym and harmony words cleared against Wiktionary.
+  `laki` is two etymologies: the law noun is `5*D risti` (`lain`, `lakia`,
+  `lakini`) and the summit noun is `7*D ovi` (`laen`, `lakea`, `lakeni`).
+  `native_nom_base` no longer pulls the `5*D` possessive onto the e-stem, so
+  `laki` has both `lakini` and `lakeni`; the `7*D` bucket's `5*D` expectations
+  are an oracle homonym artifact and are recorded as `missing`. `kuusi` is the
+  same shape: the numeral six is `27 käsi` and the spruce is `24 uni`, so the
+  class-24 numeral expectations and the class-24 spruce spellings are recorded
+  with two `stems` rules. `porina` is class-13 `katiska`, which Wiktionary
+  gives both plural families for, so `porinojen`/`porinoja` are explained as
+  real alternates; `mölinä` is class-12 `kulkija` and takes only the i-plural,
+  so `mölinojen`/`mölinojä` are demoted to `Repaired`. `arkkitehti` is
+  genuinely both-harmonic (`fi-decl-risti` with `a` and `ä`), so class 5*F now
+  emits both columns. The 20-lemma sample is 226,859 confirmed / 0 missing /
+  106 oracle-only / 0 not-plain / 11 illegal.

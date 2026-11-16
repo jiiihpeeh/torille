@@ -29,8 +29,10 @@ pub const CLASS: &str = "13";
 /// Read off the reference, which for every word of the class attests one whole
 /// plural family or the other and never mixes the two across all four forms
 /// (`-ojen`, `-oja`, `-oiden`/`-oitten`, `-oita`): 153 words give both, 3 give
-/// this one and 10 give the other.
-const I_PLURAL_ONLY: &[&str] = &["asana", "kaldera", "latuska"];
+/// this one and 10 give the other. `mölinä` is the Wiktionary exception: the
+/// sanalista files it as 13, but its page gives the class-12 `kulkija`
+/// declension (`mölinöiden`, `mölinöitten`, `mölinöitä`) with no vowel plural.
+const I_PLURAL_ONLY: &[&str] = &["asana", "kaldera", "latuska", "mölinä"];
 
 /// Class-13 words whose confirmed plural is the vowel-plural only (`-ojen`,
 /// `-oja`) and not the `i`-plural. For them the `-oiden`/`-oitten`/`-oita`
@@ -222,7 +224,7 @@ mod tests {
     /// words the reference does separate are the ones now listed.
     #[test]
     fn the_plain_plural_family_is_the_one_the_reference_confirms() {
-        for lemma in ["aivina", "suurima", "kahina", "mölinä", "media", "reppana"] {
+        for lemma in ["aivina", "suurima", "kahina", "media", "reppana"] {
             let plain = plain_words(lemma);
             let stem = o_stem(lemma);
             for confirmed in [format!("{stem}jen"), format!("{stem}iden")] {

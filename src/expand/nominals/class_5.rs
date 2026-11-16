@@ -121,6 +121,14 @@ const STRONG_INSTRUCTIVE: &[&str] = &[
 /// `e`-stem in the nominative possessive (`kuoreni`, `vyyhteni`), while the
 /// rest of the class-5 grid stays on its i-stem.
 fn native_nom_base(lemma: &str) -> Option<String> {
+    // `laki` is two etymologies, not a native twin. The law noun is `5*D`
+    // `risti` (`lain`, `lakia`, `lakini`) and the summit/ceiling noun is `7*D`
+    // `ovi` (`laen`, `lakea`, `lakeni`). The `7*D` row must not pull the `5*D`
+    // possessive onto the e-stem: Wiktionary's risti table gives `lakini`, and
+    // the summit paradigm keeps `lakeni` on its own class-7 grid.
+    if lemma == "laki" {
+        return None;
+    }
     let mut native = false;
     for row in crate::kotus::sanalista().by_word(lemma) {
         for inflection in row.inflections() {
@@ -205,6 +213,21 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
 /// strong (partitive, essive, illative) vs weak (translative, local,
 /// instructive). There is no `i`-plural (`aerobikkien`, not `aerobikkoiden`).
 pub fn inflect_graded(lemma: &str, possessives: bool, grad: Gradation) -> Vec<Form> {
+    inflect_graded_with_harmony(lemma, possessives, grad, None)
+}
+
+/// The graded grid with an explicit harmony override.
+///
+/// `None` reads the word's harmony the usual way; `Some(true)`/`Some(false)`
+/// forces the front/back column. `arkkitehti` is the one class-5*F word
+/// Wiktionary gives in both harmonies ({{fi-decl-risti|arkkiteh|t|d|a}} and
+/// the `ä` twin), so `class_5F` asks for both columns and merges them.
+pub(super) fn inflect_graded_with_harmony(
+    lemma: &str,
+    possessives: bool,
+    grad: Gradation,
+    front: Option<bool>,
+) -> Vec<Form> {
     // The native `-ppi` words take the class-7 grid (apet, apissa, apilla).
     // Their 5*B row still confirms the i-stem translative possessive column
     // (`apikseen`, `apikseni`) that class 7 spells on the e-stem, so that one
@@ -213,7 +236,11 @@ pub fn inflect_graded(lemma: &str, possessives: bool, grad: Gradation) -> Vec<Fo
     if NATIVE_SEVEN.contains(&lemma) {
         return super::class_7::inflect_graded(lemma, possessives, grad);
     }
-    let mut b = Builder::new_harmony(lemma, possessives, loanword_harmony(lemma));
+    let mut b = Builder::new_harmony(
+        lemma,
+        possessives,
+        front.unwrap_or_else(|| loanword_harmony(lemma)),
+    );
     let strong = lemma;
     let nom_base = native_nom_base(lemma);
     let weak = grad.apply(strong, Grade::Weak);
@@ -346,6 +373,24 @@ mod tests {
         let viti = nominative_singular(inflect_graded("viti", true, Gradation(6)));
         assert!(viti.contains(&"vitini".to_string()));
         assert!(!viti.contains(&"viteni".to_string()));
+    }
+
+    /// `laki` is two etymologies, not a native twin: the law noun is `5*D`
+    /// `risti` and the summit noun is `7*D` `ovi`. Wiktionary's risti table
+    /// gives the strong possessive `lakini`, so the `7*D` row must not pull
+    /// the `5*D` paradigm onto the e-stem.
+    #[test]
+    fn laki_law_keeps_the_strong_possessive() {
+        let ws: Vec<String> = inflect_graded("laki", true, Gradation(4))
+            .into_iter()
+            .map(|form| form.word)
+            .collect();
+        for want in ["lakini", "lakisi", "lakimme", "lakinne", "lakinsa"] {
+            assert!(ws.contains(&want.to_string()), "laki is missing {want}");
+        }
+        for wrong in ["lakeni", "lakesi", "lakemme", "lakenne", "lakensa"] {
+            assert!(!ws.contains(&wrong.to_string()), "{wrong} is the 7*D form");
+        }
     }
 
     use super::*;

@@ -29,6 +29,27 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
             Gradation(6),
         ));
     }
+    // `arkkitehti` is genuinely both-harmonic: Wiktionary gives both the
+    // `{{fi-decl-risti|arkkiteh|t|d|a}}` and the `ä` declension, so
+    // `arkkitehtia`/`arkkitehtiä` and `arkkitehtiensa`/`arkkitehtiensä` are
+    // both real. Emit both columns; the shared endings deduplicate below.
+    if lemma == "arkkitehti" {
+        let mut out = super::class_5::inflect_graded_with_harmony(
+            lemma,
+            possessives,
+            Gradation(6),
+            Some(false),
+        );
+        out.extend(super::class_5::inflect_graded_with_harmony(
+            lemma,
+            possessives,
+            Gradation(6),
+            Some(true),
+        ));
+        let mut seen = std::collections::HashSet::new();
+        out.retain(|form| seen.insert(form.word.clone()));
+        return out;
+    }
     super::class_5::inflect_graded(lemma, possessives, Gradation(6))
 }
 
@@ -38,6 +59,29 @@ mod tests {
 
     fn words(lemma: &str) -> Vec<String> {
         inflect(lemma, true).into_iter().map(|f| f.word).collect()
+    }
+
+    /// `arkkitehti` is both-harmonic in Wiktionary: the `a` and `ä`
+    /// `risti` declensions are both given, so both columns are plain.
+    #[test]
+    fn arkkitehti_emits_both_harmonies() {
+        let w = words("arkkitehti");
+        for expected in [
+            "arkkitehtia",
+            "arkkitehtiä",
+            "arkkitehteja",
+            "arkkitehtejä",
+            "arkkitehdilla",
+            "arkkitehdillä",
+            "arkkitehtiensa",
+            "arkkitehtiensä",
+        ] {
+            assert!(w.contains(&expected.to_string()), "missing {expected}");
+        }
+        let mut seen = std::collections::HashSet::new();
+        for word in &w {
+            assert!(seen.insert(word), "duplicate {word}");
+        }
     }
 
     /// Wiktionary `pihdit` (Kotus 5*F, plural only): no singular cells, and
