@@ -829,7 +829,11 @@ class Harness:
                     negative=f.negative,
                     tags=list(f.tags),
                 )
-                for f in self.engine.inflect(lemma, klass=klass)
+                for f in self.engine.inflect(
+                    lemma,
+                    klass=klass,
+                    pos="adjektiivi" if self.pos == "adjective" else "substantiivi",
+                )
             ]
         return self._torille_forms_via_binary(lemma, klass)
 
@@ -1355,6 +1359,11 @@ class Harness:
             return []
         expected_by_form: dict[str, list[Cell]] = {}
         expected_raw: dict[str, list[str]] = {}
+        # Honour the requested cell grid. The materialised oracle stores the
+        # whole paradigm, but `--bare` asks only for the case/number cells and
+        # an adjective audit must not count possessive columns the engine is
+        # not entitled to generate.
+        wanted = {(c.case, c.number, c.possessive) for c in cells}
         for form, cname, nm, pnm in rows:
             if cname not in inv_case or nm not in inv_num:
                 # A row outside the cell grid -- the DB also keeps
@@ -1363,9 +1372,11 @@ class Harness:
                 # pair, generated and judged separately). It is real data,
                 # just not a grid cell.
                 continue
-            expected_by_form.setdefault(form, []).append(
-                Cell(case=inv_case[cname], number=inv_num[nm],
-                     possessive=inv_pos.get(pnm, pnm)))
+            place = Cell(case=inv_case[cname], number=inv_num[nm],
+                         possessive=inv_pos.get(pnm, pnm))
+            if (place.case, place.number, place.possessive) not in wanted:
+                continue
+            expected_by_form.setdefault(form, []).append(place)
             expected_raw.setdefault(form, [form])
         # Every form Omorfi so much as generated, whatever `ok`, so the
         # precision pass can tell "Omorfi asserts it but Voikko does not" from

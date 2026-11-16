@@ -606,3 +606,12 @@ exhaustive pass over `1, 2, 5, 6, 10, 12, 39, 40` audited 18,148 lemmas and
 2,049,728 forms. It found only the class-5 `vuori` compounds, `uros`/
 `merirosvous`, and the remaining class-5 i-plural promotions; all are closed.
 The smaller classes were already fully covered by `n=1000`.
+
+
+### Adjective follow-up
+
+`report_by_class.py` gained `--pos adjective --bare` and now honours the
+requested cell grid in the materialised-oracle path. The adjective `n=1000`
+sample is 76,440 confirmed / 0 missing / 0 illegal / 0 not-plain. It exposed
+the `34*A` geminating `-ton` adjective (`seksitön`) and the adjective
+superlative `perin` (`sisin`/36), both now sourced and tested.

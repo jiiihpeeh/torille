@@ -100,6 +100,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     )
     p.add_argument("-n", "--per-class", type=int, default=5,
                    help="lemmas to check per class (default: 5)")
+    p.add_argument("--pos", choices=("noun", "adjective"), default="noun",
+                   help="part of speech to audit (default: noun)")
     p.add_argument("-c", "--classes", default="all",
                    help="comma-separated class numbers to report, or 'all'")
     p.add_argument("-j", "--jobs", type=int, default=4,
@@ -367,7 +369,7 @@ def main(argv: list[str]) -> int:
         eprint("--raw-illegal cannot be combined with --verify-illegal "
                "or --strict-illegal")
         return 2
-    harness = Harness(pos="noun", lexicon=args.lexicon)
+    harness = Harness(pos=args.pos, lexicon=args.lexicon)
     verifier = None
     verifier_lock = None
     evidence = None
@@ -388,7 +390,8 @@ def main(argv: list[str]) -> int:
             # run: the curated rules would still be applied, but the live
             # second opinion would be missing without saying so.
             return 2
-    buckets = harness.words_in_class("substantiivi", args.classless)
+    part_of_speech = "adjektiivi" if args.pos == "adjective" else "substantiivi"
+    buckets = harness.words_in_class(part_of_speech, args.classless)
 
     def class_key(c: str) -> tuple[int, int, str]:
         # `(none)` and `(none:<class>)` are the rows the sanalista gives no type

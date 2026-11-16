@@ -232,6 +232,9 @@ const DISPATCH: &[(&str, fn(&str, bool) -> Vec<Form>)] = &[
     ("33*K", class_33K::inflect),
     ("33*L", class_33L::inflect),
     ("34", class_34::inflect),
+    // `seksitön` is the one 34*A member; Wiktionary's onneton table
+    // geminates the oblique (seksittömän), the same shape as 34*C.
+    ("34*A", class_34C::inflect),
     ("34*C", class_34C::inflect),
     ("35*H", class_35H::inflect),
     ("36", class_36::inflect),

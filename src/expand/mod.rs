@@ -382,6 +382,14 @@ pub fn inflect_in(
     if try_irregular(lemma, possessives, pos, &mut out) {
         return out;
     }
+    // `perin` is the class-99 superlative `sisin` (Wiktionary
+    // `fi-decl-sisin|per|ä`) when it is the adjective; the same spelling as
+    // the adverb is indeclinable. The class-99 engine has no superlative
+    // grid, so route the adjective reading to class 36.
+    if lemma == "perin" && pos == PartOfSpeech::Adjective {
+        out.extend(nominals::class_36::inflect(lemma, possessives));
+        return out;
+    }
     if try_compound_marker(lemma, inflection, cat, lexicon, pos, possessives, &mut out) {
         return out;
     }
@@ -870,6 +878,26 @@ mod tests {
             .into_iter()
             .map(|g| g.word)
             .collect()
+    }
+
+    /// `perin` is the adjective superlative `sisin`; the adverb homonym is
+    /// indeclinable and stays on the class-99 path.
+    #[test]
+    fn perin_adjective_routes_to_the_superlative() {
+        let cat = cat();
+        let forms = inflect(
+            "perin",
+            Inflection {
+                class: 99,
+                gradation: None,
+            },
+            &cat,
+            PartOfSpeech::Adjective,
+            false,
+        );
+        let words: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
+        assert!(words.contains(&"perimmän"));
+        assert!(words.contains(&"perimmät"));
     }
 
     /// The plural stem the catalogue's partitive plural gives a class, at the

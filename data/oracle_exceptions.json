@@ -548,6 +548,61 @@
       "note": "harmaakaihi is both risti (harmaakaiheitta) and ovi (harmaakaihitta); the engine's risti plural is the second standard table, while the oracle keeps the ovi forms."
     },
     {
+      "id": "lemma-41-kallis-kaunis-rare-illative",
+      "classes": ["41"],
+      "lemmas": ["kallis", "kaunis"],
+      "predicate": "form",
+      "forms": ["kalliihin", "kauniihin"],
+      "sample": 1000,
+      "applies_to": ["not_plain"],
+      "source": "https://en.wiktionary.org/wiki/kallis#Finnish",
+      "note": "Wiktionary marks the plural illative kalliihin/kauniihin as a rare alternate beside kalliisiin/kauniisiin; the engine keeps it repaired, which is correct."
+    },
+    {
+      "id": "lemma-9a-silkka-wrong-instructive",
+      "classes": ["9*A"],
+      "lemmas": ["silkka"],
+      "predicate": "form",
+      "forms": ["silkin"],
+      "sample": 1000,
+      "applies_to": ["missing"],
+      "source": "https://en.wiktionary.org/wiki/silkka#Finnish",
+      "note": "Wiktionary's kala table gives the plural instructive silkoin; the oracle's silkin is not a form of the adjective."
+    },
+    {
+      "id": "lemma-5a-ubiikki-instructive",
+      "classes": ["5*A"],
+      "lemmas": ["ubiikki"],
+      "predicate": "form",
+      "forms": ["ubiikkein"],
+      "sample": 1000,
+      "applies_to": ["not_plain"],
+      "source": "https://en.wiktionary.org/wiki/ubiikki#Finnish",
+      "note": "Wiktionary's risti table gives ubiikein; the engine keeps the ubiikkein alternate repaired, which is correct."
+    },
+    {
+      "id": "lemma-9-taaja-instructive",
+      "classes": ["9"],
+      "lemmas": ["taaja"],
+      "predicate": "form",
+      "forms": ["taajin"],
+      "sample": 1000,
+      "applies_to": ["not_plain"],
+      "source": "https://en.wiktionary.org/wiki/taaja#Finnish",
+      "note": "Wiktionary's kala table gives taajoin; the engine keeps the taajin alternate repaired, which is correct."
+    },
+    {
+      "id": "lemma-17-vajaa-illative",
+      "classes": ["17"],
+      "lemmas": ["vajaa"],
+      "predicate": "form",
+      "forms": ["vajaahan"],
+      "sample": 1000,
+      "applies_to": ["not_plain"],
+      "source": "https://en.wiktionary.org/wiki/vajaa#Finnish",
+      "note": "Wiktionary's vapaa table gives vajaaseen; the engine keeps the vajaahan alternate repaired, which is correct."
+    },
+    {
       "id": "compound-50-class-2-head-i-plural",
       "classes": ["50"],
       "predicate": "head-class",

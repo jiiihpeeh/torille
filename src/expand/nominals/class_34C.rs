@@ -30,6 +30,13 @@ mod tests {
     }
 
     #[test]
+    fn ton_a_adjective_geminates_too() {
+        let w = words("seksitön");
+        assert!(w.contains(&"seksittömän".to_string()));
+        assert!(w.contains(&"seksittömiä".to_string()));
+    }
+
+    #[test]
     fn tton() {
         let w = words("aateliton");
         assert!(w.contains(&"aateliton".to_string()));

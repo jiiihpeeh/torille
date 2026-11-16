@@ -1880,3 +1880,11 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   class-5 i-plural list); after sourcing them with Wiktionary, both are 0
   missing / 0 illegal / 0 not-plain. The `n=1000`, `n=100` and `n=20`
   samples remain clean; the n=5 evidence gate now has 121 rules.
+
+- 2026-11-17: adjective coverage is now measurable. `report_by_class.py --pos
+  adjective --bare` audits the adjective rows in `kotus_nomines.sqlite`; the
+  n=1000 sample is 76,440 confirmed / 0 missing / 0 illegal / 0 not-plain.
+  The pass added the `34*A` `-ton` geminating reading (`seksitön`) and routed
+  the adjective `perin` to the class-36 superlative (`perimmän`, `perimmät`).
+  The four remaining sample findings were Wiktionary-sourced rare alternates
+  (`silkin`, `ubiikkein`, `taajin`, `vajaahan`, `kalliihin`, `kauniihin`).
