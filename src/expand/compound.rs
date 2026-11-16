@@ -182,25 +182,21 @@ pub(super) fn compound_paradigm(
                 continue;
             }
             for h in &heads {
-                // A hyphenated class-51 lemma keeps its hyphen in every
-                // cell: `nuori-isäntä` is an established expression, so the
-                // table is `nuoren-isännän`, `nuorta-isäntää`,
-                // `nuoret-isännät`, not the closed spelling a generic
-                // compound would use. The separator is not part of either
-                // part, so it is chosen here.
                 let tail_surface = shape.surface(&t.word);
-                // An identical-vowel boundary is written with a hyphen:
-                // `vanhaksi-isännäksi`, `vanhoiksi-isänniksi`, and, per
-                // Wiktionary's `isotaivot`, `isoja-aivoja`, `isoissa-aivoissa`
-                // and `isoilta-aivoilta`. A different vowel stays closed:
-                // `isoilleaivoille`, `isoiksiaivoiksi`, `isojen aivojen`
-                // without the space (`isojenaivojen`).
+                // The hyphen marks an identical-vowel boundary, not the
+                // lemma's spelling. `nuori-isäntä` is hyphenated because
+                // `nuori` + `isäntä` is `i` + `i`, and the citation keeps it;
+                // the inflected modifier usually ends in another vowel, so the
+                // form closes (`nuorenisännän`, `nuorettaisännättä`). Where the
+                // boundary stays identical the hyphen stays
+                // (`nuoreksi-isännäksi`, `nuoriksi-isänniksi`). Wiktionary's
+                // `nuori-isäntä` entry passes `space=` to the same template,
+                // and the materialised oracle confirms the closed forms.
                 let head_last = h.chars().last();
                 let boundary_hyphen = class == 51
-                    && prefix != "-"
                     && head_last.is_some_and(crate::is_vowel)
                     && head_last == tail_surface.chars().next();
-                let separator = if class == 51 && (prefix == "-" || boundary_hyphen) {
+                let separator = if class == 51 && boundary_hyphen {
                     "-"
                 } else {
                     ""
@@ -355,10 +351,10 @@ fn find_parts<'a>(
             }
         }
         // `nuori-isäntä` is the one class-51 lemma the sanalista writes with a
-        // hyphen. The hyphen belongs to the established expression and is kept
-        // in every cell (`nuoren-isännän`, `nuorta-isäntää`), so the parts are
-        // joined with it. The ordinary head scan cannot see the word because
-        // the tail it looks for is `-isäntä`, hyphen included.
+        // hyphen. The ordinary head scan cannot see the word because the tail
+        // it looks for is `-isäntä`, hyphen included, so it is split here.
+        // Whether a generated cell keeps a hyphen is decided per cell by the
+        // identical-vowel boundary rule in [`compound_paradigm`].
         if parts.is_empty()
             && let Some((head_word, tail_word)) = lemma.split_once('-')
             && head_word.chars().count() >= SHORTEST_HEAD

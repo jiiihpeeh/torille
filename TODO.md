@@ -138,13 +138,13 @@ still open.
   `7*D` flag. `check_word_against_omorfi.py lovi ovi joki` now reports
   **all 153 confirmed forms plain** for each.
 
-  The current 20-lemma noun sample is 226,716 confirmed, 216 missing, 8
+  The current 20-lemma noun sample is 226,716 confirmed, 100 missing, 12
   oracle-only, 0 not-plain, 61 illegal. The remaining missing rows are the
-  class-51 compound gap (116), the class-7*D `laki` homonym artifact (76) and
-  class 24 (18); the remaining illegal rows are class 13 (26), 24 (24), 27
-  (7), 49 (2), 21 (1) and 41 (1). The next fix is those stems, not another
-  possessive filter. The older 14,026 figure predates the possessive rounds
-  and the current sample.
+  class-7*D `laki` homonym artifact (76), class 24's `kuusi` noun/numeral
+  homonym (18), class 5*D (5) and class 5*F (1); the remaining illegal rows
+  are class 13 (26), 24 (24), 27 (7), 49 (2), 21 (1) and 41 (1). The next fix
+  is those stems, not another possessive filter. The older 14,026 figure
+  predates the possessive rounds and the current sample.
 
   Evidence: `docs/harness.md` → Known defects → A.
 
@@ -1743,3 +1743,17 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   alternate forms. The 20-lemma noun sample moves from 226,569 confirmed /
   268 illegal / 107 not-plain to 226,716 confirmed / 61 illegal / 0
   not-plain; class 11, 7*F and 99 are clean.
+
+- 2026-11-16: class-51 hyphen rule corrected. A hyphenated class-51 lemma keeps
+  the hyphen only at an identical-vowel boundary, not in every cell: the
+  citation `nuori-isäntä` and the translatives `nuoreksi-isännäksi` /
+  `nuoriksi-isänniksi` stay hyphenated, while `nuorenisännän`,
+  `nuortaisäntää`, `nuorittaisännittä` and the rest close. Wiktionary's
+  `nuori-isäntä` entry passes `space=` to its declension template, and the
+  oracle's `both` rows agree. `pahahenki`'s strong nominative possessives
+  (`pahahenkini`, `pahahenkisi`, `pahahenkimme`, `pahahenkinne`) are
+  oracle-only: Wiktionary's `fi-decl-kala-ovi|space=` table gives the weak
+  `pahahenkeni`, `pahahenkesi`, `pahahenkemme`, `pahahenkenne`,
+  `pahahenkensä`, which the engine already emits. Class 51 is now 0 missing and
+  0 illegal; the 20-lemma sample is 226,716 confirmed / 100 missing / 12
+  oracle-only / 61 illegal.

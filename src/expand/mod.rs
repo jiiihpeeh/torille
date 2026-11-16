@@ -1547,17 +1547,20 @@ mod tests {
         );
     }
 
-    /// A hyphenated class-51 compound keeps its hyphen in every cell.
+    /// A hyphenated class-51 compound keeps the hyphen only at an
+    /// identical-vowel boundary.
     ///
     /// `nuori-isäntä` is the one class-51 lemma the sanalista writes with a
-    /// hyphen, and the hyphen is part of the established expression rather than
-    /// a nominative-only boundary marker: the table is `nuoren-isännän`,
-    /// `nuorta-isäntää`, `nuoret-isännät`. `find_parts` could not see it before
-    /// because it looks for `isäntä` after the head and the row spells the tail
-    /// `-isäntä`.
+    /// hyphen, and the citation keeps it because `nuori` + `isäntä` is `i` +
+    /// `i`. The inflected modifier usually ends in another vowel, so the form
+    /// closes: `nuorenisännän`, `nuortaisäntää`, `nuoretisännät`,
+    /// `nuorittaisännittä`. Where the boundary stays identical the hyphen
+    /// stays (`nuoreksi-isännäksi`, `nuoriksi-isänniksi`). Wiktionary's
+    /// `nuori-isäntä` entry passes `space=` to the declension template, and the
+    /// materialised oracle confirms the closed forms.
     #[cfg(feature = "generated-nominals")]
     #[test]
-    fn a_hyphenated_class_51_compound_keeps_its_hyphen() {
+    fn a_hyphenated_class_51_compound_keeps_only_the_boundary_hyphen() {
         let cat = cat();
         let lexicon = crate::kotus::sanalista().to_lemmas();
         let forms: Vec<String> = inflect_in(
@@ -1576,34 +1579,45 @@ mod tests {
         .collect();
         for expected in [
             "nuori-isäntä",
-            "nuoren-isännän",
-            "nuorta-isäntää",
-            "nuoressa-isännässä",
-            "nuoresta-isännästä",
-            "nuoreen-isäntään",
-            "nuorella-isännällä",
-            "nuorelta-isännältä",
-            "nuorelle-isännälle",
-            "nuorena-isäntänä",
+            "nuorenisännän",
+            "nuortaisäntää",
+            "nuoressaisännässä",
+            "nuorestaisännästä",
+            "nuoreenisäntään",
+            "nuorellaisännällä",
+            "nuoreltaisännältä",
+            "nuorelleisännälle",
+            "nuorenaisäntänä",
             "nuoreksi-isännäksi",
-            "nuoretta-isännättä",
-            "nuoret-isännät",
-            "nuorten-isäntien",
-            "nuoria-isäntiä",
-            "nuorissa-isännissä",
-            "nuorista-isännistä",
-            "nuoriin-isäntiin",
-            "nuorilla-isännillä",
-            "nuorilta-isänniltä",
-            "nuorille-isännille",
-            "nuorina-isäntinä",
+            "nuorettaisännättä",
+            "nuoretisännät",
+            "nuortenisäntien",
+            "nuoriaisäntiä",
+            "nuorissaisännissä",
+            "nuoristaisännistä",
+            "nuoriinisäntiin",
+            "nuorillaisännillä",
+            "nuoriltaisänniltä",
+            "nuorilleisännille",
+            "nuorinaisäntinä",
             "nuoriksi-isänniksi",
-            "nuoritta-isännittä",
-            "nuorin-isännin",
+            "nuorittaisännittä",
+            "nuorinisännin",
         ] {
             assert!(
                 forms.iter().any(|f| f == expected),
                 "{expected} is missing from nuori-isäntä"
+            );
+        }
+        for wrong in [
+            "nuoren-isännän",
+            "nuorta-isäntää",
+            "nuoret-isännät",
+            "nuoritta-isännittä",
+        ] {
+            assert!(
+                !forms.iter().any(|f| f == wrong),
+                "{wrong} must be written closed"
             );
         }
     }
@@ -3342,9 +3356,9 @@ mod tests {
         let ws = forms("nuori-isäntä", 51, None);
         for want in [
             "nuori-isäntä",
-            "nuoren-isännän",
-            "nuorta-isäntää",
-            "nuoret-isännät",
+            "nuorenisännän",
+            "nuortaisäntää",
+            "nuoretisännät",
         ] {
             assert!(ws.iter().any(|w| w == want), "missing {want}");
         }

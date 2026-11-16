@@ -457,6 +457,17 @@
       "sample": 20,
       "source": "https://en.wiktionary.org/wiki/vyyhti#Finnish",
       "note": "Wiktionary gives vyyhti both the 7*F ovi and the 5*F risti declension. The oracle generated only the 7*F column and wrote the 5*F plural (vyyhdit, vyyhteinä, vyyhteihin, vyyhdeittä, ...) as engine rows, so the engine's risti plural is real but not ok='both'."
+    },
+    {
+      "id": "lemma-51-pahahenki-strong-nom-possessive-missing",
+      "classes": ["51"],
+      "lemmas": ["pahahenki"],
+      "cell": {"case": "NOM", "number": "SG"},
+      "predicate": "lemma",
+      "sample": 20,
+      "applies_to": ["missing"],
+      "source": "https://en.wiktionary.org/wiki/pahahenki#Finnish",
+      "note": "Wiktionary's pahahenki entry is the closed alt form of paha henki, and its fi-decl-kala-ovi|space= table gives the weak nominative singular possessives pahahenkeni, pahahenkesi, pahahenkemme, pahahenkenne and pahahenkensä (the henki table agrees). The oracle's strong pahahenkini/pahahenkisi/pahahenkimme/pahahenkinne are Voikko-accepted alternates, not the standard forms, so they are oracle-only."
     }
   ]
 }

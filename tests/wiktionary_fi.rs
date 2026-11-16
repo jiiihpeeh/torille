@@ -12,7 +12,10 @@ use torille::tags::PartOfSpeech;
 
 /// The Finnish Wiktionary declension of `nuori-isäntä`.
 ///
-/// Both parts inflect, and the hyphen is kept in every cell.
+/// Both parts inflect. The hyphen marks an identical-vowel boundary, so the
+/// citation `nuori-isäntä` and `nuoreksi-isännäksi` keep it while the cells
+/// whose boundary differs close (`nuorenisännän`, `nuortaisäntää`). The
+/// Wiktionary entry passes `space=` to its declension template.
 #[test]
 fn nuori_isanta_matches_the_wiktionary_table() {
     let cat = Catalogues::embedded();
@@ -33,16 +36,17 @@ fn nuori_isanta_matches_the_wiktionary_table() {
     for want in [
         // Singular.
         "nuori-isäntä",
-        "nuoren-isännän",
-        "nuorta-isäntää",
-        "nuoreen-isäntään",
-        "nuoresta-isännästä",
+        "nuorenisännän",
+        "nuortaisäntää",
+        "nuoreenisäntään",
+        "nuorestaisännästä",
+        "nuoreksi-isännäksi",
         // Plural.
-        "nuoret-isännät",
-        "nuorten-isäntien",
-        "nuoria-isäntiä",
-        "nuoriin-isäntiin",
-        "nuorista-isännistä",
+        "nuoretisännät",
+        "nuortenisäntien",
+        "nuoriaisäntiä",
+        "nuoriinisäntiin",
+        "nuoristaisännistä",
     ] {
         assert!(
             forms.iter().any(|form| form == want),
@@ -51,7 +55,12 @@ fn nuori_isanta_matches_the_wiktionary_table() {
     }
 
     // The whole-word catalogue alignment used to invent `nuori-idenkuun`.
-    for wrong in ["nuori-idenkuun", "nuori-isäntään"] {
+    for wrong in [
+        "nuori-idenkuun",
+        "nuori-isäntään",
+        "nuoren-isännän",
+        "nuorta-isäntää",
+    ] {
         assert!(
             !forms.iter().any(|form| form == wrong),
             "invented {wrong} instead of using the split"
