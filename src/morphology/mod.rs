@@ -1800,3 +1800,34 @@ mod tests {
         );
     }
 }
+
+
+#[cfg(test)]
+mod arkisin_tests {
+    use super::*;
+    use crate::tags::{Case, Number, PartOfSpeech};
+
+    /// Wiktionary's `arkisin` has three readings: the weekday adverb, the
+    /// superlative of `arkinen`, and the instructive plural of `arkinen`.
+    /// The morphology pass must keep all three.
+    #[test]
+    fn arkisin_keeps_the_adverb_and_both_adjective_readings() {
+        let tokens = crate::tokenise::tokenise("arkisin");
+        let mut cache = MorphologyCache::new();
+        let morphology = analyze_morphology(&tokens, &mut cache);
+        let readings = morphology.word(0).expect("arkisin resolves").readings();
+        assert!(readings.iter().any(|tags| {
+            tags.part_of_speech == Some(PartOfSpeech::Adverb)
+        }));
+        assert!(readings.iter().any(|tags| {
+            tags.part_of_speech == Some(PartOfSpeech::Adjective)
+                && tags.case == Some(Case::Nominative)
+                && tags.number == Some(Number::Singular)
+        }));
+        assert!(readings.iter().any(|tags| {
+            tags.part_of_speech == Some(PartOfSpeech::Adjective)
+                && tags.case == Some(Case::Instructive)
+                && tags.number == Some(Number::Plural)
+        }));
+    }
+}
