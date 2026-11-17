@@ -825,25 +825,31 @@ analysis refinements”.
   prenominal attribute, a postposed attribute and a participle complement are
   no longer rewritten by a rection frame. On `page-2000` that removes 7 false
   positives (54 → 47 diagnostics).
+  The agreement and attribute half is fixed too: a finite form that is also an
+  instructive/infinitive is not an agreement bearer, `kaikki` never decides
+  the number, a comma plus a personal pronoun plus its verb starts a clause,
+  and only a `Modifier` in a clause with a predicate is an attribute candidate.
+  On `page-2000` the two rounds together remove 20 false positives
+  (54 → 34 diagnostics) with none added.
   Still open, in order of measured frequency:
-  - **predicate selection with two finite candidates in one clause.** A merged
-    subordinate clause whose comma falls before the subject rather than before
-    the verb (`kun häneltä kysyttiin, hän vastasi`) keeps both verbs in one
-    clause, so the first one becomes the predicate and the main clause's
-    subject is read as its argument. Quotative inversion (`sanoi hän`,
-    `kysyi hän`, `valitti hän`) is the same shape; it accounts for three more
-    `verb_rection`/`object_case` rows.
+  - **quotative inversion with a quoted subject.** `sanoi hän`, `kysyi hän`,
+    `valitti hän` keep their subject inside a preceding quotation
+    (`sinä, Heintsi', sanoi hän`), so the agreement and object-case rules read
+    the quote's pronoun instead of `hän`. Three rows.
   - **an infinitive clause's nominative subject.** `alkoi tulla ... puute` and
     `Haluan mennä koulu` cannot be told apart without the governing finite
     verb: the nominative is the infinitive's subject in the first and the
     rection error in the second. Needs the governing verb's agreement, not the
     infinitive's.
-  - **quotative and absolute constructions.** `lapsi sylissä`, `vuorta
-    ylöspäin` outside the closed direction set.
+  - **absolute constructions.** `lapsi sylissä`, `Päivän vaietessa`,
+    `niitä seuraamaan`: a nominal plus an oblique form that is not the verb's
+    argument.
+  - **`vaikka` as an adverb** (`kerron vaikka tästä`) and `sen kun`, which the
+    comma rule reads as subordinators.
   - **the negated-clause object rule** beyond the reviewed `sillä` rows.
-  - **the adverb/nominal interaction** (the `attribute_agreement` rows where a
-    pronoun or oblique nominal is taken as the attribute of the following
-    word).
+  - **indirect questions and vocatives**: `katsokaa, miten puut heiluvat.` is a
+    reported question, not a missing question mark; `Jumala, ole minulle
+    armollinen` is a vocative, not a rection argument.
   These are grammar-checker bugs independent of M0. Re-run `ud_m0_eval` and
   `m0_prose_eval` after each fix; a larger model remains blocked meanwhile.
 
@@ -1110,3 +1116,14 @@ intended/competing interpretation pair that fails.
   `page-2000`: 54 → 47 diagnostics, all seven removed rows adjudicated as
   false positives, none added; the clean corpus, the ambiguity fixture and
   `m0_prose_eval` (66 rows, 0 diagnostics) stay green.
+- 2026-11-18: agreement and attribute hardening (second round of the same
+  item). The agreement rule skips a bearer that is also an instructive or
+  infinitive (`ihastellen`, `elää`, `ihmetellen`) and never takes `kaikki` as
+  the number cue. A comma followed by a personal pronoun and then a finite
+  predicate starts a clause (`kun häneltä kysyttiin, hän vastasi`). Only a
+  `Modifier` in a clause with a predicate is an attribute candidate, and among
+  the pronouns only the demonstratives are attributive, so `minulle`,
+  `niille`, `häntä` and `mutta` are no longer compared with the following
+  noun. Measured on `page-2000`: 47 → 34 diagnostics, all removed rows
+  adjudicated false positives, none added; 11 new clean rows and two ambiguity
+  cases pin the behaviour.

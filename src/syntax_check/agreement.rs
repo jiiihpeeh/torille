@@ -87,6 +87,20 @@ fn check_subject_predicate(
         {
             continue;
         }
+        // A spelling that is both a finite form and an instructive or
+        // infinitive is not a clear predicate: `ihastellen` is the potential
+        // 1sg of `ihastella` *and* its instructive, and the instructive is the
+        // reading a text almost always means (`sinä rannassa, ihastellen
+        // kalojani`). Diagnosing the accidental one is a false positive, and
+        // this rule needs a clear bearer.
+        if has_non_finite_verb_reading(&analysis.tokens[bearer.index]) {
+            continue;
+        }
+        // `kaikki` is “everything” with a singular verb and “all (of them)”
+        // with a plural one, so it never decides the number on its own.
+        if analysis.tokens[subject.index].key == "kaikki" {
+            continue;
+        }
         if subject.person == bearer.person && subject.number == bearer.number {
             continue;
         }
@@ -283,12 +297,26 @@ fn check_attributes(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         let predicate_less = has_predicate
             .get(syntax.clause)
             .is_none_or(|has_predicate| !has_predicate);
-        if !tokens[index].is_word()
-            || !(matches!(
+        if !tokens[index].is_word() {
+            continue;
+        }
+        // A clause with a finite predicate has a role for everything that can
+        // have one, and only a `Modifier` is an attribute. A pronoun in an
+        // oblique case (`niille`, `minulle`), an object or a complement is not
+        // compared with the following noun: `panna niille raha-arvo` and
+        // `sai tuskin sanotuksi` are not agreement errors.
+        //
+        // A predicate-less clause (a heading, a fragment, `Punaisessa auto.`)
+        // keeps the shape-based reading, because there is no role to rely on.
+        let candidate = if predicate_less {
+            matches!(
                 syntax.role,
-                SyntacticRole::Modifier | SyntacticRole::Unknown
-            ) || (predicate_less && syntax.role == SyntacticRole::Adverbial))
-        {
+                SyntacticRole::Modifier | SyntacticRole::Unknown | SyntacticRole::Adverbial
+            )
+        } else {
+            syntax.role == SyntacticRole::Modifier
+        };
+        if !candidate {
             continue;
         }
         // A relative pronoun (`joka`, `jotka`, `jossa`, ...) introduces a
@@ -615,7 +643,7 @@ fn adjective_shape(token: &TokenSyntax) -> Option<(Case, Number)> {
 fn attribute_degree(token: &TokenSyntax) -> Option<Option<Degree>> {
     let mut seen: Vec<Option<Degree>> = Vec::new();
     for reading in &token.readings {
-        if !is_attribute_pos(reading.part_of_speech) {
+        if !is_attribute_pos(&token.key, reading.part_of_speech) {
             continue;
         }
         seen.push(reading.degree);
@@ -627,7 +655,7 @@ fn attribute_degree(token: &TokenSyntax) -> Option<Option<Degree>> {
 fn attribute_shape(token: &TokenSyntax) -> Option<(Case, Number)> {
     let mut shape: Option<(Case, Number)> = None;
     for reading in &token.readings {
-        if !is_attribute_pos(reading.part_of_speech) {
+        if !is_attribute_pos(&token.key, reading.part_of_speech) {
             continue;
         }
         let Some(candidate) = reading.case.zip(reading.number) else {
@@ -665,15 +693,26 @@ fn attribute_pos(token: &TokenSyntax) -> Option<PartOfSpeech> {
         .readings
         .iter()
         .find_map(|reading| {
-            is_attribute_pos(reading.part_of_speech).then_some(reading.part_of_speech?)
+            is_attribute_pos(&token.key, reading.part_of_speech)
+                .then_some(reading.part_of_speech?)
         })
 }
 
-fn is_attribute_pos(pos: Option<PartOfSpeech>) -> bool {
-    matches!(
-        pos,
-        Some(PartOfSpeech::Adjective | PartOfSpeech::Ordinal | PartOfSpeech::Pronoun)
-    )
+/// Which readings can stand as an attributive modifier.
+///
+/// Only the demonstratives among the pronouns do: a personal or indefinite
+/// pronoun in an oblique case (`minulle`, `häntä`, `niille`) is never the
+/// attribute of the following noun, and treating it as one offered `minä` for
+/// `Siellä uusiintui minulle ruumis ja sielu.`.
+fn is_attribute_pos(key: &str, pos: Option<PartOfSpeech>) -> bool {
+    match pos {
+        Some(PartOfSpeech::Adjective | PartOfSpeech::Ordinal) => true,
+        Some(PartOfSpeech::Pronoun) => matches!(
+            key,
+            "se" | "tämä" | "tuo" | "ne" | "nämä" | "nuo" | "sama" | "samat"
+        ),
+        _ => false,
+    }
 }
 
 /// A relative pronoun, whose forms introduce a clause rather than modify a
@@ -932,6 +971,17 @@ fn bearer_of(
         reading,
         person,
         number,
+    })
+}
+
+/// Whether the token also has an instructive or infinitive verb reading.
+///
+/// Used to keep the agreement rule off a spelling collision: the same surface
+/// can be a finite form of one verb and a non-finite form of another.
+fn has_non_finite_verb_reading(token: &TokenSyntax) -> bool {
+    token.readings.iter().any(|reading| {
+        reading.part_of_speech == Some(PartOfSpeech::Verb)
+            && matches!(reading.mood, Some(Mood::Infinitive | Mood::Instructive))
     })
 }
 

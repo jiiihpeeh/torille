@@ -495,6 +495,30 @@
         { "word": "kreivi", "role": "object" }
       ],
       "diagnostics": []
+    },
+    {
+      "id": "comma_pronoun_subject_starts_a_clause",
+      "text": "Kun häneltä kysyttiin, hän vastasi selvästi.",
+      "clauses": 2,
+      "roles": [
+        { "word": "kysyttiin", "role": "predicate" },
+        { "word": "vastasi", "role": "predicate" }
+      ],
+      "forbidden_roles": [
+        { "word": "hän", "role": "object" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "kaikki_takes_either_number",
+      "text": "Kaikki tulivat kotiin.",
+      "clauses": 1,
+      "subject": "kaikki",
+      "roles": [
+        { "word": "kaikki", "role": "subject", "case": "nominative" },
+        { "word": "tulivat", "role": "predicate" }
+      ],
+      "diagnostics": []
     }
   ]
 }

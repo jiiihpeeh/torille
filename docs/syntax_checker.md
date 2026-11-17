@@ -201,6 +201,26 @@ class.
   `predicative_agreement` compare them like any adjective. Degree derivations
   are `Repaired`, so `Punaisempi autot ...` is diagnostic-only: the checker
   names the expected number but does not offer a `Repaired` rewrite.
+- **The agreement bearer must be a clear finite form.** A surface that is
+  both a finite form and an instructive or infinitive is not diagnosed:
+  `ihastellen` is the potential 1sg of `ihastella` *and* its instructive, and
+  the instructive is what a text means (`sinä rannassa, ihastellen kalojani`).
+  The same guard keeps `elää` (`antaa hänen elää`) and `ihmetellen` quiet.
+  `kaikki` likewise never decides the number: it takes a singular verb as
+  “everything” and a plural one as “all of them”.
+- **A clause divider is a comma plus a subject that runs into its verb.** A
+  comma followed by a personal pronoun and then a finite predicate starts a
+  new clause (`kun häneltä kysyttiin, hän vastasi`), the pronoun counterpart
+  of the existing capitalised-name rule (`..., Sikri soitti`). A vocative
+  (`sinä, Heintsi', sanoi ...`) is not one, because the pronoun is followed by
+  a comma rather than its verb.
+- **Only a real attribute is compared.** In a clause with a finite predicate
+  only a `Modifier`-role token is an agreement candidate; a pronoun in an
+  oblique case (`minulle`, `niille`), an object or a complement is not. Among
+  the pronouns only the demonstratives can be attributive, so
+  `Siellä uusiintui minulle ruumis ja sielu.` and `panna niille raha-arvo`
+  stay quiet. A predicate-less fragment keeps the shape-based reading
+  (`Punaisessa auto.`), because there is no role to rely on.
 - **Compound-tense agreement covers the active past participle only.**
   `Me olemme lukenut.` gives `lukeneet`; `Minä olen lukeneet.` gives
   `lukenut`. Passive compound tenses (`Talo on rakennettu`,

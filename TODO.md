@@ -2079,3 +2079,11 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   complement belongs to `olla` only, and `jäädä`/`pysyä` take an
   essive/translative complement. On the committed prose page that removes 7
   adjudicated false positives (54 → 47 diagnostics) with none added.
+
+- 2026-11-18: grammar precision, second round. The agreement rule skips a
+  spelling that is both a finite form and an instructive/infinitive, and never
+  takes `kaikki` as its number cue; a comma plus a personal pronoun plus its
+  verb starts a clause; only a `Modifier` in a clause with a predicate is an
+  attribute candidate, and only demonstratives are attributive among the
+  pronouns. Together with the argument-selection round, `page-2000` drops from
+  54 to 34 diagnostics, all 20 removed rows adjudicated false positives.

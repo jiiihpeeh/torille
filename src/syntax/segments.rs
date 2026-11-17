@@ -127,7 +127,9 @@ pub(super) fn segment_clause_words(
             starts.push(position);
             continue;
         }
-        if starts_capitalised_subject_clause(words, position, tokens, out) {
+        if starts_capitalised_subject_clause(words, position, tokens, out)
+            || starts_pronoun_subject_clause(words, position, tokens, out)
+        {
             starts.push(position);
             continue;
         }
@@ -200,6 +202,39 @@ fn starts_capitalised_subject_clause(
         // predicate. The split is for `..., Sikri soitti`, where the name runs
         // straight into its verb.
         && !has_separator_between(tokens, word, next, ',')
+}
+
+/// `..., hän vastasi`: a comma followed by a personal pronoun that runs
+/// straight into a finite predicate starts a new clause at the pronoun.
+///
+/// This is the pronoun counterpart of [`starts_capitalised_subject_clause`].
+/// Without it a merged `kun häneltä kysyttiin, hän vastasi` keeps both verbs,
+/// the first becomes the clause predicate, and the main clause's subject is
+/// read as the subordinate verb's argument.
+///
+/// `sinä, Heintsi', sanoi ...` is deliberately not one: the pronoun is
+/// followed by a comma, so it is a vocative, not the subject of the predicate.
+fn starts_pronoun_subject_clause(
+    words: &[usize],
+    position: usize,
+    tokens: &[Token],
+    out: &[TokenSyntax],
+) -> bool {
+    if position == 0 {
+        return false;
+    }
+    let word = words[position];
+    if !matches!(
+        out[word].key.as_str(),
+        "minä" | "sinä" | "hän" | "me" | "te" | "he"
+    ) {
+        return false;
+    }
+    let Some(&next) = words.get(position + 1) else {
+        return false;
+    };
+    let finite = is_predicate_candidate(next, out) || is_negative_auxiliary(next, out);
+    finite && has_separator_between(tokens, words[position - 1], word, ',')
 }
 
 /// `sillä` is both “because” and an adessive pronoun (“on it”).
