@@ -703,8 +703,12 @@ Adjacent repetition is not always accidental:
 
 - [ ] **Cold page target**
   `PLAN_GRAMMAR_STYLE_PERF.md` still records the ≤500 ms cold-page target as
-  open: ~1.4 s wasm with the 4-worker pool, ~3 s single-thread. Performance is
-  separate from rule correctness.
+  open. The 2026-11-17 re-measurement is **1,931 ms** cold morphology
+  single-thread (warm all 97 ms; fresh-cache style 1,376 ms), or ~1.4 s with
+  the 4-worker pool. The cost is spread across 1,136 misses in the long tail
+  (slowest word 8.7 ms), not one hotspot; the reverse-index experiment was
+  rejected on blob size. Performance stays a separate engineering objective,
+  not a rule-correctness gate.
 
 ## P3 — future syntax roadmap
 

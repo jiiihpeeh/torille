@@ -1,6 +1,6 @@
 # PLAN_GRAMMAR_STYLE_PERF — one morphology pass for grammar and style
 
-Status: **Phase 0–7 landed/decided; 256-bit stem-shape filter and 4-worker morphology pool landed; cold page ~1.4 s wasm; ≤500 ms open; background and content-panel e2e landed** · 2026-11-14 · branch `syntax` · baseline `2e5f13c`
+Status: **Phase 0–7 landed/decided; 256-bit stem-shape filter and 4-worker morphology pool landed; cold page ~1.4 s wasm / 1.9 s native single-thread; ≤500 ms open; background and content-panel e2e landed** · 2026-11-17 · branch `syntax` · baseline `2e5f13c`
 
 This is the performance plan for the two opt-in analysis layers:
 
@@ -125,6 +125,23 @@ worker chunks the check with progress and cancellation. The sentence cache
 (Phase 4) remains. The cold page target is not met yet: the release wasm is
 ~3.0 s single-thread / ~1.4 s with the 4-worker pool, with first progress at
 ~110 ms.
+
+Re-measured 2026-11-17 on the committed fixture, single-thread:
+
+```text
+page-2000 (1,918 words): cold morphology 1,931 ms, warm morphology 86 ms,
+warm syntax 4.8 ms, warm rules 10.5 ms, warm style 89.9 ms, warm all 97.4 ms,
+style from a fresh cache 1,376 ms; sentence cache cold 94.8 ms.
+cold cache: 1,124 words, 809 hits, 1,136 misses;
+depths: direct 334, stem_map 693, clitic 24, possessive 2, compound 18,
+unknown 53; deep upgrades 12.
+slowest single word: 8.7 ms (`hirvestä`); every other item is under 8.4 ms.
+```
+
+The cost is spread across the long tail, not one word. The reverse-index
+experiment was already rejected on blob size (§Phase 6 decision), so the
+≤500 ms target stays open and this remains a separate engineering objective,
+not a rule-correctness gate.
 
 ## 1. The measured problem
 

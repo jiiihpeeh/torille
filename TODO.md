@@ -2039,3 +2039,10 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   rule set and `tests/word_order_spec.rs` pins its schema. Decisions are
   `FORCE`/`PREFER`/`ALLOW`; SVO is a preference, never an error. The rule
   engine remains deferred until the clause features land.
+
+- 2026-11-17: re-measured the cold page. `page-2000` (1,918 words)
+  single-thread is 1,931 ms cold morphology, 97 ms warm all, and 1,376 ms from
+  a fresh style cache; the 4-worker pool remains ~1.4 s. The cost is spread
+  across the long tail (slowest word 8.7 ms), not a single hotspot. The
+  ≤500 ms target stays open; the reverse-index alternative was already
+  rejected on blob size.
