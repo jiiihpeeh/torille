@@ -5,7 +5,7 @@ use crate::tokenise::Token;
 
 use super::super::analysis::{comma_between, first_word, is_finite, last_word};
 use super::super::diagnostic::{
-    Correction, DiagnosticConfidence, DiagnosticKind, Edit, Severity, SyntaxDiagnostic,
+    Confidence, Correction, CorrectionLicense, DiagnosticKind, Edit, Severity, SyntaxDiagnostic,
 };
 use super::clause::{ClauseKind, clause_kind};
 
@@ -162,7 +162,7 @@ fn comma_missing(at: usize, kind: DiagnosticKind) -> SyntaxDiagnostic {
     let mut diagnostic = SyntaxDiagnostic::new(
         kind,
         Severity::Error,
-        DiagnosticConfidence::High,
+        Confidence::Certain,
         at..at,
         message,
     );
@@ -170,7 +170,9 @@ fn comma_missing(at: usize, kind: DiagnosticKind) -> SyntaxDiagnostic {
         vec![Edit::insertion(at, ",")],
         0.0,
         "comma_missing",
-    )];
+    )
+    .licensed_by(CorrectionLicense::Punctuation)
+    .with_confidence(Confidence::Certain)];
     diagnostic
 }
 

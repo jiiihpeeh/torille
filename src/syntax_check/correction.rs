@@ -13,7 +13,7 @@ use crate::tags::{
 };
 use crate::tokenise::Token;
 
-use super::diagnostic::{Correction, Edit};
+use super::diagnostic::{Confidence as DiagnosticConfidence, Correction, CorrectionLicense, Edit};
 
 /// A cached [`forms_of`] result for one (lemma, inflections, wanted tags, POS).
 ///
@@ -145,7 +145,9 @@ pub fn verb_agreement_corrections(
             vec![Edit::new(token.start, token.end, form.word.clone())],
             distance as f32,
             "subject_predicate_agreement",
-        ));
+        )
+        .licensed_by(CorrectionLicense::Inflection)
+        .with_confidence(DiagnosticConfidence::Certain));
     }
     corrections.sort_by(|a, b| {
         a.score
@@ -216,7 +218,9 @@ pub fn connegative_corrections(
             vec![Edit::new(token.start, token.end, form.word.clone())],
             distance as f32,
             "connegative",
-        ));
+        )
+        .licensed_by(CorrectionLicense::Inflection)
+        .with_confidence(DiagnosticConfidence::Certain));
     }
     corrections.sort_by(|a, b| {
         a.score
@@ -293,7 +297,9 @@ pub fn attribute_agreement_corrections(
             vec![Edit::new(token.start, token.end, form.word.clone())],
             distance as f32,
             "attribute_agreement",
-        ));
+        )
+        .licensed_by(CorrectionLicense::Inflection)
+        .with_confidence(DiagnosticConfidence::Certain));
     }
     corrections.sort_by(|a, b| {
         a.score
@@ -347,7 +353,9 @@ pub fn case_corrections(
             vec![Edit::new(token.start, token.end, form.word.clone())],
             distance as f32,
             "verb_rection",
-        ));
+        )
+        .licensed_by(CorrectionLicense::Inflection)
+        .with_confidence(DiagnosticConfidence::Certain));
     }
     corrections.sort_by(|a, b| {
         a.score
@@ -369,9 +377,13 @@ pub fn negative_auxiliary_correction(
     if word == original {
         return None;
     }
-    Some(Correction::new(
-        vec![Edit::new(start, end, word)],
-        0.0,
-        "subject_predicate_agreement",
-    ))
+    Some(
+        Correction::new(
+            vec![Edit::new(start, end, word)],
+            0.0,
+            "subject_predicate_agreement",
+        )
+        .licensed_by(CorrectionLicense::Inflection)
+        .with_confidence(DiagnosticConfidence::Certain),
+    )
 }

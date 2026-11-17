@@ -82,6 +82,9 @@ pub fn check_tokens_with_morphology(
     diagnostics.extend(repetition::check(tokens, morphology, &covered, &contexts));
     let long_sentences = length::check(tokens, morphology, &diagnostics);
     diagnostics.extend(long_sentences);
+    // The shared contract suppresses ambiguous findings in every layer; the
+    // style pass does not go through the grammar ranker.
+    diagnostics.retain(|diagnostic| diagnostic.confidence.is_actionable());
     diagnostics.sort_by(|a, b| {
         a.span
             .start

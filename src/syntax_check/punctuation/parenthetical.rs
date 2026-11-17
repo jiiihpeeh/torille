@@ -6,7 +6,7 @@ use crate::tokenise::Token;
 
 use super::super::analysis::{clause_words, comma_between, inside_brackets};
 use super::super::diagnostic::{
-    Correction, DiagnosticConfidence, DiagnosticKind, Edit, Severity, SyntaxDiagnostic,
+    Confidence, Correction, CorrectionLicense, DiagnosticKind, Edit, Severity, SyntaxDiagnostic,
 };
 
 /// Cues whose parenthetical can be delimited locally.
@@ -62,7 +62,7 @@ pub(super) fn parenthetical_diagnostics(
             let mut diagnostic = SyntaxDiagnostic::new(
                 DiagnosticKind::CommaMissing,
                 Severity::Suggestion,
-                DiagnosticConfidence::Medium,
+                Confidence::Likely,
                 tokens[index].start..tokens[index].end,
                 "parenthetical_comma",
             );
@@ -73,7 +73,9 @@ pub(super) fn parenthetical_diagnostics(
                 ],
                 0.0,
                 "parenthetical_comma",
-            )];
+            )
+            .licensed_by(CorrectionLicense::Punctuation)
+            .with_confidence(Confidence::Certain)];
             out.push(diagnostic);
         }
     }

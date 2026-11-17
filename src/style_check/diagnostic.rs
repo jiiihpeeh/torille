@@ -1,14 +1,16 @@
 //! Types for the opt-in style layer.
 //!
 //! Style diagnostics reuse the grammar checker's small diagnostic primitives
-//! (`Severity`, `DiagnosticConfidence`, `Correction`) but keep their own kind
+//! (`Severity`, `Confidence`, `Correction`) but keep their own kind
 //! enum. A style finding is always [`Severity::Suggestion`]; the constructor
 //! enforces that, so a rule cannot accidentally turn a preference into an
 //! error.
 
 use std::ops::Range;
 
-use crate::syntax_check::{Correction, DiagnosticConfidence, Severity};
+use crate::diagnostic::{
+    Confidence, Correction, Explanation, Finding, Relation, RuleId, Severity,
+};
 
 /// Stable style categories. Keep the names distinct from the grammar kinds;
 /// a consumer must be able to tell the two streams apart even when a panel
@@ -40,6 +42,15 @@ impl StyleKind {
             StyleKind::Colloquial => "style_colloquial",
         }
     }
+
+    fn relation(self) -> Relation {
+        match self {
+            StyleKind::Repetition => Relation::Repetition,
+            StyleKind::LongSentence => Relation::Length,
+            StyleKind::Cliche | StyleKind::Wordy => Relation::Phrase,
+            StyleKind::Filler | StyleKind::Colloquial => Relation::WordChoice,
+        }
+    }
 }
 
 /// One optional style observation.
@@ -51,14 +62,18 @@ impl StyleKind {
 #[derive(Debug, Clone, PartialEq)]
 pub struct StyleDiagnostic {
     pub kind: StyleKind,
+    /// Stable rule identifier for ignore/dismiss lists.
+    pub rule_id: RuleId,
     pub severity: Severity,
-    pub confidence: DiagnosticConfidence,
+    pub confidence: Confidence,
     /// The smallest source span the UI should highlight.
     pub span: Range<usize>,
     /// Stable message key, normally [`StyleKind::name`].
     pub message: &'static str,
     /// The matched phrase or lemma, for the panel and debugging.
     pub expected: Option<String>,
+    /// Stable relation/key explanation, independent of any correction.
+    pub explanation: Option<Explanation>,
     pub corrections: Vec<Correction>,
 }
 
@@ -66,19 +81,51 @@ impl StyleDiagnostic {
     /// A suggestion-only diagnostic.
     pub fn new(
         kind: StyleKind,
-        confidence: DiagnosticConfidence,
+        confidence: Confidence,
         span: Range<usize>,
         message: &'static str,
     ) -> Self {
         Self {
             kind,
+            rule_id: RuleId::new(message),
             severity: Severity::Suggestion,
             confidence,
             span,
             message,
             expected: None,
+            explanation: Some(Explanation::new(kind.relation(), message)),
             corrections: Vec::new(),
         }
+    }
+}
+
+impl Finding for StyleDiagnostic {
+    fn rule_id(&self) -> RuleId {
+        self.rule_id
+    }
+
+    fn severity(&self) -> Severity {
+        self.severity
+    }
+
+    fn confidence(&self) -> Confidence {
+        self.confidence
+    }
+
+    fn span(&self) -> &Range<usize> {
+        &self.span
+    }
+
+    fn message(&self) -> &'static str {
+        self.message
+    }
+
+    fn explanation(&self) -> Option<&Explanation> {
+        self.explanation.as_ref()
+    }
+
+    fn corrections(&self) -> &[Correction] {
+        &self.corrections
     }
 }
 
@@ -104,7 +151,7 @@ mod tests {
     fn a_style_diagnostic_is_always_a_suggestion() {
         let diagnostic = StyleDiagnostic::new(
             StyleKind::LongSentence,
-            DiagnosticConfidence::Medium,
+            Confidence::Likely,
             0..4,
             StyleKind::LongSentence.name(),
         );

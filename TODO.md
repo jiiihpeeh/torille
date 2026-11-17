@@ -1936,3 +1936,15 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   (`ilman Jumalan tahtomatta`) stay quiet. The page-2000 sweep found that one
   false positive before the guard; the adjudicated prose and clean syntax
   corpora stay at baseline.
+
+- 2026-11-17: the P1 diagnostic-contract refactor landed. `src/diagnostic.rs`
+  now owns `RuleId`, `Confidence::{Certain,Likely,Ambiguous}`, `Relation`/
+  `Explanation`, `CorrectionLicense`, and the `Finding` trait; syntax and style
+  diagnostics both carry `rule_id` and `explanation`, and
+  `CheckAll::findings()` exposes one contract over both streams. `rank::resolve`
+  suppresses `Ambiguous` findings and downgrades an `Error` that is only
+  `Likely` to `Warning`. Corrections record their license and confidence; the
+  wasm object and the Leptos panels expose the rule id, relation, and
+  correction provenance. Added a suppression case to the ambiguity fixture and
+  a cross-layer contract test. Workspace tests and clippy are green; the
+  adjudicated prose baseline is unchanged.

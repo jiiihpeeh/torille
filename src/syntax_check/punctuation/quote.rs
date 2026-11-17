@@ -4,7 +4,7 @@ use crate::sentence;
 use crate::tokenise::Token;
 
 use super::super::diagnostic::{
-    DiagnosticConfidence, DiagnosticKind, Severity, SyntaxDiagnostic,
+    Confidence, DiagnosticKind, Severity, SyntaxDiagnostic,
 };
 
 /// One warning for a quote left open at the end of the document.
@@ -23,7 +23,7 @@ pub(super) fn quote_diagnostics(
     vec![SyntaxDiagnostic::new(
         DiagnosticKind::UnbalancedQuote,
         Severity::Warning,
-        DiagnosticConfidence::Medium,
+        Confidence::Likely,
         at..at,
         "unbalanced_quote",
     )]

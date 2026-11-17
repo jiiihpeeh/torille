@@ -14,7 +14,7 @@ use crate::tokenise::Token;
 
 use super::analysis::{candidate_number, clause_words, nominal_case, nominal_pos};
 use super::correction;
-use super::diagnostic::{DiagnosticConfidence, DiagnosticKind, Severity, SyntaxDiagnostic};
+use super::diagnostic::{Confidence, DiagnosticKind, Severity, SyntaxDiagnostic};
 
 /// Which side of the adposition its complement can stand on.
 #[derive(Clone, Copy)]
@@ -96,9 +96,9 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
             }
             let confident = syntax.confidence == RoleConfidence::Likely;
             let (severity, confidence) = if confident {
-                (Severity::Error, DiagnosticConfidence::High)
+                (Severity::Error, Confidence::Certain)
             } else {
-                (Severity::Warning, DiagnosticConfidence::Medium)
+                (Severity::Warning, Confidence::Likely)
             };
             let mut diagnostic = SyntaxDiagnostic::new(
                 DiagnosticKind::CaseSelection,

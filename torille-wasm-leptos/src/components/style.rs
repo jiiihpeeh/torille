@@ -6,7 +6,7 @@
 
 use leptos::prelude::*;
 use torille::style_check::{self, StyleDiagnostic, StyleKind};
-use torille::syntax_check::Severity;
+use torille::syntax_check::{Relation, Severity};
 
 use super::syntax::apply_correction;
 
@@ -69,11 +69,20 @@ fn diagnostic_row(
     set_checked: WriteSignal<bool>,
 ) -> impl IntoView {
     let kind = diagnostic.kind;
+    let rule_id = diagnostic.rule_id;
+    let relation = diagnostic.explanation.map(|explanation| explanation.relation);
     let expected = diagnostic.expected.clone();
     let corrections = diagnostic.corrections.clone();
 
     let expected_view = move || match expected.clone() {
         Some(value) => view! { <p class="syntax-expected">"odotettu: " {value}</p> }.into_any(),
+        None => ().into_any(),
+    };
+    let relation_view = move || match relation {
+        Some(relation) => {
+            view! { <p class="syntax-relation">"suhde: " {relation_label(relation)}</p> }
+                .into_any()
+        }
         None => ().into_any(),
     };
 
@@ -108,8 +117,9 @@ fn diagnostic_row(
             <div class="syntax-head">
                 <strong>{kind_label(kind)}</strong>
                 <span class="syntax-severity">{severity_label()}</span>
-                <code>{kind.name()}</code>
+                <code>{rule_id.as_str()}</code>
             </div>
+            {relation_view}
             {expected_view}
             {correction_view}
         </li>
@@ -121,6 +131,26 @@ fn correction_label(correction: &torille::syntax_check::Correction) -> String {
         Some(edit) if edit.replacement.is_empty() => "poista".to_string(),
         Some(edit) => edit.replacement.clone(),
         None => "korjaa".to_string(),
+    }
+}
+
+fn relation_label(relation: Relation) -> &'static str {
+    match relation {
+        Relation::SubjectPredicate => "subjekti ja predikaatti",
+        Relation::AttributeHead => "attribuutti ja pääsana",
+        Relation::PredicativeComplement => "predikatiivin täydennys",
+        Relation::VerbFrame => "verbikehys",
+        Relation::AdpositionComplement => "preposition täydennys",
+        Relation::NumeralComplement => "numeraalin täydennys",
+        Relation::ObjectCase => "objektin sija",
+        Relation::Argument => "argumentti",
+        Relation::ClauseStructure => "lauserakenne",
+        Relation::Punctuation => "välimerkki",
+        Relation::Repetition => "toisto",
+        Relation::Length => "pituus",
+        Relation::Phrase => "fraasi",
+        Relation::WordChoice => "sanavalinta",
+        Relation::Other => "muu",
     }
 }
 

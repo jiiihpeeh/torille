@@ -5,48 +5,18 @@
 //! that fix it. A correction can contain more than one edit (a comma pair, a
 //! token replacement plus an auxiliary change), so callers apply the edit list
 //! rather than replacing the whole sentence.
+//!
+//! The primitives (`Severity`, `Confidence`, `RuleId`, `Explanation`,
+//! `Correction`) live in [`crate::diagnostic`], shared with the style layer.
+//! This module adds the grammar-specific [`DiagnosticKind`] and the concrete
+//! [`SyntaxDiagnostic`].
 
 use std::ops::Range;
 
-/// How serious a diagnostic is.
-///
-/// `Error` means standard written Finnish is violated. `Warning` covers a
-/// construction that is likely wrong but has variation (coordinated subjects,
-/// colloquial number). `Suggestion` is optional punctuation/style.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Severity {
-    Error,
-    Warning,
-    Suggestion,
-}
-
-impl Severity {
-    pub fn name(self) -> &'static str {
-        match self {
-            Severity::Error => "error",
-            Severity::Warning => "warning",
-            Severity::Suggestion => "suggestion",
-        }
-    }
-}
-
-/// How much the checker trusts the diagnosis itself.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum DiagnosticConfidence {
-    High,
-    Medium,
-    Low,
-}
-
-impl DiagnosticConfidence {
-    pub fn name(self) -> &'static str {
-        match self {
-            DiagnosticConfidence::High => "high",
-            DiagnosticConfidence::Medium => "medium",
-            DiagnosticConfidence::Low => "low",
-        }
-    }
-}
+pub use crate::diagnostic::{
+    Confidence, Correction, CorrectionLicense, DiagnosticConfidence, Edit, Explanation, Finding,
+    Relation, RuleId, Severity,
+};
 
 /// Stable diagnostic categories. Add a new variant rather than reusing one
 /// for a different rule; consumers switch on these names.
@@ -102,56 +72,38 @@ impl DiagnosticKind {
             DiagnosticKind::ListIntroducerComma => "list_introducer_comma",
         }
     }
-}
 
-/// One replacement in the source text. `start == end` is an insertion.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Edit {
-    pub start: usize,
-    pub end: usize,
-    pub replacement: String,
-}
-
-impl Edit {
-    pub fn new(start: usize, end: usize, replacement: impl Into<String>) -> Self {
-        Self {
-            start,
-            end,
-            replacement: replacement.into(),
+    /// The grammatical relation this kind reports.
+    fn relation(self, message: &str) -> Relation {
+        match self {
+            DiagnosticKind::SubjectPredicateAgreement | DiagnosticKind::Connegative => {
+                Relation::SubjectPredicate
+            }
+            DiagnosticKind::AttributeAgreement => Relation::AttributeHead,
+            DiagnosticKind::PredicativeAgreement => Relation::PredicativeComplement,
+            DiagnosticKind::VerbRection => Relation::VerbFrame,
+            DiagnosticKind::CaseSelection if message == "numeral_case" => {
+                Relation::NumeralComplement
+            }
+            DiagnosticKind::CaseSelection if message == "adposition_case" => {
+                Relation::AdpositionComplement
+            }
+            DiagnosticKind::CaseSelection => Relation::Other,
+            DiagnosticKind::ObjectCase => Relation::ObjectCase,
+            DiagnosticKind::MissingArgument | DiagnosticKind::ExtraArgument => Relation::Argument,
+            DiagnosticKind::ClauseStructure | DiagnosticKind::WordOrder => {
+                Relation::ClauseStructure
+            }
+            DiagnosticKind::CommaMissing
+            | DiagnosticKind::CommaExtra
+            | DiagnosticKind::CommaPairUnbalanced
+            | DiagnosticKind::QuestionMarkMissing
+            | DiagnosticKind::UnbalancedQuote
+            | DiagnosticKind::ListSeparatorMissing
+            | DiagnosticKind::ListSeparatorDuplicate
+            | DiagnosticKind::ListCommaBeforeConjunction
+            | DiagnosticKind::ListIntroducerComma => Relation::Punctuation,
         }
-    }
-
-    pub fn insertion(at: usize, replacement: impl Into<String>) -> Self {
-        Self::new(at, at, replacement)
-    }
-}
-
-/// One way to fix a diagnostic. Applying every edit yields a corrected text.
-#[derive(Debug, Clone, PartialEq)]
-pub struct Correction {
-    pub edits: Vec<Edit>,
-    /// Lower is better; populated by the ranker.
-    pub score: f32,
-    /// Stable note key for the UI/debugging.
-    pub note: &'static str,
-}
-
-impl Correction {
-    pub fn new(edits: Vec<Edit>, score: f32, note: &'static str) -> Self {
-        Self {
-            edits,
-            score,
-            note,
-        }
-    }
-
-    /// A single-token replacement.
-    pub fn replacement(start: usize, end: usize, word: impl Into<String>) -> Self {
-        Self::new(
-            vec![Edit::new(start, end, word)],
-            0.0,
-            "replacement",
-        )
     }
 }
 
@@ -159,14 +111,18 @@ impl Correction {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SyntaxDiagnostic {
     pub kind: DiagnosticKind,
+    /// Stable rule identifier for ignore/dismiss lists.
+    pub rule_id: RuleId,
     pub severity: Severity,
-    pub confidence: DiagnosticConfidence,
+    pub confidence: Confidence,
     /// The smallest source span the UI should underline.
     pub span: Range<usize>,
     /// Stable message key; the caller localizes it.
     pub message: &'static str,
     /// What the rule expected, for diagnostics/debugging.
     pub expected: Option<String>,
+    /// Stable relation/key explanation, independent of any correction.
+    pub explanation: Option<Explanation>,
     pub corrections: Vec<Correction>,
 }
 
@@ -174,18 +130,96 @@ impl SyntaxDiagnostic {
     pub fn new(
         kind: DiagnosticKind,
         severity: Severity,
-        confidence: DiagnosticConfidence,
+        confidence: Confidence,
         span: Range<usize>,
         message: &'static str,
     ) -> Self {
         Self {
             kind,
+            rule_id: RuleId::new(message),
             severity,
             confidence,
             span,
             message,
             expected: None,
+            explanation: Some(Explanation::new(kind.relation(message), message)),
             corrections: Vec::new(),
         }
+    }
+}
+
+impl Finding for SyntaxDiagnostic {
+    fn rule_id(&self) -> RuleId {
+        self.rule_id
+    }
+
+    fn severity(&self) -> Severity {
+        self.severity
+    }
+
+    fn confidence(&self) -> Confidence {
+        self.confidence
+    }
+
+    fn span(&self) -> &Range<usize> {
+        &self.span
+    }
+
+    fn message(&self) -> &'static str {
+        self.message
+    }
+
+    fn explanation(&self) -> Option<&Explanation> {
+        self.explanation.as_ref()
+    }
+
+    fn corrections(&self) -> &[Correction] {
+        &self.corrections
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_diagnostic_carries_a_stable_rule_and_explanation() {
+        let diagnostic = SyntaxDiagnostic::new(
+            DiagnosticKind::CaseSelection,
+            Severity::Error,
+            Confidence::Certain,
+            0..3,
+            "adposition_case",
+        );
+        assert_eq!(diagnostic.rule_id.as_str(), "adposition_case");
+        let explanation = diagnostic.explanation.expect("an explanation is set");
+        assert_eq!(explanation.relation, Relation::AdpositionComplement);
+        assert_eq!(explanation.key, "adposition_case");
+    }
+
+    #[test]
+    fn the_relation_distinguishes_the_two_case_selection_rules() {
+        let numeral = SyntaxDiagnostic::new(
+            DiagnosticKind::CaseSelection,
+            Severity::Error,
+            Confidence::Certain,
+            0..3,
+            "numeral_case",
+        );
+        let adposition = SyntaxDiagnostic::new(
+            DiagnosticKind::CaseSelection,
+            Severity::Error,
+            Confidence::Certain,
+            0..3,
+            "adposition_case",
+        );
+        assert_eq!(
+            numeral.explanation.expect("explanation").relation,
+            Relation::NumeralComplement
+        );
+        assert_eq!(
+            adposition.explanation.expect("explanation").relation,
+            Relation::AdpositionComplement
+        );
     }
 }

@@ -9,7 +9,7 @@ use std::ops::Range;
 
 use crate::morphology::MorphologyAnalysis;
 use crate::syntax::is_finite_predicate;
-use crate::syntax_check::DiagnosticConfidence;
+use crate::syntax_check::Confidence;
 use crate::tokenise::Token;
 
 use super::{StyleDiagnostic, StyleKind};
@@ -68,7 +68,7 @@ pub(super) fn check(
         }
         let mut diagnostic = StyleDiagnostic::new(
             StyleKind::LongSentence,
-            DiagnosticConfidence::Medium,
+            Confidence::Likely,
             span.start..span.end,
             StyleKind::LongSentence.name(),
         );
@@ -154,7 +154,7 @@ mod tests {
         );
         let covered = StyleDiagnostic::new(
             StyleKind::Wordy,
-            DiagnosticConfidence::High,
+            Confidence::Certain,
             0..1,
             StyleKind::Wordy.name(),
         );

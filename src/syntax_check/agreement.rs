@@ -16,7 +16,7 @@ use crate::tokenise::Token;
 
 use super::correction;
 use super::diagnostic::{
-    DiagnosticConfidence, DiagnosticKind, Severity, SyntaxDiagnostic,
+    Confidence, DiagnosticKind, Severity, SyntaxDiagnostic,
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -91,9 +91,9 @@ fn check_subject_predicate(
         let confident = analysis.tokens[subject.index].confidence == RoleConfidence::Likely
             && analysis.tokens[bearer.index].confidence == RoleConfidence::Likely;
         let (severity, confidence) = if confident {
-            (Severity::Error, DiagnosticConfidence::High)
+            (Severity::Error, Confidence::Certain)
         } else {
-            (Severity::Warning, DiagnosticConfidence::Medium)
+            (Severity::Warning, Confidence::Likely)
         };
         let token = &tokens[bearer.index];
         let original = token.text.as_str();
@@ -229,9 +229,9 @@ fn check_attributes(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         );
         let number_mismatch = attribute_number != head_number;
         let (severity, confidence) = if number_mismatch {
-            (Severity::Error, DiagnosticConfidence::High)
+            (Severity::Error, Confidence::Certain)
         } else {
-            (Severity::Warning, DiagnosticConfidence::Medium)
+            (Severity::Warning, Confidence::Likely)
         };
         let mut diagnostic = SyntaxDiagnostic::new(
             DiagnosticKind::AttributeAgreement,
@@ -310,9 +310,9 @@ fn check_complements(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxD
         let confident = analysis.tokens[subject.index].confidence == RoleConfidence::Likely
             && analysis.tokens[complement].confidence == RoleConfidence::Likely;
         let (severity, confidence) = if confident {
-            (Severity::Error, DiagnosticConfidence::High)
+            (Severity::Error, Confidence::Certain)
         } else {
-            (Severity::Warning, DiagnosticConfidence::Medium)
+            (Severity::Warning, Confidence::Likely)
         };
         let mut diagnostic = SyntaxDiagnostic::new(
             DiagnosticKind::PredicativeAgreement,

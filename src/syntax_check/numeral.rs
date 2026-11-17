@@ -18,7 +18,7 @@ use crate::tokenise::Token;
 
 use super::analysis::{clause_words, nominal_pos};
 use super::correction;
-use super::diagnostic::{DiagnosticConfidence, DiagnosticKind, Severity, SyntaxDiagnostic};
+use super::diagnostic::{Confidence, DiagnosticKind, Severity, SyntaxDiagnostic};
 
 pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
     let mut diagnostics = Vec::new();
@@ -96,9 +96,9 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
             }
             let confident = analysis.tokens[complement].confidence == RoleConfidence::Likely;
             let (severity, confidence) = if confident {
-                (Severity::Error, DiagnosticConfidence::High)
+                (Severity::Error, Confidence::Certain)
             } else {
-                (Severity::Warning, DiagnosticConfidence::Medium)
+                (Severity::Warning, Confidence::Likely)
             };
             let mut diagnostic = SyntaxDiagnostic::new(
                 DiagnosticKind::CaseSelection,

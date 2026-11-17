@@ -6,7 +6,7 @@ use crate::tags::PartOfSpeech;
 use crate::tokenise::Token;
 
 use super::super::diagnostic::{
-    Correction, DiagnosticConfidence, DiagnosticKind, Edit, Severity, SyntaxDiagnostic,
+    Confidence, Correction, CorrectionLicense, DiagnosticKind, Edit, Severity, SyntaxDiagnostic,
 };
 
 pub(super) fn list_diagnostics(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
@@ -113,7 +113,7 @@ fn missing_separators(
             let mut diagnostic = SyntaxDiagnostic::new(
                 DiagnosticKind::ListSeparatorMissing,
                 Severity::Error,
-                DiagnosticConfidence::High,
+                Confidence::Certain,
                 boundary..boundary,
                 "list_separator_missing",
             );
@@ -121,7 +121,9 @@ fn missing_separators(
                 vec![Edit::insertion(boundary, ",")],
                 0.0,
                 "list_separator_missing",
-            )];
+            )
+            .licensed_by(CorrectionLicense::Punctuation)
+            .with_confidence(Confidence::Certain)];
             diagnostics.push(diagnostic);
         }
     }
@@ -160,7 +162,7 @@ fn remove_comma(
     let mut diagnostic = SyntaxDiagnostic::new(
         kind,
         severity,
-        DiagnosticConfidence::High,
+        Confidence::Certain,
         start..start + 1,
         message,
     );
@@ -168,7 +170,9 @@ fn remove_comma(
         vec![Edit::new(start, start + 1, "")],
         0.0,
         message,
-    )];
+    )
+    .licensed_by(CorrectionLicense::Punctuation)
+    .with_confidence(Confidence::Certain)];
     diagnostic
 }
 

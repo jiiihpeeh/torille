@@ -12,7 +12,7 @@ use crate::tokenise::Token;
 
 use super::analysis::{clause_words, is_marker, nominal_case, nominal_pos};
 use super::diagnostic::{
-    DiagnosticConfidence, DiagnosticKind, Severity, SyntaxDiagnostic,
+    Confidence, DiagnosticKind, Severity, SyntaxDiagnostic,
 };
 
 pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
@@ -90,7 +90,7 @@ fn missing_argument(
     let mut diagnostic = SyntaxDiagnostic::new(
         DiagnosticKind::MissingArgument,
         Severity::Warning,
-        DiagnosticConfidence::Medium,
+        Confidence::Likely,
         tokens[predicate].end..tokens[predicate].end,
         "missing_argument",
     );
@@ -147,7 +147,7 @@ fn extra_argument(
         let mut diagnostic = SyntaxDiagnostic::new(
             DiagnosticKind::ExtraArgument,
             Severity::Warning,
-            DiagnosticConfidence::Medium,
+            Confidence::Likely,
             tokens[index].start..tokens[index].end,
             "extra_argument",
         );

@@ -25,7 +25,8 @@ mod sentence_cache;
 pub mod diagnostic;
 
 pub use diagnostic::{
-    Correction, DiagnosticConfidence, DiagnosticKind, Edit, Severity, SyntaxDiagnostic,
+    Confidence, Correction, CorrectionLicense, DiagnosticConfidence, DiagnosticKind, Edit,
+    Explanation, Finding, Relation, RuleId, Severity, SyntaxDiagnostic,
 };
 pub use sentence_cache::{SentenceCache, SentenceCacheStats};
 

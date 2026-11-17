@@ -4,10 +4,21 @@
 //! then confidence, then source position. Two rules that report the same kind
 //! at the same span collapse to the higher-ranked one.
 
-use super::diagnostic::{DiagnosticConfidence, SyntaxDiagnostic};
+use super::diagnostic::{Confidence, Severity, SyntaxDiagnostic};
 
 pub(super) fn resolve(mut diagnostics: Vec<SyntaxDiagnostic>) -> Vec<SyntaxDiagnostic> {
+    // Ambiguous findings are suppressed before they reach a caller: competing
+    // readings are not evidence.
+    diagnostics.retain(|diagnostic| diagnostic.confidence.is_actionable());
+    // A rule whose preconditions are only `Likely` may warn or suggest, never
+    // claim an error. Enforce the contract centrally so a new rule cannot
+    // silently bypass it.
     for diagnostic in &mut diagnostics {
+        if diagnostic.severity == Severity::Error
+            && diagnostic.confidence != Confidence::Certain
+        {
+            diagnostic.severity = Severity::Warning;
+        }
         diagnostic.corrections.sort_by(|a, b| {
             a.score
                 .total_cmp(&b.score)
@@ -29,11 +40,11 @@ pub(super) fn resolve(mut diagnostics: Vec<SyntaxDiagnostic>) -> Vec<SyntaxDiagn
     diagnostics
 }
 
-fn confidence_rank(confidence: DiagnosticConfidence) -> u8 {
+fn confidence_rank(confidence: Confidence) -> u8 {
     match confidence {
-        DiagnosticConfidence::High => 0,
-        DiagnosticConfidence::Medium => 1,
-        DiagnosticConfidence::Low => 2,
+        Confidence::Certain => 0,
+        Confidence::Likely => 1,
+        Confidence::Ambiguous => 2,
     }
 }
 
@@ -47,14 +58,14 @@ mod tests {
         let low = SyntaxDiagnostic::new(
             DiagnosticKind::CommaMissing,
             Severity::Suggestion,
-            DiagnosticConfidence::Low,
+            Confidence::Likely,
             10..12,
             "comma_missing",
         );
         let error = SyntaxDiagnostic::new(
             DiagnosticKind::SubjectPredicateAgreement,
             Severity::Error,
-            DiagnosticConfidence::High,
+            Confidence::Certain,
             4..9,
             "subject_predicate_agreement",
         );
@@ -63,5 +74,31 @@ mod tests {
         assert_eq!(resolved.len(), 2);
         assert_eq!(resolved[0].severity, Severity::Error);
         assert_eq!(resolved[1].severity, Severity::Suggestion);
+    }
+
+    #[test]
+    fn an_ambiguous_finding_is_suppressed() {
+        let ambiguous = SyntaxDiagnostic::new(
+            DiagnosticKind::SubjectPredicateAgreement,
+            Severity::Warning,
+            Confidence::Ambiguous,
+            0..3,
+            "subject_predicate_agreement",
+        );
+        assert!(resolve(vec![ambiguous]).is_empty());
+    }
+
+    #[test]
+    fn a_likely_finding_is_never_an_error() {
+        let likely = SyntaxDiagnostic::new(
+            DiagnosticKind::SubjectPredicateAgreement,
+            Severity::Error,
+            Confidence::Likely,
+            0..3,
+            "subject_predicate_agreement",
+        );
+        let resolved = resolve(vec![likely]);
+        assert_eq!(resolved.len(), 1);
+        assert_eq!(resolved[0].severity, Severity::Warning);
     }
 }

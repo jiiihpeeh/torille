@@ -15,7 +15,7 @@ use super::analysis::{
 };
 use super::correction;
 use super::diagnostic::{
-    DiagnosticConfidence, DiagnosticKind, Severity, SyntaxDiagnostic,
+    Confidence, DiagnosticKind, Severity, SyntaxDiagnostic,
 };
 
 pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
@@ -79,9 +79,9 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         let confident = analysis.tokens[predicate].confidence
             == crate::syntax::RoleConfidence::Likely;
         let (severity, confidence) = if confident {
-            (Severity::Error, DiagnosticConfidence::High)
+            (Severity::Error, Confidence::Certain)
         } else {
-            (Severity::Warning, DiagnosticConfidence::Medium)
+            (Severity::Warning, Confidence::Likely)
         };
         let mut diagnostic = SyntaxDiagnostic::new(
             DiagnosticKind::VerbRection,

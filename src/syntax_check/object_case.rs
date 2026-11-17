@@ -19,7 +19,7 @@ use super::analysis::{
 };
 use super::correction;
 use super::diagnostic::{
-    Correction, DiagnosticConfidence, DiagnosticKind, Severity, SyntaxDiagnostic,
+    Correction, Confidence, DiagnosticKind, Severity, SyntaxDiagnostic,
 };
 
 /// Adverbs that mark an ongoing action.
@@ -83,7 +83,7 @@ fn negative_object(
     let mut diagnostic = SyntaxDiagnostic::new(
         DiagnosticKind::ObjectCase,
         Severity::Error,
-        DiagnosticConfidence::High,
+        Confidence::Certain,
         tokens[argument].start..tokens[argument].end,
         "object_case",
     );
@@ -168,7 +168,7 @@ fn aspect_suggestion(
     let mut diagnostic = SyntaxDiagnostic::new(
         DiagnosticKind::ObjectCase,
         Severity::Suggestion,
-        DiagnosticConfidence::Medium,
+        Confidence::Likely,
         tokens[object].start..tokens[object].end,
         "object_case",
     );

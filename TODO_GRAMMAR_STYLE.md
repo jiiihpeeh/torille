@@ -395,6 +395,13 @@ Rules:
 - an explanation is available without a correction;
 - `style_check` never emits `Error` or `Warning`.
 
+Landed in `src/diagnostic.rs`: the shared `Severity`, `Confidence`, `RuleId`,
+`Explanation`, `Correction` (with `license` and `confidence`), and the `Finding`
+trait. `SyntaxDiagnostic` and `StyleDiagnostic` both carry `rule_id` and
+`explanation`; `CheckAll::findings()` returns both streams through the same
+trait. The old `DiagnosticConfidence` name and `High`/`Medium`/`Low` constants
+remain as compatibility aliases.
+
 ### P1-B — Structural confidence and suppression
 
 Introduce a small number of explicit structural states rather than numerical
@@ -410,20 +417,36 @@ An unknown word, an ambiguous role, a numeral phrase, a coordinated subject
 whose person cannot be resolved, or a missing comma that changes the parse
 should suppress rather than guess.
 
-- [ ] Add the confidence states and route every existing rule through them.
-- [ ] Pin suppression cases in the ambiguity fixture.
-- [ ] Do not emit `Error` from a rule whose preconditions are only `Likely`.
+- [x] Add the confidence states and route every existing rule through them.
+  `Confidence::{Certain, Likely, Ambiguous}` replaces the numeric labels;
+  `Confidence::from_role` maps an unambiguous role to `Certain` and a weak role
+  to `Likely`.
+- [x] Pin suppression cases in the ambiguity fixture. Added
+  `ambiguous_tuli_subject` (`Tuli sammui.`); the ranker also has a synthetic
+  suppression test.
+- [x] Do not emit `Error` from a rule whose preconditions are only `Likely`.
+  Enforced centrally in `rank::resolve`: an `Error` with `Likely` is downgraded
+  to `Warning`, and an `Ambiguous` finding is dropped before it reaches a
+  caller. Existing rules now build `Certain`/`Error` only from a clear role.
 
 ### P1-C — Detection confidence vs correction confidence
 
 A diagnostic can be valid even when no safe rewrite exists.
 
-- [ ] Make correction confidence explicit, or make corrections fully optional
-  per diagnostic.
-- [ ] Keep curated replacements for style and safe case/form changes.
-- [ ] Do not invent a word, a subject or an argument just to fill a suggestion.
-- [ ] For numeral/adposition/object rules, detect confidently and propose only
-  forms licensed by the inflection engine and the curated frame.
+- [x] Make correction confidence explicit, or make corrections fully optional
+  per diagnostic. Corrections are optional (empty is valid) and now carry a
+  `CorrectionLicense` (`Inflection`, `Curated`, `Punctuation`, `Other`) and a
+  `Confidence`; the wasm wire shape exposes both.
+- [x] Keep curated replacements for style and safe case/form changes. Style
+  phrase replacements are `Curated`/`Likely`; inflection forms are
+  `Inflection`/`Certain`; punctuation edits are `Punctuation`/`Certain`.
+- [x] Do not invent a word, a subject or an argument just to fill a suggestion.
+  The helpers still take every replacement from `forms_of`/the curated tables;
+  a diagnostic with no safe rewrite keeps an empty correction list.
+- [x] For numeral/adposition/object rules, detect confidently and propose only
+  forms licensed by the inflection engine and the curated frame. The numeral
+  and adposition corrections are built through `case_corrections`, which
+  requires a `Plain` engine form.
 
 Example: `Kaksi lapsi tuli.` can be detected confidently, but a suggestion is
 only safe when the engine can name the partitive singular without ambiguity.
@@ -441,6 +464,13 @@ Every finding should be able to say:
 `expected` and `message` are useful for debugging, but the UI needs a stable
 explanation separate from the correction. Add explanation keys before the
 first new rule family.
+
+Landed: every finding carries `rule_id` (the message key) and an `Explanation`
+with a stable `Relation` (`subject_predicate`, `attribute_head`, `verb_frame`,
+`adposition_complement`, `numeral_complement`, `punctuation`, ...) and a
+stable key. The syntax and style panels show the rule id and the relation; the
+wasm diagnostic object exposes `rule_id` and `explanation: { relation, key }`.
+`expected` remains the category (case/number/person/form).
 
 ## P1 — grammar rule subsystems
 
@@ -832,3 +862,15 @@ intended/competing interpretation pair that fails.
   (`ilman Jumalan tahtomatta`) stay quiet. The full page-2000 sweep found
   exactly that one false positive before the guard; the adjudicated prose and
   clean syntax corpora are unchanged.
+- 2026-11-17: landed the shared diagnostic contract (P1-A..D). Added
+  `src/diagnostic.rs` with `RuleId`, `Confidence::{Certain,Likely,Ambiguous}`,
+  `Explanation`/`Relation`, `CorrectionLicense`, and the `Finding` trait.
+  `SyntaxDiagnostic` and `StyleDiagnostic` now carry `rule_id` and
+  `explanation`; `CheckAll::findings()` exposes both streams through one
+  contract. `rank::resolve` suppresses `Ambiguous` findings and downgrades an
+  `Error` whose confidence is only `Likely` to `Warning`. Corrections carry a
+  license and their own confidence; the wasm object exports `rule_id`,
+  `explanation`, and the correction license/confidence. The syntax and style
+  panels show the rule id and relation. Added `ambiguous_tuli_subject` to the
+  ambiguity fixture and a cross-layer contract test. All workspace tests and
+  clippy are green; the checked prose baseline is unchanged.

@@ -283,6 +283,20 @@
       "text": "Pöytä alla on kissa.",
       "clauses": 1,
       "diagnostics": ["case_selection"]
+    },
+    {
+      "id": "ambiguous_tuli_subject",
+      "text": "Tuli sammui.",
+      "clauses": 1,
+      "subject": "Tuli",
+      "predicate": "sammui",
+      "roles": [
+        { "word": "Tuli", "role": "subject", "case": "nominative" }
+      ],
+      "forbidden_roles": [
+        { "word": "Tuli", "role": "predicate" }
+      ],
+      "diagnostics": []
     }
   ]
 }

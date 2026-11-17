@@ -706,12 +706,16 @@ fn diagnostics_array(
         array.push(&diagnostic_object(
             DiagnosticFields {
                 kind: diagnostic.kind.name(),
+                rule_id: diagnostic.rule_id.as_str(),
                 severity: diagnostic.severity.name(),
                 confidence: diagnostic.confidence.name(),
                 start: diagnostic.span.start,
                 end: diagnostic.span.end,
                 message: diagnostic.message,
                 expected: diagnostic.expected.as_deref(),
+                explanation: diagnostic
+                    .explanation
+                    .map(|explanation| (explanation.relation.name(), explanation.key)),
             },
             &diagnostic.corrections,
         ));
@@ -729,12 +733,16 @@ fn style_diagnostics_array(
         array.push(&diagnostic_object(
             DiagnosticFields {
                 kind: diagnostic.kind.name(),
+                rule_id: diagnostic.rule_id.as_str(),
                 severity: diagnostic.severity.name(),
                 confidence: diagnostic.confidence.name(),
                 start: diagnostic.span.start,
                 end: diagnostic.span.end,
                 message: diagnostic.message,
                 expected: diagnostic.expected.as_deref(),
+                explanation: diagnostic
+                    .explanation
+                    .map(|explanation| (explanation.relation.name(), explanation.key)),
             },
             &diagnostic.corrections,
         ));
@@ -744,12 +752,14 @@ fn style_diagnostics_array(
 
 struct DiagnosticFields<'a> {
     kind: &'a str,
+    rule_id: &'a str,
     severity: &'a str,
     confidence: &'a str,
     start: usize,
     end: usize,
     message: &'a str,
     expected: Option<&'a str>,
+    explanation: Option<(&'a str, &'a str)>,
 }
 
 fn diagnostic_object(
@@ -760,21 +770,30 @@ fn diagnostic_object(
 
     let DiagnosticFields {
         kind,
+        rule_id,
         severity,
         confidence,
         start,
         end,
         message,
         expected,
+        explanation,
     } = fields;
     let item = Object::new();
     set(&item, "kind", JsValue::from(kind));
+    set(&item, "rule_id", JsValue::from(rule_id));
     set(&item, "severity", JsValue::from(severity));
     set(&item, "confidence", JsValue::from(confidence));
     set(&item, "start", JsValue::from(start as u32));
     set(&item, "end", JsValue::from(end as u32));
     set(&item, "message", JsValue::from(message));
     set_option(&item, "expected", expected);
+    if let Some((relation, key)) = explanation {
+        let explanation = Object::new();
+        set(&explanation, "relation", JsValue::from(relation));
+        set(&explanation, "key", JsValue::from(key));
+        set(&item, "explanation", explanation.into());
+    }
 
     let corrections_array = Array::new();
     for correction in corrections {
@@ -785,6 +804,16 @@ fn diagnostic_object(
             JsValue::from(correction.score as f64),
         );
         set(&correction_item, "note", JsValue::from(correction.note));
+        set(
+            &correction_item,
+            "license",
+            JsValue::from(correction.license.name()),
+        );
+        set(
+            &correction_item,
+            "confidence",
+            JsValue::from(correction.confidence.name()),
+        );
         let edits = Array::new();
         for edit in &correction.edits {
             let edit_item = Object::new();

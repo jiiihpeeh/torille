@@ -4,8 +4,8 @@
 //! sentence boundary. A match covers the whole phrase; after a hit the scan
 //! resumes after it, so overlapping table rows cannot double-report.
 
+use crate::diagnostic::{Confidence, Correction, CorrectionLicense};
 use crate::sentence;
-use crate::syntax_check::{Correction, DiagnosticConfidence};
 use crate::tokenise::Token;
 
 use super::{StyleDiagnostic, lexicon};
@@ -73,18 +73,18 @@ pub(super) fn check_with_contexts(
             let span = tokens[first].start..tokens[last].end;
             let mut diagnostic = StyleDiagnostic::new(
                 entry.kind,
-                DiagnosticConfidence::High,
+                Confidence::Certain,
                 span.clone(),
                 entry.kind.name(),
             );
             diagnostic.expected = Some(key);
             if let Some(replacement) = entry.replacement {
                 let replacement = sentence_case(replacement, contexts[first].sentence_start);
-                diagnostic.corrections.push(Correction::replacement(
-                    span.start,
-                    span.end,
-                    replacement,
-                ));
+                diagnostic.corrections.push(
+                    Correction::replacement(span.start, span.end, replacement)
+                        .licensed_by(CorrectionLicense::Curated)
+                        .with_confidence(Confidence::Likely),
+                );
             }
             diagnostics.push(diagnostic);
             position = last_position + 1;

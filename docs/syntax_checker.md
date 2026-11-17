@@ -12,15 +12,25 @@ is **not** a parser, a style checker, or part of the keystroke path.
 - `check_with_cache(text, cache)` is the per-textarea form; the wasm export
   `check_syntax_with_state(idx, text)` uses the same word cache.
 - Every diagnostic carries:
-  - a stable `DiagnosticKind` name;
+  - a stable `DiagnosticKind` name and a stable `RuleId` (the message key,
+    suitable for ignore/dismiss lists);
   - a `Severity`: `Error`, `Warning` or `Suggestion`;
-  - a `DiagnosticConfidence`: `High`, `Medium` or `Low`;
+  - a `Confidence`: `Certain`, `Likely` or `Ambiguous`;
   - a byte span in the source text;
   - a stable `message` key;
   - an optional `expected` value for debugging;
-  - zero or more `Correction`s, each of which is a list of `Edit`s.
+  - an `Explanation` with the triggering `Relation` and a stable key;
+  - zero or more `Correction`s, each of which is a list of `Edit`s and records
+    its `CorrectionLicense` (`Inflection`, `Curated`, `Punctuation`) and its own
+    `Confidence`.
 - A correction is applied by replaying its edits **from the end of the text
   backwards**, so earlier offsets stay valid.
+
+The grammar and style layers share these primitives (`src/diagnostic.rs`) and
+implement the `Finding` trait; `CheckAll::findings()` exposes both streams
+through it. `Confidence::Ambiguous` findings are suppressed before they reach a
+caller, and an `Error` whose confidence is only `Likely` is downgraded to a
+`Warning`, so a rule cannot overstate an ambiguous target.
 
 The demo panel is in `torille-wasm-leptos/src/components/syntax.rs`; it runs
 the checker only when the user presses the grammar button.

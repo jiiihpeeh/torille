@@ -66,7 +66,7 @@ pub(super) fn check(
         {
             let mut diagnostic = StyleDiagnostic::new(
                 StyleKind::Repetition,
-                crate::syntax_check::DiagnosticConfidence::Medium,
+                crate::syntax_check::Confidence::Likely,
                 token.start..token.end,
                 StyleKind::Repetition.name(),
             );

@@ -4,6 +4,7 @@
 //! caller uses when it wants both streams: the per-textarea wasm state, the
 //! combined worker request, or a CLI. It never runs in the keystroke path.
 
+use crate::diagnostic::Finding;
 use crate::disambiguation::{Disambiguation, disambiguate};
 use crate::morphology::{MorphologyAnalysis, MorphologyCache, analyze_morphology};
 use crate::style_check::{StyleAnalysis, check_tokens_with_morphology};
@@ -16,6 +17,26 @@ use crate::tokenise::{Token, tokenise};
 pub struct CheckAll {
     pub syntax: SyntaxCheck,
     pub style: StyleAnalysis,
+}
+
+impl CheckAll {
+    /// Both streams through the shared [`Finding`] contract.
+    ///
+    /// A panel or an ignore list can treat grammar and style alike without
+    /// matching on the concrete diagnostic type.
+    pub fn findings(&self) -> Vec<&dyn Finding> {
+        self.syntax
+            .diagnostics
+            .iter()
+            .map(|diagnostic| diagnostic as &dyn Finding)
+            .chain(
+                self.style
+                    .diagnostics
+                    .iter()
+                    .map(|diagnostic| diagnostic as &dyn Finding),
+            )
+            .collect()
+    }
 }
 
 /// Check a text with the embedded lexicon and a thread-local cache.
@@ -90,5 +111,20 @@ mod tests {
         let all = check_all_tokens(&tokens, &morphology);
         assert_eq!(all.syntax.diagnostics.len(), 1);
         assert_eq!(all.style.diagnostics.len(), 1);
+    }
+
+    #[test]
+    fn both_layers_share_the_finding_contract() {
+        use crate::diagnostic::Severity;
+        let all = check_all("Koira nukkuvat. Tällä hetkellä tilanne on rauhallinen.");
+        let findings = all.findings();
+        assert_eq!(findings.len(), 2);
+        assert_eq!(
+            findings[0].rule_id().as_str(),
+            "subject_predicate_agreement"
+        );
+        assert!(findings[1].rule_id().as_str().starts_with("style_"));
+        assert_eq!(findings[1].severity(), Severity::Suggestion);
+        assert!(findings.iter().all(|finding| finding.explanation().is_some()));
     }
 }

@@ -7,7 +7,7 @@ use crate::tokenise::Token;
 
 use super::super::analysis::first_word;
 use super::super::diagnostic::{
-    Correction, DiagnosticConfidence, DiagnosticKind, Edit, Severity, SyntaxDiagnostic,
+    Confidence, Correction, CorrectionLicense, DiagnosticKind, Edit, Severity, SyntaxDiagnostic,
 };
 
 /// Interrogative surfaces that open a direct question.
@@ -66,7 +66,7 @@ pub(super) fn question_diagnostics(tokens: &[Token], analysis: &SyntaxAnalysis) 
         let mut diagnostic = SyntaxDiagnostic::new(
             DiagnosticKind::QuestionMarkMissing,
             Severity::Error,
-            DiagnosticConfidence::High,
+            Confidence::Certain,
             edit.start..edit.end,
             "question_mark_missing",
         );
@@ -75,7 +75,9 @@ pub(super) fn question_diagnostics(tokens: &[Token], analysis: &SyntaxAnalysis) 
             vec![edit],
             0.0,
             "question_mark_missing",
-        )];
+        )
+        .licensed_by(CorrectionLicense::Punctuation)
+        .with_confidence(Confidence::Certain)];
         out.push(diagnostic);
     }
     out

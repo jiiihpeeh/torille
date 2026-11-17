@@ -9,6 +9,7 @@
 pub(crate) mod case;
 pub mod compound;
 pub mod derivation;
+pub mod diagnostic;
 pub mod disambiguation;
 pub mod expand;
 pub(crate) mod gradation;
