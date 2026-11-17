@@ -112,6 +112,7 @@ impl std::fmt::Display for RuleId {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Relation {
     SubjectPredicate,
+    SubjectCase,
     AttributeHead,
     PredicativeComplement,
     VerbFrame,
@@ -132,6 +133,7 @@ impl Relation {
     pub fn name(self) -> &'static str {
         match self {
             Relation::SubjectPredicate => "subject_predicate",
+            Relation::SubjectCase => "subject_case",
             Relation::AttributeHead => "attribute_head",
             Relation::PredicativeComplement => "predicative_complement",
             Relation::VerbFrame => "verb_frame",

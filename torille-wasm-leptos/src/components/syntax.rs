@@ -156,6 +156,7 @@ fn correction_label(correction: &Correction) -> String {
 fn relation_label(relation: Relation) -> &'static str {
     match relation {
         Relation::SubjectPredicate => "subjekti ja predikaatti",
+        Relation::SubjectCase => "subjektin sija",
         Relation::AttributeHead => "attribuutti ja pääsana",
         Relation::PredicativeComplement => "predikatiivin täydennys",
         Relation::VerbFrame => "verbikehys",

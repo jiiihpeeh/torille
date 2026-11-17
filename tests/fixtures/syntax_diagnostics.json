@@ -709,11 +709,42 @@
           "corrections": ["rahaa"]
         }
       ]
+    },
+    {
+      "id": "existential_subject_genitive",
+      "text": "Pöydällä on kirjan.",
+      "diagnostics": [
+        {
+          "kind": "case_selection",
+          "severity": "error",
+          "start": 15,
+          "end": 21,
+          "corrections": ["kirja", "kirjaa"]
+        }
+      ]
+    },
+    {
+      "id": "existential_subject_plural_genitive",
+      "text": "Pöydällä on kirjojen.",
+      "diagnostics": [
+        {
+          "kind": "case_selection",
+          "severity": "error",
+          "start": 15,
+          "end": 23,
+          "corrections": ["kirjoja", "kirjat"]
+        }
+      ]
     }
   ],
   "clean": [
     "Pöydällä on kirjat.",
     "Pöydällä on kirja.",
+    "Pöydällä on kirjoja.",
+    "Pöydällä on Liisan kirja.",
+    "Pöydällä on minun kirjani.",
+    "Pöydällä on kirjan mittainen.",
+    "Täällä on minun mentävä.",
     "Pöydällä on kirjat ja kynät.",
     "Talo on rakennettu.",
     "Talo on kaunis.",

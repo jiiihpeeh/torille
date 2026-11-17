@@ -297,6 +297,26 @@
         { "word": "Tuli", "role": "predicate" }
       ],
       "diagnostics": []
+    },
+    {
+      "id": "existential_nominative_subject",
+      "text": "Pöydällä on kirja.",
+      "clauses": 1,
+      "subject": "kirja",
+      "predicate": "on",
+      "roles": [
+        { "word": "kirja", "role": "subject", "case": "nominative" }
+      ],
+      "forbidden_roles": [
+        { "word": "Pöydällä", "role": "subject" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "existential_genitive_subject",
+      "text": "Pöydällä on kirjan.",
+      "clauses": 1,
+      "diagnostics": ["case_selection"]
     }
   ]
 }

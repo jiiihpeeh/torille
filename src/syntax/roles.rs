@@ -434,9 +434,15 @@ pub(super) fn resolve_clause(
         .iter()
         .chain(after)
         .any(|&index| is_locative_adverbial(index, tokens, out));
-    let nominative_after = after
-        .iter()
-        .any(|&index| nominal_has_case(&out[index], &[Case::Nominative, Case::Partitive]));
+    // A genitive is included because the wrong-case subject of
+    // `Pöytällä on kirjan.` must not stop the clause being recognised as
+    // existential; the subject rule can then name the case error.
+    let nominal_after = after.iter().any(|&index| {
+        nominal_has_case(
+            &out[index],
+            &[Case::Nominative, Case::Partitive, Case::Genitive],
+        )
+    });
     // A nominative before the predicate is the subject of a copula
     // (`Helsingissä asuva mies on opettaja`), not an existential's postverbal
     // subject. Without this gate the locative of a modifying phrase would make
@@ -444,7 +450,7 @@ pub(super) fn resolve_clause(
     let nominative_before = before
         .iter()
         .any(|&index| nominal_has_case(&out[index], &[Case::Nominative]));
-    clause.existential = is_olla && locative && nominative_after && !nominative_before;
+    clause.existential = is_olla && locative && nominal_after && !nominative_before;
 
     let genitive_before = before.iter().rev().copied().find(|&index| {
         out[index].role == SyntacticRole::Unknown

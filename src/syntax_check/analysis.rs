@@ -87,6 +87,23 @@ pub(super) fn nominal_case(token: &TokenSyntax) -> Option<Case> {
     found
 }
 
+/// Every nominal lemma behind a surface, the chosen lemma first.
+///
+/// A case correction must try the reading the syntax layer chose before a
+/// homonym; `kirjojen` is a form of both `kirja` and `kirjo`.
+pub(super) fn nominal_bases(token: &TokenSyntax) -> Vec<&str> {
+    let mut ordered: Vec<&str> = Vec::new();
+    if let Some(lemma) = token.lemma.as_deref() {
+        ordered.push(lemma);
+    }
+    for lemma in &token.lemmas {
+        if !ordered.contains(&lemma.as_str()) {
+            ordered.push(lemma.as_str());
+        }
+    }
+    ordered
+}
+
 /// The token's number when every reading in `case` agrees.
 pub(super) fn candidate_number(token: &TokenSyntax, case: Case) -> Option<Number> {
     let mut found: Option<Number> = None;

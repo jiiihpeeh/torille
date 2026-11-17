@@ -181,6 +181,8 @@ diagnostic_tests!(
     fused_negative_subordinator_comma,
     adposition_case_postposition,
     adposition_case_preposition,
+    existential_subject_genitive,
+    existential_subject_plural_genitive,
     relative_comma_pair,
     rection_elative,
     rection_illative,

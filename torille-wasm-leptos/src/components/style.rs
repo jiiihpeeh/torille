@@ -137,6 +137,7 @@ fn correction_label(correction: &torille::syntax_check::Correction) -> String {
 fn relation_label(relation: Relation) -> &'static str {
     match relation {
         Relation::SubjectPredicate => "subjekti ja predikaatti",
+        Relation::SubjectCase => "subjektin sija",
         Relation::AttributeHead => "attribuutti ja pääsana",
         Relation::PredicativeComplement => "predikatiivin täydennys",
         Relation::VerbFrame => "verbikehys",

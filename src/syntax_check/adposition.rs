@@ -12,7 +12,9 @@ use crate::syntax::{RoleConfidence, SyntaxAnalysis, TokenSyntax};
 use crate::tags::{Case, PartOfSpeech};
 use crate::tokenise::Token;
 
-use super::analysis::{candidate_number, clause_words, nominal_case, nominal_pos};
+use super::analysis::{
+    candidate_number, clause_words, nominal_bases, nominal_case, nominal_pos,
+};
 use super::correction;
 use super::diagnostic::{Confidence, DiagnosticKind, Severity, SyntaxDiagnostic};
 
@@ -65,7 +67,7 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
             };
             let number = candidate_number(syntax, case);
             let mut corrections = Vec::new();
-            for lemma in bases(syntax) {
+            for lemma in nominal_bases(syntax) {
                 let found: Vec<_> = correction::case_corrections(
                     lemma,
                     &tokens[complement],
@@ -211,20 +213,6 @@ fn is_recoverable_mismatch(expected: Case, observed: Case) -> bool {
         (expected, observed),
         (Case::Genitive, Case::Nominative | Case::Partitive) | (Case::Partitive, Case::Nominative)
     )
-}
-
-/// The lemma then the homonym lemmas, so the chosen reading is tried first.
-fn bases(token: &TokenSyntax) -> Vec<&str> {
-    let mut ordered: Vec<&str> = Vec::new();
-    if let Some(lemma) = token.lemma.as_deref() {
-        ordered.push(lemma);
-    }
-    for lemma in &token.lemmas {
-        if !ordered.contains(&lemma.as_str()) {
-            ordered.push(lemma.as_str());
-        }
-    }
-    ordered
 }
 
 /// A comma between the adposition and its complement breaks the phrase.

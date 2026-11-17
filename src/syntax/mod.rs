@@ -482,6 +482,14 @@ mod tests {
     }
 
     #[test]
+    fn a_genitive_subject_does_not_stop_the_existential_flag() {
+        // The case error must remain visible to the case rule; existential
+        // recognition cannot depend on the subject already being correct.
+        let (_, analysis) = analyzed("Pöydällä on kirjan.");
+        assert!(analysis.clauses[0].existential);
+    }
+
+    #[test]
     fn a_necessity_subject_is_genitive() {
         let (tokens, analysis) = analyzed("Minun on mentävä.");
         let minun = word_index(&tokens, "Minun");

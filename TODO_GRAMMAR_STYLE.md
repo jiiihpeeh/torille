@@ -546,10 +546,19 @@ prose-corpus review.
   Area: `src/syntax_check/adposition.rs`, `src/expand/adposition_cases.rs`,
   `data/adposition_cases.csv`, `build.rs`, `build/map_builders/front_coded.rs`.
 
-- [ ] **Existential subject case**
-  `Pöydällä on kirjan.` is silent. An existential's subject is nominative or
-  partitive, never genitive. The clause already has `existential`.
-  Area: `src/syntax_check/`.
+- [x] **Existential subject case** — landed.
+  `Pöydällä on kirjan.` now emits `case_selection` on `kirjan`; the subject is
+  nominative or partitive, never genitive. The clause's `existential` flag now
+  accepts a genitive post-predicate nominal, so a wrong-case subject does not
+  hide the construction. Detection is `Certain`/`Error`, but the rewrite is
+  `Likely`: the engine offers both licensed forms (`kirja`, `kirjaa`) because
+  boundedness and count/mass choose between them. `Pöydällä on kirja.`,
+  `Pöydällä on kirjoja.`, `Pöydällä on Liisan kirja.`,
+  `Pöydällä on minun kirjani.`, `Minun on mentävä.` and
+  `Täällä on minun mentävä.` are clean. The rule fires only on a
+  sentence-final common noun/adjective; a clause split at a line break or an
+  unpunctuated coordinator (`... laulujen\nja kanteleen maa`) stays quiet.
+  Area: `src/syntax_check/existential.rs`, `src/syntax/roles.rs`.
 
 - [ ] **Bare nominative object**
   `Minä näen kirja.` is silent; the syntax layer already marks `kirja` as an
@@ -874,3 +883,11 @@ intended/competing interpretation pair that fails.
   panels show the rule id and relation. Added `ambiguous_tuli_subject` to the
   ambiguity fixture and a cross-layer contract test. All workspace tests and
   clippy are green; the checked prose baseline is unchanged.
+- 2026-11-17: landed existential subject case. `Pöydällä on kirjan.` emits
+  `case_selection` with both engine-licensed repairs (`kirja`, `kirjaa`); the
+  diagnostic is `Certain` while each correction is `Likely`, so detection and
+  correction confidence stay separate. The existential flag now accepts a
+  genitive post-predicate nominal. The rule is limited to a sentence-final
+  common noun/adjective and skips pronouns, proper names, and clauses split at
+  a line break; the page-2000 sweep is quiet. Added diagnostic, clean and
+  ambiguity cases.

@@ -88,6 +88,9 @@ impl DiagnosticKind {
             DiagnosticKind::CaseSelection if message == "adposition_case" => {
                 Relation::AdpositionComplement
             }
+            DiagnosticKind::CaseSelection if message == "existential_subject_case" => {
+                Relation::SubjectCase
+            }
             DiagnosticKind::CaseSelection => Relation::Other,
             DiagnosticKind::ObjectCase => Relation::ObjectCase,
             DiagnosticKind::MissingArgument | DiagnosticKind::ExtraArgument => Relation::Argument,

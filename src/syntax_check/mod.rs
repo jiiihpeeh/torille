@@ -15,6 +15,7 @@ mod analysis;
 mod arguments;
 mod connegative;
 mod correction;
+mod existential;
 mod numeral;
 mod object_case;
 mod punctuation;
@@ -103,6 +104,7 @@ pub(crate) fn check_analysis_without_quote(
     diagnostics.extend(connegative::check(tokens, analysis));
     diagnostics.extend(numeral::check(tokens, analysis));
     diagnostics.extend(adposition::check(tokens, analysis));
+    diagnostics.extend(existential::check(tokens, analysis));
     diagnostics.extend(punctuation::check_without_quote_with_contexts(
         tokens, analysis, contexts,
     ));

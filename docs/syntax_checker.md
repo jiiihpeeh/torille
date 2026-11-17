@@ -43,7 +43,7 @@ the checker only when the user presses the grammar button.
 | `connegative` | the main verb after a negative auxiliary is in the connegative form | `Error` |
 | `attribute_agreement` | attributive adjective/demonstrative agrees with its head | `Error` for number, `Warning` for case |
 | `predicative_agreement` | a predicative adjective agrees with its subject in number | `Error` for a clear number mismatch, `Warning` when a role is weak |
-| `case_selection` | a cardinal numeral governs the partitive singular, or a curated adposition governs a non-matching case | `Error` for a clear complement, `Warning` when a role is weak |
+| `case_selection` | a cardinal numeral governs the partitive singular, a curated adposition governs a non-matching case, or an existential subject is genitive | `Error` for a clear complement, `Warning` when a role is weak |
 | `verb_rection` | curated valency frame requires a case the argument lacks | `Error` with a likely predicate, otherwise `Warning` |
 | `object_case` | negative clause requires a partitive object; aspect cues suggest partitive/total | `Error` for negation, `Suggestion` for aspect |
 | `missing_argument` | an obligatory slot from `data/verb_arguments.csv` is absent | `Warning` |
@@ -191,6 +191,12 @@ class.
   frame. A genitive after a partitive-governing preposition is left quiet
   because it may modify a following nominal or participle
   (`ilman Jumalan tahtomatta`), and a multi-case adposition stays quiet.
+- **Existential subject case detects, but does not choose the repair.** A
+  sentence-final genitive common noun after an existential `on` is an error
+  (`Pöydällä on kirjan.`). The engine offers both licensed forms
+  (`kirja`, `kirjaa`) because boundedness and count/mass choose between them;
+  the diagnostic is `Certain`, each correction `Likely`. The rule skips
+  pronouns, proper names, and clause-final genitives created by a line break.
 - **Ambiguous partitive plurals stay quiet.** A plural completive suggestion
   is offered when every noun base names the same total form (`autoja →
   autot`); a homonymous surface such as `kirjoja` (`kirja`/`kirjo`) stays

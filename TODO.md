@@ -1948,3 +1948,12 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   correction provenance. Added a suppression case to the ambiguity fixture and
   a cross-layer contract test. Workspace tests and clippy are green; the
   adjudicated prose baseline is unchanged.
+
+- 2026-11-17: existential subject case landed. `Pöydällä on kirjan.` emits
+  `case_selection`; the subject is nominative or partitive, never genitive.
+  The `existential` flag now survives a genitive post-predicate nominal, and
+  the rule offers both engine-licensed repairs (`kirja`, `kirjaa`) at
+  `Likely` correction confidence while the finding itself is `Certain`.
+  Clean cases cover `Pöydällä on kirja/kirjoja`, `Pöydällä on Liisan kirja`,
+  `Pöydällä on minun kirjani`, `Minun on mentävä` and
+  `Täällä on minun mentävä`; the page-2000 sweep is quiet.
