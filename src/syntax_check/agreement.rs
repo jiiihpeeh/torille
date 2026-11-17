@@ -18,7 +18,7 @@ use crate::tokenise::Token;
 
 use super::correction;
 use super::diagnostic::{
-    Confidence, DiagnosticKind, Severity, SyntaxDiagnostic,
+    Confidence, Correction, DiagnosticKind, Severity, SyntaxDiagnostic,
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -402,73 +402,159 @@ fn check_complements(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxD
         let Some(complement) = clause.complement else {
             continue;
         };
-        let Some((complement_case, complement_number)) =
-            adjective_shape(&analysis.tokens[complement])
-        else {
-            continue;
-        };
-        let Some(degree) = attribute_degree(&analysis.tokens[complement]) else {
-            continue;
-        };
-        if degree.is_none()
-            && crate::expand::degree_base(&analysis.tokens[complement].key).is_some()
-        {
-            continue;
-        }
         // A coordinated subject phrase is collapsed to a plural controller by
         // `subject_of`; it returns `None` when the person cannot be resolved.
         let Some(subject) = subject_of(clause, tokens, analysis) else {
             continue;
         };
-        if subject.number == complement_number {
+        let syntax = &analysis.tokens[complement];
+        let Some(lemma) = syntax.lemma.as_deref() else {
+            continue;
+        };
+        if let Some((complement_case, complement_number)) = adjective_shape(syntax) {
+            let Some(degree) = attribute_degree(syntax) else {
+                continue;
+            };
+            if degree.is_none() && crate::expand::degree_base(&syntax.key).is_some() {
+                continue;
+            }
+            if subject.number == complement_number {
+                continue;
+            }
+            let target_case = if subject.number == Number::Singular {
+                Case::Nominative
+            } else {
+                complement_case
+            };
+            let corrections = correction::attribute_agreement_corrections(
+                lemma,
+                &tokens[complement],
+                target_case,
+                subject.number,
+                degree,
+                PartOfSpeech::Adjective,
+                crate::spec::Catalogues::embedded(),
+            )
+            .into_iter()
+            .map(|mut correction| {
+                correction.note = "predicative_agreement";
+                correction
+            })
+            .collect();
+            let confident = analysis.tokens[subject.index].confidence == RoleConfidence::Likely
+                && syntax.confidence == RoleConfidence::Likely;
+            let (severity, confidence) = if confident {
+                (Severity::Error, Confidence::Certain)
+            } else {
+                (Severity::Warning, Confidence::Likely)
+            };
+            let mut diagnostic = SyntaxDiagnostic::new(
+                DiagnosticKind::PredicativeAgreement,
+                severity,
+                confidence,
+                tokens[complement].start..tokens[complement].end,
+                "predicative_agreement",
+            );
+            diagnostic.expected = Some(format!(
+                "{} {}",
+                target_case.name(),
+                subject.number.name()
+            ));
+            diagnostic.corrections = corrections;
+            diagnostics.push(diagnostic);
             continue;
         }
-        let Some(lemma) = analysis.tokens[complement].lemma.as_deref() else {
+
+        // A noun predicate has a semantic partitive/nominative choice, so this
+        // separate rule only reports a clear number mismatch: a nominative
+        // singular predicate with a plural subject (`He ovat opettaja.`) or a
+        // nominative plural predicate with a singular subject. Partitive
+        // predicates are left to the speaker (`He ovat opettajia.`,
+        // `Ne ovat vettä.`).
+        let Some((complement_case, complement_number)) = noun_predicative_shape(syntax) else {
             continue;
         };
-        let target_case = if subject.number == Number::Singular {
-            Case::Nominative
+        if complement_case != Case::Nominative || subject.number == complement_number {
+            continue;
+        }
+        let targets: &[Case] = if subject.number == Number::Plural {
+            &[Case::Partitive, Case::Nominative]
         } else {
-            complement_case
+            &[Case::Nominative]
         };
-        let corrections = correction::attribute_agreement_corrections(
-            lemma,
-            &tokens[complement],
-            target_case,
-            subject.number,
-            degree,
-            PartOfSpeech::Adjective,
-            crate::spec::Catalogues::embedded(),
-        )
-        .into_iter()
-        .map(|mut correction| {
-            correction.note = "predicative_agreement";
-            correction
-        })
-        .collect();
+        let mut corrections: Vec<Correction> = Vec::new();
+        for target in targets {
+            corrections.extend(
+                correction::attribute_agreement_corrections(
+                    lemma,
+                    &tokens[complement],
+                    *target,
+                    subject.number,
+                    None,
+                    PartOfSpeech::Noun,
+                    crate::spec::Catalogues::embedded(),
+                )
+                .into_iter()
+                .take(1)
+                .map(|mut correction| {
+                    correction.note = "predicative_agreement";
+                    correction.with_confidence(Confidence::Likely)
+                }),
+            );
+        }
+        let mut seen: Vec<String> = Vec::new();
+        corrections.retain(|correction| {
+            let Some(edit) = correction.edits.first() else {
+                return false;
+            };
+            if seen.contains(&edit.replacement) {
+                return false;
+            }
+            seen.push(edit.replacement.clone());
+            true
+        });
         let confident = analysis.tokens[subject.index].confidence == RoleConfidence::Likely
-            && analysis.tokens[complement].confidence == RoleConfidence::Likely;
-        let (severity, confidence) = if confident {
-            (Severity::Error, Confidence::Certain)
+            && syntax.confidence == RoleConfidence::Likely;
+        let confidence = if confident {
+            Confidence::Certain
         } else {
-            (Severity::Warning, Confidence::Likely)
+            Confidence::Likely
         };
         let mut diagnostic = SyntaxDiagnostic::new(
             DiagnosticKind::PredicativeAgreement,
-            severity,
+            Severity::Warning,
             confidence,
             tokens[complement].start..tokens[complement].end,
-            "predicative_agreement",
+            "predicative_noun_agreement",
         );
-        diagnostic.expected = Some(format!(
-            "{} {}",
-            target_case.name(),
-            subject.number.name()
-        ));
+        diagnostic.expected = Some(if subject.number == Number::Plural {
+            "partitive or nominative plural".to_string()
+        } else {
+            "nominative singular".to_string()
+        });
         diagnostic.corrections = corrections;
         diagnostics.push(diagnostic);
     }
     diagnostics
+}
+
+/// The unique case/number of a noun predicate.
+fn noun_predicative_shape(token: &TokenSyntax) -> Option<(Case, Number)> {
+    let mut shape: Option<(Case, Number)> = None;
+    for reading in &token.readings {
+        if reading.part_of_speech != Some(PartOfSpeech::Noun) {
+            continue;
+        }
+        let Some(candidate) = reading.case.zip(reading.number) else {
+            continue;
+        };
+        match shape {
+            None => shape = Some(candidate),
+            Some(seen) if seen == candidate => {}
+            Some(_) => return None,
+        }
+    }
+    shape
 }
 
 /// Whether an attribute sits immediately after a cardinal numeral.

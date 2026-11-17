@@ -379,6 +379,21 @@
       "id": "extra_comma_apposition",
       "text": "Minä, yksin, tulen.",
       "diagnostics": []
+    },
+    {
+      "id": "predicative_noun_partitive",
+      "text": "He ovat opettajia.",
+      "diagnostics": []
+    },
+    {
+      "id": "predicative_mass_partitive",
+      "text": "Ne ovat vettä.",
+      "diagnostics": []
+    },
+    {
+      "id": "predicative_noun_number",
+      "text": "He ovat opettaja.",
+      "diagnostics": ["predicative_agreement"]
     }
   ]
 }

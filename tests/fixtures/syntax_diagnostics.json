@@ -891,6 +891,45 @@
           "corrections": []
         }
       ]
+    },
+    {
+      "id": "predicative_noun_plural_subject",
+      "text": "He ovat opettaja.",
+      "diagnostics": [
+        {
+          "kind": "predicative_agreement",
+          "severity": "warning",
+          "start": 8,
+          "end": 16,
+          "corrections": ["opettajia", "opettajat"]
+        }
+      ]
+    },
+    {
+      "id": "predicative_noun_singular_subject",
+      "text": "Hän on opettajat.",
+      "diagnostics": [
+        {
+          "kind": "predicative_agreement",
+          "severity": "warning",
+          "start": 8,
+          "end": 17,
+          "corrections": ["opettaja"]
+        }
+      ]
+    },
+    {
+      "id": "participle_vasynyt",
+      "text": "Lapset ovat väsynyt.",
+      "diagnostics": [
+        {
+          "kind": "subject_predicate_agreement",
+          "severity": "error",
+          "start": 12,
+          "end": 20,
+          "corrections": ["väsyneet"]
+        }
+      ]
     }
   ],
   "clean": [
@@ -915,6 +954,12 @@
     "He ovat lukeneet.",
     "He ovat väsyneet.",
     "He ovat väsyneitä.",
+    "He ovat opettajia.",
+    "He ovat opettajat.",
+    "Hän on opettaja.",
+    "Ne ovat vettä.",
+    "Lapset ovat väsyneet.",
+    "Lapset ovat väsyneitä.",
     "Talo on rakennettu.",
     "Talot on rakennettu.",
     "Me emme ole lukeneet.",
