@@ -265,6 +265,31 @@ allowed example; the fixture test checks the schema and stable ids.
 - Only after that net is green may a `PREFER` suggestion be added, and only for
   an unambiguous cue.
 
+### 6.1 Why no `WordOrder` rule is emitted yet
+
+Building the net (§6) settled the question for now. Every sentence the
+specification marks as a non-preferred order is also listed by the same rule as
+an allowed alternative:
+
+| rule | non-preferred example | the rule's own verdict |
+|---|---|---|
+| `FI_QUESTION_001` | `Hän asuu missä?` | echo question, `ALLOW` |
+| `FI_QUESTION_002` | `Hän tuleeko?` | contrastive, `ALLOW` |
+| `FI_IMPERATIVE_001` | `Tänne tule!` | contrastive, `ALLOW` |
+| `FI_ORDER_001` | `Auton ostin.`, `Eilen kävin kaupassa.` | fronting, `ALLOW` |
+| `FI_EXISTENTIAL_001` | `Kirja on pöydällä.` | `ALLOW` |
+| `FI_SUBORDINATE_001` | `Tiedän, että tulee hän.` | `ALLOW` |
+
+So a rule that fires on any of them would report a sentence this project pins
+clean, and every one of those orders carries a different information structure
+the engine cannot name. `Söi Sami puuron.` is in the same position: it is in the
+clean corpus, and there is no `PREFER` rewrite the engine could defend.
+
+A `WordOrder` diagnostic is therefore not written until there is a construction
+with a **structurally impossible** order — a genuine `FORCE` — rather than a
+merely less neutral one. The features and the net are the groundwork that makes
+that decision cheap to revisit.
+
 ## 7. Non-goals
 
 - Do not enforce SVO on neutral declaratives.

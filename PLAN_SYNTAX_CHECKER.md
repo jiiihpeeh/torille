@@ -1314,8 +1314,11 @@ Tasks:
       rule reads the features.
 - [x] Keep the rule engine deferred; do not infer object case from position.
 
-The net is green. The first `PREFER` suggestion is the next step, and it must
-stay suggestion-only with no attached correction.
+The net is green. It also settled the rule question: every non-preferred order
+in the spec is listed by the same rule as an allowed alternative, so a `PREFER`
+suggestion would report a sentence pinned clean (see `docs/word_order.md`
+§6.1). No `WordOrder` rule is written until a construction makes an order
+structurally impossible — a genuine `FORCE`.
 
 ### Phase 6 — punctuation phase 2, UI, ranking, evaluation
 

@@ -2057,3 +2057,9 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   every example in `docs/word_order.md` clean and found two rection false
   positives (`Tuleeko hän?`, `Talossa asuu ihmisiä`), both fixed. No
   `WordOrder` diagnostic is emitted yet.
+
+- 2026-11-17: decided against a `WordOrder` diagnostic for now. Every
+  non-preferred order in `docs/word_order.md` is listed by the same rule as an
+  allowed alternative, so a `PREFER` suggestion would report a sentence the
+  `ALLOW` net pins clean (§6.1 of the spec). The clause features and the net
+  stay as the groundwork for a future genuine `FORCE` rule.

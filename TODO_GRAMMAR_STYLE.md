@@ -740,6 +740,11 @@ Adjacent repetition is not always accidental:
   were rewritten by the rection rule.
 - [ ] **Implement the first `PREFER` suggestion**, now that the net is green;
   keep `WordOrder` suggestion-only and attach no automatic correction.
+  **Held deliberately:** §6.1 of `docs/word_order.md` shows that every
+  non-preferred example in the spec is also listed as an allowed alternative by
+  the same rule, so a suggestion would fire on a sentence pinned clean. No
+  `WordOrder` rule until there is a **structurally impossible** order (a
+  genuine `FORCE`), not a merely less neutral one.
 
 Keep the rest visible; do not implement it before the local agreement and case
 work is trustworthy. The current analysis is deliberately local and advisory.
