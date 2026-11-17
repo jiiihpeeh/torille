@@ -1305,8 +1305,17 @@ Tasks:
       existential, passive, subordinate clauses and the information-structure
       `ALLOW` table.
 - [x] Pin the schema and stable rule ids in `tests/word_order_spec.rs`.
-- [x] Keep the rule engine deferred until the clause features in the spec are
-      available; do not infer object case from position.
+- [x] Add the clause features (`clause_type`, `construction`, `question_type`,
+      `subject_position`, `object_case`, `focus_type`, `topic_position`,
+      `register`) to `Clause` via `src/syntax/features.rs`, and expose them in
+      the wasm clause object.
+- [x] Build the `ALLOW` regression net (`tests/fixtures/word_order_cases.json`,
+      `tests/word_order_allow.rs`) over every example in the spec before any
+      rule reads the features.
+- [x] Keep the rule engine deferred; do not infer object case from position.
+
+The net is green. The first `PREFER` suggestion is the next step, and it must
+stay suggestion-only with no attached correction.
 
 ### Phase 6 — punctuation phase 2, UI, ranking, evaluation
 

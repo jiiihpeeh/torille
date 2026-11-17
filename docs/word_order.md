@@ -30,18 +30,55 @@ unambiguously structural; no current rule sets it. In particular, **SVO is a
 Word order cannot be judged from positions alone. The validator needs:
 
 - `clause_type`: declarative, interrogative, imperative, subordinate;
-- `construction`: existential, passive, copular, possessive, other;
+- `construction`: existential, passive, copular, possessive, ordinary;
 - `subject_position`: preverbal, postverbal, omitted;
 - `object_case`: partitive, accusative, genitive, nominative (from morphology,
   never from position);
 - `question_type`: wh, yes/no, alternative, echo;
-- `focus_type`: neutral, contrastive, narrow, broad;
+- `focus_type`: neutral, contrastive;
 - `topic_position`: initial, non-initial;
-- `register`: formal, neutral, colloquial;
-- `constraint_level`: hard, preferred, optional.
+- `register`: neutral, colloquial;
+- `constraint_level`: hard, preferred, optional — the rule's own decision, not
+  a clause feature.
 
 `object_case` in particular must be resolved before the order rule runs:
 `Kirjan luin` is object fronting, not a subject + verb.
+
+### 2.1 Implementation status
+
+The features are implemented on `Clause::features`
+(`src/syntax/features.rs`) and computed after role resolution, so every field
+reads the final case and role assignment:
+
+| feature | cue |
+|---|---|
+| `clause_type` | imperative mood + no subject or `!`; `?` or a `-ko` clitic; else a subordinator or a relative parent; else declarative |
+| `construction` | `clause.passive`; an adessive personal possessor + `olla`; `clause.existential`; `olla` + complement; else ordinary |
+| `question_type` | `vai` + a clitic → alternative; a clitic → yes/no; a clause-initial interrogative → wh; a trailing interrogative clause → echo |
+| `subject_position` | the subject token against the predicate token |
+| `object_case` | the resolved object's case |
+| `focus_type` | an all-caps word the lexicon knows |
+| `topic_position` | whether a constituent precedes the finite verb |
+| `register` | a closed colloquial surface list |
+
+Three values the specification lists are deliberately **not** produced, because
+the analysis has no cue for them and a guess would defeat the purpose:
+
+- `focus_type` `narrow`/`broad` needs prosody or discourse;
+- `register` `formal` needs a register model;
+- a `FORCE`-level `constraint_level`, because no current rule is a hard
+  structural requirement.
+
+`construction` describes the clause's *order and frame*, so `Kirja on
+pöydällä` is `ordinary` while `Pöydällä on kirja` is `existential`; the two have
+the same proposition and different information structure, which is exactly what
+the order rule must see.
+
+`existential` itself was extended for this: an intransitive verb of existence or
+appearance with a locative and a postverbal **partitive** now counts
+(`Talossa asuu ihmisiä`, `Puutarhassa kasvaa kukkia`). The partitive is the
+cue, because a nominative subject agrees with its verb (`Naapurissa asuvat
+Liisa ja Pekka`) and must keep going through the agreement rule.
 
 ## 3. Rules
 
@@ -218,11 +255,15 @@ allowed example; the fixture test checks the schema and stable ids.
 - `ALLOW` cases produce no diagnostic. In particular, object/topic/temporal/
   locative fronting, contrastive focus, passive and existential orders are
   clean.
-- Before any rule lands, the clause features in §2 are added to the analysis
-  and pinned in `tests/fixtures/syntax_ambiguity.json` and the prose corpus.
-- The first implementation phase should start with the `ALLOW` table (a
-  regression net that proves the checker stays quiet) and only then add a
-  `PREFER` suggestion for an unambiguous cue.
+- The clause features in §2 are added to the analysis and pinned in
+  `tests/fixtures/syntax_ambiguity.json` and the prose corpus. **Done** — see
+  §2.1.
+- The `ALLOW` regression net is in place before any rule:
+  `tests/fixtures/word_order_cases.json` carries every example in §3, and
+  `tests/word_order_allow.rs` asserts the exact diagnostic list (empty), the
+  clause features, and that `WordOrder` is never emitted. **Done.**
+- Only after that net is green may a `PREFER` suggestion be added, and only for
+  an unambiguous cue.
 
 ## 7. Non-goals
 
@@ -235,13 +276,15 @@ allowed example; the fixture test checks the schema and stable ids.
 
 ## 8. Implementation map
 
-| future piece | location |
+| piece | location |
 |---|---|
-| clause features (`clause_type`, `construction`, `question_type`, ...) | `src/syntax/` and `src/syntax_check/` |
-| rule engine and decision model | `src/syntax_check/word_order.rs` (new) |
-| machine-readable rules | `tests/fixtures/word_order_rules.json` |
-| ambiguity and prose regressions | `tests/fixtures/syntax_ambiguity.json`, `tests/fixtures/prose/adjudicated.json` |
-| explanation relation | `Relation::WordOrder` (new; `DiagnosticKind::WordOrder` already exists) |
+| clause features (`clause_type`, `construction`, `question_type`, ...) | `src/syntax/features.rs`, on `Clause::features` |
+| machine-readable rules | `tests/fixtures/word_order_rules.json`, pinned by `tests/word_order_spec.rs` |
+| the `ALLOW` regression net | `tests/fixtures/word_order_cases.json`, `tests/word_order_allow.rs` |
+| ambiguity regressions | `tests/fixtures/syntax_ambiguity.json` (`features` key) |
+| clause features in the browser surface | `torille-wasm/src/lib.rs` `analyze_syntax` |
+| rule engine and decision model | `src/syntax_check/word_order.rs` (not implemented) |
+| explanation relation | `Relation::WordOrder` (not implemented; `DiagnosticKind::WordOrder` already exists) |
 
 The spec is deliberately separate from `PLAN_SYNTAX_CHECKER.md`'s old “no
 word-order rules” decision; that decision is superseded here.

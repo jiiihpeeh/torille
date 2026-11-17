@@ -958,7 +958,7 @@ fn selected_readings(token: &TokenSyntax) -> impl Iterator<Item = &Tags> {
         .filter(move |reading| token.case.is_none() || reading.case == token.case)
 }
 
-fn pronoun_person_number(word: &str) -> Option<(Person, Number)> {
+pub(super) fn pronoun_person_number(word: &str) -> Option<(Person, Number)> {
     Some(match word.to_lowercase().as_str() {
         "minä" => (Person::First, Number::Singular),
         "sinä" => (Person::Second, Number::Singular),

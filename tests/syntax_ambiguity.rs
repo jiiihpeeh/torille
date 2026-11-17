@@ -174,6 +174,24 @@ fn ambiguous_surfaces_pick_the_intended_reading() {
                 ));
             }
         }
+        if let Some(features) = case_value["features"].as_object() {
+            let Some(clause) = analysis.clauses.first() else {
+                failures.push(format!("{id}: no clause to pin features on"));
+                continue;
+            };
+            for (name, expected) in features {
+                let expected = expected.as_str().unwrap_or_default();
+                match clause.features.value(name) {
+                    Some(actual) if actual == expected => {}
+                    Some(actual) => failures.push(format!(
+                        "{id}: feature {name} is {actual:?}, expected {expected:?}"
+                    )),
+                    None => failures.push(format!(
+                        "{id}: feature {name} is absent, expected {expected:?}"
+                    )),
+                }
+            }
+        }
     }
 
     assert!(

@@ -67,6 +67,13 @@ Reserved but not emitted: `WordOrder`. The construction-aware specification is
 SVO is a preference rather than a correctness rule, and the future kind stays
 suggestion-only.
 
+The features that spec needs are already computed on `Clause::features`
+(`clause_type`, `construction`, `question_type`, `subject_position`,
+`object_case`, `focus_type`, `topic_position`, `register`). They are exposed
+through the analysis only — no rule reads them yet, and the `ALLOW` regression
+net (`tests/word_order_allow.rs`) proves the sentences a naive order rule would
+flag stay clean.
+
 ## False-positive policy
 
 Ship fewer rules, not more guesses.
@@ -178,7 +185,9 @@ class.
 
 ## Known limitations
 
-- **Word order** is not checked.
+- **Word order** is not checked. The clause features that a future rule needs
+  exist (`Clause::features`), and every example in
+  [`docs/word_order.md`](word_order.md) is pinned clean, but no rule reads them.
 - **Predicative agreement is number-only.** `Talot ovat punainen` and
   `Talo on punaisia` are caught for adjectives and active participles. A noun
   predicate has a semantic partitive/nominative choice, so the separate noun

@@ -4,6 +4,8 @@
     "`roles` pins the winning reading; `forbidden_roles` pins the reading that",
     "must not win. `diagnostics` is the expected syntax_check kind list, so a",
     "clean false-positive case can be pinned without a second fixture.",
+    "`features` pins the word-order clause features (docs/word_order.md) of the",
+    "first clause, so a role reading and the construction it feeds stay paired.",
     "Word lookups are case-insensitive and take the first matching word token."
   ],
   "cases": [
@@ -394,6 +396,59 @@
       "id": "predicative_noun_number",
       "text": "He ovat opettaja.",
       "diagnostics": ["predicative_agreement"]
+    },
+    {
+      "id": "existential_intransitive_partitive_subject",
+      "text": "Talossa asuu ihmisiä.",
+      "clauses": 1,
+      "subject": "ihmisiä",
+      "predicate": "asuu",
+      "roles": [
+        { "word": "Talossa", "role": "adverbial", "case": "inessive" },
+        { "word": "asuu", "role": "predicate" },
+        { "word": "ihmisiä", "role": "subject", "case": "partitive" }
+      ],
+      "forbidden_roles": [
+        { "word": "ihmisiä", "role": "object" }
+      ],
+      "features": {
+        "construction": "existential",
+        "subject_position": "postverbal",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "nominative_subject_blocks_intransitive_existential",
+      "text": "Naapurissa asuvat Liisa ja Pekka.",
+      "clauses": 1,
+      "features": {
+        "construction": "ordinary",
+        "subject_position": "postverbal"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "object_fronting_eilen",
+      "text": "Kirjan luin eilen.",
+      "clauses": 1,
+      "subject": "none",
+      "predicate": "luin",
+      "roles": [
+        { "word": "Kirjan", "role": "object", "case": "genitive" },
+        { "word": "luin", "role": "predicate" },
+        { "word": "eilen", "role": "adverbial" }
+      ],
+      "forbidden_roles": [
+        { "word": "Kirjan", "role": "subject" }
+      ],
+      "features": {
+        "clause_type": "declarative",
+        "subject_position": "omitted",
+        "object_case": "genitive",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
     }
   ]
 }

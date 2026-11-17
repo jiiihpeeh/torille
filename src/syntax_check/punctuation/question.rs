@@ -12,16 +12,9 @@ use super::super::diagnostic::{
 
 /// Interrogative surfaces that open a direct question.
 ///
-/// The inflected forms of `kuka`/`ken` and `mikä` are included because the
-/// sentence opener is often `Kenen`, `Missä` or `Mitä`, not the citation form.
-/// `koska` is deliberately absent: it is also the subordinator “because”.
-const INTERROGATIVE_SURFACES: &[&str] = &[
-    "kuka", "ken", "ketä", "kenen", "kelle", "keneltä", "kenelle", "kenessä", "kenestä",
-    "kenellä", "ketkä", "keiden", "keitä", "keissä", "keistä", "keihin", "keillä", "keiltä",
-    "keille", "mikä", "mitä", "minkä", "missä", "mistä", "mihin", "millä", "miltä", "mille",
-    "miksi", "mitkä", "millainen", "millaisia", "millaiset", "kumpi", "kumman", "kumpaa",
-    "kummat", "kumpia", "milloin", "miten", "kuinka", "montako",
-];
+/// The list lives in the syntax layer because the clause features and the
+/// missing-question-mark rule must agree on what opens a wh-question.
+use crate::syntax::INTERROGATIVE_SURFACES;
 
 pub(super) fn question_diagnostics(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
     let mut out = Vec::new();

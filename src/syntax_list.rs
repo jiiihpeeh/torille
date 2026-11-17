@@ -294,6 +294,8 @@ fn nested_in_item(
             complement: None,
             negative: false,
             existential: false,
+            passive: false,
+            features: crate::syntax::ClauseFeatures::default(),
             parent: None,
             children: Vec::new(),
             antecedent: None,

@@ -148,6 +148,49 @@ fn correction_bases(syntax: &crate::syntax::TokenSyntax) -> Vec<(&str, crate::ta
     out
 }
 
+/// Is this `Subject`-role token really the clause subject rather than a
+/// mislabelled governed argument?
+///
+/// Three cues say yes:
+///
+/// - the clause is existential, so its postverbal nominative/partitive is the
+///   subject (`Talossa asuu ihmisiä`) and the existential rule owns it;
+/// - the clause has more than one subject role, which means a coordinated
+///   subject (`Naapurissa asuvat Liisa ja Pekka`);
+/// - the token is a personal pronoun that agrees in person and number with the
+///   finite predicate (`Tuleeko hän?`).
+///
+/// Everything else stays a candidate. `Menen koulu` and `Pidän sinä` are
+/// rection errors on a nominative the role pass had no other slot for, and a
+/// personal pronoun that cannot agree is likewise not that verb's subject.
+fn is_genuine_subject(
+    clause: &crate::syntax::Clause,
+    index: usize,
+    predicate: usize,
+    analysis: &SyntaxAnalysis,
+) -> bool {
+    use super::agreement::{finite_reading, pronoun_person_number};
+
+    if clause.existential {
+        return true;
+    }
+    let subjects = clause
+        .tokens
+        .clone()
+        .filter(|&token| analysis.tokens[token].role == SyntacticRole::Subject)
+        .count();
+    if subjects > 1 {
+        return true;
+    }
+    let Some((person, number)) = pronoun_person_number(&analysis.tokens[index].key) else {
+        return false;
+    };
+    let Some(reading) = finite_reading(&analysis.tokens[predicate]) else {
+        return false;
+    };
+    reading.person == Some(person) && reading.number == Some(number)
+}
+
 /// Verbs whose table frame is aspectual rather than lexical.
 ///
 /// The table records the partitive object these verbs commonly take, but
@@ -172,6 +215,11 @@ fn aspectual_total_object(lemma: &str, case: Case) -> bool {
 }
 
 /// The first post-predicate nominal that can be the governed argument.
+///
+/// A *genuine* subject is never the governed argument, so it is skipped; see
+/// [`is_genuine_subject`]. The subject role is still a candidate when the role
+/// pass mislabelled a required argument as one, which is exactly the error this
+/// rule exists to catch (`Menen koulu`, `Pidän sinä`).
 fn argument(
     clause: &crate::syntax::Clause,
     predicate: usize,
@@ -186,6 +234,11 @@ fn argument(
             syntax.role,
             SyntacticRole::Object | SyntacticRole::Subject | SyntacticRole::Unknown
         ) || is_marker(&analysis.tokens[index].key)
+        {
+            continue;
+        }
+        if syntax.role == SyntacticRole::Subject
+            && is_genuine_subject(clause, index, predicate, analysis)
         {
             continue;
         }

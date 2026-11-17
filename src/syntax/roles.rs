@@ -451,6 +451,25 @@ pub(super) fn resolve_clause(
         .iter()
         .any(|&index| nominal_has_case(&out[index], &[Case::Nominative]));
     clause.existential = is_olla && locative && nominal_after && !nominative_before;
+    // An intransitive verb of existence or appearance takes its indefinite
+    // subject after the predicate: `Talossa asuu ihmisiä`, `Puutarhassa kasvaa
+    // kukkia`. That postverbal partitive is a subject, not an object. A
+    // nominative subject agrees with its verb (`Naapurissa asuvat Liisa ja
+    // Pekka`), so only the partitive pattern is an existential here and the
+    // agreement rule keeps seeing the nominative one.
+    if !clause.existential
+        && !is_olla
+        && is_existential_verb(&lemma)
+        && locative
+        && !nominative_before
+    {
+        let partitive_after = after.iter().any(|&index| {
+            out[index].role == SyntacticRole::Unknown
+                && nominal_has_case(&out[index], &[Case::Partitive])
+                && !is_clause_marker(index, tokens, out)
+        });
+        clause.existential = partitive_after;
+    }
 
     let genitive_before = before.iter().rev().copied().find(|&index| {
         out[index].role == SyntacticRole::Unknown
@@ -467,6 +486,7 @@ pub(super) fn resolve_clause(
             "täytyä" | "pitää" | "kannattaa" | "sopia" | "kuulua"
         );
     let passive_construction = is_olla && !necessity && passive_participle_after(after, out);
+    clause.passive = passive || passive_construction;
 
     let mut subject = None;
     if !passive && !passive_construction {
@@ -550,6 +570,15 @@ pub(super) fn resolve_clause(
         out[index].head = Some(predicate);
         clause.subject = Some(index);
         mark_coordinated_subjects(before, index, predicate, tokens, out);
+        if index > predicate {
+            // A postverbal coordinated subject keeps the same cue:
+            // `Naapurissa asuvat Liisa ja Pekka`. Without this the second
+            // conjunct would fall through to the object pass and a rection
+            // rule could rewrite it. A copular complement is not at risk
+            // because this pass only runs when the chosen subject itself
+            // follows the predicate.
+            mark_coordinated_subjects(after, index, predicate, tokens, out);
+        }
         mark_numeral_complement(index, &words, out);
     }
 
@@ -680,6 +709,41 @@ pub(super) fn resolve_clause(
             out[index].head = Some(predicate);
         }
     }
+}
+
+/// An intransitive verb of existence or appearance whose postverbal
+/// partitive is a subject rather than an object.
+///
+/// A closed list, not a valency guess: a transitive verb with a partitive
+/// object (`Kaupassa ostan ruokaa`) must not turn into an existential.
+fn is_existential_verb(lemma: &str) -> bool {
+    matches!(
+        lemma,
+        "asua"
+            | "elää"
+            | "sijaita"
+            | "kasvaa"
+            | "kukoistaa"
+            | "löytyä"
+            | "ilmaantua"
+            | "ilmestyä"
+            | "seisoa"
+            | "istua"
+            | "maata"
+            | "lojua"
+            | "roikkua"
+            | "virrata"
+            | "juosta"
+            | "lentää"
+            | "uida"
+            | "kaikua"
+            | "soida"
+            | "tuoksua"
+            | "tapahtua"
+            | "vallita"
+            | "syttyä"
+            | "roihuta"
+    )
 }
 
 /// The `Minun on mentävä` construction: a genitive subject plus a participle.

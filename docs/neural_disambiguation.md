@@ -1132,7 +1132,7 @@ ambiguous cases, and the 2,000-word prose fixture. It compares:
 - every `TokenSyntax` field: `key`, `role`, `confidence`, `clause`, `head`,
   `case`, `lemma`, `lemmas`, `readings`;
 - every `Clause` field: ranges, predicate, subject, object, complement,
-  negative, existential, parent/children, antecedent;
+  negative, existential, passive, features, parent/children, antecedent;
 - every diagnostic: kind, severity, confidence, span, message, expected;
 - every correction: edit order, spans, replacement, score, note;
 - list structures and sentence spans;

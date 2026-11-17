@@ -22,6 +22,7 @@
 use std::cell::RefCell;
 use std::ops::Range;
 
+pub mod features;
 mod predicates;
 mod roles;
 mod segments;
@@ -32,6 +33,11 @@ use crate::tags::{Case, Tags};
 use crate::tokenise::Token;
 
 pub use crate::morphology::MorphologyCache as AnalysisCache;
+pub use features::{
+    ClauseFeatures, ClauseType, Construction, FocusType, ObjectCase, QuestionType, Register,
+    SubjectPosition, TopicPosition,
+};
+pub(crate) use features::INTERROGATIVE_SURFACES;
 pub(crate) use predicates::{
     is_coordinating, is_finite_predicate, is_nominal_pos, is_past_participle, is_subordinator,
     is_verb_reading, predicate_is_passive, starts_relative_clause,
@@ -113,6 +119,11 @@ pub struct Clause {
     pub negative: bool,
     /// True for an existential construction (`pöydällä on kirja`).
     pub existential: bool,
+    /// True for a passive clause or a passive perfect (`Talo rakennettiin`,
+    /// `Asia on jo käsitelty`).
+    pub passive: bool,
+    /// The word-order-relevant features, filled after role resolution.
+    pub features: ClauseFeatures,
     /// The clause this one is nested inside, when it is a relative clause.
     /// The linear `start`, `end` and `tokens` stay the source of truth; the
     /// tree is additive so existing rules and callers are unaffected.
@@ -323,6 +334,8 @@ pub(crate) fn analyze_syntax_with_contexts_and_decisions(
                 complement: None,
                 negative: false,
                 existential: false,
+                passive: false,
+                features: ClauseFeatures::default(),
                 parent: None,
                 children: Vec::new(),
                 antecedent: None,
@@ -347,6 +360,7 @@ pub(crate) fn analyze_syntax_with_contexts_and_decisions(
         resolve_clause(clause, tokens, &mut out, &nominal_lemmas);
     }
     share_clause_roles(&mut clauses, &clause_groups_of, tokens, &out);
+    features::assign(&mut clauses, tokens, &out);
 
     let lists = crate::syntax_list::parse(tokens, &clauses, &out);
     SyntaxAnalysis {

@@ -721,13 +721,25 @@ Adjacent repetition is not always accidental:
   questions, imperatives, neutral SVO, existentials, passives, subordinate
   clauses and the information-structure `ALLOW` table. The decision vocabulary
   is `FORCE`/`PREFER`/`ALLOW`; SVO is a `PREFER`, never an error.
-- [ ] **Add the clause features** (`clause_type`, `construction`,
+- [x] **Add the clause features** (`clause_type`, `construction`,
   `question_type`, `subject_position`, `object_case`, `focus_type`,
-  `topic_position`, `register`) to the analysis and pin them in the ambiguity
-  fixture.
-- [ ] **Implement the first `PREFER` suggestion** only after the `ALLOW` table
-  is a green regression net; keep `WordOrder` suggestion-only and attach no
-  automatic correction.
+  `topic_position`, `register`) to the analysis. They live on
+  `Clause::features` in `src/syntax/features.rs`, are pinned in
+  `tests/fixtures/syntax_ambiguity.json` and the new
+  `tests/fixtures/word_order_cases.json`, and are exposed by `analyze_syntax`
+  in the wasm surface. `Clause` also gained `passive`, which the construction
+  feature needs. The existential detection was extended to intransitive
+  existence/appearance verbs with a postverbal partitive subject
+  (`Talossa asuu ihmisiä`), and a postverbal coordinated subject is now marked
+  (`Naapurissa asuvat Liisa ja Pekka`).
+- [x] **Build the `ALLOW` regression net.** `tests/word_order_allow.rs` checks
+  every example in `docs/word_order.md`: the exact diagnostic list (empty), the
+  clause features, that each case really is an example on the side of the rule
+  it names, and that `WordOrder` is never emitted. It immediately found two
+  real false positives, both fixed: `Tuleeko hän?` and `Talossa asuu ihmisiä`
+  were rewritten by the rection rule.
+- [ ] **Implement the first `PREFER` suggestion**, now that the net is green;
+  keep `WordOrder` suggestion-only and attach no automatic correction.
 
 Keep the rest visible; do not implement it before the local agreement and case
 work is trustworthy. The current analysis is deliberately local and advisory.
@@ -1031,3 +1043,15 @@ intended/competing interpretation pair that fails.
   `PREFER`, never an error, and object/topic/temporal/locative fronting,
   passive, existential and contrastive orders are `ALLOW`. The rule engine
   stays deferred until the clause features are present.
+- 2026-11-17: implemented the word-order clause features on `Clause::features`
+  (`src/syntax/features.rs`): `clause_type`, `construction`, `question_type`,
+  `subject_position`, `object_case`, `focus_type`, `topic_position`,
+  `register`. Added `Clause::passive`, extended the existential detection to
+  intransitive existence verbs with a partitive postverbal subject, and marked
+  a postverbal coordinated subject. Every example in `docs/word_order.md` is
+  now a green `ALLOW`/preferred regression case in
+  `tests/fixtures/word_order_cases.json` + `tests/word_order_allow.rs`, which
+  found and closed two rection false positives (`Tuleeko hän?`,
+  `Talossa asuu ihmisiä`). The wasm clause object exposes the features.
+  Narrow/broad focus, a formal register and any `FORCE` rule remain
+  unimplemented because there is no cue for them.

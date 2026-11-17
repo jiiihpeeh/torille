@@ -81,6 +81,7 @@ src/
   morphology/         cached readings: case, number, POS, clitic, possessive
   check.rs            combined grammar + style pass over one morphology result
   syntax/             on-demand clause/role analysis over the morphology engine
+                      (`features.rs` computes the word-order clause features)
   syntax_list.rs      list structure parser used by the syntax checker
   syntax_check/       grammar diagnostics + corrections over `syntax`
   hyphenation/        Finnish line-break hyphenation (patterns + policy)
@@ -551,6 +552,7 @@ is gitignored and generated.
 | feminine derivations (`-tar`, `-nna`, `-ska`, `-kko`) | `src/expand/derived_forms/agent.rs` for productive `-tar`; lexical `-nna`/`-ska`/`-kko` as data, not a suffix stripper |
 | the grammar reading model | `src/tags.rs` |
 | grammar diagnostics/corrections | `src/syntax_check/`, `tests/syntax_check.rs`, `PLAN_SYNTAX_CHECKER.md` |
+| word-order clause features / spec | `src/syntax/features.rs`, `docs/word_order.md`, `tests/word_order_allow.rs` |
 | grammar/style performance | `src/morphology/`, `src/syntax_check/`, `src/style_check/`, `PLAN_GRAMMAR_STYLE_PERF.md` |
 | hyphenation patterns/policy | `src/hyphenation/`, `data/hyphenation/` |
 | the wasm/browser surface | `torille-wasm/src/`, `extensions/firefox/`, `extensions/chromium/` |

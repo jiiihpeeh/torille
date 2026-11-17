@@ -2046,3 +2046,14 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   across the long tail (slowest word 8.7 ms), not a single hotspot. The
   ≤500 ms target stays open; the reverse-index alternative was already
   rejected on blob size.
+
+- 2026-11-17: word-order clause features landed on `Clause::features`
+  (`src/syntax/features.rs`) — `clause_type`, `construction`, `question_type`,
+  `subject_position`, `object_case`, `focus_type`, `topic_position`,
+  `register` — plus `Clause::passive`. The existential detection now covers
+  intransitive existence verbs with a postverbal partitive subject, and a
+  postverbal coordinated subject is marked. The `ALLOW` regression net
+  (`tests/fixtures/word_order_cases.json`, `tests/word_order_allow.rs`) pins
+  every example in `docs/word_order.md` clean and found two rection false
+  positives (`Tuleeko hän?`, `Talossa asuu ihmisiä`), both fixed. No
+  `WordOrder` diagnostic is emitted yet.

@@ -191,8 +191,10 @@ pub fn hyphenate(
 /// {
 ///   sentences: [{ start, end, index, paragraphStart }],
 ///   clauses:   [{ start, end, tokensStart, tokensEnd, predicate, subject,
-///                 object, complement, negative, existential, parent,
-///                 children, antecedent }],
+///                 object, complement, negative, existential, passive, parent,
+///                 children, antecedent, clauseType, construction,
+///                 questionType, subjectPosition, objectCase, focusType,
+///                 topicPosition, register }],
 ///   lists:     [{ start, end, tokensStart, tokensEnd, clause, role, head,
 ///                 kind, items, separators, conjunction, introducer, parent }],
 ///   tokens:    [{ word, start, end, role, confidence, clause, head,
@@ -210,6 +212,10 @@ pub fn hyphenate(
 /// `parent`, `children` and `antecedent` are the additive relative-clause
 /// tree. The linear clause array stays the source of truth: a relative clause
 /// is also present at its own index and keeps its own `start`/`end`.
+///
+/// The `clauseType` … `register` fields are the word-order features from
+/// `docs/word_order.md`. They are additive too, and `questionType` and
+/// `objectCase` are null when the clause has no question or no object.
 ///
 /// A clause may span two `sentences` entries when the sentence layer split at
 /// a parenthetical bracket; the syntax layer merges that boundary.
@@ -296,6 +302,7 @@ fn syntax_object(
         }
         set(&item, "children", children.into());
         set_option(&item, "antecedent", clause.antecedent);
+        item_features(&item, &clause.features);
         clauses.push(&item);
     }
     set(&obj, "clauses", clauses.into());
@@ -842,6 +849,42 @@ fn set_option<T: Into<JsValue>>(obj: &js_sys::Object, key: &str, value: Option<T
         Some(value) => set(obj, key, value.into()),
         None => set(obj, key, JsValue::NULL),
     }
+}
+
+/// Attach the word-order clause features to a clause object.
+///
+/// They are additive: an older consumer keeps reading the flat clause fields.
+/// `questionType` and `objectCase` are null when the clause has no question or
+/// no object. See `docs/word_order.md` for the vocabulary.
+fn item_features(obj: &js_sys::Object, features: &torille::syntax::ClauseFeatures) {
+    set(obj, "clauseType", JsValue::from(features.clause_type.name()));
+    set(
+        obj,
+        "construction",
+        JsValue::from(features.construction.name()),
+    );
+    set_option(
+        obj,
+        "questionType",
+        features.question_type.map(|kind| kind.name()),
+    );
+    set(
+        obj,
+        "subjectPosition",
+        JsValue::from(features.subject_position.name()),
+    );
+    set_option(
+        obj,
+        "objectCase",
+        features.object_case.map(|case| case.name()),
+    );
+    set(obj, "focusType", JsValue::from(features.focus_type.name()));
+    set(
+        obj,
+        "topicPosition",
+        JsValue::from(features.topic_position.name()),
+    );
+    set(obj, "register", JsValue::from(features.register.name()));
 }
 
 /// One-shot: returns a JavaScript object that bundles a full spell-check

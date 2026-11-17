@@ -1,0 +1,470 @@
+{
+  "_comment": [
+    "The word-order regression net. Every sentence is an example from",
+    "docs/word_order.md, tagged with the rule that names it and the side of",
+    "that rule's examples it comes from (`outcome`: preferred or allowed).",
+    "`features` pins the clause features the analysis must produce for that",
+    "clause (index given by `clause`, default 0).",
+    "",
+    "`diagnostics` is the exact expected kind list. Every example here is",
+    "correct Finnish, so it must stay clean: a word-order rule never reports",
+    "it, and no other rule may fire on it either. `PREFER` is a generation",
+    "preference, not an error.",
+    "",
+    "The `text` values must appear verbatim in tests/fixtures/word_order_rules.json;",
+    "tests/word_order_allow.rs checks both direction and coverage."
+  ],
+  "cases": [
+    {
+      "id": "wh_question_initial",
+      "rule": "FI_QUESTION_001",
+      "outcome": "preferred",
+      "text": "Missä hän asuu?",
+      "features": {
+        "clause_type": "interrogative",
+        "construction": "ordinary",
+        "question_type": "wh",
+        "subject_position": "preverbal",
+        "focus_type": "neutral",
+        "topic_position": "initial",
+        "register": "neutral"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "wh_question_initial_prodrop",
+      "rule": "FI_QUESTION_001",
+      "outcome": "preferred",
+      "text": "Miksi tulit tänne?",
+      "features": {
+        "clause_type": "interrogative",
+        "question_type": "wh",
+        "subject_position": "omitted",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "wh_question_echo_noun_subject",
+      "rule": "FI_QUESTION_001",
+      "outcome": "allowed",
+      "text": "Hän asuu missä?",
+      "features": {
+        "clause_type": "interrogative",
+        "question_type": "echo",
+        "subject_position": "preverbal",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "wh_question_echo_verb_initial",
+      "rule": "FI_QUESTION_001",
+      "outcome": "allowed",
+      "text": "Tulit tänne miksi?",
+      "features": {
+        "clause_type": "interrogative",
+        "question_type": "echo",
+        "subject_position": "omitted",
+        "topic_position": "non_initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "ko_question_clitic_first",
+      "rule": "FI_QUESTION_002",
+      "outcome": "preferred",
+      "text": "Tuleeko hän?",
+      "features": {
+        "clause_type": "interrogative",
+        "construction": "ordinary",
+        "question_type": "yes_no",
+        "subject_position": "postverbal",
+        "topic_position": "non_initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "ko_question_copula",
+      "rule": "FI_QUESTION_002",
+      "outcome": "preferred",
+      "text": "Oletko valmis?",
+      "features": {
+        "clause_type": "interrogative",
+        "construction": "copular",
+        "question_type": "yes_no",
+        "subject_position": "omitted",
+        "topic_position": "non_initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "ko_question_focused_adverbial",
+      "rule": "FI_QUESTION_002",
+      "outcome": "preferred",
+      "text": "Helsingissäkö hän asuu?",
+      "features": {
+        "clause_type": "interrogative",
+        "question_type": "yes_no",
+        "subject_position": "preverbal",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "ko_question_marked_order",
+      "rule": "FI_QUESTION_002",
+      "outcome": "allowed",
+      "text": "Hän tuleeko?",
+      "features": {
+        "clause_type": "interrogative",
+        "question_type": "yes_no",
+        "subject_position": "preverbal",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "imperative_directional",
+      "rule": "FI_IMPERATIVE_001",
+      "outcome": "preferred",
+      "text": "Tule tänne!",
+      "features": {
+        "clause_type": "imperative",
+        "construction": "ordinary",
+        "subject_position": "omitted",
+        "topic_position": "non_initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "imperative_object",
+      "rule": "FI_IMPERATIVE_001",
+      "outcome": "preferred",
+      "text": "Avaa ovi!",
+      "features": {
+        "clause_type": "imperative",
+        "subject_position": "omitted",
+        "object_case": "nominative",
+        "topic_position": "non_initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "imperative_plural",
+      "rule": "FI_IMPERATIVE_001",
+      "outcome": "preferred",
+      "text": "Lukekaa kirja!",
+      "features": {
+        "clause_type": "imperative",
+        "subject_position": "omitted",
+        "object_case": "nominative",
+        "topic_position": "non_initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "imperative_marked_order",
+      "rule": "FI_IMPERATIVE_001",
+      "outcome": "allowed",
+      "text": "Tänne tule!",
+      "features": {
+        "clause_type": "imperative",
+        "subject_position": "omitted",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "declarative_svo_pronoun",
+      "rule": "FI_ORDER_001",
+      "outcome": "preferred",
+      "text": "Minä ostin auton.",
+      "features": {
+        "clause_type": "declarative",
+        "construction": "ordinary",
+        "subject_position": "preverbal",
+        "object_case": "genitive",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "declarative_svo_partitive",
+      "rule": "FI_ORDER_001",
+      "outcome": "preferred",
+      "text": "Hän lukee kirjaa.",
+      "features": {
+        "clause_type": "declarative",
+        "subject_position": "preverbal",
+        "object_case": "partitive",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "declarative_svo_plural",
+      "rule": "FI_ORDER_001",
+      "outcome": "preferred",
+      "text": "Lapset pelaavat jalkapalloa.",
+      "features": {
+        "clause_type": "declarative",
+        "subject_position": "preverbal",
+        "object_case": "partitive",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "declarative_object_fronting",
+      "rule": "FI_ORDER_001",
+      "outcome": "allowed",
+      "text": "Auton ostin.",
+      "features": {
+        "clause_type": "declarative",
+        "subject_position": "omitted",
+        "object_case": "genitive",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "declarative_temporal_fronting",
+      "rule": "FI_ORDER_001",
+      "outcome": "allowed",
+      "text": "Eilen kävin kaupassa.",
+      "features": {
+        "clause_type": "declarative",
+        "subject_position": "omitted",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "existential_copula",
+      "rule": "FI_EXISTENTIAL_001",
+      "outcome": "preferred",
+      "text": "Pöydällä on kirja.",
+      "features": {
+        "construction": "existential",
+        "subject_position": "postverbal",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "existential_live",
+      "rule": "FI_EXISTENTIAL_001",
+      "outcome": "preferred",
+      "text": "Talossa asuu ihmisiä.",
+      "features": {
+        "construction": "existential",
+        "subject_position": "postverbal",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "existential_growth",
+      "rule": "FI_EXISTENTIAL_001",
+      "outcome": "preferred",
+      "text": "Puutarhassa kasvaa kukkia.",
+      "features": {
+        "construction": "existential",
+        "subject_position": "postverbal",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "existential_reordered",
+      "rule": "FI_EXISTENTIAL_001",
+      "outcome": "allowed",
+      "text": "Kirja on pöydällä.",
+      "features": {
+        "construction": "ordinary",
+        "subject_position": "preverbal",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "passive_generic",
+      "rule": "FI_PASSIVE_001",
+      "outcome": "preferred",
+      "text": "Täällä puhutaan suomea.",
+      "features": {
+        "construction": "passive",
+        "subject_position": "omitted",
+        "object_case": "partitive",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "passive_perfect",
+      "rule": "FI_PASSIVE_001",
+      "outcome": "preferred",
+      "text": "Asia on jo käsitelty.",
+      "features": {
+        "construction": "passive",
+        "subject_position": "omitted",
+        "object_case": "nominative"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "passive_object_fronting",
+      "rule": "FI_PASSIVE_001",
+      "outcome": "allowed",
+      "text": "Täällä suomea puhutaan.",
+      "features": {
+        "construction": "passive",
+        "subject_position": "omitted",
+        "object_case": "partitive",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "subordinate_etta",
+      "rule": "FI_SUBORDINATE_001",
+      "outcome": "preferred",
+      "text": "Tiedän, että hän tulee.",
+      "clause": 1,
+      "features": {
+        "clause_type": "subordinate",
+        "subject_position": "preverbal",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "subordinate_etta_copula",
+      "rule": "FI_SUBORDINATE_001",
+      "outcome": "preferred",
+      "text": "Luulen, että asia on tärkeä.",
+      "clause": 1,
+      "features": {
+        "clause_type": "subordinate",
+        "construction": "copular",
+        "subject_position": "preverbal",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "subordinate_koska",
+      "rule": "FI_SUBORDINATE_001",
+      "outcome": "preferred",
+      "text": "Menen kotiin, koska olen väsynyt.",
+      "clause": 1,
+      "features": {
+        "clause_type": "subordinate",
+        "subject_position": "omitted",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "subordinate_marked_order",
+      "rule": "FI_SUBORDINATE_001",
+      "outcome": "allowed",
+      "text": "Tiedän, että tulee hän.",
+      "clause": 1,
+      "features": {
+        "clause_type": "subordinate",
+        "subject_position": "postverbal"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "allow_object_fronting",
+      "rule": "FI_ALLOW_001",
+      "outcome": "allowed",
+      "text": "Kirjan luin eilen.",
+      "features": {
+        "clause_type": "declarative",
+        "construction": "ordinary",
+        "subject_position": "omitted",
+        "object_case": "genitive",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "allow_topic_fronting",
+      "rule": "FI_ALLOW_001",
+      "outcome": "allowed",
+      "text": "Minä en sitä tiedä.",
+      "features": {
+        "clause_type": "declarative",
+        "subject_position": "preverbal",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "allow_temporal_fronting",
+      "rule": "FI_ALLOW_001",
+      "outcome": "allowed",
+      "text": "Eilen kävin kaupassa.",
+      "features": {
+        "clause_type": "declarative",
+        "subject_position": "omitted",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "allow_locative_fronting",
+      "rule": "FI_ALLOW_001",
+      "outcome": "allowed",
+      "text": "Kotona hän viihtyy hyvin.",
+      "features": {
+        "clause_type": "declarative",
+        "subject_position": "preverbal",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "allow_contrastive_focus",
+      "rule": "FI_ALLOW_001",
+      "outcome": "allowed",
+      "text": "JUURI HÄN teki sen.",
+      "features": {
+        "clause_type": "declarative",
+        "subject_position": "preverbal",
+        "object_case": "genitive",
+        "focus_type": "contrastive",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "allow_passive",
+      "rule": "FI_ALLOW_001",
+      "outcome": "allowed",
+      "text": "Asia käsiteltiin eilen.",
+      "features": {
+        "construction": "passive",
+        "subject_position": "omitted",
+        "object_case": "nominative"
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "allow_existential",
+      "rule": "FI_ALLOW_001",
+      "outcome": "allowed",
+      "text": "Pöydällä on kahvikuppi.",
+      "features": {
+        "construction": "existential",
+        "subject_position": "postverbal",
+        "topic_position": "initial"
+      },
+      "diagnostics": []
+    }
+  ]
+}
