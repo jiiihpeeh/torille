@@ -703,12 +703,17 @@ Adjacent repetition is not always accidental:
 
 - [ ] **Cold page target**
   `PLAN_GRAMMAR_STYLE_PERF.md` still records the ≤500 ms cold-page target as
-  open. The 2026-11-17 re-measurement is **1,931 ms** cold morphology
-  single-thread (warm all 97 ms; fresh-cache style 1,376 ms), or ~1.4 s with
-  the 4-worker pool. The cost is spread across 1,136 misses in the long tail
-  (slowest word 8.7 ms), not one hotspot; the reverse-index experiment was
-  rejected on blob size. Performance stays a separate engineering objective,
-  not a rule-correctness gate.
+  open. The 2026-11-18 re-measurement after the shared paradigm probe is
+  **1,490 ms** cold morphology single-thread (was 2,016 ms), **~1,140 ms**
+  fresh-cache style (was ~1,410), and **537 ms** with the 4 native workers
+  (was 753). Warm all stays 97 ms. The native 4-worker path is within ~7% of
+  the target; the shipping wasm build is still above it. What is left is
+  paradigm construction (~66%) plus a duplicated unknown-word search (~20%);
+  closing it needs a form → readings table or a targeted "can this class spell
+  this surface" test, not cheaper cells (the plan records the attribution
+  experiment). The reverse-index experiment stays rejected on blob size.
+  Performance remains a separate engineering objective, not a rule-correctness
+  gate.
 
 ## P3 — future syntax roadmap
 
@@ -1060,3 +1065,13 @@ intended/competing interpretation pair that fails.
   `Talossa asuu ihmisiä`). The wasm clause object exposes the features.
   Narrow/broad focus, a formal register and any `FORCE` rule remain
   unimplemented because there is no cue for them.
+- 2026-11-18: cut the cold morphology pass by sharing one paradigm build. The
+  `emits_form` verification now keeps the readings of the surface it was asked
+  about, so `form_readings` answers from that probe instead of walking the
+  paradigm a second time (609 of 1,398 extractions on the perf fixture); the
+  verification walk skips `split::dedup` and folds the matched copies with
+  `Form::absorb`, which is the same merge; `modifier_is_known` is memoised per
+  modifier. Cold single-thread 2,016 → 1,490 ms, fresh-cache style ~1,410 →
+  ~1,140 ms, 4 native workers 753 → 537 ms, warm unchanged. The attribution
+  experiment (verb stem map, cheap fallback, both) is recorded in
+  `PLAN_GRAMMAR_STYLE_PERF.md`.

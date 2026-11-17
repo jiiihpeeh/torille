@@ -1,6 +1,6 @@
 # PLAN_GRAMMAR_STYLE_PERF — one morphology pass for grammar and style
 
-Status: **Phase 0–7 landed/decided; 256-bit stem-shape filter and 4-worker morphology pool landed; cold page ~1.4 s wasm / 1.9 s native single-thread; ≤500 ms open; background and content-panel e2e landed** · 2026-11-17 · branch `syntax` · baseline `2e5f13c`
+Status: **Phase 0–7 landed/decided; 256-bit stem-shape filter, shared paradigm probe and 4-worker morphology pool landed; cold page ~1.5 s native single-thread / ~0.54 s with 4 workers; ≤500 ms open; background and content-panel e2e landed** · 2026-11-18 · branch `syntax` · baseline `2e5f13c`
 
 This is the performance plan for the two opt-in analysis layers:
 
@@ -126,7 +126,8 @@ worker chunks the check with progress and cancellation. The sentence cache
 ~3.0 s single-thread / ~1.4 s with the 4-worker pool, with first progress at
 ~110 ms.
 
-Re-measured 2026-11-17 on the committed fixture, single-thread:
+Re-measured 2026-11-17 on the committed fixture, single-thread (before the
+shared paradigm probe; the current numbers follow this block):
 
 ```text
 page-2000 (1,918 words): cold morphology 1,931 ms, warm morphology 86 ms,
@@ -142,6 +143,53 @@ The cost is spread across the long tail, not one word. The reverse-index
 experiment was already rejected on blob size (§Phase 6 decision), so the
 ≤500 ms target stays open and this remains a separate engineering objective,
 not a rule-correctness gate.
+
+Re-measured 2026-11-18 after the shared paradigm probe (§Phase 8), same
+machine, median of 7 first-pass runs in fresh processes:
+
+| workload | before | after |
+|---|---:|---:|
+| cold morphology, single-thread (wasm shape) | 2,016 ms | **1,490 ms** |
+| style from a fresh cache | ~1,410 ms | **~1,140 ms** |
+| cold morphology, 4 native workers | 753 ms | **537 ms** |
+| warm morphology / warm all | 90 / 97 ms | unchanged |
+
+Diagnostics are identical in every configuration: `--threads 4` reports the
+same 54 grammar / 14 style as the single-thread pass, and the parity flags are
+`true`/`true`. The ≤500 ms target is now within ~7% on the native 4-worker
+path and still open for the shipping wasm build, which this plan does not
+measure.
+
+### What the remaining seconds are, measured
+
+Three throwaway experiments on the fixture attribute the cold pass. Each
+disables one branch and re-measures; the point is the *shape*, not the exact
+milliseconds:
+
+| experiment | cold morphology | reading |
+|---|---:|---|
+| baseline at the time | 1,763 ms | — |
+| skip the verb stem map (`collect_bases_via_verb_stem_map`) | 1,797 ms | no change: a base it would have named then costs the fallback instead |
+| skip the cheap fallback (`resolve_cheap_fallback`) | 1,551 ms | −12% |
+| skip both | **964 ms** | −45% |
+
+Instruction counts from `callgrind` on the same fixture (14.9 G before the
+paradigm probe, 12.0 G after):
+
+| area | share |
+|---|---:|
+| `inflect_in` and the paradigm builders (`emits_form` 60% of the pass alone) | ~66% |
+| compound/unknown path (`check_normal_fast`, `is_known_word_fast`, the compound DP) | ~20% |
+| `format!`/`fmt` inside both | ~24% |
+| `split::dedup`'s two sorts | ~15% |
+
+So the cost is *paradigm construction* plus a *duplicated unknown-word
+search*, not one hot function. `format!` is concentrated in the compound DP
+(`segment_compound_dp::solve` is its largest caller) and in the per-class
+builders; `dedup` runs once per `inflect_in`. Any further large win has to come
+from constructing fewer paradigms (a form → readings table, or a targeted
+"can this class spell this surface" test that does not build the grid) rather
+than from cheaper cells.
 
 ## 1. The measured problem
 
@@ -1011,6 +1059,52 @@ from both the free-text panel and the reader, shows the reader underlay spans,
 and cancels to 0. `docs/syntax_checker.md` records the sentence-cache path.
 The reader was enabled on the chunked-progress branch of the condition, not
 the 500 ms cold-page branch.
+
+### Phase 8 — shared paradigm probe (landed)
+
+The cold pass asked the engine the same question twice per word. The stem-map
+ladder verifies a candidate base with `expand::emits_form` ("does this lemma
+emit this surface?"), and the reading extraction immediately asks
+`expand::form_readings` the same thing ("which readings does that surface
+have?"). Each built the whole paradigm: a page did ~2,000 verifications and
+~1,400 extractions, ~3.5 full paradigm builds per unique word.
+
+Three changes, none of which touches a rule or a generated class module:
+
+1. **The paradigm cache carries a probe.** `emits_form`'s cache entry is now
+   the word set *plus* the readings of the one surface it was asked about.
+   `form_readings` asks the same cache with the same key and answers from the
+   probe when the surface matches. On the fixture that turns 609 of 1,398
+   extractions into a comparison. Only one probe is kept per paradigm, so an
+   entry costs a surface and its readings, not a second copy of the word set.
+2. **The verification walk skips `split::dedup`.** `inflect_in` stays the
+   ordered, merged list; `inflect_in_raw` is the same builder without the two
+   sorts. `emits_form` walks the raw list (its `HashSet` collapses the copies)
+   and folds the matched copies with `Form::absorb`, which is exactly the merge
+   `dedup` would have done — so the probe's readings are the merged ones. The
+   public listing API is untouched.
+3. **`modifier_is_known` is memoised.** It is a pure function of the modifier
+   and the static dictionary, and one classless lemma asks it once per
+   verification of that lemma. The `-mis`/`-inen`/numeral tails fall through
+   to the compound recogniser, which is the expensive part.
+
+Acceptance: cold single-thread 2,016 → **1,490 ms**, fresh-cache style
+~1,410 → **~1,140 ms**, 4-worker native 753 → **537 ms**; warm numbers
+unchanged; the whole suite, the strict engine comparison, the illegal-evidence
+gate and the binding agreement gate green; two unit tests pin the invariant
+(the probe equals a fresh walk's readings, and the raw paradigm spells the same
+words as the merged one).
+
+Rejected in this phase, with the measurement in hand:
+
+- **Skipping `dedup` in `form_readings` too** (a further ~8%): the merged
+  readings are the contract, and `add_reading`'s order-independence is an
+  argument, not a test.
+- **Raising the paradigm cap to 400,000 words**: more cache hits, no measurable
+  time win, four times the heap.
+- **`format!` → `push_str` in `nominals/utility.rs` and `inflect.rs push`**:
+  measured inside the noise. The 24% of instructions in `fmt` is dominated by
+  the compound DP, not by the class builders.
 
 ## 8. Measurement harness
 

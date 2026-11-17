@@ -2063,3 +2063,11 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   allowed alternative, so a `PREFER` suggestion would report a sentence the
   `ALLOW` net pins clean (§6.1 of the spec). The clause features and the net
   stay as the groundwork for a future genuine `FORCE` rule.
+
+- 2026-11-18: shared paradigm probe in the cold morphology pass. `emits_form`
+  now keeps the readings of the surface it verified, so `form_readings` reuses
+  them instead of rebuilding the paradigm; the verification walk skips
+  `split::dedup` and folds matched copies with `Form::absorb`; and
+  `modifier_is_known` is memoised. Measured on `page-2000`: cold single-thread
+  2,016 → 1,490 ms, fresh-cache style ~1,410 → ~1,140 ms, 4 native workers
+  753 → 537 ms, warm unchanged, diagnostics identical.

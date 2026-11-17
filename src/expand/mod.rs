@@ -372,6 +372,28 @@ pub fn inflect_in(
     pos: PartOfSpeech,
     possessives: bool,
 ) -> Vec<Generated> {
+    let mut out = inflect_in_raw(lemma, inflection, cat, lexicon, pos, possessives);
+    dedup(&mut out);
+    out
+}
+
+/// The same paradigm before [`split::dedup`].
+///
+/// `dedup` sorts the whole form list twice and merges the same-word pairs it
+/// finds. A caller that only asks "does this word appear" needs none of that:
+/// its own `HashSet` collapses duplicates and the order is unobservable. The
+/// stem-map gates ask this thousands of times per page, so [`emits_form`]
+/// walks this and [`inflect_in`] stays the ordered, merged list the listing
+/// API promises. [`form_readings`] keeps the merge, because it returns the
+/// readings.
+fn inflect_in_raw(
+    lemma: &str,
+    inflection: Inflection,
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+    pos: PartOfSpeech,
+    possessives: bool,
+) -> Vec<Generated> {
     let mut out: Vec<Generated> = Vec::with_capacity(64);
     // An empty lemma has no paradigm. Some class engines build `lemma + ending`
     // and would otherwise emit bare endings; a couple assumed a non-empty stem
@@ -456,7 +478,6 @@ pub fn inflect_in(
         }
         out.extend(generated);
     }
-    dedup(&mut out);
     out
 }
 
@@ -518,24 +539,46 @@ pub(super) fn inflect_paradigms(
     out
 }
 
+/// What [`walk_generated`] walks: one lemma and the classes it is read under.
+///
+/// Grouped rather than passed one by one so the walk's two shapes -- merged
+/// for a listing, raw for a membership test -- read as one thing.
+struct GeneratedWalk<'a, 'row> {
+    lemma: &'a str,
+    inflections: &'a [Inflection],
+    cat: &'a Catalogues,
+    lexicon: Option<&'a LexiconIndex<'row>>,
+    pos: PartOfSpeech,
+    possessives: bool,
+}
+
 /// Visits every form the engine generates for `lemma`, in the same order as
 /// [`inflect_all`].
 ///
-/// `visit` returns `false` to stop early. The core paradigm is walked raw;
-/// [`inflect_all`] applies its own deduplication, while [`emits_form`] and
-/// [`form_readings`] only need the set or the matching readings. One source
-/// list keeps the three from drifting.
+/// `visit` returns `false` to stop early. `dedup_core` selects the merged core
+/// list ([`inflect_in`]) or the raw one ([`inflect_in_raw`]): a listing needs
+/// the merge, a membership test does not. [`inflect_all`], [`emits_form`] and
+/// [`form_readings`] share this one source list so the three cannot drift.
 fn walk_generated(
-    lemma: &str,
-    inflections: &[Inflection],
-    cat: &Catalogues,
-    lexicon: Option<&LexiconIndex>,
-    pos: PartOfSpeech,
-    possessives: bool,
+    walk: GeneratedWalk<'_, '_>,
+    dedup_core: bool,
     mut visit: impl FnMut(Generated) -> bool,
 ) -> bool {
+    let GeneratedWalk {
+        lemma,
+        inflections,
+        cat,
+        lexicon,
+        pos,
+        possessives,
+    } = walk;
     for inflection in inflections {
-        for form in inflect_in(lemma, *inflection, cat, lexicon, pos, possessives) {
+        let forms = if dedup_core {
+            inflect_in(lemma, *inflection, cat, lexicon, pos, possessives)
+        } else {
+            inflect_in_raw(lemma, *inflection, cat, lexicon, pos, possessives)
+        };
+        for form in forms {
             if !visit(form) {
                 return false;
             }
@@ -605,12 +648,15 @@ pub fn inflect_all(
     let mut out: Vec<Generated> = Vec::new();
     let mut seen: HashSet<(String, Confidence, Vec<Tags>)> = HashSet::new();
     walk_generated(
-        lemma,
-        inflections,
-        cat,
-        lexicon,
-        pos,
-        possessives,
+        GeneratedWalk {
+            lemma,
+            inflections,
+            cat,
+            lexicon,
+            pos,
+            possessives,
+        },
+        true,
         |form| {
             let key = (form.word.clone(), form.confidence, form.readings.clone());
             if seen.insert(key) {
@@ -639,15 +685,33 @@ pub fn form_readings(
     possessives: bool,
     surface: &str,
 ) -> Option<Vec<Tags>> {
+    let key = (!inflections.is_empty())
+        .then(|| paradigm_key(lemma, inflections, pos, possessives, lexicon));
+    if let Some(key) = &key
+        && let Some(readings) = PARADIGMS.with_borrow(|cache| {
+            cache.get(key).and_then(|paradigm| {
+                paradigm
+                    .probe
+                    .as_ref()
+                    .filter(|(probed, _)| probed == surface)
+                    .map(|(_, readings)| readings.clone())
+            })
+        })
+    {
+        return (!readings.is_empty()).then_some(readings);
+    }
     let mut readings: Vec<Tags> = Vec::new();
     let mut found = false;
     walk_generated(
-        lemma,
-        inflections,
-        cat,
-        lexicon,
-        pos,
-        possessives,
+        GeneratedWalk {
+            lemma,
+            inflections,
+            cat,
+            lexicon,
+            pos,
+            possessives,
+        },
+        true,
         |form| {
             if form.word == surface {
                 found = true;
@@ -658,19 +722,87 @@ pub fn form_readings(
             true
         },
     );
+    if let Some(key) = key {
+        // Refresh the probe of an entry the verification pass created; a
+        // probe-only entry would make `emits_form` answer "no" for a word
+        // whose paradigm was never materialised.
+        let probed = readings.clone();
+        PARADIGMS.with_borrow_mut(|cache| {
+            if let Some(paradigm) = cache.get_mut(&key) {
+                paradigm.probe = Some((surface.to_string(), probed));
+            }
+        });
+    }
     found.then_some(readings)
 }
 
-/// The key of [`emits_form`]'s paradigm cache: the lemma, its inflections,
-/// the reading, the possessive flag, and whether a lexicon was supplied.
+/// The key of the paradigm cache: the lemma, its inflections, the part of
+/// speech it is read under, the possessive flag, and whether a lexicon was
+/// supplied.
 ///
 /// The inflections are part of the key: two callers may ask about the same
 /// lemma under different subsets, and the cached set is the union of the
 /// forms of the inflections it was built from.
 type ParadigmKey = (String, Vec<(u16, u8)>, u8, bool, bool);
 
-/// One lemma's verified word set.
-type Paradigm = std::rc::Rc<HashSet<String>>;
+/// One lemma's verified word set, plus the one surface a caller asked about.
+///
+/// `probe` is what makes the stem-map ladder pay once: `emits_form` verifies
+/// a candidate base, and the caller that then needs the readings asks
+/// [`form_readings`] about the same surface. Keeping the readings the walk
+/// already saw turns that second full walk of the paradigm into a comparison.
+/// Only one probe is kept, so an entry costs a surface and its readings, not
+/// a second copy of the paradigm.
+struct Paradigm {
+    words: std::rc::Rc<HashSet<String>>,
+    probe: Option<(String, Vec<Tags>)>,
+}
+
+thread_local! {
+    /// The paradigm cache. See [`emits_form`] and [`form_readings`].
+    static PARADIGMS: std::cell::RefCell<
+        std::collections::HashMap<ParadigmKey, Paradigm>,
+    > = std::cell::RefCell::new(std::collections::HashMap::new());
+    static PARADIGM_WORDS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+/// The cache cap, counted in the words of the cached paradigms.
+///
+/// Counted in words rather than entries because an entry's cost is its word
+/// set: one lemma's paradigm is a hundred words, so a few hundred lemmas is
+/// already megabytes.
+const PARADIGM_WORD_CAP: usize = 100_000;
+
+fn paradigm_key(
+    lemma: &str,
+    inflections: &[Inflection],
+    pos: PartOfSpeech,
+    possessives: bool,
+    lexicon: Option<&LexiconIndex>,
+) -> ParadigmKey {
+    (
+        lemma.to_string(),
+        inflections
+            .iter()
+            .map(|inflection| (inflection.class, inflection.gradation.map_or(0, |g| g.0)))
+            .collect(),
+        pos as u8,
+        possessives,
+        lexicon.is_some(),
+    )
+}
+
+/// Insert a paradigm, evicting the whole cache when it would pass the cap.
+fn store_paradigm(key: ParadigmKey, paradigm: Paradigm) {
+    PARADIGMS.with_borrow_mut(|cache| {
+        if PARADIGM_WORDS.with(std::cell::Cell::get) + paradigm.words.len() > PARADIGM_WORD_CAP {
+            cache.clear();
+            PARADIGM_WORDS.with(|counter| counter.set(0));
+        }
+        PARADIGM_WORDS.with(|counter| counter.set(counter.get() + paradigm.words.len()));
+        cache.insert(key, paradigm);
+    });
+}
 
 /// Whether `lemma` under `inflections` produces `word`.
 ///
@@ -696,12 +828,15 @@ pub fn emits_form(
     if inflections.is_empty() {
         let mut hit = false;
         walk_generated(
-            lemma,
-            inflections,
-            cat,
-            lexicon,
-            pos,
-            possessives,
+            GeneratedWalk {
+                lemma,
+                inflections,
+                cat,
+                lexicon,
+                pos,
+                possessives,
+            },
+            true,
             |form| {
                 if form.word == word {
                     hit = true;
@@ -716,50 +851,52 @@ pub fn emits_form(
     // The stem-map gates verify the same base once per token, and a page has
     // many case forms of one lemma (`talo`, `talossa`, `talolle`, ...). Each
     // verification otherwise rebuilds the whole paradigm; the first builds the
-    // word set and the rest are one hash probe.
-    thread_local! {
-        static CACHE: std::cell::RefCell<
-            std::collections::HashMap<ParadigmKey, Paradigm>,
-        > = std::cell::RefCell::new(std::collections::HashMap::new());
-        static WORDS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    // word set and the rest are one hash probe. The walk also keeps the
+    // readings of the surface it was asked about, so the caller that needs
+    // them ([`form_readings`]) does not walk the paradigm a second time.
+    let key = paradigm_key(lemma, inflections, pos, possessives, lexicon);
+    if let Some(hit) = PARADIGMS.with_borrow(|cache| {
+        cache
+            .get(&key)
+            .map(|paradigm| paradigm.words.contains(word))
+    }) {
+        return hit;
     }
-    const WORD_CAP: usize = 100_000;
-    let key = (
-        lemma.to_string(),
-        inflections
-            .iter()
-            .map(|inflection| (inflection.class, inflection.gradation.map_or(0, |g| g.0)))
-            .collect(),
-        pos as u8,
-        possessives,
-        lexicon.is_some(),
-    );
-    if let Some(set) = CACHE.with_borrow(|cache| cache.get(&key).cloned()) {
-        return set.contains(word);
-    }
-    let mut set: HashSet<String> = HashSet::new();
+    let mut words: HashSet<String> = HashSet::new();
+    // The probe is the merged form, not one entry per copy: `dedup` folds
+    // same-word forms with `Form::absorb`, and this raw walk must produce the
+    // same readings as the merged one. Absorbing here is that fold for the
+    // one word anyone asked about.
+    let mut matched: Option<Generated> = None;
     walk_generated(
-        lemma,
-        inflections,
-        cat,
-        lexicon,
-        pos,
-        possessives,
+        GeneratedWalk {
+            lemma,
+            inflections,
+            cat,
+            lexicon,
+            pos,
+            possessives,
+        },
+        false,
         |form| {
-            set.insert(form.word);
+            if form.word == word {
+                match &mut matched {
+                    Some(existing) => existing.absorb(&form),
+                    None => matched = Some(form.clone()),
+                }
+            }
+            words.insert(form.word);
             true
         },
     );
-    let hit = set.contains(word);
-    let cached = std::rc::Rc::new(set);
-    CACHE.with_borrow_mut(|cache| {
-        if WORDS.with(std::cell::Cell::get) + cached.len() > WORD_CAP {
-            cache.clear();
-            WORDS.with(|w| w.set(0));
-        }
-        WORDS.with(|w| w.set(w.get() + cached.len()));
-        cache.insert(key, cached);
-    });
+    let hit = words.contains(word);
+    store_paradigm(
+        key,
+        Paradigm {
+            words: std::rc::Rc::new(words),
+            probe: matched.map(|form| (word.to_string(), form.readings)),
+        },
+    );
     hit
 }
 
@@ -879,6 +1016,79 @@ mod tests {
             .into_iter()
             .map(|g| g.word)
             .collect()
+    }
+
+    /// The probe the verification walk stores must answer exactly what a
+    /// fresh `form_readings` walk would: the same surface, the same readings.
+    ///
+    /// This is the invariant that makes the shared paradigm cache safe. The
+    /// walk in `emits_form` skips `split::dedup`, so the probe is the folded
+    /// form (`Form::absorb` over the same-word copies) — `appi` is two classes
+    /// whose forms coincide, and the readings must come back merged, not
+    /// doubled.
+    #[test]
+    fn the_paradigm_probe_agrees_with_a_fresh_reading_walk() {
+        let cat = cat();
+        let cases: [(u16, Option<u8>, PartOfSpeech, &str); 5] = [
+            (1, None, PartOfSpeech::Noun, "talo"),
+            (10, None, PartOfSpeech::Adjective, "punainen"),
+            (24, Some(1), PartOfSpeech::Noun, "käsi"),
+            (5, Some(1), PartOfSpeech::Noun, "appi"),
+            (1, None, PartOfSpeech::Pronoun, "hän"),
+        ];
+        for (class, gradation, pos, lemma) in cases {
+            let inflections = [Inflection {
+                class,
+                gradation: gradation.map(Gradation),
+            }];
+            let paradigm = inflect_all(lemma, &inflections, &cat, None, pos, false);
+            // A copy, so the probe is what answers: `form_readings` must not
+            // walk a second time to agree with `inflect_all`'s own list.
+            for form in &paradigm {
+                assert!(
+                    emits_form(lemma, &inflections, &cat, None, pos, false, &form.word),
+                    "{lemma}: the walk must emit its own form {:?}",
+                    form.word
+                );
+                let probed = form_readings(lemma, &inflections, &cat, None, pos, false, &form.word)
+                    .unwrap_or_else(|| panic!("{lemma}: no readings for {:?}", form.word));
+                assert_eq!(
+                    probed, form.readings,
+                    "{lemma}: probe readings differ for {:?}",
+                    form.word
+                );
+            }
+        }
+    }
+
+    /// `inflect_in` stays the ordered, merged list; the raw builder is only a
+    /// cost-saving input to the membership walk, so the two must agree on the
+    /// words they spell.
+    #[test]
+    fn the_raw_paradigm_has_the_same_words_as_the_deduplicated_one() {
+        let cat = cat();
+        for (class, gradation, lemma) in [
+            (1, None, "talo"),
+            (24, Some(1), "käsi"),
+            (5, Some(1), "appi"),
+            (10, None, "punainen"),
+        ] {
+            let inflection = Inflection {
+                class,
+                gradation: gradation.map(Gradation),
+            };
+            let deduped: HashSet<String> =
+                inflect_in(lemma, inflection, &cat, None, PartOfSpeech::Noun, true)
+                    .into_iter()
+                    .map(|form| form.word)
+                    .collect();
+            let raw: HashSet<String> =
+                inflect_in_raw(lemma, inflection, &cat, None, PartOfSpeech::Noun, true)
+                    .into_iter()
+                    .map(|form| form.word)
+                    .collect();
+            assert_eq!(deduped, raw, "{lemma}: class {class}");
+        }
     }
 
     /// `perin` is the adjective superlative `sisin`; the adverb homonym is

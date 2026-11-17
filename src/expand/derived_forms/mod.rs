@@ -383,6 +383,36 @@ fn classless_modifier_is_known(
 /// Only the noun map counts for the combining-form case: a compound
 /// modifier is a nominal stem, never a verb stem or a verb case form.
 pub(crate) fn modifier_is_known(modifier: &str) -> bool {
+    // The result is a pure function of the modifier and the static
+    // dictionary, and one classless compound is asked about many times: the
+    // same head is re-split by every verification of the lemma, and the
+    // stem-map walk re-verifies the same base for several case forms. A
+    // probe answers most of these (`luonnon`, `kansan`, `maan`), but the
+    // `-mis`/`-inen`/numeral tails fall through to the compound recogniser,
+    // which is the expensive part.
+    thread_local! {
+        static MEMO: std::cell::RefCell<std::collections::HashMap<
+            String,
+            bool,
+        >> = std::cell::RefCell::new(std::collections::HashMap::new());
+    }
+    const CAP: usize = 8_192;
+    let key = modifier.strip_suffix('-').unwrap_or(modifier);
+    if let Some(known) = MEMO.with_borrow(|memo| memo.get(key).copied()) {
+        return known;
+    }
+    let known = modifier_is_known_uncached(modifier);
+    MEMO.with_borrow_mut(|memo| {
+        if memo.len() >= CAP && !memo.contains_key(key) {
+            // A probe, not state: dropping it is always safe.
+            memo.clear();
+        }
+        memo.insert(key.to_string(), known);
+    });
+    known
+}
+
+fn modifier_is_known_uncached(modifier: &str) -> bool {
     let bare = modifier.strip_suffix('-').unwrap_or(modifier);
     if bare.is_empty() {
         return false;
