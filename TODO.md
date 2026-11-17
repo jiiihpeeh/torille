@@ -2023,3 +2023,19 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   compares degree forms. `Punaisempi autot ovat hienoja.` is an
   `attribute_agreement` error. Degree forms are derived `Repaired` words, so
   the diagnostic has no suggested rewrite; agreeing degree forms are clean.
+
+- 2026-11-17: predicative noun complements landed. `He ovat opettaja.` emits
+  `predicative_agreement`/`predicative_noun_agreement` as a `Warning` with
+  `opettajia`/`opettajat`; `Hän on opettajat.` suggests `opettaja`. The rule is
+  separate from the adjective number rule and only reports a clear nominative
+  number mismatch; partitive predicates (`He ovat opettajia.`,
+  `Ne ovat vettä.`) stay quiet. `Lapset ovat väsynyt.` is covered by the
+  compound-participle rule (`väsyneet`). Page-2000 is quiet.
+
+- 2026-11-17: word order now has a construction-aware specification.
+  `docs/word_order.md` covers wh- and -ko questions, imperatives, neutral SVO,
+  existentials, passives, subordinate clauses and the information-structure
+  `ALLOW` table. `tests/fixtures/word_order_rules.json` is the machine-readable
+  rule set and `tests/word_order_spec.rs` pins its schema. Decisions are
+  `FORCE`/`PREFER`/`ALLOW`; SVO is a preference, never an error. The rule
+  engine remains deferred until the clause features land.

@@ -488,11 +488,16 @@ prose-corpus review.
   (nominative plural) are both legitimate, so case is not a correctness claim.
   Area: `src/syntax_check/agreement.rs`; `Clause.complement`.
 
-- [ ] **Predicative noun/participle complements**
-  `Lapset ovat väsynyt.` and `He ovat opettaja.` are still silent:
-  `väsynyt` is read as a participle, and the noun complement's
-  partitive/nominative choice is semantic. Add only after the adjective rule
-  has survived the prose corpus; do not fold it into the number-only rule.
+- [x] **Predicative noun/participle complements** — landed.
+  `Lapset ovat väsynyt.` is covered by the separate compound-participle rule
+  (`väsyneet`); `He ovat opettaja.` now emits `predicative_agreement` /
+  `predicative_noun_agreement` as a `Warning` with both licensed plural forms
+  (`opettajia`, `opettajat`). The noun rule is deliberately separate from the
+  adjective number rule: it only fires on a clear nominative number mismatch
+  (plural subject + nominative singular, or singular subject + nominative
+  plural). Partitive predicates (`He ovat opettajia.`, `Ne ovat vettä.`) and
+  agreeing forms stay quiet; the correction confidence is `Likely` because the
+  partitive/nominative choice is semantic.
   Area: `src/syntax_check/agreement.rs`.
 
 - [x] **Connegative main verb after the negative auxiliary** — landed.
@@ -648,6 +653,7 @@ reuses the previous one and the prose corpus grows with it.
 | 13 | Style vocabulary expansion | Incremental table growth |
 | 14 | UI ignore/dismiss + combined command | Rule-level suppression and usability |
 | 15 | Cold-page performance | Separate engineering objective |
+| 16 | Word-order specification and features | Construction-aware, suggestion-only |
 
 ## P2 — punctuation, style and surfaces
 
@@ -702,7 +708,24 @@ Adjacent repetition is not always accidental:
 
 ## P3 — future syntax roadmap
 
-Keep these visible; do not implement them before the local agreement and case
+### Word-order specification
+
+- [x] **Write the construction-aware specification.** The rules, decisions and
+  examples are in [`docs/word_order.md`](docs/word_order.md) and the
+  machine-readable fixture `tests/fixtures/word_order_rules.json`; the schema
+  is pinned by `tests/word_order_spec.rs`. It covers wh-questions, `-ko`
+  questions, imperatives, neutral SVO, existentials, passives, subordinate
+  clauses and the information-structure `ALLOW` table. The decision vocabulary
+  is `FORCE`/`PREFER`/`ALLOW`; SVO is a `PREFER`, never an error.
+- [ ] **Add the clause features** (`clause_type`, `construction`,
+  `question_type`, `subject_position`, `object_case`, `focus_type`,
+  `topic_position`, `register`) to the analysis and pin them in the ambiguity
+  fixture.
+- [ ] **Implement the first `PREFER` suggestion** only after the `ALLOW` table
+  is a green regression net; keep `WordOrder` suggestion-only and attach no
+  automatic correction.
+
+Keep the rest visible; do not implement it before the local agreement and case
 work is trustworthy. The current analysis is deliberately local and advisory.
 
 - relative clauses with complex, coordinated or distant antecedents;
@@ -989,3 +1012,18 @@ intended/competing interpretation pair that fails.
   forms like ordinary adjectives. `Punaisempi autot ovat hienoja.` is now a
   number-agreement error. Degree forms are derived `Repaired` words, so the
   finding is diagnostic-only; the clean rows cover the agreeing degree forms.
+- 2026-11-17: landed predicative noun complements. `He ovat opettaja.` emits
+  `predicative_agreement`/`predicative_noun_agreement` as a `Warning` with
+  `opettajia`/`opettajat`; `Hän on opettajat.` suggests `opettaja`. The rule is
+  separate from the adjective number rule and only fires on a nominative
+  number mismatch; partitive predicates (`He ovat opettajia.`,
+  `Ne ovat vettä.`) stay quiet. `Lapset ovat väsynyt.` was already covered by
+  the compound-participle rule (`väsyneet`). Page-2000 has no noun-complement
+  findings.
+- 2026-11-17: wrote the construction-aware word-order specification in
+  `docs/word_order.md`, with the machine-readable rule set in
+  `tests/fixtures/word_order_rules.json` and the schema gate in
+  `tests/word_order_spec.rs`. The model is `FORCE`/`PREFER`/`ALLOW`; SVO is a
+  `PREFER`, never an error, and object/topic/temporal/locative fronting,
+  passive, existential and contrastive orders are `ALLOW`. The rule engine
+  stays deferred until the clause features are present.

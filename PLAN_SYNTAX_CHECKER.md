@@ -1287,8 +1287,12 @@ Implementation notes:
 
 #### Phase 5D — word order decision record
 
-No word-order rules are planned. Finnish order is information structure, and
-`Söi Sami puuron`, `Puuron söi Sami` and `Sami söi puuron` are all grammatical.
+The old “no word-order rules” deferral is superseded by
+[`docs/word_order.md`](docs/word_order.md) and its machine-readable fixture
+`tests/fixtures/word_order_rules.json`. Word order is construction-aware and
+information-structure-aware; **SVO is a `PREFER`, never an error**. The checker
+does not emit `WordOrder` yet, and the spec explicitly keeps the kind
+suggestion-only when it does.
 
 Tasks:
 
@@ -1297,8 +1301,12 @@ Tasks:
       and not emitted, so a future reader does not assume a missing rule.
 - [x] Keep `WordOrder` out of the severity/ranking examples; the rank test now
       uses `CommaMissing` as its suggestion placeholder.
-
-This closes the deferral without shipping a rule.
+- [x] Write the construction-aware spec: questions, imperatives, neutral SVO,
+      existential, passive, subordinate clauses and the information-structure
+      `ALLOW` table.
+- [x] Pin the schema and stable rule ids in `tests/word_order_spec.rs`.
+- [x] Keep the rule engine deferred until the clause features in the spec are
+      available; do not infer object case from position.
 
 ### Phase 6 — punctuation phase 2, UI, ranking, evaluation
 

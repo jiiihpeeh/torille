@@ -44,7 +44,7 @@ the checker only when the user presses the grammar button.
 | `subject_predicate_agreement` | subject and finite predicate agree in person and number; an active past participle in a compound tense agrees in number | `Error`, or `Warning` when a role is weak |
 | `connegative` | the main verb after a negative auxiliary is in the connegative form | `Error` |
 | `attribute_agreement` | attributive adjective/demonstrative agrees with its head | `Error` for number, `Warning` for case |
-| `predicative_agreement` | a predicative adjective agrees with its subject in number | `Error` for a clear number mismatch, `Warning` when a role is weak |
+| `predicative_agreement` | a predicative adjective/participle agrees with its subject in number; a clear noun-predicate number mismatch | `Error` for a clear adjective number mismatch, `Warning` for a noun predicate or weak role |
 | `possessive_agreement` | a possessive suffix matches an adjacent genitive personal pronoun | `Warning` for a wrong suffix, `Suggestion` when it is missing |
 | `case_selection` | a cardinal numeral governs the partitive singular, a curated adposition governs a non-matching case, or an existential subject is genitive | `Error` for a clear complement, `Warning` when a role is weak |
 | `verb_rection` | curated valency frame requires a case the argument lacks | `Error` with a likely predicate, otherwise `Warning` |
@@ -62,8 +62,10 @@ the checker only when the user presses the grammar button.
 | `list_comma_before_conjunction` | a comma before the final `ja`/`tai`/`sekä` | `Suggestion` |
 | `list_introducer_comma` | a comma directly after a list-introducing colon | `Error` |
 
-Reserved but not emitted: `WordOrder`. Word order is deliberately deferred:
-Finnish order is information structure, not a fixed rule.
+Reserved but not emitted: `WordOrder`. The construction-aware specification is
+[`docs/word_order.md`](word_order.md): Finnish order is information structure,
+SVO is a preference rather than a correctness rule, and the future kind stays
+suggestion-only.
 
 ## False-positive policy
 
@@ -177,10 +179,14 @@ class.
 ## Known limitations
 
 - **Word order** is not checked.
-- **Predicative agreement is number-only and adjective-only.** `Talot ovat
-  punainen` and `Talo on punaisia` are caught; noun complements and participle
-  complements are not, because their agreement/case behaviour needs a separate
-  rule.
+- **Predicative agreement is number-only.** `Talot ovat punainen` and
+  `Talo on punaisia` are caught for adjectives and active participles. A noun
+  predicate has a semantic partitive/nominative choice, so the separate noun
+  rule only reports a clear number mismatch: a nominative singular predicate
+  with a plural subject (`He ovat opettaja.`) or a nominative plural predicate
+  with a singular subject. Partitive predicates (`He ovat opettajia.`,
+  `Ne ovat vettä.`) stay quiet, and the correction offers both licensed plural
+  forms with a `Likely` correction confidence.
 - **Adjective degree is a tag, not a separate rule.** `Tags.degree` marks
   comparative and superlative forms, and `attribute_agreement` /
   `predicative_agreement` compare them like any adjective. Degree derivations

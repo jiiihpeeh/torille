@@ -1,0 +1,192 @@
+{
+  "language": "fi",
+  "rule_engine": "word_order",
+  "decisions": ["FORCE", "PREFER", "ALLOW"],
+  "rules": [
+    {
+      "id": "FI_QUESTION_001",
+      "name": "wh_question_fronting",
+      "category": "interrogative",
+      "condition": {
+        "clause_type": "interrogative",
+        "question_type": "wh"
+      },
+      "constraint": {
+        "target": "interrogative_phrase",
+        "position": "initial"
+      },
+      "decision": "PREFER",
+      "priority": 100,
+      "hard_constraint": false,
+      "exceptions": ["echo_question", "contrastive_focus", "spoken_language"],
+      "examples": {
+        "preferred": ["Missä hän asuu?", "Miksi tulit tänne?"],
+        "allowed": ["Hän asuu missä?", "Tulit tänne miksi?"]
+      }
+    },
+    {
+      "id": "FI_QUESTION_002",
+      "name": "yes_no_question_clitic",
+      "category": "interrogative",
+      "condition": {
+        "clause_type": "interrogative",
+        "question_type": "yes_no",
+        "clitic": "ko"
+      },
+      "constraint": {
+        "target": "clitic_constituent",
+        "position": "before_remaining_clause"
+      },
+      "decision": "PREFER",
+      "priority": 95,
+      "hard_constraint": false,
+      "exceptions": ["echo_question", "contrastive_focus", "spoken_language"],
+      "examples": {
+        "preferred": ["Tuleeko hän?", "Oletko valmis?", "Helsingissäkö hän asuu?"],
+        "allowed": ["Hän tuleeko?"]
+      }
+    },
+    {
+      "id": "FI_IMPERATIVE_001",
+      "name": "imperative_verb_first",
+      "category": "imperative",
+      "condition": {
+        "clause_type": "imperative",
+        "mood": "imperative"
+      },
+      "constraint": {
+        "target": "finite_imperative_verb",
+        "position": "clause_initial_or_near_initial",
+        "subject_pronoun": "normally_omitted"
+      },
+      "decision": "PREFER",
+      "priority": 80,
+      "hard_constraint": false,
+      "exceptions": ["contrastive_focus", "discourse_context"],
+      "examples": {
+        "preferred": ["Tule tänne!", "Avaa ovi!", "Lukekaa kirja!"],
+        "allowed": ["Tänne tule!"]
+      }
+    },
+    {
+      "id": "FI_ORDER_001",
+      "name": "neutral_declarative_svo",
+      "category": "default_order",
+      "condition": {
+        "clause_type": "declarative",
+        "construction": "ordinary",
+        "topic_override": false,
+        "focus_override": false
+      },
+      "constraint": {
+        "order": ["subject", "finite_verb", "object"]
+      },
+      "decision": "PREFER",
+      "priority": 10,
+      "hard_constraint": false,
+      "exceptions": [
+        "topic_fronting",
+        "focus_fronting",
+        "existential_construction",
+        "passive",
+        "stylistic_inversion"
+      ],
+      "examples": {
+        "preferred": ["Minä ostin auton.", "Hän lukee kirjaa.", "Lapset pelaavat jalkapalloa."],
+        "allowed": ["Auton ostin.", "Eilen kävin kaupassa."]
+      }
+    },
+    {
+      "id": "FI_EXISTENTIAL_001",
+      "name": "existential_postverbal_subject",
+      "category": "existential",
+      "condition": {
+        "construction": "existential"
+      },
+      "constraint": {
+        "location_or_existence_context": "before_finite_verb",
+        "existential_subject": "after_finite_verb"
+      },
+      "decision": "PREFER",
+      "priority": 90,
+      "hard_constraint": false,
+      "exceptions": ["information_structure_reordering"],
+      "examples": {
+        "preferred": ["Pöydällä on kirja.", "Talossa asuu ihmisiä.", "Puutarhassa kasvaa kukkia."],
+        "allowed": ["Kirja on pöydällä."]
+      }
+    },
+    {
+      "id": "FI_PASSIVE_001",
+      "name": "passive_no_required_subject",
+      "category": "passive",
+      "condition": {
+        "construction": "passive"
+      },
+      "constraint": {
+        "grammatical_subject": "not_required",
+        "passive_verb": "preserve",
+        "agent_expression": "optional"
+      },
+      "decision": "ALLOW",
+      "priority": 90,
+      "hard_constraint": false,
+      "exceptions": [],
+      "examples": {
+        "preferred": ["Täällä puhutaan suomea.", "Asia on jo käsitelty."],
+        "allowed": ["Täällä suomea puhutaan."]
+      }
+    },
+    {
+      "id": "FI_SUBORDINATE_001",
+      "name": "subordinate_clause_no_inversion",
+      "category": "subordinate_clause",
+      "condition": {
+        "clause_type": "subordinate"
+      },
+      "constraint": {
+        "conjunction": "clause_initial",
+        "subject_verb_inversion": "not_required"
+      },
+      "decision": "PREFER",
+      "priority": 85,
+      "hard_constraint": false,
+      "exceptions": ["stylistic_inversion", "poetry", "contrastive_focus"],
+      "examples": {
+        "preferred": [
+          "Tiedän, että hän tulee.",
+          "Luulen, että asia on tärkeä.",
+          "Menen kotiin, koska olen väsynyt."
+        ],
+        "allowed": ["Tiedän, että tulee hän."]
+      }
+    },
+    {
+      "id": "FI_ALLOW_001",
+      "name": "information_structure_fronting",
+      "category": "information_structure",
+      "condition": {
+        "fronting_type": "topic_focus_temporal_locative"
+      },
+      "constraint": {
+        "order": "do_not_report_as_an_error"
+      },
+      "decision": "ALLOW",
+      "priority": 0,
+      "hard_constraint": false,
+      "exceptions": [],
+      "examples": {
+        "preferred": [],
+        "allowed": [
+          "Kirjan luin eilen.",
+          "Minä en sitä tiedä.",
+          "Eilen kävin kaupassa.",
+          "Kotona hän viihtyy hyvin.",
+          "JUURI HÄN teki sen.",
+          "Asia käsiteltiin eilen.",
+          "Pöydällä on kahvikuppi."
+        ]
+      }
+    }
+  ]
+}
