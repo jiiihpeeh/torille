@@ -187,6 +187,7 @@ diagnostic_tests!(
     participle_singular_subject,
     participle_third_singular,
     participle_negative,
+    bare_nominative_object,
     relative_comma_pair,
     rection_elative,
     rection_illative,

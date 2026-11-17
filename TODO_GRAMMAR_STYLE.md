@@ -567,11 +567,16 @@ prose-corpus review.
   unpunctuated coordinator (`... laulujen\nja kanteleen maa`) stays quiet.
   Area: `src/syntax_check/existential.rs`, `src/syntax/roles.rs`.
 
-- [ ] **Bare nominative object**
-  `Minä näen kirja.` is silent; the syntax layer already marks `kirja` as an
-  object with a nominative case. Emit an `ObjectCase` error only when the
-  object is a bare nominative with no possessive and the clause is not
-  imperative, passive or necessive. The guards already exist.
+- [x] **Bare nominative object** — landed.
+  `Minä näen kirja.` now emits `object_case` on `kirja` with both licensed
+  repairs (`kirjan`, `kirjaa`). The total object is genitive singular or
+  nominative plural; a nominative **singular** object is correct only in an
+  imperative, passive or necessive clause. The rule is deliberately narrow:
+  it requires an overt preverbal subject, a postverbal object, a singular
+  common noun with no possessive and no competing nominal case, and the object
+  must be the clause's final word. `Näen kirjat.`, `Syö puuro!`,
+  `Syötiin puuro.`, `Minun täytyy lukea kirja.`, `Söin aamupuuronsa.` and
+  `Hän puhui kuten asiantuntija.` are clean; the page-2000 sweep is quiet.
   Area: `src/syntax_check/object_case.rs`.
 
 ### Sentence structure
@@ -905,3 +910,10 @@ intended/competing interpretation pair that fails.
   tenses, and falls back through `lemmas` when the chosen base is an adjective
   (`väsynyt`). Added diagnostic, clean and ambiguity cases; the page-2000
   sweep has no `participle_agreement` findings.
+- 2026-11-17: landed bare nominative object. `Minä näen kirja.` emits
+  `object_case` with `kirjan`/`kirjaa`. The rule requires an overt preverbal
+  subject, a postverbal singular common-noun object with no possessive or
+  competing nominal case, and a clause-final object; it skips imperative,
+  passive, necessive and comparison constructions. The first prose sweep
+  flagged 16 role-path false positives (coordinated subjects, vocatives,
+  `lasta`, comparisons); the final guards bring page-2000 to zero.

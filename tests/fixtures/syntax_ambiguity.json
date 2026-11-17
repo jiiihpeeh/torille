@@ -329,6 +329,16 @@
       "text": "Talot on rakennettu.",
       "clauses": 1,
       "diagnostics": []
+    },
+    {
+      "id": "nominative_object_imperative",
+      "text": "Syö puuro!",
+      "diagnostics": []
+    },
+    {
+      "id": "nominative_object_necessive",
+      "text": "Minun täytyy lukea kirja.",
+      "diagnostics": []
     }
   ]
 }

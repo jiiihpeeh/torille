@@ -787,6 +787,19 @@
           "corrections": ["lukeneet"]
         }
       ]
+    },
+    {
+      "id": "bare_nominative_object",
+      "text": "Minä näen kirja.",
+      "diagnostics": [
+        {
+          "kind": "object_case",
+          "severity": "error",
+          "start": 12,
+          "end": 17,
+          "corrections": ["kirjan", "kirjaa"]
+        }
+      ]
     }
   ],
   "clean": [
@@ -809,6 +822,13 @@
     "Talo on rakennettu.",
     "Talot on rakennettu.",
     "Me emme ole lukeneet.",
+    "Minä näen kirjan.",
+    "Minä näen kirjaa.",
+    "Näen kirjat.",
+    "Syö puuro!",
+    "Syötiin puuro.",
+    "Minun täytyy lukea kirja.",
+    "Söin aamupuuronsa.",
     "Talot ovat kauniita.",
     "Talot ovat punaisia.",
     "Talot ovat punaiset.",

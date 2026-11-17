@@ -1966,3 +1966,12 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   (`väsynyt`) through `lemmas`. Clean cases cover the negative compound,
   predicative `väsyneet`/`väsyneitä`, and passive forms; the page-2000 sweep is
   quiet.
+
+- 2026-11-17: bare nominative object landed. `Minä näen kirja.` emits
+  `object_case` with `kirjan`/`kirjaa`. The total object is genitive singular
+  or nominative plural, so the rule only fires on a singular common-noun
+  object in a normal preverbal-subject/postverbal-object clause, with no
+  possessive, no competing nominal case, and no imperative, passive,
+  necessive or comparison construction. `Näen kirjat.`, `Syö puuro!`,
+  `Syötiin puuro.`, `Minun täytyy lukea kirja.` and
+  `Hän puhui kuten asiantuntija.` stay clean; page-2000 is quiet.

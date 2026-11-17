@@ -11,11 +11,12 @@
 //! stays quiet.
 
 use crate::syntax::{SyntacticRole, SyntaxAnalysis};
-use crate::tags::{Case, Number, PartOfSpeech};
+use crate::tags::{Case, Mood, Number, PartOfSpeech};
 use crate::tokenise::Token;
 
 use super::analysis::{
-    candidate_number, clause_words, inside_brackets, is_marker, nominal_case, nominal_pos,
+    candidate_number, clause_words, inside_brackets, is_marker, nominal_bases, nominal_case,
+    nominal_pos,
 };
 use super::correction;
 use super::diagnostic::{
@@ -44,11 +45,183 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
             if let Some(diagnostic) = negative_object(clause, tokens, analysis) {
                 diagnostics.push(diagnostic);
             }
-        } else if let Some(diagnostic) = aspect_suggestion(clause, tokens, analysis) {
-            diagnostics.push(diagnostic);
+        } else {
+            diagnostics.extend(bare_nominative_objects(clause, tokens, analysis));
+            if let Some(diagnostic) = aspect_suggestion(clause, tokens, analysis) {
+                diagnostics.push(diagnostic);
+            }
         }
     }
     diagnostics
+}
+
+/// A singular bare nominative object outside the constructions that license it.
+///
+/// The total object is genitive singular or nominative plural; a nominative
+/// **singular** object is correct only in an imperative, passive or necessive
+/// clause. `Minä näen kirja.` is therefore an error, while `Näen kirjat.`,
+/// `Syö puuro!`, `Syötiin puuro.` and `Minun täytyy lukea kirja.` are not.
+fn bare_nominative_objects(
+    clause: &crate::syntax::Clause,
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+) -> Vec<SyntaxDiagnostic> {
+    if clause.existential {
+        return Vec::new();
+    }
+    let Some(predicate) = clause.predicate else {
+        return Vec::new();
+    };
+    if analysis.tokens[predicate].readings.iter().any(|reading| {
+        reading.mood == Some(Mood::Imperative)
+            && crate::syntax::is_finite_predicate(reading)
+    }) || crate::syntax::predicate_is_passive(predicate, &analysis.tokens)
+    {
+        return Vec::new();
+    }
+    // A genitive subject is the necessive construction (`Minun täytyy ...`).
+    if clause
+        .subject
+        .is_some_and(|index| analysis.tokens[index].case == Some(Case::Genitive))
+    {
+        return Vec::new();
+    }
+
+    // The role layer's `object` is the one it committed to. Walking every
+    // Object-role token instead reports coordinated subjects (`Matti` after
+    // `ja`) and other second-pass noise.
+    let Some(index) = clause.object else {
+        return Vec::new();
+    };
+    let Some(subject) = clause.subject else {
+        return Vec::new();
+    };
+    // A dropped subject (`Näen kirja.`) and a postverbal subject
+    // (`sanoi julma mies`) are readings where the role pass is less reliable.
+    // Keep the rule to the ordinary preverbal-subject, postverbal-object
+    // order.
+    if subject >= predicate || index <= predicate || subject == index {
+        return Vec::new();
+    }
+    // A bare nominative object is a learner error in a simple clausal object
+    // slot. Requiring it to be the clause's final word keeps the rule away
+    // from the many role-path readings where a later nominal is an adverbial,
+    // a coordinated subject, or part of a comparison.
+    let words = clause_words(clause, tokens);
+    if words.last() != Some(&index) {
+        return Vec::new();
+    }
+    if clause.tokens.clone().any(|word| {
+        tokens[word].is_word()
+            && word > predicate
+            && word < index
+            && matches!(analysis.tokens[word].key.as_str(), "kuten" | "kuin")
+    }) {
+        return Vec::new();
+    }
+    if !tokens[index].is_word() || tokens[index].is_capitalised() {
+        return Vec::new();
+    }
+    let syntax = &analysis.tokens[index];
+    if syntax.role != SyntacticRole::Object
+        || nominal_pos(syntax) != Some(PartOfSpeech::Noun)
+        || syntax
+            .readings
+            .iter()
+            .any(|reading| reading.possessive.is_some())
+    {
+        return Vec::new();
+    }
+    let Some(number) = unique_nominative_number(syntax) else {
+        return Vec::new();
+    };
+    if number != Number::Singular {
+        return Vec::new();
+    }
+    let pos = PartOfSpeech::Noun;
+    let mut corrections = Vec::new();
+    for target in [Case::Genitive, Case::Partitive] {
+        for lemma in nominal_bases(syntax) {
+            let found: Vec<Correction> = correction::case_corrections(
+                lemma,
+                &tokens[index],
+                target,
+                Some(Number::Singular),
+                pos,
+                crate::spec::Catalogues::embedded(),
+            )
+            .into_iter()
+            .map(|mut correction| {
+                correction.note = "object_case";
+                correction.with_confidence(Confidence::Likely)
+            })
+            .collect();
+            if !found.is_empty() {
+                corrections.extend(found);
+                break;
+            }
+        }
+    }
+    let mut seen: Vec<String> = Vec::new();
+    corrections.retain(|correction| {
+        let Some(edit) = correction.edits.first() else {
+            return false;
+        };
+        if seen.contains(&edit.replacement) {
+            return false;
+        }
+        seen.push(edit.replacement.clone());
+        true
+    });
+    let confident = syntax.confidence == crate::syntax::RoleConfidence::Likely;
+    let (severity, confidence) = if confident {
+        (Severity::Error, Confidence::Certain)
+    } else {
+        (Severity::Warning, Confidence::Likely)
+    };
+    let mut diagnostic = SyntaxDiagnostic::new(
+        DiagnosticKind::ObjectCase,
+        severity,
+        confidence,
+        tokens[index].start..tokens[index].end,
+        "bare_nominative_object",
+    );
+    diagnostic.expected = Some("genitive or partitive".to_string());
+    diagnostic.corrections = corrections;
+    vec![diagnostic]
+}
+
+/// The unique case and number of a nominal token.
+///
+/// `lasta` is the partitive of `lapsi` and the nominative of `lasta`; the
+/// role pass may commit to the nominative and hide the valid partitive
+/// object. A surface with competing nominal cases is not a bare nominative.
+fn unique_nominative_number(syntax: &crate::syntax::TokenSyntax) -> Option<Number> {
+    let mut cases = Vec::new();
+    let mut numbers = Vec::new();
+    for reading in &syntax.readings {
+        if !crate::syntax::is_nominal_pos(reading.part_of_speech) {
+            continue;
+        }
+        let Some(case) = reading.case else {
+            continue;
+        };
+        cases.push(case);
+        if case == Case::Nominative && let Some(number) = reading.number {
+            numbers.push(number);
+        }
+    }
+    cases.sort_unstable();
+    cases.dedup();
+    if cases != [Case::Nominative] {
+        return None;
+    }
+    numbers.sort_unstable();
+    numbers.dedup();
+    match numbers.as_slice() {
+        [number] => Some(*number),
+        _ => None,
+    }
 }
 
 /// The negative-clause partitive rule.
