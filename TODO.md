@@ -2002,3 +2002,9 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   the pair; an explicit rhetorical list (`hyvin hyvin`, `kauan kauan`, ...) and
   phrase-table spans stay quiet. The duplicate takes precedence over the
   near-repeat metric. Page-2000 is quiet.
+
+- 2026-11-17: expanded the curated style vocabulary with reviewed rows:
+  `periaatteessa`, `tosiasiassa`, `sinänsä`, `joka tapauksessa` (filler),
+  `jollain tavalla` -> `jotenkin` and `jossain määrin` (wordy).
+  `niin kuin`/`ikään kuin` stay out as standard comparators. Added style
+  fixture cases; the style clean corpus and page-2000 remain quiet.

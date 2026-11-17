@@ -167,6 +167,66 @@
       "id": "long_sentence_threshold_is_inclusive",
       "text": "Hän on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on ja on nyt.",
       "diagnostics": []
+    },
+    {
+      "id": "word_filler_periaatteessa",
+      "text": "Periaatteessa ehdotus on hyvä.",
+      "diagnostics": [
+        {
+          "kind": "style_filler",
+          "severity": "suggestion",
+          "start": 0,
+          "end": 13,
+          "message": "style_filler",
+          "expected": "periaatteessa",
+          "corrections": []
+        }
+      ]
+    },
+    {
+      "id": "word_filler_sinansä",
+      "text": "Sinänsä se on hyvä.",
+      "diagnostics": [
+        {
+          "kind": "style_filler",
+          "severity": "suggestion",
+          "start": 0,
+          "end": 9,
+          "message": "style_filler",
+          "expected": "sinänsä",
+          "corrections": []
+        }
+      ]
+    },
+    {
+      "id": "phrase_filler_joka_tapauksessa",
+      "text": "Joka tapauksessa tulen.",
+      "diagnostics": [
+        {
+          "kind": "style_filler",
+          "severity": "suggestion",
+          "start": 0,
+          "end": 16,
+          "message": "style_filler",
+          "expected": "joka tapauksessa",
+          "corrections": []
+        }
+      ]
+    },
+    {
+      "id": "phrase_wordy_jollain_tavalla",
+      "text": "Jollain tavalla se on hyvä.",
+      "diagnostics": [
+        {
+          "kind": "style_wordy",
+          "severity": "suggestion",
+          "start": 0,
+          "end": 15,
+          "message": "style_wordy",
+          "expected": "jollain tavalla",
+          "corrections": ["Jotenkin"]
+        }
+      ]
     }
   ],
   "clean": [

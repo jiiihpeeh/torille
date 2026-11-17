@@ -57,6 +57,12 @@ phrases use consecutive word tokens with single spaces between them and do not
 cross a sentence boundary. A match covers the whole phrase and is reported
 once; the scan resumes after it.
 
+Rows are added only after review, because the exact-match table cannot see
+context. Common hedges/fillers (`periaatteessa`, `tosiasiassa`, `sinänsä`,
+`joka tapauksessa`) and wordy phrases (`jollain tavalla` → `jotenkin`,
+`jossain määrin`) are in; standard comparators (`niin kuin`, `ikään kuin`) are
+deliberately not, since they are not fillers.
+
 A replacement at the start of a sentence keeps the sentence capital:
 `Tällä hetkellä` becomes `Nyt`, not `nyt`.
 

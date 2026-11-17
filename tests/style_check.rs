@@ -25,6 +25,7 @@ fn case_by_id<'a>(root: &'a Value, id: &str) -> &'a Value {
 fn kind(name: &str) -> StyleKind {
     [
         StyleKind::Repetition,
+        StyleKind::DuplicateWord,
         StyleKind::LongSentence,
         StyleKind::Cliche,
         StyleKind::Filler,
@@ -166,4 +167,8 @@ diagnostic_tests!(
     repetition_skips_a_light_verb,
     long_sentence,
     long_sentence_threshold_is_inclusive,
+    word_filler_periaatteessa,
+    word_filler_sinansä,
+    phrase_filler_joka_tapauksessa,
+    phrase_wordy_jollain_tavalla,
 );

@@ -665,11 +665,15 @@ Adjacent repetition is not always accidental:
 
 ### Other P2 items
 
-- [ ] **Grow the style tables carefully**
-  `data/style_words.csv` has 6 entries and `data/style_phrases.csv` has 8.
-  Common fillers such as `periaatteessa`, `tosiasiassa`, `joka tapauksessa`,
-  `niin kuin` and `ikään kuin` are not matched. Add reviewed rows only; keep
-  the exact-match contract and measure on the prose corpus.
+- [x] **Grow the style tables carefully** — landed.
+  Added reviewed rows: `periaatteessa`, `tosiasiassa`, `sinänsä` (filler),
+  `joka tapauksessa` (filler), `jollain tavalla` → `jotenkin` (wordy) and
+  `jossain määrin` (wordy, label only). `niin kuin` and `ikään kuin` are
+  deliberately **not** rows: they are standard comparators, not fillers, and
+  the exact-match table cannot see whether a given use is redundant. The
+  exact-match contract is unchanged; the new rows were checked against the
+  style fixtures and the page-2000 prose corpus (none of the new terms occur
+  there, so its style baseline is unchanged).
 
 - [x] **Dead reserved kinds** — resolved.
   `CaseSelection`, `ClauseStructure` and `CommaExtra` now have emitting rules;
@@ -955,3 +959,9 @@ intended/competing interpretation pair that fails.
   rhetorical list (`hyvin hyvin`, `kauan kauan`, ...) and phrase-table spans
   stay quiet; the duplicate takes precedence over the near-repeat metric. The
   page-2000 sweep has no duplicate-word findings.
+- 2026-11-17: grew the curated style tables with reviewed rows:
+  `periaatteessa`, `tosiasiassa`, `sinänsä`, `joka tapauksessa` (filler),
+  `jollain tavalla` -> `jotenkin` (wordy) and `jossain määrin` (wordy, label
+  only). Left `niin kuin` and `ikään kuin` out because they are standard
+  comparators rather than fillers. Added exact-output style cases; the clean
+  style corpus and page-2000 remain quiet.
