@@ -1989,3 +1989,9 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   a correction. Matching and standalone suffixes stay clean, and a genitive
   pronoun before a necessive verb is treated as the verb's subject rather than
   a possessor. Page-2000 is quiet.
+
+- 2026-11-17: extra-comma rule landed. `Minä, menen kotiin.` emits
+  `comma_extra` as a `Warning` with a comma-removal correction. Only a
+  personal-pronoun subject directly before its finite predicate is checked;
+  appositions, parentheticals, noun-subject addresses and intervening words
+  stay quiet. Page-2000 has no `comma_extra` findings.

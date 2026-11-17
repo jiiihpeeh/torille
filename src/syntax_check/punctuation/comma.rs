@@ -20,7 +20,72 @@ pub(super) fn clause_diagnostics(tokens: &[Token], analysis: &SyntaxAnalysis) ->
             out.extend(relative_comma(clause, tokens, analysis));
         }
     }
+    out.extend(extra_comma(tokens, analysis));
     out
+}
+
+/// The personal-pronoun subjects where a comma before the predicate is not an
+/// apposition or a parenthetical.
+const PERSONAL_SUBJECTS: &[&str] = &["minä", "sinä", "hän", "me", "te", "he"];
+
+/// `Minä, menen kotiin.`: a comma directly between a personal-pronoun subject
+/// and its finite predicate.
+///
+/// The pattern is deliberately narrow. A noun subject can be an apposition or
+/// an address (`Liisa, tule tänne`), and any intervening word (`Minä, kuten
+/// tiedät, menen`) makes the comma a parenthetical. A deliberate pause is the
+/// remaining competitor, so the finding is a `Warning` and the removal is a
+/// `Likely` correction, never an `Error`.
+fn extra_comma(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
+    let mut out = Vec::new();
+    for clause in &analysis.clauses {
+        let (Some(subject), Some(predicate)) = (clause.subject, clause.predicate) else {
+            continue;
+        };
+        if subject >= predicate
+            || analysis.tokens[subject].role != SyntacticRole::Subject
+            || !PERSONAL_SUBJECTS.contains(&analysis.tokens[subject].key.as_str())
+            || !is_finite(&analysis.tokens[predicate])
+        {
+            continue;
+        }
+        let Some(comma) = comma_between_index(tokens, subject, predicate) else {
+            continue;
+        };
+        if tokens[subject + 1..predicate]
+            .iter()
+            .any(Token::is_word)
+        {
+            continue;
+        }
+        let token = &tokens[comma];
+        let mut diagnostic = SyntaxDiagnostic::new(
+            DiagnosticKind::CommaExtra,
+            Severity::Warning,
+            Confidence::Likely,
+            token.start..token.end,
+            "comma_extra",
+        );
+        diagnostic.expected = Some("no comma".to_string());
+        diagnostic.corrections = vec![Correction::new(
+            vec![Edit::new(token.start, token.end, "")],
+            0.0,
+            "comma_extra",
+        )
+        .licensed_by(CorrectionLicense::Punctuation)
+        .with_confidence(Confidence::Likely)];
+        out.push(diagnostic);
+    }
+    out
+}
+
+fn comma_between_index(tokens: &[Token], left: usize, right: usize) -> Option<usize> {
+    let (start, end) = if left < right {
+        (left + 1, right)
+    } else {
+        (right + 1, left)
+    };
+    (start..end).find(|&index| !tokens[index].is_word() && tokens[index].text.contains(','))
 }
 
 /// A subordinate clause after a main clause, or a main clause after an initial

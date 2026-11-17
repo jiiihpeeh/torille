@@ -194,6 +194,7 @@ diagnostic_tests!(
     possessive_wrong_suffix,
     possessive_third_person,
     possessive_missing,
+    extra_comma_subject,
     relative_comma_pair,
     rection_elative,
     rection_illative,

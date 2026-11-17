@@ -51,6 +51,7 @@ the checker only when the user presses the grammar button.
 | `extra_argument` | a closed intransitive frame has an object | `Warning` |
 | `clause_structure` | a declarative clause has no finite predicate, or ends in a coordinator without a coordinated predicate | `Warning`, never a correction |
 | `comma_missing` | subordinate clause needs a comma; `esimerkiksi` needs a parenthetical pair | `Error`, or `Suggestion` for the parenthetical |
+| `comma_extra` | a comma directly between a personal-pronoun subject and its finite predicate | `Warning` with a `Likely` removal |
 | `comma_pair_unbalanced` | an opened relative-clause comma pair is not closed | `Error` |
 | `question_mark_missing` | a clear direct question ends with `.` or no mark | `Error` |
 | `unbalanced_quote` | a quotation is still open at the end of the text | `Warning` |
@@ -59,9 +60,8 @@ the checker only when the user presses the grammar button.
 | `list_comma_before_conjunction` | a comma before the final `ja`/`tai`/`sekä` | `Suggestion` |
 | `list_introducer_comma` | a comma directly after a list-introducing colon | `Error` |
 
-Reserved but not emitted: `WordOrder`, `CommaExtra`. Word order is
-deliberately deferred: Finnish order is information structure, not a fixed
-rule.
+Reserved but not emitted: `WordOrder`. Word order is deliberately deferred:
+Finnish order is information structure, not a fixed rule.
 
 ## False-positive policy
 
@@ -212,6 +212,12 @@ class.
   clause-final object, no possessive and no competing nominal case; it skips
   imperative, passive, necessive and comparison constructions. `Näen kirjat.`,
   `Syö puuro!`, `Syötiin puuro.` and `Minun täytyy lukea kirja.` stay quiet.
+- **Extra commas are detected only in the pronoun-subject slot.** A comma
+  directly between `minä`/`sinä`/`hän`/`me`/`te`/`he` and its finite predicate
+  is a `Warning`, with a `Likely` removal. Appositions, parentheticals
+  (`Minä, yksin, tulen.`), noun-subject addresses (`Liisa, tule tänne.`) and
+  any intervening word stay quiet; a deliberate pause keeps this below
+  `Error`.
 - **Possessive agreement is warning/suggestion only.** `Minun kirjasi on uusi.`
   warns and `Minun kirja on uusi.` suggests, but neither is an `Error` and
   neither carries a correction: colloquial Finnish drops the suffix. A suffix

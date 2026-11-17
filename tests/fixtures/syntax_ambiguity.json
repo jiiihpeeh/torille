@@ -369,6 +369,16 @@
       "id": "possessive_missing_colloquial",
       "text": "Minun kirja on uusi.",
       "diagnostics": ["possessive_agreement"]
+    },
+    {
+      "id": "extra_comma_pronoun_subject",
+      "text": "Minä, menen kotiin.",
+      "diagnostics": ["comma_extra"]
+    },
+    {
+      "id": "extra_comma_apposition",
+      "text": "Minä, yksin, tulen.",
+      "diagnostics": []
     }
   ]
 }

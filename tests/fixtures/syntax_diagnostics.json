@@ -865,6 +865,19 @@
           "corrections": []
         }
       ]
+    },
+    {
+      "id": "extra_comma_subject",
+      "text": "Minä, menen kotiin.",
+      "diagnostics": [
+        {
+          "kind": "comma_extra",
+          "severity": "warning",
+          "start": 5,
+          "end": 7,
+          "corrections": [""]
+        }
+      ]
     }
   ],
   "clean": [
@@ -900,6 +913,11 @@
     "Teidän kirjanne on uusi.",
     "Heidän kirjansa on uusi.",
     "Kirjani on uusi.",
+    "Minä menen kotiin.",
+    "Minä, kaikesta huolimatta, menen kotiin.",
+    "Minä, teidän ystävänne, tulen huomenna.",
+    "Minä, yksin, tulen.",
+    "Liisa, tule tänne.",
     "Minun uusi kirjani on uusi.",
     "Teidän kerran täytyy tili tehdä.",
     "Söin aamupuuronsa.",

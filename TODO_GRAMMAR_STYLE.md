@@ -600,10 +600,14 @@ prose-corpus review.
   have a predicate and end at a declarative period; `Hän tuli ja lähti.` and a
   fragment without the period stay quiet.
 
-- [ ] **Extra comma**
-  `Minä, menen kotiin.` is silent; `CommaExtra` is declared but never emitted.
-  Avoid appositives, parentheticals and deliberate pauses before firing.
-  This is P2 punctuation work, not a prerequisite for the agreement rules.
+- [x] **Extra comma** — landed.
+  `Minä, menen kotiin.` now emits `comma_extra` as a `Warning` with a
+  `Likely` comma-removal correction. The rule is deliberately narrow: only a
+  personal-pronoun subject directly followed by a comma and then its finite
+  predicate. Appositions and parentheticals (`Minä, yksin, tulen.`,
+  `Minä, kaikesta huolimatta, menen kotiin.`), noun-subject addresses
+  (`Liisa, tule tänne.`) and any intervening word stay quiet. A deliberate
+  pause is the remaining competitor, so this is never an `Error`.
   Area: `src/syntax_check/punctuation/comma.rs`.
 
 ### Morphology
@@ -939,3 +943,8 @@ intended/competing interpretation pair that fails.
   suffixes, standalone suffixes, and necessive genitive subjects
   (`Teidän täytyy ...`) stay quiet. Added diagnostic, clean and ambiguity
   cases; the page-2000 sweep has no possessive findings.
+- 2026-11-17: landed the extra-comma rule. `Minä, menen kotiin.` emits
+  `comma_extra` as a `Warning` with a comma-removal `Likely` correction. Only
+  a personal-pronoun subject directly before its finite predicate is checked;
+  appositions, parentheticals, noun-subject addresses and intervening words
+  stay quiet. The page-2000 sweep has no `comma_extra` findings.
