@@ -1898,8 +1898,8 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   as oracle-only against the older Kotus spellings.
 
 - 2026-11-17: the adjudicated prose sample now exceeds 1,000 correct words:
-  930 clean + 91 known-false-positive = 1,021 words, with 10 known errors
-  (9.8 per 1,000). New rows come from the same public-domain Gutenberg
+  940 clean + 81 known-false-positive = 1,021 words, with 9 known errors
+  (8.8 per 1,000). New rows come from the same public-domain Gutenberg
   excerpt and were admitted only after `check_syntax` returned zero
   diagnostics. `cargo test --release --test syntax_prose` passes.
 
@@ -1909,3 +1909,9 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   `--kun` and conditional-prose rows moved to clean. The relative-clause
   negative coordination and dash guards also reduced the known-error rate to
   10 errors per 1,021 correct words (**9.8 per 1,000**).
+
+
+- 2026-11-17: `attribute_head` walks past modifier words to the actual noun
+  head, so `Nämä hurskaan miehen sanat` no longer corrects `Nämä` against
+  `hurskaan`. The row moved to clean; prose baseline is now 940 clean + 81
+  known-FP words, 9 known errors (**8.8 per 1,000**).

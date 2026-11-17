@@ -73,7 +73,8 @@
     "Mutta kreivi Sikri oli jo aikoja sitten palannut sodasta ja saatuaan tietää, että hänen puolisonsa oli syyttömästi mestattu, rupesi hän sitä suremaan niin, että oli tulla mielipuoleksi.",
     "Meille on niinkuin usein ennenkin haettu kotimieheksi Laukkasen Anni, Satu-Anni, koulumestarin kivuloinen ja kalpea tyttö, joka ei milloinkaan leiki eikä hymyile.",
     "Tein sen melkein hauskuudekseni--kun ajattelin niitä arvoja, mitkä niillä on maailmalle ja mitkä minulle.",
-    "Mitä vaivaisveroa tulisinkaan maksamaan, jos panisin niihin niiden todellisen arvon, niiden ainoan, sen, mikä niillä on minulle."
+    "Mitä vaivaisveroa tulisinkaan maksamaan, jos panisin niihin niiden todellisen arvon, niiden ainoan, sen, mikä niillä on minulle.",
+    "Nämä hurskaan miehen sanat täyttivät kaikkien läsnäolevien mielen kummallisella aavistuksella."
   ],
   "errors": [
     {
@@ -109,13 +110,6 @@
         "subject_predicate_agreement"
       ],
       "note": "Each coordinated clause has its own singular subject; the shared-subject rule is over-firing."
-    },
-    {
-      "text": "Nämä hurskaan miehen sanat täyttivät kaikkien läsnäolevien mielen kummallisella aavistuksella.",
-      "kinds": [
-        "attribute_agreement"
-      ],
-      "note": "Nämä modifies sanat; hurskaan miehen is a genitive modifier, not the agreement head."
     },
     {
       "text": "Kenoveeva kiiruhti torniin ja katseli sieltä rakkaan puolisonsa jälkeen, sitten hän sulkeutui huoneeseensa eikä koko päivänä maistanut eineen muruakaan.",

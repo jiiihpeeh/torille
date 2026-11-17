@@ -451,14 +451,19 @@ fn attribute_head(
     if let Some(head) = syntax.head
         && head != index
         && tokens.get(head).is_some_and(Token::is_word)
+        && analysis.tokens[head].role != SyntacticRole::Modifier
     {
         return Some(head);
     }
     let clause = analysis.clauses.get(syntax.clause)?;
-    clause
-        .tokens
-        .clone()
-        .find(|&candidate| candidate > index && tokens[candidate].is_word())
+    clause.tokens.clone().find(|&candidate| {
+        candidate > index
+            && tokens[candidate].is_word()
+            // `Nämä hurskaan miehen sanat`: the immediate next word is another
+            // modifier, not the agreement head. Walk past modifiers to the
+            // noun the whole phrase modifies.
+            && analysis.tokens[candidate].role != SyntacticRole::Modifier
+    })
 }
 
 fn starts_with_subordinator(

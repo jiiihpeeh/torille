@@ -114,8 +114,8 @@ public-domain prose sample with reviewed findings and provenance.
 - [x] **Keep the constructed exact-output fixtures** as the per-rule gate.
 - [x] **Grow the prose sample to at least 1,000 correct words** and keep the
   known-false-positive rate per 1,000 words as the baseline. The sample is now
-  930 clean words + 91 known-false-positive words = **1,021 correct words**
-  (61 clean rows), with 10 known errors, **9.8 per 1,000 words**. The new
+  940 clean words + 81 known-false-positive words = **1,021 correct words**
+  (62 clean rows), with 9 known errors, **8.8 per 1,000 words**. The new
   rows come from the same public-domain Gutenberg excerpt and were admitted
   only after `check_syntax` returned zero diagnostics; the seed note in
   `tests/fixtures/prose/adjudicated.json` records that rule.
