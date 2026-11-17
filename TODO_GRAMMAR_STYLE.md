@@ -112,8 +112,13 @@ public-domain prose sample with reviewed findings and provenance.
   be moved to `clean` or `errors`.
 - [x] **Add the ambiguity corpus** from P0-A to the same run.
 - [x] **Keep the constructed exact-output fixtures** as the per-rule gate.
-- [ ] **Grow the prose sample to at least 1,000 correct words** and keep the
-  known-false-positive rate per 1,000 words as the baseline.
+- [x] **Grow the prose sample to at least 1,000 correct words** and keep the
+  known-false-positive rate per 1,000 words as the baseline. The sample is now
+  877 clean words + 144 known-false-positive words = **1,021 correct words**
+  (58 clean rows), with 14 known errors, **13.7 per 1,000 words**. The new
+  rows come from the same public-domain Gutenberg excerpt and were admitted
+  only after `check_syntax` returned zero diagnostics; the seed note in
+  `tests/fixtures/prose/adjudicated.json` records that rule.
 
 Track these metrics:
 

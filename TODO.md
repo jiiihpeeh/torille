@@ -1896,3 +1896,9 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   ordinals (`kahdeksattakymmenettä`, `kahdeksannenkymmenennen`). Wiktionary's
   `kymmenes`/`tuhannes` ordinal table and `iltakuusi`'s käsi table are recorded
   as oracle-only against the older Kotus spellings.
+
+- 2026-11-17: the adjudicated prose sample now exceeds 1,000 correct words:
+  877 clean + 144 known-false-positive = 1,021 words, with 14 known errors
+  (13.7 per 1,000). New rows come from the same public-domain Gutenberg
+  excerpt and were admitted only after `check_syntax` returned zero
+  diagnostics. `cargo test --release --test syntax_prose` passes.
