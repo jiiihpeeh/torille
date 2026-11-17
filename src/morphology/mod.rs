@@ -774,6 +774,28 @@ fn resolve_word_fast(cat: &Catalogues, lower: &str) -> Option<WordInfo> {
                 }
             }
         }
+        // A closed-class pronoun form can also be a lemma of its own:
+        // `häntä` is the noun “tail” and the partitive of `hän`. The direct
+        // pass resolves the noun, so add the pronoun paradigm's reading as a
+        // second homonym. Role selection then prefers the pronoun reading
+        // when it has one; the noun reading is not lost.
+        //
+        // Only when the direct pass produced no pronoun reading: the table is
+        // keyed by surface, and a personal pronoun can collide with another
+        // paradigm's case form (`sinä` is the nominative of `sinä` and the
+        // essive of `se`). Adding the table's base would give the personal
+        // pronoun an invented essive reading and make its case ambiguous.
+        let has_pronoun = out
+            .readings
+            .iter()
+            .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Pronoun));
+        if !has_pronoun
+            && let Some(base) = crate::expand::check_normal::pronoun_base(lower)
+            && base != lower
+        {
+            add_readings_from_base_matched(base, lower, cat, &mut out.readings);
+            out.push_lemma(base);
+        }
         if out.lemma.is_none()
             && let Some(row) = direct.first()
         {
@@ -1657,6 +1679,35 @@ mod tests {
         });
         assert!(inessive_pronoun);
         assert_eq!(info.depth(), Depth::StemMap);
+    }
+
+    #[test]
+    fn a_pronoun_homonym_keeps_the_pronoun_reading() {
+        // `häntä` is both the noun “tail” and the partitive of `hän`. The
+        // direct pass resolves the noun; the closed-class pronoun reading must
+        // be added beside it, not replace it.
+        let (morphology, _) = analyzed("häntä");
+        let info = morphology.word(0).expect("häntä resolved");
+        assert!(info.readings().iter().any(|reading| {
+            reading.part_of_speech == Some(PartOfSpeech::Pronoun)
+                && reading.case == Some(Case::Partitive)
+                && reading.number == Some(Number::Singular)
+        }));
+        assert!(info.readings().iter().any(|reading| {
+            reading.part_of_speech == Some(PartOfSpeech::Noun)
+                && reading.case == Some(Case::Nominative)
+        }));
+    }
+
+    #[test]
+    fn a_plural_personal_pronoun_is_tagged_plural() {
+        let (morphology, _) = analyzed("me");
+        let info = morphology.word(0).expect("me resolved");
+        assert!(info.readings().iter().any(|reading| {
+            reading.part_of_speech == Some(PartOfSpeech::Pronoun)
+                && reading.case == Some(Case::Nominative)
+                && reading.number == Some(Number::Plural)
+        }));
     }
 
     #[test]

@@ -178,6 +178,7 @@ diagnostic_tests!(
     nested_list_duplicate_separator,
     subordinate_comma_after_main,
     subordinate_comma_initial,
+    fused_negative_subordinator_comma,
     relative_comma_pair,
     rection_elative,
     rection_illative,

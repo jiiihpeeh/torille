@@ -1915,3 +1915,15 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   head, so `Nämä hurskaan miehen sanat` no longer corrects `Nämä` against
   `hurskaan`. The row moved to clean; prose baseline is now 940 clean + 81
   known-FP words, 9 known errors (**8.8 per 1,000**).
+
+- 2026-11-17: the four remaining prose false positives landed. Class 101 now
+  tags `me`/`te`/`he` plural; `häntä` keeps the pronoun reading beside the noun
+  homonym; a personal pronoun heads an apposition; `ettei` opens a clause;
+  `kuin` is a comparison marker; unknown capitalized names get a role-only
+  subject; a comma before a capitalized subject splits the clause; postpositions
+  and temporal essives are adverbials. The landing also re-reads a demoted weak
+  predicate from its non-verb readings, stops relative clauses inheriting the
+  main subject, and makes the negative-object rule skip the clause subject. All
+  four rows moved to `clean`: **1,021 clean words, 0 known false positives, 0
+  known errors (0.0 per 1,000)**; `cargo test --release --test syntax_prose`
+  passes.

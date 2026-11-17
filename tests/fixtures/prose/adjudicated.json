@@ -74,7 +74,11 @@
     "Meille on niinkuin usein ennenkin haettu kotimieheksi Laukkasen Anni, Satu-Anni, koulumestarin kivuloinen ja kalpea tyttö, joka ei milloinkaan leiki eikä hymyile.",
     "Tein sen melkein hauskuudekseni--kun ajattelin niitä arvoja, mitkä niillä on maailmalle ja mitkä minulle.",
     "Mitä vaivaisveroa tulisinkaan maksamaan, jos panisin niihin niiden todellisen arvon, niiden ainoan, sen, mikä niillä on minulle.",
-    "Nämä hurskaan miehen sanat täyttivät kaikkien läsnäolevien mielen kummallisella aavistuksella."
+    "Nämä hurskaan miehen sanat täyttivät kaikkien läsnäolevien mielen kummallisella aavistuksella.",
+    "Me suuremmat istumme tuoleilla, kyynärpäät pöytään nojaten ja leuat käsien varassa, pikkusisar pyrkii Annin syliin ja kietoo käsivartensa hänen kaulaansa, ettei häntä pelottaisi.",
+    "Ja kun hän kasvoi täysikasvuiseksi, oli hän yhtä viaton ja herttainen kuin kaunis ja häntä mainittiin kaikkien hyvien avujen esikuvana.",
+    "Eräänä iltana myöhään istuivat molemmat illallisen jälkeen arkihuoneessa; Kenoveeva kehräsi ja lauloi, Sikri soitti kanteletta ja säesti Kenoveevan laulua.",
+    "Kenoveeva kiiruhti torniin ja katseli sieltä rakkaan puolisonsa jälkeen, sitten hän sulkeutui huoneeseensa eikä koko päivänä maistanut eineen muruakaan."
   ],
   "errors": [
     {
@@ -85,39 +89,5 @@
       "note": "Direct -ko question; the period should be a question mark."
     }
   ],
-  "known_false_positives": [
-    {
-      "text": "Me suuremmat istumme tuoleilla, kyynärpäät pöytään nojaten ja leuat käsien varassa, pikkusisar pyrkii Annin syliin ja kietoo käsivartensa hänen kaulaansa, ettei häntä pelottaisi.",
-      "kinds": [
-        "attribute_agreement",
-        "subject_predicate_agreement",
-        "object_case"
-      ],
-      "note": "Apposition Me suuremmat is not a subject+attribute pair; pelottaa is an experiencer verb, not a partitive-object error."
-    },
-    {
-      "text": "Ja kun hän kasvoi täysikasvuiseksi, oli hän yhtä viaton ja herttainen kuin kaunis ja häntä mainittiin kaikkien hyvien avujen esikuvana.",
-      "kinds": [
-        "attribute_agreement"
-      ],
-      "note": "Sentence-initial Ja no longer asks for a comma; herttainen is a predicate complement, not an attribute of a plural head."
-    },
-    {
-      "text": "Eräänä iltana myöhään istuivat molemmat illallisen jälkeen arkihuoneessa; Kenoveeva kehräsi ja lauloi, Sikri soitti kanteletta ja säesti Kenoveevan laulua.",
-      "kinds": [
-        "subject_predicate_agreement",
-        "subject_predicate_agreement",
-        "subject_predicate_agreement"
-      ],
-      "note": "Each coordinated clause has its own singular subject; the shared-subject rule is over-firing."
-    },
-    {
-      "text": "Kenoveeva kiiruhti torniin ja katseli sieltä rakkaan puolisonsa jälkeen, sitten hän sulkeutui huoneeseensa eikä koko päivänä maistanut eineen muruakaan.",
-      "kinds": [
-        "object_case",
-        "attribute_agreement"
-      ],
-      "note": "jälkeen governs the genitive puolisonsa; koko päivänä is an adverbial, not an essive attribute."
-    }
-  ]
+  "known_false_positives": []
 }

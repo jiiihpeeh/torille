@@ -175,6 +175,16 @@ fn check_attributes(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         {
             continue;
         }
+        // An invariant quantifier/determiner does not agree with its head:
+        // `Te kaikki tiedätte` and `koko päivänä` keep the same nominative
+        // shape whatever the number of the noun.
+        if syntax
+            .lemma
+            .as_deref()
+            .is_some_and(is_invariant_attribute_lemma)
+        {
+            continue;
+        }
         // Ask for an unambiguous attribute shape first: a token that is not an
         // adjective, ordinal or demonstrative never needs the degree lookup.
         let Some((attribute_case, attribute_number)) = attribute_shape(syntax) else {
@@ -432,6 +442,14 @@ fn is_relative_pronoun_lemma(lemma: &str) -> bool {
     matches!(lemma, "joka" | "mikä" | "ken" | "kuka")
 }
 
+/// Determiners whose nominative is the same for singular and plural.
+///
+/// `kaikki` has a rare generated plural `kaiket`, but the standard appositive
+/// `Te kaikki tiedätte` uses the invariant form. `koko` is likewise invariant.
+fn is_invariant_attribute_lemma(lemma: &str) -> bool {
+    matches!(lemma, "kaikki" | "koko")
+}
+
 fn is_head_pos(pos: Option<PartOfSpeech>) -> bool {
     matches!(
         pos,
@@ -450,20 +468,43 @@ fn attribute_head(
 ) -> Option<usize> {
     if let Some(head) = syntax.head
         && head != index
-        && tokens.get(head).is_some_and(Token::is_word)
-        && analysis.tokens[head].role != SyntacticRole::Modifier
+        && can_head_attribute(head, tokens, analysis)
     {
         return Some(head);
     }
     let clause = analysis.clauses.get(syntax.clause)?;
-    clause.tokens.clone().find(|&candidate| {
-        candidate > index
-            && tokens[candidate].is_word()
-            // `Nämä hurskaan miehen sanat`: the immediate next word is another
-            // modifier, not the agreement head. Walk past modifiers to the
-            // noun the whole phrase modifies.
-            && analysis.tokens[candidate].role != SyntacticRole::Modifier
-    })
+    clause
+        .tokens
+        .clone()
+        .find(|&candidate| candidate > index && can_head_attribute(candidate, tokens, analysis))
+}
+
+/// Whether a token can be the head of an attributive phrase.
+///
+/// `Nämä hurskaan miehen sanat`: the immediate next word is another modifier,
+/// not the agreement head, so walk past modifiers to the noun the whole phrase
+/// modifies. A function word is not a head even when the lexicon gives it a
+/// nominal homonym: `kuin` is a comparison particle before it is the
+/// instructive plural of `kuu`, and `herttainen kuin kaunis` must not agree
+/// with an instructive plural.
+fn can_head_attribute(index: usize, tokens: &[Token], analysis: &SyntaxAnalysis) -> bool {
+    let Some(token) = tokens.get(index) else {
+        return false;
+    };
+    if !token.is_word() {
+        return false;
+    }
+    let syntax = &analysis.tokens[index];
+    if matches!(
+        syntax.role,
+        SyntacticRole::Modifier | SyntacticRole::Adverbial
+    ) {
+        return false;
+    }
+    let key = syntax.key.as_str();
+    key != "kuin"
+        && !crate::syntax::is_coordinating(key)
+        && !crate::syntax::is_subordinator(key)
 }
 
 fn starts_with_subordinator(

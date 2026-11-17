@@ -670,6 +670,19 @@
           "corrections": [","]
         }
       ]
+    },
+    {
+      "id": "fused_negative_subordinator_comma",
+      "text": "Hän sanoi ettei tule.",
+      "diagnostics": [
+        {
+          "kind": "comma_missing",
+          "severity": "error",
+          "start": 10,
+          "end": 10,
+          "corrections": [","]
+        }
+      ]
     }
   ],
   "clean": [
@@ -833,6 +846,14 @@
     "Kaksi kolmesta.",
     "Sata autoa.",
     "Kaksikymmentä lasta.",
-    "Ostin kaksi kirjaa."
+    "Ostin kaksi kirjaa.",
+    "Hän on yhtä viaton ja herttainen kuin kaunis.",
+    "Illallisen jälkeen lähdimme.",
+    "Koko päivänä en maistanut mitään.",
+    "Pöydän alla on kissa.",
+    "Te kaikki tiedätte.",
+    "Me suuremmat emme istu.",
+    "Minä yksin tulen.",
+    "Minä ja Liisa tulemme."
   ]
 }

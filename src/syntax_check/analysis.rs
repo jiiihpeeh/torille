@@ -52,6 +52,13 @@ pub(super) fn nominal_case(token: &TokenSyntax) -> Option<Case> {
     if let Some(case) = token.case {
         return Some(case);
     }
+    // Prefer a pronoun reading over a noun homonym, the same way
+    // `nominal_has_case` does: `häntä` is the pronoun's partitive before it
+    // is the noun “tail”.
+    let prefer_pronoun = token
+        .readings
+        .iter()
+        .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Pronoun));
     let mut found: Option<Case> = None;
     for reading in &token.readings {
         if !matches!(
@@ -63,6 +70,9 @@ pub(super) fn nominal_case(token: &TokenSyntax) -> Option<Case> {
                     | PartOfSpeech::Ordinal
             )
         ) {
+            continue;
+        }
+        if prefer_pronoun && reading.part_of_speech != Some(PartOfSpeech::Pronoun) {
             continue;
         }
         let Some(case) = reading.case else {
@@ -103,7 +113,7 @@ pub(super) fn candidate_number(token: &TokenSyntax, case: Case) -> Option<Number
 pub(super) fn is_marker(key: &str) -> bool {
     crate::syntax::is_coordinating(key)
         || crate::syntax::is_subordinator(key)
-        || matches!(key, "joka" | "mikä" | "ken" | "kuka")
+        || matches!(key, "joka" | "mikä" | "ken" | "kuka" | "kuin")
 }
 
 /// A finite verb reading in the punctuation sense.

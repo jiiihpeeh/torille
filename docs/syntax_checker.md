@@ -77,7 +77,8 @@ competing reading that must not win for ambiguous surfaces (`joka päivä`,
 `ilman`, `sen`, `sinut`, and the determiner/relative split).
 `tests/fixtures/prose/adjudicated.json` is the reviewed-prose gate: clean rows
 must stay quiet, true positives must match their kinds, and known false
-positives pin the current bugs so a fix has to move the row.
+positives pin the current bugs so a fix has to move the row. As of 2026-11-17
+the prose fixture has 66 clean rows / 1,021 words and no known false positives.
 
 Current baseline (2026-11-15):
 

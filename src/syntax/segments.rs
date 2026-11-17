@@ -127,6 +127,10 @@ pub(super) fn segment_clause_words(
             starts.push(position);
             continue;
         }
+        if starts_capitalised_subject_clause(words, position, tokens, out) {
+            starts.push(position);
+            continue;
+        }
         if is_coordinating(&lower) {
             if position + 1 < words.len() && is_predicate_candidate(words[position + 1], out) {
                 starts.push(position);
@@ -161,6 +165,41 @@ pub(super) fn segment_clause_words(
         }
     }
     segments
+}
+
+/// `..., Sikri soitti`: a comma followed by a capitalized word that itself
+/// stands before the finite predicate starts a new clause at the capitalized
+/// word, not at the predicate.
+///
+/// The ordinary comma-plus-finite-verb rule starts the clause at `soitti`,
+/// which leaves `Sikri` in the previous clause and gives `lauloi` both
+/// `Sikri` and its own object. A capitalized word is the conservative marker:
+/// it covers names and a new sentence-like subject without splitting a list
+/// (`Sami, Liisa ja Pekka söivät`, where `Liisa` is followed by `ja`).
+fn starts_capitalised_subject_clause(
+    words: &[usize],
+    position: usize,
+    tokens: &[Token],
+    out: &[TokenSyntax],
+) -> bool {
+    if position == 0 {
+        return false;
+    }
+    let word = words[position];
+    if !tokens[word].is_capitalised() || is_predicate_candidate(word, out) {
+        return false;
+    }
+    let Some(&next) = words.get(position + 1) else {
+        return false;
+    };
+    let finite = is_predicate_candidate(next, out) || is_negative_auxiliary(next, out);
+    finite
+        && has_separator_between(tokens, words[position - 1], word, ',')
+        // `sinä, Heintsi', sanoi ...`: a vocative/apposition is followed by a
+        // comma before the predicate, so it is not the subject of that
+        // predicate. The split is for `..., Sikri soitti`, where the name runs
+        // straight into its verb.
+        && !has_separator_between(tokens, word, next, ',')
 }
 
 /// `sillä` is both “because” and an adessive pronoun (“on it”).

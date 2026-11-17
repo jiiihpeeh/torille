@@ -166,11 +166,11 @@
       "sentence": "Zorblax istuu.",
       "clauses": 1,
       "words": [
-        {"text": "Zorblax", "role": "unknown", "confidence": "weak"},
+        {"text": "Zorblax", "role": "subject", "confidence": "likely"},
         {"text": "istuu", "role": "predicate", "lemma": "istua"}
       ],
       "clause_roles": [
-        {"predicate": 1, "subject": null, "object": null, "negative": false, "existential": false}
+        {"predicate": 1, "subject": 0, "object": null, "negative": false, "existential": false}
       ]
     },
 

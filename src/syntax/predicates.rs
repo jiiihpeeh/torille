@@ -91,8 +91,17 @@ pub(super) fn is_nominal(syntax: &TokenSyntax) -> bool {
 /// one. Subject and object selection must not take the case from the reading
 /// that is not the nominal.
 pub(super) fn nominal_has_case(syntax: &TokenSyntax, cases: &[Case]) -> bool {
+    // A pronoun surface can also be a noun (`häntä` is the partitive of `hän`
+    // and the noun “tail”). When both are present, the closed-class pronoun
+    // reading is the grammatical one; do not let the noun's nominative
+    // homonym make the pronoun look like a subject.
+    let prefer_pronoun = syntax
+        .readings
+        .iter()
+        .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Pronoun));
     syntax.readings.iter().any(|reading| {
         is_nominal_pos(reading.part_of_speech)
+            && (!prefer_pronoun || reading.part_of_speech == Some(PartOfSpeech::Pronoun))
             && reading.case.is_some_and(|case| cases.contains(&case))
     })
 }
@@ -199,10 +208,17 @@ pub(crate) fn is_coordinating(word: &str) -> bool {
 }
 
 pub(crate) fn is_subordinator(word: &str) -> bool {
-    matches!(
+    if matches!(
         word,
         "että" | "kun" | "jos" | "vaikka" | "koska" | "jotta" | "mikäli" | "ellei"
-    )
+    ) {
+        return true;
+    }
+    // The fused negative subordinators are one word: `ettei` is `että + ei`,
+    // and the same construction gives `etten`, `jottei`, `vaikkei`, ... . The
+    // connective table already knows the conjunction each one belongs to.
+    crate::expand::negation::negation_base(word)
+        .is_some_and(|base| matches!(base, "että" | "jotta" | "vaikka" | "ellei"))
 }
 
 /// The inflected forms of the relative pronouns. The engine resolves most of
@@ -294,5 +310,10 @@ pub(super) fn comma_between(tokens: &[Token], left: usize, right: usize) -> bool
 /// because the lexicon also gives it a noun reading (`ja`, `kun`).
 pub(super) fn is_clause_marker(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
     let lower = tokens[index].text.to_lowercase();
-    is_coordinating(&lower) || is_subordinator(&lower) || is_relative_word(index, tokens, out)
+    is_coordinating(&lower)
+        || is_subordinator(&lower)
+        || is_relative_word(index, tokens, out)
+        // `kuin` is a comparison particle, not a nominal even though the
+        // lexicon also has the instructive plural of `kuu` (`kuin`).
+        || lower == "kuin"
 }

@@ -557,6 +557,90 @@ mod tests {
     }
 
     #[test]
+    fn a_capitalised_subject_after_a_comma_starts_a_clause() {
+        let (tokens, analysis) = analyzed("Kenoveeva kehräsi ja lauloi, Sikri soitti kanteletta.");
+        let sikri = word_index(&tokens, "Sikri");
+        let soitti = word_index(&tokens, "soitti");
+        let clause = analysis
+            .clauses
+            .iter()
+            .find(|clause| clause.tokens.contains(&sikri))
+            .expect("Sikri starts a clause");
+        assert_eq!(clause.predicate, Some(soitti));
+        assert_eq!(analysis.tokens[sikri].role, SyntacticRole::Subject);
+    }
+
+    #[test]
+    fn a_fused_negative_subordinator_starts_its_own_clause() {
+        let (tokens, analysis) = analyzed("Sami söi, ettei häntä pelottaisi.");
+        let ettei = word_index(&tokens, "ettei");
+        let pelottaisi = word_index(&tokens, "pelottaisi");
+        let hanta = word_index(&tokens, "häntä");
+        let clause = analysis
+            .clauses
+            .iter()
+            .find(|clause| clause.tokens.contains(&ettei))
+            .expect("ettei starts a clause");
+        assert_eq!(clause.predicate, Some(pelottaisi));
+        assert_eq!(analysis.tokens[ettei].role, SyntacticRole::Auxiliary);
+        assert_eq!(analysis.tokens[hanta].role, SyntacticRole::Object);
+        assert_eq!(analysis.tokens[hanta].case, Some(Case::Partitive));
+    }
+
+    #[test]
+    fn a_personal_pronoun_heads_its_apposition() {
+        let (tokens, analysis) = analyzed("Me suuremmat istumme.");
+        let me = word_index(&tokens, "Me");
+        let suuremmat = word_index(&tokens, "suuremmat");
+        assert_eq!(analysis.tokens[me].role, SyntacticRole::Subject);
+        assert_eq!(analysis.tokens[suuremmat].role, SyntacticRole::Modifier);
+        assert_eq!(analysis.tokens[suuremmat].head, Some(me));
+        assert_eq!(analysis.clauses[0].subject, Some(me));
+    }
+
+    #[test]
+    fn a_negative_predicate_reads_the_auxiliary_person_for_its_apposition() {
+        // `istu` has an imperative homonym; the person comes from `emme`,
+        // so `Me` still matches the predicate and heads the apposition.
+        let (tokens, analysis) = analyzed("Me suuremmat emme istu.");
+        let me = word_index(&tokens, "Me");
+        let suuremmat = word_index(&tokens, "suuremmat");
+        assert_eq!(analysis.tokens[me].role, SyntacticRole::Subject);
+        assert_eq!(analysis.tokens[suuremmat].role, SyntacticRole::Modifier);
+        assert_eq!(analysis.clauses[0].subject, Some(me));
+    }
+
+    #[test]
+    fn a_coordinated_pronoun_is_not_an_apposition() {
+        let (tokens, analysis) = analyzed("Minä ja Liisa tulemme.");
+        let mina = word_index(&tokens, "Minä");
+        let liisa = word_index(&tokens, "Liisa");
+        assert_eq!(analysis.tokens[mina].role, SyntacticRole::Subject);
+        assert_eq!(analysis.tokens[liisa].role, SyntacticRole::Subject);
+    }
+
+    #[test]
+    fn a_pronoun_is_the_subject_beside_an_adverb() {
+        let (tokens, analysis) = analyzed("Minä yksin tulen.");
+        let mina = word_index(&tokens, "Minä");
+        let yksin = word_index(&tokens, "yksin");
+        assert_eq!(analysis.tokens[mina].role, SyntacticRole::Subject);
+        assert_eq!(analysis.tokens[yksin].role, SyntacticRole::Adverbial);
+        assert_eq!(analysis.clauses[0].subject, Some(mina));
+    }
+
+    #[test]
+    fn an_invariant_quantifier_is_the_apposition_not_the_subject() {
+        let (tokens, analysis) = analyzed("Te kaikki tiedätte.");
+        let te = word_index(&tokens, "Te");
+        let kaikki = word_index(&tokens, "kaikki");
+        assert_eq!(analysis.tokens[te].role, SyntacticRole::Subject);
+        assert_eq!(analysis.tokens[kaikki].role, SyntacticRole::Modifier);
+        assert_eq!(analysis.tokens[kaikki].head, Some(te));
+        assert_eq!(analysis.clauses[0].subject, Some(te));
+    }
+
+    #[test]
     fn coordinated_objects_are_both_objects() {
         let (tokens, analysis) = analyzed("Sami söi puuron ja maidon.");
         let puuron = word_index(&tokens, "puuron");
@@ -704,12 +788,23 @@ mod tests {
     }
 
     #[test]
-    fn an_unknown_word_stays_unknown() {
+    fn an_unknown_capitalised_word_can_head_a_clause() {
+        // `Kenoveeva kehräsi` and `Zorblax istuu` have no lexicon entry. The
+        // role pass may use the capitalized word as the subject when it
+        // stands directly before the predicate, but it invents no reading
+        // and no lemma, so no correction can be offered for the name.
         let (tokens, analysis) = analyzed("Zorblax istuu.");
         let unknown = word_index(&tokens, "Zorblax");
+        assert_eq!(analysis.tokens[unknown].role, SyntacticRole::Subject);
+        assert_eq!(analysis.tokens[unknown].confidence, RoleConfidence::Likely);
+        assert!(analysis.tokens[unknown].readings.is_empty());
+        assert_eq!(analysis.tokens[unknown].lemma, None);
+
+        // An unknown lowercase word is not a name and stays unassigned.
+        let (tokens, analysis) = analyzed("zorblax istuu.");
+        let unknown = word_index(&tokens, "zorblax");
         assert_eq!(analysis.tokens[unknown].role, SyntacticRole::Unknown);
         assert_eq!(analysis.tokens[unknown].confidence, RoleConfidence::Weak);
-        assert!(analysis.tokens[unknown].readings.is_empty());
     }
 
     #[test]

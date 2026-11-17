@@ -48,6 +48,13 @@ pub const CLASS: &str = "101";
 /// spelling.
 struct Pron {
     lemma: &'static str,
+    /// The grammatical number every case of this pronoun realises.
+    ///
+    /// `me`, `te` and `he` are plural pronouns: their spellings build on the
+    /// same stem as the singular paradigm, but every cell is a plural form
+    /// (`meidän`, `meitä`, `meissä`, ...). The singular pronouns keep
+    /// [`Number::Singular`].
+    number: Number,
     stem: &'static str,
     /// The word's harmony, which for pronouns is lexical and not the
     /// nominative's vowel: `minä` is back (`minuna`), `hän` front (`hänenä`).
@@ -57,10 +64,10 @@ struct Pron {
     overrides: &'static [(Case, &'static str)],
 }
 
-/// Every singular case, in the order the engine emits them: the nominative,
-/// genitive, partitive and illative first, then the rest, as the catalogue
-/// orders them.
-const SINGULAR_CASES: &[Case] = &[
+/// Every case the regular pronouns emit, in the order the engine emits them:
+/// the nominative, genitive, partitive and illative first, then the rest, as
+/// the catalogue orders them. The number is the pronoun's own.
+const REGULAR_CASES: &[Case] = &[
     Case::Nominative,
     Case::Genitive,
     Case::Partitive,
@@ -79,6 +86,7 @@ const SINGULAR_CASES: &[Case] = &[
 const TEMPLATED: &[Pron] = &[
     Pron {
         lemma: "hän",
+        number: Number::Singular,
         stem: "häne",
         harmony: Harmony::Front,
         partitive: "häntä",
@@ -87,6 +95,7 @@ const TEMPLATED: &[Pron] = &[
     },
     Pron {
         lemma: "minä",
+        number: Number::Singular,
         stem: "minu",
         harmony: Harmony::Back,
         partitive: "minua",
@@ -95,6 +104,7 @@ const TEMPLATED: &[Pron] = &[
     },
     Pron {
         lemma: "sinä",
+        number: Number::Singular,
         stem: "sinu",
         harmony: Harmony::Back,
         partitive: "sinua",
@@ -103,6 +113,7 @@ const TEMPLATED: &[Pron] = &[
     },
     Pron {
         lemma: "tuo",
+        number: Number::Singular,
         stem: "tuo",
         harmony: Harmony::Back,
         partitive: "tuota",
@@ -111,6 +122,7 @@ const TEMPLATED: &[Pron] = &[
     },
     Pron {
         lemma: "tämä",
+        number: Number::Singular,
         stem: "tä",
         harmony: Harmony::Front,
         partitive: "tätä",
@@ -119,6 +131,7 @@ const TEMPLATED: &[Pron] = &[
     },
     Pron {
         lemma: "se",
+        number: Number::Singular,
         stem: "si",
         harmony: Harmony::Front,
         partitive: "sitä",
@@ -134,6 +147,7 @@ const TEMPLATED: &[Pron] = &[
     // not make.
     Pron {
         lemma: "me",
+        number: Number::Plural,
         stem: "mei",
         harmony: Harmony::Front,
         partitive: "meitä",
@@ -142,6 +156,7 @@ const TEMPLATED: &[Pron] = &[
     },
     Pron {
         lemma: "te",
+        number: Number::Plural,
         stem: "tei",
         harmony: Harmony::Front,
         partitive: "teitä",
@@ -150,6 +165,7 @@ const TEMPLATED: &[Pron] = &[
     },
     Pron {
         lemma: "he",
+        number: Number::Plural,
         stem: "hei",
         harmony: Harmony::Front,
         partitive: "heitä",
@@ -544,16 +560,16 @@ const IRREGULAR: &[(&str, &[(Case, Number, &str, bool)])] = &[
     ),
 ];
 
-/// One singular case of a templated pronoun, as a `Decl` entry. The
-/// nominative, partitive and illative are the members the stem does not make,
-/// so the pronoun spells them outright; every other case is the stem plus the
-/// shared suffix table's ending, or an override. The abessive is real but
+/// One case of a templated pronoun, as a `Decl` entry. The nominative,
+/// partitive and illative are the members the stem does not make, so the
+/// pronoun spells them outright; every other case is the stem plus the shared
+/// suffix table's ending, or an override. The abessive is real but
 /// unconfirmed for these pronouns, so it is generated rather than offered.
 fn pronoun_entry(p: &Pron, case: Case) -> Entry {
     match case {
-        Case::Nominative => plain(case, Number::Singular, p.lemma, ["", ""]),
-        Case::Partitive => plain(case, Number::Singular, p.partitive, ["", ""]),
-        Case::Illative => plain(case, Number::Singular, p.illative, ["", ""]),
+        Case::Nominative => plain(case, p.number, p.lemma, ["", ""]),
+        Case::Partitive => plain(case, p.number, p.partitive, ["", ""]),
+        Case::Illative => plain(case, p.number, p.illative, ["", ""]),
         // The accusative is not the stem plus an ending: `hän` is `hänet`,
         // and the plural pronouns take `-dät` (`meidät`, `heidät`), while
         // `se` and `tuo` use the genitive shape (`sen`, `tuon`).
@@ -568,9 +584,9 @@ fn pronoun_entry(p: &Pron, case: Case) -> Entry {
                 "tuo" => "tuon",
                 "tämä" => "tämän",
                 "se" => "sen",
-                _ => return plain(case, Number::Singular, p.lemma, ["", ""]),
+                _ => return plain(case, p.number, p.lemma, ["", ""]),
             };
-            plain(case, Number::Singular, word, ["", ""])
+            plain(case, p.number, word, ["", ""])
         }
         _ => {
             let suffix = singular_case_suffix(case, p.harmony)
@@ -581,17 +597,17 @@ fn pronoun_entry(p: &Pron, case: Case) -> Entry {
                 .find(|(c, _)| *c == case)
                 .map_or_else(|| format!("{}{suffix}", p.stem), |(_, w)| (*w).to_string());
             if case == Case::Abessive {
-                rare(case, Number::Singular, &word, ["", ""])
+                rare(case, p.number, &word, ["", ""])
             } else {
-                plain(case, Number::Singular, &word, ["", ""])
+                plain(case, p.number, &word, ["", ""])
             }
         }
     }
 }
 
-/// A templated pronoun's singular paradigm.
+/// A templated pronoun's paradigm.
 fn inflect_regular(p: &Pron) -> Vec<Entry> {
-    SINGULAR_CASES
+    REGULAR_CASES
         .iter()
         .map(|case| pronoun_entry(p, *case))
         .collect()
@@ -739,6 +755,55 @@ mod tests {
         assert!(w.contains(&"mun".to_string()));
         assert!(w.contains(&"mua".to_string()));
         assert!(w.contains(&"mulla".to_string()));
+    }
+
+    #[test]
+    fn plural_personal_pronouns_carry_plural_tags() {
+        use crate::tags::Number;
+
+        for lemma in ["me", "te", "he"] {
+            let forms = inflect(lemma);
+            assert!(!forms.is_empty(), "{lemma} has a paradigm");
+            for form in &forms {
+                for reading in &form.readings {
+                    assert_eq!(
+                        reading.number,
+                        Some(Number::Plural),
+                        "{lemma}: {} must be plural",
+                        form.word
+                    );
+                }
+            }
+        }
+        for lemma in ["minä", "sinä", "hän"] {
+            let forms = inflect(lemma);
+            assert!(!forms.is_empty(), "{lemma} has a paradigm");
+            for form in &forms {
+                for reading in &form.readings {
+                    assert_eq!(
+                        reading.number,
+                        Some(Number::Singular),
+                        "{lemma}: {} must be singular",
+                        form.word
+                    );
+                }
+            }
+        }
+        // The accusative of a plural pronoun is plural too.
+        for (lemma, accusative) in [
+            ("me", "meidät"),
+            ("te", "teidät"),
+            ("he", "heidät"),
+        ] {
+            let form = inflect(lemma)
+                .into_iter()
+                .find(|form| form.word == accusative)
+                .unwrap_or_else(|| panic!("{lemma} should have {accusative}"));
+            assert!(
+                form.readings.iter().all(|reading| reading.number == Some(Number::Plural)),
+                "{lemma}: {accusative} must be plural"
+            );
+        }
     }
 
     #[test]

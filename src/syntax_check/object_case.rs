@@ -58,7 +58,7 @@ fn negative_object(
     analysis: &SyntaxAnalysis,
 ) -> Option<SyntaxDiagnostic> {
     let predicate = clause.predicate?;
-    let (argument, case) = argument(clause, predicate, tokens, analysis)?;
+    let (argument, case) = argument(clause, predicate, clause.subject, tokens, analysis)?;
     if case == Case::Partitive {
         return None;
     }
@@ -287,12 +287,20 @@ fn cue_present(
 fn argument(
     clause: &crate::syntax::Clause,
     predicate: usize,
+    subject: Option<usize>,
     tokens: &[Token],
     analysis: &SyntaxAnalysis,
 ) -> Option<(usize, Case)> {
     let words = clause_words(clause, tokens);
     let predicate_position = words.iter().position(|&index| index == predicate)?;
     for &index in words.iter().skip(predicate_position + 1) {
+        // A merged clause can hold a second, later predicate with its own
+        // subject (`... sulkeutui huoneeseensa eikä ... maistanut ...`). The
+        // subject is never the object of the negation, even though its
+        // nominative case would otherwise make it a candidate.
+        if Some(index) == subject {
+            continue;
+        }
         let syntax = &analysis.tokens[index];
         if !matches!(
             syntax.role,

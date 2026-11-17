@@ -664,10 +664,15 @@ class Harness:
         the whole grid, so it returns the full confirmed paradigm.
         """
         if self.lexicon is not None:
-            rows = self.lexicon.execute(
-                "SELECT DISTINCT form FROM forms WHERE lemma=? AND ok='both'",
-                (lemma,),
-            ).fetchall()
+            # The report tool shares one harness across a thread pool. A
+            # sqlite3 connection is not safe for concurrent use
+            # (`check_same_thread=False` only disables the guard), so every
+            # query is serialised on the harness lock.
+            with self._lock:
+                rows = self.lexicon.execute(
+                    "SELECT DISTINCT form FROM forms WHERE lemma=? AND ok='both'",
+                    (lemma,),
+                ).fetchall()
             return {r[0] for r in rows}
         out: set[str] = set()
         for cell in cells:
@@ -1359,10 +1364,11 @@ class Harness:
         if strict and klass:
             class_filter = " AND b.class=?"
             params.append(klass)
-        rows = self.lexicon.execute(
-            "SELECT f.form, f.[case], f.number, f.possessive"
-            " FROM forms f JOIN base b USING(lemma, homonym)"
-            f" WHERE f.lemma=? AND f.ok='both'{class_filter}", params).fetchall()
+        with self._lock:
+            rows = self.lexicon.execute(
+                "SELECT f.form, f.[case], f.number, f.possessive"
+                " FROM forms f JOIN base b USING(lemma, homonym)"
+                f" WHERE f.lemma=? AND f.ok='both'{class_filter}", params).fetchall()
         if not rows:
             # A word with no confirmed form is a skip (`no confirmed form`).
             return []
@@ -1391,9 +1397,10 @@ class Harness:
         # precision pass can tell "Omorfi asserts it but Voikko does not" from
         # "Omorfi never produced it".
         all_params: list[str] = [lemma] + ([klass] if strict and klass else [])
-        all_forms = {r[0] for r in self.lexicon.execute(
-            "SELECT f.form FROM forms f JOIN base b USING(lemma, homonym)"
-            f" WHERE f.lemma=?{class_filter}", all_params)}
+        with self._lock:
+            all_forms = {r[0] for r in self.lexicon.execute(
+                "SELECT f.form FROM forms f JOIN base b USING(lemma, homonym)"
+                f" WHERE f.lemma=?{class_filter}", all_params)}
 
         def cell_key(place: Cell) -> tuple[str, str, str]:
             return (CASE_NAMES[place.case], num_name[place.number],
@@ -1433,10 +1440,11 @@ class Harness:
             if not places:
                 continue
             cname, nm, pnm = cell_key(places[0])
-            cell_expected = [r[0] for r in self.lexicon.execute(
-                "SELECT form FROM forms WHERE lemma=? AND [case]=? AND number=? "
-                "AND possessive=? AND ok='both'", (lemma, cname, nm, pnm))
-                if r[0]]
+            with self._lock:
+                cell_expected = [r[0] for r in self.lexicon.execute(
+                    "SELECT form FROM forms WHERE lemma=? AND [case]=? AND number=? "
+                    "AND possessive=? AND ok='both'", (lemma, cname, nm, pnm))
+                    if r[0]]
             if cell_expected:
                 if pnm == "third person" and any(
                         self.same_third_person(word, want)

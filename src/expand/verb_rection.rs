@@ -30,6 +30,9 @@ mod tests {
         assert_eq!(cases("pitää"), vec![Case::Elative, Case::Partitive]);
         assert_eq!(cases("mennä"), vec![Case::Illative, Case::Allative]);
         assert_eq!(cases("luottaa"), vec![Case::Illative]);
+        // `soittaa` has two frames: call someone (allative) and play an
+        // instrument (partitive).
+        assert_eq!(cases("soittaa"), vec![Case::Allative, Case::Partitive]);
     }
 
     #[test]

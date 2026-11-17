@@ -1,6 +1,6 @@
 //! Clause role resolution.
 
-use crate::tags::{Case, Mood, PartOfSpeech, Person, Tags};
+use crate::tags::{Case, Mood, Number, PartOfSpeech, Person, Tags};
 use crate::tokenise::Token;
 
 /// Object cases when the surface carries a possessive suffix.
@@ -40,6 +40,19 @@ pub(super) fn classify(readings: &[Tags]) -> (SyntacticRole, RoleConfidence, Opt
         return (SyntacticRole::Predicate, confidence, None);
     }
 
+    // An adposition is an adverbial of its clause, not a noun with the case
+    // its homonym happens to carry. `jälkeen` is `postpositio, adverbi`; the
+    // noun `jälki` also gives it an illative reading, which must not turn
+    // `puolisonsa jälkeen` into a genitive-subject plus illative object.
+    if readings.iter().any(|reading| {
+        matches!(
+            reading.part_of_speech,
+            Some(PartOfSpeech::Preposition | PartOfSpeech::Postposition)
+        )
+    }) {
+        return (SyntacticRole::Adverbial, RoleConfidence::Likely, None);
+    }
+
     let adverbs = readings
         .iter()
         .filter(|reading| matches!(reading.part_of_speech, Some(PartOfSpeech::Adverb)))
@@ -75,6 +88,25 @@ pub(super) fn classify(readings: &[Tags]) -> (SyntacticRole, RoleConfidence, Opt
     }
 
     (SyntacticRole::Unknown, RoleConfidence::Weak, None)
+}
+
+/// Re-read a demoted predicate from its non-verb readings.
+///
+/// `siitä` is simultaneously the elative pronoun/adverb and a form of the verb
+/// `siittää`. Once the clause has chosen a clearer predicate, the verb reading
+/// is no longer available; classify what remains so an adverbial stays an
+/// adverbial instead of becoming an `Unknown` that the attribute rule may pick
+/// up. A word with no non-verb reading stays `Unknown`.
+fn classify_without_verb(readings: &[Tags]) -> (SyntacticRole, RoleConfidence, Option<Case>) {
+    let nominal_or_adverbial: Vec<Tags> = readings
+        .iter()
+        .filter(|reading| !is_verb_reading(reading))
+        .cloned()
+        .collect();
+    if nominal_or_adverbial.len() == readings.len() {
+        return (SyntacticRole::Unknown, RoleConfidence::Weak, None);
+    }
+    classify(&nominal_or_adverbial)
 }
 
 /// Assign the initial role with an optional preferred reading.
@@ -156,6 +188,121 @@ fn choose_predicate(words: &[usize], out: &[TokenSyntax]) -> Option<usize> {
         })
 }
 
+/// The person and number of a personal pronoun surface.
+fn personal_pronoun(key: &str) -> Option<(Person, Number)> {
+    Some(match key {
+        "minä" => (Person::First, Number::Singular),
+        "sinä" => (Person::Second, Number::Singular),
+        "hän" => (Person::Third, Number::Singular),
+        "me" => (Person::First, Number::Plural),
+        "te" => (Person::Second, Number::Plural),
+        "he" => (Person::Third, Number::Plural),
+        _ => return None,
+    })
+}
+
+/// The finite predicate's person and number, including a negative auxiliary.
+fn predicate_person_number(
+    predicate: usize,
+    words: &[usize],
+    tokens: &[Token],
+    out: &[TokenSyntax],
+) -> Option<(Person, Number)> {
+    // A connegative main verb is finite through the negative auxiliary before
+    // it: `emme istu` is first-person plural even when `istu` also has an
+    // imperative homonym with a different person.
+    // `words` may be the whole clause or only the run before the predicate;
+    // either way, the negative auxiliary we want is in the pre-predicate part.
+    let before = words
+        .iter()
+        .position(|&index| index == predicate)
+        .map_or(words, |position| &words[..position]);
+    if let Some(auxiliary) = before
+        .iter()
+        .rev()
+        .copied()
+        .find(|&index| is_negative_auxiliary(index, out))
+    {
+        return crate::expand::negation::person_number(&tokens[auxiliary].text);
+    }
+    if out[predicate]
+        .readings
+        .iter()
+        .any(|reading| reading.part_of_speech == Some(PartOfSpeech::NegativeVerb))
+    {
+        return crate::expand::negation::person_number(&tokens[predicate].text);
+    }
+    out[predicate]
+        .readings
+        .iter()
+        .find(|reading| is_finite_predicate(reading))
+        .and_then(|reading| reading.person.zip(reading.number))
+}
+
+/// Whether the word after `index` is the clause predicate or its auxiliary.
+///
+/// Used only for the unknown-capitalized-name fallback. `Kenoveeva kehräsi`
+/// is a name plus predicate; `Kenoveevan laulua` is a name-form plus a noun,
+/// so the latter stays out of the subject slot.
+fn next_word_heads_predicate(index: usize, words: &[usize], out: &[TokenSyntax]) -> bool {
+    let Some(position) = words.iter().position(|&candidate| candidate == index) else {
+        return false;
+    };
+    words.get(position + 1).is_some_and(|&next| {
+        out[next].role == SyntacticRole::Predicate
+            || out[next].role == SyntacticRole::Auxiliary
+            || is_negative_auxiliary(next, out)
+    })
+}
+
+/// `Me suuremmat istumme`: the personal pronoun is the subject head and the
+/// following nominative phrase is an apposition.
+///
+/// The ordinary subject search takes the last preverbal nominative, which would
+/// make `suuremmat` the subject and leave the 1st-person predicate disagreeing
+/// with a 3rd-person plural noun. A pronoun that already matches the predicate
+/// is the stronger candidate. Coordination (`Minä ja Liisa`) is not an
+/// apposition and stays with the coordinated-subject pass.
+fn apposition_subject(
+    before: &[usize],
+    predicate: usize,
+    tokens: &[Token],
+    out: &mut [TokenSyntax],
+) -> Option<usize> {
+    let (person, number) = predicate_person_number(predicate, before, tokens, out)?;
+    for (position, &pronoun) in before.iter().enumerate() {
+        let Some((pronoun_person, pronoun_number)) = personal_pronoun(&out[pronoun].key) else {
+            continue;
+        };
+        if pronoun_person != person || pronoun_number != number {
+            continue;
+        }
+        let mut appositions = Vec::new();
+        for &candidate in &before[position + 1..] {
+            if candidate == predicate
+                || is_clause_marker(candidate, tokens, out)
+                || has_coordinator_between(tokens, pronoun, candidate)
+                || out[candidate].role != SyntacticRole::Unknown
+                || !nominal_has_case(&out[candidate], &[Case::Nominative])
+            {
+                break;
+            }
+            appositions.push(candidate);
+        }
+        if appositions.is_empty() {
+            continue;
+        }
+        for candidate in appositions {
+            out[candidate].role = SyntacticRole::Modifier;
+            out[candidate].confidence = RoleConfidence::Likely;
+            out[candidate].case = Some(Case::Nominative);
+            out[candidate].head = Some(pronoun);
+        }
+        return Some(pronoun);
+    }
+    None
+}
+
 /// Resolve the core roles in one clause.
 pub(super) fn resolve_clause(
     clause: &mut Clause,
@@ -220,8 +367,18 @@ pub(super) fn resolve_clause(
             .iter()
             .any(|reading| is_nominal_pos(reading.part_of_speech));
         if !auxiliary && nominal {
-            out[index].role = SyntacticRole::Unknown;
-            out[index].confidence = RoleConfidence::Weak;
+            // Re-read the token from its non-verb readings instead of
+            // dropping it to a bare `Unknown`. `siitä` is the elative pronoun
+            // (and an adverb) beside the verb `siittää`; when the clause has a
+            // clearer predicate, the pronoun/adverb reading is the one to
+            // keep, so the attribute pass does not mistake an adverbial for
+            // an attribute of the next nominal.
+            let (role, confidence, case) = classify_without_verb(&out[index].readings);
+            out[index].role = role;
+            out[index].confidence = confidence;
+            if role == SyntacticRole::Adverbial {
+                out[index].case = case;
+            }
         }
     }
     for &index in &words {
@@ -243,6 +400,8 @@ pub(super) fn resolve_clause(
     // A postposition and its genitive modifier (`Pöydän alla`) must be a
     // locative phrase before the existential test runs.
     mark_adpositions(&words, predicate, out);
+    mark_invariant_determiners(&words, out);
+    mark_temporal_essives(&words, tokens, out);
     // `joka päivä` may look like a nominative subject to the agreement rule
     // when the real subject is the dropped 1st/2nd-person pronoun.
     mark_frequency_determiners(&words, tokens, out);
@@ -315,6 +474,9 @@ pub(super) fn resolve_clause(
             subject = genitive_before;
         }
         if subject.is_none() {
+            subject = apposition_subject(before, predicate, tokens, out);
+        }
+        if subject.is_none() {
             // A true name (`Sami`) wins over a following capitalized common
             // word (`Ruotsalainen`) so a multiword name stays one subject.
             // The lemma's capitalization is the marker: a common word that
@@ -329,6 +491,21 @@ pub(super) fn resolve_clause(
                         .is_some_and(|first| first.is_uppercase())
                     && nominal_has_case(&out[index], &[Case::Nominative, Case::Partitive])
                     && !is_clause_marker(index, tokens, out)
+            });
+        }
+        if subject.is_none() {
+            // A capitalized word the lexicon does not know at all
+            // (`Kenoveeva`, `Sikri`) is still the subject when it stands
+            // immediately before the predicate. This is a role-only fallback:
+            // it invents no morphology and no lemma, so no correction can be
+            // offered for the name. A capitalized word before another nominal
+            // (`Kenoveevan laulua`) is a modifier, not a subject.
+            subject = before.iter().copied().find(|&index| {
+                out[index].role == SyntacticRole::Unknown
+                    && out[index].readings.is_empty()
+                    && tokens[index].is_capitalised()
+                    && !is_clause_marker(index, tokens, out)
+                    && next_word_heads_predicate(index, &words, out)
             });
         }
         if subject.is_none() {
@@ -390,12 +567,21 @@ pub(super) fn resolve_clause(
                 && !is_clause_marker(index, tokens, out)
         })
     } else if !is_olla && !is_change {
-        after.iter().copied().find(|&index| {
-            Some(index) != subject
-                && out[index].role == SyntacticRole::Unknown
-                && nominal_has_case(&out[index], object_cases)
-                && !is_clause_marker(index, tokens, out)
-        })
+        // A preverbal object is ordinary Finnish (`Kirjan luin`,
+        // `ettei häntä pelottaisi`). Try the post-predicate position first,
+        // then the pre-predicate one, skipping the subject and clause
+        // markers. A numeral's counted noun is already a modifier by this
+        // point, so the fallback cannot take it.
+        after
+            .iter()
+            .copied()
+            .chain(before.iter().rev().copied())
+            .find(|&index| {
+                Some(index) != subject
+                    && out[index].role == SyntacticRole::Unknown
+                    && nominal_has_case(&out[index], object_cases)
+                    && !is_clause_marker(index, tokens, out)
+            })
     } else {
         None
     };
@@ -548,7 +734,9 @@ fn mark_adpositions(words: &[usize], predicate: usize, out: &mut [TokenSyntax]) 
                 continue;
             }
         }
-        if out[index].role != SyntacticRole::Unknown || !postposition {
+        if !matches!(out[index].role, SyntacticRole::Unknown | SyntacticRole::Adverbial)
+            || !postposition
+        {
             continue;
         }
         if position > 0 {
@@ -566,6 +754,75 @@ fn mark_adpositions(words: &[usize], predicate: usize, out: &mut [TokenSyntax]) 
         out[index].confidence = RoleConfidence::Likely;
         out[index].case = None;
         out[index].head = Some(predicate);
+    }
+}
+
+/// Invariant determiners that do not agree with their head: `koko`.
+///
+/// `koko` has an adjective reading, but it is not inflected in `koko päivänä`
+/// or `koko talon`. Marking it as the modifier keeps the object/subject pass
+/// from taking it as a nominative object; the head carries the case.
+const INVARIANT_DETERMINERS: &[&str] = &["koko"];
+
+fn mark_invariant_determiners(words: &[usize], out: &mut [TokenSyntax]) {
+    for (position, &index) in words.iter().enumerate() {
+        let Some(lemma) = out[index].lemma.as_deref() else {
+            continue;
+        };
+        if out[index].role != SyntacticRole::Unknown
+            || !INVARIANT_DETERMINERS.contains(&lemma.to_lowercase().as_str())
+        {
+            continue;
+        }
+        let Some(&head) = words.get(position + 1) else {
+            continue;
+        };
+        if !is_nominal(&out[head]) {
+            continue;
+        }
+        out[index].role = SyntacticRole::Modifier;
+        out[index].confidence = RoleConfidence::Likely;
+        out[index].case = None;
+        out[index].head = Some(head);
+    }
+}
+
+/// Temporal nouns whose essive is an adverbial of time, not an attribute and
+/// not a predicate complement: `päivänä`, `iltana`, `vuonna`.
+const TEMPORAL_ESSIVE_NOUNS: &[&str] = &[
+    "aamu",
+    "aika",
+    "hetki",
+    "ilta",
+    "kesä",
+    "kevät",
+    "kuukausi",
+    "päivä",
+    "syksy",
+    "talvi",
+    "viikko",
+    "viikonloppu",
+    "vuosi",
+    "yö",
+];
+
+fn mark_temporal_essives(words: &[usize], tokens: &[Token], out: &mut [TokenSyntax]) {
+    for &index in words {
+        if out[index].role != SyntacticRole::Unknown
+            || is_clause_marker(index, tokens, out)
+            || !nominal_has_case(&out[index], &[Case::Essive])
+        {
+            continue;
+        }
+        let Some(lemma) = out[index].lemma.as_deref() else {
+            continue;
+        };
+        if !TEMPORAL_ESSIVE_NOUNS.contains(&lemma.to_lowercase().as_str()) {
+            continue;
+        }
+        out[index].role = SyntacticRole::Adverbial;
+        out[index].confidence = RoleConfidence::Likely;
+        out[index].case = Some(Case::Essive);
     }
 }
 
@@ -865,6 +1122,98 @@ fn has_coordinator_between(tokens: &[Token], left: usize, right: usize) -> bool 
         })
 }
 
+/// The person and number a clause's subject roles agree on, for deciding
+/// whether a following clause may inherit that subject.
+fn clause_subject_person_number(
+    clause: &Clause,
+    out: &[TokenSyntax],
+) -> Option<(Person, Number)> {
+    let subjects: Vec<usize> = clause
+        .tokens
+        .clone()
+        .filter(|&index| out[index].role == SyntacticRole::Subject)
+        .collect();
+    if subjects.is_empty() {
+        return None;
+    }
+    if subjects.len() > 1 {
+        // Coordinated subjects are plural unless a 1st/2nd-person pronoun is
+        // involved, in which case the person needs the rule this phase does
+        // not have. Unknown means "do not block sharing" at the call site.
+        if subjects.iter().any(|&index| {
+            matches!(
+                personal_pronoun(&out[index].key),
+                Some((Person::First | Person::Second, _))
+            )
+        }) {
+            return None;
+        }
+        return Some((Person::Third, Number::Plural));
+    }
+    subject_person_number(subjects[0], out)
+}
+
+/// The person and number of a single subject token, when they are unambiguous.
+fn subject_person_number(index: usize, out: &[TokenSyntax]) -> Option<(Person, Number)> {
+    if let Some(pair) = personal_pronoun(&out[index].key) {
+        return Some(pair);
+    }
+    let mut numbers: Vec<Number> = out[index]
+        .readings
+        .iter()
+        .filter_map(|reading| reading.number)
+        .collect();
+    numbers.sort_unstable();
+    numbers.dedup();
+    let number = match numbers.as_slice() {
+        [number] => *number,
+        _ => return None,
+    };
+    let mut persons: Vec<Person> = out[index]
+        .readings
+        .iter()
+        .filter_map(|reading| reading.person)
+        .collect();
+    persons.sort_unstable();
+    persons.dedup();
+    let person = match persons.as_slice() {
+        [person] => *person,
+        [] => Person::Third,
+        _ => return None,
+    };
+    Some((person, number))
+}
+
+/// Whether a clause's predicate can agree with the subject of the clause
+/// before it, so the subject may be inherited.
+///
+/// `Sami söi ja joi` shares a 3rd-person singular subject. `Kenoveeva kehräsi
+/// ja lauloi` shares a name whose number is unknown. `Eräänä iltana istuivat
+/// molemmat ...; Kenoveeva kehräsi` must not copy the plural `molemmat` into a
+/// singular predicate just because both are 3rd person.
+fn predicate_matches_previous_subject(
+    clause: &Clause,
+    previous: &Clause,
+    tokens: &[Token],
+    out: &[TokenSyntax],
+) -> bool {
+    let Some(predicate) = clause.predicate else {
+        return false;
+    };
+    let words: Vec<usize> = clause
+        .tokens
+        .clone()
+        .filter(|&index| tokens[index].is_word())
+        .collect();
+    let Some((person, number)) = predicate_person_number(predicate, &words, tokens, out) else {
+        return true;
+    };
+    clause_subject_person_number(previous, out)
+        .is_none_or(|(subject_person, subject_number)| {
+            subject_person == person && subject_number == number
+        })
+}
+
 /// Share the subject of a coordinated or non-finite clause with the one before.
 ///
 /// `clause_groups` holds the clause-group index (see [`clause_groups`]); two
@@ -882,6 +1231,13 @@ pub(super) fn share_clause_roles(
         if clauses[index].subject.is_some() {
             continue;
         }
+        // A relative clause introduces its own subject (`poika, joka oli
+        // syntynyt ...`). It must not copy the main clause's subject: the
+        // relative pronoun is the controller, and inheriting `he` would ask
+        // the singular `oli` to agree with a plural subject.
+        if is_relative_word(clauses[index].tokens.start, tokens, out) {
+            continue;
+        }
         let starts_with_coordinator = tokens
             .get(clauses[index].tokens.start)
             .is_some_and(|token| is_coordinating(&token.text.to_lowercase()));
@@ -893,14 +1249,16 @@ pub(super) fn share_clause_roles(
         });
         // A dropped subject in a subordinate clause is recoverable from
         // agreement: `Sami söi, koska oli nälkäinen`. First/second person
-        // (`Kun hän tuli, söin`) must not inherit the previous subject.
-        let predicate_is_third_person = clauses[index].predicate.is_some_and(|predicate| {
-            !predicate_is_passive(predicate, out)
-                && out[predicate].readings.iter().any(|reading| {
-                    is_finite_predicate(reading) && reading.person == Some(Person::Third)
-                })
-        });
-        if starts_with_coordinator || predicate_is_non_finite || predicate_is_third_person {
+        // (`Kun hän tuli, söin`) must not inherit the previous subject, and a
+        // plural subject must not be copied into a singular predicate
+        // (`... istuivat molemmat ...; Kenoveeva kehräsi`).
+        let predicate_fits = predicate_matches_previous_subject(
+            &clauses[index],
+            &clauses[index - 1],
+            tokens,
+            out,
+        );
+        if starts_with_coordinator || predicate_is_non_finite || predicate_fits {
             clauses[index].subject = clauses[index - 1].subject;
         }
     }
