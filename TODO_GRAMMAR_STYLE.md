@@ -506,11 +506,18 @@ prose-corpus review.
   Area: `src/syntax_check/connegative.rs`, `src/syntax_check/correction.rs`,
   `src/syntax/predicates.rs`.
 
-- [ ] **Compound-tense participle agreement**
-  `Me olemme lukenut.`, `Minä olen lukeneet.` and `Hän on lukeneet.` are
-  silent. The auxiliary agrees; the past participle's number is not compared
-  with the subject.
-  Area: `src/syntax_check/agreement.rs`.
+- [x] **Compound-tense participle agreement** — landed.
+  `Me olemme lukenut.`, `Minä olen lukeneet.` and `Hän on lukeneet.` now emit
+  `subject_predicate_agreement` with the corrected participle (`lukeneet`,
+  `lukenut`). The rule compares the subject's number with the active past
+  participle when an `olla` auxiliary is present. Passive compound tenses
+  (`Talo on rakennettu`, `Talot on rakennettu`) are skipped. Active/passive
+  homonyms (`mennyt`, `tullut`) are filtered to the active reading; an
+  adjective homonym whose chosen lemma is not the verb (`väsynyt`) falls back
+  to the verb lemma in `lemmas`. Clean rows cover all three example errors
+  fixed, the negative compound (`Me emme ole lukeneet.`), `He ovat väsyneet.`,
+  `He ovat väsyneitä.` and the passive forms.
+  Area: `src/syntax_check/agreement.rs`, `src/syntax_check/correction.rs`.
 
 - [ ] **Possessive suffix person/number**
   `Minun kirjasi on uusi.`, `Hänen kirjani on uusi.` and `Minun kirja on uusi.`
@@ -891,3 +898,10 @@ intended/competing interpretation pair that fails.
   common noun/adjective and skips pronouns, proper names, and clauses split at
   a line break; the page-2000 sweep is quiet. Added diagnostic, clean and
   ambiguity cases.
+- 2026-11-17: landed compound-tense participle agreement. The rule compares the
+  subject's number with the active past participle of an `olla` compound tense
+  (`Me olemme lukenut.` -> `lukeneet`, `Minä olen lukeneet.` -> `lukenut`).
+  It filters the passive homonyms of `mennyt`/`tullut`, skips passive compound
+  tenses, and falls back through `lemmas` when the chosen base is an adjective
+  (`väsynyt`). Added diagnostic, clean and ambiguity cases; the page-2000
+  sweep has no `participle_agreement` findings.

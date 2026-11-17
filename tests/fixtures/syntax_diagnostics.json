@@ -735,6 +735,58 @@
           "corrections": ["kirjoja", "kirjat"]
         }
       ]
+    },
+    {
+      "id": "participle_plural_subject",
+      "text": "Me olemme lukenut.",
+      "diagnostics": [
+        {
+          "kind": "subject_predicate_agreement",
+          "severity": "error",
+          "start": 10,
+          "end": 17,
+          "corrections": ["lukeneet"]
+        }
+      ]
+    },
+    {
+      "id": "participle_singular_subject",
+      "text": "Minä olen lukeneet.",
+      "diagnostics": [
+        {
+          "kind": "subject_predicate_agreement",
+          "severity": "error",
+          "start": 11,
+          "end": 19,
+          "corrections": ["lukenut"]
+        }
+      ]
+    },
+    {
+      "id": "participle_third_singular",
+      "text": "Hän on lukeneet.",
+      "diagnostics": [
+        {
+          "kind": "subject_predicate_agreement",
+          "severity": "error",
+          "start": 8,
+          "end": 16,
+          "corrections": ["lukenut"]
+        }
+      ]
+    },
+    {
+      "id": "participle_negative",
+      "text": "Me emme ole lukenut.",
+      "diagnostics": [
+        {
+          "kind": "subject_predicate_agreement",
+          "severity": "error",
+          "start": 12,
+          "end": 19,
+          "corrections": ["lukeneet"]
+        }
+      ]
     }
   ],
   "clean": [
@@ -748,6 +800,15 @@
     "Pöydällä on kirjat ja kynät.",
     "Talo on rakennettu.",
     "Talo on kaunis.",
+    "Me olemme lukeneet.",
+    "Minä olen lukenut.",
+    "Hän on lukenut.",
+    "He ovat lukeneet.",
+    "He ovat väsyneet.",
+    "He ovat väsyneitä.",
+    "Talo on rakennettu.",
+    "Talot on rakennettu.",
+    "Me emme ole lukeneet.",
     "Talot ovat kauniita.",
     "Talot ovat punaisia.",
     "Talot ovat punaiset.",

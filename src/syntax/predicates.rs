@@ -170,7 +170,7 @@ pub(super) fn is_infinitive(index: usize, out: &[TokenSyntax]) -> bool {
 /// (`lukenut`, `tullut`) carries the compound tense with `olla` or the
 /// negative auxiliary; the passive form (`luettu`, `rakennettu`) makes the
 /// clause passive. A present participle (`mentävä`) is not one of these.
-pub(super) fn is_past_participle(index: usize, out: &[TokenSyntax]) -> bool {
+pub(crate) fn is_past_participle(index: usize, out: &[TokenSyntax]) -> bool {
     out[index].readings.iter().any(|reading| {
         reading.part_of_speech == Some(PartOfSpeech::Verb)
             && reading.tense == Some(crate::tags::Tense::Past)

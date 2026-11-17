@@ -157,6 +157,79 @@ pub fn verb_agreement_corrections(
     corrections
 }
 
+/// The past active participle form for the subject's number.
+///
+/// The participle agrees with the subject in number (`olen lukenut`,
+/// `olemme lukeneet`). The target keeps the observed tense, voice, case and
+/// mood, so the helper only changes the number.
+pub fn participle_agreement_corrections(
+    lemma: &str,
+    token: &Token,
+    number: Number,
+    reading: &Tags,
+    cat: &Catalogues,
+) -> Vec<Correction> {
+    let Some(row) = sanalista().by_word(lemma).next() else {
+        return Vec::new();
+    };
+    let inflections: Vec<_> = row.inflections().collect();
+    let pos = PartOfSpeech::parse_all(row.part_of_speech())
+        .first()
+        .copied()
+        .unwrap_or(PartOfSpeech::Verb);
+    let mut want = Tags::UNKNOWN;
+    want.part_of_speech = Some(PartOfSpeech::Verb);
+    want.number = Some(number);
+    want.tense = reading.tense;
+    want.case = reading.case;
+    want.voice = reading.voice.or(Some(Voice::Active));
+    want.mood = reading.mood;
+    want.polarity = Polarity::Affirmative;
+
+    let mut corrections: Vec<Correction> = Vec::new();
+    for form in cached_forms(lemma, &inflections, cat, &want, pos).iter() {
+        if form.confidence != Confidence::Plain || form.word == token.text {
+            continue;
+        }
+        let exact = form.readings.iter().any(|candidate| {
+            candidate.part_of_speech == Some(PartOfSpeech::Verb)
+                && candidate.number == Some(number)
+                && candidate.tense == reading.tense
+                && candidate.case == reading.case
+                && candidate.voice == reading.voice.or(Some(Voice::Active))
+                && candidate.mood == reading.mood
+                && candidate.possessive.is_none()
+                && candidate.polarity == Polarity::Affirmative
+        });
+        if !exact {
+            continue;
+        }
+        if corrections.iter().any(|seen| {
+            seen.edits
+                .first()
+                .is_some_and(|edit| edit.replacement == form.word)
+        }) {
+            continue;
+        }
+        let distance = crate::levenshtein_with_ops(&token.text, &form.word).0;
+        corrections.push(
+            Correction::new(
+                vec![Edit::new(token.start, token.end, form.word.clone())],
+                distance as f32,
+                "participle_agreement",
+            )
+            .licensed_by(CorrectionLicense::Inflection)
+            .with_confidence(DiagnosticConfidence::Certain),
+        );
+    }
+    corrections.sort_by(|a, b| {
+        a.score
+            .total_cmp(&b.score)
+            .then_with(|| a.edits[0].replacement.cmp(&b.edits[0].replacement))
+    });
+    corrections
+}
+
 /// The connegative main-verb form for a negative clause.
 ///
 /// The present connegative is the 2sg imperative surface (`en mene`), the

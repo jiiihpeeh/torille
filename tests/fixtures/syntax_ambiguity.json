@@ -317,6 +317,18 @@
       "text": "Pöydällä on kirjan.",
       "clauses": 1,
       "diagnostics": ["case_selection"]
+    },
+    {
+      "id": "participle_active_homonym",
+      "text": "Me olemme mennyt.",
+      "clauses": 1,
+      "diagnostics": ["subject_predicate_agreement"]
+    },
+    {
+      "id": "participle_passive_no_agreement",
+      "text": "Talot on rakennettu.",
+      "clauses": 1,
+      "diagnostics": []
     }
   ]
 }

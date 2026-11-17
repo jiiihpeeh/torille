@@ -39,7 +39,7 @@ the checker only when the user presses the grammar button.
 
 | kind | rule | severity |
 |---|---|---|
-| `subject_predicate_agreement` | subject and finite predicate agree in person and number | `Error`, or `Warning` when a role is weak |
+| `subject_predicate_agreement` | subject and finite predicate agree in person and number; an active past participle in a compound tense agrees in number | `Error`, or `Warning` when a role is weak |
 | `connegative` | the main verb after a negative auxiliary is in the connegative form | `Error` |
 | `attribute_agreement` | attributive adjective/demonstrative agrees with its head | `Error` for number, `Warning` for case |
 | `predicative_agreement` | a predicative adjective agrees with its subject in number | `Error` for a clear number mismatch, `Warning` when a role is weak |
@@ -175,6 +175,13 @@ class.
   punainen` and `Talo on punaisia` are caught; noun complements and participle
   complements are not, because their agreement/case behaviour needs a separate
   rule.
+- **Compound-tense agreement covers the active past participle only.**
+  `Me olemme lukenut.` gives `lukeneet`; `Minä olen lukeneet.` gives
+  `lukenut`. Passive compound tenses (`Talo on rakennettu`,
+  `Talot on rakennettu`) deliberately stay quiet because the passive
+  participle does not agree with the subject. An adjective homonym
+  (`väsynyt`) is resolved through the verb lemma before a correction is
+  offered.
 - **Connegative findings are safest in declarative clauses.** `en mene`,
   `hän ei menee` and the negative past are covered. Imperative auxiliaries
   (`älä`, `älkää`) are detected but currently get no automatic correction; the

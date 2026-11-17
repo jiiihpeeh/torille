@@ -1957,3 +1957,12 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   Clean cases cover `Pöydällä on kirja/kirjoja`, `Pöydällä on Liisan kirja`,
   `Pöydällä on minun kirjani`, `Minun on mentävä` and
   `Täällä on minun mentävä`; the page-2000 sweep is quiet.
+
+- 2026-11-17: compound-tense participle agreement landed.
+  `Me olemme lukenut.`, `Minä olen lukeneet.` and `Hän on lukeneet.` now emit
+  `subject_predicate_agreement` with `lukeneet`/`lukenut`. The rule handles
+  active `olla` + past participle, skips passive compound tenses, filters the
+  passive homonyms of `mennyt`/`tullut`, and resolves adjective homonyms
+  (`väsynyt`) through `lemmas`. Clean cases cover the negative compound,
+  predicative `väsyneet`/`väsyneitä`, and passive forms; the page-2000 sweep is
+  quiet.

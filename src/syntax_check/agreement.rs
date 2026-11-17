@@ -11,7 +11,7 @@
 //! `Kaksi miestä tuli` are all correct.
 
 use crate::syntax::{RoleConfidence, SyntacticRole, SyntaxAnalysis, TokenSyntax};
-use crate::tags::{Case, Mood, Number, PartOfSpeech, Person, Polarity, Tags, Voice};
+use crate::tags::{Case, Mood, Number, PartOfSpeech, Person, Polarity, Tags, Tense, Voice};
 use crate::tokenise::Token;
 
 use super::correction;
@@ -36,6 +36,7 @@ struct Bearer {
 
 pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
     let mut diagnostics = check_subject_predicate(tokens, analysis);
+    diagnostics.extend(check_compound_participle(tokens, analysis));
     diagnostics.extend(check_attributes(tokens, analysis));
     diagnostics.extend(check_complements(tokens, analysis));
     diagnostics
@@ -133,6 +134,129 @@ fn check_subject_predicate(
             subject.person.name(),
             subject.number.name()
         ));
+        diagnostic.corrections = corrections;
+        diagnostics.push(diagnostic);
+    }
+    diagnostics
+}
+
+/// Past active participle agreement in a compound tense.
+///
+/// `olen lukenut` / `olemme lukeneet`: the auxiliary carries the person and
+/// the participle agrees with the subject in number. Passive compound tenses
+/// (`talo on rakennettu`, `talot on rakennettu`) do not agree, so they are
+/// skipped.
+fn check_compound_participle(
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+) -> Vec<SyntaxDiagnostic> {
+    let mut diagnostics = Vec::new();
+    for clause in &analysis.clauses {
+        let Some(predicate) = clause.predicate else {
+            continue;
+        };
+        if !crate::syntax::is_past_participle(predicate, &analysis.tokens)
+            || crate::syntax::predicate_is_passive(predicate, &analysis.tokens)
+        {
+            continue;
+        }
+        let has_olla_auxiliary = clause.tokens.clone().any(|index| {
+            tokens[index].is_word()
+                && analysis.tokens[index].role == SyntacticRole::Auxiliary
+                && analysis.tokens[index].lemma.as_deref() == Some("olla")
+        });
+        if !has_olla_auxiliary {
+            continue;
+        }
+        let Some(subject) = subject_of(clause, tokens, analysis) else {
+            continue;
+        };
+        if subject.index > predicate {
+            continue;
+        }
+        let mut numbers: Vec<Number> = analysis.tokens[predicate]
+            .readings
+            .iter()
+            .filter(|reading| {
+                reading.part_of_speech == Some(PartOfSpeech::Verb)
+                    && reading.tense == Some(Tense::Past)
+                    && reading.case.is_some()
+                    && reading.mood != Some(Mood::Infinitive)
+                    // `mennyt`/`tullut` also have passive homonyms; the
+                    // compound tense here is active.
+                    && reading.voice != Some(Voice::Passive)
+            })
+            .filter_map(|reading| reading.number)
+            .collect();
+        numbers.sort_unstable();
+        numbers.dedup();
+        let [participle_number] = numbers.as_slice() else {
+            continue;
+        };
+        if *participle_number == subject.number {
+            continue;
+        }
+        let Some(reading) = analysis.tokens[predicate]
+            .readings
+            .iter()
+            .find(|reading| {
+                reading.part_of_speech == Some(PartOfSpeech::Verb)
+                    && reading.tense == Some(Tense::Past)
+                    && reading.case.is_some()
+                    && reading.mood != Some(Mood::Infinitive)
+                    && reading.voice != Some(Voice::Passive)
+                    && reading.number == Some(*participle_number)
+            })
+            .copied()
+        else {
+            continue;
+        };
+        // The participle's role reading is often weak because the surface is
+        // also an adjective/nominal (`lukenut`); the single participle number
+        // established above is the disambiguation, so the subject's confidence
+        // is the controlling one.
+        let confident = analysis.tokens[subject.index].confidence == RoleConfidence::Likely;
+        let (severity, confidence) = if confident {
+            (Severity::Error, Confidence::Certain)
+        } else {
+            (Severity::Warning, Confidence::Likely)
+        };
+        let token = &tokens[predicate];
+        // The chosen lemma can be the adjective homonym (`väsynyt`); the verb
+        // paradigm is one of the `lemmas`. Take the first base that actually
+        // produces the wanted participle cell.
+        let mut corrections = Vec::new();
+        for lemma in &analysis.tokens[predicate].lemmas {
+            corrections = correction::participle_agreement_corrections(
+                lemma,
+                token,
+                subject.number,
+                &reading,
+                crate::spec::Catalogues::embedded(),
+            );
+            if !corrections.is_empty() {
+                break;
+            }
+        }
+        if corrections.is_empty()
+            && let Some(lemma) = analysis.tokens[predicate].lemma.as_deref()
+        {
+            corrections = correction::participle_agreement_corrections(
+                lemma,
+                token,
+                subject.number,
+                &reading,
+                crate::spec::Catalogues::embedded(),
+            );
+        }
+        let mut diagnostic = SyntaxDiagnostic::new(
+            DiagnosticKind::SubjectPredicateAgreement,
+            severity,
+            confidence,
+            token.start..token.end,
+            "participle_agreement",
+        );
+        diagnostic.expected = Some(format!("{} participle", subject.number.name()));
         diagnostic.corrections = corrections;
         diagnostics.push(diagnostic);
     }

@@ -33,8 +33,8 @@ use crate::tokenise::Token;
 
 pub use crate::morphology::MorphologyCache as AnalysisCache;
 pub(crate) use predicates::{
-    is_coordinating, is_finite_predicate, is_nominal_pos, is_subordinator, is_verb_reading,
-    predicate_is_passive, starts_relative_clause,
+    is_coordinating, is_finite_predicate, is_nominal_pos, is_past_participle, is_subordinator,
+    is_verb_reading, predicate_is_passive, starts_relative_clause,
 };
 use roles::{classify_with_preference, resolve_clause, share_clause_roles};
 use segments::{build_clause_tree, clause_groups, segment_clause_words};
