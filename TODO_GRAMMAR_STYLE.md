@@ -194,29 +194,147 @@ before the next rule lands.
   Area: `src/syntax/segments.rs`, `src/syntax/predicates.rs`.
 
 Prose-corpus findings now pinned as `known_false_positives` in
-`tests/fixtures/prose/adjudicated.json`:
+`tests/fixtures/prose/adjudicated.json`. Two of the older rows have landed:
+
+- [x] **Modifier vs head:** landed. `Nämä hurskaan miehen sanat` agrees `Nämä`
+  with `sanat`; `attribute_head` walks past intervening modifier words.
+- [x] **Punctuation boundaries:** landed. Sentence-initial `Ja kun ...`, a
+  final relative clause (`..., joka ei ...`), `--kun ...` and the `jos`
+  conditional no longer ask for an extra comma.
+
+The four remaining rows, with the cause measured from a token/role dump:
 
 - [ ] **Apposition and subject phrase:** `Me suuremmat istumme ...` produces
   `attribute_agreement`, `subject_predicate_agreement` and `object_case`.
-  The pronoun is the subject head; `suuremmat` is an apposition.
+  `me` is tagged nominative **singular** by the class-101 engine, so `Me`
+  cannot agree with plural `suuremmat`; the subject pass then takes the last
+  preverbal nominative (`suuremmat`) as the subject and demotes `Me` to a
+  weak modifier. `häntä` is the noun “tail” before it is the pronoun `hän`,
+  and `ettei` is not treated as a clause opener.
 - [ ] **Experiencer and total-object verbs:** `ettei häntä pelottaisi`,
   `he eivät uupuneet sitä kuuntelemasta`, and `Jumala hellytti pyövelien
-  sydämet` are read as partitive-object errors. `pelottaa` is an experiencer
-  verb, `häntä` is the pronoun (not `häntä` “tail”), and `sydämet` is a total
-  object in an affirmative clause.
+  sydämet` are read as partitive-object errors. The latter two are clean
+  already; `pelottaa` fires because `ettei` does not split its clause and
+  `häntä`'s noun nominative homonym becomes the subject.
 - [ ] **Coordination scope:** `Kenoveeva kehräsi ja lauloi, Sikri soitti ...`
-  reports plural agreement on three singular predicates. Each coordinated
-  clause keeps its own subject.
-- [ ] **Modifier vs head:** `Nämä hurskaan miehen sanat` reports
-  `attribute_agreement` on `Nämä`. The genitive `hurskaan miehen` modifies
-  `sanat`; `Nämä` agrees with the head, not with the genitive.
+  reports plural agreement on three singular predicates. The unknown
+  capitalized names have no readings, so the subject pass misses them and
+  `share_clause_roles` copies `molemmat` into every following 3rd-person
+  clause. `ja lauloi, Sikri soitti` is also one clause because the boundary
+  is before `Sikri`, not directly before the finite verb.
 - [ ] **Postposition and adverbial:** `rakkaan puolisonsa jälkeen` reports an
-  `object_case` error on the genitive governed by `jälkeen`;
-  `koko päivänä` is read as an essive attribute and corrected to `kokona`.
-- [ ] **Punctuation boundaries:** sentence-initial `Ja kun ...` asks for a
-  comma after `Ja`; a final relative clause (`..., joka ei ...`) is reported
-  as an unbalanced comma pair; `--kun ...` and the `jos` conditional ask for a
-  second comma. All are pinned false positives.
+  `object_case` error on the genitive governed by `jälkeen`. `jälkeen` has a
+  postposition reading plus a noun illative homonym, so `classify` gives it
+  the noun case and `mark_adpositions` skips it; the genitive
+  `puolisonsa` then becomes the subject. `koko päivänä` is read as an essive
+  attribute and corrected to `kokona`; `koko` is an invariant determiner and
+  `päivänä` is a temporal essive adverbial, not an attribute head.
+
+#### P0-C landing plan — the four remaining rows
+
+Land the morphology first: it removes diagnostics from more than one row and
+keeps the later role rules from compensating for a bad reading.
+
+1. **Pronoun morphology** — `src/expand/nominals/class_101.rs`,
+   `src/morphology/mod.rs`.
+   - Give `Pron` an explicit `number`; `me`, `te` and `he` are plural, while
+     `minä`, `sinä` and `hän` stay singular. Use it for every cell, including
+     the accusative (`meidät`, `teidät`, `heidät`).
+   - When a direct resolution succeeds (`häntä` is a noun), also add the
+     closed-class pronoun paradigm's readings for `pronoun_base(lower)`.
+     Keep both homonyms; do not overwrite the noun.
+   - Make `nominal_has_case` and `nominal_case` prefer pronoun readings when
+     a token has both a pronoun and a noun reading, so the “tail” nominative
+     cannot make `häntä` a subject.
+   - Tests: class-101 number tags for every personal pronoun; `häntä` has a
+     pronoun partitive reading; `Me` is nominative plural.
+
+2. **Apposition** — `src/syntax/roles.rs`.
+   - Before the default subject search, when a preverbal personal pronoun
+     (`minä`/`sinä`/`hän`/`me`/`te`/`he`) matches the finite predicate's
+     person and number, make the pronoun the subject.
+   - Mark a following nominative nominal/adjective phrase as an apposition
+     `Modifier` headed by the pronoun. Require no coordinator between the
+     two, so `Minä ja Liisa tulemme` still uses coordinated subjects.
+   - Tests: `Me suuremmat istumme.`, `Minä yksin tulen.`,
+     `Te kaikki tiedätte.`, `Me suuremmat emme istu.`; keep
+     `Minä ja Liisa tulemme.` clean.
+
+3. **Fused negative subordinators** — `src/syntax/predicates.rs`,
+   `src/syntax/segments.rs`.
+   - `ettei` is `että + ei`. Recognise fused negative conjunctions through
+     `expand::negation::negation_base`: if the base is a subordinator
+     (`että`, `jotta`, `vaikka`, `ellei`, ...), treat the surface as one.
+   - This splits `ettei häntä pelottaisi`; with the pronoun preference from
+     step 1, `häntä` is the partitive object and the negative-object rule is
+     quiet.
+   - Tests: `ettei häntä pelottaisi`; `Hän sanoi ettei tule.` keeps its
+     comma behaviour; `Ei, sillä Jumala hellytti ...` and
+     `he eivät uupuneet ...` stay clean.
+
+4. **Comparison marker and attribute heads** — `src/syntax/predicates.rs`,
+   `src/syntax/roles.rs`, `src/syntax_check/agreement.rs`.
+   - Add `kuin` as a function word (`is_clause_marker`, `is_marker`). Its
+     noun homonym is `kuu` in the instructive plural, which is what
+     `attribute_head` currently finds.
+   - `attribute_head` accepts only a nominal head whose role can head a
+     phrase (`Subject`, `Object`, `Complement`, `Unknown`); skip `Modifier`
+     and `Adverbial` and continue to the next candidate.
+   - Tests: `Hän on yhtä viaton ja herttainen kuin kaunis.` is quiet;
+     `Punainen auto` still agrees; `Nämä hurskaan miehen sanat` stays clean.
+
+5. **Unknown names and coordination scope** —
+   `src/syntax/roles.rs`, `src/syntax/segments.rs`.
+   - Role-only fallback for an unknown capitalized word immediately followed
+     by the clause predicate/auxiliary: mark it as a nominative subject
+     without inventing morphology or a lemma. Do not apply when it is
+     followed by a nominal (`Kenoveevan laulua`), so it stays a modifier.
+   - Start a new clause at a comma followed by a capitalized word that is
+     itself followed by a finite predicate. This splits `, Sikri soitti`.
+   - In `share_clause_roles`, only inherit the previous subject when the new
+     predicate's person/number is compatible with it, or when the previous
+     subject's number is unknown. A plural subject must not be copied into a
+     singular predicate.
+   - Tests: the full row is quiet; `Sami söi ja joi.` keeps a shared
+     singular subject; `Sami ja Liisa söivät ja joivat.` stays plural;
+     `Kun hän tuli, söin.` still does not share.
+
+6. **Postpositions and temporal essives** — `src/syntax/roles.rs`.
+   - `classify` gives a preposition/postposition reading `Adverbial` with no
+     case, before the noun-case fallback.
+   - `mark_adpositions` handles a postposition already classified
+     `Adverbial`, marks the preceding genitive as `Modifier` (head =
+     postposition), and clears the postposition's case. Standalone `jälkeen`
+     stays safe because no genitive precedes it.
+   - Mark essive temporal nouns (`päivä`, `ilta`, `aamu`, `yö`, `kesä`,
+     `talvi`, `kevät`, `syksy`, `vuosi`, `viikonloppu`, `hetki`) as
+     `Adverbial` before subject/object selection. `koko` stays an invariant
+     determiner; the temporal head is no longer an attribute head.
+   - Tests: the full row is quiet; `Illallisen jälkeen ...` has no object;
+     `koko päivänä` is quiet; `Eräänä iltana` stays quiet;
+     `Pöydän alla on kissa` is unchanged.
+
+7. **Corpus, metrics and gates** — `tests/fixtures/prose/adjudicated.json`,
+   `tests/syntax_prose.rs`, `TODO_GRAMMAR_STYLE.md`, `TODO.md`.
+   - Move each row to `clean` only when it has zero diagnostics. All four
+     moving gives 1,021 clean words, 0 known-FP words, 9 known errors,
+     **8.8 per 1,000 words**.
+   - Run `cargo test --release --test syntax_prose`, then
+     `cargo test --release --workspace`, clippy, the strict engine-output
+     comparison, the n=5 evidence gate and the binding agreement test.
+   - The class-101 change retags existing surfaces; it does not add or remove
+     a surface. Verify `the_pronoun_blob_matches_compute` and
+     `cargo run -p torille-maps -- status`; regenerate/publish only if a
+     surface changed.
+   - Do not add `koko päivä` (nominative) to the clean set, a universal
+     postposition rule, or a suffix entry in `is_known_word`. Keep
+     `Koira nukkuvat.`, `Minä menee kotiin.` and `En lue kirja.` as true
+     positives.
+
+The order is deliberate: steps 1 and 3 fix `Me suuremmat ...`; step 4 fixes
+`herttainen`; step 5 fixes the coordinated names; step 6 fixes the postposition
+and `koko` row. Each step carries its own unit regression, so a later role
+change cannot silently reintroduce an earlier false positive.
 
 ## P1 — shared diagnostic contract, confidence and explainability
 
