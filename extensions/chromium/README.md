@@ -38,11 +38,17 @@ The same keys are read by the content script at startup and on
 
 ## Grammar check
 
-Right-click a text field and choose **Tarkista kielioppi**. The check is
-on-demand and does not run on every keystroke. A floating panel lists the
-diagnostics in the checker's rank order; clicking a correction replaces the
-field text. Textarea and input fields are written directly; contenteditable
-uses a range-aware writer so the surrounding markup stays intact.
+Right-click a text field and choose **Tarkista kielioppi**, **Tarkista tyyli**
+or **Tarkista kielioppi ja tyyli**. The combined command runs both layers in
+one morphology pass and shows a single ranked panel. The check is on-demand
+and does not run on every keystroke. A floating panel lists the diagnostics;
+clicking a correction replaces the field text. Textarea and input fields are
+written directly; contenteditable uses a range-aware writer so the surrounding
+markup stays intact.
+
+Each finding also has an **älä huomauta** button. It hides that stable rule id
+(not one span) and stores the choice in `torille-ignored-rules`; the options
+page can clear the list. Ignored rules survive edits and reloads.
 
 ## Install
 

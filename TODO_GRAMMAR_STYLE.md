@@ -679,11 +679,15 @@ Adjacent repetition is not always accidental:
   `CaseSelection`, `ClauseStructure` and `CommaExtra` now have emitting rules;
   `WordOrder` is the only deliberately reserved kind left.
 
-- [ ] **Ignore/dismiss and a combined command**
-  Findings can be corrected but not ignored. Ignore by stable rule ID, not by
-  span. The extensions expose **Tarkista kielioppi** and **Tarkista tyyli** as
-  separate commands even though the wasm export returns both in one pass.
-  Add a combined action if the UX is in scope.
+- [x] **Ignore/dismiss and a combined command** — landed.
+  Every grammar/style finding has an **älä huomauta** action that hides its
+  stable `rule_id`; the per-page set is persisted in
+  `torille-ignored-rules` and the options page can clear it. The Rust API is
+  `SyntaxCheck`/`StyleAnalysis`/`CheckAll::without_rules` and
+  `ignore_rules`. The context menu adds **Tarkista kielioppi ja tyyli**, which
+  runs the existing combined wasm/background pass and shows one ranked panel;
+  the separate grammar and style commands remain. Both browser extensions
+  stay source-identical and pass their typecheck and unit tests.
 
 - [ ] **Cold page target**
   `PLAN_GRAMMAR_STYLE_PERF.md` still records the ≤500 ms cold-page target as
@@ -965,3 +969,11 @@ intended/competing interpretation pair that fails.
   only). Left `niin kuin` and `ikään kuin` out because they are standard
   comparators rather than fillers. Added exact-output style cases; the clean
   style corpus and page-2000 remain quiet.
+- 2026-11-17: landed rule-level dismiss and the combined command. Grammar and
+  style diagnostics now carry a stable `rule_id` through the wasm wire; the
+  panels expose an "älä huomauta" action, persist the ignored ids in
+  `torille-ignored-rules`, and the options page can clear them. The Rust
+  `without_rules`/`ignore_rules` API filters both streams. The context menu
+  adds "Tarkista kielioppi ja tyyli" over the existing combined
+  `check-grammar-style` pass and renders one ranked panel. Firefox and
+  Chromium sources remain identical; both typecheck and extension tests pass.

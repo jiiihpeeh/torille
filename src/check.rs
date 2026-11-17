@@ -24,6 +24,14 @@ impl CheckAll {
     ///
     /// A panel or an ignore list can treat grammar and style alike without
     /// matching on the concrete diagnostic type.
+    /// Drop ignored rules from both streams.
+    pub fn without_rules(self, ignored: &[crate::diagnostic::RuleId]) -> Self {
+        Self {
+            syntax: self.syntax.without_rules(ignored),
+            style: self.style.without_rules(ignored),
+        }
+    }
+
     pub fn findings(&self) -> Vec<&dyn Finding> {
         self.syntax
             .diagnostics
@@ -111,6 +119,21 @@ mod tests {
         let all = check_all_tokens(&tokens, &morphology);
         assert_eq!(all.syntax.diagnostics.len(), 1);
         assert_eq!(all.style.diagnostics.len(), 1);
+    }
+
+    #[test]
+    fn an_ignored_rule_is_dropped_from_both_streams() {
+        use crate::diagnostic::RuleId;
+        let all = check_all("Koira nukkuvat. Tällä hetkellä tilanne on rauhallinen.");
+        assert_eq!(all.syntax.diagnostics.len(), 1);
+        assert_eq!(all.style.diagnostics.len(), 1);
+        let filtered = all.without_rules(&[
+            RuleId::new("subject_predicate_agreement"),
+            RuleId::new("style_wordy"),
+        ]);
+        assert!(filtered.syntax.diagnostics.is_empty());
+        assert!(filtered.style.diagnostics.is_empty());
+        assert!(filtered.findings().is_empty());
     }
 
     #[test]

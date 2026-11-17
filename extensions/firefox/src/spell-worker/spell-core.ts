@@ -349,12 +349,14 @@ function handleSuggestWithState(
 
 type RawDiagnostic = {
   kind: string;
+  rule_id: string;
   severity: string;
   confidence: string;
   start: number;
   end: number;
   message: string;
   expected: string | null;
+  explanation?: { relation: string; key: string } | null;
   corrections?: {
     score: number;
     note: string;
@@ -397,12 +399,14 @@ function toContentDiagnostics(
     }
     diagnostics.push({
       kind: d.kind,
+      rule_id: d.rule_id,
       severity: d.severity,
       confidence: d.confidence,
       start,
       end,
       message: d.message,
       expected: d.expected ?? null,
+      explanation: d.explanation ?? null,
       corrections,
     });
   }

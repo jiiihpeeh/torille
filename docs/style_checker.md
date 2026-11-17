@@ -130,10 +130,17 @@ UTF-16 for the content script, exactly as `check_syntax` does. `severity` is
 always `suggestion`.
 
 The Firefox and Chromium extensions add **Tarkista tyyli** as a separate
-context-menu command. It opens a `Tyyli` panel and paints blue style underlines
-on the checked text. Findings whose span intersects an ignored range (code,
-URLs, BBCode) are dropped before the panel and the underlines are shown. The
-Leptos demo has a separate `Tyyli` panel next to `Kielioppi`.
+context-menu command, plus **Tarkista kielioppi ja tyyli** for the combined
+pass. The separate command opens a `Tyyli` panel and paints blue style
+underlines on the checked text; the combined command shares the morphology
+pass and shows one ranked panel. Findings whose span intersects an ignored
+range (code, URLs, BBCode) are dropped before the panel and the underlines are
+shown. The Leptos demo has a separate `Tyyli` panel next to `Kielioppi`.
+
+Each finding has an **älä huomauta** action. It hides the stable `rule_id`
+(`style_wordy`, `style_duplicate_word`, ...) and stores the choice in
+`torille-ignored-rules`; the options page clears the list. The Rust API is
+`StyleAnalysis::without_rules`/`ignore_rules`.
 
 Underlines are colour-coded across the three layers:
 

@@ -2008,3 +2008,11 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   `jollain tavalla` -> `jotenkin` and `jossain määrin` (wordy).
   `niin kuin`/`ikään kuin` stay out as standard comparators. Added style
   fixture cases; the style clean corpus and page-2000 remain quiet.
+
+- 2026-11-17: rule-level dismiss and the combined command landed. Diagnostics
+  expose a stable `rule_id`; the panels have an "älä huomauta" action that
+  persists ignored ids in `torille-ignored-rules`, and the options page clears
+  them. `SyntaxCheck`/`StyleAnalysis`/`CheckAll` add `without_rules` and
+  `ignore_rules`. The context menu adds "Tarkista kielioppi ja tyyli" over the
+  existing combined wasm/background pass, with one ranked panel. Both browser
+  extensions stay source-identical and pass typecheck and unit tests.

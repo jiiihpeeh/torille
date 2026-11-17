@@ -244,6 +244,26 @@ export function createWorkerClient(opts: { dbg: DebugFn; inputId: number }) {
       });
       return Array.isArray(r?.diagnostics) ? r.diagnostics : null;
     },
+    // One combined grammar + style pass for the "Tarkista kielioppi ja tyyli"
+    // command. The background shares the morphology work between the two
+    // layers and returns both streams.
+    async checkGrammarStyleAsync(
+      text: string,
+    ): Promise<R_CheckGrammarStyleResponse | null> {
+      const idx = await stateIdx();
+      if (idx === null) return null;
+      const r = await send<R_CheckGrammarStyleResponse>({
+        type: 'torille:check-grammar-style',
+        idx,
+        inputId,
+        text,
+        syntax: true,
+        style: true,
+      });
+      return r && Array.isArray(r.diagnostics) && Array.isArray(r.style)
+        ? r
+        : null;
+    },
     // Stop the background's batch loop for this input. Called on every
     // edit so a long check does not keep the worker busy after its
     // offsets have gone stale.

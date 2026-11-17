@@ -133,12 +133,14 @@ declare type R_SyntaxCorrection = {
 };
 declare type R_SyntaxDiagnostic = {
   kind: string;
+  rule_id: string;
   severity: string;
   confidence: string;
   start: number;
   end: number;
   message: string;
   expected: string | null;
+  explanation?: { relation: string; key: string } | null;
   corrections: R_SyntaxCorrection[];
 };
 declare type R_CheckSyntax = {
@@ -260,10 +262,14 @@ declare type R_CheckGrammarPendingInputMessage = {
 declare type R_CheckStylePendingInputMessage = {
   type: 'torille:check-style-pending-input';
 };
+declare type R_CheckAllPendingInputMessage = {
+  type: 'torille:check-all-pending-input';
+};
 declare type R_ContentInboundMessage =
   | R_TogglePendingInputMessage
   | R_CheckGrammarPendingInputMessage
   | R_CheckStylePendingInputMessage
+  | R_CheckAllPendingInputMessage
   | R_CheckProgress;
 declare type R_ToggleResponse = { disabled: boolean };
 declare type R_CheckGrammarResponse = { checked: boolean };

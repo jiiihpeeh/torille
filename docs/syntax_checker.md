@@ -28,7 +28,9 @@ is **not** a parser, a style checker, or part of the keystroke path.
 
 The grammar and style layers share these primitives (`src/diagnostic.rs`) and
 implement the `Finding` trait; `CheckAll::findings()` exposes both streams
-through it. `Confidence::Ambiguous` findings are suppressed before they reach a
+through it. `SyntaxCheck`, `StyleAnalysis` and `CheckAll` expose
+`without_rules(&[RuleId])`/`ignore_rules`, so an ignore list filters by stable
+rule id rather than by span. `Confidence::Ambiguous` findings are suppressed before they reach a
 caller, and an `Error` whose confidence is only `Likely` is downgraded to a
 `Warning`, so a rule cannot overstate an ambiguous target.
 
@@ -121,7 +123,9 @@ cargo run --release -p torille-tools --bin check_syntax -- "Koira nukkuvat."
 - **Leptos demo:** the `SyntaxPanel` runs `syntax_check::check` on a button
   press, lists diagnostics in rank order and applies corrections.
 - **Firefox / Chromium extensions:** right-click a text field and choose
-  **Tarkista kielioppi**. The check is opt-in and runs on one input at a time;
+  **Tarkista kielioppi**, or **Tarkista kielioppi ja tyyli** for the combined
+  pass. The check is opt-in and runs on one input at a time; each finding can
+  be dismissed by its stable rule id, and the options page clears the list.
   a floating panel lists diagnostics and applies corrections to textarea,
   input and contenteditable fields. On Firefox the background resolves
   morphology in a pool of up to four workers (the `grammarThreads` setting,

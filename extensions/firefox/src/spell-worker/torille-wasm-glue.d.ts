@@ -66,12 +66,14 @@ declare module '*/torille_wasm_bg.js' {
   ): {
     diagnostics: {
       kind: string;
+      rule_id: string;
       severity: string;
       confidence: string;
       start: number;
       end: number;
       message: string;
       expected: string | null;
+      explanation?: { relation: string; key: string } | null;
       corrections: {
         score: number;
         note: string;
@@ -89,12 +91,14 @@ declare module '*/torille_wasm_bg.js' {
   ): {
     diagnostics: {
       kind: string;
+      rule_id: string;
       severity: string;
       confidence: string;
       start: number;
       end: number;
       message: string;
       expected: string | null;
+      explanation?: { relation: string; key: string } | null;
       corrections: {
         score: number;
         note: string;
@@ -103,12 +107,14 @@ declare module '*/torille_wasm_bg.js' {
     }[];
     style: {
       kind: string;
+      rule_id: string;
       severity: string;
       confidence: string;
       start: number;
       end: number;
       message: string;
       expected: string | null;
+      explanation?: { relation: string; key: string } | null;
       corrections: {
         score: number;
         note: string;
@@ -121,12 +127,14 @@ declare module '*/torille_wasm_bg.js' {
   export function check_style(text: string): {
     diagnostics: {
       kind: string;
+      rule_id: string;
       severity: string;
       confidence: string;
       start: number;
       end: number;
       message: string;
       expected: string | null;
+      explanation?: { relation: string; key: string } | null;
       corrections: {
         score: number;
         note: string;

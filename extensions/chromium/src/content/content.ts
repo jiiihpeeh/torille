@@ -18,8 +18,8 @@
 import { createBlacklist } from './blacklist';
 import { createTextboxToggle } from './context-menu';
 import {
-  editorText, hideCheckProgress, showCheckProgress, showGrammarPanel,
-  showStylePanel,
+  editorText, hideCheckProgress, showCheckProgress, showCombinedPanel,
+  showGrammarPanel, showStylePanel,
 } from './grammar-panel';
 import { createOverlay } from './overlay';
 import { createScanner } from './scanner';
@@ -50,6 +50,41 @@ function nextCheckToken(inputId: number): number {
   const next = (checkTokens.get(inputId) ?? 0) + 1;
   checkTokens.set(inputId, next);
   return next;
+}
+
+// Rule-level dismissals. The stable rule id is the wasm's `rule_id`, not a
+// span: ignoring `subject_predicate_agreement` keeps it hidden after the
+// sentence is edited. The set is persisted in extension storage so the
+// choices survive a reload; the options page can clear it.
+const IGNORED_RULES_KEY = 'torille-ignored-rules';
+const ignoredRules = new Set<string>();
+const ignoredRulesReady = (async (): Promise<void> => {
+  try {
+    const raw = await api.storage.local.get(IGNORED_RULES_KEY);
+    const stored = raw[IGNORED_RULES_KEY];
+    if (Array.isArray(stored)) {
+      for (const rule of stored) {
+        if (typeof rule === 'string') ignoredRules.add(rule);
+      }
+    }
+  } catch (_) { /* storage unavailable: per-page ignores only */ }
+})();
+
+function ruleOf(diagnostic: R_SyntaxDiagnostic): string {
+  return diagnostic.rule_id || diagnostic.kind;
+}
+
+function filterIgnored(
+  diagnostics: R_SyntaxDiagnostic[],
+): R_SyntaxDiagnostic[] {
+  return diagnostics.filter((diagnostic) => !ignoredRules.has(ruleOf(diagnostic)));
+}
+
+function ignoreRule(ruleId: string): void {
+  ignoredRules.add(ruleId);
+  api.storage.local.set({
+    [IGNORED_RULES_KEY]: [...ignoredRules],
+  }).catch(() => { /* storage unavailable */ });
 }
 
 // Hide or show the host element for one input. Used by the
@@ -138,35 +173,47 @@ createTextboxToggle({
   dbg,
   describeInput,
   setVisible,
-  checkGrammar(input: HTMLElement): void {
+  async checkGrammar(input: HTMLElement): Promise<void> {
+    await ignoredRulesReady;
     const overlay = perInput.get(input);
     if (!overlay) return;
     const text = editorText(input);
     const inputId = overlay.workerClient.inputId;
     const token = nextCheckToken(inputId);
+    const apply = (correction: R_SyntaxCorrection): boolean => {
+      if (editorText(input) !== text) return false;
+      return overlay.applyTextEdits(correction.edits);
+    };
     showCheckProgress(inputId, 'Tarkistetaan kielioppia…');
     overlay.workerClient.checkSyntaxAsync(text).then((diagnostics) => {
       if (diagnostics === null) return;
       // The field changed while the check ran; the offsets are stale.
       if (editorText(input) !== text) return;
-      overlay.setGrammarDiagnostics(diagnostics);
-      showGrammarPanel(input, diagnostics, (correction) => {
-        // If the field changed after the check, the offsets are stale.
-        if (editorText(input) !== text) return false;
-        return overlay.applyTextEdits(correction.edits);
-      });
+      const render = (list: R_SyntaxDiagnostic[]): void => {
+        overlay.setGrammarDiagnostics(list);
+        showGrammarPanel(input, list, apply, (ruleId) => {
+          ignoreRule(ruleId);
+          render(list.filter((d) => ruleOf(d) !== ruleId));
+        });
+      };
+      render(filterIgnored(diagnostics));
     }).catch((e: unknown) => {
       dbg('content', 'checkGrammar failed', String(e));
     }).finally(() => {
       if (checkTokens.get(inputId) === token) hideCheckProgress(inputId);
     });
   },
-  checkStyle(input: HTMLElement): void {
+  async checkStyle(input: HTMLElement): Promise<void> {
+    await ignoredRulesReady;
     const overlay = perInput.get(input);
     if (!overlay) return;
     const text = editorText(input);
     const inputId = overlay.workerClient.inputId;
     const token = nextCheckToken(inputId);
+    const apply = (correction: R_SyntaxCorrection): boolean => {
+      if (editorText(input) !== text) return false;
+      return overlay.applyTextEdits(correction.edits);
+    };
     showCheckProgress(inputId, 'Tarkistetaan tyyliä…');
     overlay.workerClient.checkStyleAsync(text).then((diagnostics) => {
       if (diagnostics === null) return;
@@ -175,20 +222,63 @@ createTextboxToggle({
       // Code blocks, URLs and BBCode are not style prose. Drop any finding
       // that intersects an ignored range, exactly as the spell overlay does.
       const ignored = ignoredRangesFor(text);
-      const visible = ignored.length === 0
-        ? diagnostics
-        : diagnostics.filter(
-            (diagnostic) => !isIgnored(
-              { start: diagnostic.start, end: diagnostic.end }, ignored),
-          );
-      overlay.setStyleDiagnostics(visible);
-      showStylePanel(input, visible, (correction) => {
-        // If the field changed after the check, the offsets are stale.
-        if (editorText(input) !== text) return false;
-        return overlay.applyTextEdits(correction.edits);
-      });
+      const visible = filterIgnored(diagnostics).filter(
+        (diagnostic) => !isIgnored(
+          { start: diagnostic.start, end: diagnostic.end }, ignored),
+      );
+      const render = (list: R_SyntaxDiagnostic[]): void => {
+        overlay.setStyleDiagnostics(list);
+        showStylePanel(input, list, apply, (ruleId) => {
+          ignoreRule(ruleId);
+          render(list.filter((d) => ruleOf(d) !== ruleId));
+        });
+      };
+      render(visible);
     }).catch((e: unknown) => {
       dbg('content', 'checkStyle failed', String(e));
+    }).finally(() => {
+      if (checkTokens.get(inputId) === token) hideCheckProgress(inputId);
+    });
+  },
+  async checkAll(input: HTMLElement): Promise<void> {
+    await ignoredRulesReady;
+    const overlay = perInput.get(input);
+    if (!overlay) return;
+    const text = editorText(input);
+    const inputId = overlay.workerClient.inputId;
+    const token = nextCheckToken(inputId);
+    const apply = (correction: R_SyntaxCorrection): boolean => {
+      if (editorText(input) !== text) return false;
+      return overlay.applyTextEdits(correction.edits);
+    };
+    showCheckProgress(inputId, 'Tarkistetaan kielioppia ja tyyliä…');
+    overlay.workerClient.checkGrammarStyleAsync(text).then((result) => {
+      if (result === null) return;
+      // The field changed while the check ran; the offsets are stale.
+      if (editorText(input) !== text) return;
+      const ignored = ignoredRangesFor(text);
+      const syntax = filterIgnored(result.diagnostics);
+      const style = filterIgnored(result.style).filter(
+        (diagnostic) => !isIgnored(
+          { start: diagnostic.start, end: diagnostic.end }, ignored),
+      );
+      const render = (
+        nextSyntax: R_SyntaxDiagnostic[],
+        nextStyle: R_SyntaxDiagnostic[],
+      ): void => {
+        overlay.setGrammarDiagnostics(nextSyntax);
+        overlay.setStyleDiagnostics(nextStyle);
+        showCombinedPanel(input, nextSyntax, nextStyle, apply, (ruleId) => {
+          ignoreRule(ruleId);
+          render(
+            nextSyntax.filter((d) => ruleOf(d) !== ruleId),
+            nextStyle.filter((d) => ruleOf(d) !== ruleId),
+          );
+        });
+      };
+      render(syntax, style);
+    }).catch((e: unknown) => {
+      dbg('content', 'checkAll failed', String(e));
     }).finally(() => {
       if (checkTokens.get(inputId) === token) hideCheckProgress(inputId);
     });
@@ -215,6 +305,17 @@ if (api.storage?.onChanged) {
       dbg('content', 'storage.onChanged torille-searchboxes ->',
           checkSearchboxes);
       refreshSearchFields();
+    }
+    if (area === 'local' && changes[IGNORED_RULES_KEY]) {
+      const value = changes[IGNORED_RULES_KEY].newValue;
+      ignoredRules.clear();
+      if (Array.isArray(value)) {
+        for (const rule of value) {
+          if (typeof rule === 'string') ignoredRules.add(rule);
+        }
+      }
+      dbg('content', 'storage.onChanged ignored rules',
+          [...ignoredRules]);
     }
     if (area === 'local'
         && Object.values(UI_SETTINGS).some((key) => key in changes)) {

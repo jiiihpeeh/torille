@@ -136,8 +136,9 @@ export function showGrammarPanel(
   input: HTMLElement,
   diagnostics: R_SyntaxDiagnostic[],
   apply: (correction: R_SyntaxCorrection) => boolean,
+  ignore: (ruleId: string) => void,
 ): void {
-  showPanel(input, diagnostics, apply, {
+  showPanel(input, diagnostics, apply, ignore, {
     title: 'Kielioppi',
     empty: 'Ei huomautuksia.',
     kindLabel: syntaxKindLabel,
@@ -148,11 +149,30 @@ export function showStylePanel(
   input: HTMLElement,
   diagnostics: R_SyntaxDiagnostic[],
   apply: (correction: R_SyntaxCorrection) => boolean,
+  ignore: (ruleId: string) => void,
 ): void {
-  showPanel(input, diagnostics, apply, {
+  showPanel(input, diagnostics, apply, ignore, {
     title: 'Tyyli',
     empty: 'Ei tyylihuomautuksia.',
     kindLabel: styleKindLabel,
+  });
+}
+
+/// One panel for the combined grammar+style command.
+export function showCombinedPanel(
+  input: HTMLElement,
+  syntax: R_SyntaxDiagnostic[],
+  style: R_SyntaxDiagnostic[],
+  apply: (correction: R_SyntaxCorrection) => boolean,
+  ignore: (ruleId: string) => void,
+): void {
+  const diagnostics = [...syntax, ...style].sort(
+    (a, b) => a.start - b.start || a.end - b.end);
+  showPanel(input, diagnostics, apply, ignore, {
+    title: 'Kielioppi ja tyyli',
+    empty: 'Ei huomautuksia.',
+    kindLabel: (kind: string) =>
+      kind.startsWith('style_') ? styleKindLabel(kind) : syntaxKindLabel(kind),
   });
 }
 
@@ -160,6 +180,7 @@ function showPanel(
   input: HTMLElement,
   diagnostics: R_SyntaxDiagnostic[],
   apply: (correction: R_SyntaxCorrection) => boolean,
+  ignore: (ruleId: string) => void,
   labels: PanelLabels,
 ): void {
   document.querySelector('.torille-grammar-panel')?.remove();
@@ -231,22 +252,29 @@ function showPanel(
         expected.style.cssText = 'color:#555;font-size:0.9em;margin-top:2px;';
         item.append(expected);
       }
-      if (diagnostic.corrections.length > 0) {
-        const actions = document.createElement('div');
-        actions.style.cssText = 'margin-top:4px;';
-        for (const correction of diagnostic.corrections) {
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.textContent = syntaxCorrectionLabel(correction);
-          button.style.cssText =
-            'font:inherit;padding:0.15em 0.5em;margin:0 4px 0 0;cursor:pointer;';
-          button.addEventListener('click', () => {
-            if (apply(correction)) panel.remove();
-          });
-          actions.append(button);
-        }
-        item.append(actions);
+      const actions = document.createElement('div');
+      actions.style.cssText = 'margin-top:4px;';
+      for (const correction of diagnostic.corrections) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = syntaxCorrectionLabel(correction);
+        button.style.cssText =
+          'font:inherit;padding:0.15em 0.5em;margin:0 4px 0 0;cursor:pointer;';
+        button.addEventListener('click', () => {
+          if (apply(correction)) panel.remove();
+        });
+        actions.append(button);
       }
+      const ignoreButton = document.createElement('button');
+      ignoreButton.type = 'button';
+      ignoreButton.textContent = 'älä huomauta';
+      ignoreButton.title = `Ohita sääntö ${diagnostic.rule_id}`;
+      ignoreButton.style.cssText =
+        'font:inherit;padding:0.15em 0.5em;margin:0 4px 0 0;cursor:pointer;'
+        + 'background:transparent;border:1px solid #ccc;border-radius:3px;';
+      ignoreButton.addEventListener('click', () => ignore(diagnostic.rule_id));
+      actions.append(ignoreButton);
+      item.append(actions);
       list.append(item);
     }
     panel.append(list);

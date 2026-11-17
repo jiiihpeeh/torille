@@ -855,6 +855,7 @@ const MENU_DISABLE_INPUT = 'torille-disable-input';
 const MENU_DISABLE_SITE = 'torille-disable-site';
 const MENU_CHECK_GRAMMAR = 'torille-check-grammar';
 const MENU_CHECK_STYLE = 'torille-check-style';
+const MENU_CHECK_ALL = 'torille-check-all';
 
 const MENU_ITEMS: browser.contextMenus._CreateCreateProperties[] = [
   {
@@ -865,6 +866,11 @@ const MENU_ITEMS: browser.contextMenus._CreateCreateProperties[] = [
   {
     id: MENU_CHECK_STYLE,
     title: 'Tarkista tyyli',
+    contexts: ['editable'],
+  },
+  {
+    id: MENU_CHECK_ALL,
+    title: 'Tarkista kielioppi ja tyyli',
     contexts: ['editable'],
   },
   {
@@ -1162,6 +1168,10 @@ api.contextMenus.onClicked.addListener(async (info, tab) => {
     await handleCheckStyleClick(tab);
     return;
   }
+  if (info.menuItemId === MENU_CHECK_ALL) {
+    await handleCheckAllClick(tab);
+    return;
+  }
   if (info.menuItemId === MENU_DISABLE_INPUT) {
     await handleDisableInputClick(tab);
     return;
@@ -1188,6 +1198,17 @@ async function handleCheckStyleClick(tab: browser.tabs.Tab | undefined): Promise
   try {
     await api.tabs.sendMessage(tab.id, {
       type: 'torille:check-style-pending-input',
+    });
+  } catch (_) {
+    // No content script on this tab; nothing to check.
+  }
+}
+
+async function handleCheckAllClick(tab: browser.tabs.Tab | undefined): Promise<void> {
+  if (!tab || tab.id == null) return;
+  try {
+    await api.tabs.sendMessage(tab.id, {
+      type: 'torille:check-all-pending-input',
     });
   } catch (_) {
     // No content script on this tab; nothing to check.

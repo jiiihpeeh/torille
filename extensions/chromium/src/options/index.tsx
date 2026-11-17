@@ -149,6 +149,7 @@ function OptionsApp() {
   const [debug, setDebug] = createSignal(false);
   const [searchboxes, setSearchboxes] = createSignal(false);
   const [host, setHost] = createSignal('');
+  const [ignoredRules, setIgnoredRules] = createSignal<string[]>([]);
   let statusTimer: number | undefined;
 
   function flash(message: string, error = false): void {
@@ -197,17 +198,25 @@ function OptionsApp() {
     setBlacklist(next);
   }
 
+  async function clearIgnoredRules(): Promise<void> {
+    await api.storage.local.set({ 'torille-ignored-rules': [] });
+    setIgnoredRules([]);
+  }
+
   onMount(async () => {
     const raw = await api.storage.local.get([
       ...Object.values(KEYS),
       'blacklist',
       'torille-debug',
       'torille-searchboxes',
+      'torille-ignored-rules',
     ]);
     setSettings(readSettings(raw));
     setBlacklist(Array.isArray(raw.blacklist) ? raw.blacklist : []);
     setDebug(raw['torille-debug'] === true);
     setSearchboxes(raw['torille-searchboxes'] === true);
+    setIgnoredRules(Array.isArray(raw['torille-ignored-rules'])
+      ? raw['torille-ignored-rules'] : []);
 
     api.storage.onChanged.addListener((changes: Record<string, any>, area: string) => {
       if (area !== 'local') return;
@@ -225,6 +234,10 @@ function OptionsApp() {
       }
       if (changes['torille-searchboxes']) {
         setSearchboxes(changes['torille-searchboxes'].newValue === true);
+      }
+      if (changes['torille-ignored-rules']) {
+        setIgnoredRules(Array.isArray(changes['torille-ignored-rules'].newValue)
+          ? changes['torille-ignored-rules'].newValue : []);
       }
     });
   });
@@ -395,6 +408,16 @@ function OptionsApp() {
             <input type="color" id="style-color"
               value={settings().styleColor}
               onInput={(e) => patch('styleColor', e.currentTarget.value)} />
+          </div>
+        </div>
+        <div class="settings-grid single">
+          <div class="row">
+            <label>
+              Ohitetut säännöt <small>{ignoredRules().length}</small>
+            </label>
+            <button type="button" onClick={clearIgnoredRules}>
+              Tyhjennä ohitetut säännöt
+            </button>
           </div>
         </div>
       </section>
