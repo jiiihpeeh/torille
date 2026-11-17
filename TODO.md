@@ -1975,3 +1975,10 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   necessive or comparison construction. `Näen kirjat.`, `Syö puuro!`,
   `Syötiin puuro.`, `Minun täytyy lukea kirja.` and
   `Hän puhui kuten asiantuntija.` stay clean; page-2000 is quiet.
+
+- 2026-11-17: clause-structure warnings landed. `Koska minä väsynyt.` emits
+  `clause_structure`/`missing_predicate` and `Hän tuli ja.` emits
+  `incomplete_coordination`; both are `Warning` with no correction. The rule
+  requires a sentence-final declarative period and stays out of questions,
+  headings, comma-continued clauses and period-less fragments. Page-2000 has
+  no `clause_structure` findings.

@@ -581,16 +581,20 @@ prose-corpus review.
 
 ### Sentence structure
 
-- [ ] **Missing finite predicate**
-  `Koska minä väsynyt.` (missing `olen`) is silent. Start with a conservative
-  “subordinator or coordination with no finite predicate” rule.
-  `Hän tuli ja.` is the coordination variant. Do not flag headings, captions
-  or intentional fragments.
-  Area: `src/syntax_check/punctuation/clause.rs`, `src/syntax_check/`.
+- [x] **Missing finite predicate** — landed.
+  `Koska minä väsynyt.` now emits `clause_structure`/`missing_predicate` as a
+  `Warning`, with no correction. The rule requires a sentence-final
+  declarative clause that starts with a subordinator, has no finite predicate,
+  and contains a personal-pronoun subject followed by a predicative
+  adjective/participle. `Koska minä olen väsynyt.`, questions, headings and
+  fragments without a period stay quiet.
+  Area: `src/syntax_check/structure.rs`.
 
-- [ ] **Incomplete coordination**
-  `Hän tuli ja.` may share the missing-predicate rule or get its own
-  `ClauseStructure` finding. Keep it `Warning` at most.
+- [x] **Incomplete coordination** — landed.
+  `Hän tuli ja.` now emits `clause_structure`/`incomplete_coordination` as a
+  `Warning` on the trailing coordinator, with no correction. The clause must
+  have a predicate and end at a declarative period; `Hän tuli ja lähti.` and a
+  fragment without the period stay quiet.
 
 - [ ] **Extra comma**
   `Minä, menen kotiin.` is silent; `CommaExtra` is declared but never emitted.
@@ -917,3 +921,10 @@ intended/competing interpretation pair that fails.
   passive, necessive and comparison constructions. The first prose sweep
   flagged 16 role-path false positives (coordinated subjects, vocatives,
   `lasta`, comparisons); the final guards bring page-2000 to zero.
+- 2026-11-17: landed the conservative clause-structure warnings in
+  `src/syntax_check/structure.rs`. `Koska minä väsynyt.` emits
+  `missing_predicate` and `Hän tuli ja.` emits `incomplete_coordination`, both
+  `clause_structure`/`Warning` with no correction. The rule only fires at a
+  declarative period; questions, headings, comma-continued clauses and
+  period-less fragments stay quiet. The page-2000 sweep has no
+  `clause_structure` findings.

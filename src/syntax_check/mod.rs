@@ -22,6 +22,7 @@ mod punctuation;
 mod rank;
 mod rection;
 mod sentence_cache;
+mod structure;
 
 pub mod diagnostic;
 
@@ -105,6 +106,7 @@ pub(crate) fn check_analysis_without_quote(
     diagnostics.extend(numeral::check(tokens, analysis));
     diagnostics.extend(adposition::check(tokens, analysis));
     diagnostics.extend(existential::check(tokens, analysis));
+    diagnostics.extend(structure::check(tokens, analysis));
     diagnostics.extend(punctuation::check_without_quote_with_contexts(
         tokens, analysis, contexts,
     ));

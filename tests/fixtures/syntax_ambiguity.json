@@ -339,6 +339,21 @@
       "id": "nominative_object_necessive",
       "text": "Minun täytyy lukea kirja.",
       "diagnostics": []
+    },
+    {
+      "id": "complete_subordinate_clause",
+      "text": "Koska minä olen väsynyt.",
+      "diagnostics": []
+    },
+    {
+      "id": "incomplete_coordination_warning",
+      "text": "Hän tuli ja.",
+      "diagnostics": ["clause_structure"]
+    },
+    {
+      "id": "clause_fragment_without_period",
+      "text": "Koska minä väsynyt",
+      "diagnostics": []
     }
   ]
 }

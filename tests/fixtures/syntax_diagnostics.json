@@ -800,6 +800,32 @@
           "corrections": ["kirjan", "kirjaa"]
         }
       ]
+    },
+    {
+      "id": "missing_predicate",
+      "text": "Koska minä väsynyt.",
+      "diagnostics": [
+        {
+          "kind": "clause_structure",
+          "severity": "warning",
+          "start": 12,
+          "end": 20,
+          "corrections": []
+        }
+      ]
+    },
+    {
+      "id": "incomplete_coordination",
+      "text": "Hän tuli ja.",
+      "diagnostics": [
+        {
+          "kind": "clause_structure",
+          "severity": "warning",
+          "start": 10,
+          "end": 12,
+          "corrections": []
+        }
+      ]
     }
   ],
   "clean": [
@@ -829,6 +855,11 @@
     "Syötiin puuro.",
     "Minun täytyy lukea kirja.",
     "Söin aamupuuronsa.",
+    "Koska minä olen väsynyt.",
+    "Hän tuli ja lähti.",
+    "Koska minä väsynyt?",
+    "Koska minä väsynyt",
+    "Hän tuli ja",
     "Talot ovat kauniita.",
     "Talot ovat punaisia.",
     "Talot ovat punaiset.",

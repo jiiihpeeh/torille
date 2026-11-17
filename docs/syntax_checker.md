@@ -48,6 +48,7 @@ the checker only when the user presses the grammar button.
 | `object_case` | negative clause requires a partitive object; a singular bare nominative object is an error; aspect cues suggest partitive/total | `Error` for negation and the bare nominative, `Suggestion` for aspect |
 | `missing_argument` | an obligatory slot from `data/verb_arguments.csv` is absent | `Warning` |
 | `extra_argument` | a closed intransitive frame has an object | `Warning` |
+| `clause_structure` | a declarative clause has no finite predicate, or ends in a coordinator without a coordinated predicate | `Warning`, never a correction |
 | `comma_missing` | subordinate clause needs a comma; `esimerkiksi` needs a parenthetical pair | `Error`, or `Suggestion` for the parenthetical |
 | `comma_pair_unbalanced` | an opened relative-clause comma pair is not closed | `Error` |
 | `question_mark_missing` | a clear direct question ends with `.` or no mark | `Error` |
@@ -57,9 +58,9 @@ the checker only when the user presses the grammar button.
 | `list_comma_before_conjunction` | a comma before the final `ja`/`tai`/`sekä` | `Suggestion` |
 | `list_introducer_comma` | a comma directly after a list-introducing colon | `Error` |
 
-Reserved but not emitted: `ClauseStructure`, `WordOrder`, `CommaExtra`. Word
-order is deliberately deferred: Finnish order is information structure, not a
-fixed rule.
+Reserved but not emitted: `WordOrder`, `CommaExtra`. Word order is
+deliberately deferred: Finnish order is information structure, not a fixed
+rule.
 
 ## False-positive policy
 
@@ -210,6 +211,13 @@ class.
   clause-final object, no possessive and no competing nominal case; it skips
   imperative, passive, necessive and comparison constructions. `Näen kirjat.`,
   `Syö puuro!`, `Syötiin puuro.` and `Minun täytyy lukea kirja.` stay quiet.
+- **Clause-structure warnings are deliberately narrow.** A missing predicate
+  is reported only for a sentence-final subordinate clause with a
+  personal-pronoun subject and a predicative word but no finite verb
+  (`Koska minä väsynyt.`). Incomplete coordination is reported only when a
+  clause with a predicate ends in a coordinator at a declarative period
+  (`Hän tuli ja.`). Questions, headings, comma-continued clauses and
+  period-less fragments stay quiet; neither warning carries a correction.
 - **Ambiguous partitive plurals stay quiet.** A plural completive suggestion
   is offered when every noun base names the same total form (`autoja →
   autot`); a homonymous surface such as `kirjoja` (`kirja`/`kirjo`) stays

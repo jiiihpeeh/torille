@@ -188,6 +188,8 @@ diagnostic_tests!(
     participle_third_singular,
     participle_negative,
     bare_nominative_object,
+    missing_predicate,
+    incomplete_coordination,
     relative_comma_pair,
     rection_elative,
     rection_illative,
