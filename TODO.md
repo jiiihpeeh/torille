@@ -1898,7 +1898,14 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   as oracle-only against the older Kotus spellings.
 
 - 2026-11-17: the adjudicated prose sample now exceeds 1,000 correct words:
-  877 clean + 144 known-false-positive = 1,021 words, with 13 known errors
-  (12.7 per 1,000). New rows come from the same public-domain Gutenberg
+  930 clean + 91 known-false-positive = 1,021 words, with 10 known errors
+  (9.8 per 1,000). New rows come from the same public-domain Gutenberg
   excerpt and were admitted only after `check_syntax` returned zero
   diagnostics. `cargo test --release --test syntax_prose` passes.
+
+
+- 2026-11-17: the comma pass no longer adds a second boundary inside `kun`/`jos`
+  clauses already marked by a comma, dash, or sentence-initial `ja`; the
+  `--kun` and conditional-prose rows moved to clean. The relative-clause
+  negative coordination and dash guards also reduced the known-error rate to
+  10 errors per 1,021 correct words (**9.8 per 1,000**).

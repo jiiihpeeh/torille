@@ -35,6 +35,30 @@ fn subordinate_comma(
     analysis: &SyntaxAnalysis,
 ) -> Vec<SyntaxDiagnostic> {
     let mut out = Vec::new();
+    // A `kun`/`jos` clause whose boundary is already marked by a comma, a
+    // dash, or a sentence-initial `ja` needs no second comma inside it. This
+    // is the prose pattern `..., jos ...`, `--kun ...`, and `Ja kun ...`.
+    if let Some(first) = first_word(clause, tokens) {
+        let concord = |index: usize| {
+            matches!(
+                tokens[index].text.to_lowercase().as_str(),
+                "kun" | "jos"
+            )
+        };
+        let marked = |index: usize| {
+            previous_word(tokens, index).is_some_and(|previous| {
+                comma_between(tokens, previous, index)
+                    || dash_between(tokens, previous, index)
+                    || tokens[previous].text.eq_ignore_ascii_case("ja")
+            })
+        };
+        if (concord(first) && marked(first))
+            || previous_word(tokens, first)
+                .is_some_and(|previous| concord(previous) && marked(previous))
+        {
+            return out;
+        }
+    }
     if index > 0 && same_sentence(&analysis.clauses[index - 1], clause, analysis) {
         let previous = &analysis.clauses[index - 1];
         if let (Some(left), Some(right)) = (last_word(previous, tokens), first_word(clause, tokens)) {
