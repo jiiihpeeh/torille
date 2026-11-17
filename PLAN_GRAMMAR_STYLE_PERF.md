@@ -164,11 +164,12 @@ measure.
 
 Three throwaway experiments on the fixture attribute the cold pass. Each
 disables one branch and re-measures; the point is the *shape*, not the exact
-milliseconds:
+milliseconds. The baseline is the fixture with the probe and the memo already
+in, so the deltas are what each branch costs on top of everything else:
 
 | experiment | cold morphology | reading |
 |---|---:|---|
-| baseline at the time | 1,763 ms | — |
+| baseline (probe and memo in) | 1,763 ms | — |
 | skip the verb stem map (`collect_bases_via_verb_stem_map`) | 1,797 ms | no change: a base it would have named then costs the fallback instead |
 | skip the cheap fallback (`resolve_cheap_fallback`) | 1,551 ms | −12% |
 | skip both | **964 ms** | −45% |
