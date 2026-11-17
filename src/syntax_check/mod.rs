@@ -18,6 +18,7 @@ mod correction;
 mod existential;
 mod numeral;
 mod object_case;
+mod possessive;
 mod punctuation;
 mod rank;
 mod rection;
@@ -112,6 +113,7 @@ pub(crate) fn check_analysis_without_quote(
     ));
     diagnostics.extend(rection::check(tokens, analysis));
     diagnostics.extend(object_case::check(tokens, analysis));
+    diagnostics.extend(possessive::check(tokens, analysis));
     diagnostics.extend(arguments::check(tokens, analysis));
     rank::resolve(diagnostics)
 }

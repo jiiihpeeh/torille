@@ -519,12 +519,16 @@ prose-corpus review.
   `He ovat väsyneitä.` and the passive forms.
   Area: `src/syntax_check/agreement.rs`, `src/syntax_check/correction.rs`.
 
-- [ ] **Possessive suffix person/number**
-  `Minun kirjasi on uusi.`, `Hänen kirjani on uusi.` and `Minun kirja on uusi.`
-  are silent. Morphology already records `possessive`.
-  Emit `Warning` or `Suggestion`, never `Error`: colloquial Finnish drops the
-  suffix and the written norm has exceptions.
-  Area: `src/syntax_check/agreement.rs`.
+- [x] **Possessive suffix person/number** — landed.
+  `Minun kirjasi on uusi.` and `Hänen kirjani on uusi.` now emit
+  `possessive_agreement` as a `Warning`; `Minun kirja on uusi.` emits
+  `possessive_missing` as a `Suggestion`. Never an `Error`, and no automatic
+  correction: colloquial Finnish drops the suffix. The rule matches a genitive
+  personal pronoun with the adjacent head noun, through adjective/adverb
+  modifiers; standalone suffixes (`Kirjani on uusi.`) and matching suffixes
+  stay quiet. A genitive pronoun before a necessive verb (`Teidän täytyy ...`)
+  is the verb's subject, not a possessor, and is skipped.
+  Area: `src/syntax_check/possessive.rs`.
 
 ### Case government
 
@@ -928,3 +932,10 @@ intended/competing interpretation pair that fails.
   declarative period; questions, headings, comma-continued clauses and
   period-less fragments stay quiet. The page-2000 sweep has no
   `clause_structure` findings.
+- 2026-11-17: landed possessive-suffix agreement in
+  `src/syntax_check/possessive.rs`. A wrong suffix is a `Warning`
+  (`Minun kirjasi ...`), a missing suffix a `Suggestion` (`Minun kirja ...`);
+  neither is ever an `Error` and neither carries a correction. Matching
+  suffixes, standalone suffixes, and necessive genitive subjects
+  (`Teidän täytyy ...`) stay quiet. Added diagnostic, clean and ambiguity
+  cases; the page-2000 sweep has no possessive findings.

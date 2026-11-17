@@ -1982,3 +1982,10 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   requires a sentence-final declarative period and stays out of questions,
   headings, comma-continued clauses and period-less fragments. Page-2000 has
   no `clause_structure` findings.
+
+- 2026-11-17: possessive-suffix agreement landed. `Minun kirjasi on uusi.`
+  emits `possessive_agreement`/`Warning`; `Minun kirja on uusi.` emits
+  `possessive_missing`/`Suggestion`. Neither is an `Error` and neither carries
+  a correction. Matching and standalone suffixes stay clean, and a genitive
+  pronoun before a necessive verb is treated as the verb's subject rather than
+  a possessor. Page-2000 is quiet.

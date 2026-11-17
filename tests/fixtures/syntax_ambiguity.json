@@ -354,6 +354,21 @@
       "id": "clause_fragment_without_period",
       "text": "Koska minä väsynyt",
       "diagnostics": []
+    },
+    {
+      "id": "possessive_third_person",
+      "text": "Hänen kirjansa on uusi.",
+      "diagnostics": []
+    },
+    {
+      "id": "possessive_necessive_subject",
+      "text": "Teidän kerran täytyy tili tehdä.",
+      "diagnostics": []
+    },
+    {
+      "id": "possessive_missing_colloquial",
+      "text": "Minun kirja on uusi.",
+      "diagnostics": ["possessive_agreement"]
     }
   ]
 }

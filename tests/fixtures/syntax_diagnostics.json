@@ -826,6 +826,45 @@
           "corrections": []
         }
       ]
+    },
+    {
+      "id": "possessive_wrong_suffix",
+      "text": "Minun kirjasi on uusi.",
+      "diagnostics": [
+        {
+          "kind": "possessive_agreement",
+          "severity": "warning",
+          "start": 6,
+          "end": 13,
+          "corrections": []
+        }
+      ]
+    },
+    {
+      "id": "possessive_third_person",
+      "text": "Hänen kirjani on uusi.",
+      "diagnostics": [
+        {
+          "kind": "possessive_agreement",
+          "severity": "warning",
+          "start": 7,
+          "end": 14,
+          "corrections": []
+        }
+      ]
+    },
+    {
+      "id": "possessive_missing",
+      "text": "Minun kirja on uusi.",
+      "diagnostics": [
+        {
+          "kind": "possessive_agreement",
+          "severity": "suggestion",
+          "start": 6,
+          "end": 11,
+          "corrections": []
+        }
+      ]
     }
   ],
   "clean": [
@@ -854,6 +893,15 @@
     "Syö puuro!",
     "Syötiin puuro.",
     "Minun täytyy lukea kirja.",
+    "Minun kirjani on uusi.",
+    "Sinun kirjasi on uusi.",
+    "Hänen kirjansa on uusi.",
+    "Meidän kirjamme on uusi.",
+    "Teidän kirjanne on uusi.",
+    "Heidän kirjansa on uusi.",
+    "Kirjani on uusi.",
+    "Minun uusi kirjani on uusi.",
+    "Teidän kerran täytyy tili tehdä.",
     "Söin aamupuuronsa.",
     "Koska minä olen väsynyt.",
     "Hän tuli ja lähti.",

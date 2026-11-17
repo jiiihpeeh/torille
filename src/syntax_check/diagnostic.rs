@@ -26,6 +26,7 @@ pub enum DiagnosticKind {
     Connegative,
     AttributeAgreement,
     PredicativeAgreement,
+    PossessiveAgreement,
     VerbRection,
     CaseSelection,
     ObjectCase,
@@ -54,6 +55,7 @@ impl DiagnosticKind {
             DiagnosticKind::Connegative => "connegative",
             DiagnosticKind::AttributeAgreement => "attribute_agreement",
             DiagnosticKind::PredicativeAgreement => "predicative_agreement",
+            DiagnosticKind::PossessiveAgreement => "possessive_agreement",
             DiagnosticKind::VerbRection => "verb_rection",
             DiagnosticKind::CaseSelection => "case_selection",
             DiagnosticKind::ObjectCase => "object_case",
@@ -81,6 +83,7 @@ impl DiagnosticKind {
             }
             DiagnosticKind::AttributeAgreement => Relation::AttributeHead,
             DiagnosticKind::PredicativeAgreement => Relation::PredicativeComplement,
+            DiagnosticKind::PossessiveAgreement => Relation::Possessive,
             DiagnosticKind::VerbRection => Relation::VerbFrame,
             DiagnosticKind::CaseSelection if message == "numeral_case" => {
                 Relation::NumeralComplement

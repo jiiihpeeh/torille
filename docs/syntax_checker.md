@@ -43,6 +43,7 @@ the checker only when the user presses the grammar button.
 | `connegative` | the main verb after a negative auxiliary is in the connegative form | `Error` |
 | `attribute_agreement` | attributive adjective/demonstrative agrees with its head | `Error` for number, `Warning` for case |
 | `predicative_agreement` | a predicative adjective agrees with its subject in number | `Error` for a clear number mismatch, `Warning` when a role is weak |
+| `possessive_agreement` | a possessive suffix matches an adjacent genitive personal pronoun | `Warning` for a wrong suffix, `Suggestion` when it is missing |
 | `case_selection` | a cardinal numeral governs the partitive singular, a curated adposition governs a non-matching case, or an existential subject is genitive | `Error` for a clear complement, `Warning` when a role is weak |
 | `verb_rection` | curated valency frame requires a case the argument lacks | `Error` with a likely predicate, otherwise `Warning` |
 | `object_case` | negative clause requires a partitive object; a singular bare nominative object is an error; aspect cues suggest partitive/total | `Error` for negation and the bare nominative, `Suggestion` for aspect |
@@ -211,6 +212,12 @@ class.
   clause-final object, no possessive and no competing nominal case; it skips
   imperative, passive, necessive and comparison constructions. `Näen kirjat.`,
   `Syö puuro!`, `Syötiin puuro.` and `Minun täytyy lukea kirja.` stay quiet.
+- **Possessive agreement is warning/suggestion only.** `Minun kirjasi on uusi.`
+  warns and `Minun kirja on uusi.` suggests, but neither is an `Error` and
+  neither carries a correction: colloquial Finnish drops the suffix. A suffix
+  with no expressed pronoun (`Kirjani on uusi.`) is correct and stays quiet; a
+  genitive pronoun before a necessive verb is the verb's subject, not a
+  possessor.
 - **Clause-structure warnings are deliberately narrow.** A missing predicate
   is reported only for a sentence-final subordinate clause with a
   personal-pronoun subject and a predicative word but no finite verb

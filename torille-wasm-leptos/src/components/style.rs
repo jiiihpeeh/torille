@@ -140,6 +140,7 @@ fn relation_label(relation: Relation) -> &'static str {
         Relation::SubjectCase => "subjektin sija",
         Relation::AttributeHead => "attribuutti ja pääsana",
         Relation::PredicativeComplement => "predikatiivin täydennys",
+        Relation::Possessive => "omistusliite",
         Relation::VerbFrame => "verbikehys",
         Relation::AdpositionComplement => "preposition täydennys",
         Relation::NumeralComplement => "numeraalin täydennys",
