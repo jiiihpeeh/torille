@@ -74,11 +74,15 @@ pub fn check_tokens_with_morphology(
     morphology: &MorphologyAnalysis,
 ) -> StyleAnalysis {
     let contexts = crate::sentence::analyze(tokens);
-    let mut diagnostics = phrases::check_with_contexts(tokens, &contexts);
-    let covered: Vec<std::ops::Range<usize>> = diagnostics
+    let phrases = phrases::check_with_contexts(tokens, &contexts);
+    let mut covered: Vec<std::ops::Range<usize>> = phrases
         .iter()
         .map(|diagnostic| diagnostic.span.clone())
         .collect();
+    let duplicates = repetition::duplicate_words(tokens, &covered);
+    covered.extend(duplicates.iter().map(|diagnostic| diagnostic.span.clone()));
+    let mut diagnostics = phrases;
+    diagnostics.extend(duplicates);
     diagnostics.extend(repetition::check(tokens, morphology, &covered, &contexts));
     let long_sentences = length::check(tokens, morphology, &diagnostics);
     diagnostics.extend(long_sentences);

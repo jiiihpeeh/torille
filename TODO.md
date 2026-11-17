@@ -1995,3 +1995,10 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   personal-pronoun subject directly before its finite predicate is checked;
   appositions, parentheticals, noun-subject addresses and intervening words
   stay quiet. Page-2000 has no `comma_extra` findings.
+
+- 2026-11-17: `style_duplicate_word` landed. Adjacent identical surfaces with
+  only whitespace between them (`että että`) are a `Suggestion` with a
+  delete-the-second-word correction. A comma, dash or any punctuation breaks
+  the pair; an explicit rhetorical list (`hyvin hyvin`, `kauan kauan`, ...) and
+  phrase-table spans stay quiet. The duplicate takes precedence over the
+  near-repeat metric. Page-2000 is quiet.

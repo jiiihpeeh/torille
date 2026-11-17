@@ -19,6 +19,8 @@ use crate::diagnostic::{
 pub enum StyleKind {
     /// The same content lemma repeats close enough to read as an echo.
     Repetition,
+    /// The same surface is written twice in a row with nothing between.
+    DuplicateWord,
     /// A sentence is longer than the readability threshold.
     LongSentence,
     /// A curated, established phrase reads as a cliché or stock phrase.
@@ -35,6 +37,7 @@ impl StyleKind {
     pub fn name(self) -> &'static str {
         match self {
             StyleKind::Repetition => "style_repetition",
+            StyleKind::DuplicateWord => "style_duplicate_word",
             StyleKind::LongSentence => "style_long_sentence",
             StyleKind::Cliche => "style_cliche",
             StyleKind::Filler => "style_filler",
@@ -45,7 +48,7 @@ impl StyleKind {
 
     fn relation(self) -> Relation {
         match self {
-            StyleKind::Repetition => Relation::Repetition,
+            StyleKind::Repetition | StyleKind::DuplicateWord => Relation::Repetition,
             StyleKind::LongSentence => Relation::Length,
             StyleKind::Cliche | StyleKind::Wordy => Relation::Phrase,
             StyleKind::Filler | StyleKind::Colloquial => Relation::WordChoice,
@@ -137,6 +140,7 @@ mod tests {
     fn every_style_kind_has_a_stable_name() {
         for (kind, name) in [
             (StyleKind::Repetition, "style_repetition"),
+            (StyleKind::DuplicateWord, "style_duplicate_word"),
             (StyleKind::LongSentence, "style_long_sentence"),
             (StyleKind::Cliche, "style_cliche"),
             (StyleKind::Filler, "style_filler"),

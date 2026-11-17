@@ -170,6 +170,7 @@ fn severity_label() -> &'static str {
 fn kind_label(kind: StyleKind) -> &'static str {
     match kind {
         StyleKind::Repetition => "toistuva sana",
+        StyleKind::DuplicateWord => "peräkkäinen toisto",
         StyleKind::LongSentence => "pitkä virke",
         StyleKind::Cliche => "kulunut ilmaus",
         StyleKind::Filler => "täytesana",
@@ -185,6 +186,7 @@ mod tests {
     #[test]
     fn style_labels_are_finnish() {
         assert_eq!(kind_label(StyleKind::Repetition), "toistuva sana");
+        assert_eq!(kind_label(StyleKind::DuplicateWord), "peräkkäinen toisto");
         assert_eq!(kind_label(StyleKind::LongSentence), "pitkä virke");
         assert_eq!(kind_label(StyleKind::Cliche), "kulunut ilmaus");
         assert_eq!(kind_label(StyleKind::Filler), "täytesana");

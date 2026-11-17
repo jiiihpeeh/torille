@@ -29,17 +29,18 @@ spell-check pipeline.
 | kind | UI label | meaning |
 |---|---|---|
 | `style_repetition` | toistuva sana | the same content lemma repeats within the window |
+| `style_duplicate_word` | peräkkäinen toisto | the same surface is written twice with no punctuation between |
 | `style_long_sentence` | pitkä virke | the sentence is over 35 word tokens |
 | `style_cliche` | kulunut ilmaus | a curated stock phrase |
 | `style_filler` | täytesana | a curated filler word or phrase |
 | `style_wordy` | monisanainen ilmaus | a curated expression with a shorter form |
 | `style_colloquial` | arkikielinen ilmaus | a curated informal word |
 
-Every diagnostic is `Severity::Suggestion` and `DiagnosticConfidence::High`
-for table hits or `Medium` for the repetition and length metrics. The
-`message` is the stable kind name; `expected` carries the matched phrase or
-lemma. A correction exists only when a curated table row names a safe
-replacement.
+Every diagnostic is `Severity::Suggestion` and `Confidence::Certain` for
+table hits or `Confidence::Likely` for the repetition, duplicate-word and
+length metrics. The `message` is the stable kind name; `expected` carries the
+matched phrase or lemma. A correction exists only when a curated table row
+names a safe replacement, or for the duplicate-word deletion.
 
 ## Rules
 
@@ -72,6 +73,19 @@ spans are excluded, and one lemma is reported once per sentence.
 
 Cross-sentence repetition is deliberately quiet: cohesive prose repeats
 deliberately.
+
+### Duplicate word
+
+`style_duplicate_word` is the adjacent transcription slip, not the near
+repeat: two identical surfaces with only whitespace between them
+(`että että`). The suggestion removes the separator whitespace and the second
+word.
+
+A comma, dash or any other punctuation breaks the pair
+(`Se oli hyvin, hyvin vaikeaa.`, `Ei, ei se ollut niin.`), and an explicit
+rhetorical list (`hyvin hyvin`, `kauan kauan`, `pian pian`, ...) stays quiet.
+A phrase-table span also suppresses the pair, and the duplicate takes
+precedence over the near-repeat metric so one span never carries both.
 
 ### Long sentence
 

@@ -654,12 +654,14 @@ Adjacent repetition is not always accidental:
 - `Hän sanoi, että että tämä oli väärin.` may be a transcription artifact, but
   context matters.
 
-Implement `style_duplicate_word` as a **Suggestion** only. Start with adjacent
-identical surfaces and no punctuation between them. Skip when a comma or dash
-separates the pair, and keep an explicit exception list for rhetorical
-reduplication. Do not conflate repetition with bad style.
-
-Area: `src/style_check/repetition.rs`.
+- [x] **Landed.** `style_duplicate_word` is a `Suggestion` for two identical
+  surfaces with only whitespace between them. The correction removes the
+  separator and the second word. A comma, dash or any other punctuation breaks
+  the pair; the explicit rhetorical list (`hyvin hyvin`, `kauan kauan`,
+  `pian pian`, ...) and phrase-table spans stay quiet. The duplicate takes
+  precedence over the near-repeat metric, so one span never carries both.
+  Page-2000 has no `style_duplicate_word` findings.
+  Area: `src/style_check/repetition.rs`.
 
 ### Other P2 items
 
@@ -669,10 +671,9 @@ Area: `src/style_check/repetition.rs`.
   `niin kuin` and `ikään kuin` are not matched. Add reviewed rows only; keep
   the exact-match contract and measure on the prose corpus.
 
-- [ ] **Dead reserved kinds**
-  `CaseSelection`, `ClauseStructure` and `CommaExtra` are never emitted;
-  `WordOrder` is deliberately reserved. The first three correspond to the P1
-  rules above. Do not remove them before those rules land.
+- [x] **Dead reserved kinds** — resolved.
+  `CaseSelection`, `ClauseStructure` and `CommaExtra` now have emitting rules;
+  `WordOrder` is the only deliberately reserved kind left.
 
 - [ ] **Ignore/dismiss and a combined command**
   Findings can be corrected but not ignored. Ignore by stable rule ID, not by
@@ -948,3 +949,9 @@ intended/competing interpretation pair that fails.
   a personal-pronoun subject directly before its finite predicate is checked;
   appositions, parentheticals, noun-subject addresses and intervening words
   stay quiet. The page-2000 sweep has no `comma_extra` findings.
+- 2026-11-17: landed `style_duplicate_word` in `src/style_check/repetition.rs`.
+  Adjacent identical surfaces with only whitespace between them are a
+  `Suggestion` with a delete-the-second-word correction. Punctuation, the
+  rhetorical list (`hyvin hyvin`, `kauan kauan`, ...) and phrase-table spans
+  stay quiet; the duplicate takes precedence over the near-repeat metric. The
+  page-2000 sweep has no duplicate-word findings.

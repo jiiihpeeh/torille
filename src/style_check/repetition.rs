@@ -7,6 +7,7 @@
 
 use std::ops::Range;
 
+use crate::diagnostic::{Confidence, Correction, CorrectionLicense, Edit};
 use crate::morphology::{MorphologyAnalysis, WordInfo};
 use crate::sentence;
 use crate::tags::PartOfSpeech;
@@ -19,6 +20,28 @@ const REPETITION_WINDOW: usize = 10;
 
 /// Lemmas that are too grammatical to count as an echo.
 const LIGHT_LEMMAS: &[&str] = &["olla", "tulla", "voida", "tehdä"];
+
+/// Established rhetorical reduplications that are not transcription slips.
+const RHETORICAL_REDUPLICATION: &[&str] = &[
+    "hyvin",
+    "kauan",
+    "pian",
+    "niin",
+    "joo",
+    "ei",
+    "kyllä",
+    "kovin",
+    "hitaasti",
+    "nopeasti",
+    "enemmän",
+    "vähemmän",
+    "lähemmäs",
+    "kauemmas",
+    "useammin",
+    "harvemmin",
+    "vähän",
+    "paljon",
+];
 
 pub(super) fn check(
     tokens: &[Token],
@@ -63,6 +86,8 @@ pub(super) fn check(
         if let Some((_, previous)) = last_seen.iter().find(|(seen, _)| *seen == lemma)
             && position.saturating_sub(*previous) <= REPETITION_WINDOW + 1
             && !reported.contains(&lemma)
+            && !(position.saturating_sub(*previous) == 1
+                && RHETORICAL_REDUPLICATION.contains(&lemma.as_str()))
         {
             let mut diagnostic = StyleDiagnostic::new(
                 StyleKind::Repetition,
@@ -82,6 +107,59 @@ pub(super) fn check(
         }
     }
 
+    diagnostics
+}
+
+/// Adjacent identical surfaces with no punctuation between them.
+///
+/// This is the transcription-slip / stutter case (`että että`), not the
+/// near-repeat `style_repetition`. A comma, dash, line-break punctuation or
+/// any other separator breaks the pair, and the rhetorical list keeps
+/// `hyvin hyvin`, `kauan kauan` and friends out.
+pub(super) fn duplicate_words(
+    tokens: &[Token],
+    covered: &[Range<usize>],
+) -> Vec<StyleDiagnostic> {
+    let mut diagnostics = Vec::new();
+    let mut previous: Option<usize> = None;
+    for (index, token) in tokens.iter().enumerate() {
+        if !token.is_word() {
+            continue;
+        }
+        if let Some(first) = previous {
+            let surface = token.text.to_lowercase();
+            let in_phrase = covered.iter().any(|span| {
+                (span.start <= tokens[first].start && tokens[first].end <= span.end)
+                    || (span.start <= token.start && token.end <= span.end)
+            });
+            if tokens[first].text.to_lowercase() == surface
+                && tokens[first + 1..index]
+                    .iter()
+                    .all(|between| !between.is_word() && between.text.trim().is_empty())
+                && !in_phrase
+                && !RHETORICAL_REDUPLICATION.contains(&surface.as_str())
+            {
+                let mut diagnostic = StyleDiagnostic::new(
+                    StyleKind::DuplicateWord,
+                    Confidence::Likely,
+                    token.start..token.end,
+                    StyleKind::DuplicateWord.name(),
+                );
+                diagnostic.expected = Some(surface);
+                // Remove the separator whitespace with the repeated word so
+                // the result does not leave a double space behind.
+                diagnostic.corrections = vec![Correction::new(
+                    vec![Edit::new(tokens[first].end, token.end, "")],
+                    0.0,
+                    "style_duplicate_word",
+                )
+                .licensed_by(CorrectionLicense::Curated)
+                .with_confidence(Confidence::Likely)];
+                diagnostics.push(diagnostic);
+            }
+        }
+        previous = Some(index);
+    }
     diagnostics
 }
 
@@ -193,6 +271,43 @@ mod tests {
             found.iter().all(|d| d.kind == StyleKind::Wordy),
             "{found:#?}"
         );
+    }
+
+    fn duplicates(text: &str) -> Vec<StyleDiagnostic> {
+        diagnostics(text)
+            .into_iter()
+            .filter(|diagnostic| diagnostic.kind == StyleKind::DuplicateWord)
+            .collect()
+    }
+
+    #[test]
+    fn an_adjacent_duplicate_is_a_single_suggestion() {
+        let text = "Hän sanoi, että että tämä oli väärin.";
+        let found = duplicates(text);
+        assert_eq!(found.len(), 1, "{found:#?}");
+        let second = text.match_indices("että").nth(1).unwrap().0;
+        assert_eq!(found[0].span, second..second + "että".len());
+        assert_eq!(found[0].severity, crate::syntax_check::Severity::Suggestion);
+        assert_eq!(found[0].corrections[0].edits[0].replacement, "");
+    }
+
+    #[test]
+    fn punctuation_or_rhetorical_reduplication_is_quiet() {
+        for text in [
+            "Se oli hyvin, hyvin vaikeaa.",
+            "Ei, ei se ollut niin.",
+            "Se oli hyvin hyvin vaikeaa.",
+            "Hän sanoi, että, että tämä oli väärin.",
+        ] {
+            assert!(duplicates(text).is_empty(), "{text}: {:?}", duplicates(text));
+        }
+    }
+
+    #[test]
+    fn a_duplicate_word_takes_precedence_over_a_near_repeat() {
+        let found = diagnostics("Talo talo on suuri.");
+        assert_eq!(found.len(), 1, "{found:#?}");
+        assert_eq!(found[0].kind, StyleKind::DuplicateWord);
     }
 
     #[test]
