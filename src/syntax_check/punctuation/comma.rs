@@ -41,7 +41,10 @@ fn subordinate_comma(
             let previous_kind = clause_kind(previous, tokens, analysis);
             let boundary_needs_comma = previous_kind != ClauseKind::Subordinate
                 || clause_kind(clause, tokens, analysis) == ClauseKind::Subordinate;
-            if boundary_needs_comma && !comma_between(tokens, left, right) {
+            if boundary_needs_comma
+                && !comma_between(tokens, left, right)
+                && !dash_between(tokens, left, right)
+            {
                 out.push(comma_missing(tokens[left].end, DiagnosticKind::CommaMissing));
             }
         }
@@ -51,6 +54,7 @@ fn subordinate_comma(
         && let (Some(left), Some(right)) = (last_word(clause, tokens), first_word(next, tokens))
         && clause_kind(next, tokens, analysis) == ClauseKind::Main
         && !comma_between(tokens, left, right)
+        && !dash_between(tokens, left, right)
     {
         out.push(comma_missing(tokens[left].end, DiagnosticKind::CommaMissing));
     }
@@ -63,6 +67,7 @@ fn subordinate_comma(
         && let Some(&main) = finite.last()
         && let Some(before) = previous_word(tokens, main)
         && !comma_between(tokens, before, main)
+        && !dash_between(tokens, before, main)
     {
         out.push(comma_missing(tokens[before].end, DiagnosticKind::CommaMissing));
     }
@@ -105,6 +110,23 @@ fn relative_comma(
         tokens[before].end,
         DiagnosticKind::CommaPairUnbalanced,
     )]
+}
+
+/// A dash is a clause boundary in the same places a comma is; do not ask for a
+/// comma after one.
+fn dash_between(tokens: &[Token], left: usize, right: usize) -> bool {
+    if left == right {
+        return false;
+    }
+    let (start, end) = if left < right {
+        (left + 1, right)
+    } else {
+        (right + 1, left)
+    };
+    tokens[start..end]
+        .iter()
+        .filter(|token| !token.is_word())
+        .any(|token| token.text.contains("--") || token.text.contains('—') || token.text.contains('–'))
 }
 
 fn comma_missing(at: usize, kind: DiagnosticKind) -> SyntaxDiagnostic {
@@ -172,6 +194,7 @@ fn coordinated_between(tokens: &[Token], left: usize, right: usize) -> bool {
             matches!(
                 token.text.to_lowercase().as_str(),
                 "ja" | "sekä" | "tai" | "vai"
+                    | "eikä" | "enkä" | "etkä" | "emme" | "ette" | "eivätkä"
             )
         })
 }
