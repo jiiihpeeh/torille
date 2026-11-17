@@ -173,15 +173,23 @@ milliseconds:
 | skip the cheap fallback (`resolve_cheap_fallback`) | 1,551 ms | −12% |
 | skip both | **964 ms** | −45% |
 
-Instruction counts from `callgrind` on the same fixture (14.9 G before the
-paradigm probe, 12.0 G after):
+`callgrind` on the same fixture counted 14.9 G instructions before the shared
+paradigm probe and 12.0 G after (a 1.24× instruction reduction; wall clock
+improved 1.35× because the probe also removes allocation). The tree, from the
+after run, with inclusive shares that nest:
 
-| area | share |
+| frame | inclusive |
 |---|---:|
-| `inflect_in` and the paradigm builders (`emits_form` 60% of the pass alone) | ~66% |
-| compound/unknown path (`check_normal_fast`, `is_known_word_fast`, the compound DP) | ~20% |
-| `format!`/`fmt` inside both | ~24% |
-| `split::dedup`'s two sorts | ~15% |
+| `emits_form` (the verification walk and every paradigm it builds) | 74% |
+| `inflect_in` (the builders) | 67% |
+| `modifier_is_known` → `is_known_word_fast` → compound DP | 19% |
+| `alloc::fmt::format` | 24% |
+| `split::dedup` | 15% |
+
+Self-cost leaves say the same thing from the other side: `malloc`/`free` 23%,
+the formatter 14–24% (overlapping with the DP, which is its largest caller),
+the two `dedup` sorts 7%, hashing 10%, `memcpy` 8%, and the front-coded map
+probes 8%.
 
 So the cost is *paradigm construction* plus a *duplicated unknown-word
 search*, not one hot function. `format!` is concentrated in the compound DP
