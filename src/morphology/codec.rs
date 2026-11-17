@@ -12,7 +12,7 @@
 //! ```text
 //! "TMOR" u8 version u32 row_count
 //! row: surface flags lemma? verb_lemma? nominal_lemma? lemmas readings
-//!      case number pos clitic possessive derivation depth
+//!      case number pos degree clitic possessive derivation depth
 //! ```
 //!
 //! Every enum is a stable index into its `ALL` array; an `Option` uses `0`
@@ -22,7 +22,8 @@ use std::sync::Arc;
 
 use crate::derivation::RULES;
 use crate::tags::{
-    Case, Clitic, Mood, Number, PartOfSpeech, Person, Polarity, Possessive, Tags, Tense, Voice,
+    Case, Clitic, Degree, Mood, Number, PartOfSpeech, Person, Polarity, Possessive, Tags, Tense,
+    Voice,
 };
 
 use super::{Depth, WordInfo};
@@ -167,6 +168,7 @@ fn encode_tags(writer: &mut Writer, tags: &Tags) {
     writer.u8(optional_index(tags.mood, &Mood::ALL));
     writer.u8(optional_index(tags.voice, &Voice::ALL));
     writer.u8(optional_index(tags.possessive, &Possessive::ALL));
+    writer.u8(optional_index(tags.degree, &Degree::ALL));
     writer.u8(optional_index(tags.clitic, &Clitic::ALL));
     writer.u8(index(tags.polarity, &Polarity::ALL));
 }
@@ -181,6 +183,7 @@ fn decode_tags(reader: &mut Reader<'_>) -> Result<Tags, String> {
         mood: optional_value(reader.u8()?, &Mood::ALL)?,
         voice: optional_value(reader.u8()?, &Voice::ALL)?,
         possessive: optional_value(reader.u8()?, &Possessive::ALL)?,
+        degree: optional_value(reader.u8()?, &Degree::ALL)?,
         clitic: optional_value(reader.u8()?, &Clitic::ALL)?,
         polarity: value(reader.u8()?, &Polarity::ALL)?,
     })
@@ -319,6 +322,7 @@ mod tests {
             mood: None,
             voice: None,
             possessive: Some(Possessive::FirstSingular),
+            degree: Some(Degree::Comparative),
             clitic: Some(Clitic::Kin),
             polarity: Polarity::Affirmative,
         }

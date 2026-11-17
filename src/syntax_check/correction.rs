@@ -9,7 +9,7 @@ use crate::expand::forms_of;
 use crate::kotus::sanalista;
 use crate::spec::Catalogues;
 use crate::tags::{
-    Case, Confidence, Mood, Number, PartOfSpeech, Person, Polarity, Tags, Tense, Voice,
+    Case, Confidence, Degree, Mood, Number, PartOfSpeech, Person, Polarity, Tags, Tense, Voice,
 };
 use crate::tokenise::Token;
 
@@ -327,6 +327,7 @@ pub fn attribute_agreement_corrections(
     token: &Token,
     case: Case,
     number: Number,
+    degree: Option<Degree>,
     pos: PartOfSpeech,
     cat: &Catalogues,
 ) -> Vec<Correction> {
@@ -343,6 +344,7 @@ pub fn attribute_agreement_corrections(
     want.part_of_speech = Some(pos);
     want.case = Some(case);
     want.number = Some(number);
+    want.degree = degree;
 
     let mut corrections: Vec<Correction> = Vec::new();
     let forms = cached_forms(lemma, &inflections, cat, &want, pos);
@@ -354,6 +356,7 @@ pub fn attribute_agreement_corrections(
             candidate.part_of_speech == Some(pos)
                 && candidate.case == Some(case)
                 && candidate.number == Some(number)
+                && candidate.degree == degree
         });
         if !exact {
             continue;

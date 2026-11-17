@@ -878,6 +878,19 @@
           "corrections": [""]
         }
       ]
+    },
+    {
+      "id": "attribute_degree_number",
+      "text": "Punaisempi autot ovat hienoja.",
+      "diagnostics": [
+        {
+          "kind": "attribute_agreement",
+          "severity": "error",
+          "start": 0,
+          "end": 10,
+          "corrections": []
+        }
+      ]
     }
   ],
   "clean": [
@@ -891,6 +904,11 @@
     "Pöydällä on kirjat ja kynät.",
     "Talo on rakennettu.",
     "Talo on kaunis.",
+    "Punainen auto on hieno.",
+    "Punaisempi auto on hieno.",
+    "Punaisemmat autot ovat hienoja.",
+    "Punaisimmat autot ovat hienoja.",
+    "Talot ovat punaisempia.",
     "Me olemme lukeneet.",
     "Minä olen lukenut.",
     "Hän on lukenut.",

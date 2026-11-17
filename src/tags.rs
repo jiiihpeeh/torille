@@ -79,6 +79,7 @@ pub fn agreed(readings: &[Tags]) -> Tags {
         mood: agree(readings.iter().map(|r| r.mood)),
         voice: agree(readings.iter().map(|r| r.voice)),
         possessive: agree(readings.iter().map(|r| r.possessive)),
+        degree: agree(readings.iter().map(|r| r.degree)),
         clitic: agree(readings.iter().map(|r| r.clitic)),
         polarity: agree(readings.iter().map(|r| Some(r.polarity))).unwrap_or_default(),
     }
@@ -622,12 +623,33 @@ impl Possessive {
     }
 }
 
+/// The comparison degree of an adjective or adverb form.
+///
+/// The positive degree is absence, not a variant: `punainen` has no degree
+/// tag, while `punaisempi` and `punaisin` carry the derived forms.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Degree {
+    Comparative,
+    Superlative,
+}
+
+impl Degree {
+    pub const ALL: [Degree; 2] = [Degree::Comparative, Degree::Superlative];
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Degree::Comparative => "comparative",
+            Degree::Superlative => "superlative",
+        }
+    }
+}
+
 /// What a form says about the grammar, with a dimension absent where it does
 /// not apply.
 ///
 /// The dimensions are all optional, and a form that is a noun has no person and
 /// a form that is a participle may have both a tense and a mood. The type of
-/// each is a one-byte discriminant, so a [`Tags`] is seven bytes and a word
+/// each is a one-byte discriminant, so a [`Tags`] stays small and a word
 /// table of a few million of them costs less than the strings do.
 ///
 /// [`Tags`] is also what makes a word lookup explainable. [`Tags::unite`]
@@ -657,6 +679,9 @@ pub struct Tags {
     /// singular and `talonsa` third person. The third person covers both
     /// singular and plural, since the suffix does not say which.
     pub possessive: Option<Possessive>,
+    /// The comparison degree, for an adjective/adverb form. The positive is
+    /// absence, not a third variant.
+    pub degree: Option<Degree>,
     /// The clitic attached to the end of the form, if any: `aamullakin` is
     /// `aamulla` with a `kin`. A clitic is a post-inflectional particle, not a
     /// case, so it lives alongside the case rather than replacing it.
@@ -683,6 +708,7 @@ impl Tags {
         mood: None,
         voice: None,
         possessive: None,
+        degree: None,
         clitic: None,
         polarity: Polarity::Affirmative,
     };
@@ -800,6 +826,7 @@ impl Tags {
             mood: same(self.mood, other.mood),
             voice: same(self.voice, other.voice),
             possessive: same(self.possessive, other.possessive),
+            degree: same(self.degree, other.degree),
             clitic: same(self.clitic, other.clitic),
             polarity: same(Some(self.polarity), Some(other.polarity)).unwrap_or_default(),
         }
@@ -827,6 +854,7 @@ impl Tags {
             && sub(self.mood, other.mood)
             && sub(self.voice, other.voice)
             && sub(self.possessive, other.possessive)
+            && sub(self.degree, other.degree)
             && sub(self.clitic, other.clitic)
             && sub(Some(self.polarity), Some(other.polarity))
     }
@@ -860,6 +888,7 @@ impl Tags {
             && hit(self.mood, want.mood)
             && hit(self.voice, want.voice)
             && hit(self.possessive, want.possessive)
+            && hit(self.degree, want.degree)
     }
 }
 

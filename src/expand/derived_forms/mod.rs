@@ -7,7 +7,7 @@
 
 use crate::kotus::{EmbeddedLemma, Inflection};
 use crate::spec::Catalogues;
-use crate::tags::{Case, Confidence, Number, PartOfSpeech, Tags};
+use crate::tags::{Case, Confidence, Degree, Number, PartOfSpeech, Tags};
 
 use super::degrees;
 use super::lexicon_index::LexiconIndex;
@@ -992,9 +992,14 @@ pub(super) fn degree_forms(
     // not match. The superlative's `-in` -> `-imm-` is the class 36
     // model's own, so it needs no gradation flag.
     let comparative_gradation = crate::kotus::Gradation::from_letter('H');
-    for (nominal, class, gradation) in [
-        (comparative.as_deref(), 16u16, comparative_gradation),
-        (superlative.as_deref(), 36u16, None),
+    for (nominal, class, gradation, degree) in [
+        (
+            comparative.as_deref(),
+            16u16,
+            comparative_gradation,
+            Degree::Comparative,
+        ),
+        (superlative.as_deref(), 36u16, None, Degree::Superlative),
     ] {
         let Some(nominal) = nominal else {
             continue;
@@ -1005,7 +1010,7 @@ pub(super) fn degree_forms(
         // every other degree form: accepted, never suggested. The part of
         // speech is fixed so that `paha` inflected as a noun still derives
         // adjective degrees.
-        for form in inflect_in(
+        for mut form in inflect_in(
             nominal,
             Inflection { class, gradation },
             cat,
@@ -1013,17 +1018,21 @@ pub(super) fn degree_forms(
             PartOfSpeech::Adjective,
             true,
         ) {
+            for reading in &mut form.readings {
+                reading.degree = Some(degree);
+            }
             out.push(form.with(Confidence::Repaired));
         }
     }
     // Adverb degrees are curated rather than derived: `hiljaa` has no
     // positive paradigm to compare, but `hiljempaa` is its comparative.
-    for form in degrees::ADVERB_DEGREES.bases(lemma) {
+    for (position, form) in degrees::ADVERB_DEGREES.bases(lemma).enumerate() {
         if form.is_empty() {
             continue;
         }
         let tags = Tags {
             part_of_speech: Some(PartOfSpeech::Adverb),
+            degree: Degree::ALL.get(position).copied(),
             ..Default::default()
         };
         out.push(Generated::new(form.to_string(), tags).with(Confidence::Repaired));

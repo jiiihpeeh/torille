@@ -612,10 +612,16 @@ prose-corpus review.
 
 ### Morphology
 
-- [ ] **Adjective degree**
-  `Punaisempi autot ovat hienoja.` is silent because `Tags` has no degree;
-  `attribute_agreement` deliberately skips `expand::degree_base` matches.
-  Add a degree dimension only when a correction rule needs it.
+- [x] **Adjective degree** — landed.
+  `Punaisempi autot ovat hienoja.` now emits `attribute_agreement` on
+  `Punaisempi` (expected nominative plural). `Tags` gained
+  `degree: Option<Degree>` (`Comparative`/`Superlative`), the morphology codec
+  carries it, and `degree_forms` tags every generated degree reading.
+  `attribute_agreement` and `predicative_agreement` compare degree forms like
+  any adjective; an untagged degree surface is still skipped rather than
+  replaced with a positive. Degree forms are derived `Repaired` words, so the
+  diagnostic is detection-only: `Punaisemmat autot ovat hienoja.`,
+  `Punaisempi auto on hieno.` and `Talot ovat punaisempia.` are clean.
   Recorded decision: `PLAN_SYNTAX_CHECKER.md` §14 item 4.
 
 ## Recommended implementation order
@@ -977,3 +983,9 @@ intended/competing interpretation pair that fails.
   adds "Tarkista kielioppi ja tyyli" over the existing combined
   `check-grammar-style` pass and renders one ranked panel. Firefox and
   Chromium sources remain identical; both typecheck and extension tests pass.
+- 2026-11-17: added the adjective-degree dimension. `Tags.degree`
+  (`Comparative`/`Superlative`), the morphology codec and `degree_forms` now
+  carry it, and `attribute_agreement`/`predicative_agreement` compare degree
+  forms like ordinary adjectives. `Punaisempi autot ovat hienoja.` is now a
+  number-agreement error. Degree forms are derived `Repaired` words, so the
+  finding is diagnostic-only; the clean rows cover the agreeing degree forms.

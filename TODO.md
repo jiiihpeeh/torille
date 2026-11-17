@@ -2016,3 +2016,10 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   `ignore_rules`. The context menu adds "Tarkista kielioppi ja tyyli" over the
   existing combined wasm/background pass, with one ranked panel. Both browser
   extensions stay source-identical and pass typecheck and unit tests.
+
+- 2026-11-17: adjective degree landed. `Tags` gained
+  `degree: Option<Degree>` with `Comparative`/`Superlative`; the morphology
+  codec and `degree_forms` carry it, and attribute/predicative agreement now
+  compares degree forms. `Punaisempi autot ovat hienoja.` is an
+  `attribute_agreement` error. Degree forms are derived `Repaired` words, so
+  the diagnostic has no suggested rewrite; agreeing degree forms are clean.

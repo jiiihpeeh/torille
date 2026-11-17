@@ -195,6 +195,7 @@ diagnostic_tests!(
     possessive_third_person,
     possessive_missing,
     extra_comma_subject,
+    attribute_degree_number,
     relative_comma_pair,
     rection_elative,
     rection_illative,

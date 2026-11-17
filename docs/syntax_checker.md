@@ -181,6 +181,11 @@ class.
   punainen` and `Talo on punaisia` are caught; noun complements and participle
   complements are not, because their agreement/case behaviour needs a separate
   rule.
+- **Adjective degree is a tag, not a separate rule.** `Tags.degree` marks
+  comparative and superlative forms, and `attribute_agreement` /
+  `predicative_agreement` compare them like any adjective. Degree derivations
+  are `Repaired`, so `Punaisempi autot ...` is diagnostic-only: the checker
+  names the expected number but does not offer a `Repaired` rewrite.
 - **Compound-tense agreement covers the active past participle only.**
   `Me olemme lukenut.` gives `lukeneet`; `Minä olen lukeneet.` gives
   `lukenut`. Passive compound tenses (`Talo on rakennettu`,

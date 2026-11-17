@@ -11,7 +11,9 @@
 //! `Kaksi miestä tuli` are all correct.
 
 use crate::syntax::{RoleConfidence, SyntacticRole, SyntaxAnalysis, TokenSyntax};
-use crate::tags::{Case, Mood, Number, PartOfSpeech, Person, Polarity, Tags, Tense, Voice};
+use crate::tags::{
+    Case, Degree, Mood, Number, PartOfSpeech, Person, Polarity, Tags, Tense, Voice,
+};
 use crate::tokenise::Token;
 
 use super::correction;
@@ -314,7 +316,12 @@ fn check_attributes(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         let Some((attribute_case, attribute_number)) = attribute_shape(syntax) else {
             continue;
         };
-        if crate::expand::degree_base(&syntax.key).is_some() {
+        let Some(degree) = attribute_degree(syntax) else {
+            continue;
+        };
+        // A degree surface the morphology could not tag is left quiet: the
+        // correction helper must not replace a comparative with its positive.
+        if degree.is_none() && crate::expand::degree_base(&syntax.key).is_some() {
             continue;
         }
         // `Kaksi pientä lasta`: the adjective belongs to a cardinal numeral
@@ -348,6 +355,7 @@ fn check_attributes(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
             token,
             head_case,
             head_number,
+            degree,
             pos,
             crate::spec::Catalogues::embedded(),
         );
@@ -377,7 +385,8 @@ fn check_attributes(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
 /// The rule is number-only: `Talot ovat punaisia` (partitive plural) and
 /// `Talot ovat punaiset` (nominative plural) are both legitimate, so the case
 /// is not a correctness claim. Coordinated subjects, noun complements,
-/// participles, degree forms and existential clauses are skipped.
+/// participles and existential clauses are skipped; an adjective degree keeps
+/// its degree in the correction.
 fn check_complements(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
     let mut diagnostics = Vec::new();
     for clause in &analysis.clauses {
@@ -398,7 +407,12 @@ fn check_complements(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxD
         else {
             continue;
         };
-        if crate::expand::degree_base(&analysis.tokens[complement].key).is_some() {
+        let Some(degree) = attribute_degree(&analysis.tokens[complement]) else {
+            continue;
+        };
+        if degree.is_none()
+            && crate::expand::degree_base(&analysis.tokens[complement].key).is_some()
+        {
             continue;
         }
         // A coordinated subject phrase is collapsed to a plural controller by
@@ -422,6 +436,7 @@ fn check_complements(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxD
             &tokens[complement],
             target_case,
             subject.number,
+            degree,
             PartOfSpeech::Adjective,
             crate::spec::Catalogues::embedded(),
         )
@@ -505,6 +520,22 @@ fn adjective_shape(token: &TokenSyntax) -> Option<(Case, Number)> {
         }
     }
     shape
+}
+
+/// The degree every attribute reading agrees on.
+///
+/// `Some(None)` is the positive degree, `Some(Some(Comparative))` a comparative
+/// and so on; `None` means the readings disagree and the rule is skipped.
+fn attribute_degree(token: &TokenSyntax) -> Option<Option<Degree>> {
+    let mut seen: Vec<Option<Degree>> = Vec::new();
+    for reading in &token.readings {
+        if !is_attribute_pos(reading.part_of_speech) {
+            continue;
+        }
+        seen.push(reading.degree);
+    }
+    let first = *seen.first()?;
+    seen.iter().all(|degree| *degree == first).then_some(first)
 }
 
 fn attribute_shape(token: &TokenSyntax) -> Option<(Case, Number)> {
