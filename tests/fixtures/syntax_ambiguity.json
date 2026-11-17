@@ -449,6 +449,52 @@
         "topic_position": "initial"
       },
       "diagnostics": []
+    },
+    {
+      "id": "prenominal_attribute_is_not_the_subject",
+      "text": "Rinteellä tuli hirvittävä susi.",
+      "clauses": 1,
+      "subject": "susi",
+      "predicate": "tuli",
+      "roles": [
+        { "word": "hirvittävä", "role": "modifier" },
+        { "word": "susi", "role": "subject", "case": "nominative" }
+      ],
+      "forbidden_roles": [
+        { "word": "hirvittävä", "role": "subject" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "determiner_and_attribute_precede_the_subject",
+      "text": "Milloin tulee se kesy hirvi?",
+      "clauses": 1,
+      "subject": "hirvi",
+      "predicate": "tulee",
+      "roles": [
+        { "word": "se", "role": "modifier" },
+        { "word": "kesy", "role": "modifier" },
+        { "word": "hirvi", "role": "subject", "case": "nominative" }
+      ],
+      "forbidden_roles": [
+        { "word": "se", "role": "subject" },
+        { "word": "hirvi", "role": "object" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "postverbal_subject_agrees_with_its_verb",
+      "text": "Sitten auttoi kreivi komean ratsun.",
+      "clauses": 1,
+      "subject": "kreivi",
+      "predicate": "auttoi",
+      "roles": [
+        { "word": "kreivi", "role": "subject", "case": "nominative" }
+      ],
+      "forbidden_roles": [
+        { "word": "kreivi", "role": "object" }
+      ],
+      "diagnostics": []
     }
   ]
 }

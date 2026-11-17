@@ -405,6 +405,10 @@ pub(super) fn resolve_clause(
     // `joka päivä` may look like a nominative subject to the agreement rule
     // when the real subject is the dropped 1st/2nd-person pronoun.
     mark_frequency_determiners(&words, tokens, out);
+    // Before any role is chosen: an attribute that precedes its head must not
+    // become the subject or the object.
+    mark_prenominal_attributes(&words, predicate, tokens, out);
+    mark_direction_extent(&words, out);
 
     let passive = predicate_is_passive(predicate, out);
     // The negative auxiliary is the only thing that makes a clause negative.
@@ -680,9 +684,20 @@ pub(super) fn resolve_clause(
         // A participle after `olla` is the complement too: `Minun on mentävä`,
         // `Talo on rakennettu`. It has a verb reading and a case, not a noun
         // reading, so the nominal search above cannot see it.
+        //
+        // Two guards. Only `olla` takes a participle complement directly: a
+        // change verb's complement is the translative the nominal search
+        // already covers, so `Rinteellä tuli hirvittävä susi` keeps
+        // `hirvittävä` as the attribute of `susi` rather than making it the
+        // complement of `tuli`. And the token must still be unassigned, so an
+        // attribute an earlier pass already placed cannot be re-purposed.
         let complement = complement.or_else(|| {
+            if !is_olla {
+                return None;
+            }
             after.iter().copied().find(|&index| {
                 Some(index) != subject
+                    && out[index].role == SyntacticRole::Unknown
                     && out[index].readings.iter().any(|reading| {
                         reading.part_of_speech == Some(PartOfSpeech::Verb)
                             && reading.case.is_some()
@@ -1077,6 +1092,141 @@ fn mark_modifiers(
     }
 }
 
+/// Direction adverbs that take an extent nominal before them.
+///
+/// `vuorta ylöspäin`, `merta pitkin`: the partitive nominal names the extent
+/// the adverb measures, so it is the adverb's complement, not the verb's
+/// argument. Without this a rection frame for the verb rewrites it
+/// (`tulla` + illative offered `vuorta` -> `vuoreen`).
+///
+/// The set is closed and limited to the unambiguous `-päin` direction
+/// adverbs. `päin` itself is deliberately absent: with a noun or pronoun
+/// (`kotiin päin`, `meillä päin`) the two words stay apart and `päin` is not
+/// a postposition (see `AGENTS.md`).
+const DIRECTION_EXTENT_ADVERBS: &[&str] = &["ylöspäin", "alaspäin", "eteenpäin", "taaksepäin"];
+
+fn mark_direction_extent(words: &[usize], out: &mut [TokenSyntax]) {
+    for (position, &index) in words.iter().enumerate() {
+        if !DIRECTION_EXTENT_ADVERBS.contains(&out[index].key.as_str()) || position == 0 {
+            continue;
+        }
+        let extent = words[position - 1];
+        if out[extent].role == SyntacticRole::Unknown
+            && nominal_has_case(&out[extent], &[Case::Partitive])
+        {
+            out[extent].role = SyntacticRole::Complement;
+            out[extent].confidence = RoleConfidence::Likely;
+            out[extent].case = Some(Case::Partitive);
+            out[extent].head = Some(index);
+        }
+    }
+}
+
+/// Mark a prenominal attribute so the subject and object passes skip it.
+///
+/// `Rinteellä tuli hirvittävä susi` has `susi` as its subject; without this
+/// the subject pass takes `hirvittävä`, because it is the first nominative
+/// after the predicate, and every later rule inherits the mistake. The same
+/// holds for a demonstrative determiner (`se kesy hirvi`) and for an agreeing
+/// participle.
+///
+/// The cue is deliberately narrow: an adjective, ordinal, participle or
+/// demonstrative with an Unknown role, immediately followed (no punctuation
+/// in between, and not by the predicate) by a noun or ordinal in the
+/// nominative. A nominalised adjective with no head (`Nuoret tulivat`) is not
+/// touched, and a cardinal numeral is left to [`mark_numeral_complement`].
+fn mark_prenominal_attributes(
+    words: &[usize],
+    predicate: usize,
+    tokens: &[Token],
+    out: &mut [TokenSyntax],
+) {
+    // Adjectives and participles first: the head they name is the noun right
+    // after them. `se kesy hirvi` needs both passes: `kesy` attaches to
+    // `hirvi`, and then `se` can look past the attribute it now knows about.
+    for (position, &index) in words.iter().enumerate() {
+        if out[index].role != SyntacticRole::Unknown
+            || is_clause_marker(index, tokens, out)
+            || !is_attribute_capable(index, out)
+            || is_demonstrative(index, out)
+        {
+            continue;
+        }
+        let Some(&next) = words.get(position + 1) else {
+            continue;
+        };
+        if next == predicate || !is_noun_head(next, out) {
+            continue;
+        }
+        if !nominal_has_case(&out[index], &[Case::Nominative])
+            || !nominal_has_case(&out[next], &[Case::Nominative])
+        {
+            continue;
+        }
+        mark_as_modifier(index, next, out);
+    }
+    // Then the demonstrative determiners, which may have one or more
+    // attributes between them and their head (`se kesy hirvi`).
+    for (position, &index) in words.iter().enumerate() {
+        if out[index].role != SyntacticRole::Unknown
+            || is_clause_marker(index, tokens, out)
+            || !is_demonstrative(index, out)
+            || !nominal_has_case(&out[index], &[Case::Nominative])
+        {
+            continue;
+        }
+        let head = words[position + 1..]
+            .iter()
+            .take_while(|&&word| word != predicate)
+            .find(|&&word| {
+                out[word].role != SyntacticRole::Modifier && is_noun_head(word, out)
+            });
+        let Some(head) = head.copied() else {
+            continue;
+        };
+        if !nominal_has_case(&out[head], &[Case::Nominative]) {
+            continue;
+        }
+        mark_as_modifier(index, head, out);
+    }
+}
+
+fn mark_as_modifier(index: usize, head: usize, out: &mut [TokenSyntax]) {
+    out[index].role = SyntacticRole::Modifier;
+    out[index].confidence = RoleConfidence::Weak;
+    out[index].head = Some(head);
+}
+
+/// The demonstratives that can stand as a determiner before a noun.
+fn is_demonstrative(index: usize, out: &[TokenSyntax]) -> bool {
+    matches!(
+        out[index].key.as_str(),
+        "se" | "tämä" | "tuo" | "ne" | "nämä" | "nuo" | "sama" | "samat"
+    )
+}
+
+/// The parts of speech (and the closed determiner set) that can be a
+/// prenominal attribute.
+fn is_attribute_capable(index: usize, out: &[TokenSyntax]) -> bool {
+    is_participle_attribute(index, out)
+        || out[index].readings.iter().any(|reading| {
+            matches!(
+                reading.part_of_speech,
+                Some(PartOfSpeech::Adjective | PartOfSpeech::Ordinal)
+            )
+        })
+}
+
+/// A head that a prenominal attribute can modify: a noun or an ordinal.
+fn is_noun_head(index: usize, out: &[TokenSyntax]) -> bool {
+    out[index].readings.iter().any(|reading| {
+        matches!(
+            reading.part_of_speech,
+            Some(PartOfSpeech::Noun | PartOfSpeech::Ordinal)
+        )
+    })
+}
+
 /// Mark the counted noun of a numeral phrase: `kaksi lasta`, `kaksi miestä`.
 ///
 /// The numeral is the head (subject or object); the following partitive is
@@ -1395,6 +1545,10 @@ fn is_locative_adverbial(index: usize, tokens: &[Token], out: &[TokenSyntax]) ->
 
 const ABLATIVE_COMPLEMENT: &[Case] = &[Case::Ablative];
 const TRANSLATIVE_COMPLEMENT: &[Case] = &[Case::Translative];
+/// Verbs of remaining: `Kenoveeva jäi tunnottomana`, `Hän pysyi vaiti`. The
+/// essive/translative nominal is the predicate's complement, so a rection
+/// frame for the verb's locative sense must not rewrite it.
+const ESSIVE_COMPLEMENT: &[Case] = &[Case::Essive, Case::Translative];
 
 /// The complement case of a small, productive verb family.
 ///
@@ -1409,6 +1563,7 @@ fn predicate_complement_cases(lemma: &str) -> Option<&'static [Case]> {
         "maalata" | "värittää" | "kutsua" | "nimittää" | "valita" | "tehdä" => {
             Some(TRANSLATIVE_COMPLEMENT)
         }
+        "jäädä" | "pysyä" | "viipyä" | "säilyä" => Some(ESSIVE_COMPLEMENT),
         _ => None,
     }
 }

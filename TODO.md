@@ -2071,3 +2071,11 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   `modifier_is_known` is memoised. Measured on `page-2000`: cold single-thread
   2,016 → 1,490 ms, fresh-cache style ~1,410 → ~1,140 ms, 4 native workers
   753 → 537 ms, warm unchanged, diagnostics identical.
+
+- 2026-11-18: grammar precision. Rection now targets a genuine argument (a
+  subject that agrees with its finite predicate is not one), prenominal
+  attributes and demonstrative determiners are marked before the subject and
+  object passes, a postposed attribute is not an argument, the participle
+  complement belongs to `olla` only, and `jäädä`/`pysyä` take an
+  essive/translative complement. On the committed prose page that removes 7
+  adjudicated false positives (54 → 47 diagnostics) with none added.

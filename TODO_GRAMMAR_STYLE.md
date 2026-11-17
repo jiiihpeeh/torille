@@ -820,10 +820,31 @@ analysis refinements”.
   auxiliary even when the class engine gives it no negative-polarity reading
   (`eivät uupuneet`), removing a false positive the new split exposed.
 - [ ] **Remaining role/clause hardening.** `sillä` splitting and the
-  negative-past participle are fixed. Still open: predicate selection when a
-  clause has more than one finite candidate, the negated-clause object rule
-  beyond the reviewed `sillä` rows, and the adverb/nominal interaction. These
-  are grammar-checker bugs independent of M0. Re-run `ud_m0_eval` and
+  negative-past participle are fixed, and so is the argument-selection half of
+  the role pass (2026-11-18, below): a subject that agrees with its verb, a
+  prenominal attribute, a postposed attribute and a participle complement are
+  no longer rewritten by a rection frame. On `page-2000` that removes 7 false
+  positives (54 → 47 diagnostics).
+  Still open, in order of measured frequency:
+  - **predicate selection with two finite candidates in one clause.** A merged
+    subordinate clause whose comma falls before the subject rather than before
+    the verb (`kun häneltä kysyttiin, hän vastasi`) keeps both verbs in one
+    clause, so the first one becomes the predicate and the main clause's
+    subject is read as its argument. Quotative inversion (`sanoi hän`,
+    `kysyi hän`, `valitti hän`) is the same shape; it accounts for three more
+    `verb_rection`/`object_case` rows.
+  - **an infinitive clause's nominative subject.** `alkoi tulla ... puute` and
+    `Haluan mennä koulu` cannot be told apart without the governing finite
+    verb: the nominative is the infinitive's subject in the first and the
+    rection error in the second. Needs the governing verb's agreement, not the
+    infinitive's.
+  - **quotative and absolute constructions.** `lapsi sylissä`, `vuorta
+    ylöspäin` outside the closed direction set.
+  - **the negated-clause object rule** beyond the reviewed `sillä` rows.
+  - **the adverb/nominal interaction** (the `attribute_agreement` rows where a
+    pronoun or oblique nominal is taken as the attribute of the following
+    word).
+  These are grammar-checker bugs independent of M0. Re-run `ud_m0_eval` and
   `m0_prose_eval` after each fix; a larger model remains blocked meanwhile.
 
 ## Deliberate boundaries
@@ -1075,3 +1096,17 @@ intended/competing interpretation pair that fails.
   ~1,140 ms, 4 native workers 753 → 537 ms, warm unchanged. The attribution
   experiment (verb stem map, cheap fallback, both) is recorded in
   `PLAN_GRAMMAR_STYLE_PERF.md`.
+- 2026-11-18: role/argument hardening. The rection rule now requires a
+  *genuine* argument: a `Subject`-role token is skipped when the finite
+  predicate agrees with it (person and number for a pronoun, 3rd person and
+  number for a nominal), when the clause is existential, or when it has
+  coordinated subjects. A partitive adjective after a nominal is that
+  nominal's attribute (`jotain erinomaista`). The role pass marks prenominal
+  attributes and demonstrative determiners before subject selection (so
+  `Rinteellä tuli hirvittävä susi` names `susi`, and `se kesy hirvi` names
+  `hirvi`), marks a partitive extent before the `-päin` direction adverbs as
+  their complement, and restricts the participle complement to `olla`. `jäädä`
+  and `pysyä` joined the essive/translative complement table. Measured on
+  `page-2000`: 54 → 47 diagnostics, all seven removed rows adjudicated as
+  false positives, none added; the clean corpus, the ambiguity fixture and
+  `m0_prose_eval` (66 rows, 0 diagnostics) stay green.

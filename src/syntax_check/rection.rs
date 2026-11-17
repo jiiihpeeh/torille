@@ -7,7 +7,7 @@
 //! priority order.
 
 use crate::syntax::{SyntacticRole, SyntaxAnalysis};
-use crate::tags::Case;
+use crate::tags::{Case, Person};
 use crate::tokenise::Token;
 
 use super::analysis::{
@@ -148,21 +148,49 @@ fn correction_bases(syntax: &crate::syntax::TokenSyntax) -> Vec<(&str, crate::ta
     out
 }
 
+/// Is this adjective a postposed attribute of the nominal before it?
+///
+/// Finnish allows the quantifier construction `jotain erinomaista`, where the
+/// partitive adjective follows the indefinite pronoun it modifies. A governed
+/// argument is a nominal in its own right, so an adjective directly after a
+/// nominal is that nominal's attribute (or complement) and never the
+/// argument: `Lapsesta tulee varmaan jotain erinomaista` is not a rection
+/// error on `erinomaista`.
+fn is_postposed_attribute(
+    index: usize,
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+) -> bool {
+    use crate::tags::PartOfSpeech;
+
+    if !analysis.tokens[index]
+        .readings
+        .iter()
+        .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Adjective))
+    {
+        return false;
+    }
+    let previous = (0..index).rev().find(|&word| tokens[word].is_word());
+    previous.is_some_and(|previous| nominal_or_numeral_pos(&analysis.tokens[previous]).is_some())
+}
+
 /// Is this `Subject`-role token really the clause subject rather than a
 /// mislabelled governed argument?
 ///
-/// Three cues say yes:
+/// The test is agreement, not the role alone. A role the pass assigned from a
+/// nominative fallback is not evidence that the word is the subject, and a
+/// rection rewrite of a real subject is always a false positive.
 ///
-/// - the clause is existential, so its postverbal nominative/partitive is the
-///   subject (`Talossa asuu ihmisiä`) and the existential rule owns it;
-/// - the clause has more than one subject role, which means a coordinated
-///   subject (`Naapurissa asuvat Liisa ja Pekka`);
-/// - the token is a personal pronoun that agrees in person and number with the
-///   finite predicate (`Tuleeko hän?`).
-///
-/// Everything else stays a candidate. `Menen koulu` and `Pidän sinä` are
-/// rection errors on a nominative the role pass had no other slot for, and a
-/// personal pronoun that cannot agree is likewise not that verb's subject.
+/// - an existential's postverbal nominative/partitive is its subject even
+///   though the verb does not agree (`Pöydällä on kirjat`);
+/// - more than one subject role means coordinated subjects, where the verb is
+///   plural and the clause names only the first (`Naapurissa asuvat Liisa ja
+///   Pekka`);
+/// - a personal pronoun must agree in person and number (`Tuleeko hän?`);
+/// - a nominal needs a 3rd-person verb and the same number. `Sitten auttoi
+///   kreivi ...` and `alkoi tulla ... puute` are subjects this removes, while
+///   `Menen koulu` is not: a 1st-person verb cannot take a noun subject, so
+///   the nominative there is the rection error the rule exists to catch.
 fn is_genuine_subject(
     clause: &crate::syntax::Clause,
     index: usize,
@@ -182,13 +210,22 @@ fn is_genuine_subject(
     if subjects > 1 {
         return true;
     }
-    let Some((person, number)) = pronoun_person_number(&analysis.tokens[index].key) else {
-        return false;
-    };
     let Some(reading) = finite_reading(&analysis.tokens[predicate]) else {
         return false;
     };
-    reading.person == Some(person) && reading.number == Some(number)
+    if let Some((person, number)) = pronoun_person_number(&analysis.tokens[index].key) {
+        return reading.person == Some(person) && reading.number == Some(number);
+    }
+    // The agreed number of the surface, from the case the role licensed. An
+    // ambiguous number stays a candidate: the rule offers a rewrite, so the
+    // ambiguous direction is silence.
+    let number = analysis.tokens[index]
+        .case
+        .and_then(|case| candidate_number(&analysis.tokens[index], case));
+    match (reading.person, number) {
+        (Some(Person::Third), Some(number)) => reading.number == Some(number),
+        _ => false,
+    }
 }
 
 /// Verbs whose table frame is aspectual rather than lexical.
@@ -240,6 +277,9 @@ fn argument(
         if syntax.role == SyntacticRole::Subject
             && is_genuine_subject(clause, index, predicate, analysis)
         {
+            continue;
+        }
+        if is_postposed_attribute(index, tokens, analysis) {
             continue;
         }
         let Some(case) = nominal_case(syntax) else {

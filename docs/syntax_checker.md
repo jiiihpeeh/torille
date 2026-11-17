@@ -224,6 +224,23 @@ class.
   frame. A genitive after a partitive-governing preposition is left quiet
   because it may modify a following nominal or participle
   (`ilman Jumalan tahtomatta`), and a multi-case adposition stays quiet.
+- **Rection targets a genuine argument, not a subject or an attribute.** A
+  `Subject`-role token is treated as the verb's argument only when it cannot be
+  the subject: the clause is existential, it has coordinated subjects, or the
+  finite predicate does not agree with it (person and number for a pronoun,
+  3rd person and number for a nominal). An adjective directly after a nominal
+  is that nominal's attribute (`jotain erinomaista`), and a participle
+  complement belongs to `olla` only. So `Sitten auttoi kreivi komean ratsun.`,
+  `Rinteellä tuli hirvittävä susi.` and `Minun on täytynyt pitää
+  perunkirjoitus.` stay quiet, while `Menen koulu.`, `Pidän sinä.` and
+  `Luotan sinä.` still fire: a 1st-person verb cannot take a noun or a
+  2nd-person pronoun as its subject.
+- **Attributes are placed before roles.** An adjective, participle or
+  demonstrative determiner immediately before a nominative noun is that
+  noun's attribute (`Milloin tulee se kesy hirvi?` names `hirvi` as the
+  subject, not `se` or `kesy`). A nominalised adjective with no head (`Nuoret
+  tulivat.`) is left alone, and a cardinal numeral is left to the numeral
+  rule.
 - **Existential subject case detects, but does not choose the repair.** A
   sentence-final genitive common noun after an existential `on` is an error
   (`Pöydällä on kirjan.`). The engine offers both licensed forms
