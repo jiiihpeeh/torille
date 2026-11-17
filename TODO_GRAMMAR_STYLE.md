@@ -502,12 +502,19 @@ prose-corpus review.
   guard also removes the old `Kaksi pientä lasta` attribute false positive.
   Area: `src/syntax_check/numeral.rs`, `src/syntax_check/agreement.rs`.
 
-- [ ] **Adposition case government**
-  `Pöytä alla on kissa.` (should be `Pöydän alla`) is silent. Add a small
-  `data/adposition_cases.csv` and use the reserved `CaseSelection` kind.
-  Do not infer the case from the surface; share only the case-selection
-  infrastructure with numeral government, not the linguistic assumptions.
-  Area: `src/syntax_check/`, `src/expand/`, `data/`.
+- [x] **Adposition case government** — landed.
+  `Pöytä alla on kissa.` now emits `case_selection` on `Pöytä` with
+  `Pöydän`; `Lähdin ilman raha.` does the same with `rahaa`. The table is
+  `data/adposition_cases.csv` (`adposition,case,example`), embedded as
+  `maps/adposition_cases.bin.gz`; the rule does not infer a case from the
+  surface. `Pöydän alla on kissa.`, `Lähdin ilman rahaa.`,
+  `Ennen minua hän lähti.`, `Tien varrella kasvoi koivuja.`,
+  `Lain mukaan se on sallittua.` and the standalone adverb `Kissa on alla.`
+  are clean. A genitive after a partitive-governing preposition is left quiet
+  because it may modify a following participle (`ilman Jumalan tahtomatta`);
+  that prose false positive was found during the corpus review and removed.
+  Area: `src/syntax_check/adposition.rs`, `src/expand/adposition_cases.rs`,
+  `data/adposition_cases.csv`, `build.rs`, `build/map_builders/front_coded.rs`.
 
 - [ ] **Existential subject case**
   `Pöydällä on kirjan.` is silent. An existential's subject is nominative or
@@ -808,3 +815,20 @@ intended/competing interpretation pair that fails.
   connegative rule now accepts the negative past/perfect participle
   (`eivät uupuneet`) even when the class engine omits the negative-polarity
   reading, removing the false positive the split exposed.
+- 2026-11-17: landed the four remaining P0-C prose false positives. Class 101
+  tags `me`/`te`/`he` plural; a personal pronoun heads its apposition; `ettei`
+  opens a clause; `kuin` is a comparison marker; unknown capitalized names get
+  a role-only subject; relative clauses do not inherit the main subject;
+  postpositions and temporal essives are adverbials. The landing also re-reads
+  a demoted weak predicate from its non-verb readings and makes the
+  negative-object rule skip the clause subject. All four rows moved to
+  `clean`; the prose fixture is 66 rows / 1,021 words with 0 known false
+  positives and 0 known errors.
+- 2026-11-17: landed adposition case government. Added
+  `data/adposition_cases.csv`, its build emitter and embedded map, and
+  `src/syntax_check/adposition.rs`. `Pöytä alla` now offers `Pöydän` and
+  `ilman raha` offers `rahaa`; the standalone adverb (`Kissa on alla`) and a
+  genitive modifier after a partitive-governing preposition
+  (`ilman Jumalan tahtomatta`) stay quiet. The full page-2000 sweep found
+  exactly that one false positive before the guard; the adjudicated prose and
+  clean syntax corpora are unchanged.

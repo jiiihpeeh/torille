@@ -9,6 +9,7 @@
 //! [`DiagnosticKind`] are reserved for the later phases in
 //! `PLAN_SYNTAX_CHECKER.md`.
 
+mod adposition;
 mod agreement;
 mod analysis;
 mod arguments;
@@ -100,6 +101,7 @@ pub(crate) fn check_analysis_without_quote(
     let mut diagnostics = agreement::check(tokens, analysis);
     diagnostics.extend(connegative::check(tokens, analysis));
     diagnostics.extend(numeral::check(tokens, analysis));
+    diagnostics.extend(adposition::check(tokens, analysis));
     diagnostics.extend(punctuation::check_without_quote_with_contexts(
         tokens, analysis, contexts,
     ));

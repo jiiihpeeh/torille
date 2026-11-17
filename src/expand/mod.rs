@@ -854,6 +854,7 @@ pub mod prefix_index;
 pub mod proper_names;
 pub(crate) mod static_table;
 pub mod stem_index;
+pub mod adposition_cases;
 pub mod verb_arguments;
 pub mod verb_rection;
 

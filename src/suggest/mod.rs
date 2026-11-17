@@ -50,7 +50,7 @@ use crate::expand::{BasesReport, ClassPrior, find_bases_for_check, rank_lemma_ba
 use crate::kotus::normalize_apostrophe;
 
 mod candidates;
-mod casing;
+pub(crate) mod casing;
 mod detail;
 mod known;
 mod levenshtein;

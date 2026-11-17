@@ -1927,3 +1927,12 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   four rows moved to `clean`: **1,021 clean words, 0 known false positives, 0
   known errors (0.0 per 1,000)**; `cargo test --release --test syntax_prose`
   passes.
+
+- 2026-11-17: adposition case government landed. `data/adposition_cases.csv`
+  (adposition, case, example) is embedded as `maps/adposition_cases.bin.gz`;
+  `src/syntax_check/adposition.rs` emits `case_selection` for `Pöytä alla`
+  (`Pöydän`) and `ilman raha` (`rahaa`). The standalone adverb `Kissa on alla`
+  and genitive modifiers after a partitive-governing preposition
+  (`ilman Jumalan tahtomatta`) stay quiet. The page-2000 sweep found that one
+  false positive before the guard; the adjudicated prose and clean syntax
+  corpora stay at baseline.

@@ -1,0 +1,57 @@
+# Curated adposition case government. One row is `adposition,case,example`.
+# Keep the table small and review every row against the prose corpus; an
+# adposition's case is lexical, so it cannot be inferred from the surface.
+adposition,case,example
+alla,genitive,pöydän alla
+alta,genitive,pöydän alta
+alle,genitive,pöydän alle
+edessä,genitive,pöydän edessä
+edestä,genitive,pöydän edestä
+eteen,genitive,pöydän eteen
+jälkeen,genitive,illallisen jälkeen
+kanssa,genitive,minun kanssa
+luona,genitive,minun luona
+luota,genitive,minun luota
+luo,genitive,minun luo
+lähellä,genitive,talon lähellä
+läheltä,genitive,talon läheltä
+lähelle,genitive,talon lähelle
+päällä,genitive,pöydän päällä
+päältä,genitive,pöydän päältä
+päälle,genitive,pöydän päälle
+sisällä,genitive,talon sisällä
+sisältä,genitive,talon sisältä
+sisälle,genitive,talon sisälle
+takana,genitive,talon takana
+takaa,genitive,talon takaa
+taakse,genitive,talon taakse
+ulkona,genitive,talon ulkona
+ulkoa,genitive,talon ulkoa
+vieressä,genitive,talon vieressä
+vierestä,genitive,talon vierestä
+viereen,genitive,talon viereen
+yllä,genitive,pöydän yllä
+yltä,genitive,pöydän yltä
+ylle,genitive,pöydän ylle
+aikana,genitive,illallisen aikana
+vuoksi,genitive,sinun vuoksi
+tähden,genitive,sinun tähden
+takia,genitive,sinun takia
+puolesta,genitive,minun puolesta
+sijaan,genitive,sen sijaan
+mukaan,genitive,lain mukaan
+kohdalla,genitive,talon kohdalla
+kohdalta,genitive,talon kohdalta
+kohdalle,genitive,talon kohdalle
+varrella,genitive,tien varrella
+varrelta,genitive,tien varrelta
+varrelle,genitive,tien varrelle
+ohessa,genitive,talon ohessa
+ohesta,genitive,talon ohesta
+oheen,genitive,talon oheen
+ilman,partitive,ilman rahaa
+ennen,partitive,ennen minua
+kohti,partitive,kohti taloa
+pitkin,partitive,pitkin metsää
+varten,partitive,sinua varten
+paitsi,partitive,paitsi sinua

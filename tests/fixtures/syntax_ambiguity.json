@@ -248,6 +248,41 @@
         { "word": "lasta", "role": "subject" }
       ],
       "diagnostics": []
+    },
+    {
+      "id": "adposition_postposition_genitive",
+      "text": "Pöydän alla on kissa.",
+      "clauses": 1,
+      "subject": "kissa",
+      "predicate": "on",
+      "roles": [
+        { "word": "Pöydän", "role": "modifier", "case": "genitive" },
+        { "word": "alla", "role": "adverbial" }
+      ],
+      "forbidden_roles": [
+        { "word": "Pöydän", "role": "subject" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "adposition_adverb_no_complement",
+      "text": "Kissa on alla.",
+      "clauses": 1,
+      "subject": "kissa",
+      "predicate": "on",
+      "roles": [
+        { "word": "alla", "role": "adverbial" }
+      ],
+      "forbidden_roles": [
+        { "word": "alla", "role": "complement" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "adposition_nominative_error",
+      "text": "Pöytä alla on kissa.",
+      "clauses": 1,
+      "diagnostics": ["case_selection"]
     }
   ]
 }

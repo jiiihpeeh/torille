@@ -33,7 +33,7 @@ the checker only when the user presses the grammar button.
 | `connegative` | the main verb after a negative auxiliary is in the connegative form | `Error` |
 | `attribute_agreement` | attributive adjective/demonstrative agrees with its head | `Error` for number, `Warning` for case |
 | `predicative_agreement` | a predicative adjective agrees with its subject in number | `Error` for a clear number mismatch, `Warning` when a role is weak |
-| `case_selection` | a cardinal numeral above one governs the partitive singular | `Error` for a clear complement, `Warning` when a role is weak |
+| `case_selection` | a cardinal numeral governs the partitive singular, or a curated adposition governs a non-matching case | `Error` for a clear complement, `Warning` when a role is weak |
 | `verb_rection` | curated valency frame requires a case the argument lacks | `Error` with a likely predicate, otherwise `Warning` |
 | `object_case` | negative clause requires a partitive object; aspect cues suggest partitive/total | `Error` for negation, `Suggestion` for aspect |
 | `missing_argument` | an obligatory slot from `data/verb_arguments.csv` is absent | `Warning` |
@@ -149,11 +149,14 @@ and the pool are in
 |---|---|
 | `data/verb_rection.csv` | curated `lemma,case,frame,priority,note` valency frames |
 | `data/verb_arguments.csv` | curated `lemma,slot,case,requirement,note` argument-completeness frames |
+| `data/adposition_cases.csv` | curated `adposition,case,example` governed-case rows |
 | `maps/verb_rection.bin.gz` | `(verb lemma → governed cases)` |
 | `maps/verb_arguments.bin.gz` | `(verb lemma → argument frames)` |
+| `maps/adposition_cases.bin.gz` | `(adposition → governed cases)` |
 
-Both tables are small and curated. Do not infer a valency frame or an
-obligatory argument from a suffix or a dictionary class.
+These tables are small and curated. Do not infer a valency frame, an
+obligatory argument or an adposition's case from a suffix or a dictionary
+class.
 
 ## Known limitations
 
@@ -171,6 +174,13 @@ obligatory argument from a suffix or a dictionary class.
   or a partitive plural is flagged; a non-nominative, non-partitive complement
   (`kaksi kolmesta`) is left alone. `yksi`, plural numerals (`kahdet`) and
   non-cardinal numerals (`toinen`) are skipped.
+- **Adposition government is a curated list.** Only rows in
+  `data/adposition_cases.csv` are checked; an adposition's case is lexical, so
+  it is never inferred from the surface. The rule fires on a nominative or
+  partitive against a genitive frame and on a nominative against a partitive
+  frame. A genitive after a partitive-governing preposition is left quiet
+  because it may modify a following nominal or participle
+  (`ilman Jumalan tahtomatta`), and a multi-case adposition stays quiet.
 - **Ambiguous partitive plurals stay quiet.** A plural completive suggestion
   is offered when every noun base names the same total form (`autoja →
   autot`); a homonymous surface such as `kirjoja` (`kirja`/`kirjo`) stays

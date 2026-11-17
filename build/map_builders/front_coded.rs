@@ -375,6 +375,53 @@ pub(crate) fn emit_verb_rection(csv_path: &Path, blob_path: &Path) {
     write_front_coded_map(blob_path, &entries);
 }
 
+/// Emit `adposition -> case` from `data/adposition_cases.csv`.
+///
+/// One row is `adposition,case,example`; the example is human documentation
+/// and is not embedded. The table is a closed lexical list: an adposition's
+/// governed case cannot be inferred from the surface.
+pub(crate) fn emit_adposition_cases(csv_path: &Path, blob_path: &Path) {
+    if !csv_path.exists() && blob_path.exists() {
+        eprintln!(
+            "build.rs: {} missing but {} present -- reusing",
+            csv_path.display(),
+            blob_path.display(),
+        );
+        return;
+    }
+    let csv = fs::read_to_string(csv_path).unwrap_or_else(|e| {
+        panic!(
+            "build.rs: could not read {}: {e}",
+            csv_path.display(),
+        )
+    });
+    let mut entries: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for line in csv.lines() {
+        let line = line.trim();
+        if line.is_empty() || line.starts_with('#') || line.starts_with("adposition,") {
+            continue;
+        }
+        let mut fields = line.splitn(3, ',');
+        let Some(adposition) = fields.next().map(str::trim).filter(|s| !s.is_empty()) else {
+            continue;
+        };
+        let Some(case) = fields.next().map(str::trim).filter(|s| !s.is_empty()) else {
+            continue;
+        };
+        let values = entries.entry(adposition.to_string()).or_default();
+        if !values.iter().any(|seen| seen == case) {
+            values.push(case.to_string());
+        }
+    }
+    eprintln!(
+        "build.rs: {}: {} adpositions",
+        csv_path.display(),
+        entries.len(),
+    );
+    let entries: Vec<(String, Vec<String>)> = entries.into_iter().collect();
+    write_front_coded_map(blob_path, &entries);
+}
+
 /// Emit `lemma -> argument frames` from `data/verb_arguments.csv`.
 ///
 /// One row is `lemma,slot,case,requirement,note`; the value is encoded as

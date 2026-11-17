@@ -179,6 +179,8 @@ diagnostic_tests!(
     subordinate_comma_after_main,
     subordinate_comma_initial,
     fused_negative_subordinator_comma,
+    adposition_case_postposition,
+    adposition_case_preposition,
     relative_comma_pair,
     rection_elative,
     rection_illative,

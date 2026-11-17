@@ -683,6 +683,32 @@
           "corrections": [","]
         }
       ]
+    },
+    {
+      "id": "adposition_case_postposition",
+      "text": "Pöytä alla on kissa.",
+      "diagnostics": [
+        {
+          "kind": "case_selection",
+          "severity": "error",
+          "start": 0,
+          "end": 7,
+          "corrections": ["Pöydän"]
+        }
+      ]
+    },
+    {
+      "id": "adposition_case_preposition",
+      "text": "Lähdin ilman raha.",
+      "diagnostics": [
+        {
+          "kind": "case_selection",
+          "severity": "error",
+          "start": 14,
+          "end": 18,
+          "corrections": ["rahaa"]
+        }
+      ]
     }
   ],
   "clean": [
@@ -851,6 +877,11 @@
     "Illallisen jälkeen lähdimme.",
     "Koko päivänä en maistanut mitään.",
     "Pöydän alla on kissa.",
+    "Kissa on alla.",
+    "Lähdin ilman rahaa.",
+    "Ennen minua hän lähti.",
+    "Tien varrella kasvoi koivuja.",
+    "Lain mukaan se on sallittua.",
     "Te kaikki tiedätte.",
     "Me suuremmat emme istu.",
     "Minä yksin tulen.",

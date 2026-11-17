@@ -45,8 +45,9 @@ use csv_builders::string_map::{
     emit_style_table, write_style_phrase_first,
 };
 use map_builders::front_coded::{
-    emit_empty_set, emit_front_coded_set, emit_proper_name_cases, emit_proper_name_lemmas,
-    emit_proper_names, emit_stem_map, emit_verb_arguments, emit_verb_rection,
+    emit_adposition_cases, emit_empty_set, emit_front_coded_set, emit_proper_name_cases,
+    emit_proper_name_lemmas, emit_proper_names, emit_stem_map, emit_verb_arguments,
+    emit_verb_rection,
 };
 
 #[path = "src/rejected.rs"]
@@ -185,6 +186,12 @@ fn main() {
     println!("cargo:rerun-if-changed={}", arguments_csv.display());
     emit_map(&out_dir, &precomputed, "verb_arguments.bin", |raw| {
         emit_verb_arguments(&arguments_csv, raw)
+    });
+
+    let adposition_csv = Path::new(&manifest).join("data/adposition_cases.csv");
+    println!("cargo:rerun-if-changed={}", adposition_csv.display());
+    emit_map(&out_dir, &precomputed, "adposition_cases.bin", |raw| {
+        emit_adposition_cases(&adposition_csv, raw)
     });
 
     // Optional style layer: curated phrase and word tables, keyed by the
