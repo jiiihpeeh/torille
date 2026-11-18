@@ -425,6 +425,19 @@
       ]
     },
     {
+      "id": "subordinate_comma_etta",
+      "text": "Luulen että hän tulee.",
+      "diagnostics": [
+        {
+          "kind": "comma_missing",
+          "severity": "error",
+          "start": 6,
+          "end": 6,
+          "corrections": [","]
+        }
+      ]
+    },
+    {
       "id": "relative_comma_pair",
       "text": "Koira, joka nukkuu sohvalla on minun.",
       "diagnostics": [
@@ -1197,6 +1210,8 @@
     "No minä kerron vaikka tästä.",
     "Suuremmat istumme tuoleilla.",
     "Taivaalla loisti lukemattomat tähdet, kuu oli laskeutumaisillaan, tuuli\npuhalteli kylmästi.",
-    "Mies, jolla oli yllään lampaan nahka, lähti kotiin."
+    "Mies, jolla oli yllään lampaan nahka, lähti kotiin.",
+    "Luulen, että hän tulee.",
+    "Niin että hän tuli."
   ]
 }

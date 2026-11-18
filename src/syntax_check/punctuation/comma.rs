@@ -28,6 +28,13 @@ pub(super) fn clause_diagnostics(tokens: &[Token], analysis: &SyntaxAnalysis) ->
 /// apposition or a parenthetical.
 const PERSONAL_SUBJECTS: &[&str] = &["minä", "sinä", "hän", "me", "te", "he"];
 
+/// Fixed multiword conjunctions and adverbials whose halves take no comma.
+///
+/// `niin että` is the consecutive conjunction (`..., niin että kaikki
+/// sanoivat`); `sen kun` is the fixed adverbial “kept on …”. `siten, että` is
+/// deliberately absent: it does take the comma.
+const NO_COMMA_PAIRS: &[(&str, &str)] = &[("niin", "että"), ("sen", "kun")];
+
 /// `Minä, menen kotiin.`: a comma directly between a personal-pronoun subject
 /// and its finite predicate.
 ///
@@ -131,6 +138,7 @@ fn subordinate_comma(
             let boundary_needs_comma = previous_kind != ClauseKind::Subordinate
                 || clause_kind(clause, tokens, analysis) == ClauseKind::Subordinate;
             if boundary_needs_comma
+                && !is_no_comma_pair(tokens, left, right)
                 && !comma_between(tokens, left, right)
                 && !dash_between(tokens, left, right)
             {
@@ -142,6 +150,7 @@ fn subordinate_comma(
         && same_sentence(clause, next, tokens, analysis)
         && let (Some(left), Some(right)) = (last_word(clause, tokens), first_word(next, tokens))
         && clause_kind(next, tokens, analysis) == ClauseKind::Main
+        && !is_no_comma_pair(tokens, left, right)
         && !comma_between(tokens, left, right)
         && !dash_between(tokens, left, right)
     {
@@ -155,11 +164,10 @@ fn subordinate_comma(
     if finite.len() >= 2
         && let Some(&main) = finite.last()
         && let Some(&previous) = finite.get(finite.len() - 2)
-        // A `jolloin`/`joka` clause that the parser merged into the same
-        // `Clause` already has its comma before the relative pronoun
-        // (`Kun se aamu valkeni, jolloin …`). The merged-subordinate path
-        // must not insert a second one.
-        && !comma_before_relative(tokens, previous, main, analysis)
+        // A comma between the two finite words already marks the boundary
+        // (`Kun se aamu valkeni, jolloin …`, `..., sen kun Anni vain kertoi,
+        // koko ajan …`). The merged-subordinate path must not add another.
+        && !comma_between(tokens, previous, main)
         && let Some(before) = previous_word(tokens, main)
         && !comma_between(tokens, before, main)
         && !dash_between(tokens, before, main)
@@ -328,35 +336,14 @@ fn terminal_between(left: &Clause, right: &Clause, tokens: &[Token]) -> bool {
         .any(|token| token.text.chars().any(|c| matches!(c, '.' | '!' | '?')))
 }
 
-/// A comma followed by a relative pronoun between two finite words already
-/// marks the clause boundary: `Kun se aamu valkeni, jolloin Kenoveevan
-/// täytyi …`. The merged-subordinate path must not add a second comma.
-fn comma_before_relative(
-    tokens: &[Token],
-    left: usize,
-    right: usize,
-    analysis: &SyntaxAnalysis,
-) -> bool {
-    let (start, end) = if left < right {
-        (left + 1, right)
-    } else {
-        (right + 1, left)
-    };
-    for comma in start..end {
-        if tokens[comma].is_word() || !tokens[comma].text.contains(',') {
-            continue;
-        }
-        let relative = (comma + 1..end)
-            .find(|&index| tokens[index].is_word())
-            .is_some_and(|index| {
-                tokens[index].text.eq_ignore_ascii_case("jolloin")
-                    || crate::syntax::starts_relative_clause(index, tokens, &analysis.tokens)
-            });
-        if relative {
-            return true;
-        }
-    }
-    false
+/// A fixed multiword pair whose halves take no comma (`niin että`,
+/// `sen kun`).
+fn is_no_comma_pair(tokens: &[Token], left: usize, right: usize) -> bool {
+    let left = tokens[left].text.to_lowercase();
+    let right = tokens[right].text.to_lowercase();
+    NO_COMMA_PAIRS
+        .iter()
+        .any(|&(first, second)| left == first && right == second)
 }
 
 fn sentence_index(byte: usize, analysis: &SyntaxAnalysis) -> Option<usize> {

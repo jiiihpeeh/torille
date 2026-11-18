@@ -1,7 +1,7 @@
 # PLAN_GRAMMAR_PRECISION — closing the adjudicated false positives
 
-Status: **23 diagnostics on the committed prose page, 18 adjudicated false
-positives across nine phases; phases 0–2 landed** · 2026-11-18 · branch
+Status: **20 diagnostics on the committed prose page, 15 adjudicated false
+positives across nine phases; phases 0–3 landed** · 2026-11-18 · branch
 `syntax` · baseline `b8b3687`
 
 This plan closes the false positives that remain on
@@ -19,17 +19,16 @@ Contents: [§1 where we are](#1-where-we-are) ·
 
 ## 1. Where we are
 
-`page-2000` (1,959 words) reports **23** grammar diagnostics. Every one was
-adjudicated by hand: 18 false positives, 1 true positive, 3 accepted, 1
+`page-2000` (1,959 words) reports **20** grammar diagnostics. Every one was
+adjudicated by hand: 15 false positives, 1 true positive, 3 accepted, 1
 excerpt artefact.
 
 | kind | rows | false positives |
 |---|---:|---:|
 | `verb_rection` | 8 | 8 |
-| `comma_missing` | 3 | 3 |
 | `question_mark_missing` | 4 | 2 (1 accepted, 1 true positive) |
-| `subject_predicate_agreement` | 2 | 0 (2 accepted) |
 | `list_separator_missing` | 3 | 3 |
+| `subject_predicate_agreement` | 2 | 0 (2 accepted) |
 | `attribute_agreement` | 1 | 1 |
 | `object_case` | 1 | 1 |
 | `unbalanced_quote` | 1 | 0 (excerpt ends inside a quote) |
@@ -60,11 +59,11 @@ and adds another is a failed phase and is reverted.
 
 ### 1.2 What the prose fixture can pin
 
-The prose fixture checks each row in isolation. Of the current 18 false
-positives, 12 reproduce alone (11 entries in `known_false_positives`, with the
-`sen kun` sentence carrying two findings) and six do not (five page-only rows:
-`paljon hyvää`, the two `lapsineen` findings, `puute`, and two of the
-question-mark rows). The fixture form of each row is in the §2 table.
+The prose fixture checks each row in isolation. Of the current 15 false
+positives, nine reproduce alone (nine entries in `known_false_positives`) and
+six do not (five page-only rows: `paljon hyvää`, the two `lapsineen` findings,
+`puute`, and two of the question-mark rows). The fixture form of each row is
+in the §2 table.
 
 A page-only row is still pinned by the plan: the phase that fixes it adds a
 **purpose-built sentence** to `syntax_diagnostics.json` that exercises the same
@@ -102,9 +101,9 @@ per §1.2).
 | 2 | `comma_missing` | 4516 | `Kun se aamu valkeni, jolloin Kenoveevan täytyi…` | `,` | the comma is already there | 2 | **fixed** |
 | 3 | `comma_missing` | 9904 | `'Hänen täytyy kuolla', sanoi Kuntsi.` | `,` | the comma is already there, after a quote | 2 | **fixed** |
 | 4 | `comma_pair_unbalanced` | 15040 | `…ulos, jolla oli yllään lampaan nahka…` | `,` | the relative clause ends the sentence | 2 | **fixed** |
-| 5 | `comma_missing` | 3771 | `…sievästi, niin että kaikki sanoivat…` | `,` | `niin että` is a fixed conjunction | 3 | sentence |
-| 6 | `comma_missing` | 10627 | `…hiljaista, sen kun Anni vain kertoi…` | `,` | `sen kun` is a fixed adverbial | 3 | sentence |
-| 7 | `comma_missing` | 10654 | same sentence | `,` | same | 3 | sentence |
+| 5 | `comma_missing` | 3771 | `…sievästi, niin että kaikki sanoivat…` | `,` | `niin että` is a fixed conjunction | 3 | **fixed** |
+| 6 | `comma_missing` | 10627 | `…hiljaista, sen kun Anni vain kertoi…` | `,` | `sen kun` is a fixed adverbial | 3 | **fixed** |
+| 7 | `comma_missing` | 10654 | same sentence | `,` | same | 3 | **fixed** |
 | 8 | `verb_rection` | 9153 `se` | `…katsokaa, se peitäkse pilven taa…` | `sitä` | `se` is the 3sg subject | 4 | sentence |
 | 9 | `verb_rection` | 5105 `kaikki` | `…jolloin kaikki tänne kokoontuneet Jumalaa…` | `kaikkeen` | `kaikki` is a plural subject | 4 | sentence |
 | 10 | `object_case` | 13182 `se` | `…kerro, niinkuin se sitten kävi.` | `sitä` | `niinkuin` opens a comparison clause | 5 | sentence |
@@ -243,16 +242,23 @@ in `syntax_diagnostics.json`; `subordinate_comma_after_main`,
 `subordinate_comma_initial` and `relative_comma_pair` still fire. Page
 26 → 23, exactly these three.
 
-### Phase 3 — fixed multiword conjunctions (rows 5–7)
+### Phase 3 — fixed multiword conjunctions — **landed**
 
 - `niin että` is the consecutive conjunction and takes no comma between its
-  halves; `sen kun` is the fixed adverbial (“kept on …”).
-- Add `NO_COMMA_PAIRS: &[(&str, &str)]` to `punctuation/comma.rs`, checked
-  where a subordinator is about to require a comma. It starts with
-  `("niin", "että")` and `("sen", "kun")` and is documented as closed.
-- Do not extend it to `siten, että`, which does take the comma.
+  halves; `sen kun` is the fixed adverbial (“kept on …”). `NO_COMMA_PAIRS`
+  is a closed two-entry table in `punctuation/comma.rs`, checked on both
+  clause-boundary paths before a comma is required.
+- The second `sen kun` finding was not a subordinator at all: `ajan` is also
+  the 1sg of `ajaa`, so the merged-subordinate path took `koko ajan` as a
+  second finite predicate. The merged path now skips whenever a comma already
+  sits between its last two finite words, which is the same cue Phase 2 used
+  for `jolloin` and removes the spurious `koko, ajan` insertion.
+- `siten, että` is deliberately absent from the table: it does take a comma.
 
-Acceptance: rows 5–7 clean; `Luulen, että hän tulee.` still needs its comma.
+Acceptance: rows 5–7 clean; `Luulen, että hän tulee.` stays clean and
+`Luulen että hän tulee.` still reports the missing comma (new exact-output
+case and clean rows); `Niin että hän tuli.` is clean. Page 23 → 20, exactly
+these three.
 
 ### Phase 4 — demonstrative and quantity subjects (rows 8–9)
 

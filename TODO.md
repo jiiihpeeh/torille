@@ -2111,3 +2111,6 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   postpositions are no longer treated as commas/finite predicates.
   `page-2000` 26 → 23 diagnostics; phases 3–9 remain in
   `PLAN_GRAMMAR_PRECISION.md`.
+- 2026-11-18: grammar precision Phase 3 landed: `niin että`/`sen kun` take no
+  comma, and a comma between the last two finite words closes the merged
+  boundary path. `page-2000` 23 → 20 diagnostics; phases 4–9 remain.

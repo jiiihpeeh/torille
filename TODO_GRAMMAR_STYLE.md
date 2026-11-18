@@ -1176,3 +1176,10 @@ intended/competing interpretation pair that fails.
   moved from `known_false_positives` to `clean`; row 4's `yllään` sentence is
   a clean fixture. `page-2000`: 26 → 23, exactly these three. The
   `subordinate_comma_*` and `relative_comma_pair` fixtures still fire.
+- 2026-11-18: precision Phase 3 (fixed multiword conjunctions). `NO_COMMA_PAIRS`
+  stops the boundary comma inside `niin että` and `sen kun`; the merged path
+  now skips whenever a comma already sits between its last two finite words,
+  which also closes the second `sen kun` finding (`koko ajan` was read as a
+  1sg predicate). `Luulen että hän tulee.` still reports the missing comma;
+  `Luulen, että hän tulee.` and `Niin että hän tuli.` are clean. `page-2000`:
+  23 → 20, exactly rows 5–7.
