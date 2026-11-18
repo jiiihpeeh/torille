@@ -84,7 +84,8 @@
     "Kehrätessään hän osasi asettaa äidilleen kaikenlaisia painavia kysymyksiä, ja kun häneltä kysyttiin, hän vastasi erinomaisen selvästi ja sievästi, niin että kaikki sanoivat ihmetellen: tuosta lapsesta tulee varmaan jotain erinomaista.",
     "Oli ollut ihan hiljaista, sen kun Anni vain kertoi, koko ajan kynttilään katsoen, tasaisella äänellä.",
     "Se päivä tulee, jolloin kaikki tänne kokoontuneet Jumalaa siitä ilokyynelin kiittävät.",
-    "Näettehän kuun, katsokaa, se peitäkse pilven taa ikäänkuin ei voisi nähdä sitä tekoa, jonka aiotte tehdä."
+    "Näettehän kuun, katsokaa, se peitäkse pilven taa ikäänkuin ei voisi nähdä sitä tekoa, jonka aiotte tehdä.",
+    "Hän sanoi: \"Ei vielä, ei, kerro, niinkuin se sitten kävi.\""
   ],
   "errors": [
     {
@@ -109,13 +110,6 @@
         "verb_rection"
       ],
       "note": "Phase 5: same absolute phrase."
-    },
-    {
-      "text": "Hän sanoi: \"Ei vielä, ei, kerro, niinkuin se sitten kävi.\"",
-      "kinds": [
-        "object_case"
-      ],
-      "note": "Phase 5: `niinkuin` opens a comparison clause; `se` is its subject."
     },
     {
       "text": "Hän tapasi hirven jälet ja lähti niitä seuraamaan.",

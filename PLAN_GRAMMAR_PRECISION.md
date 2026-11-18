@@ -1,8 +1,8 @@
 # PLAN_GRAMMAR_PRECISION — closing the adjudicated false positives
 
-Status: **18 diagnostics on the committed prose page, 13 adjudicated false
-positives across nine phases; phases 0–4 landed** · 2026-11-18 · branch
-`syntax` · baseline `b8b3687`
+Status: **17 diagnostics on the committed prose page, 12 adjudicated false
+positives across nine phases; phases 0–4 and 5a landed** · 2026-11-18 ·
+branch `syntax` · baseline `b8b3687`
 
 This plan closes the false positives that remain on
 `tests/fixtures/perf/page-2000.txt` after the argument-selection and agreement
@@ -19,8 +19,8 @@ Contents: [§1 where we are](#1-where-we-are) ·
 
 ## 1. Where we are
 
-`page-2000` (1,959 words) reports **18** grammar diagnostics. Every one was
-adjudicated by hand: 13 false positives, 1 true positive, 3 accepted, 1
+`page-2000` (1,959 words) reports **17** grammar diagnostics. Every one was
+adjudicated by hand: 12 false positives, 1 true positive, 3 accepted, 1
 excerpt artefact.
 
 | kind | rows | false positives |
@@ -30,7 +30,6 @@ excerpt artefact.
 | `list_separator_missing` | 3 | 3 |
 | `subject_predicate_agreement` | 2 | 0 (2 accepted) |
 | `attribute_agreement` | 1 | 1 |
-| `object_case` | 1 | 1 |
 | `unbalanced_quote` | 1 | 0 (excerpt ends inside a quote) |
 
 The workflow is a review loop:
@@ -59,11 +58,11 @@ and adds another is a failed phase and is reverted.
 
 ### 1.2 What the prose fixture can pin
 
-The prose fixture checks each row in isolation. Of the current 13 false
-positives, seven reproduce alone (seven entries in `known_false_positives`)
-and six do not (five page-only rows: `paljon hyvää`, the two `lapsineen`
-findings, `puute`, and two of the question-mark rows). The fixture form of
-each row is in the §2 table.
+The prose fixture checks each row in isolation. Of the current 12 false
+positives, six reproduce alone (six entries in `known_false_positives`) and
+six do not (five page-only rows: `paljon hyvää`, the two `lapsineen` findings,
+`puute`, and two of the question-mark rows). The fixture form of each row is
+in the §2 table.
 
 A page-only row is still pinned by the plan: the phase that fixes it adds a
 **purpose-built sentence** to `syntax_diagnostics.json` that exercises the same
@@ -106,7 +105,7 @@ per §1.2).
 | 7 | `comma_missing` | 10654 | same sentence | `,` | same | 3 | **fixed** |
 | 8 | `verb_rection` | 9153 `se` | `…katsokaa, se peitäkse pilven taa…` | `sitä` | `se` is the 3sg subject | 4 | **fixed** |
 | 9 | `verb_rection` | 5105 `kaikki` | `…jolloin kaikki tänne kokoontuneet Jumalaa…` | `kaikkeen` | `kaikki` is a plural subject | 4 | **fixed** |
-| 10 | `object_case` | 13182 `se` | `…kerro, niinkuin se sitten kävi.` | `sitä` | `niinkuin` opens a comparison clause | 5 | sentence |
+| 10 | `object_case` | 13182 `se` | `…kerro, niinkuin se sitten kävi.` | `sitä` | `niinkuin` opens a comparison clause | 5 | **fixed** |
 | 11 | `verb_rection` | 11079 `lapsi` | `Hän jäi lapsi sylissä istumaan…` | `lapseen` | `lapsi sylissä` is an absolute phrase | 5 | sentence |
 | 12 | `verb_rection` | 11341 `lapsi` | `Hän lähti lapsi sylissä kulkemaan…` | `lapseen` | same | 5 | sentence |
 | 13 | `verb_rection` | 5952 `Päivän` | `Päivän vaietessa` | `päivään` | genitive subject of an impersonal non-finite verb | 5 | window |
@@ -285,7 +284,23 @@ Acceptance: rows 8–9 clean; `Katsokaa se!` still reports `verb_rection`
 
 ### Phase 5 — comparison clauses, absolute phrases, non-finite subjects (rows 10–13)
 
-The riskiest phase; ship its three parts separately.
+The riskiest phase; ship its three parts separately. **5a landed**; 5b and 5c
+remain.
+
+#### 5a — comparison clauses (row 10) — **landed**
+
+`niinkuin` and `ikäänkuin` open a comparison clause but have no lexicon
+readings, so `Hän sanoi: ”… kerro, niinkuin se sitten kävi.”` kept `se` inside
+the imperative clause and the negative-object rule read it as the object.
+
+- `is_comparison_opener` starts a clause at `niinkuin`/`ikäänkuin` when a
+  predicate follows. It is **not** `is_subordinator`: a comma before a
+  comparison clause is stylistic, and putting them in the subordinator set
+  added two false `comma_missing` rows on the page (`niinkuin usein ennenkin
+  haettu`, `pilven taa ikäänkuin ei voisi`).
+- The `se` is now the subject of `kävi`; the object rule sees no argument.
+- Row 10 moves from `known_false_positives` to `clean`; `Meille on niinkuin
+  ennenkin haettu apua.` is a new clean row. Page 18 → 17.
 
 1. **Comparison clause.** `niinkuin`/`ikäänkuin` introduce a comparison clause
    (`…kerro, niinkuin se sitten kävi`). Add them to the clause markers and the

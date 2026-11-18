@@ -221,6 +221,16 @@ pub(crate) fn is_subordinator(word: &str) -> bool {
         .is_some_and(|base| matches!(base, "että" | "jotta" | "vaikka" | "ellei"))
 }
 
+/// Comparison conjunctions that open a clause but do not require a comma.
+///
+/// `..., niinkuin se sitten kävi` and `... ikäänkuin ei voisi nähdä` are
+/// comparison clauses. They are clause boundaries for role assignment, but a
+/// comma before them is stylistic, not required, so they are deliberately not
+/// in [`is_subordinator`].
+pub(crate) fn is_comparison_opener(word: &str) -> bool {
+    matches!(word, "niinkuin" | "ikäänkuin")
+}
+
 /// The inflected forms of the relative pronouns. The engine resolves most of
 /// them to `joka`/`mikä`/`kuka`; the surface list covers the ones whose own
 /// lemma wins (`missä`, `mitä`) and keeps the check independent of the

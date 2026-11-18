@@ -5,8 +5,8 @@ use crate::tokenise::Token;
 
 use super::predicates::{
     is_coordinating, is_infinitive, is_negative_auxiliary, is_nominal,
-    is_predicate_candidate, is_relative_word, is_subordinator, nominal_has_case,
-    starts_relative_clause,
+    is_comparison_opener, is_predicate_candidate, is_relative_word, is_subordinator,
+    nominal_has_case, starts_relative_clause,
 };
 use super::{Clause, TokenSyntax};
 
@@ -115,6 +115,14 @@ pub(super) fn segment_clause_words(
             continue;
         }
         if starts_relative_clause(words[position], tokens, out) {
+            starts.push(position);
+            continue;
+        }
+        if is_comparison_opener(&lower)
+            && words[position + 1..]
+                .iter()
+                .any(|&index| is_predicate_candidate(index, out))
+        {
             starts.push(position);
             continue;
         }

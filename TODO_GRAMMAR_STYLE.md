@@ -1191,3 +1191,10 @@ intended/competing interpretation pair that fails.
   requires the negative auxiliary to precede the clause predicate (the `ei`
   belongs to `ikäänkuin ei voisi`). `Katsokaa se!` still fires. `page-2000`:
   20 → 18, exactly rows 8–9.
+- 2026-11-18: precision Phase 5a (comparison clauses). `niinkuin`/`ikäänkuin`
+  now open a clause when a predicate follows, so `… kerro, niinkuin se sitten
+  kävi` makes `se` the subject of `kävi`. They are not subordinators: a comma
+  before a comparison clause is stylistic, and the subordinator route added
+  two false comma rows on the page. `page-2000`: 18 → 17, row 10 only; the
+  `niinkuin` prose row moves to clean and `Meille on niinkuin ennenkin haettu
+  apua.` is a clean fixture.
