@@ -8,6 +8,7 @@ use crate::syntax::{SyntacticRole, SyntaxAnalysis};
 use crate::tokenise::Token;
 
 use super::clauses::{host_kind, kind_of};
+use super::lists::eligible;
 use super::{Ast, NodeId, NodeKind, Violation};
 
 /// Check every phase-0 invariant.
@@ -51,7 +52,7 @@ pub fn validate(
     check_cycles(ast, &mut out);
     check_words(tokens, analysis, ast, &mut out);
     check_segments(tokens, ast, &mut out);
-    check_coverage(tokens, ast, &mut out);
+    check_coverage(tokens, analysis, ast, &mut out);
     check_clauses(tokens, analysis, ast, &mut out);
     check_roles(analysis, ast, &mut out);
     check_phrase_heads(ast, &mut out);
@@ -291,11 +292,31 @@ fn check_segments(tokens: &[Token], ast: &Ast, out: &mut Vec<Violation>) {
     }
 }
 
-fn check_coverage(tokens: &[Token], ast: &Ast, out: &mut Vec<Violation>) {
+fn check_coverage(
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+    ast: &Ast,
+    out: &mut Vec<Violation>,
+) {
     let mut marks = vec![0usize; tokens.len()];
     for (index, node) in ast.nodes.iter().enumerate() {
         if node.tokens.start > node.tokens.end || node.tokens.end > tokens.len() {
             continue;
+        }
+        let mut skip = vec![false; tokens.len()];
+        if let NodeKind::List { index } = node.kind
+            && let Some(list) = analysis.lists.get(index)
+        {
+            for &separator in &list.separators {
+                if let Some(slot) = skip.get_mut(separator) {
+                    *slot = true;
+                }
+            }
+            if let Some(token_index) = list.introducer
+                && let Some(slot) = skip.get_mut(token_index)
+            {
+                *slot = true;
+            }
         }
         let mark = index + 1;
         let mut stack = vec![NodeId::new(index)];
@@ -313,6 +334,7 @@ fn check_coverage(tokens: &[Token], ast: &Ast, out: &mut Vec<Violation>) {
         }
         for token_index in node.tokens.clone() {
             if tokens.get(token_index).is_some_and(Token::is_word)
+                && !skip.get(token_index).copied().unwrap_or(false)
                 && marks.get(token_index) != Some(&mark)
             {
                 fail(
@@ -498,7 +520,23 @@ fn check_roles(analysis: &SyntaxAnalysis, ast: &Ast, out: &mut Vec<Violation>) {
                     );
                 }
             }
-            NodeKind::List { .. } => {}
+            NodeKind::List { index } => {
+                let Some(list) = analysis.lists.get(index) else {
+                    fail(
+                        out,
+                        None,
+                        "role",
+                        format!("list index {index} is out of range"),
+                    );
+                    continue;
+                };
+                if node.role != list.role {
+                    fail(out, None, "role", format!("list {index} role differs"));
+                }
+                if node.head != list.head {
+                    fail(out, None, "role", format!("list {index} head differs"));
+                }
+            }
             _ => {
                 if node.role.is_some() {
                     fail(out, None, "role", "this node kind must not carry a role");
@@ -550,15 +588,93 @@ fn check_phrase_heads(ast: &Ast, out: &mut Vec<Violation>) {
 }
 
 fn check_lists(analysis: &SyntaxAnalysis, ast: &Ast, out: &mut Vec<Violation>) {
+    let mut represented = vec![0usize; analysis.lists.len()];
     for node in &ast.nodes {
         match node.kind {
             NodeKind::List { index } => {
-                if index >= analysis.lists.len() {
+                let Some(list) = analysis.lists.get(index) else {
                     fail(
                         out,
                         None,
                         "list",
                         format!("list index {index} is out of range"),
+                    );
+                    continue;
+                };
+                represented[index] += 1;
+                if node.tokens != list.tokens {
+                    fail(
+                        out,
+                        None,
+                        "list",
+                        format!("list {index} token range differs"),
+                    );
+                }
+                if node.span != list.span {
+                    fail(out, None, "list", format!("list {index} byte span differs"));
+                }
+                if node.head != list.head || node.role != list.role {
+                    fail(
+                        out,
+                        None,
+                        "list",
+                        format!("list {index} head or role differs"),
+                    );
+                }
+                let mut item_seen = vec![false; list.items.len()];
+                let mut conjunction_seen = false;
+                for &child in &node.children {
+                    let child_node = ast.node(child);
+                    match child_node.kind {
+                        NodeKind::ListItem {
+                            list: child_list,
+                            item,
+                        } if child_list == index && item < list.items.len() => {
+                            if item_seen[item] {
+                                fail(
+                                    out,
+                                    None,
+                                    "list",
+                                    format!("list {index} item {item} appears twice"),
+                                );
+                            }
+                            item_seen[item] = true;
+                        }
+                        NodeKind::Word if list.conjunction == Some(child_node.tokens.start) => {
+                            if conjunction_seen {
+                                fail(
+                                    out,
+                                    None,
+                                    "list",
+                                    format!("list {index} conjunction appears twice"),
+                                );
+                            }
+                            conjunction_seen = true;
+                        }
+                        _ => fail(
+                            out,
+                            None,
+                            "list",
+                            format!("list {index} has an unexpected child"),
+                        ),
+                    }
+                }
+                for (item_index, seen) in item_seen.iter().enumerate() {
+                    if !seen {
+                        fail(
+                            out,
+                            None,
+                            "list",
+                            format!("list {index} is missing item {item_index}"),
+                        );
+                    }
+                }
+                if list.conjunction.is_some() && !conjunction_seen {
+                    fail(
+                        out,
+                        None,
+                        "list",
+                        format!("list {index} is missing its conjunction"),
                     );
                 }
             }
@@ -572,16 +688,55 @@ fn check_lists(analysis: &SyntaxAnalysis, ast: &Ast, out: &mut Vec<Violation>) {
                     );
                     continue;
                 };
-                if item >= entry.items.len() {
+                let Some(flat_item) = entry.items.get(item) else {
                     fail(
                         out,
                         None,
                         "list",
                         format!("item {item} is out of range for list {list}"),
                     );
+                    continue;
+                };
+                if node.tokens != flat_item.tokens {
+                    fail(
+                        out,
+                        None,
+                        "list",
+                        format!("list {list} item {item} tokens differ"),
+                    );
+                }
+                if node.span != flat_item.span {
+                    fail(
+                        out,
+                        None,
+                        "list",
+                        format!("list {list} item {item} span differs"),
+                    );
+                }
+                if node.children.is_empty() {
+                    fail(
+                        out,
+                        None,
+                        "list",
+                        format!("list {list} item {item} has no children"),
+                    );
                 }
             }
             _ => {}
+        }
+    }
+
+    for (index, list) in analysis.lists.iter().enumerate() {
+        if eligible(list) && represented[index] > 1 {
+            fail(
+                out,
+                None,
+                "list",
+                format!(
+                    "attachable list {index} has {} nodes, expected at most 1",
+                    represented[index]
+                ),
+            );
         }
     }
 }

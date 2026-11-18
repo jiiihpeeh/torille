@@ -22,11 +22,13 @@
 
 use std::ops::Range;
 
-use crate::sentence::SentenceSpan;
 use crate::syntax::{Clause, RoleConfidence, SyntacticRole, SyntaxAnalysis, TokenSyntax};
+use crate::syntax_list::{List, ListItem, ListKind};
 use crate::tokenise::Token;
 
+mod attach;
 mod clauses;
+mod lists;
 mod phrases;
 mod seed;
 mod validate;
@@ -235,8 +237,8 @@ impl Node {
         node
     }
 
-    fn sentence(span: &SentenceSpan, tokens: Range<usize>) -> Self {
-        let mut node = Self::framed(NodeKind::Sentence, span.start..span.end, tokens);
+    fn sentence(span: Range<usize>, tokens: Range<usize>) -> Self {
+        let mut node = Self::framed(NodeKind::Sentence, span, tokens);
         node.confidence = RoleConfidence::Likely;
         node
     }
@@ -307,6 +309,61 @@ impl Node {
         node.clause = Some(clause);
         node
     }
+
+    fn list(list: &List, index: usize) -> Self {
+        let mut node = Self::framed(
+            NodeKind::List { index },
+            list.span.clone(),
+            list.tokens.clone(),
+        );
+        node.head = list.head;
+        node.role = list.role;
+        node.confidence = if list.kind == ListKind::Mixed {
+            RoleConfidence::Weak
+        } else {
+            RoleConfidence::Likely
+        };
+        node.clause = Some(list.clause);
+        node
+    }
+
+    fn list_item(list: &List, item: &ListItem, list_index: usize, item_index: usize) -> Self {
+        let mut node = Self::framed(
+            NodeKind::ListItem {
+                list: list_index,
+                item: item_index,
+            },
+            item.span.clone(),
+            item.tokens.clone(),
+        );
+        node.confidence = if list.kind == ListKind::Mixed {
+            RoleConfidence::Weak
+        } else {
+            RoleConfidence::Likely
+        };
+        node.clause = Some(list.clause);
+        node
+    }
+
+    fn parenthetical(span: Range<usize>, tokens: Range<usize>, clause: Option<usize>) -> Self {
+        Self::container(NodeKind::Parenthetical, span, tokens, clause)
+    }
+
+    fn quote(span: Range<usize>, tokens: Range<usize>, clause: Option<usize>) -> Self {
+        Self::container(NodeKind::Quote, span, tokens, clause)
+    }
+
+    fn container(
+        kind: NodeKind,
+        span: Range<usize>,
+        tokens: Range<usize>,
+        clause: Option<usize>,
+    ) -> Self {
+        let mut node = Self::framed(kind, span, tokens);
+        node.confidence = RoleConfidence::Likely;
+        node.clause = clause;
+        node
+    }
 }
 
 /// The whole tree.
@@ -364,6 +421,9 @@ pub fn build(tokens: &[Token], analysis: &SyntaxAnalysis) -> Ast {
     let root = seed.root;
     let clause_nodes = clauses::group(tokens, analysis, &mut builder, &seed);
     phrases::attach(tokens, analysis, &mut builder, &seed, &clause_nodes);
+    lists::attach(tokens, analysis, &mut builder, &clause_nodes);
+    attach::parentheticals(tokens, analysis, &mut builder, &seed);
+    attach::quotes(tokens, analysis, &mut builder, &seed);
     let ast = builder.finish(root);
 
     #[cfg(debug_assertions)]
@@ -579,6 +639,112 @@ mod tests {
         assert_eq!(leaf.governor, Some(2));
         assert_eq!(leaf.head, Some(kaunis));
         validate(&tokens, &tree.analysis, &tree.ast).expect("copular tree is valid");
+    }
+
+    #[test]
+    fn a_nominal_list_owns_its_items_and_conjunction() {
+        let (tokens, tree) = analyzed("Ostin omenan, banaanin ja kaksi päärynää.");
+        let list = tree
+            .ast
+            .nodes
+            .iter()
+            .find(|node| matches!(node.kind, NodeKind::List { .. }))
+            .expect("a list node");
+        assert_eq!(list.role, Some(SyntacticRole::Object));
+        let items = list
+            .children
+            .iter()
+            .filter(|child| matches!(tree.ast.node(**child).kind, NodeKind::ListItem { .. }))
+            .count();
+        assert_eq!(items, 3);
+        assert!(
+            list.children.iter().any(|child| {
+                let node = tree.ast.node(*child);
+                node.kind == NodeKind::Word && node.tokens.start == 6
+            }),
+            "the conjunction is a list child"
+        );
+        validate(&tokens, &tree.analysis, &tree.ast).expect("list tree is valid");
+    }
+
+    #[test]
+    fn a_colon_list_is_attached_to_its_clause() {
+        let (tokens, tree) = analyzed("Ostin kolme asiaa: omenoita, appelsiineja ja banaaneja.");
+        let list = tree
+            .ast
+            .nodes
+            .iter()
+            .find(|node| matches!(node.kind, NodeKind::List { .. }))
+            .expect("a list node");
+        assert_eq!(list.clause, Some(1));
+        assert_eq!(
+            list.children
+                .iter()
+                .filter(|child| matches!(tree.ast.node(**child).kind, NodeKind::ListItem { .. }))
+                .count(),
+            3
+        );
+        validate(&tokens, &tree.analysis, &tree.ast).expect("colon list tree is valid");
+    }
+
+    #[test]
+    fn a_mixed_or_nested_list_stays_flat() {
+        for text in [
+            "Punainen, sininen ja vihreä talo on kaunis.",
+            "Ostin omenoita, appelsiineja (pieniä, makeita) ja banaaneja.",
+        ] {
+            let tokens = tokenise(text);
+            let tree = analyze(&tokens);
+            assert!(
+                tree.ast
+                    .nodes
+                    .iter()
+                    .all(|node| !matches!(node.kind, NodeKind::List { .. })),
+                "{text}"
+            );
+            validate(&tokens, &tree.analysis, &tree.ast).expect("flat list tree is valid");
+        }
+    }
+
+    #[test]
+    fn a_parenthetical_is_a_container() {
+        let (tokens, tree) =
+            analyzed("Ostin omenoita, appelsiineja (pieniä, makeita) ja banaaneja.");
+        let parenthetical = tree
+            .ast
+            .nodes
+            .iter()
+            .find(|node| node.kind == NodeKind::Parenthetical)
+            .expect("a parenthetical node");
+        assert_eq!(parenthetical.tokens, 6..9);
+        assert_eq!(parenthetical.children.len(), 2);
+        validate(&tokens, &tree.analysis, &tree.ast).expect("parenthetical tree is valid");
+    }
+
+    #[test]
+    fn a_quote_is_a_container() {
+        let (tokens, tree) = analyzed("Hän sanoi: \"Minä tulen.\"");
+        let quote = tree
+            .ast
+            .nodes
+            .iter()
+            .find(|node| node.kind == NodeKind::Quote)
+            .expect("a quote node");
+        assert_eq!(quote.tokens, 4..7);
+        assert_eq!(quote.children.len(), 2);
+        validate(&tokens, &tree.analysis, &tree.ast).expect("quote tree is valid");
+    }
+
+    #[test]
+    fn a_bracket_parenthetical_stays_in_one_sentence() {
+        let (_, tree) = analyzed("Ostin omenoita, appelsiineja (pieniä, makeita) ja banaaneja.");
+        let sentences = tree
+            .ast
+            .nodes
+            .iter()
+            .filter(|node| node.kind == NodeKind::Sentence)
+            .count();
+        assert_eq!(sentences, 1);
     }
 
     #[test]

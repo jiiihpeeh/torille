@@ -1,11 +1,10 @@
 # PLAN_SYNTAX_AST — a typed surface tree over `syntax`
 
-Status: **Phases 0–2 landed.** The skeleton, head-driven phrases and the
-multi-segment relative host are in `src/syntax/ast/`: `Ast`, `Node`, `NodeKind`,
-the `seed`/`group`/`chunk` passes, the validator and the `syntax_tree` CLI. The
-flat `syntax::SyntaxAnalysis` stays the authority; the tree is an additive view
-built on demand. This plan defines the node kinds, the
-construction pipeline, the invariants and the phase gates.
+Status: **Phases 0–3 landed.** The skeleton, head-driven phrases, the
+multi-segment relative host, top-level nominal lists, parentheticals and quotes
+are in `src/syntax/ast/`. The flat `syntax::SyntaxAnalysis` stays the authority;
+the tree is an additive view built on demand. This plan defines the node kinds,
+the construction pipeline, the invariants and the phase gates.
 
 ## Decision summary
 
@@ -429,21 +428,34 @@ scale.
 
 ### 7.5 Lists
 
-`syntax_list::parse` is the only list parser. The tree mirrors its arena, it
-does not re-scan commas.
+`syntax_list::parse` is the only list parser. The tree mirrors its arena for
+the lists phase 3a can represent; it does not re-scan commas.
+
+Phase 3a attaches a list only when:
+
+- it is top-level (`List.parent.is_none()`);
+- `ListKind::Nominal`;
+- every item is `ListItemKind::Word` or `ListItemKind::Phrase`;
+- every item is covered by existing phrase/word children;
+- the list is covered by its items plus the conjunction.
+
+Nested lists, `Mixed` lists and clause/predicate lists stay flat. The flat
+`analysis.lists` arena remains the source for a later phase.
+
+For an attached list:
 
 - one `List { index }` node per `analysis.lists[index]`;
 - `span`, `tokens`, `head`, `role` and `clause` copied from the list;
 - one `ListItem { list, item }` child per item, in item order;
 - the item's children are the top-level phrase/word/clause nodes whose token
   ranges fall inside `item.tokens` and whose parent is not also inside the item;
-- `ListItemKind::List(indices)` makes the child `List` nodes the item's
-  children, preserving the post-order arena;
-- separators stay out of the tree; the list's `separators` field is still the
-  punctuation source.
+- the conjunction is a `Word` child of the `List` (not a `ListItem`), so it sits
+  between the items that surround it;
+- comma separators stay out of the tree; the list's `separators` field is still
+  the punctuation source.
 
-**Ownership rule.** A list attaches to the smallest node whose token range
-contains the whole list:
+**Ownership rule.** A list attaches to the smallest `Clause` or `Phrase` whose
+token range contains the whole list:
 
 - if the list is exactly a clause slot (`list.role` names the slot and the
   list's token range equals the slot's phrase range), the `List` is a direct
@@ -509,6 +521,26 @@ twice.
 Until a consumer needs coordination, the pass is off. The enum variant stays
 so adding it later is not a breaking match change.
 
+### 7.8 Parentheticals and quotes
+
+`attach.rs` adds two container kinds:
+
+- **Parenthetical**: a balanced `(...)`, `[...]` or `{...}` pair. `span`
+  includes the brackets, `tokens` is the word envelope inside, and the children
+  are the top-level existing nodes inside. Pairs are processed innermost first,
+  so an outer parenthetical sees an inner one as a child. Unbalanced brackets
+  produce no node.
+- **Quote**: a maximal run of word tokens whose
+  `sentence::TokenContext::quote_depth` is positive. `span` is the word
+  envelope (the quote marks are separators), `tokens` is that run, and the
+  children are the top-level existing nodes inside. A quote that crosses a
+  sentence boundary attaches to the sentence or document that contains it.
+
+Both attach to the smallest containing node by byte span, preferring a phrase
+or clause over a sentence and a sentence over the document. Their children are
+the existing phrases, clauses, lists and words; the pass never re-parses the
+contents.
+
 ## 8. Invariants
 
 `ast::validate(tokens, analysis, &ast)` checks all of these. The builder runs
@@ -526,24 +558,26 @@ it under `debug_assert!`; tests and the CLI run it explicitly.
    `tokens`.
 5. **Partition.** A node's `segments` plus the token ranges of its interrupting
    children partition `tokens`. “Interrupting” means a child not contained in
-   any segment; in v1 this is only a relative clause inside a host.
+   any segment; currently this is only a relative clause inside a host.
 6. **Clause agreement.** Every flat `Clause` belongs to exactly one tree
    `Clause` node: either that node's own `tokens`/`clause`, or a segment of a
    multi-segment host. Every `Clause` node points back to an existing flat
    clause, and a host's `segments` are exactly the token ranges of the flat
    clauses it merged.
-7. **List agreement.** Every `analysis.lists[i]` has exactly one
-   `List { index: i }` node with the same `tokens` and `span`; every item has
-   one `ListItem { list: i, item: j }`; nested list indices resolve.
+7. **List agreement.** Every `List` node points at a real flat list and copies
+   its `tokens`, `span`, `head` and `role`; every `ListItem` points at a real
+   item and copies its `tokens` and `span`; a conjunction is a `Word` child of
+   the list. Phase 3a attaches only representable top-level `Nominal` lists;
+   ineligible lists stay flat.
 8. **Role agreement.** For a `Word` or `Phrase`, `role` and `confidence` equal
    the flat `TokenSyntax` values of `head`. For a `List`, they come from the
    flat `syntax_list::List`. Every other kind has `role = None`. The tree never
    invents a role.
 9. **Phrase heads.** A `Phrase` has a head; its children are the attached
-   modifiers/auxiliaries and their sub-phrases, plus any `List` or
-   `Parenthetical` that belongs inside the phrase. No clause-level argument is
-   a child of a phrase. A one-word phrase is legal only when it fills a clause
-   slot, is a list item head, or is a coordination conjunct.
+   modifiers/auxiliaries and their sub-phrases, plus any `List`,
+   `Parenthetical` or `Quote` that belongs inside the phrase. No clause-level
+   argument is a child of a phrase. A one-word phrase is legal only when it
+   fills a clause slot, is a list item head, or is a coordination conjunct.
 10. **Acyclicity.** Following `parent` from any node reaches the root; no
     cycle exists.
 
@@ -558,10 +592,11 @@ violations so a test can print them at once.
 src/syntax/ast/
   mod.rs           Ast, NodeId, Node, NodeKind, ClauseKind, PhraseKind,
                    CoordKind, public build/validate
-  seed.rs          Document/Sentence/Word skeleton
+  seed.rs          Document/Sentence/Word skeleton; sentence-span union
   phrases.rs       phrase roots, head resolution, kind, contiguity
   clauses.rs       clause grouping, ClauseKind, host segments
-  attach.rs        lists, parentheticals, quotes (phase 3)
+  lists.rs         top-level nominal lists and items
+  attach.rs        parentheticals and quotes
   coordination.rs  the optional same-kind pass (phase 4)
   validate.rs      the invariants in §8
 ```
@@ -658,7 +693,7 @@ zero diagnostic diff.
 | 0. Skeleton | types, `seed`, `group` (one Clause per flat clause, no host merge), `validate`, CLI dump | **landed**: `Ast` builds for every text in `tests/fixtures/syntax_cases.json`; all invariants hold; `cargo test --release --workspace` green; no diagnostic change |
 | 1. Phrases | phrase roots, kinds, contiguity, `head`/`governor` | **landed**: phrase tests for NP/AP/NumP/PP/VP; every `Modifier`/`Auxiliary` flat edge appears as a tree edge; multi-word object and `Kaksi miestä` covered |
 | 2. Clause grouping | clause kinds, predicate phrase, slot children, host merge | **landed**: `Mies, joka tuli, söi` keeps three flat clauses but the tree has one host with two segments and the relative nested between them; `Talo on kaunis` has a separate AdjectivePhrase complement |
-| 3. Attach | lists, list items, parentheticals, quotes | list and nested-list fixtures; a clause-slot list replaces the slot phrase; unbalanced brackets leave the flat shape |
+| 3. Attach | lists, list items, parentheticals, quotes | **landed (3a)**: top-level nominal lists with Word/Phrase items, the conjunction as a list child, parentheticals and quotes; nested, mixed, clause and predicate lists stay flat |
 | 4. Coordination (optional) | same-kind phrase/clause coordination | `Sami söi puuron ja joi maidon`; mixed coordination stays flat; `word_order_allow` unchanged |
 | 5. Consumers | one checker rule or the word-order feature reads the tree; wasm export | the new rule's fixture fails on the flat path and passes on the tree; every existing diagnostic is byte-identical |
 | 6. Cleanup | migrate ad hoc helpers only where the tree is equivalent | no helper is deleted until its last caller moves; the flat API stays |
@@ -691,18 +726,31 @@ coordinated, or any agreement/antecedent condition fails, the tree keeps the
 flat three-clause shape. The validator now checks a flat clause by
 segment-membership rather than by a one-to-one node.
 
+**Phase 3 landing.** `lists.rs` mirrors the flat list arena for top-level
+nominal lists whose items are `Word` or `Phrase`; the conjunction becomes a
+`Word` child of the `List`, the items own the existing phrases/words, and the
+list attaches to the smallest containing clause or phrase. Nested lists,
+mixed lists and clause/predicate lists stay flat. `attach.rs` adds
+`Parenthetical` nodes from balanced bracket pairs and `Quote` nodes from
+`TokenContext::quote_depth` runs; both are containers over the existing
+children. `seed.rs` now merges the raw sentence spans that one clause touches,
+so a bracket parenthetical stays in one tree sentence.
+
 ## 11. Tests
 
 ### 11.1 Unit tests
 
 In `src/syntax/ast/`, beside the code:
 
-- `seed`: sentence and leaf counts, leaf coverage, separator exclusion;
+- `seed`: sentence and leaf counts, leaf coverage, separator exclusion, the
+  bracket-span union;
 - `phrases`: one test per kind, one for the head/governor split, one for
   contiguity refusal;
 - `clauses`: main/relative/subordinate/infinitive, predicate phrase, copular
   complement, existential adverbial, host merge;
-- `attach`: list ownership, nested list, unbalanced bracket;
+- `lists`: nominal list ownership, the conjunction child, the colon list,
+  nested/mixed lists staying flat;
+- `attach`: parenthetical and quote containers;
 - `coordination`: same-kind, mixed, shared subject;
 - `validate`: one test per invariant with a deliberately broken arena.
 
@@ -838,15 +886,21 @@ Clause(main) segments=[Mies] [söi]
 ```text
 Clause(main)
   Phrase(verb, head=Ostin, role=predicate)
-  List(nominal, role=object)
+  List(nominal, head=Ostin, role=object)
     ListItem
-      Phrase(noun, head=omenan)
+      Phrase(noun, head=omenan, role=object)
     ListItem
-      Phrase(noun, head=banaanin)
+      Word banaanin
+    Word ja
     ListItem
-      Phrase(numeral, head=päärynää)
-        Word kaksi        # modifier, head=päärynää
+      Phrase(numeral, head=kaksi, role=subject)
+        Word kaksi
+        Word päärynää   # modifier, head=kaksi
 ```
+
+The flat model gives the numeral phrase its current roles; the tree copies
+them. The conjunction is a list child so the List span and its children stay
+in source order.
 
 `Kirjan luin eilen.` — a fronted object is a constituent:
 
