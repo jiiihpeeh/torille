@@ -1,9 +1,10 @@
 # PLAN_SYNTAX_AST — a typed surface tree over `syntax`
 
-Status: **Phase 0 landed.** The skeleton is in `src/syntax/ast/`: `Ast`,
-`Node`, `NodeKind`, the `seed`/`group` passes, the validator and the
-`syntax_tree` CLI. The flat `syntax::SyntaxAnalysis` stays the authority; the
-tree is an additive view built on demand. This plan defines the node kinds, the
+Status: **Phases 0–1 landed.** The skeleton and head-driven phrases are in
+`src/syntax/ast/`: `Ast`, `Node`, `NodeKind`, the `seed`/`group`/`chunk`
+passes, the validator and the `syntax_tree` CLI. The flat
+`syntax::SyntaxAnalysis` stays the authority; the tree is an additive view
+built on demand. This plan defines the node kinds, the
 construction pipeline, the invariants and the phase gates.
 
 ## Decision summary
@@ -173,10 +174,12 @@ pub enum PhraseKind {
 }
 ```
 
-`Numeral` is a nominal phrase that contains a numeral modifier (`kaksi
-miestä`). The head stays the counted noun, matching the flat model's
-`numeral -> modifier -> noun` edge; the kind records that the phrase as a whole
-behaves like a numeral (singular agreement, partitive object).
+`Numeral` is a phrase whose head is a numeral (`Kaksi` in `Kaksi miestä`) or
+a nominal head with a numeral dependent. The head is the token the flat model
+made the clause slot; in the current model the counted noun is a `Modifier`
+dependent of the numeral (`miestä` -> `Kaksi`), and the phrase records that the
+whole constituent behaves like a numeral (singular agreement, partitive
+object).
 
 `CoordKind` is the category of the conjuncts:
 
@@ -358,7 +361,7 @@ tree should have constituents at every argument position and every list item.
 | nominal POS (noun, unknown nominal) | `Noun` |
 | pronoun | `Pronoun` |
 | adjective | `Adjective` |
-| numeral modifier plus a nominal head | `Numeral` |
+| numeral head, or a nominal head with a numeral dependent | `Numeral` |
 | adverb | `Adverb` |
 | postposition | `Postposition` |
 | preposition | `Preposition` |
@@ -366,9 +369,9 @@ tree should have constituents at every argument position and every list item.
 | verb with `Mood::Infinitive` | `Infinitive` |
 | verb with a participle reading | `Participle` |
 
-If the head has no nominal or verbal POS, no phrase is created. This is the
-same conservatism as `nominal_pos` and `is_finite`: a closed table beats a
-guess.
+If the head has no nominal, verbal, adposition or adverb POS, no phrase is
+created. This is the same conservatism as `nominal_pos` and `is_finite`: a
+closed table beats a guess.
 
 ### 7.3 Contiguity
 
@@ -549,8 +552,8 @@ src/syntax/ast/
   mod.rs           Ast, NodeId, Node, NodeKind, ClauseKind, PhraseKind,
                    CoordKind, public build/validate
   seed.rs          Document/Sentence/Word skeleton
-  phrases.rs       phrase roots, head resolution, kind, contiguity (phase 1)
-  clauses.rs       clause grouping, ClauseKind, host segments
+  phrases.rs       phrase roots, head resolution, kind, contiguity
+  clauses.rs       clause grouping, ClauseKind, host segments (phase 2)
   attach.rs        lists, parentheticals, quotes (phase 3)
   coordination.rs  the optional same-kind pass (phase 4)
   validate.rs      the invariants in §8
@@ -648,7 +651,7 @@ zero diagnostic diff.
 | phase | deliverable | gate |
 |---|---|---|
 | 0. Skeleton | types, `seed`, `group` (one Clause per flat clause, no host merge), `validate`, CLI dump | **landed**: `Ast` builds for every text in `tests/fixtures/syntax_cases.json`; all invariants hold; `cargo test --release --workspace` green; no diagnostic change |
-| 1. Phrases | phrase roots, kinds, contiguity, `head`/`governor` | fixture trees for NP/AP/NumP/PP/VP; every `Modifier`/`Auxiliary` flat edge appears as a tree edge; multi-word object and `kaksi miestä` covered |
+| 1. Phrases | phrase roots, kinds, contiguity, `head`/`governor` | **landed**: phrase tests for NP/AP/NumP/PP/VP; every `Modifier`/`Auxiliary` flat edge appears as a tree edge; multi-word object and `Kaksi miestä` covered |
 | 2. Clause grouping | clause kinds, predicate phrase, slot children, host merge | `Mies, joka tuli, söi` keeps three flat clauses but the tree has one host with two segments and the relative nested between them; `Talo on kaunis` has a separate AdjectivePhrase complement |
 | 3. Attach | lists, list items, parentheticals, quotes | list and nested-list fixtures; a clause-slot list replaces the slot phrase; unbalanced brackets leave the flat shape |
 | 4. Coordination (optional) | same-kind phrase/clause coordination | `Sami söi puuron ja joi maidon`; mixed coordination stays flat; `word_order_allow` unchanged |
@@ -664,6 +667,15 @@ it; the current workarounds are documented and the flat model is correct.
 sentences. Relative clauses are typed as `Clause(Relative)` but stay direct
 children of their sentence until phase 2's host merge, because the flat host
 range does not contain the relative yet.
+
+**Phase 1 landing.** `phrases.rs` builds a contiguous phrase per phrase root:
+clause slots and adverbials become one-word phrases, `Modifier`/`Auxiliary`
+edges become phrase children, an adposition's complement is internal, and a
+numeral head (or a numeral dependent) makes a `Numeral` phrase. Phrases that
+would cross a relative clause, a parenthetical or a list are refused; their
+words stay leaves and keep the flat `governor`. The phrase tests cover NP, VP,
+AP, NumP, postposition and preposition phrases, a modifier chain and a fronted
+object.
 
 ## 11. Tests
 

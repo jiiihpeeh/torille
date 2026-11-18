@@ -14,11 +14,11 @@
 //! The design, the construction rules and the phase plan are in
 //! `../../misc_md/PLAN_SYNTAX_AST.md`.
 //!
-//! Phase 0 (this implementation) covers the skeleton: one [`NodeKind::Document`],
-//! one [`NodeKind::Sentence`] per sentence span that contains a word, one
+//! Phase 0 covers the skeleton: one [`NodeKind::Document`], one
+//! [`NodeKind::Sentence`] per sentence span that contains a word, one
 //! [`NodeKind::Clause`] per flat clause, and one [`NodeKind::Word`] leaf per
-//! word token. Phrases, list nodes, host segments and coordination are later
-//! phases.
+//! word token. Phase 1 adds head-driven [`NodeKind::Phrase`] nodes inside each
+//! clause. List nodes, host segments and coordination are later phases.
 
 use std::ops::Range;
 
@@ -27,6 +27,7 @@ use crate::syntax::{Clause, RoleConfidence, SyntacticRole, SyntaxAnalysis, Token
 use crate::tokenise::Token;
 
 mod clauses;
+mod phrases;
 mod seed;
 mod validate;
 
@@ -261,6 +262,23 @@ impl Node {
         node.clause = Some(syntax.clause);
         node
     }
+
+    fn phrase(
+        kind: PhraseKind,
+        tokens: Range<usize>,
+        span: Range<usize>,
+        head: usize,
+        syntax: &TokenSyntax,
+        clause: usize,
+    ) -> Self {
+        let mut node = Self::framed(NodeKind::Phrase(kind), span, tokens);
+        node.head = Some(head);
+        node.governor = syntax.head;
+        node.role = Some(syntax.role);
+        node.confidence = syntax.confidence;
+        node.clause = Some(clause);
+        node
+    }
 }
 
 /// The whole tree.
@@ -316,7 +334,8 @@ pub fn build(tokens: &[Token], analysis: &SyntaxAnalysis) -> Ast {
     let mut builder = Builder::new();
     let seed = seed::build(tokens, analysis, &mut builder);
     let root = seed.root;
-    clauses::group(tokens, analysis, &mut builder, &seed);
+    let clause_nodes = clauses::group(tokens, analysis, &mut builder, &seed);
+    phrases::attach(tokens, analysis, &mut builder, &seed, &clause_nodes);
     let ast = builder.finish(root);
 
     #[cfg(debug_assertions)]
@@ -422,6 +441,18 @@ mod tests {
             .collect()
     }
 
+    fn phrase_for<'a>(tree: &'a SyntaxTree, tokens: &[Token], text: &str) -> &'a Node {
+        let index = tokens
+            .iter()
+            .position(|token| token.text == text)
+            .unwrap_or_else(|| panic!("no token {text:?}"));
+        tree.ast
+            .nodes
+            .iter()
+            .find(|node| matches!(node.kind, NodeKind::Phrase(_)) && node.head == Some(index))
+            .unwrap_or_else(|| panic!("no phrase headed by {text:?}"))
+    }
+
     #[test]
     fn an_empty_text_has_a_document_root() {
         let (tokens, tree) = analyzed("");
@@ -503,6 +534,90 @@ mod tests {
         let walked = tree.ast.walk();
         assert_eq!(walked.len(), tree.ast.nodes.len());
         assert_eq!(walked.first(), Some(&tree.ast.root));
+    }
+
+    #[test]
+    fn a_simple_clause_has_subject_predicate_object_phrases() {
+        let (tokens, tree) = analyzed("Sami söi aamupuuronsa.");
+        let kinds: Vec<PhraseKind> = tree
+            .ast
+            .nodes
+            .iter()
+            .filter_map(|node| match node.kind {
+                NodeKind::Phrase(kind) => Some(kind),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            kinds,
+            vec![PhraseKind::Noun, PhraseKind::Verb, PhraseKind::Noun]
+        );
+        assert_eq!(
+            phrase_for(&tree, &tokens, "Sami").role,
+            Some(SyntacticRole::Subject)
+        );
+        assert_eq!(
+            phrase_for(&tree, &tokens, "söi").role,
+            Some(SyntacticRole::Predicate)
+        );
+        assert_eq!(
+            phrase_for(&tree, &tokens, "aamupuuronsa").role,
+            Some(SyntacticRole::Object)
+        );
+        validate(&tokens, &tree.analysis, &tree.ast).expect("phrase tree is valid");
+    }
+
+    #[test]
+    fn a_modifier_chain_stays_in_one_phrase() {
+        let (tokens, tree) = analyzed("Matin vanha auto on punainen.");
+        let phrase = phrase_for(&tree, &tokens, "auto");
+        assert_eq!(phrase.kind, NodeKind::Phrase(PhraseKind::Noun));
+        assert_eq!(phrase.children.len(), 3);
+        let surfaces: Vec<&str> = phrase
+            .children
+            .iter()
+            .map(|child| tokens[tree.ast.node(*child).tokens.start].text.as_str())
+            .collect();
+        assert_eq!(surfaces, vec!["Matin", "vanha", "auto"]);
+        validate(&tokens, &tree.analysis, &tree.ast).expect("modifier tree is valid");
+    }
+
+    #[test]
+    fn a_numeral_phrase_is_typed() {
+        let (tokens, tree) = analyzed("Kaksi miestä tuli.");
+        let phrase = phrase_for(&tree, &tokens, "Kaksi");
+        assert_eq!(phrase.kind, NodeKind::Phrase(PhraseKind::Numeral));
+        assert_eq!(phrase.children.len(), 2);
+        validate(&tokens, &tree.analysis, &tree.ast).expect("numeral tree is valid");
+    }
+
+    #[test]
+    fn an_adposition_phrase_owns_its_complement() {
+        let postposition_tokens = tokenise("Pöydän alla on kissa.");
+        let postposition_tree = analyze(&postposition_tokens);
+        let postposition = phrase_for(&postposition_tree, &postposition_tokens, "alla");
+        assert_eq!(
+            postposition.kind,
+            NodeKind::Phrase(PhraseKind::Postposition)
+        );
+        assert_eq!(postposition.children.len(), 2);
+
+        let preposition_tokens = tokenise("Ilman rahaa en tule.");
+        let preposition_tree = analyze(&preposition_tokens);
+        let preposition = phrase_for(&preposition_tree, &preposition_tokens, "Ilman");
+        assert_eq!(preposition.kind, NodeKind::Phrase(PhraseKind::Preposition));
+        assert_eq!(preposition.children.len(), 2);
+    }
+
+    #[test]
+    fn a_fronted_object_is_its_own_phrase() {
+        let (tokens, tree) = analyzed("Kirjan luin eilen.");
+        let object = phrase_for(&tree, &tokens, "Kirjan");
+        assert_eq!(object.role, Some(SyntacticRole::Object));
+        assert_eq!(object.kind, NodeKind::Phrase(PhraseKind::Noun));
+        let verb = phrase_for(&tree, &tokens, "luin");
+        assert_eq!(verb.role, Some(SyntacticRole::Predicate));
+        validate(&tokens, &tree.analysis, &tree.ast).expect("fronting tree is valid");
     }
 
     #[test]

@@ -4,7 +4,7 @@
 //! builder runs this under `debug_assert!`; tests and the CLI run it
 //! explicitly so a malformed tree cannot be silently accepted.
 
-use crate::syntax::SyntaxAnalysis;
+use crate::syntax::{SyntacticRole, SyntaxAnalysis};
 use crate::tokenise::Token;
 
 use super::clauses::kind_of;
@@ -54,6 +54,7 @@ pub fn validate(
     check_coverage(tokens, ast, &mut out);
     check_clauses(tokens, analysis, ast, &mut out);
     check_roles(analysis, ast, &mut out);
+    check_phrase_heads(ast, &mut out);
     check_lists(analysis, ast, &mut out);
 
     if out.is_empty() { Ok(()) } else { Err(out) }
@@ -420,6 +421,14 @@ fn check_roles(analysis: &SyntaxAnalysis, ast: &Ast, out: &mut Vec<Violation>) {
                     );
                     continue;
                 };
+                if !node.tokens.contains(&head) {
+                    fail(
+                        out,
+                        None,
+                        "role",
+                        format!("head token {head} is outside its node"),
+                    );
+                }
                 if node.role != Some(syntax.role) {
                     fail(
                         out,
@@ -443,6 +452,47 @@ fn check_roles(analysis: &SyntaxAnalysis, ast: &Ast, out: &mut Vec<Violation>) {
                     fail(out, None, "role", "this node kind must not carry a role");
                 }
             }
+        }
+    }
+}
+
+fn check_phrase_heads(ast: &Ast, out: &mut Vec<Violation>) {
+    for node in &ast.nodes {
+        if !matches!(node.kind, NodeKind::Phrase(_)) {
+            continue;
+        }
+        let Some(head) = node.head else {
+            fail(out, None, "phrase", "a phrase node has no head");
+            continue;
+        };
+        if !node.tokens.contains(&head) {
+            fail(
+                out,
+                None,
+                "phrase",
+                format!("phrase head {head} is outside the phrase"),
+            );
+        }
+        if node.children.is_empty() {
+            fail(out, None, "phrase", "a phrase node has no children");
+        }
+        let slot = matches!(
+            node.role,
+            Some(
+                SyntacticRole::Predicate
+                    | SyntacticRole::Subject
+                    | SyntacticRole::Object
+                    | SyntacticRole::Complement
+                    | SyntacticRole::Adverbial
+            )
+        );
+        if node.children.len() == 1 && !slot {
+            fail(
+                out,
+                None,
+                "phrase",
+                "a one-word phrase must fill a clause slot or an adverbial",
+            );
         }
     }
 }
