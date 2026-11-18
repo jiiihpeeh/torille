@@ -1204,3 +1204,11 @@ intended/competing interpretation pair that fails.
   it is marked Adverbial before the object pass, so the illative frame cannot
   rewrite it. `Hän istui tuolissa.` and `Kirja pöydällä on minun.` are clean
   guard fixtures. `page-2000`: 17 → 15, rows 11–12 only.
+- 2026-11-18: precision Phase 5c (genitive subject of an impersonal
+  non-finite verb). When a clause ends in a genitive nominal and the next word
+  is `vaieta`/`hämärtää`/`sarastaa`/`koittaa`/`valjeta`/`pimetä` as a
+  possessive-less infinitive, the genitive is that verb's subject
+  (`Päivän vaietessa`) and is detached before the object pass.
+  `Kirjan luettuaan` keeps `kirjan` as the object because the possessive
+  suffix marks the agent; the role pair is pinned in `syntax_ambiguity.json`.
+  `page-2000`: 15 → 14, row 13 only. Phase 5 is complete.

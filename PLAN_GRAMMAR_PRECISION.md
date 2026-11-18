@@ -1,7 +1,7 @@
 # PLAN_GRAMMAR_PRECISION — closing the adjudicated false positives
 
-Status: **15 diagnostics on the committed prose page, 10 adjudicated false
-positives across nine phases; phases 0–4 and 5a–5b landed** · 2026-11-18 ·
+Status: **14 diagnostics on the committed prose page, 9 adjudicated false
+positives across nine phases; phases 0–4 and 5a–5c landed** · 2026-11-18 ·
 branch `syntax` · baseline `b8b3687`
 
 This plan closes the false positives that remain on
@@ -19,13 +19,13 @@ Contents: [§1 where we are](#1-where-we-are) ·
 
 ## 1. Where we are
 
-`page-2000` (1,959 words) reports **15** grammar diagnostics. Every one was
-adjudicated by hand: 10 false positives, 1 true positive, 3 accepted, 1
+`page-2000` (1,959 words) reports **14** grammar diagnostics. Every one was
+adjudicated by hand: 9 false positives, 1 true positive, 3 accepted, 1
 excerpt artefact.
 
 | kind | rows | false positives |
 |---|---:|---:|
-| `verb_rection` | 4 | 4 |
+| `verb_rection` | 3 | 3 |
 | `question_mark_missing` | 4 | 2 (1 accepted, 1 true positive) |
 | `list_separator_missing` | 3 | 3 |
 | `subject_predicate_agreement` | 2 | 0 (2 accepted) |
@@ -58,11 +58,11 @@ and adds another is a failed phase and is reverted.
 
 ### 1.2 What the prose fixture can pin
 
-The prose fixture checks each row in isolation. Of the current 10 false
-positives, four reproduce alone (four entries in `known_false_positives`) and
-six do not (five page-only rows: `paljon hyvää`, the two `lapsineen` findings,
-`puute`, and two of the question-mark rows). The fixture form of each row is
-in the §2 table.
+The prose fixture checks each row in isolation. Of the current 9 false
+positives, three reproduce alone (three entries in `known_false_positives`)
+and six do not (five page-only rows: `paljon hyvää`, the two `lapsineen`
+findings, `puute`, and two of the question-mark rows). The fixture form of
+each row is in the §2 table.
 
 A page-only row is still pinned by the plan: the phase that fixes it adds a
 **purpose-built sentence** to `syntax_diagnostics.json` that exercises the same
@@ -108,7 +108,7 @@ per §1.2).
 | 10 | `object_case` | 13182 `se` | `…kerro, niinkuin se sitten kävi.` | `sitä` | `niinkuin` opens a comparison clause | 5 | **fixed** |
 | 11 | `verb_rection` | 11079 `lapsi` | `Hän jäi lapsi sylissä istumaan…` | `lapseen` | `lapsi sylissä` is an absolute phrase | 5 | **fixed** |
 | 12 | `verb_rection` | 11341 `lapsi` | `Hän lähti lapsi sylissä kulkemaan…` | `lapseen` | same | 5 | **fixed** |
-| 13 | `verb_rection` | 5952 `Päivän` | `Päivän vaietessa` | `päivään` | genitive subject of an impersonal non-finite verb | 5 | window |
+| 13 | `verb_rection` | 5952 `Päivän` | `Päivän vaietessa` | `päivään` | genitive subject of an impersonal non-finite verb | 5 | **fixed** |
 | 14 | `verb_rection` | 14764 `niitä` | `…lähti niitä seuraamaan.` | `niihin` | `niitä` is the infinitive's object | 6 | sentence |
 | 15 | `verb_rection` | 6583 `sinut` | `…uskon sinut … haltuun.` | `sinuun` | the illative `haltuun` satisfies the frame | 6 | sentence |
 | 16 | `verb_rection` | 8210 `Jumala` | `…'Jumala, ole minulle armollinen…'` | `jumalaan` | vocative | 7 | sentence |
@@ -284,8 +284,7 @@ Acceptance: rows 8–9 clean; `Katsokaa se!` still reports `verb_rection`
 
 ### Phase 5 — comparison clauses, absolute phrases, non-finite subjects (rows 10–13)
 
-The riskiest phase; ship its three parts separately. **5a and 5b landed**;
-5c remains.
+The riskiest phase; its three parts landed separately.
 
 #### 5a — comparison clauses (row 10) — **landed**
 
@@ -318,17 +317,20 @@ illation frame rewrote it to `lapseen`.
   keep their readings and are clean fixtures.
 - Rows 11–12 move from `known_false_positives` to `clean`. Page 17 → 15.
 
-#### 5c — the genitive subject of an impersonal non-finite verb (row 13)
+#### 5c — the genitive subject of an impersonal non-finite verb (row 13) — **landed**
 
 `Päivän vaietessa` has a genitive subject; `Kirjan luettuaan` has a preposed
 genitive object. The discriminator is the **possessive suffix on the
 non-finite form** (`luettuaan` marks its agent) and a closed list of
 impersonal verbs of time and weather (`vaieta`, `hämärtää`, `sarastaa`,
-`koittaa`, `valjeta`, `pimetä`). Only the intersection gets a genitive
-subject.
+`koittaa`, `valjeta`, `pimetä`).
 
-Acceptance: row 13 clean; `Haluan mennä koulu.` fires; `Kirjan luettuaan hän
-lähti.` keeps `kirjan` as the object (new fixture).
+- A genitive nominal at the end of a clause whose next word is one of those
+  verbs, non-finite and without a possessive suffix, is marked `Adverbial`
+  (the genitive subject) before the object pass.
+- `Kirjan luettuaan` keeps `kirjan` as the object because `luettuaan` carries
+  the possessive suffix; the role pin is in `syntax_ambiguity.json`.
+- Row 13 moves from `known_false_positives` to `clean`. Page 15 → 14.
 
 ### Phase 6 — the infinitive's object and the transfer frame (rows 14–15)
 

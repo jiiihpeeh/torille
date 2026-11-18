@@ -16,12 +16,26 @@
       "subject": "none",
       "predicate": "juon",
       "roles": [
-        { "word": "päivä", "role": "adverbial", "case": "nominative" },
-        { "word": "juon", "role": "predicate" },
-        { "word": "kahvia", "role": "object", "case": "partitive" }
+        {
+          "word": "päivä",
+          "role": "adverbial",
+          "case": "nominative"
+        },
+        {
+          "word": "juon",
+          "role": "predicate"
+        },
+        {
+          "word": "kahvia",
+          "role": "object",
+          "case": "partitive"
+        }
       ],
       "forbidden_roles": [
-        { "word": "päivä", "role": "subject" }
+        {
+          "word": "päivä",
+          "role": "subject"
+        }
       ],
       "diagnostics": []
     },
@@ -32,11 +46,22 @@
       "subject": "mies",
       "predicate": "tietää",
       "roles": [
-        { "word": "mies", "role": "subject", "case": "nominative" },
-        { "word": "sen", "role": "object", "case": "genitive" }
+        {
+          "word": "mies",
+          "role": "subject",
+          "case": "nominative"
+        },
+        {
+          "word": "sen",
+          "role": "object",
+          "case": "genitive"
+        }
       ],
       "forbidden_roles": [
-        { "word": "mies", "role": "adverbial" }
+        {
+          "word": "mies",
+          "role": "adverbial"
+        }
       ],
       "diagnostics": []
     },
@@ -47,11 +72,22 @@
       "subject": "päivä",
       "predicate": "on",
       "roles": [
-        { "word": "päivä", "role": "subject", "case": "nominative" },
-        { "word": "kaunis", "role": "complement", "case": "nominative" }
+        {
+          "word": "päivä",
+          "role": "subject",
+          "case": "nominative"
+        },
+        {
+          "word": "kaunis",
+          "role": "complement",
+          "case": "nominative"
+        }
       ],
       "forbidden_roles": [
-        { "word": "päivä", "role": "adverbial" }
+        {
+          "word": "päivä",
+          "role": "adverbial"
+        }
       ],
       "diagnostics": []
     },
@@ -62,11 +98,21 @@
       "subject": "none",
       "predicate": "tule",
       "roles": [
-        { "word": "Ilman", "role": "adverbial" },
-        { "word": "rahaa", "role": "complement", "case": "partitive" }
+        {
+          "word": "Ilman",
+          "role": "adverbial"
+        },
+        {
+          "word": "rahaa",
+          "role": "complement",
+          "case": "partitive"
+        }
       ],
       "forbidden_roles": [
-        { "word": "Ilman", "role": "subject" }
+        {
+          "word": "Ilman",
+          "role": "subject"
+        }
       ],
       "diagnostics": []
     },
@@ -77,11 +123,22 @@
       "subject": "minä",
       "predicate": "tule",
       "roles": [
-        { "word": "sinua", "role": "complement", "case": "partitive" },
-        { "word": "minä", "role": "subject", "case": "nominative" }
+        {
+          "word": "sinua",
+          "role": "complement",
+          "case": "partitive"
+        },
+        {
+          "word": "minä",
+          "role": "subject",
+          "case": "nominative"
+        }
       ],
       "forbidden_roles": [
-        { "word": "sinua", "role": "modifier" }
+        {
+          "word": "sinua",
+          "role": "modifier"
+        }
       ],
       "diagnostics": []
     },
@@ -92,11 +149,22 @@
       "subject": "hän",
       "predicate": "tuli",
       "roles": [
-        { "word": "minua", "role": "complement", "case": "partitive" },
-        { "word": "hän", "role": "subject", "case": "nominative" }
+        {
+          "word": "minua",
+          "role": "complement",
+          "case": "partitive"
+        },
+        {
+          "word": "hän",
+          "role": "subject",
+          "case": "nominative"
+        }
       ],
       "forbidden_roles": [
-        { "word": "minua", "role": "modifier" }
+        {
+          "word": "minua",
+          "role": "modifier"
+        }
       ],
       "diagnostics": []
     },
@@ -107,10 +175,17 @@
       "subject": "none",
       "predicate": "Tarvitsen",
       "roles": [
-        { "word": "sen", "role": "object", "case": "genitive" }
+        {
+          "word": "sen",
+          "role": "object",
+          "case": "genitive"
+        }
       ],
       "forbidden_roles": [
-        { "word": "sen", "role": "adverbial" }
+        {
+          "word": "sen",
+          "role": "adverbial"
+        }
       ],
       "diagnostics": []
     },
@@ -121,10 +196,17 @@
       "subject": "none",
       "predicate": "Autan",
       "roles": [
-        { "word": "sinut", "role": "object", "case": "accusative" }
+        {
+          "word": "sinut",
+          "role": "object",
+          "case": "accusative"
+        }
       ],
       "forbidden_roles": [
-        { "word": "sinut", "role": "subject" }
+        {
+          "word": "sinut",
+          "role": "subject"
+        }
       ],
       "diagnostics": []
     },
@@ -135,10 +217,17 @@
       "subject": "Hän",
       "predicate": "pitää",
       "roles": [
-        { "word": "puheen", "role": "object", "case": "genitive" }
+        {
+          "word": "puheen",
+          "role": "object",
+          "case": "genitive"
+        }
       ],
       "forbidden_roles": [
-        { "word": "puheen", "role": "adverbial" }
+        {
+          "word": "puheen",
+          "role": "adverbial"
+        }
       ],
       "diagnostics": []
     },
@@ -149,10 +238,17 @@
       "subject": "none",
       "predicate": "Pidän",
       "roles": [
-        { "word": "sinusta", "role": "adverbial", "case": "elative" }
+        {
+          "word": "sinusta",
+          "role": "adverbial",
+          "case": "elative"
+        }
       ],
       "forbidden_roles": [
-        { "word": "sinusta", "role": "object" }
+        {
+          "word": "sinusta",
+          "role": "object"
+        }
       ],
       "diagnostics": []
     },
@@ -163,11 +259,21 @@
       "subject": "none",
       "predicate": "Merkitse",
       "roles": [
-        { "word": "esine", "role": "object", "case": "nominative" }
+        {
+          "word": "esine",
+          "role": "object",
+          "case": "nominative"
+        }
       ],
       "forbidden_roles": [
-        { "word": "joka", "role": "predicate" },
-        { "word": "kirjaan", "role": "predicate" }
+        {
+          "word": "joka",
+          "role": "predicate"
+        },
+        {
+          "word": "kirjaan",
+          "role": "predicate"
+        }
       ],
       "diagnostics": []
     },
@@ -190,8 +296,16 @@
       "subject": "Talot",
       "predicate": "ovat",
       "roles": [
-        { "word": "Talot", "role": "subject", "case": "nominative" },
-        { "word": "punaisia", "role": "complement", "case": "partitive" }
+        {
+          "word": "Talot",
+          "role": "subject",
+          "case": "nominative"
+        },
+        {
+          "word": "punaisia",
+          "role": "complement",
+          "case": "partitive"
+        }
       ],
       "diagnostics": []
     },
@@ -202,10 +316,20 @@
       "subject": "Talot",
       "predicate": "ovat",
       "roles": [
-        { "word": "Talot", "role": "subject", "case": "nominative" },
-        { "word": "punainen", "role": "complement", "case": "nominative" }
+        {
+          "word": "Talot",
+          "role": "subject",
+          "case": "nominative"
+        },
+        {
+          "word": "punainen",
+          "role": "complement",
+          "case": "nominative"
+        }
       ],
-      "diagnostics": ["predicative_agreement"]
+      "diagnostics": [
+        "predicative_agreement"
+      ]
     },
     {
       "id": "connegative_present",
@@ -214,9 +338,14 @@
       "subject": "none",
       "predicate": "menen",
       "roles": [
-        { "word": "menen", "role": "predicate" }
+        {
+          "word": "menen",
+          "role": "predicate"
+        }
       ],
-      "diagnostics": ["connegative"]
+      "diagnostics": [
+        "connegative"
+      ]
     },
     {
       "id": "connegative_correct",
@@ -225,7 +354,10 @@
       "subject": "none",
       "predicate": "mene",
       "roles": [
-        { "word": "mene", "role": "predicate" }
+        {
+          "word": "mene",
+          "role": "predicate"
+        }
       ],
       "diagnostics": []
     },
@@ -236,9 +368,15 @@
       "subject": "lapsi",
       "predicate": "tuli",
       "roles": [
-        { "word": "lapsi", "role": "subject", "case": "nominative" }
+        {
+          "word": "lapsi",
+          "role": "subject",
+          "case": "nominative"
+        }
       ],
-      "diagnostics": ["case_selection"]
+      "diagnostics": [
+        "case_selection"
+      ]
     },
     {
       "id": "numeral_partitive",
@@ -247,7 +385,10 @@
       "subject": "lasta",
       "predicate": "tuli",
       "roles": [
-        { "word": "lasta", "role": "subject" }
+        {
+          "word": "lasta",
+          "role": "subject"
+        }
       ],
       "diagnostics": []
     },
@@ -258,11 +399,21 @@
       "subject": "kissa",
       "predicate": "on",
       "roles": [
-        { "word": "Pöydän", "role": "modifier", "case": "genitive" },
-        { "word": "alla", "role": "adverbial" }
+        {
+          "word": "Pöydän",
+          "role": "modifier",
+          "case": "genitive"
+        },
+        {
+          "word": "alla",
+          "role": "adverbial"
+        }
       ],
       "forbidden_roles": [
-        { "word": "Pöydän", "role": "subject" }
+        {
+          "word": "Pöydän",
+          "role": "subject"
+        }
       ],
       "diagnostics": []
     },
@@ -273,10 +424,16 @@
       "subject": "kissa",
       "predicate": "on",
       "roles": [
-        { "word": "alla", "role": "adverbial" }
+        {
+          "word": "alla",
+          "role": "adverbial"
+        }
       ],
       "forbidden_roles": [
-        { "word": "alla", "role": "complement" }
+        {
+          "word": "alla",
+          "role": "complement"
+        }
       ],
       "diagnostics": []
     },
@@ -284,7 +441,9 @@
       "id": "adposition_nominative_error",
       "text": "Pöytä alla on kissa.",
       "clauses": 1,
-      "diagnostics": ["case_selection"]
+      "diagnostics": [
+        "case_selection"
+      ]
     },
     {
       "id": "ambiguous_tuli_subject",
@@ -293,10 +452,17 @@
       "subject": "Tuli",
       "predicate": "sammui",
       "roles": [
-        { "word": "Tuli", "role": "subject", "case": "nominative" }
+        {
+          "word": "Tuli",
+          "role": "subject",
+          "case": "nominative"
+        }
       ],
       "forbidden_roles": [
-        { "word": "Tuli", "role": "predicate" }
+        {
+          "word": "Tuli",
+          "role": "predicate"
+        }
       ],
       "diagnostics": []
     },
@@ -307,10 +473,17 @@
       "subject": "kirja",
       "predicate": "on",
       "roles": [
-        { "word": "kirja", "role": "subject", "case": "nominative" }
+        {
+          "word": "kirja",
+          "role": "subject",
+          "case": "nominative"
+        }
       ],
       "forbidden_roles": [
-        { "word": "Pöydällä", "role": "subject" }
+        {
+          "word": "Pöydällä",
+          "role": "subject"
+        }
       ],
       "diagnostics": []
     },
@@ -318,13 +491,17 @@
       "id": "existential_genitive_subject",
       "text": "Pöydällä on kirjan.",
       "clauses": 1,
-      "diagnostics": ["case_selection"]
+      "diagnostics": [
+        "case_selection"
+      ]
     },
     {
       "id": "participle_active_homonym",
       "text": "Me olemme mennyt.",
       "clauses": 1,
-      "diagnostics": ["subject_predicate_agreement"]
+      "diagnostics": [
+        "subject_predicate_agreement"
+      ]
     },
     {
       "id": "participle_passive_no_agreement",
@@ -350,7 +527,9 @@
     {
       "id": "incomplete_coordination_warning",
       "text": "Hän tuli ja.",
-      "diagnostics": ["clause_structure"]
+      "diagnostics": [
+        "clause_structure"
+      ]
     },
     {
       "id": "clause_fragment_without_period",
@@ -370,12 +549,16 @@
     {
       "id": "possessive_missing_colloquial",
       "text": "Minun kirja on uusi.",
-      "diagnostics": ["possessive_agreement"]
+      "diagnostics": [
+        "possessive_agreement"
+      ]
     },
     {
       "id": "extra_comma_pronoun_subject",
       "text": "Minä, menen kotiin.",
-      "diagnostics": ["comma_extra"]
+      "diagnostics": [
+        "comma_extra"
+      ]
     },
     {
       "id": "extra_comma_apposition",
@@ -395,7 +578,9 @@
     {
       "id": "predicative_noun_number",
       "text": "He ovat opettaja.",
-      "diagnostics": ["predicative_agreement"]
+      "diagnostics": [
+        "predicative_agreement"
+      ]
     },
     {
       "id": "existential_intransitive_partitive_subject",
@@ -404,12 +589,26 @@
       "subject": "ihmisiä",
       "predicate": "asuu",
       "roles": [
-        { "word": "Talossa", "role": "adverbial", "case": "inessive" },
-        { "word": "asuu", "role": "predicate" },
-        { "word": "ihmisiä", "role": "subject", "case": "partitive" }
+        {
+          "word": "Talossa",
+          "role": "adverbial",
+          "case": "inessive"
+        },
+        {
+          "word": "asuu",
+          "role": "predicate"
+        },
+        {
+          "word": "ihmisiä",
+          "role": "subject",
+          "case": "partitive"
+        }
       ],
       "forbidden_roles": [
-        { "word": "ihmisiä", "role": "object" }
+        {
+          "word": "ihmisiä",
+          "role": "object"
+        }
       ],
       "features": {
         "construction": "existential",
@@ -435,12 +634,25 @@
       "subject": "none",
       "predicate": "luin",
       "roles": [
-        { "word": "Kirjan", "role": "object", "case": "genitive" },
-        { "word": "luin", "role": "predicate" },
-        { "word": "eilen", "role": "adverbial" }
+        {
+          "word": "Kirjan",
+          "role": "object",
+          "case": "genitive"
+        },
+        {
+          "word": "luin",
+          "role": "predicate"
+        },
+        {
+          "word": "eilen",
+          "role": "adverbial"
+        }
       ],
       "forbidden_roles": [
-        { "word": "Kirjan", "role": "subject" }
+        {
+          "word": "Kirjan",
+          "role": "subject"
+        }
       ],
       "features": {
         "clause_type": "declarative",
@@ -457,11 +669,21 @@
       "subject": "susi",
       "predicate": "tuli",
       "roles": [
-        { "word": "hirvittävä", "role": "modifier" },
-        { "word": "susi", "role": "subject", "case": "nominative" }
+        {
+          "word": "hirvittävä",
+          "role": "modifier"
+        },
+        {
+          "word": "susi",
+          "role": "subject",
+          "case": "nominative"
+        }
       ],
       "forbidden_roles": [
-        { "word": "hirvittävä", "role": "subject" }
+        {
+          "word": "hirvittävä",
+          "role": "subject"
+        }
       ],
       "diagnostics": []
     },
@@ -472,13 +694,29 @@
       "subject": "hirvi",
       "predicate": "tulee",
       "roles": [
-        { "word": "se", "role": "modifier" },
-        { "word": "kesy", "role": "modifier" },
-        { "word": "hirvi", "role": "subject", "case": "nominative" }
+        {
+          "word": "se",
+          "role": "modifier"
+        },
+        {
+          "word": "kesy",
+          "role": "modifier"
+        },
+        {
+          "word": "hirvi",
+          "role": "subject",
+          "case": "nominative"
+        }
       ],
       "forbidden_roles": [
-        { "word": "se", "role": "subject" },
-        { "word": "hirvi", "role": "object" }
+        {
+          "word": "se",
+          "role": "subject"
+        },
+        {
+          "word": "hirvi",
+          "role": "object"
+        }
       ],
       "diagnostics": []
     },
@@ -489,10 +727,17 @@
       "subject": "kreivi",
       "predicate": "auttoi",
       "roles": [
-        { "word": "kreivi", "role": "subject", "case": "nominative" }
+        {
+          "word": "kreivi",
+          "role": "subject",
+          "case": "nominative"
+        }
       ],
       "forbidden_roles": [
-        { "word": "kreivi", "role": "object" }
+        {
+          "word": "kreivi",
+          "role": "object"
+        }
       ],
       "diagnostics": []
     },
@@ -501,11 +746,20 @@
       "text": "Kun häneltä kysyttiin, hän vastasi selvästi.",
       "clauses": 2,
       "roles": [
-        { "word": "kysyttiin", "role": "predicate" },
-        { "word": "vastasi", "role": "predicate" }
+        {
+          "word": "kysyttiin",
+          "role": "predicate"
+        },
+        {
+          "word": "vastasi",
+          "role": "predicate"
+        }
       ],
       "forbidden_roles": [
-        { "word": "hän", "role": "object" }
+        {
+          "word": "hän",
+          "role": "object"
+        }
       ],
       "diagnostics": []
     },
@@ -515,8 +769,15 @@
       "clauses": 1,
       "subject": "kaikki",
       "roles": [
-        { "word": "kaikki", "role": "subject", "case": "nominative" },
-        { "word": "tulivat", "role": "predicate" }
+        {
+          "word": "kaikki",
+          "role": "subject",
+          "case": "nominative"
+        },
+        {
+          "word": "tulivat",
+          "role": "predicate"
+        }
       ],
       "diagnostics": []
     },
@@ -527,11 +788,22 @@
       "subject": "hän",
       "predicate": "sanoi",
       "roles": [
-        { "word": "sen", "role": "object", "case": "genitive" },
-        { "word": "hän", "role": "subject", "case": "nominative" }
+        {
+          "word": "sen",
+          "role": "object",
+          "case": "genitive"
+        },
+        {
+          "word": "hän",
+          "role": "subject",
+          "case": "nominative"
+        }
       ],
       "forbidden_roles": [
-        { "word": "hän", "role": "object" }
+        {
+          "word": "hän",
+          "role": "object"
+        }
       ],
       "diagnostics": []
     },
@@ -542,7 +814,10 @@
       "subject": "hän",
       "predicate": "sanoi",
       "forbidden_roles": [
-        { "word": "heintsi", "role": "subject" }
+        {
+          "word": "heintsi",
+          "role": "subject"
+        }
       ],
       "diagnostics": []
     },
@@ -552,10 +827,60 @@
       "clauses": 1,
       "subject": "hän",
       "roles": [
-        { "word": "hän", "role": "subject", "case": "nominative" }
+        {
+          "word": "hän",
+          "role": "subject",
+          "case": "nominative"
+        }
       ],
       "forbidden_roles": [
-        { "word": "herttainen", "role": "subject" }
+        {
+          "word": "herttainen",
+          "role": "subject"
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "impersonal_genitive_subject",
+      "text": "Kuningas käskee jo tänä iltana lähteä sotaan.' Päivän vaietessa olivatkin jo kaikki Sikrin ritarit koolla linnan suuressa salissa.",
+      "clauses": 3,
+      "roles": [
+        {
+          "word": "päivän",
+          "role": "adverbial",
+          "case": "genitive"
+        },
+        {
+          "word": "vaietessa",
+          "role": "adverbial",
+          "case": "inessive"
+        }
+      ],
+      "forbidden_roles": [
+        {
+          "word": "päivän",
+          "role": "object"
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "agent_participle_genitive_object",
+      "text": "Kirjan luettuaan hän lähti.",
+      "clauses": 1,
+      "roles": [
+        {
+          "word": "kirjan",
+          "role": "object",
+          "case": "genitive"
+        }
+      ],
+      "forbidden_roles": [
+        {
+          "word": "kirjan",
+          "role": "adverbial"
+        }
       ],
       "diagnostics": []
     }

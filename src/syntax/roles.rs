@@ -625,6 +625,23 @@ pub(super) fn resolve_clause(
         }
     }
 
+    // A genitive nominal immediately before an impersonal non-finite verb of
+    // time or weather is that verb's subject (`Päivän vaietessa`), not the
+    // object of the preceding predicate. `Kirjan luettuaan` is different: the
+    // possessive suffix marks the agent, so the genitive stays an object.
+    if let Some(next) = (clause.tokens.end..tokens.len()).find(|&index| tokens[index].is_word())
+        && is_impersonal_temporal_verb(&out[next])
+        && let Some(&last) = after.last()
+        && Some(last) != subject
+        && out[last].role == SyntacticRole::Unknown
+        && nominal_has_case(&out[last], &[Case::Genitive])
+    {
+        out[last].role = SyntacticRole::Adverbial;
+        out[last].confidence = nominal_confidence(&out[last]);
+        out[last].case = Some(Case::Genitive);
+        out[last].head = Some(next);
+    }
+
     let object_cases: &[Case] = if negative {
         &[Case::Partitive]
     } else {
@@ -1301,6 +1318,30 @@ fn mark_numeral_complement(head: usize, words: &[usize], out: &mut [TokenSyntax]
 }
 
 /// Whether a token carries a possessive suffix.
+/// Impersonal verbs of time and weather whose genitive subject is
+/// `Päivän vaietessa`. A possessive suffix (`luettuaan`) marks the agent and
+/// keeps the genitive as an object, so it is excluded.
+const IMPERSONAL_TIME_VERBS: &[&str] = &[
+    "vaieta",
+    "hämärtää",
+    "sarastaa",
+    "koittaa",
+    "valjeta",
+    "pimetä",
+];
+
+fn is_impersonal_temporal_verb(syntax: &TokenSyntax) -> bool {
+    syntax
+        .lemma
+        .as_deref()
+        .is_some_and(|lemma| IMPERSONAL_TIME_VERBS.contains(&lemma))
+        && syntax.readings.iter().any(|reading| {
+            reading.part_of_speech == Some(PartOfSpeech::Verb)
+                && reading.mood == Some(Mood::Infinitive)
+                && reading.possessive.is_none()
+        })
+}
+
 /// Does this token have an inessive reading? The second half of an absolute
 /// phrase (`lapsi sylissä`) may be a nominal or an adverb.
 fn is_inessive_phrase_head(syntax: &TokenSyntax) -> bool {

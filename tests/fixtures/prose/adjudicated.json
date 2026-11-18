@@ -87,7 +87,8 @@
     "Näettehän kuun, katsokaa, se peitäkse pilven taa ikäänkuin ei voisi nähdä sitä tekoa, jonka aiotte tehdä.",
     "Hän sanoi: \"Ei vielä, ei, kerro, niinkuin se sitten kävi.\"",
     "Hän jäi lapsi sylissä istumaan puun alle ja odotti päivän nousua.",
-    "Hän lähti lapsi sylissä kulkemaan lumessa ja sateessa yhä kauemmas korpeen, tietämättä minne."
+    "Hän lähti lapsi sylissä kulkemaan lumessa ja sateessa yhä kauemmas korpeen, tietämättä minne.",
+    "Kuningas käskee jo tänä iltana lähteä sotaan.' Päivän vaietessa olivatkin jo kaikki Sikrin ritarit koolla linnan suuressa salissa."
   ],
   "errors": [
     {
@@ -119,13 +120,6 @@
         "verb_rection"
       ],
       "note": "Phase 7: `Jumala` is a vocative."
-    },
-    {
-      "text": "Kuningas käskee jo tänä iltana lähteä sotaan.' Päivän vaietessa olivatkin jo kaikki Sikrin ritarit koolla linnan suuressa salissa.",
-      "kinds": [
-        "verb_rection"
-      ],
-      "note": "Phase 5: `Päivän` is the genitive subject of the impersonal `vaietessa`."
     }
   ]
 }
