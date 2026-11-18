@@ -85,7 +85,9 @@
     "Oli ollut ihan hiljaista, sen kun Anni vain kertoi, koko ajan kynttilään katsoen, tasaisella äänellä.",
     "Se päivä tulee, jolloin kaikki tänne kokoontuneet Jumalaa siitä ilokyynelin kiittävät.",
     "Näettehän kuun, katsokaa, se peitäkse pilven taa ikäänkuin ei voisi nähdä sitä tekoa, jonka aiotte tehdä.",
-    "Hän sanoi: \"Ei vielä, ei, kerro, niinkuin se sitten kävi.\""
+    "Hän sanoi: \"Ei vielä, ei, kerro, niinkuin se sitten kävi.\"",
+    "Hän jäi lapsi sylissä istumaan puun alle ja odotti päivän nousua.",
+    "Hän lähti lapsi sylissä kulkemaan lumessa ja sateessa yhä kauemmas korpeen, tietämättä minne."
   ],
   "errors": [
     {
@@ -97,20 +99,6 @@
     }
   ],
   "known_false_positives": [
-    {
-      "text": "Hän jäi lapsi sylissä istumaan puun alle ja odotti päivän nousua.",
-      "kinds": [
-        "verb_rection"
-      ],
-      "note": "Phase 5: `lapsi sylissä` is an absolute phrase, not the object of `jäi`."
-    },
-    {
-      "text": "Hän lähti lapsi sylissä kulkemaan lumessa ja sateessa yhä kauemmas korpeen, tietämättä minne.",
-      "kinds": [
-        "verb_rection"
-      ],
-      "note": "Phase 5: same absolute phrase."
-    },
     {
       "text": "Hän tapasi hirven jälet ja lähti niitä seuraamaan.",
       "kinds": [

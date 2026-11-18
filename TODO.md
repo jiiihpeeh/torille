@@ -2121,3 +2121,6 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
 - 2026-11-18: grammar precision Phase 5a landed: comparison clauses
   (`niinkuin`/`ikäänkuin`) split without requiring a comma. `page-2000`
   18 → 17 diagnostics; 5b–5c and phases 6–9 remain.
+- 2026-11-18: grammar precision Phase 5b landed: absolute phrases
+  (`lapsi sylissä`) are detached before the object pass. `page-2000`
+  17 → 15 diagnostics; 5c and phases 6–9 remain.

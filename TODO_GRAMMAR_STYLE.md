@@ -1198,3 +1198,9 @@ intended/competing interpretation pair that fails.
   two false comma rows on the page. `page-2000`: 18 → 17, row 10 only; the
   `niinkuin` prose row moves to clean and `Meille on niinkuin ennenkin haettu
   apua.` is a clean fixture.
+- 2026-11-18: precision Phase 5b (absolute phrases). A nominative nominal
+  directly before an inessive nominal/adverb, after an overt clause subject,
+  is a detached phrase (`Hän jäi lapsi sylissä istumaan`), not the object;
+  it is marked Adverbial before the object pass, so the illative frame cannot
+  rewrite it. `Hän istui tuolissa.` and `Kirja pöydällä on minun.` are clean
+  guard fixtures. `page-2000`: 17 → 15, rows 11–12 only.

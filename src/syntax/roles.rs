@@ -600,6 +600,31 @@ pub(super) fn resolve_clause(
         mark_numeral_complement(index, &words, out);
     }
 
+    // An absolute phrase: `Hän jäi lapsi sylissä istumaan`. A nominative
+    // nominal directly before an inessive nominal or adverb is a detached
+    // phrase, not the verb's object. Mark it before the object pass so a
+    // rection frame cannot rewrite it. The clause needs an overt subject,
+    // and the inessive must follow immediately: `Hän istui tuolissa` has no
+    // nominative before the inessive, and `Kirja pöydällä on minun` has the
+    // subject itself as the phrase's head.
+    if subject.is_some() {
+        for pair in after.windows(2) {
+            let (first, second) = (pair[0], pair[1]);
+            if out[first].role == SyntacticRole::Unknown
+                && nominal_has_case(&out[first], &[Case::Nominative])
+                && is_inessive_phrase_head(&out[second])
+                && !is_clause_marker(first, tokens, out)
+                && !is_clause_marker(second, tokens, out)
+            {
+                out[first].role = SyntacticRole::Adverbial;
+                out[first].confidence = nominal_confidence(&out[first]);
+                out[first].case = Some(Case::Nominative);
+                out[first].head = Some(predicate);
+                break;
+            }
+        }
+    }
+
     let object_cases: &[Case] = if negative {
         &[Case::Partitive]
     } else {
@@ -1276,6 +1301,15 @@ fn mark_numeral_complement(head: usize, words: &[usize], out: &mut [TokenSyntax]
 }
 
 /// Whether a token carries a possessive suffix.
+/// Does this token have an inessive reading? The second half of an absolute
+/// phrase (`lapsi sylissä`) may be a nominal or an adverb.
+fn is_inessive_phrase_head(syntax: &TokenSyntax) -> bool {
+    syntax
+        .readings
+        .iter()
+        .any(|reading| reading.case == Some(Case::Inessive))
+}
+
 fn has_possessive(syntax: &TokenSyntax) -> bool {
     syntax
         .readings
