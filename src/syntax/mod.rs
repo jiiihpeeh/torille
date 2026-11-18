@@ -44,6 +44,7 @@ pub(crate) use predicates::{
     is_subordinator, is_verb_reading, predicate_is_passive, starts_relative_clause,
 };
 use roles::{classify_with_preference, resolve_clause, share_clause_roles};
+pub(crate) use roles::predicate_matches_previous_subject;
 use segments::{build_clause_tree, clause_groups, segment_clause_words};
 
 /// What a token is doing in its sentence.

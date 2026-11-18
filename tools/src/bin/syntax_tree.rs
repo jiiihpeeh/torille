@@ -119,6 +119,9 @@ fn dump(ast: &Ast, tokens: &[Token], text: &str, id: NodeId, depth: usize) {
     if let Some(role) = node.role {
         line.push_str(&format!(" role={}", role.name()));
     }
+    if let Some(antecedent) = node.antecedent.and_then(|index| tokens.get(index)) {
+        line.push_str(&format!(" antecedent={}", antecedent.text));
+    }
     line.push_str(match node.confidence {
         RoleConfidence::Likely => " conf=likely",
         RoleConfidence::Weak => " conf=weak",
@@ -164,6 +167,7 @@ fn node_json(ast: &Ast, id: NodeId) -> Value {
         "governor": node.governor,
         "role": node.role.map(|role| role.name()),
         "confidence": confidence,
+        "antecedent": node.antecedent,
         "clause": node.clause,
     })
 }

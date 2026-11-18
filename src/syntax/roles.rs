@@ -1590,7 +1590,7 @@ fn subject_person_number(index: usize, out: &[TokenSyntax]) -> Option<(Person, N
 /// ja lauloi` shares a name whose number is unknown. `Eräänä iltana istuivat
 /// molemmat ...; Kenoveeva kehräsi` must not copy the plural `molemmat` into a
 /// singular predicate just because both are 3rd person.
-fn predicate_matches_previous_subject(
+pub(crate) fn predicate_matches_previous_subject(
     clause: &Clause,
     previous: &Clause,
     tokens: &[Token],

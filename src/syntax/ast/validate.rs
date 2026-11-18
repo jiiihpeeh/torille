@@ -7,7 +7,7 @@
 use crate::syntax::{SyntacticRole, SyntaxAnalysis};
 use crate::tokenise::Token;
 
-use super::clauses::kind_of;
+use super::clauses::{host_kind, kind_of};
 use super::{Ast, NodeId, NodeKind, Violation};
 
 /// Check every phase-0 invariant.
@@ -328,77 +328,129 @@ fn check_coverage(tokens: &[Token], ast: &Ast, out: &mut Vec<Violation>) {
 }
 
 fn check_clauses(tokens: &[Token], analysis: &SyntaxAnalysis, ast: &Ast, out: &mut Vec<Violation>) {
-    for (index, clause) in analysis.clauses.iter().enumerate() {
-        let found: Vec<&super::Node> = ast
-            .nodes
-            .iter()
-            .filter(|node| matches!(node.kind, NodeKind::Clause(_)) && node.clause == Some(index))
-            .collect();
-        if found.len() != 1 {
-            fail(
-                out,
-                None,
-                "clause",
-                format!("flat clause {index} has {} nodes, expected 1", found.len()),
-            );
+    let mut represented = vec![0usize; analysis.clauses.len()];
+
+    for node in &ast.nodes {
+        let NodeKind::Clause(kind) = node.kind else {
+            continue;
+        };
+        if node.segments.is_empty() {
+            fail(out, None, "clause", "a clause node has no segments");
             continue;
         }
-        let node = found[0];
-        if node.tokens != clause.tokens {
-            fail(
-                out,
-                None,
-                "clause",
-                format!("clause {index} token range differs"),
-            );
+
+        let mut flat = Vec::with_capacity(node.segments.len());
+        let mut bad = false;
+        for segment in &node.segments {
+            match analysis
+                .clauses
+                .iter()
+                .position(|clause| clause.tokens == *segment)
+            {
+                Some(index) => {
+                    represented[index] += 1;
+                    flat.push(index);
+                }
+                None => {
+                    fail(
+                        out,
+                        None,
+                        "clause",
+                        "a clause segment matches no flat clause",
+                    );
+                    bad = true;
+                }
+            }
         }
-        if node.span != (clause.start..clause.end) {
-            fail(
-                out,
-                None,
-                "clause",
-                format!("clause {index} byte span differs"),
-            );
+        if bad {
+            continue;
         }
-        let expected = NodeKind::Clause(kind_of(tokens, analysis, clause));
-        if node.kind != expected {
-            fail(
-                out,
-                None,
-                "clause",
-                format!("clause {index} has the wrong kind"),
-            );
+        let (Some(&first_index), Some(&last_index)) = (flat.first(), flat.last()) else {
+            continue;
+        };
+        let first = &analysis.clauses[first_index];
+        let last = &analysis.clauses[last_index];
+
+        if node.segments.len() == 1 {
+            if node.clause != Some(first_index) {
+                fail(
+                    out,
+                    None,
+                    "clause",
+                    "a single-segment clause points at the wrong flat clause",
+                );
+            }
+            if node.tokens != first.tokens {
+                fail(
+                    out,
+                    None,
+                    "clause",
+                    "a clause node has the wrong token range",
+                );
+            }
+            if node.span != (first.start..first.end) {
+                fail(out, None, "clause", "a clause node has the wrong byte span");
+            }
+            if kind != kind_of(tokens, analysis, first) {
+                fail(out, None, "clause", "a clause node has the wrong kind");
+            }
+            if node.antecedent != first.antecedent {
+                fail(
+                    out,
+                    None,
+                    "clause",
+                    "a clause node has the wrong antecedent",
+                );
+            }
+        } else {
+            if node.clause != Some(last_index) {
+                fail(
+                    out,
+                    None,
+                    "clause",
+                    "a host clause points at the wrong flat clause",
+                );
+            }
+            if node.tokens != (first.tokens.start..last.tokens.end) {
+                fail(
+                    out,
+                    None,
+                    "clause",
+                    "a host clause has the wrong token envelope",
+                );
+            }
+            if node.span != (first.start..last.end) {
+                fail(
+                    out,
+                    None,
+                    "clause",
+                    "a host clause has the wrong byte envelope",
+                );
+            }
+            if kind != host_kind(tokens, analysis, first, last) {
+                fail(out, None, "clause", "a host clause has the wrong kind");
+            }
+            if node.head != last.predicate {
+                fail(out, None, "clause", "a host clause has the wrong predicate");
+            }
+            if node.antecedent.is_some() {
+                fail(
+                    out,
+                    None,
+                    "clause",
+                    "a host clause must not carry an antecedent",
+                );
+            }
         }
     }
 
-    for node in &ast.nodes {
-        if !matches!(node.kind, NodeKind::Clause(_)) {
-            continue;
-        }
-        let Some(index) = node.clause else {
+    for (index, count) in represented.iter().enumerate() {
+        if *count != 1 {
             fail(
                 out,
                 None,
                 "clause",
-                "a clause node has no flat clause index",
-            );
-            continue;
-        };
-        let Some(clause) = analysis.clauses.get(index) else {
-            fail(
-                out,
-                None,
-                "clause",
-                format!("clause index {index} is out of range"),
-            );
-            continue;
-        };
-        if node.tokens != clause.tokens {
-            fail(
-                out,
-                None,
-                "clause",
-                format!("clause {index} node has the wrong tokens"),
+                format!("flat clause {index} is represented by {count} nodes, expected 1"),
             );
         }
     }

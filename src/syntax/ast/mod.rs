@@ -198,6 +198,9 @@ pub struct Node {
     /// The role the flat model chose for `head`, copied, never re-derived.
     pub role: Option<SyntacticRole>,
     pub confidence: RoleConfidence,
+    /// For a relative clause, the nominal the relative pronoun modifies.
+    /// `None` on every other node and when the flat model left it unlinked.
+    pub antecedent: Option<usize>,
     /// Index into [`SyntaxAnalysis::clauses`] for the node's head token. A
     /// multi-segment host uses the flat clause of its predicate.
     pub clause: Option<usize>,
@@ -221,6 +224,7 @@ impl Node {
             governor: None,
             role: None,
             confidence: RoleConfidence::Weak,
+            antecedent: None,
             clause: None,
         }
     }
@@ -249,7 +253,31 @@ impl Node {
         } else {
             RoleConfidence::Weak
         };
+        node.antecedent = clause.antecedent;
         node.clause = Some(index);
+        node
+    }
+
+    fn host_clause(
+        kind: ClauseKind,
+        first: &Clause,
+        continuation: &Clause,
+        continuation_index: usize,
+    ) -> Self {
+        let tokens = first.tokens.start..continuation.tokens.end;
+        let mut node = Self::framed(
+            NodeKind::Clause(kind),
+            first.start..continuation.end,
+            tokens,
+        );
+        node.segments = vec![first.tokens.clone(), continuation.tokens.clone()];
+        node.head = continuation.predicate;
+        node.confidence = if continuation.predicate.is_some() {
+            RoleConfidence::Likely
+        } else {
+            RoleConfidence::Weak
+        };
+        node.clause = Some(continuation_index);
         node
     }
 
@@ -491,22 +519,47 @@ mod tests {
     }
 
     #[test]
-    fn a_relative_clause_is_a_relative_node() {
+    fn a_relative_host_has_two_segments_and_a_relative_child() {
         let (tokens, tree) = analyzed("Mies, joka tuli, söi.");
-        let kinds: Vec<ClauseKind> = clauses(&tree)
+        let (host_id, host) = tree
+            .ast
+            .nodes
             .iter()
-            .filter_map(|node| match node.kind {
-                NodeKind::Clause(kind) => Some(kind),
-                _ => None,
+            .enumerate()
+            .find(|(_, node)| {
+                matches!(node.kind, NodeKind::Clause(ClauseKind::Main)) && node.segments.len() == 2
             })
-            .collect();
-        assert!(kinds.contains(&ClauseKind::Relative), "{kinds:?}");
+            .map(|(index, node)| (NodeId::new(index), node))
+            .expect("a host clause");
+        assert_eq!(host.segments, vec![0..1, 6..7]);
+        assert_eq!(host.clause, Some(2));
+        assert_eq!(host.head, Some(6));
         let relative = clauses(&tree)
             .into_iter()
             .find(|node| node.kind == NodeKind::Clause(ClauseKind::Relative))
             .expect("a relative clause");
-        assert!(relative.parent.is_some(), "the relative is nested");
-        validate(&tokens, &tree.analysis, &tree.ast).expect("relative tree is valid");
+        assert_eq!(relative.parent, Some(host_id));
+        assert!(
+            host.children
+                .iter()
+                .any(|&child| tree.ast.node(child).kind == NodeKind::Clause(ClauseKind::Relative))
+        );
+        assert_eq!(relative.antecedent, tree.analysis.clauses[1].antecedent);
+        validate(&tokens, &tree.analysis, &tree.ast).expect("host tree is valid");
+    }
+
+    #[test]
+    fn a_relative_without_a_continuation_stays_flat() {
+        let (tokens, tree) = analyzed("Mies, joka tuli.");
+        assert!(tree.ast.nodes.iter().all(|node| node.segments.len() <= 1));
+        validate(&tokens, &tree.analysis, &tree.ast).expect("flat relative tree is valid");
+    }
+
+    #[test]
+    fn a_coordinated_continuation_is_not_merged() {
+        let (tokens, tree) = analyzed("Mies, joka tuli, söi ja joi.");
+        assert!(tree.ast.nodes.iter().all(|node| node.segments.len() <= 1));
+        validate(&tokens, &tree.analysis, &tree.ast).expect("coordinated tree is valid");
     }
 
     #[test]

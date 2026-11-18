@@ -1,9 +1,9 @@
 # PLAN_SYNTAX_AST — a typed surface tree over `syntax`
 
-Status: **Phases 0–1 landed.** The skeleton and head-driven phrases are in
-`src/syntax/ast/`: `Ast`, `Node`, `NodeKind`, the `seed`/`group`/`chunk`
-passes, the validator and the `syntax_tree` CLI. The flat
-`syntax::SyntaxAnalysis` stays the authority; the tree is an additive view
+Status: **Phases 0–2 landed.** The skeleton, head-driven phrases and the
+multi-segment relative host are in `src/syntax/ast/`: `Ast`, `Node`, `NodeKind`,
+the `seed`/`group`/`chunk` passes, the validator and the `syntax_tree` CLI. The
+flat `syntax::SyntaxAnalysis` stays the authority; the tree is an additive view
 built on demand. This plan defines the node kinds, the
 construction pipeline, the invariants and the phase gates.
 
@@ -225,6 +225,8 @@ pub struct Node {
     /// The role the flat model chose for `head`, copied, never re-derived.
     pub role: Option<SyntacticRole>,
     pub confidence: RoleConfidence,
+    /// For a relative clause, the nominal the relative pronoun modifies.
+    pub antecedent: Option<usize>,
     /// Index into `SyntaxAnalysis::clauses` for the node's head token. A
     /// multi-segment host uses the flat clause of its predicate.
     pub clause: Option<usize>,
@@ -459,8 +461,10 @@ The flat model builds a relative tree on `Clause` (`parent`, `children`,
 `antecedent`) but keeps the host in contiguous pieces. `group` may merge the
 pieces into one host node with **segments** when all of these hold:
 
-1. relative clause `R` has `R.parent == Some(A)`;
-2. the next flat clause `B` is in the same sentence group as `A`;
+1. relative clause `R` has `R.parent == Some(A)`, `A` is top-level, `A`'s
+   only child is `R`, and `R` has no children of its own;
+2. the next flat clause `B` is in the same sentence as `A` and is the **last**
+   clause of that sentence (a coordinated continuation is left flat);
 3. `B` has no subject of its own, or `share_clause_roles` made it share `A`'s
    subject; when `A` has a subject and `B` does not share it, `B`'s predicate
    must still fit that subject in person and number;
@@ -468,13 +472,16 @@ pieces into one host node with **segments** when all of these hold:
 5. `R.antecedent` is in `A` or `B` (or `None` when the relative word is
    unambiguous).
 
-Then the host is one `Clause(Main)` with:
+Then the host is one `Clause(kind)` with:
 
-- `segments = [A.tokens, B.tokens]`, `tokens = A.start..B.end`;
-- `clause` is `B` (the flat clause that holds the host predicate);
+- `segments = [A.tokens, B.tokens]`, `tokens = A.tokens.start..B.tokens.end`,
+  `span = A.start..B.end`;
+- `kind` is `Subordinate` when `A` opens with a subordinator, `Infinitive`
+  when either segment's predicate is non-finite, and `Main` otherwise;
+- `head` is `B.predicate`, and `clause` is `B` (the flat clause that holds the
+  host predicate);
 - children from `A`, the relative `Clause(Relative)`, then children from `B`;
-- the relative's `parent` is the host, `antecedent` copied from the flat
-  clause.
+- the relative's `parent` is the host, `antecedent` copied to `Node.antecedent`.
 
 `Mies, joka tuli, söi.` becomes one host clause with segments `[Mies]` and
 `[söi]`, containing the relative clause between them. If any condition fails,
@@ -553,7 +560,7 @@ src/syntax/ast/
                    CoordKind, public build/validate
   seed.rs          Document/Sentence/Word skeleton
   phrases.rs       phrase roots, head resolution, kind, contiguity
-  clauses.rs       clause grouping, ClauseKind, host segments (phase 2)
+  clauses.rs       clause grouping, ClauseKind, host segments
   attach.rs        lists, parentheticals, quotes (phase 3)
   coordination.rs  the optional same-kind pass (phase 4)
   validate.rs      the invariants in §8
@@ -625,18 +632,16 @@ cheap and on-demand; a later phase can thread the contexts through
 The CLI and the golden fixtures share one format:
 
 ```text
-Document[0..17]
-  Sentence[0..17]
-    Clause(main)[0..17] tokens=0..5 segs=0..1,4..5
-      Phrase(noun)[0..4] head=0 role=subject conf=likely
-        Word[0..4] "Mies"
-      Clause(relative)[6..13] parent=1 antecedent=0
-        Phrase(pronoun)[6..10] head=2 role=subject
-          Word[6..10] "joka"
-        Phrase(verb)[11..14] head=3 role=predicate
-          Word[11..14] "tuli"
-      Phrase(verb)[15..18] head=4 role=predicate
-        Word[15..18] "söi"
+Document[0..21]
+  Sentence[0..21]
+    Clause(main)[0..21] tokens=0..7 segs=0..1,6..7 head=söi
+      Word[0..4] "Mies"
+      Clause(relative)[6..15] parent=host antecedent=Mies
+        Word[6..10] "joka"
+        Phrase(verb)[11..15] head=tuli role=predicate
+          Word[11..15] "tuli"
+      Phrase(verb)[17..21] head=söi role=predicate
+        Word[17..21] "söi"
 ```
 
 Byte spans are omitted from the stable golden file when they would make the
@@ -652,7 +657,7 @@ zero diagnostic diff.
 |---|---|---|
 | 0. Skeleton | types, `seed`, `group` (one Clause per flat clause, no host merge), `validate`, CLI dump | **landed**: `Ast` builds for every text in `tests/fixtures/syntax_cases.json`; all invariants hold; `cargo test --release --workspace` green; no diagnostic change |
 | 1. Phrases | phrase roots, kinds, contiguity, `head`/`governor` | **landed**: phrase tests for NP/AP/NumP/PP/VP; every `Modifier`/`Auxiliary` flat edge appears as a tree edge; multi-word object and `Kaksi miestä` covered |
-| 2. Clause grouping | clause kinds, predicate phrase, slot children, host merge | `Mies, joka tuli, söi` keeps three flat clauses but the tree has one host with two segments and the relative nested between them; `Talo on kaunis` has a separate AdjectivePhrase complement |
+| 2. Clause grouping | clause kinds, predicate phrase, slot children, host merge | **landed**: `Mies, joka tuli, söi` keeps three flat clauses but the tree has one host with two segments and the relative nested between them; `Talo on kaunis` has a separate AdjectivePhrase complement |
 | 3. Attach | lists, list items, parentheticals, quotes | list and nested-list fixtures; a clause-slot list replaces the slot phrase; unbalanced brackets leave the flat shape |
 | 4. Coordination (optional) | same-kind phrase/clause coordination | `Sami söi puuron ja joi maidon`; mixed coordination stays flat; `word_order_allow` unchanged |
 | 5. Consumers | one checker rule or the word-order feature reads the tree; wasm export | the new rule's fixture fails on the flat path and passes on the tree; every existing diagnostic is byte-identical |
@@ -676,6 +681,15 @@ would cross a relative clause, a parenthetical or a list are refused; their
 words stay leaves and keep the flat `governor`. The phrase tests cover NP, VP,
 AP, NumP, postposition and preposition phrases, a modifier chain and a fronted
 object.
+
+**Phase 2 landing.** `clauses.rs` merges a relative host with its continuation
+when the flat model links them and the continuation is the last clause of the
+sentence, so `Mies, joka tuli, söi` is one `Clause(main)` with segments
+`[Mies]` and `[söi]`, the relative nested between them and its `antecedent`
+copied to the node. If there is no continuation, the continuation is
+coordinated, or any agreement/antecedent condition fails, the tree keeps the
+flat three-clause shape. The validator now checks a flat clause by
+segment-membership rather than by a one-to-one node.
 
 ## 11. Tests
 
@@ -812,9 +826,9 @@ Clause(main, features.construction=copular)
 
 ```text
 Clause(main) segments=[Mies] [söi]
-  Phrase(noun, head=Mies, role=subject)
+  Word Mies        # the flat model leaves this one Unknown
   Clause(relative) parent=host antecedent=Mies
-    Phrase(pronoun, head=joka, role=subject)
+    Word joka
     Phrase(verb, head=tuli, role=predicate)
   Phrase(verb, head=söi, role=predicate)
 ```

@@ -64,7 +64,7 @@ fn every_fixture_sentence_builds_a_valid_tree() {
 }
 
 #[test]
-fn a_relative_clause_is_typed_even_before_host_nesting() {
+fn a_relative_clause_is_typed_and_nested() {
     let tokens = tokenise("Mies, joka tuli, söi.");
     let tree = ast::analyze(&tokens);
     let relative = tree
@@ -74,6 +74,13 @@ fn a_relative_clause_is_typed_even_before_host_nesting() {
         .filter(|node| node.kind == NodeKind::Clause(ClauseKind::Relative))
         .count();
     assert_eq!(relative, 1);
+    let host = tree
+        .ast
+        .nodes
+        .iter()
+        .filter(|node| matches!(node.kind, NodeKind::Clause(_)) && node.segments.len() == 2)
+        .count();
+    assert_eq!(host, 1, "the host should have two segments");
     ast::validate(&tokens, &tree.analysis, &tree.ast).expect("relative tree is valid");
 }
 

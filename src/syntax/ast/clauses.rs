@@ -1,11 +1,25 @@
-//! Phase 0: one `Clause` node per flat clause.
+//! Clause grouping: one node per flat clause, plus the multi-segment host.
+//!
+//! A relative clause in the middle of its host (`Mies, joka tuli, söi`) is a
+//! flat pair of segments in `SyntaxAnalysis`: the host is clause `A`, the
+//! relative is `R`, and the continuation is `B`. `group` may replace `A` and
+//! `B` with one host node whose `segments` are `[A.tokens, B.tokens]` and
+//! whose child order is `A`, `R`, `B`. The merge is deliberately conservative;
+//! if any condition fails the tree keeps the flat three-clause shape.
 
-use crate::syntax::{Clause, SyntaxAnalysis};
+use crate::syntax::{Clause, SyntaxAnalysis, predicate_matches_previous_subject};
 use crate::tags::{Mood, PartOfSpeech};
 use crate::tokenise::Token;
 
 use super::seed::Seed;
 use super::{Builder, ClauseKind, Node, NodeId};
+
+#[derive(Debug, Clone, Copy)]
+struct Merge {
+    host: usize,
+    relative: usize,
+    continuation: usize,
+}
 
 /// The structural kind of a flat clause.
 ///
@@ -56,34 +70,72 @@ pub(super) fn kind_of(tokens: &[Token], analysis: &SyntaxAnalysis, clause: &Clau
     ClauseKind::Main
 }
 
+/// The kind of a merged host. The first segment supplies the subordinator; the
+/// continuation supplies the predicate, so an infinitive predicate still types
+/// the clause.
+pub(super) fn host_kind(
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+    first: &Clause,
+    continuation: &Clause,
+) -> ClauseKind {
+    match kind_of(tokens, analysis, first) {
+        ClauseKind::Subordinate => ClauseKind::Subordinate,
+        ClauseKind::Infinitive => ClauseKind::Infinitive,
+        _ => {
+            if kind_of(tokens, analysis, continuation) == ClauseKind::Infinitive {
+                ClauseKind::Infinitive
+            } else {
+                ClauseKind::Main
+            }
+        }
+    }
+}
+
 pub(super) fn group(
     tokens: &[Token],
     analysis: &SyntaxAnalysis,
     builder: &mut Builder,
     seed: &Seed,
 ) -> Vec<NodeId> {
-    let mut clause_nodes = Vec::with_capacity(analysis.clauses.len());
-    for (index, clause) in analysis.clauses.iter().enumerate() {
-        let kind = kind_of(tokens, analysis, clause);
-        let node = builder.push(Node::clause(clause, index, kind));
-        clause_nodes.push(node);
+    let merges = plan_merges(tokens, analysis);
+    let mut nodes: Vec<Option<NodeId>> = vec![None; analysis.clauses.len()];
+
+    for merge in &merges {
+        let host = &analysis.clauses[merge.host];
+        let relative = &analysis.clauses[merge.relative];
+        let continuation = &analysis.clauses[merge.continuation];
+        let kind = host_kind(tokens, analysis, host, continuation);
+        let host_node = builder.push(Node::host_clause(
+            kind,
+            host,
+            continuation,
+            merge.continuation,
+        ));
+        let relative_node =
+            builder.push(Node::clause(relative, merge.relative, ClauseKind::Relative));
+        builder.attach(host_node, relative_node);
+        nodes[merge.host] = Some(host_node);
+        nodes[merge.relative] = Some(relative_node);
+        nodes[merge.continuation] = Some(host_node);
+        builder.attach(seed.sentence_for(host.start), host_node);
     }
 
-    // A relative clause is a child of the preceding host segment; every other
-    // clause belongs to the sentence that contains its first word.
-    //
-    // Phase 0 keeps every clause under its sentence. The flat `parent` link is
-    // still what makes `kind_of` call a relative a relative; phase 2 replaces
-    // the relative + host pair with a nested host, which is the only place a
-    // clause stops being a direct sentence child.
     for (index, clause) in analysis.clauses.iter().enumerate() {
-        let parent = seed.sentence_for(clause.start);
-        builder.attach(parent, clause_nodes[index]);
+        if nodes[index].is_some() {
+            continue;
+        }
+        let node = builder.push(Node::clause(
+            clause,
+            index,
+            kind_of(tokens, analysis, clause),
+        ));
+        nodes[index] = Some(node);
+        builder.attach(seed.sentence_for(clause.start), node);
     }
 
-    // Reparent the word leaves from their sentence to their clause. A token
-    // whose clause index does not actually contain it stays with the sentence;
-    // the validator will catch a bad flat model, not a bad tree.
+    // Reparent the word leaves from their sentence to their tree clause. The
+    // host owns both of its segments' words; the relative owns its own.
     for (index, token) in tokens.iter().enumerate() {
         if !token.is_word() {
             continue;
@@ -101,11 +153,110 @@ pub(super) fn group(
                     .get(clause)
                     .is_some_and(|clause| clause.tokens.contains(&index))
             })
-            .and_then(|clause| clause_nodes.get(clause).copied())
+            .and_then(|clause| nodes.get(clause).copied().flatten())
             .unwrap_or_else(|| seed.sentence_for(token.start));
         builder.reparent(parent, leaf);
     }
 
     builder.sort_children();
-    clause_nodes
+    nodes
+        .into_iter()
+        .map(|node| node.expect("every flat clause has a tree node"))
+        .collect()
+}
+
+fn plan_merges(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<Merge> {
+    let mut used = vec![false; analysis.clauses.len()];
+    let mut merges = Vec::new();
+
+    for (relative_index, relative) in analysis.clauses.iter().enumerate() {
+        let Some(host_index) = relative.parent else {
+            continue;
+        };
+        let Some(host) = analysis.clauses.get(host_index) else {
+            continue;
+        };
+        let continuation_index = relative_index + 1;
+        let Some(continuation) = analysis.clauses.get(continuation_index) else {
+            continue;
+        };
+
+        if used[host_index] || used[relative_index] || used[continuation_index] {
+            continue;
+        }
+        if host.parent.is_some() {
+            continue;
+        }
+        if host.children.len() != 1 || host.children[0] != relative_index {
+            continue;
+        }
+        if !relative.children.is_empty() {
+            continue;
+        }
+        if continuation.parent.is_some() || !continuation.children.is_empty() {
+            continue;
+        }
+        if host.tokens.end > relative.tokens.start
+            || relative.tokens.end > continuation.tokens.start
+        {
+            continue;
+        }
+
+        let Some(sentence) = sentence_containing(analysis, host.start) else {
+            continue;
+        };
+        if sentence_containing(analysis, relative.start) != Some(sentence)
+            || sentence_containing(analysis, continuation.start) != Some(sentence)
+        {
+            continue;
+        }
+        if last_clause_in_sentence(analysis, sentence) != Some(continuation_index) {
+            continue;
+        }
+
+        if let Some(subject) = continuation.subject {
+            if Some(subject) != host.subject {
+                continue;
+            }
+        } else if !predicate_matches_previous_subject(continuation, host, tokens, &analysis.tokens)
+        {
+            continue;
+        }
+
+        if let Some(antecedent) = relative.antecedent
+            && !host.tokens.contains(&antecedent)
+            && !continuation.tokens.contains(&antecedent)
+        {
+            continue;
+        }
+
+        used[host_index] = true;
+        used[relative_index] = true;
+        used[continuation_index] = true;
+        merges.push(Merge {
+            host: host_index,
+            relative: relative_index,
+            continuation: continuation_index,
+        });
+    }
+
+    merges
+}
+
+fn sentence_containing(analysis: &SyntaxAnalysis, byte: usize) -> Option<usize> {
+    analysis
+        .sentences
+        .iter()
+        .position(|span| span.start <= byte && byte < span.end)
+}
+
+fn last_clause_in_sentence(analysis: &SyntaxAnalysis, sentence: usize) -> Option<usize> {
+    let span = analysis.sentences.get(sentence)?;
+    analysis
+        .clauses
+        .iter()
+        .enumerate()
+        .rev()
+        .find(|(_, clause)| span.start <= clause.start && clause.start < span.end)
+        .map(|(index, _)| index)
 }
