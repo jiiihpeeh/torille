@@ -124,7 +124,7 @@ fn subordinate_comma(
             return out;
         }
     }
-    if index > 0 && same_sentence(&analysis.clauses[index - 1], clause, analysis) {
+    if index > 0 && same_sentence(&analysis.clauses[index - 1], clause, tokens, analysis) {
         let previous = &analysis.clauses[index - 1];
         if let (Some(left), Some(right)) = (last_word(previous, tokens), first_word(clause, tokens)) {
             let previous_kind = clause_kind(previous, tokens, analysis);
@@ -139,7 +139,7 @@ fn subordinate_comma(
         }
     }
     if let Some(next) = analysis.clauses.get(index + 1)
-        && same_sentence(clause, next, analysis)
+        && same_sentence(clause, next, tokens, analysis)
         && let (Some(left), Some(right)) = (last_word(clause, tokens), first_word(next, tokens))
         && clause_kind(next, tokens, analysis) == ClauseKind::Main
         && !comma_between(tokens, left, right)
@@ -154,6 +154,12 @@ fn subordinate_comma(
     let finite = finite_words(clause, tokens, analysis);
     if finite.len() >= 2
         && let Some(&main) = finite.last()
+        && let Some(&previous) = finite.get(finite.len() - 2)
+        // A `jolloin`/`joka` clause that the parser merged into the same
+        // `Clause` already has its comma before the relative pronoun
+        // (`Kun se aamu valkeni, jolloin …`). The merged-subordinate path
+        // must not insert a second one.
+        && !comma_before_relative(tokens, previous, main, analysis)
         && let Some(before) = previous_word(tokens, main)
         && !comma_between(tokens, before, main)
         && !dash_between(tokens, before, main)
@@ -290,8 +296,67 @@ fn coordinated_between(tokens: &[Token], left: usize, right: usize) -> bool {
         })
 }
 
-fn same_sentence(left: &Clause, right: &Clause, analysis: &SyntaxAnalysis) -> bool {
-    sentence_index(left.start, analysis) == sentence_index(right.start, analysis)
+fn same_sentence(
+    left: &Clause,
+    right: &Clause,
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+) -> bool {
+    if sentence_index(left.start, analysis) != sentence_index(right.start, analysis) {
+        return false;
+    }
+    // The sentence layer does not end a sentence at a terminal mark followed
+    // by an apostrophe quote (`. 'Jos …`), so the spans can merge two
+    // sentences. The comma rules must not reach across a terminal mark
+    // between the clauses even when the spans did.
+    !terminal_between(left, right, tokens)
+}
+
+fn terminal_between(left: &Clause, right: &Clause, tokens: &[Token]) -> bool {
+    let (Some(left_word), Some(right_word)) = (last_word(left, tokens), first_word(right, tokens))
+    else {
+        return false;
+    };
+    let (start, end) = if left_word < right_word {
+        (left_word + 1, right_word)
+    } else {
+        (right_word + 1, left_word)
+    };
+    tokens[start..end]
+        .iter()
+        .filter(|token| !token.is_word())
+        .any(|token| token.text.chars().any(|c| matches!(c, '.' | '!' | '?')))
+}
+
+/// A comma followed by a relative pronoun between two finite words already
+/// marks the clause boundary: `Kun se aamu valkeni, jolloin Kenoveevan
+/// täytyi …`. The merged-subordinate path must not add a second comma.
+fn comma_before_relative(
+    tokens: &[Token],
+    left: usize,
+    right: usize,
+    analysis: &SyntaxAnalysis,
+) -> bool {
+    let (start, end) = if left < right {
+        (left + 1, right)
+    } else {
+        (right + 1, left)
+    };
+    for comma in start..end {
+        if tokens[comma].is_word() || !tokens[comma].text.contains(',') {
+            continue;
+        }
+        let relative = (comma + 1..end)
+            .find(|&index| tokens[index].is_word())
+            .is_some_and(|index| {
+                tokens[index].text.eq_ignore_ascii_case("jolloin")
+                    || crate::syntax::starts_relative_clause(index, tokens, &analysis.tokens)
+            });
+        if relative {
+            return true;
+        }
+    }
+    false
 }
 
 fn sentence_index(byte: usize, analysis: &SyntaxAnalysis) -> Option<usize> {

@@ -78,7 +78,9 @@
     "Me suuremmat istumme tuoleilla, kyynärpäät pöytään nojaten ja leuat käsien varassa, pikkusisar pyrkii Annin syliin ja kietoo käsivartensa hänen kaulaansa, ettei häntä pelottaisi.",
     "Ja kun hän kasvoi täysikasvuiseksi, oli hän yhtä viaton ja herttainen kuin kaunis ja häntä mainittiin kaikkien hyvien avujen esikuvana.",
     "Eräänä iltana myöhään istuivat molemmat illallisen jälkeen arkihuoneessa; Kenoveeva kehräsi ja lauloi, Sikri soitti kanteletta ja säesti Kenoveevan laulua.",
-    "Kenoveeva kiiruhti torniin ja katseli sieltä rakkaan puolisonsa jälkeen, sitten hän sulkeutui huoneeseensa eikä koko päivänä maistanut eineen muruakaan."
+    "Kenoveeva kiiruhti torniin ja katseli sieltä rakkaan puolisonsa jälkeen, sitten hän sulkeutui huoneeseensa eikä koko päivänä maistanut eineen muruakaan.",
+    "Kun se aamu valkeni, jolloin Kenoveevan täytyi aviomiehensä kanssa matkustaa pois, itki hän katkerasti ja hänen äitinsä sulki hänet vapisevalle sydämellensä ja sai itkultaan tuskin sanotuksi: 'Jää hyvästi, Kenoveeva, Jumala johdattakoon sinua.",
+    "'--'Hänen täytyy kuolla', sanoi Kuntsi. 'Jos me annamme hänen elää, täytyy meidän itsemme kuolla eikä se auta häntä kuitenkaan."
   ],
   "errors": [
     {
@@ -96,13 +98,6 @@
         "comma_missing"
       ],
       "note": "Phase 3: `niin että` is the fixed consecutive conjunction and takes no comma."
-    },
-    {
-      "text": "Kun se aamu valkeni, jolloin Kenoveevan täytyi aviomiehensä kanssa matkustaa pois, itki hän katkerasti ja hänen äitinsä sulki hänet vapisevalle sydämellensä ja sai itkultaan tuskin sanotuksi: 'Jää hyvästi, Kenoveeva, Jumala johdattakoon sinua.",
-      "kinds": [
-        "comma_missing"
-      ],
-      "note": "Phase 2: the comma after `valkeni` is already there; the rule inserts a second one."
     },
     {
       "text": "Se päivä tulee, jolloin kaikki tänne kokoontuneet Jumalaa siitä ilokyynelin kiittävät.",
@@ -174,13 +169,6 @@
         "verb_rection"
       ],
       "note": "Phase 5: `Päivän` is the genitive subject of the impersonal `vaietessa`."
-    },
-    {
-      "text": "'--'Hänen täytyy kuolla', sanoi Kuntsi. 'Jos me annamme hänen elää, täytyy meidän itsemme kuolla eikä se auta häntä kuitenkaan.",
-      "kinds": [
-        "comma_missing"
-      ],
-      "note": "Phase 2: the comma after the quote is already there; the rule inserts a second one."
     }
   ]
 }

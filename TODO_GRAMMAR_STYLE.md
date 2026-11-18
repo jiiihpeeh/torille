@@ -1165,3 +1165,14 @@ intended/competing interpretation pair that fails.
   original line break is a clean fixture in `syntax_diagnostics.json`.
   Agreement true positives (`Koira nukkuvat.`, `Minä menee kotiin.`,
   `Hän antoivat kirjan.`) still fire.
+- 2026-11-18: precision Phase 2 (a comma already at the boundary counts).
+  Three mechanisms, one family: the `jolloin` relative clause merged into the
+  main `Clause` no longer gets a second comma (`comma_before_relative`, which
+  knows the relative adverb but does not change global clause segmentation);
+  `same_sentence` no longer reaches across an unspanned terminal mark like
+  `. 'Jos` (a terminal mark followed by an apostrophe quote); and `is_finite`
+  rejects a finite reading that carries a possessive suffix, so the
+  postposition `yllään` is not a relative clause's closing host. Rows 2 and 3
+  moved from `known_false_positives` to `clean`; row 4's `yllään` sentence is
+  a clean fixture. `page-2000`: 26 → 23, exactly these three. The
+  `subordinate_comma_*` and `relative_comma_pair` fixtures still fire.

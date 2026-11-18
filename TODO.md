@@ -2106,3 +2106,8 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   clause no longer copies `tähdet` and reports a false agreement error.
   `page-2000` 27 → 26 diagnostics; remaining work is phases 2–9 of
   `PLAN_GRAMMAR_PRECISION.md`.
+- 2026-11-18: grammar precision Phase 2 landed: `jolloin`-relative boundary
+  commas, terminal marks beside apostrophe quotes, and possessive-suffixed
+  postpositions are no longer treated as commas/finite predicates.
+  `page-2000` 26 → 23 diagnostics; phases 3–9 remain in
+  `PLAN_GRAMMAR_PRECISION.md`.

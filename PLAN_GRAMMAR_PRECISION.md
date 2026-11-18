@@ -1,7 +1,7 @@
 # PLAN_GRAMMAR_PRECISION — closing the adjudicated false positives
 
-Status: **26 diagnostics on the committed prose page, 20 adjudicated false
-positives across nine phases; phases 0–1 landed** · 2026-11-18 · branch
+Status: **23 diagnostics on the committed prose page, 18 adjudicated false
+positives across nine phases; phases 0–2 landed** · 2026-11-18 · branch
 `syntax` · baseline `b8b3687`
 
 This plan closes the false positives that remain on
@@ -19,19 +19,19 @@ Contents: [§1 where we are](#1-where-we-are) ·
 
 ## 1. Where we are
 
-`page-2000` (1,959 words) reports **26** grammar diagnostics. Every one was
-adjudicated by hand: 20 false positives, 5 accepted, 1 excerpt artefact.
+`page-2000` (1,959 words) reports **23** grammar diagnostics. Every one was
+adjudicated by hand: 18 false positives, 1 true positive, 3 accepted, 1
+excerpt artefact.
 
 | kind | rows | false positives |
 |---|---:|---:|
 | `verb_rection` | 8 | 8 |
-| `comma_missing` | 5 | 5 |
-| `question_mark_missing` | 4 | 3 |
+| `comma_missing` | 3 | 3 |
+| `question_mark_missing` | 4 | 2 (1 accepted, 1 true positive) |
 | `subject_predicate_agreement` | 2 | 0 (2 accepted) |
 | `list_separator_missing` | 3 | 3 |
 | `attribute_agreement` | 1 | 1 |
 | `object_case` | 1 | 1 |
-| `comma_pair_unbalanced` | 1 | 1 |
 | `unbalanced_quote` | 1 | 0 (excerpt ends inside a quote) |
 
 The workflow is a review loop:
@@ -58,25 +58,19 @@ Every phase is judged by the same three-way check:
 "Improvement" is never a lower count on its own: a phase that removes one row
 and adds another is a failed phase and is reverted.
 
-### 1.2 Only 14 of the 21 were pinnable in the prose fixture
+### 1.2 What the prose fixture can pin
 
-The prose fixture checks each row in isolation, and ten of these findings need
-their surrounding clause. Measured with a sentence-window probe:
+The prose fixture checks each row in isolation. Of the current 18 false
+positives, 12 reproduce alone (11 entries in `known_false_positives`, with the
+`sen kun` sentence carrying two findings) and six do not (five page-only rows:
+`paljon hyvää`, the two `lapsineen` findings, `puute`, and two of the
+question-mark rows). The fixture form of each row is in the §2 table.
 
-| fixture form | rows |
-|---|---:|
-| reproduces in one sentence | 11 |
-| reproduces with the preceding sentence | 1 |
-| reproduces with a two-sentence window after the quote | 1 |
-| **page-only** (does not reproduce outside the paragraph) | 8 |
-
-The page-only rows are still pinned by the plan: each phase that fixes one
-adds a **purpose-built sentence** to `syntax_diagnostics.json` that exercises
-the same cue, plus the page count invariant above. The eight were: the `tuuli`
-bearer, the `paljon hyvää` attribute, both `lapsineen` list rows, the `puute`
-list row, the `jolloin … naisihmisen` comma pair, and three question marks
-that are line-break artefacts (below). Phase 1 fixed the `tuuli` row with its
-line break preserved in the fixture; the other seven still await their phase.
+A page-only row is still pinned by the plan: the phase that fixes it adds a
+**purpose-built sentence** to `syntax_diagnostics.json` that exercises the same
+cue, plus the page count invariant above. Phase 1 fixed the `tuuli` bearer with
+its line break preserved; Phase 2 fixed the `jolloin … naisihmisen` comma pair
+with an `yllään` sentence. Five page-only rows remain.
 
 ### 1.3 Two structural root causes behind several rows
 
@@ -105,9 +99,9 @@ per §1.2).
 | # | kind | span | context | fix | adjudication | phase | fixture |
 |---:|---|---|---|---|---|---|---|
 | 1 | `subject_predicate_agreement` | 8470 `tuuli` | `…kuu oli laskeutumaisillaan, tuuli puhalteli kylmästi…` | `tuulivat` | `tuuli` is the subject of `puhalteli` | 1 | **fixed** |
-| 2 | `comma_missing` | 4516 | `Kun se aamu valkeni, jolloin Kenoveevan täytyi…` | `,` | the comma is already there | 2 | sentence |
-| 3 | `comma_missing` | 9904 | `'Hänen täytyy kuolla', sanoi Kuntsi.` | `,` | the comma is already there, after a quote | 2 | window |
-| 4 | `comma_pair_unbalanced` | 15040 | `…ulos, jolla oli yllään lampaan nahka…` | `,` | the relative clause ends the sentence | 2 | page |
+| 2 | `comma_missing` | 4516 | `Kun se aamu valkeni, jolloin Kenoveevan täytyi…` | `,` | the comma is already there | 2 | **fixed** |
+| 3 | `comma_missing` | 9904 | `'Hänen täytyy kuolla', sanoi Kuntsi.` | `,` | the comma is already there, after a quote | 2 | **fixed** |
+| 4 | `comma_pair_unbalanced` | 15040 | `…ulos, jolla oli yllään lampaan nahka…` | `,` | the relative clause ends the sentence | 2 | **fixed** |
 | 5 | `comma_missing` | 3771 | `…sievästi, niin että kaikki sanoivat…` | `,` | `niin että` is a fixed conjunction | 3 | sentence |
 | 6 | `comma_missing` | 10627 | `…hiljaista, sen kun Anni vain kertoi…` | `,` | `sen kun` is a fixed adverbial | 3 | sentence |
 | 7 | `comma_missing` | 10654 | same sentence | `,` | same | 3 | sentence |
@@ -215,23 +209,39 @@ Acceptance: row 1 gone from the page (27 → 26); `Koira nukkuvat.`,
 `Minä menee kotiin.`, `Hän antoivat kirjan.` still fire; the sentence with
 its original line break is a clean row in `syntax_diagnostics.json`.
 
-### Phase 2 — a comma already at the boundary counts (rows 2–4)
+### Phase 2 — a comma already at the boundary counts — **landed**
 
-Three findings insert a comma where one is already written. The boundary test
-compares two words and a quote or a relative clause between them defeats it.
+Three findings inserted a comma where one was already written. Each had a
+different reason, and all three are now gone without a new rule.
 
-- `punctuation/comma.rs` `subordinate_comma`: the merged-subordinate path
-  (`finite.len() >= 2`) must skip when the comma is already between the two
-  finite words **including when quote marks sit in the separator**
-  (`kuolla', sanoi`). Make the separator scan ignore quote characters.
-- The same path must not fire when the second finite word belongs to a
-  `jolloin`/`joka` relative clause whose comma is already there.
-- `relative_comma` / `comma_pair_unbalanced`: a relative clause that runs to
-  the end of its sentence needs no closing comma.
+1. **The merged relative clause (row 2).** `Kun se aamu valkeni, jolloin …`
+   leaves `jolloin` inside the same `Clause` as `valkeni`, so the
+   merged-subordinate path (`finite.len() >= 2`) saw a second finite predicate
+   and inserted a comma before it. `comma_before_relative` now checks whether a
+   comma already sits before a relative pronoun or the relative adverb
+   `jolloin` between the two finite words. `jolloin` is deliberately *not*
+   added to the global `RELATIVE_SURFACES`: that changes clause segmentation
+   and also removes the Phase 4 `kaikki` row, which this phase must leave
+   alone (measured).
+2. **The quote after a full stop (row 3).** The sentence layer treats `. 'Jos`
+   as non-terminal because the separator ends in an apostrophe quote, so the
+   `jos` clause looked like the same sentence as `Kunti.` and `subordinate_comma`
+   inserted a comma before the period. The sentence layer is left alone (it is
+   the style metric and the sentence-cache key); `same_sentence` now also
+   rejects a pair when a terminal mark sits between the clauses
+   (`terminal_between`).
+3. **A postposition with a possessive suffix (row 4).** `yllään` is the
+   postposition `yllä` plus the 3rd-person possessive, but it also carries a
+   finite `yltää` reading. `is_finite` accepted that reading, so
+   `relative_comma` took it as the relative clause's closing host and inserted
+   a comma after `oli`. `is_finite` now requires `possessive.is_none()`: a
+   finite verb does not take a possessive suffix.
 
-Acceptance: rows 2–4 clean; `subordinate_comma_after_main`,
-`subordinate_comma_initial`, `relative_comma_pair` still fire. Row 4 is
-page-only, so Phase 2 also adds its purpose-built sentence.
+Acceptance: rows 2–4 clean; the two probe rows move from
+`known_false_positives` to `clean`; row 4's `yllään` sentence is a clean row
+in `syntax_diagnostics.json`; `subordinate_comma_after_main`,
+`subordinate_comma_initial` and `relative_comma_pair` still fire. Page
+26 → 23, exactly these three.
 
 ### Phase 3 — fixed multiword conjunctions (rows 5–7)
 

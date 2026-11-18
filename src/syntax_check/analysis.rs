@@ -152,6 +152,12 @@ pub(super) fn is_finite(token: &TokenSyntax) -> bool {
                         | Mood::Potential
                 )
             )
+            // A finite verb does not take a possessive suffix. The reading
+            // that has one is the homonym: `yllään` is the postposition
+            // `yllä` plus the 3rd-person possessive, not a finite `yltää`,
+            // and treating it as a predicate invents a clause boundary
+            // (`jolla oli yllään …`).
+            && reading.possessive.is_none()
     })
 }
 
