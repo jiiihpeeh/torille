@@ -2114,3 +2114,7 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
 - 2026-11-18: grammar precision Phase 3 landed: `niin että`/`sen kun` take no
   comma, and a comma between the last two finite words closes the merged
   boundary path. `page-2000` 23 → 20 diagnostics; phases 4–9 remain.
+- 2026-11-18: grammar precision Phase 4 landed: `jolloin` opens a relative
+  clause, a comma before a demonstrative pronoun starts one, and a negative
+  auxiliary only negates what follows it. `page-2000` 20 → 18 diagnostics;
+  phases 5–9 remain.

@@ -82,7 +82,9 @@
     "Kun se aamu valkeni, jolloin Kenoveevan täytyi aviomiehensä kanssa matkustaa pois, itki hän katkerasti ja hänen äitinsä sulki hänet vapisevalle sydämellensä ja sai itkultaan tuskin sanotuksi: 'Jää hyvästi, Kenoveeva, Jumala johdattakoon sinua.",
     "'--'Hänen täytyy kuolla', sanoi Kuntsi. 'Jos me annamme hänen elää, täytyy meidän itsemme kuolla eikä se auta häntä kuitenkaan.",
     "Kehrätessään hän osasi asettaa äidilleen kaikenlaisia painavia kysymyksiä, ja kun häneltä kysyttiin, hän vastasi erinomaisen selvästi ja sievästi, niin että kaikki sanoivat ihmetellen: tuosta lapsesta tulee varmaan jotain erinomaista.",
-    "Oli ollut ihan hiljaista, sen kun Anni vain kertoi, koko ajan kynttilään katsoen, tasaisella äänellä."
+    "Oli ollut ihan hiljaista, sen kun Anni vain kertoi, koko ajan kynttilään katsoen, tasaisella äänellä.",
+    "Se päivä tulee, jolloin kaikki tänne kokoontuneet Jumalaa siitä ilokyynelin kiittävät.",
+    "Näettehän kuun, katsokaa, se peitäkse pilven taa ikäänkuin ei voisi nähdä sitä tekoa, jonka aiotte tehdä."
   ],
   "errors": [
     {
@@ -94,20 +96,6 @@
     }
   ],
   "known_false_positives": [
-    {
-      "text": "Se päivä tulee, jolloin kaikki tänne kokoontuneet Jumalaa siitä ilokyynelin kiittävät.",
-      "kinds": [
-        "verb_rection"
-      ],
-      "note": "Phase 4: `kaikki` is the plural subject of `kiittävät`, not an argument."
-    },
-    {
-      "text": "Näettehän kuun, katsokaa, se peitäkse pilven taa ikäänkuin ei voisi nähdä sitä tekoa, jonka aiotte tehdä.",
-      "kinds": [
-        "verb_rection"
-      ],
-      "note": "Phase 4: `se` is the 3sg subject of `peitäkse`."
-    },
     {
       "text": "Hän jäi lapsi sylissä istumaan puun alle ja odotti päivän nousua.",
       "kinds": [

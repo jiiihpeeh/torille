@@ -1183,3 +1183,11 @@ intended/competing interpretation pair that fails.
   1sg predicate). `Luulen että hän tulee.` still reports the missing comma;
   `Luulen, että hän tulee.` and `Niin että hän tuli.` are clean. `page-2000`:
   23 → 20, exactly rows 5–7.
+- 2026-11-18: precision Phase 4 (demonstrative subject, relative adverb).
+  `jolloin` is a relative adverb and now opens its own clause, so `kaikki …
+  kiittävät` is that clause's subject rather than an argument of `tulee`.
+  For `… katsokaa, se peitäkse …`, rection skips a demonstrative pronoun that
+  a comma separates from the predicate, and the negative-object rule now
+  requires the negative auxiliary to precede the clause predicate (the `ei`
+  belongs to `ikäänkuin ei voisi`). `Katsokaa se!` still fires. `page-2000`:
+  20 → 18, exactly rows 8–9.

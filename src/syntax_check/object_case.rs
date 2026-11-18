@@ -231,6 +231,21 @@ fn negative_object(
     analysis: &SyntaxAnalysis,
 ) -> Option<SyntaxDiagnostic> {
     let predicate = clause.predicate?;
+    // A negative auxiliary only negates what follows it. A merged clause can
+    // contain a later negation (`... katsokaa, se peitäkse ... ikäänkuin ei
+    // voisi ...`) while the clause predicate is an earlier affirmative verb;
+    // the object rule belongs to the negated predicate, not this one.
+    let auxiliary = clause_words(clause, tokens)
+        .into_iter()
+        .find(|&index| {
+            analysis.tokens[index]
+                .readings
+                .iter()
+                .any(|reading| reading.part_of_speech == Some(PartOfSpeech::NegativeVerb))
+        })?;
+    if auxiliary > predicate {
+        return None;
+    }
     let (argument, case) = argument(clause, predicate, clause.subject, tokens, analysis)?;
     if case == Case::Partitive {
         return None;

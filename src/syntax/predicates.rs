@@ -229,7 +229,8 @@ const RELATIVE_SURFACES: &[&str] = &[
     // joka
     "joka", "jonka", "jota", "jossa", "josta", "johon", "jolla", "jolta", "jolle", "joina",
     "joiksi", "joitta", "jotka", "joiden", "joita", "joissa", "joista", "joihin", "joilla",
-    "joilta", "joille", // mikä
+    "joilta", "joille", // joka, relative adverb of time (`Kun se aamu valkeni, jolloin …`)
+    "jolloin", // mikä
     "mikä", "minkä", "mitä", "missä", "mistä", "mihin", "millä", "miltä", "mille", "miksi",
     "mitkä", // kuka / ken
     "kuka", "kenen", "ketä", "kenessä", "kestä", "kehen", "kenellä", "keneltä", "kenelle", "ketkä",

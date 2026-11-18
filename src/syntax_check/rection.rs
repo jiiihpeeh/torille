@@ -11,7 +11,8 @@ use crate::tags::{Case, Person};
 use crate::tokenise::Token;
 
 use super::analysis::{
-    candidate_number, clause_words, is_marker, nominal_case, nominal_or_numeral_pos,
+    candidate_number, clause_words, comma_between, is_marker, nominal_case,
+    nominal_or_numeral_pos,
 };
 use super::correction;
 use super::diagnostic::{
@@ -266,6 +267,9 @@ fn aspectual_total_object(lemma: &str, case: Case) -> bool {
         && ASPECTUAL_OBJECT_VERBS.contains(&lemma)
 }
 
+/// The demonstrative pronouns that can open a clause after a comma.
+const DEMONSTRATIVE_PRONOUNS: &[&str] = &["se", "tämä", "tuo", "ne", "nämä", "nuo"];
+
 /// The first post-predicate nominal that can be the governed argument.
 ///
 /// A *genuine* subject is never the governed argument, so it is skipped; see
@@ -292,6 +296,15 @@ fn argument(
         }
         if syntax.role == SyntacticRole::Subject
             && is_genuine_subject(clause, clause_index, index, predicate, analysis)
+        {
+            continue;
+        }
+        // A comma before a demonstrative pronoun starts a new clause
+        // (`... katsokaa, se peitäkse ...`); the pronoun is that clause's
+        // subject, not this verb's object. The predicate is separated from
+        // the candidate by the comma, so it cannot govern it.
+        if DEMONSTRATIVE_PRONOUNS.contains(&syntax.key.as_str())
+            && comma_between(tokens, predicate, index)
         {
             continue;
         }

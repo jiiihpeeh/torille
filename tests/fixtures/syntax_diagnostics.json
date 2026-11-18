@@ -477,6 +477,19 @@
       ]
     },
     {
+      "id": "rection_imperative_object",
+      "text": "Katsokaa se!",
+      "diagnostics": [
+        {
+          "kind": "verb_rection",
+          "severity": "error",
+          "start": 9,
+          "end": 11,
+          "corrections": ["sitä"]
+        }
+      ]
+    },
+    {
       "id": "rection_partitive",
       "text": "Hän rakastaa sinä.",
       "diagnostics": [

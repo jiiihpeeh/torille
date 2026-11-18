@@ -1,7 +1,7 @@
 # PLAN_GRAMMAR_PRECISION — closing the adjudicated false positives
 
-Status: **20 diagnostics on the committed prose page, 15 adjudicated false
-positives across nine phases; phases 0–3 landed** · 2026-11-18 · branch
+Status: **18 diagnostics on the committed prose page, 13 adjudicated false
+positives across nine phases; phases 0–4 landed** · 2026-11-18 · branch
 `syntax` · baseline `b8b3687`
 
 This plan closes the false positives that remain on
@@ -19,13 +19,13 @@ Contents: [§1 where we are](#1-where-we-are) ·
 
 ## 1. Where we are
 
-`page-2000` (1,959 words) reports **20** grammar diagnostics. Every one was
-adjudicated by hand: 15 false positives, 1 true positive, 3 accepted, 1
+`page-2000` (1,959 words) reports **18** grammar diagnostics. Every one was
+adjudicated by hand: 13 false positives, 1 true positive, 3 accepted, 1
 excerpt artefact.
 
 | kind | rows | false positives |
 |---|---:|---:|
-| `verb_rection` | 8 | 8 |
+| `verb_rection` | 6 | 6 |
 | `question_mark_missing` | 4 | 2 (1 accepted, 1 true positive) |
 | `list_separator_missing` | 3 | 3 |
 | `subject_predicate_agreement` | 2 | 0 (2 accepted) |
@@ -59,11 +59,11 @@ and adds another is a failed phase and is reverted.
 
 ### 1.2 What the prose fixture can pin
 
-The prose fixture checks each row in isolation. Of the current 15 false
-positives, nine reproduce alone (nine entries in `known_false_positives`) and
-six do not (five page-only rows: `paljon hyvää`, the two `lapsineen` findings,
-`puute`, and two of the question-mark rows). The fixture form of each row is
-in the §2 table.
+The prose fixture checks each row in isolation. Of the current 13 false
+positives, seven reproduce alone (seven entries in `known_false_positives`)
+and six do not (five page-only rows: `paljon hyvää`, the two `lapsineen`
+findings, `puute`, and two of the question-mark rows). The fixture form of
+each row is in the §2 table.
 
 A page-only row is still pinned by the plan: the phase that fixes it adds a
 **purpose-built sentence** to `syntax_diagnostics.json` that exercises the same
@@ -104,8 +104,8 @@ per §1.2).
 | 5 | `comma_missing` | 3771 | `…sievästi, niin että kaikki sanoivat…` | `,` | `niin että` is a fixed conjunction | 3 | **fixed** |
 | 6 | `comma_missing` | 10627 | `…hiljaista, sen kun Anni vain kertoi…` | `,` | `sen kun` is a fixed adverbial | 3 | **fixed** |
 | 7 | `comma_missing` | 10654 | same sentence | `,` | same | 3 | **fixed** |
-| 8 | `verb_rection` | 9153 `se` | `…katsokaa, se peitäkse pilven taa…` | `sitä` | `se` is the 3sg subject | 4 | sentence |
-| 9 | `verb_rection` | 5105 `kaikki` | `…jolloin kaikki tänne kokoontuneet Jumalaa…` | `kaikkeen` | `kaikki` is a plural subject | 4 | sentence |
+| 8 | `verb_rection` | 9153 `se` | `…katsokaa, se peitäkse pilven taa…` | `sitä` | `se` is the 3sg subject | 4 | **fixed** |
+| 9 | `verb_rection` | 5105 `kaikki` | `…jolloin kaikki tänne kokoontuneet Jumalaa…` | `kaikkeen` | `kaikki` is a plural subject | 4 | **fixed** |
 | 10 | `object_case` | 13182 `se` | `…kerro, niinkuin se sitten kävi.` | `sitä` | `niinkuin` opens a comparison clause | 5 | sentence |
 | 11 | `verb_rection` | 11079 `lapsi` | `Hän jäi lapsi sylissä istumaan…` | `lapseen` | `lapsi sylissä` is an absolute phrase | 5 | sentence |
 | 12 | `verb_rection` | 11341 `lapsi` | `Hän lähti lapsi sylissä kulkemaan…` | `lapseen` | same | 5 | sentence |
@@ -260,18 +260,28 @@ Acceptance: rows 5–7 clean; `Luulen, että hän tulee.` stays clean and
 case and clean rows); `Niin että hän tuli.` is clean. Page 23 → 20, exactly
 these three.
 
-### Phase 4 — demonstrative and quantity subjects (rows 8–9)
+### Phase 4 — demonstrative subjects and a relative adverb — **landed**
 
-`rection::is_genuine_subject` tests agreement only for personal pronouns and
-nominals; `se` and `kaikki` fail it and stay candidates.
+The planned agreement test was not the mechanism for either row.
 
-- Treat the demonstratives (`se`, `tämä`, `tuo`, `ne`, `nämä`, `nuo`) as
-  agreeing subjects on the same person/number test as the personal pronouns.
-- Treat `kaikki` as number-ambiguous, the way the agreement rule already does.
-- Keep the existential and coordinated-subject exceptions unchanged.
+- **Row 9 (`kaikki`).** `jolloin` is a relative adverb of time, but it was not
+  in `RELATIVE_SURFACES`, so the `jolloin` clause stayed merged with `Se päivä
+  tulee` and `kaikki … kiittävät` was read as a post-predicate argument of
+  `tulee`. Adding `jolloin` to the relative surfaces gives the clause its own
+  predicate, and `kaikki` is its subject. This also keeps the Phase 2
+  `comma_before_relative` fix intact.
+- **Row 8 (`se`).** Two merged-clause readings produced the finding. A comma
+  before a demonstrative pronoun starts a new clause (`… katsokaa, se
+  peitäkse …`), so the rection argument search now skips a demonstrative
+  pronoun with a comma between it and the predicate. The negative-clause
+  object rule now also requires the clause's negative auxiliary to precede
+  the predicate: the `ei` in `ikäänkuin ei voisi` belongs to the later verb,
+  not to `katsokaa`. The two guards are independent, so the row stays quiet
+  whichever rule reaches it first.
 
-Acceptance: rows 8–9 clean; `Menen koulu.`, `Pidän sinä.` and the `rection_*`
-fixtures still fire.
+Acceptance: rows 8–9 clean; `Katsokaa se!` still reports `verb_rection`
+(new exact-output case), `Menen koulu.` and `Pidän sinä.` still fire, and
+`En pidä sinä.` still fires. Page 20 → 18, exactly these two.
 
 ### Phase 5 — comparison clauses, absolute phrases, non-finite subjects (rows 10–13)
 
