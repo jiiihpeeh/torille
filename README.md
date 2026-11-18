@@ -87,6 +87,32 @@ A small QWERTY-adjacency table breaks distance-1 ties. The known defects —
 recall, and `illegal` forms from wrong stems — are tracked in
 [`docs/harness.md`](docs/harness.md) and [`TODO.md`](TODO.md).
 
+## The word wizard
+
+`word_wizard` finds the Kotus inflection class of a word that is not in the
+sanalista — a name, a loanword, a dialect word — from a few inflected forms.
+It asks the engine what every candidate class would generate and compares the
+answers; the class sheet is generated from the engine and checked for
+staleness.
+
+```bash
+cargo run --release -p torille-tools --bin word_wizard -- mökki \
+  --form gen_sg=mökin --form par_sg=mökkiä --form ill_sg=mökkiin
+```
+
+The same wizard is the demo page (`torille-wasm/demo/wizard.html`) and the
+**Omat sanat** page in both browser extensions. Saved words are stored as the
+`torille-user-words` TSV in `localStorage` / `browser.storage.local`; in the
+extensions the worker accepts the generated forms and suggests them within two
+edits. Class `99` (`--indeclinable`, or the **taipumaton** checkbox) means the
+word is accepted as written and not inflected.
+
+The committed sheet is `data/class_examples.tsv`; regenerate it with
+`word_wizard --write-sheet data/class_examples.tsv` after a class-engine
+change. The design, the tail-weighted tie-break and the measured curve are in
+[`PLAN_WORD_WIZARD.md`](PLAN_WORD_WIZARD.md): adaptive top-1 base class 94.2%
+at two answers on the recorded 412-noun sample, 99.8% top-3.
+
 ## Grammar and style
 
 Two opt-in layers sit on top of the morphology engine. Neither runs in the
@@ -212,6 +238,7 @@ inventory is in [`tools/README.md`](tools/README.md).
 | binary | purpose |
 |---|---|
 | `inflect` | inflect a lemma and print every form with confidence and reading |
+| `word_wizard` | find a Kotus class from example forms (with `--write-sheet`/`--check-sheet`) |
 | `lookup` | build the reverse index and report what a word is a form of |
 | `check` | compound-aware spelling check |
 | `check_normal` | the per-keystroke gate the wasm demo uses |
@@ -374,6 +401,9 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
   model and remaining work.
 - [`PLAN_HYPHENATION.md`](PLAN_HYPHENATION.md) — the hyphenation milestones
   and the remaining corpus triage.
+- [`PLAN_WORD_WIZARD.md`](PLAN_WORD_WIZARD.md) — the text-first word wizard:
+  class sheet, sparse answer maps, nominal and verb inference, the tail prior,
+  the browser pages and the measured oracle curve.
 - [`docs/harness.md`](docs/harness.md) — the verification harness, baselines
   and the table of known defects.
 - [`docs/hyphenation.md`](docs/hyphenation.md) — patterns, compound adapter,

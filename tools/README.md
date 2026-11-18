@@ -57,6 +57,7 @@ Everyday probes:
 | binary | purpose |
 |---|---|
 | `inflect` | inflect a lemma and print every generated form with its reading |
+| `word_wizard` | find a Kotus class from example forms; also writes/checks the class sheet |
 | `lookup` | build the reverse index and answer "what is this word a form of?" |
 | `check` | check a word, with the full compound-aware path |
 | `check_normal` | the per-keystroke gate the wasm demo uses |
