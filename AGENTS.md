@@ -372,9 +372,10 @@ RoleConfidence}`; `syntax_list::{List, ListItem, ListKind, ListItemKind}`;
 `Suggestion` / `SuggestionSource` under `suggest`; `syntax_check::{check,
 check_with_cache, check_analysis, SentenceCache, SentenceCacheStats,
 SyntaxCheck, SyntaxDiagnostic, DiagnosticKind, Severity, Correction}`;
-`class_wizard::{infer, infer_with, parse_sheet, parse_answers, parse_user_words,
-format_user_words, add_user_word, remove_user_word, render_sheet, check_sheet,
-Report, Candidate, Cell, AnswerStatus, ParseError, WizardError}`;
+`class_wizard::{infer, infer_with, indeclinable, parse_sheet, parse_answers,
+parse_user_words, format_user_words, add_user_word, remove_user_word,
+render_sheet, check_sheet, INDECLINABLE_CLASS, Report, Candidate, Cell,
+AnswerStatus, ParseError, WizardError}`;
 `style_check::{check, check_with_cache,
 check_tokens_with_morphology, StyleAnalysis, StyleDiagnostic, StyleKind}`;
 `check_all`, `check_all_with_cache`, `CheckAll`.

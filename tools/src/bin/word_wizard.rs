@@ -44,6 +44,7 @@ fn main() -> ExitCode {
     let mut write_sheet = None;
     let mut check = false;
     let mut json = false;
+    let mut indeclinable = false;
 
     let mut args = std::env::args().skip(1);
     while let Some(arg) = args.next() {
@@ -55,6 +56,7 @@ fn main() -> ExitCode {
             "--write-sheet" => write_sheet = Some(args.next().unwrap_or_default()),
             "--check-sheet" => check = true,
             "--json" => json = true,
+            "--indeclinable" => indeclinable = true,
             "-h" | "--help" => {
                 usage();
                 return ExitCode::SUCCESS;
@@ -108,6 +110,23 @@ fn main() -> ExitCode {
         return ExitCode::from(2);
     }
 
+    if indeclinable {
+        let report = match class_wizard::indeclinable(&word, pos) {
+            Ok(report) => report,
+            Err(error) => {
+                eprintln!("{error}");
+                return ExitCode::from(2);
+            }
+        };
+        if json {
+            print_json(&report);
+        } else {
+            print_report(&report, false);
+            print_result(&report, &cat, emit.as_deref());
+        }
+        return ExitCode::SUCCESS;
+    }
+
     let mut answers = Answers::new();
     let had_answers_file = answers_file.is_some();
     if let Some(path) = answers_file {
@@ -155,7 +174,7 @@ fn main() -> ExitCode {
 fn usage() {
     eprintln!(
         "usage: word_wizard [WORD] [--pos POS] [--form CELL=FORM ...] [--answers FILE]\n\
-         \x20                  [--json] [--emit sanalista|custom]\n\
+         \x20                  [--indeclinable] [--json] [--emit sanalista|custom]\n\
          \x20      POS: substantiivi | adjektiivi | numeraali | järjestysluku |\n\
          \x20           pronomini | erisnimi | verbi\n\
          \x20      word_wizard --write-sheet PATH\n\
@@ -426,41 +445,46 @@ fn print_result(report: &Report, cat: &Catalogues, emit: Option<&str>) {
         .map(|first| first.is_uppercase())
         .unwrap_or(false);
 
-    let index = LexiconIndex::new(kotus::lemmas());
-    let forms = inflect_in(
-        &report.lemma,
-        best.class,
-        cat,
-        Some(&index),
-        report.pos,
-        false,
-    );
-    for key in if matches!(report.pos, PartOfSpeech::Verb | PartOfSpeech::NegativeVerb) {
-        &class_wizard::VERB_KEYS[..]
+    if best.class.class == class_wizard::INDECLINABLE_CLASS {
+        println!("  taipumaton: vain perusmuoto");
+        println!("  perusmuoto {:<8} {}", "", report.lemma);
     } else {
-        &class_wizard::CORE_KEYS[..]
-    } {
-        let key = *key;
-        let cell = Cell::parse(key).unwrap();
-        let mut words: Vec<&str> = forms
-            .iter()
-            .filter(|form| form.readings.iter().any(|tags| cell.claims(tags)))
-            .map(|form| form.word.as_str())
-            .collect();
-        words.sort_unstable();
-        words.dedup();
-        if !words.is_empty() {
-            let shown: Vec<String> = words
+        let index = LexiconIndex::new(kotus::lemmas());
+        let forms = inflect_in(
+            &report.lemma,
+            best.class,
+            cat,
+            Some(&index),
+            report.pos,
+            false,
+        );
+        for key in if matches!(report.pos, PartOfSpeech::Verb | PartOfSpeech::NegativeVerb) {
+            &class_wizard::VERB_KEYS[..]
+        } else {
+            &class_wizard::CORE_KEYS[..]
+        } {
+            let key = *key;
+            let cell = Cell::parse(key).unwrap();
+            let mut words: Vec<&str> = forms
                 .iter()
-                .map(|word| {
-                    if capitalize {
-                        capitalize_first(word)
-                    } else {
-                        (*word).to_string()
-                    }
-                })
+                .filter(|form| form.readings.iter().any(|tags| cell.claims(tags)))
+                .map(|form| form.word.as_str())
                 .collect();
-            println!("  {key:<8} {}", shown.join("/"));
+            words.sort_unstable();
+            words.dedup();
+            if !words.is_empty() {
+                let shown: Vec<String> = words
+                    .iter()
+                    .map(|word| {
+                        if capitalize {
+                            capitalize_first(word)
+                        } else {
+                            (*word).to_string()
+                        }
+                    })
+                    .collect();
+                println!("  {key:<8} {}", shown.join("/"));
+            }
         }
     }
 

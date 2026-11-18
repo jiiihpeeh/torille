@@ -53,6 +53,8 @@ The same text format is used by the demo page
 The part-of-speech choices are `substantiivi`, `adjektiivi`, `numeraali`,
 `järjestysluku`, `pronomini`, `erisnimi` and `verbi`. A proper name keeps its
 initial capital in the preview and the saved list; it inflects as a noun.
+Tick **taipumaton** to save class `99`: only the word itself is accepted, and
+no inflections are generated.
 
 ## Grammar check
 

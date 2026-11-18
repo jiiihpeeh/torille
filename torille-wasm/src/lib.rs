@@ -1140,6 +1140,11 @@ pub fn wizard_user_forms(user_words_tsv: &str) -> JsValue {
         let lemma = entry.word.trim().to_lowercase();
         forms.insert(lemma.clone());
         for inflection in torille::kotus::parse_inflections(&entry.class) {
+            if inflection.class == torille::class_wizard::INDECLINABLE_CLASS {
+                // The explicit "does not inflect" choice accepts the lemma
+                // only; class 99's loan machinery must not invent forms.
+                continue;
+            }
             let generated = inflect_in(
                 &lemma,
                 inflection,

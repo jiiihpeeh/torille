@@ -67,6 +67,9 @@
   }
   .card h2 { margin: 0 0 0.2rem; font-size: 1.02rem; }
   .card h2 small { color: var(--muted); font-weight: 400; font-size: 0.8rem; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; margin-bottom: 0.4rem; }
+  .card-head h2 { margin: 0; }
+  button.small { padding: 0.2rem 0.55rem; font-size: 0.8rem; }
   .lead { margin: 0 0 0.9rem; color: var(--muted); font-size: 0.9rem; }
   .tabs { display: flex; gap: 0.4rem; margin-bottom: 0.8rem; }
   .tab {
@@ -155,6 +158,9 @@
             <option value="verbi">verbi</option>
           </select>
         </div>
+        <label style="display:flex;align-items:center;gap:0.35rem;font-size:0.85rem;color:var(--muted);padding-bottom:0.45rem">
+          <input id="indeclinable" type="checkbox"> taipumaton
+        </label>
         <button id="start" class="primary">Aloita</button>
       </div>
       <p id="message"></p>
@@ -162,15 +168,20 @@
     </div>
 
     <div class="card" id="question-card" hidden>
-      <h2>Kysymys</h2>
-      <div class="question">
-        <div class="prompt" id="question-label">—</div>
-        <div class="hint" id="question-hint"></div>
-        <div class="row">
-          <input id="answer" type="text" placeholder="kirjoita muoto" autocomplete="off" spellcheck="false">
-          <button id="submit" class="primary">Vastaa</button>
-          <button id="skip" class="ghost">Ohita</button>
-          <button id="examples" class="ghost">Näytä esimerkit</button>
+      <div class="card-head">
+        <h2>Kysymys</h2>
+        <button id="question-toggle" class="ghost small" aria-expanded="true">Piilota</button>
+      </div>
+      <div id="question-body">
+        <div class="question">
+          <div class="prompt" id="question-label">—</div>
+          <div class="hint" id="question-hint"></div>
+          <div class="row">
+            <input id="answer" type="text" placeholder="kirjoita muoto" autocomplete="off" spellcheck="false">
+            <button id="submit" class="primary">Vastaa</button>
+            <button id="skip" class="ghost">Ohita</button>
+            <button id="examples" class="ghost">Näytä esimerkit</button>
+          </div>
         </div>
       </div>
     </div>
@@ -195,7 +206,10 @@
     </div>
 
     <div class="card" id="examples-card" hidden>
-      <h2>Esimerkkisanat</h2>
+      <div class="card-head">
+        <h2>Esimerkkisanat</h2>
+        <button id="examples-close" class="ghost small">Sulje</button>
+      </div>
       <div id="examples"></div>
     </div>
 

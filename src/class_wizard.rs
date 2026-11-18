@@ -62,6 +62,13 @@ pub const VERB_KEYS: [&str; 6] = [
 pub const VERB_QUESTION_POOL: [&str; 5] =
     ["pres_1sg", "pres_3sg", "past_3sg", "cond_3sg", "imp_2sg"];
 
+/// The class the explicit "does not inflect" switch returns.
+///
+/// Kotus uses `99` for a word that is uninflected or only partly inflected;
+/// the wizard uses it for the user's deliberate choice, and only the lemma
+/// itself is accepted for such a saved word.
+pub const INDECLINABLE_CLASS: ClassId = 99;
+
 /// `class -> key -> value`, the shape every text file in this module parses
 /// into. The sheet is the only producer today.
 pub type Sheet = HashMap<String, HashMap<String, String>>;
@@ -808,6 +815,48 @@ pub fn infer(
     infer_with(lemma, pos, answers, cat, true)
 }
 
+/// The explicit "does not inflect" result.
+///
+/// Returns a one-candidate report with class [`INDECLINABLE_CLASS`] and no
+/// question. The lemma may still be in the sanalista; the report lists its
+/// recorded classes for display, but the user's choice is the candidate.
+pub fn indeclinable(lemma: &str, pos: PartOfSpeech) -> Result<Report, WizardError> {
+    let surface = lemma.trim();
+    if surface.is_empty() {
+        return Err(WizardError::EmptyWord);
+    }
+    if !is_supported(pos) {
+        return Err(WizardError::UnsupportedPartOfSpeech(pos));
+    }
+    let lower = surface.to_lowercase();
+    let mut recorded: Vec<Inflection> = Vec::new();
+    for row in kotus::sanalista().by_word(&lower) {
+        recorded.extend(row.inflections());
+    }
+    recorded.sort_by_key(|inflection| (inflection.class, inflection.gradation));
+    recorded.dedup();
+    Ok(Report {
+        lemma: surface.to_string(),
+        pos,
+        recorded,
+        ranked: vec![Candidate {
+            class: Inflection {
+                class: INDECLINABLE_CLASS,
+                gradation: None,
+            },
+            hits: 0,
+            misses: 0,
+            unknown: 0,
+            recorded: false,
+            tail_prior: 0,
+            prior: 0,
+        }],
+        outcomes: Vec::new(),
+        question: None,
+        tie: false,
+    })
+}
+
 /// [`infer`] with the recorded-class tie-break optionally disabled.
 ///
 /// The evaluation samples words that are *in* the sanalista, so ranking the
@@ -1539,6 +1588,16 @@ mod tests {
         assert!(report.recorded.iter().any(|class| class.class == 5));
         let report = infer("mökki", PartOfSpeech::Noun, &Answers::new(), catalogue()).unwrap();
         assert!(report.ranked[0].recorded);
+    }
+
+    #[test]
+    fn the_indeclinable_result_is_class_99() {
+        let report = indeclinable("mökki", PartOfSpeech::Noun).unwrap();
+        assert_eq!(report.ranked.len(), 1);
+        assert_eq!(report.ranked[0].class.to_string(), "99");
+        assert!(report.question.is_none());
+        assert!(!report.tie);
+        assert!(report.recorded.iter().any(|class| class.class == 5));
     }
 
     #[test]

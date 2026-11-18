@@ -149,6 +149,12 @@ const removedOk = removed.error === null && !removed.text?.includes('Helsinki');
 console.log(`  ${removedOk ? 'OK ' : 'BAD'} remove: ${JSON.stringify(removed.text)}`);
 if (!removedOk) failCount++;
 
+const indecl = '# torille-user-words v1\npöräkki\t99\tsubstantiivi\n';
+const indeclForms = Array.from(glue.wizard_user_forms(indecl));
+const indeclOk = indeclForms.length === 1 && indeclForms[0] === 'pöräkki';
+console.log(`  ${indeclOk ? 'OK ' : 'BAD'} indeclinable has only the lemma: ${JSON.stringify(indeclForms)}`);
+if (!indeclOk) failCount++;
+
 if (failCount > 0) {
   console.log(`\n${failCount} check(s) failed`);
   process.exit(1);

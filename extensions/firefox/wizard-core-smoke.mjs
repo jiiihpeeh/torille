@@ -91,6 +91,20 @@ const cleared = await core.handle({ type: 'check', word: 'pöräkin' });
 check('cleared list rejects the form',
   cleared?.type === 'check' && cleared.ok === false, JSON.stringify(cleared));
 
+await core.handle({
+  type: 'set-user-words',
+  text: '# torille-user-words v1\npöräkki\t99\tsubstantiivi\n',
+});
+const indeclLemma = await core.handle({ type: 'check', word: 'pöräkki' });
+check('indeclinable accepts the lemma',
+  indeclLemma?.type === 'check' && indeclLemma.ok === true,
+  JSON.stringify(indeclLemma));
+const indeclInflected = await core.handle({ type: 'check', word: 'pöräkin' });
+check('indeclinable does not invent forms',
+  indeclInflected?.type === 'check' && indeclInflected.ok === false,
+  JSON.stringify(indeclInflected));
+await core.handle({ type: 'set-user-words', text: '' });
+
 const sheet = await core.handle({ type: 'wizard-sheet' });
 check('wizard-sheet', sheet?.type === 'wizard-sheet' && sheet.sheet.includes('1\tmodel\t'),
   sheet?.type);

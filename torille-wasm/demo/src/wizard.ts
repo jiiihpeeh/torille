@@ -11,6 +11,7 @@ const USER_WORDS_KEY = 'torille-user-words';
 const SESSION_KEY = 'torille-wizard-session';
 const WORD_KEY = 'torille-wizard-word';
 const POS_KEY = 'torille-wizard-pos';
+const INDECLINABLE_KEY = 'torille-wizard-indeclinable';
 
 type Candidate = {
   class: string;
@@ -88,6 +89,7 @@ const state = {
   saved: [] as UserWord[],
   savedText: '',
   ready: false,
+  questionCollapsed: false,
 };
 
 function byId<T extends HTMLElement>(id: string): T {
@@ -133,6 +135,7 @@ function saveSession(): void {
     localStorage.setItem(SESSION_KEY, answersText());
     localStorage.setItem(WORD_KEY, state.word);
     localStorage.setItem(POS_KEY, state.pos);
+    localStorage.setItem(INDECLINABLE_KEY, byId<HTMLInputElement>('indeclinable').checked ? '1' : '');
   } catch {
     /* private mode */
   }
@@ -164,7 +167,14 @@ function restoreSession(): void {
     }
     byId<HTMLInputElement>('word').value = state.word;
     byId<HTMLSelectElement>('pos').value = state.pos;
-    void infer();
+    const indeclinable = localStorage.getItem(INDECLINABLE_KEY) === '1';
+    byId<HTMLInputElement>('indeclinable').checked = indeclinable;
+    if (indeclinable) {
+      state.report = indeclinableReport();
+      render();
+    } else {
+      void infer();
+    }
   } catch {
     /* ignore a corrupt session */
   }
@@ -180,6 +190,14 @@ async function infer(): Promise<void> {
   state.report = raw;
   state.selected = null;
   render();
+}
+
+function setQuestionCollapsed(collapsed: boolean): void {
+  state.questionCollapsed = collapsed;
+  byId<HTMLElement>('question-body').hidden = collapsed;
+  const button = byId<HTMLButtonElement>('question-toggle');
+  button.textContent = collapsed ? 'Näytä' : 'Piilota';
+  button.setAttribute('aria-expanded', String(!collapsed));
 }
 
 function render(): void {
@@ -216,6 +234,7 @@ function render(): void {
 
   if (report.question) {
     questionCard.hidden = false;
+    setQuestionCollapsed(false);
     byId('question-label').textContent =
       CELL_LABELS[report.question] ?? report.question;
     const hint = example(report.question);
@@ -338,6 +357,18 @@ function showForm(form: string): string {
 }
 
 function preview(cls: string): void {
+  if (cls === '99') {
+    const grid = byId<HTMLDListElement>('paradigm');
+    clear(grid);
+    const dt = document.createElement('dt');
+    dt.textContent = 'perusmuoto';
+    const dd = document.createElement('dd');
+    dd.textContent = state.word;
+    grid.append(dt, dd);
+    byId('selected-note').textContent = 'Taipumaton: vain perusmuoto.';
+    byId('save').textContent = 'Tallenna 99';
+    return;
+  }
   const result = bg.wizard_paradigm(state.word, cls, state.pos) as unknown as Paradigm;
   if (result.error) {
     message(String(result.error), true);
@@ -378,6 +409,27 @@ function skipAnswer(): void {
   void infer();
 }
 
+function indeclinableReport(): Report {
+  return {
+    word: state.word,
+    pos: state.pos,
+    recorded: [],
+    candidates: [{
+      class: '99',
+      hits: 0,
+      misses: 0,
+      unknown: 0,
+      recorded: false,
+      tail_prior: 0,
+      prior: 0,
+    }],
+    total_candidates: 1,
+    outcomes: [],
+    question: null,
+    tie: false,
+  };
+}
+
 function start(): void {
   const word = byId<HTMLInputElement>('word').value.trim();
   if (!word) {
@@ -386,10 +438,16 @@ function start(): void {
   }
   state.word = word;
   state.pos = byId<HTMLSelectElement>('pos').value;
+  const indeclinable = byId<HTMLInputElement>('indeclinable').checked;
   state.answers.clear();
   state.selected = null;
   message('');
   saveSession();
+  if (indeclinable) {
+    state.report = indeclinableReport();
+    render();
+    return;
+  }
   void infer();
 }
 
@@ -569,6 +627,11 @@ function wire(): void {
   byId('submit').addEventListener('click', submitAnswer);
   byId('skip').addEventListener('click', skipAnswer);
   byId('examples').addEventListener('click', showExamples);
+  byId('question-toggle').addEventListener('click', () =>
+    setQuestionCollapsed(!state.questionCollapsed));
+  byId('examples-close').addEventListener('click', () => {
+    byId<HTMLElement>('examples-card').hidden = true;
+  });
   byId('save').addEventListener('click', saveWord);
   byId('export').addEventListener('click', exportSaved);
   byId('tab-find').addEventListener('click', () => setTab('find'));

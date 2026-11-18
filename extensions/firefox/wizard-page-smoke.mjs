@@ -141,6 +141,12 @@ try {
   await page.click('#start');
   await page.waitForSelector('#question-card:not([hidden])', { timeout: 20_000 });
 
+  await page.click('#question-toggle');
+  const collapsedOk = await page.$eval('#question-body', (el) => el.hidden);
+  const collapsedLabel = await page.$eval('#question-toggle', (el) => el.textContent);
+  await page.click('#question-toggle');
+  const expandedOk = await page.$eval('#question-body', (el) => !el.hidden);
+
   const answers = {
     'genetiivi (yksikkö)': 'mökin',
     'genetiivi (monikko)': 'mökkien',
@@ -246,6 +252,27 @@ try {
     text: localStorage.getItem('ext:torille-user-words'),
   }));
 
+  // No-conjugation flow: the checkbox returns class 99 without questions.
+  await page.$eval('#word', (el) => { el.value = 'Helsinki'; });
+  await page.select('#pos', 'erisnimi');
+  await page.$eval('#indeclinable', (el) => { el.checked = true; });
+  await page.click('#start');
+  await page.waitForFunction(
+    () => document.getElementById('best')?.textContent === '99',
+    { timeout: 20_000 },
+  );
+  const indeclResult = await page.evaluate(() => ({
+    best: document.getElementById('best')?.textContent,
+    cells: Array.from(document.querySelectorAll('#paradigm dd')).map((el) => el.textContent),
+    save: document.getElementById('save')?.textContent,
+  }));
+  await page.click('#save');
+  await sleep(500);
+  const indeclSaved = await page.evaluate(() => ({
+    rows: Array.from(document.querySelectorAll('.saved-row')).map((el) => el.textContent),
+    text: localStorage.getItem('ext:torille-user-words'),
+  }));
+
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForFunction(
     () => document.getElementById('message')?.textContent === '',
@@ -268,12 +295,21 @@ try {
     properResult.cells?.includes('Pöräkin') &&
     properSaved.rows?.some((row) => row.includes('Pöräkki')) &&
     properSaved.text?.includes('Pöräkki\t5*A\terisnimi') &&
+    indeclResult.best === '99' &&
+    indeclResult.cells?.includes('Helsinki') &&
+    indeclResult.save === 'Tallenna 99' &&
+    indeclSaved.rows?.some((row) => row.includes('Helsinki')) &&
+    indeclSaved.text?.includes('Helsinki\t99\terisnimi') &&
     afterReload.rows?.some((row) => row.includes('mökki')) &&
     afterReload.rows?.some((row) => row.includes('puhua')) &&
     afterReload.rows?.some((row) => row.includes('Pöräkki')) &&
-    errors.length === 0;
+    afterReload.rows?.some((row) => row.includes('Helsinki')) &&
+    errors.length === 0 &&
+    collapsedOk &&
+    collapsedLabel === 'Näytä' &&
+    expandedOk;
 
-  console.log(JSON.stringify({ result, saved, verbResult, verbSaved, properResult, properSaved, afterReload, errors }, null, 2));
+  console.log(JSON.stringify({ collapsedOk, expandedOk, result, saved, verbResult, verbSaved, properResult, properSaved, indeclResult, indeclSaved, afterReload, errors }, null, 2));
   if (!ok) {
     console.error('wizard page smoke failed');
     process.exitCode = 1;

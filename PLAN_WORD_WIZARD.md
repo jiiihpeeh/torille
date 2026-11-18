@@ -160,6 +160,7 @@ ill_sg	mökkiin
 mökki	5*A	substantiivi
 Helsinki	5	erisnimi
 kahdeksas	45	järjestysluku
+taipumaton sana	99	substantiivi
 ```
 
 - Three columns: word, class expression, part of speech. The class may be a dual
@@ -337,9 +338,11 @@ vowel and consonant patterns the genitive leaves tied.
   case-insensitively, and capitalize the preview from the surface. The checker's
   suggestion path restores case later. A numeral/ordinal uses the same nominal
   cells with `numeraali`/`järjestysluku` as the reading.
-- **Indeclinable.** An explicit switch returns 99 and skips the questions. The
+- **Indeclinable.** A **taipumaton** checkbox in the pages and
+  `--indeclinable` in the CLI return class `99` and skip the questions. The
   sheet has no 99 (it is not a catalogue class); the UI hard-codes the
-  explanation.
+  explanation. A saved 99 word accepts the lemma only: `wizard_user_forms`
+  does not run class 99's loan machinery, so it cannot invent forms.
 
 ## Surfaces
 
@@ -377,14 +380,16 @@ display; a capitalized name therefore finds its lower-case paradigm.
 ### CLI (`tools/src/bin/word_wizard.rs`)
 
 ```
-word_wizard [WORD] [--pos noun|adjective|verb] [--form CELL=FORM ...]
-            [--answers FILE] [--json] [--emit sanalista|custom]
+word_wizard [WORD] [--pos POS] [--form CELL=FORM ...] [--answers FILE]
+            [--indeclinable] [--json] [--emit sanalista|custom]
             [--write-sheet PATH] [--check-sheet]
 ```
 
 - No `--form` / `--answers`: an interactive text REPL, the same questions as the
   browser.
 - `--answers`: batch mode for scripts and the build phase.
+- `--indeclinable`: return class 99 and skip the questions; only the lemma is
+  accepted for the saved entry.
 - `--emit sanalista`: print the CSV row (`word, homonym, pos, class`) and the
   `add_sanalista_word.py` command with a placeholder anchor.
 - `--emit custom`: print the user-words row.
@@ -532,7 +537,7 @@ options page both call, so the saved text is never parsed in JS.
 | 2 | inference and CLI; `tools/wizard_eval.py`; binding method | batch and interactive CLI work; the oracle curve and the adaptive-versus-fixed comparison are recorded — **done** |
 | 3 | wasm exports, demo page, `localStorage`, import/export | a user can find and save a word in the demo; the page survives reload; a Puppeteer smoke test passes — **done** |
 | 4 | extension options wizard, `browser.storage.local`, worker custom-word set | a saved word is accepted by the checker on the next text; a deleted word is not; source-sync is green — **done for Firefox and Chromium** |
-| 5 | custom-word suggestions (**done**), verb sheet and cells (**done**), session restore (**done**), name handling | measured, not promised |
+| 5 | custom-word suggestions (**done**), verb sheet and cells (**done**), session restore (**done**), name handling and the indeclinable switch (**done**) | measured, not promised |
 
 Phases 0–5 and the oracle curve are implemented (2026-11-18): the demo, both
 extensions, nominal and verb inference, the tail prior, saved-word acceptance
