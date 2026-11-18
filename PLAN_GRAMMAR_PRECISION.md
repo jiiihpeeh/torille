@@ -1,7 +1,7 @@
 # PLAN_GRAMMAR_PRECISION — closing the adjudicated false positives
 
-Status: **12 diagnostics on the committed prose page, 7 adjudicated false
-positives across nine phases; phases 0–6 landed** · 2026-11-18 · branch
+Status: **10 diagnostics on the committed prose page, 5 adjudicated false
+positives across nine phases; phases 0–7 landed** · 2026-11-18 · branch
 `syntax` · baseline `b8b3687`
 
 This plan closes the false positives that remain on
@@ -19,17 +19,15 @@ Contents: [§1 where we are](#1-where-we-are) ·
 
 ## 1. Where we are
 
-`page-2000` (1,959 words) reports **12** grammar diagnostics. Every one was
-adjudicated by hand: 7 false positives, 1 true positive, 3 accepted, 1
+`page-2000` (1,959 words) reports **10** grammar diagnostics. Every one was
+adjudicated by hand: 5 false positives, 1 true positive, 3 accepted, 1
 excerpt artefact.
 
 | kind | rows | false positives |
 |---|---:|---:|
-| `verb_rection` | 1 | 1 |
 | `question_mark_missing` | 4 | 2 (1 accepted, 1 true positive) |
 | `list_separator_missing` | 3 | 3 |
 | `subject_predicate_agreement` | 2 | 0 (2 accepted) |
-| `attribute_agreement` | 1 | 1 |
 | `unbalanced_quote` | 1 | 0 (excerpt ends inside a quote) |
 
 The workflow is a review loop:
@@ -58,11 +56,10 @@ and adds another is a failed phase and is reverted.
 
 ### 1.2 What the prose fixture can pin
 
-The prose fixture checks each row in isolation. Of the current 7 false
-positives, one reproduces alone (one entry in `known_false_positives`) and six
-do not (five page-only rows: `paljon hyvää`, the two `lapsineen` findings,
-`puute`, and two of the question-mark rows). The fixture form of each row is
-in the §2 table.
+The prose fixture checks each row in isolation. None of the current 5 false
+positives reproduces alone: they are four page-only rows (the two `lapsineen`
+findings, `puute`, and two question-mark rows). The fixture form of each row
+is in the §2 table.
 
 A page-only row is still pinned by the plan: the phase that fixes it adds a
 **purpose-built sentence** to `syntax_diagnostics.json` that exercises the same
@@ -111,8 +108,8 @@ per §1.2).
 | 13 | `verb_rection` | 5952 `Päivän` | `Päivän vaietessa` | `päivään` | genitive subject of an impersonal non-finite verb | 5 | **fixed** |
 | 14 | `verb_rection` | 14764 `niitä` | `…lähti niitä seuraamaan.` | `niihin` | `niitä` is the infinitive's object | 6 | **fixed** |
 | 15 | `verb_rection` | 6583 `sinut` | `…uskon sinut … haltuun.` | `sinuun` | the illative `haltuun` satisfies the frame | 6 | **fixed** |
-| 16 | `verb_rection` | 8210 `Jumala` | `…'Jumala, ole minulle armollinen…'` | `jumalaan` | vocative | 7 | sentence |
-| 17 | `attribute_agreement` | 9821 `hyvää` | `kuinka paljon hyvää hän … osoitti` | `hyvä` | `hyvää` is the head of `paljon` | 7 | page |
+| 16 | `verb_rection` | 8210 `Jumala` | `…'Jumala, ole minulle armollinen…'` | `jumalaan` | vocative | 7 | **fixed** |
+| 17 | `attribute_agreement` | 9821 `hyvää` | `kuinka paljon hyvää hän … osoitti` | `hyvä` | `hyvää` is the head of `paljon` | 7 | **fixed** |
 | 18 | `list_separator_missing` | 11698 | `…suojassa sateelta ja tuulelta, mutta…` | `,` | not a list | 8 | page |
 | 19 | `list_separator_missing` | 11707 | same | `,` | same | 8 | page |
 | 20 | `list_separator_missing` | 13463 | `…puute, niin yhtenä päivänä…` | `,` | across a clause boundary | 8 | page |
@@ -348,18 +345,22 @@ impersonal verbs of time and weather (`vaieta`, `hämärtää`, `sarastaa`,
 Acceptance: rows 14–15 clean; `Luotan sinä.`, `En pidä sinä.` and
 `Vastaan sinä.` still fire; `Hän uskoo sinuun.` is clean. Page 14 → 12.
 
-### Phase 7 — vocative and quantity head (rows 16–17)
+### Phase 7 — vocative and quantity head — **landed**
 
-- **Vocative.** A nominative nominal followed by a comma and then an
-  imperative predicate is an address (`Jumala, ole minulle armollinen`). Mark
-  it detached before the object pass.
-- **Quantity head.** An adjective after `paljon`, `vähän`, `runsaasti`,
-  `tarpeeksi` is the head of the quantity phrase (`paljon hyvää`), not an
-  attribute of a following noun. Exclude it from `attribute_shape`'s
-  candidates.
+- **Vocative.** The last nominal of a clause is an address when the next
+  clause opens with an imperative and a comma separates them, provided a
+  colon or quotation mark stands before the address (or it is sentence-initial).
+  The punctuation cue distinguishes `vastasi: 'Jumala, ole …` from an object
+  in `Osta kirja, tule!`. The address is marked `Adverbial` before the object
+  pass, so the rection frame cannot rewrite it.
+- **Quantity head.** An adjective directly after `paljon`, `vähän`,
+  `runsaasti` or `tarpeeksi` is the head of the quantity phrase (`paljon
+  hyvää`), not an attribute of the following noun; it is excluded from
+  `check_attributes`.
 
 Acceptance: rows 16–17 clean; `Punainen autot.` and `Punaisessa auto.` still
-fire; `Minä, menen kotiin.` stays `comma_extra`.
+fire; `Minä, menen kotiin.` stays `comma_extra`; `Jumala, ole minulle
+armollinen.` and `Liisa, tule tänne.` are clean. Page 12 → 10.
 
 ### Phase 8 — list detection over clause boundaries (rows 18–20)
 

@@ -1220,3 +1220,11 @@ intended/competing interpretation pair that fails.
   predicate itself is excluded because its homonyms can carry an illative
   noun reading (`Vastaan sinä.` must keep firing). `page-2000`: 14 → 12,
   rows 14–15 only.
+- 2026-11-18: precision Phase 7 (vocative; quantity head). A clause-final
+  nominative followed by a comma and an imperative clause is an address when
+  a colon or quote precedes it (`vastasi: 'Jumala, ole …`); it is marked
+  Adverbial before the object pass, so the rection frame cannot rewrite it.
+  An adjective directly after `paljon`/`vähän`/`runsaasti`/`tarpeeksi` is the
+  head of the quantity phrase, not an attribute. `Jumala, ole …`,
+  `Liisa, tule …` and `Kuinka paljon hyvää …` are clean; `Minä, menen kotiin.`
+  stays comma_extra. `page-2000`: 12 → 10, rows 16–17 only.

@@ -349,6 +349,12 @@ fn check_attributes(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         {
             continue;
         }
+        // `paljon hyvää`: the adjective is the head of the quantity phrase,
+        // not an attribute of the following noun. A closed adverb set, the
+        // same shape as the other lexical cues in this module.
+        if previous_word_is(index, &["paljon", "vähän", "runsaasti", "tarpeeksi"], tokens, analysis) {
+            continue;
+        }
         // Ask for an unambiguous attribute shape first: a token that is not an
         // adjective, ordinal or demonstrative never needs the degree lookup.
         let Some((attribute_case, attribute_number)) = attribute_shape(syntax) else {
@@ -415,6 +421,20 @@ fn check_attributes(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         diagnostics.push(diagnostic);
     }
     diagnostics
+}
+
+/// Is the previous word one of `words`? Used for the quantity-phrase head
+/// (`paljon hyvää`), where the adjective is not an attribute.
+fn previous_word_is(
+    index: usize,
+    words: &[&str],
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+) -> bool {
+    (0..index)
+        .rev()
+        .find(|&candidate| tokens[candidate].is_word())
+        .is_some_and(|previous| words.contains(&analysis.tokens[previous].key.as_str()))
 }
 
 /// A predicative adjective agrees with the subject in number.

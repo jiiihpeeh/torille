@@ -90,7 +90,8 @@
     "Hän lähti lapsi sylissä kulkemaan lumessa ja sateessa yhä kauemmas korpeen, tietämättä minne.",
     "Kuningas käskee jo tänä iltana lähteä sotaan.' Päivän vaietessa olivatkin jo kaikki Sikrin ritarit koolla linnan suuressa salissa.",
     "Hän tapasi hirven jälet ja lähti niitä seuraamaan.",
-    "Lähinnä Jumalan haltuun uskon sinut ja kaikki, mitä minulla on, tämän uskollisen palvelijani Kolon haltuun."
+    "Lähinnä Jumalan haltuun uskon sinut ja kaikki, mitä minulla on, tämän uskollisen palvelijani Kolon haltuun.",
+    "' Kenoveeva vastasi: 'Jumala, ole minulle armollinen, minä olen sinun kädessäsi', nousi ylös ja seurasi heitä."
   ],
   "errors": [
     {
@@ -101,13 +102,5 @@
       "note": "Direct -ko question; the period should be a question mark."
     }
   ],
-  "known_false_positives": [
-    {
-      "text": "' Kenoveeva vastasi: 'Jumala, ole minulle armollinen, minä olen sinun kädessäsi', nousi ylös ja seurasi heitä.",
-      "kinds": [
-        "verb_rection"
-      ],
-      "note": "Phase 7: `Jumala` is a vocative."
-    }
-  ]
+  "known_false_positives": []
 }

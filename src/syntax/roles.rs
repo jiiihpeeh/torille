@@ -642,6 +642,26 @@ pub(super) fn resolve_clause(
         out[last].head = Some(next);
     }
 
+    // A vocative: `… vastasi: 'Jumala, ole minulle armollinen`. The last
+    // nominal of the clause is an address when the next clause opens with an
+    // imperative and a comma separates the two. The address punctuation
+    // before it (a colon or a quote) distinguishes it from the object in
+    // `Osta kirja, tule!`.
+    if let Some(next) = (clause.tokens.end..tokens.len()).find(|&index| tokens[index].is_word())
+        && is_imperative(&out[next])
+        && let Some(&last) = after.last()
+        && Some(last) != subject
+        && out[last].role == SyntacticRole::Unknown
+        && nominal_has_case(&out[last], &[Case::Nominative])
+        && comma_between_words(tokens, last, next)
+        && address_punctuation_before(tokens, last)
+    {
+        out[last].role = SyntacticRole::Adverbial;
+        out[last].confidence = nominal_confidence(&out[last]);
+        out[last].case = Some(Case::Nominative);
+        out[last].head = Some(next);
+    }
+
     let object_cases: &[Case] = if negative {
         &[Case::Partitive]
     } else {
@@ -1318,6 +1338,42 @@ fn mark_numeral_complement(head: usize, words: &[usize], out: &mut [TokenSyntax]
 }
 
 /// Whether a token carries a possessive suffix.
+fn is_imperative(syntax: &TokenSyntax) -> bool {
+    syntax
+        .readings
+        .iter()
+        .any(|reading| reading.mood == Some(Mood::Imperative) && is_finite_predicate(reading))
+}
+
+fn comma_between_words(tokens: &[Token], left: usize, right: usize) -> bool {
+    let (start, end) = if left < right {
+        (left + 1, right)
+    } else {
+        (right + 1, left)
+    };
+    tokens[start..end]
+        .iter()
+        .filter(|token| !token.is_word())
+        .any(|token| token.text.contains(','))
+}
+
+/// A colon or a quotation mark before the nominal: `vastasi: 'Jumala`.
+/// A sentence-initial address has no previous word and also qualifies.
+fn address_punctuation_before(tokens: &[Token], index: usize) -> bool {
+    let Some(previous) = (0..index).rev().find(|&candidate| tokens[candidate].is_word()) else {
+        return true;
+    };
+    tokens[previous + 1..index]
+        .iter()
+        .filter(|token| !token.is_word())
+        .any(|token| {
+            token
+                .text
+                .chars()
+                .any(|c| matches!(c, ':' | '\'' | '"' | '»' | '“' | '”'))
+        })
+}
+
 /// Impersonal verbs of time and weather whose genitive subject is
 /// `Päivän vaietessa`. A possessive suffix (`luettuaan`) marks the agent and
 /// keeps the genitive as an object, so it is excluded.
