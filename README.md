@@ -7,10 +7,11 @@ The core answers two questions:
 - **if not, what did the user mean?** — `suggest`
 
 It is dictionary-driven, not statistical. The Kotus *sanalista* supplies the
-lemmas, a paradigm catalogue (generated from the Omorfi and Voikko oracles)
-supplies each class's slots, and the engine works out which slots a particular
-member actually has. Unknown words fall through to compound analysis and the
-productive derivation rules.
+lemmas, a committed paradigm catalogue — seeded once from the Omorfi and Voikko
+oracles, then rewritten from the engine's own output until the templates are
+self-consistent — supplies each class's slots, and the engine works out which
+slots a particular member actually has. Unknown words fall through to compound
+analysis and the productive derivation rules.
 
 The same morphology engine also powers an **opt-in grammar and style checker**
 (`check_syntax`, `check_style`). It runs only when asked and never on the
@@ -220,10 +221,20 @@ cargo build -p torille
 
 `tools/build/compare_engine_outputs.py --strict` checks the committed tables
 against a fresh engine run (0 lost / 0 new is the current baseline). The
-lexical exceptions the engine does not derive — the paradigm catalogue,
-proper-name cases, the `-oi-` plural set, the class-6/15 tables — are frozen
-reference data; their generators live in [`tools/oracle/`](tools/oracle/README.md)
-and need Omorfi/Voikko.
+paradigm catalogue is bootstrapped rather than regenerated from the oracle every
+time: seed `data/catalogue.csv` once with
+`python3 tools/oracle/build_catalogue_csv.py`, then rewrite it from the engine's
+own output until the CSV stops changing:
+
+```bash
+cargo run -p torille-tools --bin build_catalogue
+cargo build
+```
+
+The other lexical exceptions the engine does not derive — proper-name cases,
+the `-oi-` plural set, the class-6/15 tables — are frozen reference data; their
+generators live in [`tools/oracle/`](tools/oracle/README.md) and need
+Omorfi/Voikko.
 
 A clean clone builds from the tracked files alone; this was verified by
 cloning `HEAD`, building `--workspace --all-targets` and running the test

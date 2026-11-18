@@ -21,6 +21,7 @@ engine's MIT/Apache-2.0 license.
 
 | file | producer | used by |
 |---|---|---|
+| `catalogue.csv` | `build_catalogue` (Rust bin), seeded by `tools/oracle/build_catalogue_csv.py` | 8 paradigm slots per class; read by `spec.rs` |
 | `adj_degrees.csv` | `gen_adj_degrees` (Rust bin) | `maps/adj_degrees.bin.gz` |
 | `adj_degrees_extra.csv` | curated (en.wiktionary) | merged by `gen_adj_degrees` into `adj_degrees.csv` |
 | `stem_to_base_map.csv` | `gen_stem_map_noun` (Rust bin) | `maps/stem_map_noun.bin.gz` |
@@ -28,6 +29,15 @@ engine's MIT/Apache-2.0 license.
 
 Regenerate with the engine binding, then `cargo build -p torille`. Do not
 hand-edit; `tools/build/compare_engine_outputs.py --strict` is the check.
+
+`catalogue.csv` is a special case: the oracle provides the initial eight slots,
+then `build_catalogue` rewrites each class from the engine's own output for a
+representative sanalista word until the templates are self-consistent. Seed it
+once with `python3 tools/oracle/build_catalogue_csv.py`; after that, regenerate
+with `build_catalogue` and `cargo build` until the CSV stops changing. It carries
+one curated correction: class 51 `uusikuu` has the illative `uuteenkuuhun`, not
+the oracle's `uuteenkuuseen` (which is a form of `kuusi`). Wiktionary confirms
+`uuteenkuuhun`.
 
 ## Generated wizard sheet (committed)
 
@@ -49,7 +59,6 @@ committed files are what a build uses.
 
 | file | producer | notes |
 |---|---|---|
-| `catalogue.csv` | `tools/oracle/build_catalogue_csv.py` | 8 paradigm slots per class; read by `spec.rs` |
 | `adverbit.csv` | `tools/oracle/build_adverbi_forms.py` | `-ksi` adverb possessives |
 | `adverb_degrees.csv` | curated (en.wiktionary) | `maps/adverb_degrees.bin.gz`; adverb comparatives such as `hiljaa -> hiljempaa` |
 | `feminine_nouns.csv` | curated (Kotus/en.wiktionary) | `maps/feminine_nouns.bin.gz`; historical `-nna` feminines such as `pormestarinna -> pormestari` |
@@ -61,11 +70,6 @@ committed files are what a build uses.
 | `verb_arguments.csv` | curated (Kotus/Kielitoimiston ohjepankki) | `lemma,slot,case,requirement,note` argument-completeness frames used by the syntax checker |
 | `oracle_exceptions.json` | curated | evidence for the harness (`tools/test_illegal_evidence.py`) |
 | `wiktionary-taivutukset.txt` | Wiktionary | fetched paradigms used by `tests/catalogue.rs` |
-
-`catalogue.csv` is oracle-generated, but it carries one curated correction:
-class 51 `uusikuu` has the illative `uuteenkuuhun`, not the oracle's
-`uuteenkuuseen` (which is a form of `kuusi`). Wiktionary confirms
-`uuteenkuuhun`.
 
 ## Curated style tables
 

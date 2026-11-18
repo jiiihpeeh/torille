@@ -135,12 +135,14 @@ docs/                 harness.md, lexicon.md, morfologia.yaml, hyphenation.md
 - `data/nykysuomensanalista.csv` — 104k lemmas, tab-separated:
   `lemma  homonymy  part_of_speech  inflection_info`. The class column carries
   `9`, `9*B` (class + gradation), `9, 50` (two classes), `(21)` (parenthesised).
-- `data/catalogue.csv` — the paradigm templates, generated from the
-  Omorfi/Voikko oracles by `tools/oracle/build_catalogue_csv.py`. Each class maps to
-  **8 slots in fixed order**: singular nominative, genitive, partitive,
-  illative, then the same four plural. Case and number are read off a slot's
-  **position**, not a label. The original Kotus `kotus-tyypit.txt` document is
-  local-only, gitignored, and read by neither the build nor the runtime.
+- `data/catalogue.csv` — the paradigm templates. The oracle seeds the eight
+  slots once; `build_catalogue` then rewrites each class from the engine's own
+  output for a representative sanalista word until the templates are
+  self-consistent. Each class maps to **8 slots in fixed order**: singular
+  nominative, genitive, partitive, illative, then the same four plural. Case and
+  number are read off a slot's **position**, not a label. The original Kotus
+  `kotus-tyypit.txt` document is local-only, gitignored, and read by neither the
+  build nor the runtime.
 
 The sanalista is `include_str!`'d (`lib.rs`); the catalogue is compiled to
 `maps/catalogue.bin.gz` by `build.rs` and embedded with

@@ -75,7 +75,7 @@ Corpus and code generation:
 
 | binary | purpose |
 |---|---|
-| `build_catalogue` | refine the catalogue CSV from the engine's own output |
+| `build_catalogue` | refine the catalogue CSV from the engine's own output; seed it once from `tools/oracle/build_catalogue_csv.py` |
 
 Profiling and one-off probes:
 

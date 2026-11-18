@@ -15,7 +15,7 @@ keeps its own terms.
 |---|---|---|
 | `build_nomine_lexicon.py` | Omorfi + Voikko | `data/kotus_nomines.sqlite` |
 | `build_verb_lexicon.py` | Omorfi + Voikko | `data/kotus_verbit.sqlite`, `data/verb_connectives.csv`, `data/verb_connegatives.csv` |
-| `build_catalogue_csv.py` | both oracle dbs | `data/catalogue.csv` |
+| `build_catalogue_csv.py` | both oracle dbs | seeds `data/catalogue.csv`; `build_catalogue` then rewrites it from the engine |
 | `build_adverbi_forms.py` | Voikko | `data/adverbit.csv` |
 | `build_proper_name_forms.py` | Omorfi | `data/proper_name_forms.csv` |
 | `build_oi_plural_lemmas.py` | noun oracle | `maps/oi_plural_lemmas.bin.gz` |
@@ -32,6 +32,9 @@ python3 tools/oracle/build_catalogue_csv.py
 python3 tools/oracle/extract_class_rules.py --rust
 ```
 
-Why these tables are not engine-derived is recorded in `FIX_GENGAPS.md`
+Why the other tables are not engine-derived is recorded in `FIX_GENGAPS.md`
 (G5/G6): the engine has no authority to invent an exception it does not
 implement, and deleting the table would remove exactly the fact it encodes.
+The paradigm catalogue is the exception: the oracle supplies the initial eight
+slots, then `build_catalogue` rewrites each class from the engine's own output
+until the templates are self-consistent.
