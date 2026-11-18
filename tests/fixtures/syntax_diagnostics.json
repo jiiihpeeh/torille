@@ -930,6 +930,19 @@
           "corrections": ["väsyneet"]
         }
       ]
+    },
+    {
+      "id": "rection_infinitive_clause_subject",
+      "text": "Haluan mennä koulu.",
+      "diagnostics": [
+        {
+          "kind": "verb_rection",
+          "severity": "error",
+          "start": 14,
+          "end": 19,
+          "corrections": ["kouluun", "koululle"]
+        }
+      ]
     }
   ],
   "clean": [
@@ -1174,6 +1187,14 @@
     "Mutta eräänä päivänä hän lähti.",
     "Hän sai itkultaan tuskin sanotuksi.",
     "Vaipui Kenoveeva kalpeana.",
-    "Kun häneltä kysyttiin, hän vastasi selvästi."
+    "Kun häneltä kysyttiin, hän vastasi selvästi.",
+    "Sen sanoi hän.",
+    "Kysyi hän sitten.",
+    "Niin sanoi hän.",
+    "Oli hän yhtä viaton ja herttainen kuin kaunis.",
+    "Niille alkoi tulla vaatteista puute.",
+    "Hän haluaa oppia suomea.",
+    "No minä kerron vaikka tästä.",
+    "Suuremmat istumme tuoleilla."
   ]
 }

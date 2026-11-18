@@ -519,6 +519,45 @@
         { "word": "tulivat", "role": "predicate" }
       ],
       "diagnostics": []
+    },
+    {
+      "id": "inverted_subject_after_the_predicate",
+      "text": "Sen sanoi hän.",
+      "clauses": 1,
+      "subject": "hän",
+      "predicate": "sanoi",
+      "roles": [
+        { "word": "sen", "role": "object", "case": "genitive" },
+        { "word": "hän", "role": "subject", "case": "nominative" }
+      ],
+      "forbidden_roles": [
+        { "word": "hän", "role": "object" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "vocative_is_not_the_subject_of_an_inverted_predicate",
+      "text": "Ja sinä, Heintsi', sanoi hän sille toiselle miehelle.",
+      "clauses": 1,
+      "subject": "hän",
+      "predicate": "sanoi",
+      "forbidden_roles": [
+        { "word": "heintsi", "role": "subject" }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "coordinated_adjective_is_not_a_subject",
+      "text": "Oli hän yhtä viaton ja herttainen kuin kaunis.",
+      "clauses": 1,
+      "subject": "hän",
+      "roles": [
+        { "word": "hän", "role": "subject", "case": "nominative" }
+      ],
+      "forbidden_roles": [
+        { "word": "herttainen", "role": "subject" }
+      ],
+      "diagnostics": []
     }
   ]
 }

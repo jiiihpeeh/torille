@@ -2087,3 +2087,11 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   attribute candidate, and only demonstratives are attributive among the
   pronouns. Together with the argument-selection round, `page-2000` drops from
   54 to 34 diagnostics, all 20 removed rows adjudicated false positives.
+
+- 2026-11-18: inverted order and non-finite subjects. `verb + nominative
+  personal pronoun` now assigns the pronoun as the subject (quotative
+  `sanoi hän`), a postverbal coordinated subject must be a noun, an infinitive
+  clause agrees through its governing verb, a 1st/2nd-person predicate takes
+  only a pronoun subject, and `vaikka` opens a clause only when a predicate
+  follows. `page-2000` grammar diagnostics are down to 27 from 54, all
+  removals adjudicated false positives.

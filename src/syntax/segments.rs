@@ -124,6 +124,18 @@ pub(super) fn segment_clause_words(
             if lower == "että" && is_seka_etta(words, position, tokens, out) {
                 continue;
             }
+            // `vaikka` is a subordinator and an adverb (“for instance”,
+            // “even”). Only the subordinator opens a clause, so require a
+            // finite predicate after it: `kerron vaikka tästä` stays one
+            // clause and takes no comma. The other subordinators keep the
+            // unconditional split, because their clause can end the group.
+            if lower == "vaikka"
+                && !words[position + 1..]
+                    .iter()
+                    .any(|&index| is_predicate_candidate(index, out))
+            {
+                continue;
+            }
             starts.push(position);
             continue;
         }

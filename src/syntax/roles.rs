@@ -494,7 +494,21 @@ pub(super) fn resolve_clause(
 
     let mut subject = None;
     if !passive && !passive_construction {
-        if clause.existential {
+        // Inverted order: a finite predicate followed immediately by a
+        // nominative personal pronoun has that pronoun as its subject
+        // (`sanoi hän`, `kysyi hän sitten`). Whatever stands before the
+        // predicate is then not the subject — in a quotation it is a vocative
+        // (`..., Heintsi', sanoi hän sille toiselle`), and the quoted
+        // predicate must not keep a subject role either.
+        if !clause.existential && !necessity && !necessive {
+            subject = after.first().copied().filter(|&index| {
+                out[index].role == SyntacticRole::Unknown
+                    && is_nominative_personal_pronoun(index, out)
+            });
+        }
+        if subject.is_some() {
+            // fall through to the common assignment below
+        } else if clause.existential {
             subject = after.iter().copied().find(|&index| {
                 out[index].role == SyntacticRole::Unknown
                     && nominal_has_case(&out[index], &[Case::Nominative, Case::Partitive])
@@ -573,7 +587,7 @@ pub(super) fn resolve_clause(
         );
         out[index].head = Some(predicate);
         clause.subject = Some(index);
-        mark_coordinated_subjects(before, index, predicate, tokens, out);
+        mark_coordinated_subjects(before, index, predicate, tokens, out, false);
         if index > predicate {
             // A postverbal coordinated subject keeps the same cue:
             // `Naapurissa asuvat Liisa ja Pekka`. Without this the second
@@ -581,7 +595,7 @@ pub(super) fn resolve_clause(
             // rule could rewrite it. A copular complement is not at risk
             // because this pass only runs when the chosen subject itself
             // follows the predicate.
-            mark_coordinated_subjects(after, index, predicate, tokens, out);
+            mark_coordinated_subjects(after, index, predicate, tokens, out, true);
         }
         mark_numeral_complement(index, &words, out);
     }
@@ -724,6 +738,14 @@ pub(super) fn resolve_clause(
             out[index].head = Some(predicate);
         }
     }
+}
+
+/// A personal pronoun in the nominative, the shape of an inverted subject.
+fn is_nominative_personal_pronoun(index: usize, out: &[TokenSyntax]) -> bool {
+    matches!(
+        out[index].key.as_str(),
+        "minä" | "sinä" | "hän" | "me" | "te" | "he"
+    ) && nominal_has_case(&out[index], &[Case::Nominative])
 }
 
 /// An intransitive verb of existence or appearance whose postverbal
@@ -1299,17 +1321,33 @@ fn mark_coordinated_objects(
 
 /// Mark `Liisa` in `Sami ja Liisa söivät` as a coordinated subject.
 fn mark_coordinated_subjects(
-    before: &[usize],
+    words: &[usize],
     subject: usize,
     predicate: usize,
     tokens: &[Token],
     out: &mut [TokenSyntax],
+    nouns_only: bool,
 ) {
-    for &index in before {
+    for &index in words {
         if index == subject
             || out[index].role == SyntacticRole::Subject
             || !nominal_has_case(&out[index], &[Case::Nominative])
             || is_clause_marker(index, tokens, out)
+        {
+            continue;
+        }
+        // A postverbal coordinated subject is a noun phrase: `Naapurissa
+        // asuvat Liisa ja Pekka`. An adjective joined by `ja` is a
+        // coordinated complement or attribute, not a second subject —
+        // `oli hän yhtä viaton ja herttainen kuin kaunis` must not become a
+        // plural subject.
+        if nouns_only
+            && !out[index].readings.iter().any(|reading| {
+                matches!(
+                    reading.part_of_speech,
+                    Some(PartOfSpeech::Noun | PartOfSpeech::Ordinal | PartOfSpeech::Numeral)
+                )
+            })
         {
             continue;
         }

@@ -20,7 +20,7 @@ use super::diagnostic::{
 
 pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
     let mut diagnostics = Vec::new();
-    for clause in &analysis.clauses {
+    for (clause_index, clause) in analysis.clauses.iter().enumerate() {
         let Some(predicate) = clause.predicate else {
             continue;
         };
@@ -31,7 +31,9 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         if frames.is_empty() {
             continue;
         }
-        let Some((argument, case)) = argument(clause, predicate, tokens, analysis) else {
+        let Some((argument, case)) =
+            argument(clause, clause_index, predicate, tokens, analysis)
+        else {
             continue;
         };
         if frames.contains(&case) {
@@ -193,6 +195,7 @@ fn is_postposed_attribute(
 ///   the nominative there is the rection error the rule exists to catch.
 fn is_genuine_subject(
     clause: &crate::syntax::Clause,
+    clause_index: usize,
     index: usize,
     predicate: usize,
     analysis: &SyntaxAnalysis,
@@ -210,7 +213,19 @@ fn is_genuine_subject(
     if subjects > 1 {
         return true;
     }
-    let Some(reading) = finite_reading(&analysis.tokens[predicate]) else {
+    // An infinitive clause has no finite predicate of its own; its subject is
+    // the one the governing verb already agreed with. `alkoi tulla ...
+    // puute` agrees with `alkoi`, and `Haluan mennä koulu` does not: a
+    // 1st-person verb cannot take the noun `koulu` as its subject, so the
+    // nominative there is the rection error.
+    let reading = finite_reading(&analysis.tokens[predicate]).or_else(|| {
+        clause_index
+            .checked_sub(1)
+            .and_then(|previous| analysis.clauses.get(previous))
+            .and_then(|previous| previous.predicate)
+            .and_then(|previous| finite_reading(&analysis.tokens[previous]))
+    });
+    let Some(reading) = reading else {
         return false;
     };
     if let Some((person, number)) = pronoun_person_number(&analysis.tokens[index].key) {
@@ -259,6 +274,7 @@ fn aspectual_total_object(lemma: &str, case: Case) -> bool {
 /// rule exists to catch (`Menen koulu`, `Pidän sinä`).
 fn argument(
     clause: &crate::syntax::Clause,
+    clause_index: usize,
     predicate: usize,
     tokens: &[Token],
     analysis: &SyntaxAnalysis,
@@ -275,7 +291,7 @@ fn argument(
             continue;
         }
         if syntax.role == SyntacticRole::Subject
-            && is_genuine_subject(clause, index, predicate, analysis)
+            && is_genuine_subject(clause, clause_index, index, predicate, analysis)
         {
             continue;
         }

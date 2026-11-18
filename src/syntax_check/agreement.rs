@@ -101,6 +101,16 @@ fn check_subject_predicate(
         if analysis.tokens[subject.index].key == "kaikki" {
             continue;
         }
+        // A 1st/2nd-person predicate takes only a pronoun as its subject;
+        // a nominal there is an apposition to the dropped pronoun
+        // (`Me suuremmat istumme`). Comparing person against the adjective
+        // offered `istuvat`, and a line break can put `Me` in the previous
+        // sentence, so the apposition is all the clause has.
+        if matches!(bearer.person, Person::First | Person::Second)
+            && !is_personal_pronoun_key(&analysis.tokens[subject.index].key)
+        {
+            continue;
+        }
         if subject.person == bearer.person && subject.number == bearer.number {
             continue;
         }
@@ -972,6 +982,11 @@ fn bearer_of(
         person,
         number,
     })
+}
+
+/// `minä`/`sinä`/`hän`/`me`/`te`/`he`, the subjects that carry a person.
+fn is_personal_pronoun_key(key: &str) -> bool {
+    matches!(key, "minä" | "sinä" | "hän" | "me" | "te" | "he")
 }
 
 /// Whether the token also has an instructive or infinitive verb reading.

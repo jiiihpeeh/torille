@@ -831,25 +831,26 @@ analysis refinements”.
   and only a `Modifier` in a clause with a predicate is an attribute candidate.
   On `page-2000` the two rounds together remove 20 false positives
   (54 → 34 diagnostics) with none added.
+  A third round fixed inverted order (`Sen sanoi hän.`), the infinitive
+  clause's subject (`alkoi tulla … puute`, while `Haluan mennä koulu` still
+  fires), the 1st/2nd-person apposition (`Me suuremmat istumme`), and
+  `vaikka` as an adverb; `page-2000` is down to **27** diagnostics from 54,
+  with every removal adjudicated and none added.
   Still open, in order of measured frequency:
-  - **quotative inversion with a quoted subject.** `sanoi hän`, `kysyi hän`,
-    `valitti hän` keep their subject inside a preceding quotation
-    (`sinä, Heintsi', sanoi hän`), so the agreement and object-case rules read
-    the quote's pronoun instead of `hän`. Three rows.
-  - **an infinitive clause's nominative subject.** `alkoi tulla ... puute` and
-    `Haluan mennä koulu` cannot be told apart without the governing finite
-    verb: the nominative is the infinitive's subject in the first and the
-    rection error in the second. Needs the governing verb's agreement, not the
-    infinitive's.
   - **absolute constructions.** `lapsi sylissä`, `Päivän vaietessa`,
-    `niitä seuraamaan`: a nominal plus an oblique form that is not the verb's
-    argument.
-  - **`vaikka` as an adverb** (`kerron vaikka tästä`) and `sen kun`, which the
-    comma rule reads as subordinators.
+    `niitä seuraamaan`: a nominal plus an oblique or non-finite form that is
+    not the verb's argument. `Päivän vaietessa` is a genitive subject of an
+    impersonal non-finite verb, which no cue yet separates from the preposed
+    genitive object in `Kirjan luettuaan`.
+  - **a vocative is not an argument.** `Jumala, ole minulle armollinen`: the
+    nominative is detached by a comma and addresses someone.
+  - **`sen kun`** (`sen kun Anni vain kertoi`), the other subordinator-shaped
+    idiom in the comma rule.
   - **the negated-clause object rule** beyond the reviewed `sillä` rows.
-  - **indirect questions and vocatives**: `katsokaa, miten puut heiluvat.` is a
-    reported question, not a missing question mark; `Jumala, ole minulle
-    armollinen` is a vocative, not a rection argument.
+  - **indirect questions**: `katsokaa, miten puut heiluvat.` is a reported
+    question and takes a period, not the question mark the rule offers.
+  - **colloquial `ne on`**, which the agreement rule reports as `ovat`
+    (defensible in written prose, but it is dialogue in the corpus).
   These are grammar-checker bugs independent of M0. Re-run `ud_m0_eval` and
   `m0_prose_eval` after each fix; a larger model remains blocked meanwhile.
 
@@ -1127,3 +1128,14 @@ intended/competing interpretation pair that fails.
   noun. Measured on `page-2000`: 47 → 34 diagnostics, all removed rows
   adjudicated false positives, none added; 11 new clean rows and two ambiguity
   cases pin the behaviour.
+- 2026-11-18: inverted order and non-finite subjects (third round). A finite
+  predicate followed by a nominative personal pronoun takes it as its subject
+  (`Sen sanoi hän.`, `Kysyi hän sitten.`), which also stops the quoted
+  vocative (`..., Heintsi', sanoi hän`) from becoming one; a postverbal
+  coordinated subject must be a noun, so a coordinated adjective no longer
+  makes `oli hän yhtä viaton ja herttainen` plural. An infinitive clause
+  agrees through the governing verb (`alkoi tulla … puute` is quiet,
+  `Haluan mennä koulu` still fires). A 1st/2nd-person predicate takes only a
+  pronoun as its subject, and `vaikka` opens a clause only when a predicate
+  follows. `page-2000`: 34 → 27 diagnostics, all removals adjudicated, none
+  added; four clean rows and three ambiguity cases added.

@@ -201,6 +201,25 @@ class.
   `predicative_agreement` compare them like any adjective. Degree derivations
   are `Repaired`, so `Punaisempi autot ...` is diagnostic-only: the checker
   names the expected number but does not offer a `Repaired` rewrite.
+- **Inverted order puts the subject after its verb.** A finite predicate
+  followed immediately by a nominative personal pronoun has that pronoun as
+  its subject: `Sen sanoi hän.`, `Kysyi hän sitten.`. Anything before the
+  predicate is then not the subject — in a quotation it is a vocative
+  (`..., Heintsi', sanoi hän sille toiselle`), so the quoted pronoun is not
+  diagnosed either.
+- **An infinitive clause agrees through the verb that governs it.**
+  `alkoi tulla ... puute` takes the number of `alkoi`, while `Haluan mennä
+  koulu` still fails: a 1st-person verb cannot take the noun `koulu` as its
+  subject, so the nominative there is the rection error.
+- **A 1st/2nd-person predicate takes only a pronoun as its subject.** A
+  nominal beside it is an apposition to the dropped pronoun
+  (`Me suuremmat istumme`), and a line break can leave the apposition alone in
+  its clause (`suuremmat istumme`), so person is not compared against an
+  adjective.
+- **`vaikka` opens a clause only when a predicate follows.** `kerron vaikka
+  tästä` is one clause and takes no comma; `vaikka hän ei kuuntelisi` is a
+  subordinate clause. The other subordinators keep their unconditional split,
+  because their clause can end the line.
 - **The agreement bearer must be a clear finite form.** A surface that is
   both a finite form and an instructive or infinitive is not diagnosed:
   `ihastellen` is the potential 1sg of `ihastella` *and* its instructive, and
@@ -260,7 +279,9 @@ class.
   noun's attribute (`Milloin tulee se kesy hirvi?` names `hirvi` as the
   subject, not `se` or `kesy`). A nominalised adjective with no head (`Nuoret
   tulivat.`) is left alone, and a cardinal numeral is left to the numeral
-  rule.
+  rule. A postverbal coordinated subject is a *noun* phrase: an adjective
+  joined by `ja` is a coordinated complement, so `oli hän yhtä viaton ja
+  herttainen kuin kaunis` keeps its singular subject.
 - **Existential subject case detects, but does not choose the repair.** A
   sentence-final genitive common noun after an existential `on` is an error
   (`Pöydällä on kirjan.`). The engine offers both licensed forms
