@@ -5,6 +5,7 @@ use crate::syntax_list::{List, ListItem, ListItemKind, ListKind};
 use crate::tags::PartOfSpeech;
 use crate::tokenise::Token;
 
+use super::super::analysis::nominal_case;
 use super::super::diagnostic::{
     Confidence, Correction, CorrectionLicense, DiagnosticKind, Edit, Severity, SyntaxDiagnostic,
 };
@@ -108,7 +109,10 @@ fn missing_separators(
         {
             continue;
         }
-        if is_common_noun(*left, tokens, out) && is_common_noun(*right, tokens, out) {
+        if is_common_noun(*left, tokens, out)
+            && is_common_noun(*right, tokens, out)
+            && same_list_case(*left, *right, out)
+        {
             let boundary = tokens[*left].end;
             let mut diagnostic = SyntaxDiagnostic::new(
                 DiagnosticKind::ListSeparatorMissing,
@@ -128,6 +132,15 @@ fn missing_separators(
         }
     }
     diagnostics
+}
+
+/// A list item pair has the same case. `lapsineen suojassa sateelta ja
+/// tuulelta` is four obliques, not a list; `omenoita appelsiineja` is a list
+/// whose separator is missing. An unknown case stays quiet.
+fn same_list_case(left: usize, right: usize, out: &[TokenSyntax]) -> bool {
+    let left_case = nominal_case(&out[left]);
+    let right_case = nominal_case(&out[right]);
+    left_case.is_some() && left_case == right_case
 }
 
 fn is_common_noun(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
