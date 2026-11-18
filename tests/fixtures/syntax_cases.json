@@ -8,7 +8,7 @@
     "",
     "`defect` marks a case that is expected to fail today. The runner requires",
     "at least one mismatch for such a case and fails once all of them pass, so",
-    "a fix cannot leave a stale xfail behind. The ids refer to PLAN_SYNTAX.md."
+    "a fix cannot leave a stale xfail behind. The ids refer to ../../misc_md/PLAN_SYNTAX.md."
   ],
   "cases": [
     {

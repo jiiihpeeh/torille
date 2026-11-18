@@ -15,4 +15,4 @@ covered by its own MIT notice and is not relicensed by torille's
 
 The engine's Finnish typographic policy filters and ranks the pattern
 candidates, and the morphology layer supplies compound boundaries. See
-`PLAN_HYPHENATION.md` and `docs/hyphenation.md`.
+`../../misc_md/PLAN_HYPHENATION.md` and `docs/hyphenation.md`.

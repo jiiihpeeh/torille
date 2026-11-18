@@ -152,7 +152,7 @@ overlay.
   with Voikko (GPL, like the other Voikko tools). It is not a gate:
   Voikko returns syllabification, while this layer applies line-break
   policy.
-- The plan and open issues are in [`PLAN_HYPHENATION.md`](../PLAN_HYPHENATION.md).
+- The plan and open issues are in [`../misc_md/PLAN_HYPHENATION.md`](../misc_md/PLAN_HYPHENATION.md).
 
 ## Pattern provenance
 

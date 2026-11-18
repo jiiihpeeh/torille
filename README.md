@@ -86,7 +86,7 @@ legitimately case-less.
 extracted edit script), then the deterministic `existing_score`, then the word.
 A small QWERTY-adjacency table breaks distance-1 ties. The known defects —
 recall, and `illegal` forms from wrong stems — are tracked in
-[`docs/harness.md`](docs/harness.md) and [`TODO.md`](TODO.md).
+[`docs/harness.md`](docs/harness.md) and [`misc_md/TODO.md`](misc_md/TODO.md).
 
 ## The word wizard
 
@@ -111,7 +111,7 @@ word is accepted as written and not inflected.
 The committed sheet is `data/class_examples.tsv`; regenerate it with
 `word_wizard --write-sheet data/class_examples.tsv` after a class-engine
 change. The design, the tail-weighted tie-break and the measured curve are in
-[`PLAN_WORD_WIZARD.md`](PLAN_WORD_WIZARD.md): adaptive top-1 base class 94.2%
+[`misc_md/PLAN_WORD_WIZARD.md`](misc_md/PLAN_WORD_WIZARD.md): adaptive top-1 base class 94.2%
 at two answers on the recorded 412-noun sample, 99.8% top-3.
 
 ## Grammar and style
@@ -153,9 +153,9 @@ while the cold pass runs. The **≤500 ms cold-page target is still open**: the
 pool halves the page, but the merged context pass and the per-lemma paradigm
 walk remain. A precomputed reverse index for the wasm was measured and
 rejected on size and coverage (86.6% at 2.1 MB; 95% would exceed 3 MB). See
-[`PLAN_GRAMMAR_STYLE_PERF.md`](PLAN_GRAMMAR_STYLE_PERF.md),
-[`PLAN_COLD_SEARCH.md`](PLAN_COLD_SEARCH.md) and
-[`PLAN_COLD_READINGS_CACHE.md`](PLAN_COLD_READINGS_CACHE.md).
+[`misc_md/PLAN_GRAMMAR_STYLE_PERF.md`](misc_md/PLAN_GRAMMAR_STYLE_PERF.md),
+[`misc_md/PLAN_COLD_SEARCH.md`](misc_md/PLAN_COLD_SEARCH.md) and
+[`misc_md/PLAN_COLD_READINGS_CACHE.md`](misc_md/PLAN_COLD_READINGS_CACHE.md).
 
 ## Workspace
 
@@ -239,7 +239,7 @@ Omorfi/Voikko.
 A clean clone builds from the tracked files alone; this was verified by
 cloning `HEAD`, building `--workspace --all-targets` and running the test
 suite with no untracked data. See [`data/README.md`](data/README.md) and
-[`FIX_GENGAPS.md`](FIX_GENGAPS.md).
+[`misc_md/FIX_GENGAPS.md`](misc_md/FIX_GENGAPS.md).
 
 ## Command-line tools
 
@@ -390,29 +390,29 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
   severity policy, corrections, evaluation and known limitations.
 - [`docs/style_checker.md`](docs/style_checker.md) — the opt-in style layer:
   curated tables, repetition and long-sentence rules, UI and baseline.
-- [`PLAN_SYNTAX_REFACTOR.md`](PLAN_SYNTAX_REFACTOR.md) — a phased
+- [`misc_md/PLAN_SYNTAX_REFACTOR.md`](misc_md/PLAN_SYNTAX_REFACTOR.md) — a phased
   modularisation plan for the syntax layer, checker and extension content.
-- [`PLAN_STYLE.md`](PLAN_STYLE.md) — the design for a separate opt-in style
+- [`misc_md/PLAN_STYLE.md`](misc_md/PLAN_STYLE.md) — the design for a separate opt-in style
   layer: suggestion-only diagnostics, curated tables and a panel UI.
-- [`PLAN_GRAMMAR_STYLE_PERF.md`](PLAN_GRAMMAR_STYLE_PERF.md) — the grammar and
+- [`misc_md/PLAN_GRAMMAR_STYLE_PERF.md`](misc_md/PLAN_GRAMMAR_STYLE_PERF.md) — the grammar and
   style performance plan: one morphology pass with cached case information,
   cold-path candidate pruning, sentence-level incremental checks and worker
   chunking.
-- [`PLAN_PARALLEL_MORPHOLOGY.md`](PLAN_PARALLEL_MORPHOLOGY.md) — the
+- [`misc_md/PLAN_PARALLEL_MORPHOLOGY.md`](misc_md/PLAN_PARALLEL_MORPHOLOGY.md) — the
   morphology-only worker pool: codec, state merge, demo and extension.
-- [`PLAN_COLD_SEARCH.md`](PLAN_COLD_SEARCH.md) — the cold morphology search:
+- [`misc_md/PLAN_COLD_SEARCH.md`](misc_md/PLAN_COLD_SEARCH.md) — the cold morphology search:
   base ladder, stem-shape filter and the deferred phases.
-- [`PLAN_COLD_READINGS_CACHE.md`](PLAN_COLD_READINGS_CACHE.md) — the negative
+- [`misc_md/PLAN_COLD_READINGS_CACHE.md`](misc_md/PLAN_COLD_READINGS_CACHE.md) — the negative
   per-lemma form-cache experiment and the stem-map-first reorder.
-- [`PLAN_SYNTAX_CHECKER.md`](PLAN_SYNTAX_CHECKER.md) — grammar and punctuation
+- [`misc_md/PLAN_SYNTAX_CHECKER.md`](misc_md/PLAN_SYNTAX_CHECKER.md) — grammar and punctuation
   diagnostics, ranking and evaluation.
-- [`PLAN_SYNTAX.md`](PLAN_SYNTAX.md) — the advisory syntax analysis layer
+- [`misc_md/PLAN_SYNTAX.md`](misc_md/PLAN_SYNTAX.md) — the advisory syntax analysis layer
   underneath the checker.
-- [`PLAN_COMPOUND.md`](PLAN_COMPOUND.md) — the compound engine's inflection
+- [`misc_md/PLAN_COMPOUND.md`](misc_md/PLAN_COMPOUND.md) — the compound engine's inflection
   model and remaining work.
-- [`PLAN_HYPHENATION.md`](PLAN_HYPHENATION.md) — the hyphenation milestones
+- [`misc_md/PLAN_HYPHENATION.md`](misc_md/PLAN_HYPHENATION.md) — the hyphenation milestones
   and the remaining corpus triage.
-- [`PLAN_WORD_WIZARD.md`](PLAN_WORD_WIZARD.md) — the text-first word wizard:
+- [`misc_md/PLAN_WORD_WIZARD.md`](misc_md/PLAN_WORD_WIZARD.md) — the text-first word wizard:
   class sheet, sparse answer maps, nominal and verb inference, the tail prior,
   the browser pages and the measured oracle curve.
 - [`docs/harness.md`](docs/harness.md) — the verification harness, baselines
@@ -427,9 +427,9 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
   generators and the comparison gate.
 - [`tools/oracle/README.md`](tools/oracle/README.md) — the GPL reference
   generators.
-- [`FIX_GENGAPS.md`](FIX_GENGAPS.md) — what still keeps a generator on an
+- [`misc_md/FIX_GENGAPS.md`](misc_md/FIX_GENGAPS.md) — what still keeps a generator on an
   oracle, with measurements and exit criteria.
-- [`DATA_CLEANUP_PLAN.md`](DATA_CLEANUP_PLAN.md) — the `data/` cleanup record.
-- [`PLAN.md`](PLAN.md) / [`PLAN_REFACTOR.md`](PLAN_REFACTOR.md) — the stem
+- [`misc_md/DATA_CLEANUP_PLAN.md`](misc_md/DATA_CLEANUP_PLAN.md) — the `data/` cleanup record.
+- [`misc_md/PLAN.md`](misc_md/PLAN.md) / [`misc_md/PLAN_REFACTOR.md`](misc_md/PLAN_REFACTOR.md) — the stem
   refactor and its outcome.
-- [`TODO.md`](TODO.md) — known gaps, ordered by user-facing impact.
+- [`misc_md/TODO.md`](misc_md/TODO.md) — known gaps, ordered by user-facing impact.

@@ -121,4 +121,4 @@ Kotus data and contains no dictionary content: each rule names the external
 source that settles a materialised-oracle disagreement. It is part of the
 harness and is licensed GPL-3.0-or-later, like the Omorfi/Voikko tool files
 in `tools/`. See `tools/illegal_evidence.py` and
-`TODO_ILLEGAL_REMOVAL_PLAN.md`.
+`../misc_md/TODO_ILLEGAL_REMOVAL_PLAN.md`.

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build the torille Firefox add-on from a source archive.
 #
-# Requirements and manual steps: SOURCE_BUILD.md.
+# Requirements and manual steps: misc_md/SOURCE_BUILD.md.
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -9,7 +9,7 @@ cd "$(dirname "$0")"
 for cmd in cargo wasm-pack node npm zip; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     echo "error: '$cmd' is not installed or not on PATH" >&2
-    echo "see SOURCE_BUILD.md for the required versions" >&2
+    echo "see misc_md/SOURCE_BUILD.md for the required versions" >&2
     exit 1
   fi
 done

@@ -1560,7 +1560,7 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   extension integration tests cover spans, edits and the stale-state fallback.
   Deferred edge cases (plural completive object suggestions, `kuten`
   parenthetical phrase extent) and the remaining analysis refinements are
-  documented in [`docs/syntax_checker.md`](docs/syntax_checker.md) and
+  documented in [`docs/syntax_checker.md`](../docs/syntax_checker.md) and
   [`PLAN_SYNTAX.md`](PLAN_SYNTAX.md).
 
 - [ ] **Fill the bare case gaps**

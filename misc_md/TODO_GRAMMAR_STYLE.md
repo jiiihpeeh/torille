@@ -2,8 +2,8 @@
 
 A roadmap for the opt-in grammar (`syntax_check`), syntax analysis (`syntax`)
 and style (`style_check`) layers. The design records are
-[`docs/syntax_checker.md`](docs/syntax_checker.md),
-[`docs/style_checker.md`](docs/style_checker.md),
+[`docs/syntax_checker.md`](../docs/syntax_checker.md),
+[`docs/style_checker.md`](../docs/style_checker.md),
 [`PLAN_SYNTAX.md`](PLAN_SYNTAX.md),
 [`PLAN_SYNTAX_CHECKER.md`](PLAN_SYNTAX_CHECKER.md) and
 [`PLAN_STYLE.md`](PLAN_STYLE.md).
@@ -720,7 +720,7 @@ Adjacent repetition is not always accidental:
 ### Word-order specification
 
 - [x] **Write the construction-aware specification.** The rules, decisions and
-  examples are in [`docs/word_order.md`](docs/word_order.md) and the
+  examples are in [`docs/word_order.md`](../docs/word_order.md) and the
   machine-readable fixture `tests/fixtures/word_order_rules.json`; the schema
   is pinned by `tests/word_order_spec.rs`. It covers wh-questions, `-ko`
   questions, imperatives, neutral SVO, existentials, passives, subordinate
@@ -769,7 +769,7 @@ analysis refinements”.
 ## Follow-up plan — neural reading disambiguation
 
 - [x] **Audit the neural reranker integration.** The architecture audit is
-  [`docs/neural_disambiguation.md`](docs/neural_disambiguation.md). It proposes a
+  [`docs/neural_disambiguation.md`](../docs/neural_disambiguation.md). It proposes a
   per-analysis `Disambiguation` sidecar between `analyze_morphology` and
   `analyze_syntax`, preserving every existing `WordInfo.readings` candidate.
   The smallest viable milestone is an M0 candidate-preference MLP behind a

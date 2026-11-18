@@ -3,7 +3,7 @@
 //!
 //! The engine has `profile_hot` for the suggestion walk; this tool covers the
 //! first-pass checker and the public `check`/`suggest` entry points, on a word
-//! list or on a book excerpt. It is the harness behind `PERFORMANCE_TODO.md`.
+//! list or on a book excerpt. It is the harness behind `../../../misc_md/PERFORMANCE_TODO.md`.
 //!
 //! Usage:
 //!   perf_check_suggest                 # the default word list

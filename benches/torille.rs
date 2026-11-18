@@ -11,7 +11,7 @@
 //!     lemma filtered to a single Tags.
 //!   * `check` / `check_fast` / `check_normal_fast` / `is_known_word_fast` —
 //!     the recognition entry points, including the fast paths added for
-//!     `PERFORMANCE_TODO.md`.
+//!     `../misc_md/PERFORMANCE_TODO.md`.
 //!
 //! These exist so future optimisations have something to verify against and
 //! so the effect of the inlining / `lto = "fat"` / `panic = "abort"` settings

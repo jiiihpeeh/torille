@@ -32,7 +32,7 @@ python3 tools/oracle/build_catalogue_csv.py
 python3 tools/oracle/extract_class_rules.py --rust
 ```
 
-Why the other tables are not engine-derived is recorded in `FIX_GENGAPS.md`
+Why the other tables are not engine-derived is recorded in `../../misc_md/FIX_GENGAPS.md`
 (G5/G6): the engine has no authority to invent an exception it does not
 implement, and deleting the table would remove exactly the fact it encodes.
 The paradigm catalogue is the exception: the oracle supplies the initial eight

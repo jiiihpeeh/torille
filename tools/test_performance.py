@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT OR Apache-2.0
-"""Performance gate for the check/suggest plan (PERFORMANCE_TODO.md).
+"""Performance gate for the check/suggest plan (../misc_md/PERFORMANCE_TODO.md).
 
 Runs `perf_check_suggest` over a book excerpt and compares the first-pass
 timings with a recorded baseline. The engine's budgets are still moving, so
@@ -29,7 +29,7 @@ BINARY = REPO / "target" / "release" / "perf_check_suggest"
 BASELINE = REPO / "reports" / "perf-baseline.json"
 CORPUS = REPO / "torille-wasm" / "demo" / "books" / "45448.txt"
 
-# Absolute ceilings from PERFORMANCE_TODO.md. Only checked with --budget.
+# Absolute ceilings from ../misc_md/PERFORMANCE_TODO.md. Only checked with --budget.
 BUDGET = {
     "per_token_ms": 0.25,
     "p95_us": 500,

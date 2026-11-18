@@ -328,7 +328,7 @@ final component); the engine inflects those through `compound_head_forms`, and
 the class is audited like any other. At n=1000: 137,206 confirmed, 1,141 missing,
 2,313 not plain, 30 illegal, 5,724 unsupported. A compound form takes the head's
 confidence, so a plain head gives a plain compound and a repaired variant
-(`väkein`) stays repaired. See `PLAN_COMPOUND.md` Phase 2.
+(`väkein`) stays repaired. See `../misc_md/PLAN_COMPOUND.md` Phase 2.
 Current totals: **96,908 confirmed, 1,041 missing, 244 oracle-only,
 4,041 not plain, 0 illegal, 0 mistagged, 646 unsupported.** Recall — confirmed
 over confirmed plus missing — is **98.9%**. The default report applies the
@@ -418,7 +418,7 @@ covers the union.
 
 The four open defects are lettered in order of **gap size**, which is not the
 order of user impact — C is the only one that makes the engine *wrong* rather
-than incomplete, and `TODO.md` puts it first for that reason. A gates B.
+than incomplete, and `../misc_md/TODO.md` puts it first for that reason. A gates B.
 
 **14026 missing forms across 101 classes** — the largest remaining gap, and most
 of it is not a possessive bug at all. `add_possessives` hangs a possessive off

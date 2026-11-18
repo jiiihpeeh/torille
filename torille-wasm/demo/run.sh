@@ -16,7 +16,7 @@
 # Requirements: a Rust toolchain with the wasm32-unknown-unknown
 # target, wasm-pack, and node. The same toolchain that builds the
 # browser extensions also runs the demo -- see
-# BROWSER_EXTENSION_INSTRUCTIONS.md at the repo root.
+# ../../misc_md/BROWSER_EXTENSION_INSTRUCTIONS.md.
 
 set -euo pipefail
 

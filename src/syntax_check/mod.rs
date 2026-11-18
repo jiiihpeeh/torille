@@ -7,7 +7,7 @@
 //!
 //! The first rule is subject–predicate agreement. The other categories in
 //! [`DiagnosticKind`] are reserved for the later phases in
-//! `PLAN_SYNTAX_CHECKER.md`.
+//! `../../misc_md/PLAN_SYNTAX_CHECKER.md`.
 
 mod adposition;
 mod agreement;

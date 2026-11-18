@@ -11,7 +11,7 @@
 //!
 //! This is the review tool for false positives: one line per diagnostic with
 //! the kind, the span, the offending text, the first correction and the
-//! sentence around it. `PLAN_GRAMMAR_PRECISION.md` is the work list it serves.
+//! sentence around it. `../../../misc_md/PLAN_GRAMMAR_PRECISION.md` is the work list it serves.
 
 use std::process::ExitCode;
 

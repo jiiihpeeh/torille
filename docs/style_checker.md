@@ -3,7 +3,7 @@
 The style layer is a separate, **opt-in** analyzer. It answers an optional
 question — “is this wording repetitive, wordy or clichéd?” — and never claims
 that the text is grammatically wrong. The design record is
-[`PLAN_STYLE.md`](../PLAN_STYLE.md).
+[`../misc_md/PLAN_STYLE.md`](../misc_md/PLAN_STYLE.md).
 
 The grammar checker and the style checker share the tokeniser, the sentence
 spans and the diagnostic primitives, but not the rule pass. `style_check` never
@@ -170,7 +170,7 @@ morphology and sentence spans, not roles or clauses. `check_with_cache` and
 `morphology::MorphologyCache` as the grammar checker, so both layers resolve
 each surface once. The measured baseline, the remaining cold-path pruning and
 the worker plan are in
-[`PLAN_GRAMMAR_STYLE_PERF.md`](../PLAN_GRAMMAR_STYLE_PERF.md).
+[`../misc_md/PLAN_GRAMMAR_STYLE_PERF.md`](../misc_md/PLAN_GRAMMAR_STYLE_PERF.md).
 
 ## Known limitations
 

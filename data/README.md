@@ -74,7 +74,7 @@ committed files are what a build uses.
 ## Curated style tables
 
 These are optional, suggestion-only data for the style layer
-(`../PLAN_STYLE.md`). They never feed the spell checker or the grammar pass.
+(`../misc_md/PLAN_STYLE.md`). They never feed the spell checker or the grammar pass.
 The `note` column is curation-only and is not shipped.
 
 | file | producer | used by |

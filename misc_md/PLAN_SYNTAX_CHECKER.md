@@ -1288,7 +1288,7 @@ Implementation notes:
 #### Phase 5D — word order decision record
 
 The old “no word-order rules” deferral is superseded by
-[`docs/word_order.md`](docs/word_order.md) and its machine-readable fixture
+[`docs/word_order.md`](../docs/word_order.md) and its machine-readable fixture
 `tests/fixtures/word_order_rules.json`. Word order is construction-aware and
 information-structure-aware; **SVO is a `PREFER`, never an error**. The checker
 does not emit `WordOrder` yet, and the spec explicitly keeps the kind
@@ -1505,7 +1505,7 @@ Decision: do not start a style layer in this plan. If one is built later:
 The separate plan now exists as [`PLAN_STYLE.md`](PLAN_STYLE.md) and the
 layer shipped in `0.7.0`: `src/style_check/`, a separate wasm export, the
 `Tarkista tyyli` command and a `Tyyli` panel. The user-facing contract is
-[`docs/style_checker.md`](docs/style_checker.md).
+[`docs/style_checker.md`](../docs/style_checker.md).
 
 Tasks:
 

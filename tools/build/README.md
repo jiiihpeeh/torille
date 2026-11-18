@@ -30,7 +30,7 @@ are reference generators, not part of a ground-up build.
 
 `compare_engine_outputs.py` regenerates engine output and compares it with
 the committed tables (and, for `all_forms`, decodes the `SST2` blob). It is
-the gate for the work in `FIX_GENGAPS.md`:
+the gate for the work in `../../misc_md/FIX_GENGAPS.md`:
 
 ```bash
 python3 tools/build/compare_engine_outputs.py --strict
@@ -38,5 +38,5 @@ python3 tools/build/compare_engine_outputs.py --artifact stem_map_verb
 ```
 
 Known oracle/lexical tables and their provenance are listed in
-`FIX_GENGAPS.md` (G6). The build path here is engine-only; nothing in this
+`../../misc_md/FIX_GENGAPS.md` (G6). The build path here is engine-only; nothing in this
 directory reads a sqlite database.

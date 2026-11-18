@@ -311,5 +311,5 @@ that decision cheap to revisit.
 | rule engine and decision model | `src/syntax_check/word_order.rs` (not implemented) |
 | explanation relation | `Relation::WordOrder` (not implemented; `DiagnosticKind::WordOrder` already exists) |
 
-The spec is deliberately separate from `PLAN_SYNTAX_CHECKER.md`'s old “no
+The spec is deliberately separate from `../misc_md/PLAN_SYNTAX_CHECKER.md`'s old “no
 word-order rules” decision; that decision is superseded here.

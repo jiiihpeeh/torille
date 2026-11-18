@@ -67,12 +67,12 @@ The checker ignores fenced code, inline code, raw HTML code elements,
 BBCode payloads, bare URLs and email addresses. Code is masked before it reaches the wasm, so it cannot
 change sentence boundaries or the learned proper-noun set. The full
 implementation notes and follow-ups are in
-[`TODO_EXTENSION_CODE_BLOCKS.md`](../TODO_EXTENSION_CODE_BLOCKS.md).
+[`../misc_md/TODO_EXTENSION_CODE_BLOCKS.md`](../misc_md/TODO_EXTENSION_CODE_BLOCKS.md).
 
 ## Building the Firefox add-on from a source archive
 
 The reproducible source-build instructions and the one-command build script
-are in [`SOURCE_BUILD.md`](../SOURCE_BUILD.md) and
+are in [`../misc_md/SOURCE_BUILD.md`](../misc_md/SOURCE_BUILD.md) and
 [`build-firefox-addon.sh`](../build-firefox-addon.sh). The script builds the
 engine, compiles the wasm, installs the extension dependencies and produces
 `extensions/firefox/torille-firefox.xpi`.

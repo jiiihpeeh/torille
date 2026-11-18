@@ -25,31 +25,31 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
   evaluation and known limitations.
 - `docs/style_checker.md` — the opt-in style layer: kinds, curated tables,
   repetition and long-sentence thresholds, UI and baseline.
-- `PLAN_SYNTAX_REFACTOR.md` — the modularisation plan for `syntax.rs`,
+- `misc_md/PLAN_SYNTAX_REFACTOR.md` — the modularisation plan for `syntax.rs`,
   `syntax_check/` and the extension content script.
-- `PLAN_STYLE.md` — the separate opt-in style-layer plan: curated phrase/word
+- `misc_md/PLAN_STYLE.md` — the separate opt-in style-layer plan: curated phrase/word
   tables, repetition and long-sentence metrics, suggestion-only diagnostics and
   a panel UI. Implemented; see `docs/style_checker.md`.
-- `PLAN_GRAMMAR_STYLE_PERF.md` — the grammar and style performance plan: one
+- `misc_md/PLAN_GRAMMAR_STYLE_PERF.md` — the grammar and style performance plan: one
   shared morphology cache with cached case/number, cold-path candidate pruning,
   sentence-level incremental checks and worker chunking.
 - `docs/hyphenation.md` — line-break hyphenation: patterns, compound adapter,
-  policy, offsets and exceptions. The plan is `PLAN_HYPHENATION.md`.
-- `TODO.md` — known gaps ordered by user-facing impact.
-- `PLAN.md` / `PLAN_REFACTOR.md` — the stem refactor and its outcome.
-- `FIX_GENGAPS.md` — engine gaps that still force a map generator onto the
+  policy, offsets and exceptions. The plan is `misc_md/PLAN_HYPHENATION.md`.
+- `misc_md/TODO.md` — known gaps ordered by user-facing impact.
+- `misc_md/PLAN.md` / `misc_md/PLAN_REFACTOR.md` — the stem refactor and its outcome.
+- `misc_md/FIX_GENGAPS.md` — engine gaps that still force a map generator onto the
   Kotus/Omorfi sqlite, with the measured baseline and the fix order.
-- `DATA_CLEANUP_PLAN.md` — what in `data/` is source, committed build input,
+- `misc_md/DATA_CLEANUP_PLAN.md` — what in `data/` is source, committed build input,
   frozen reference data, or local-only, and the deletion phases.
 - `data/README.md` — the per-file inventory of `data/` and each producer.
-- `PLAN_COMPOUND.md` — the compound engine: what the spec asks for, what
+- `misc_md/PLAN_COMPOUND.md` — the compound engine: what the spec asks for, what
   already exists, and the phases for the inflection-mode/compound-kind model.
-- `PLAN_N1000.md` — the full-lexicon noun sweep closure plan: homonym-aware
+- `misc_md/PLAN_N1000.md` — the full-lexicon noun sweep closure plan: homonym-aware
   reporting first, then the class-10 colon and class-48 stem-vowel engines, the
   class-50 agent-tail regression, twin paradigms and rare-alternate evidence.
   Wiktionary's Finnish entry is the final authority; the plan records the API
   recipe and the validation gates.
-- `PLAN_WORD_WIZARD.md` — proposal for the user-phase word wizard: find a
+- `misc_md/PLAN_WORD_WIZARD.md` — proposal for the user-phase word wizard: find a
   word's Kotus class from example forms. Text-first TSV class sheets and
   answer maps, inference through the engine, browser storage for saved words.
 
@@ -542,7 +542,7 @@ is gitignored and generated.
 - **Don't count `illegal` by class without dividing by confirmed.** The largest
   classes simply have the most forms; rank by *rate*. The current known defects
   (wrong stems, missing possessives, `taloni`'s missing case) are catalogued in
-  `docs/harness.md` and `TODO.md`.
+  `docs/harness.md` and `misc_md/TODO.md`.
 
 ## Where to change what
 
@@ -562,9 +562,9 @@ is gitignored and generated.
 | a new verb/noun class engine | `src/expand/verbs/`, `src/expand/nominals*/`, then `dispatch` + `AUTHORITATIVE_CLASSES` |
 | feminine derivations (`-tar`, `-nna`, `-ska`, `-kko`) | `src/expand/derived_forms/agent.rs` for productive `-tar`; lexical `-nna`/`-ska`/`-kko` as data, not a suffix stripper |
 | the grammar reading model | `src/tags.rs` |
-| grammar diagnostics/corrections | `src/syntax_check/`, `tests/syntax_check.rs`, `PLAN_SYNTAX_CHECKER.md` |
+| grammar diagnostics/corrections | `src/syntax_check/`, `tests/syntax_check.rs`, `misc_md/PLAN_SYNTAX_CHECKER.md` |
 | word-order clause features / spec | `src/syntax/features.rs`, `docs/word_order.md`, `tests/word_order_allow.rs` |
-| grammar/style performance | `src/morphology/`, `src/syntax_check/`, `src/style_check/`, `PLAN_GRAMMAR_STYLE_PERF.md` |
+| grammar/style performance | `src/morphology/`, `src/syntax_check/`, `src/style_check/`, `misc_md/PLAN_GRAMMAR_STYLE_PERF.md` |
 | hyphenation patterns/policy | `src/hyphenation/`, `data/hyphenation/` |
 | the wasm/browser surface | `torille-wasm/src/`, `extensions/firefox/`, `extensions/chromium/` |
 | verification | `tools/*.py`, `tests/catalogue.rs`, `docs/harness.md` |
@@ -577,5 +577,5 @@ is gitignored and generated.
   test now also allows the documented 0.05 `existing_score` bonus.
 - The morphology engine has known correctness gaps (recall ~70%, a large
   `illegal` count from stems built on the wrong stem). These are tracked defects,
-  not the build status; read `TODO.md` and `docs/harness.md` before touching
+  not the build status; read `misc_md/TODO.md` and `docs/harness.md` before touching
   stems or possessives, and never regress the harness baselines.

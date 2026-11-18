@@ -1,7 +1,7 @@
 # Syntax checker
 
 `torille::syntax_check` is the grammar and punctuation checker built on the
-advisory analysis layer in [`src/syntax.rs`](../src/syntax.rs). It answers a
+advisory analysis layer in [`src/syntax/`](../src/syntax/mod.rs). It answers a
 small, high-confidence set of questions and returns concrete corrections. It
 is **not** a parser, a style checker, or part of the keystroke path.
 
@@ -165,8 +165,8 @@ syntax/style once over the full document; the full page drops from ~3.0 s to
 ~1.4 s. Chromium's MV3 service worker cannot create nested workers, so it
 keeps the sentence-batch path. The measured baseline, the cold-path pruning
 and the pool are in
-[`PLAN_GRAMMAR_STYLE_PERF.md`](../PLAN_GRAMMAR_STYLE_PERF.md) and
-[`PLAN_PARALLEL_MORPHOLOGY.md`](../PLAN_PARALLEL_MORPHOLOGY.md).
+[`../misc_md/PLAN_GRAMMAR_STYLE_PERF.md`](../misc_md/PLAN_GRAMMAR_STYLE_PERF.md) and
+[`../misc_md/PLAN_PARALLEL_MORPHOLOGY.md`](../misc_md/PLAN_PARALLEL_MORPHOLOGY.md).
 
 ## Data files
 

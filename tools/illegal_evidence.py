@@ -9,7 +9,7 @@ same class would disappear -- so every rule names the class, the cell and the
 form shape it covers, and carries the source that settles it.
 
 The file is `data/oracle_exceptions.json`; see
-`TODO_ILLEGAL_REMOVAL_PLAN.md` for the phases that fill it in.
+`../misc_md/TODO_ILLEGAL_REMOVAL_PLAN.md` for the phases that fill it in.
 
 A rule is a JSON object:
 

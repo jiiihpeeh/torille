@@ -3,7 +3,7 @@
 //! This is deliberately separate from the grammar checker. It answers an
 //! optional question — “is this wording repetitive, wordy or clichéd?” — and
 //! never emits `Error` or `Warning`. It is on demand and must not run in the
-//! keystroke path. The design is in `PLAN_STYLE.md`.
+//! keystroke path. The design is in `../../misc_md/PLAN_STYLE.md`.
 //!
 //! Phase 2 adds the curated phrase/word table; phase 3 adds sentence-local
 //! repetition; phase 4 adds the long-sentence metric.
