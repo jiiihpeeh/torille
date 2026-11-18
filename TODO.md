@@ -2095,3 +2095,9 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   only a pronoun subject, and `vaikka` opens a clause only when a predicate
   follows. `page-2000` grammar diagnostics are down to 27 from 54, all
   removals adjudicated false positives.
+
+- 2026-11-18: added `PLAN_GRAMMAR_PRECISION.md`, the phase plan for the 21
+  remaining grammar false positives (and `tools/src/bin/dump_diagnostics.rs`,
+  the review tool it relies on). The 13 rows that reproduce outside the page
+  are pinned in the prose fixture's `known_false_positives`, so a fix now
+  fails the suite until the row is deliberately moved to `clean`.

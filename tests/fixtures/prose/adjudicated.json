@@ -89,5 +89,98 @@
       "note": "Direct -ko question; the period should be a question mark."
     }
   ],
-  "known_false_positives": []
+  "known_false_positives": [
+    {
+      "text": "Kehrätessään hän osasi asettaa äidilleen kaikenlaisia painavia kysymyksiä, ja kun häneltä kysyttiin, hän vastasi erinomaisen selvästi ja sievästi, niin että kaikki sanoivat ihmetellen: tuosta lapsesta tulee varmaan jotain erinomaista.",
+      "kinds": [
+        "comma_missing"
+      ],
+      "note": "Phase 3: `niin että` is the fixed consecutive conjunction and takes no comma."
+    },
+    {
+      "text": "Kun se aamu valkeni, jolloin Kenoveevan täytyi aviomiehensä kanssa matkustaa pois, itki hän katkerasti ja hänen äitinsä sulki hänet vapisevalle sydämellensä ja sai itkultaan tuskin sanotuksi: 'Jää hyvästi, Kenoveeva, Jumala johdattakoon sinua.",
+      "kinds": [
+        "comma_missing"
+      ],
+      "note": "Phase 2: the comma after `valkeni` is already there; the rule inserts a second one."
+    },
+    {
+      "text": "Se päivä tulee, jolloin kaikki tänne kokoontuneet Jumalaa siitä ilokyynelin kiittävät.",
+      "kinds": [
+        "verb_rection"
+      ],
+      "note": "Phase 4: `kaikki` is the plural subject of `kiittävät`, not an argument."
+    },
+    {
+      "text": "Näettehän kuun, katsokaa, se peitäkse pilven taa ikäänkuin ei voisi nähdä sitä tekoa, jonka aiotte tehdä.",
+      "kinds": [
+        "verb_rection"
+      ],
+      "note": "Phase 4: `se` is the 3sg subject of `peitäkse`."
+    },
+    {
+      "text": "Hän jäi lapsi sylissä istumaan puun alle ja odotti päivän nousua.",
+      "kinds": [
+        "verb_rection"
+      ],
+      "note": "Phase 5: `lapsi sylissä` is an absolute phrase, not the object of `jäi`."
+    },
+    {
+      "text": "Hän lähti lapsi sylissä kulkemaan lumessa ja sateessa yhä kauemmas korpeen, tietämättä minne.",
+      "kinds": [
+        "verb_rection"
+      ],
+      "note": "Phase 5: same absolute phrase."
+    },
+    {
+      "text": "Hän sanoi: \"Ei vielä, ei, kerro, niinkuin se sitten kävi.\"",
+      "kinds": [
+        "object_case"
+      ],
+      "note": "Phase 5: `niinkuin` opens a comparison clause; `se` is its subject."
+    },
+    {
+      "text": "Hän tapasi hirven jälet ja lähti niitä seuraamaan.",
+      "kinds": [
+        "verb_rection"
+      ],
+      "note": "Phase 6: `niitä` is the object of `seuraamaan`, not of `lähti`."
+    },
+    {
+      "text": "Lähinnä Jumalan haltuun uskon sinut ja kaikki, mitä minulla on, tämän uskollisen palvelijani Kolon haltuun.",
+      "kinds": [
+        "verb_rection"
+      ],
+      "note": "Phase 6: the illative `haltuun` satisfies `uskoa`'s transfer frame."
+    },
+    {
+      "text": "' Kenoveeva vastasi: 'Jumala, ole minulle armollinen, minä olen sinun kädessäsi', nousi ylös ja seurasi heitä.",
+      "kinds": [
+        "verb_rection"
+      ],
+      "note": "Phase 7: `Jumala` is a vocative."
+    },
+    {
+      "text": "Oli ollut ihan hiljaista, sen kun Anni vain kertoi, koko ajan kynttilään katsoen, tasaisella äänellä.",
+      "kinds": [
+        "comma_missing",
+        "comma_missing"
+      ],
+      "note": "Phase 3: `sen kun` is a fixed adverbial, not a subordinator."
+    },
+    {
+      "text": "Kuningas käskee jo tänä iltana lähteä sotaan.' Päivän vaietessa olivatkin jo kaikki Sikrin ritarit koolla linnan suuressa salissa.",
+      "kinds": [
+        "verb_rection"
+      ],
+      "note": "Phase 5: `Päivän` is the genitive subject of the impersonal `vaietessa`."
+    },
+    {
+      "text": "'--'Hänen täytyy kuolla', sanoi Kuntsi. 'Jos me annamme hänen elää, täytyy meidän itsemme kuolla eikä se auta häntä kuitenkaan.",
+      "kinds": [
+        "comma_missing"
+      ],
+      "note": "Phase 2: the comma after the quote is already there; the rule inserts a second one."
+    }
+  ]
 }

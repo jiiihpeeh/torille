@@ -851,6 +851,12 @@ analysis refinements”.
     question and takes a period, not the question mark the rule offers.
   - **colloquial `ne on`**, which the agreement rule reports as `ovat`
     (defensible in written prose, but it is dialogue in the corpus).
+  The exact rows, their adjudication, the fixture they are pinned in and the
+  phase that fixes each one are in
+  [`PLAN_GRAMMAR_PRECISION.md`](PLAN_GRAMMAR_PRECISION.md). The 13 pinnable
+  rows are already in `known_false_positives`, so a fix fails the suite until
+  the row is deliberately moved to `clean`; the 8 page-only rows are tracked
+  by the plan's count invariant and a purpose-built fixture per phase.
   These are grammar-checker bugs independent of M0. Re-run `ud_m0_eval` and
   `m0_prose_eval` after each fix; a larger model remains blocked meanwhile.
 
@@ -1139,3 +1145,12 @@ intended/competing interpretation pair that fails.
   pronoun as its subject, and `vaikka` opens a clause only when a predicate
   follows. `page-2000`: 34 → 27 diagnostics, all removals adjudicated, none
   added; four clean rows and three ambiguity cases added.
+- 2026-11-18: wrote `PLAN_GRAMMAR_PRECISION.md`, the phase plan for the 21
+  remaining false positives on `page-2000` (27 diagnostics: 21 FPs, 5 accepted,
+  1 excerpt artefact). Phase 0 landed: `tools/src/bin/dump_diagnostics.rs` is
+  the review tool, and the 13 rows that reproduce outside the page (14
+  findings) are pinned in `known_false_positives`, so the suite now reports
+  11.4 findings per 1,000 words and fails when a fix lands without moving its
+  row. The plan also records two structural root causes: a newline ends a
+  sentence (`sentence::separator_ends_sentence`), and a comma is invisible to
+  the boundary tests when a quote or a relative clause sits beside it.
