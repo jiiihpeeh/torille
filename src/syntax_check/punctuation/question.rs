@@ -33,6 +33,19 @@ pub(super) fn question_diagnostics(tokens: &[Token], analysis: &SyntaxAnalysis) 
         let Some(first) = first_word(clause, tokens) else {
             continue;
         };
+        // The interrogative must open the sentence, not merely its clause:
+        // `Hän kysyi, mitä minä teen.` is reported speech. A line break can
+        // also start a sentence mid-clause (`...,\nmiten ...`); a comma
+        // immediately before the sentence marks that continuation.
+        let Some(sentence_first) = tokens
+            .iter()
+            .position(|token| token.is_word() && token.start >= sentence.start)
+        else {
+            continue;
+        };
+        if sentence_first != first || preceded_by_comma(tokens, first) {
+            continue;
+        }
         let lower = tokens[first].text.to_lowercase();
         let interrogative = INTERROGATIVE_SURFACES.contains(&lower.as_str());
         let clitic = has_ko_clitic(first, analysis)
@@ -81,6 +94,21 @@ fn has_ko_clitic(index: usize, analysis: &SyntaxAnalysis) -> bool {
         .readings
         .iter()
         .any(|reading| reading.clitic == Some(Clitic::Ko))
+}
+
+/// A comma in the separator run before the word: the sentence started after
+/// a line break inside a continuing clause, so the interrogative is reported,
+/// not direct.
+fn preceded_by_comma(tokens: &[Token], first: usize) -> bool {
+    for token in tokens[..first].iter().rev() {
+        if token.is_word() {
+            break;
+        }
+        if token.text.contains(',') {
+            return true;
+        }
+    }
+    false
 }
 
 /// `kuka tahansa`, `mikä vain` and similar are indefinite pronouns, not

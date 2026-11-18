@@ -1228,3 +1228,15 @@ intended/competing interpretation pair that fails.
   head of the quantity phrase, not an attribute. `Jumala, ole …`,
   `Liisa, tule …` and `Kuinka paljon hyvää …` are clean; `Minä, menen kotiin.`
   stays comma_extra. `page-2000`: 12 → 10, rows 16–17 only.
+- 2026-11-18: precision Phase 8 (list detection). `list_separator_missing`
+  needs the adjacent pair to share a case: `lapsineen suojassa sateelta ja
+  tuulelta` is four obliques, and `vaatteista puute` is elative next to
+  nominative. The `list_*` and nested-list fixtures still fire.
+  `page-2000`: 10 → 7, rows 18–20 only.
+- 2026-11-18: precision Phase 9 (reported questions). The interrogative must
+  open the sentence, not just its clause, and a comma before the sentence
+  (possibly with a line break or quote) marks a continuation. Rows 21 and 23
+  are reported questions; row 22 stays accepted as a direct `-ko` question.
+  `page-2000`: 7 → 5. The precision plan is complete: 54 → 5 diagnostics, of
+  which 0 false positives (1 true positive, 3 accepted, 1 excerpt artefact);
+  the prefix counts are 20 words → 0, 96 → 0, 1,959 → 5.

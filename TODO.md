@@ -2133,3 +2133,7 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
 - 2026-11-18: grammar precision Phase 7 landed: vocatives are detached
   before rection, and a `paljon` + adjective phrase is not an attribute.
   `page-2000` 12 → 10 diagnostics; phases 8–9 remain.
+- 2026-11-18: grammar precision Phase 8 landed (list pairs need the same
+  case) and Phase 9 landed (reported questions and line-break continuations).
+  `page-2000` 10 → 5 diagnostics; `PLAN_GRAMMAR_PRECISION.md` is complete:
+  54 → 5, with 0 false positives.

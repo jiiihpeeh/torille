@@ -1,8 +1,7 @@
 # PLAN_GRAMMAR_PRECISION — closing the adjudicated false positives
 
-Status: **10 diagnostics on the committed prose page, 5 adjudicated false
-positives across nine phases; phases 0–7 landed** · 2026-11-18 · branch
-`syntax` · baseline `b8b3687`
+Status: **5 diagnostics on the committed prose page, 0 false positives; all
+nine phases landed** · 2026-11-18 · branch `syntax` · baseline `b8b3687`
 
 This plan closes the false positives that remain on
 `tests/fixtures/perf/page-2000.txt` after the argument-selection and agreement
@@ -19,14 +18,13 @@ Contents: [§1 where we are](#1-where-we-are) ·
 
 ## 1. Where we are
 
-`page-2000` (1,959 words) reports **10** grammar diagnostics. Every one was
-adjudicated by hand: 5 false positives, 1 true positive, 3 accepted, 1
-excerpt artefact.
+`page-2000` (1,959 words) reports **5** grammar diagnostics. Every one was
+adjudicated by hand: 0 false positives, 1 true positive, 3 accepted, 1 excerpt
+artefact.
 
 | kind | rows | false positives |
 |---|---:|---:|
-| `question_mark_missing` | 4 | 2 (1 accepted, 1 true positive) |
-| `list_separator_missing` | 3 | 3 |
+| `question_mark_missing` | 2 | 0 (1 accepted, 1 true positive) |
 | `subject_predicate_agreement` | 2 | 0 (2 accepted) |
 | `unbalanced_quote` | 1 | 0 (excerpt ends inside a quote) |
 
@@ -56,10 +54,8 @@ and adds another is a failed phase and is reverted.
 
 ### 1.2 What the prose fixture can pin
 
-The prose fixture checks each row in isolation. None of the current 5 false
-positives reproduces alone: they are four page-only rows (the two `lapsineen`
-findings, `puute`, and two question-mark rows). The fixture form of each row
-is in the §2 table.
+There are no false positives left. The five remaining rows are the true
+positive, the three accepted prescriptive findings and the excerpt artefact.
 
 A page-only row is still pinned by the plan: the phase that fixes it adds a
 **purpose-built sentence** to `syntax_diagnostics.json` that exercises the same
@@ -110,12 +106,12 @@ per §1.2).
 | 15 | `verb_rection` | 6583 `sinut` | `…uskon sinut … haltuun.` | `sinuun` | the illative `haltuun` satisfies the frame | 6 | **fixed** |
 | 16 | `verb_rection` | 8210 `Jumala` | `…'Jumala, ole minulle armollinen…'` | `jumalaan` | vocative | 7 | **fixed** |
 | 17 | `attribute_agreement` | 9821 `hyvää` | `kuinka paljon hyvää hän … osoitti` | `hyvä` | `hyvää` is the head of `paljon` | 7 | **fixed** |
-| 18 | `list_separator_missing` | 11698 | `…suojassa sateelta ja tuulelta, mutta…` | `,` | not a list | 8 | page |
-| 19 | `list_separator_missing` | 11707 | same | `,` | same | 8 | page |
-| 20 | `list_separator_missing` | 13463 | `…puute, niin yhtenä päivänä…` | `,` | across a clause boundary | 8 | page |
-| 21 | `question_mark_missing` | 9357 | `miten kauheasti puut heiluvat…` | `?` | the sentence continues on the next line | 9 | page |
-| 22 | `question_mark_missing` | 9431 | `Voitteko Jumalan silmien edessä` | `?` | the `?` is on the next line | 9 | page |
-| 23 | `question_mark_missing` | 9882 | `'--'Hänen täytyy` | `?` | a line-break artefact inside a quote | 9 | page |
+| 18 | `list_separator_missing` | 11698 | `…suojassa sateelta ja tuulelta, mutta…` | `,` | not a list | 8 | **fixed** |
+| 19 | `list_separator_missing` | 11707 | same | `,` | same | 8 | **fixed** |
+| 20 | `list_separator_missing` | 13463 | `…puute, niin yhtenä päivänä…` | `,` | across a clause boundary | 8 | **fixed** |
+| 21 | `question_mark_missing` | 9357 | `miten kauheasti puut heiluvat…` | `?` | the sentence continues on the next line | 9 | **fixed** |
+| 22 | `question_mark_missing` | 9431 | `Voitteko Jumalan silmien edessä` | `?` | **accepted**: a direct `-ko` question | 9 | accepted |
+| 23 | `question_mark_missing` | 9882 | `'--'Hänen täytyy` | `?` | a line-break artefact inside a quote | 9 | **fixed** |
 
 Accepted and **not** to be "fixed":
 
@@ -168,8 +164,9 @@ cargo run --release -q -p torille-tools --bin dump_diagnostics
   sentence, one with the preceding sentence (`Päivän vaietessa`), one as a
   two-sentence quote window (`kuolla', sanoi Kuntsi`), and the `sen kun` row
   with its two comma kinds. Each entry carries a `note` naming the phase.
-  The suite reports **11.4 findings per 1,000 words** over 1,021 clean and 212
-  known-false-positive words.
+  At Phase 0 the suite reported **11.4 findings per 1,000 words** over 1,021
+  clean and 212 known-false-positive words; it now reports none over the clean
+  corpus.
 - The eight page-only rows are listed in §1.2 and §2; they are tracked by the
   page count and by the purpose-built fixture each phase adds.
 
@@ -362,39 +359,44 @@ Acceptance: rows 16–17 clean; `Punainen autot.` and `Punaisessa auto.` still
 fire; `Minä, menen kotiin.` stays `comma_extra`; `Jumala, ole minulle
 armollinen.` and `Liisa, tule tänne.` are clean. Page 12 → 10.
 
-### Phase 8 — list detection over clause boundaries (rows 18–20)
+### Phase 8 — list detection over clause boundaries — **landed**
 
-`list_separator_missing` builds a list out of heterogeneous adverbials and
-across a comma that ends a clause.
+`list_separator_missing` was building a list out of heterogeneous obliques.
+`missing_separators` reported every adjacent common-noun pair, whatever its
+case.
 
-- A list needs at least two items of the **same kind** (same case and part of
-  speech, or two clauses of the same shape). `lapsineen suojassa sateelta ja
-  tuulelta` are four different obliques, not a list.
-- A comma that separates two clauses (a following `mutta`/`niin`/finite verb)
-  closes the list: no separator is missing inside it.
-- Guard: `Ostin omenoita appelsiineja, banaaneja ja päärynöitä.` still reports
-  the missing comma.
+- An adjacent pair now needs the **same case** (`same_list_case`).
+  `lapsineen suojassa sateelta ja tuulelta` has comitative, inessive, ablative
+  and ablative; the first two pairs are not a list, and `sateelta ja
+  tuulelta` is a two-item conjunction list that needs no comma.
+- The `puute` row is elative `vaatteista` next to nominative `puute`, so it is
+  not a pair either.
+- An unknown case stays quiet. The existing `list_missing_separator`,
+  `nested_list_missing_separator`, duplicate, introducer and
+  comma-before-conjunction fixtures all still fire.
 
-Acceptance: rows 18–20 clean; the four `list_*` and nested-list fixtures
-unchanged.
+Acceptance: rows 18–20 clean; both sentences are clean fixtures; page
+10 → 7.
 
-### Phase 9 — a line break is not a question mark's sentence end (rows 21–23)
+### Phase 9 — reported questions and line breaks — **landed**
 
-Three `question_mark_missing` rows are the newline-sentence-boundary artefact
-of §1.3, not missing marks: the `?` is on the following line.
+Rows 21 and 23 are reported questions split by a line break, not missing
+marks: `ettekö kuule,\nmiten …` and `ajattelehan toki,\nkuinka …` (the latter
+with a quote and a dash before `Hänen täytyy`). Row 22 is a direct `-ko`
+question and stays accepted.
 
-- `punctuation/question.rs`: when the sentence's last word is followed by a
-  separator run that continues into another word (a line break, a quote, a
-  dash) rather than terminal punctuation, stay quiet. `Terminal::Insert`
-  already represents this shape; split it into “continues” (quiet) and “ends
-  the text” (the current behaviour).
-- Keep the `-ko` path: `Missä sinä asut.`, `Onko sinulla kirjaa.` and
-  `Muistatko--muistatko …` still fire, because each ends at real terminal
-  punctuation.
-- Do not change `sentence::spans`: it is the style metric and the
-  sentence-cache key, and a wider change belongs in its own plan.
+- The interrogative must open the **sentence**, not merely its clause:
+  `Hän kysyi, mitä minä teen.` is reported speech.
+- A comma immediately before the sentence (possibly followed by a line break
+  or a quote) marks a continuation: `...,\nmiten …` is not a new direct
+  question. The page's two false rows are exactly this.
+- The `-ko` path is unchanged: `Missä sinä asut.`, `Onko sinulla kirjaa.`,
+  `Muistatko--muistatko …` and `Voitteko Jumalan silmien edessä …` still fire.
+- `sentence::spans` is not changed; it is the style metric and the
+  sentence-cache key.
 
-Acceptance: rows 21–23 clean; the `question_mark_*` fixtures unchanged.
+Acceptance: rows 21 and 23 clean; row 22 remains accepted; the
+`question_mark_*` fixtures unchanged; page 7 → 5.
 
 ## 5. Acceptance
 
@@ -402,14 +404,20 @@ The plan is complete when:
 
 1. every row in §2 is either clean or in §2's accepted table with a reviewed
    reason;
-2. `page-2000` reports **≤ 6** diagnostics: the true positive, the two
-   accepted `ne on` rows, and the excerpt artefact;
+2. `page-2000` reports **5** diagnostics: the true positive, the accepted
+   `Voitteko` direct question, the two accepted `ne on` rows, and the excerpt
+   artefact;
 3. `known_false_positives` is empty and the printed false-positive rate is 0
    over the clean word count;
 4. the clean corpus, the exact-output fixtures, `m0_prose_eval` and the
    workspace suite are green, and clippy is clean;
-5. the diagnostic counts on the 20-, 96- and 1,959-word prefixes are recorded
-   here.
+5. the prefix counts are recorded: **20 words → 0**, **96 words → 0**,
+   **1,959 words → 5**.
+
+Final measurement (2026-11-18): `page-2000` 5 diagnostics; adjudicated prose
+79 clean rows / 1,233 words / 0 diagnostics, 1 true positive, 0 known false
+positives; `m0_prose_eval` reports `clean: 79 rows / 1233 words`, `true
+positives: 1`, `known false positives: 0`.
 
 ## 6. Risks
 
