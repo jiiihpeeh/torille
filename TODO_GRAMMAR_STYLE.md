@@ -1212,3 +1212,11 @@ intended/competing interpretation pair that fails.
   `Kirjan luettuaan` keeps `kirjan` as the object because the possessive
   suffix marks the agent; the role pair is pinned in `syntax_ambiguity.json`.
   `page-2000`: 15 → 14, row 13 only. Phase 5 is complete.
+- 2026-11-18: precision Phase 6 (infinitive object; satisfied frame). A
+  clause-final nominal followed by an infinitive clause belongs to the
+  infinitive (`lähti niitä seuraamaan`), so the matrix rection search skips
+  it. A frame is satisfied by another nominal in the clause in its case, or
+  by the closed goal postposition `haltuun` (`uskon sinut … haltuun`); the
+  predicate itself is excluded because its homonyms can carry an illative
+  noun reading (`Vastaan sinä.` must keep firing). `page-2000`: 14 → 12,
+  rows 14–15 only.

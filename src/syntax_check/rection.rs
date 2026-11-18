@@ -7,7 +7,7 @@
 //! priority order.
 
 use crate::syntax::{SyntacticRole, SyntaxAnalysis};
-use crate::tags::{Case, Person};
+use crate::tags::{Case, Mood, Person};
 use crate::tokenise::Token;
 
 use super::analysis::{
@@ -38,6 +38,23 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
             continue;
         };
         if frames.contains(&case) {
+            continue;
+        }
+        // The frame is already satisfied by another nominal in the clause:
+        // `uskon sinut … haltuun` has the illative goal even though `haltuun`
+        // is a postposition with no case reading. A closed set keeps the
+        // transfer goal from being mistaken for a bad object.
+        if frames.iter().any(|frame| {
+            clause.tokens.clone().any(|index| {
+                index != argument
+                    && index != predicate
+                    && (analysis.tokens[index].readings.iter().any(|reading| {
+                        reading.case == Some(*frame)
+                            && crate::syntax::is_nominal_pos(reading.part_of_speech)
+                    }) || (frame == &Case::Illative
+                        && analysis.tokens[index].key == "haltuun"))
+            })
+        }) {
             continue;
         }
         // A partitive object frame for these verbs is aspectual, not lexical:
@@ -267,6 +284,24 @@ fn aspectual_total_object(lemma: &str, case: Case) -> bool {
         && ASPECTUAL_OBJECT_VERBS.contains(&lemma)
 }
 
+/// Is the first word after this clause an infinitive? The segmenter gives an
+/// infinitive its own clause, so the matrix verb's last nominal is the
+/// infinitive's argument.
+fn next_word_is_infinitive(
+    clause: &crate::syntax::Clause,
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+) -> bool {
+    (clause.tokens.end..tokens.len())
+        .find(|&index| tokens[index].is_word())
+        .is_some_and(|index| {
+            analysis.tokens[index]
+                .readings
+                .iter()
+                .any(|reading| reading.mood == Some(Mood::Infinitive))
+        })
+}
+
 /// The demonstrative pronouns that can open a clause after a comma.
 const DEMONSTRATIVE_PRONOUNS: &[&str] = &["se", "tämä", "tuo", "ne", "nämä", "nuo"];
 
@@ -315,6 +350,11 @@ fn argument(
             continue;
         };
         if nominal_or_numeral_pos(syntax).is_none() {
+            continue;
+        }
+        // A clause-final nominal before an infinitive clause belongs to the
+        // infinitive (`lähti niitä seuraamaan`), not to the matrix verb.
+        if words.last() == Some(&index) && next_word_is_infinitive(clause, tokens, analysis) {
             continue;
         }
         return Some((index, case));

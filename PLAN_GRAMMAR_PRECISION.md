@@ -1,8 +1,8 @@
 # PLAN_GRAMMAR_PRECISION — closing the adjudicated false positives
 
-Status: **14 diagnostics on the committed prose page, 9 adjudicated false
-positives across nine phases; phases 0–4 and 5a–5c landed** · 2026-11-18 ·
-branch `syntax` · baseline `b8b3687`
+Status: **12 diagnostics on the committed prose page, 7 adjudicated false
+positives across nine phases; phases 0–6 landed** · 2026-11-18 · branch
+`syntax` · baseline `b8b3687`
 
 This plan closes the false positives that remain on
 `tests/fixtures/perf/page-2000.txt` after the argument-selection and agreement
@@ -19,13 +19,13 @@ Contents: [§1 where we are](#1-where-we-are) ·
 
 ## 1. Where we are
 
-`page-2000` (1,959 words) reports **14** grammar diagnostics. Every one was
-adjudicated by hand: 9 false positives, 1 true positive, 3 accepted, 1
+`page-2000` (1,959 words) reports **12** grammar diagnostics. Every one was
+adjudicated by hand: 7 false positives, 1 true positive, 3 accepted, 1
 excerpt artefact.
 
 | kind | rows | false positives |
 |---|---:|---:|
-| `verb_rection` | 3 | 3 |
+| `verb_rection` | 1 | 1 |
 | `question_mark_missing` | 4 | 2 (1 accepted, 1 true positive) |
 | `list_separator_missing` | 3 | 3 |
 | `subject_predicate_agreement` | 2 | 0 (2 accepted) |
@@ -58,11 +58,11 @@ and adds another is a failed phase and is reverted.
 
 ### 1.2 What the prose fixture can pin
 
-The prose fixture checks each row in isolation. Of the current 9 false
-positives, three reproduce alone (three entries in `known_false_positives`)
-and six do not (five page-only rows: `paljon hyvää`, the two `lapsineen`
-findings, `puute`, and two of the question-mark rows). The fixture form of
-each row is in the §2 table.
+The prose fixture checks each row in isolation. Of the current 7 false
+positives, one reproduces alone (one entry in `known_false_positives`) and six
+do not (five page-only rows: `paljon hyvää`, the two `lapsineen` findings,
+`puute`, and two of the question-mark rows). The fixture form of each row is
+in the §2 table.
 
 A page-only row is still pinned by the plan: the phase that fixes it adds a
 **purpose-built sentence** to `syntax_diagnostics.json` that exercises the same
@@ -109,8 +109,8 @@ per §1.2).
 | 11 | `verb_rection` | 11079 `lapsi` | `Hän jäi lapsi sylissä istumaan…` | `lapseen` | `lapsi sylissä` is an absolute phrase | 5 | **fixed** |
 | 12 | `verb_rection` | 11341 `lapsi` | `Hän lähti lapsi sylissä kulkemaan…` | `lapseen` | same | 5 | **fixed** |
 | 13 | `verb_rection` | 5952 `Päivän` | `Päivän vaietessa` | `päivään` | genitive subject of an impersonal non-finite verb | 5 | **fixed** |
-| 14 | `verb_rection` | 14764 `niitä` | `…lähti niitä seuraamaan.` | `niihin` | `niitä` is the infinitive's object | 6 | sentence |
-| 15 | `verb_rection` | 6583 `sinut` | `…uskon sinut … haltuun.` | `sinuun` | the illative `haltuun` satisfies the frame | 6 | sentence |
+| 14 | `verb_rection` | 14764 `niitä` | `…lähti niitä seuraamaan.` | `niihin` | `niitä` is the infinitive's object | 6 | **fixed** |
+| 15 | `verb_rection` | 6583 `sinut` | `…uskon sinut … haltuun.` | `sinuun` | the illative `haltuun` satisfies the frame | 6 | **fixed** |
 | 16 | `verb_rection` | 8210 `Jumala` | `…'Jumala, ole minulle armollinen…'` | `jumalaan` | vocative | 7 | sentence |
 | 17 | `attribute_agreement` | 9821 `hyvää` | `kuinka paljon hyvää hän … osoitti` | `hyvä` | `hyvää` is the head of `paljon` | 7 | page |
 | 18 | `list_separator_missing` | 11698 | `…suojassa sateelta ja tuulelta, mutta…` | `,` | not a list | 8 | page |
@@ -332,20 +332,21 @@ impersonal verbs of time and weather (`vaieta`, `hämärtää`, `sarastaa`,
   the possessive suffix; the role pin is in `syntax_ambiguity.json`.
 - Row 13 moves from `known_false_positives` to `clean`. Page 15 → 14.
 
-### Phase 6 — the infinitive's object and the transfer frame (rows 14–15)
+### Phase 6 — the infinitive's object and the transfer frame — **landed**
 
 - **The infinitive's own object.** In `lähti niitä seuraamaan` the partitive
-  belongs to `seuraamaan`, not to `lähteä`. When a clause ends in an
-  infinitive, a nominal immediately before it is that infinitive's argument:
-  skip it in the matrix verb's rection search.
-- **A satisfied frame.** `uskoa` has a belief frame (illative) and a transfer
-  frame (accusative object + illative goal). In `uskon sinut … haltuun` the
-  illative `haltuun` satisfies the frame, so the accusative is the object.
-  If the clause already has a nominal in one of the frames' cases, the frame
-  is satisfied and no diagnostic is due.
+  belongs to `seuraamaan`, not to `lähteä`. When the matrix clause's last
+  nominal is followed by an infinitive clause, the rection search skips it.
+- **A satisfied frame.** `uskoa` has an illative belief frame and a transfer
+  construction (accusative object + illative goal). In `uskon sinut … haltuun`
+  the goal is the postposition `haltuun`, which has no case reading. A frame
+  is satisfied by another **nominal** in the clause in one of its cases
+  (excluding the predicate itself, whose homonyms may carry an illative noun
+  reading), plus the closed `haltuun` goal. The accusative object is then not
+  an error.
 
-Acceptance: rows 14–15 clean; `Luotan sinä.` and `En pidä sinä.` still fire;
-`Hän uskoo sinuun.` stays clean.
+Acceptance: rows 14–15 clean; `Luotan sinä.`, `En pidä sinä.` and
+`Vastaan sinä.` still fire; `Hän uskoo sinuun.` is clean. Page 14 → 12.
 
 ### Phase 7 — vocative and quantity head (rows 16–17)
 

@@ -2127,3 +2127,6 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
 - 2026-11-18: grammar precision Phase 5c landed: genitive subjects of
   impersonal temporal non-finite verbs are detached from the previous
   clause's object search. `page-2000` 15 → 14 diagnostics; phases 6–9 remain.
+- 2026-11-18: grammar precision Phase 6 landed: the infinitive's object is
+  not the matrix verb's, and an illative goal satisfies the `uskoa` frame.
+  `page-2000` 14 → 12 diagnostics; phases 7–9 remain.

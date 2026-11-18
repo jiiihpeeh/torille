@@ -88,7 +88,9 @@
     "Hän sanoi: \"Ei vielä, ei, kerro, niinkuin se sitten kävi.\"",
     "Hän jäi lapsi sylissä istumaan puun alle ja odotti päivän nousua.",
     "Hän lähti lapsi sylissä kulkemaan lumessa ja sateessa yhä kauemmas korpeen, tietämättä minne.",
-    "Kuningas käskee jo tänä iltana lähteä sotaan.' Päivän vaietessa olivatkin jo kaikki Sikrin ritarit koolla linnan suuressa salissa."
+    "Kuningas käskee jo tänä iltana lähteä sotaan.' Päivän vaietessa olivatkin jo kaikki Sikrin ritarit koolla linnan suuressa salissa.",
+    "Hän tapasi hirven jälet ja lähti niitä seuraamaan.",
+    "Lähinnä Jumalan haltuun uskon sinut ja kaikki, mitä minulla on, tämän uskollisen palvelijani Kolon haltuun."
   ],
   "errors": [
     {
@@ -100,20 +102,6 @@
     }
   ],
   "known_false_positives": [
-    {
-      "text": "Hän tapasi hirven jälet ja lähti niitä seuraamaan.",
-      "kinds": [
-        "verb_rection"
-      ],
-      "note": "Phase 6: `niitä` is the object of `seuraamaan`, not of `lähti`."
-    },
-    {
-      "text": "Lähinnä Jumalan haltuun uskon sinut ja kaikki, mitä minulla on, tämän uskollisen palvelijani Kolon haltuun.",
-      "kinds": [
-        "verb_rection"
-      ],
-      "note": "Phase 6: the illative `haltuun` satisfies `uskoa`'s transfer frame."
-    },
     {
       "text": "' Kenoveeva vastasi: 'Jumala, ole minulle armollinen, minä olen sinun kädessäsi', nousi ylös ja seurasi heitä.",
       "kinds": [
