@@ -1,8 +1,8 @@
 # PLAN_GRAMMAR_PRECISION — closing the adjudicated false positives
 
-Status: **27 diagnostics on the committed prose page, 21 adjudicated false
-positives across nine phases; phase 0 pinned** · 2026-11-18 · branch `syntax`
-· baseline `b8b3687`
+Status: **26 diagnostics on the committed prose page, 20 adjudicated false
+positives across nine phases; phases 0–1 landed** · 2026-11-18 · branch
+`syntax` · baseline `b8b3687`
 
 This plan closes the false positives that remain on
 `tests/fixtures/perf/page-2000.txt` after the argument-selection and agreement
@@ -19,15 +19,15 @@ Contents: [§1 where we are](#1-where-we-are) ·
 
 ## 1. Where we are
 
-`page-2000` (1,959 words) reports **27** grammar diagnostics. Every one was
-adjudicated by hand: 21 false positives, 5 accepted, 1 excerpt artefact.
+`page-2000` (1,959 words) reports **26** grammar diagnostics. Every one was
+adjudicated by hand: 20 false positives, 5 accepted, 1 excerpt artefact.
 
 | kind | rows | false positives |
 |---|---:|---:|
 | `verb_rection` | 8 | 8 |
 | `comma_missing` | 5 | 5 |
 | `question_mark_missing` | 4 | 3 |
-| `subject_predicate_agreement` | 3 | 1 (2 accepted) |
+| `subject_predicate_agreement` | 2 | 0 (2 accepted) |
 | `list_separator_missing` | 3 | 3 |
 | `attribute_agreement` | 1 | 1 |
 | `object_case` | 1 | 1 |
@@ -58,7 +58,7 @@ Every phase is judged by the same three-way check:
 "Improvement" is never a lower count on its own: a phase that removes one row
 and adds another is a failed phase and is reverted.
 
-### 1.2 Only 14 of the 21 are pinnable in the prose fixture
+### 1.2 Only 14 of the 21 were pinnable in the prose fixture
 
 The prose fixture checks each row in isolation, and ten of these findings need
 their surrounding clause. Measured with a sentence-window probe:
@@ -72,10 +72,11 @@ their surrounding clause. Measured with a sentence-window probe:
 
 The page-only rows are still pinned by the plan: each phase that fixes one
 adds a **purpose-built sentence** to `syntax_diagnostics.json` that exercises
-the same cue, plus the page count invariant above. The eight are: the `tuuli`
+the same cue, plus the page count invariant above. The eight were: the `tuuli`
 bearer, the `paljon hyvää` attribute, both `lapsineen` list rows, the `puute`
 list row, the `jolloin … naisihmisen` comma pair, and three question marks
-that are line-break artefacts (below).
+that are line-break artefacts (below). Phase 1 fixed the `tuuli` row with its
+line break preserved in the fixture; the other seven still await their phase.
 
 ### 1.3 Two structural root causes behind several rows
 
@@ -86,7 +87,9 @@ that are line-break artefacts (below).
    one, and the `miten kauheasti …` line is the same shape. Changing the
    sentence layer is out of scope here (it is the style metric and the
    sentence-cache key); the question rule can see that the sentence continues
-   past a line break and stay quiet.
+   past a line break and stay quiet. The same split made the Phase 1 agreement
+   row: `tuuli` ends the line and was left as a one-word predicate, while
+   `puhalteli` began the next sentence.
 2. **A comma at a boundary is invisible when a quote sits beside it.**
    `kuolla', sanoi Kuntsi` and `valkeni, jolloin` both have the comma the
    rules want to insert; the separator scan stops at the quote or at the
@@ -101,7 +104,7 @@ per §1.2).
 
 | # | kind | span | context | fix | adjudication | phase | fixture |
 |---:|---|---|---|---|---|---|---|
-| 1 | `subject_predicate_agreement` | 8470 `tuuli` | `…kuu oli laskeutumaisillaan, tuuli puhalteli kylmästi…` | `tuulivat` | `tuuli` is the subject of `puhalteli` | 1 | page |
+| 1 | `subject_predicate_agreement` | 8470 `tuuli` | `…kuu oli laskeutumaisillaan, tuuli puhalteli kylmästi…` | `tuulivat` | `tuuli` is the subject of `puhalteli` | 1 | **fixed** |
 | 2 | `comma_missing` | 4516 | `Kun se aamu valkeni, jolloin Kenoveevan täytyi…` | `,` | the comma is already there | 2 | sentence |
 | 3 | `comma_missing` | 9904 | `'Hänen täytyy kuolla', sanoi Kuntsi.` | `,` | the comma is already there, after a quote | 2 | window |
 | 4 | `comma_pair_unbalanced` | 15040 | `…ulos, jolla oli yllään lampaan nahka…` | `,` | the relative clause ends the sentence | 2 | page |
@@ -184,23 +187,33 @@ cargo run --release -q -p torille-tools --bin dump_diagnostics
 Acceptance: `syntax_prose` prints the false-positive rate over the clean word
 count and fails on any unpinned change.
 
-### Phase 1 — the agreement bearer is the clause predicate (row 1, page-only)
+### Phase 1 — an inherited subject keeps its number — **landed**
 
-`agreement::bearer_of` picks the first finite reading in the clause. In
-`…kuu oli laskeutumaisillaan, tuuli puhalteli kylmästi…` that is `tuuli`, the
-noun subject of `puhalteli`, so the rule compares `tähdet`'s number against a
-past-tense `tuulla` reading.
+The original diagnosis (a bearer picked from the first finite reading) was
+wrong: `agreement::bearer_of` already uses `clause.predicate`, with the
+negative and compound-tense auxiliaries as the exceptions it models. The row
+is a consequence of root cause 1: the page wraps `tuuli\npuhalteli`, so
+`tuuli` is left alone at the end of its sentence and becomes a one-word
+predicate through its `tuulla` reading.
 
-- Use `clause.predicate` as the bearer, with the compound-tense auxiliary as
-  the exception it already models (`Minä on lukenut`).
-- When the clause's predicate has no finite reading, stay quiet: a clause
-  without a finite head has no agreement controller.
-- Risk: a clause whose `predicate` choice is the weaker one. Guard with the
-  `sv_agreement_*` and `participle_*` fixtures and the corpus.
+`share_clause_roles` then let that clause inherit `tähdet` from the preceding
+clause. `clause_subject_person_number` collected only subject *tokens inside
+the clause*; an inherited subject is an index outside that range, so it
+returned `None`, and `predicate_matches_previous_subject` treats `None` as
+“do not block sharing”. The agreement rule compared the 3sg `tuuli` predicate
+with the plural `tähdet`.
 
-Acceptance: row 1 gone from the page; `Koira nukkuvat.`, `Minä menee kotiin.`,
-`Hän antoivat kirjan.` still fire; a purpose-built fixture joins
-`syntax_diagnostics.json` (`…tähdet, kuu oli laskemassa, tuuli puhalteli`).
+- `clause_subject_person_number` now includes `clause.subject` when it is not
+  among the clause's own subject tokens. The inheritance check then compares
+  the predicate with the subject that would actually be shared.
+- A mismatching share is refused, leaving the clause with no subject and
+  therefore no agreement controller: quiet, which is the false-negative-first
+  outcome for a clause whose subject cannot be established.
+- No change to `bearer_of`; the page count falls by exactly this row.
+
+Acceptance: row 1 gone from the page (27 → 26); `Koira nukkuvat.`,
+`Minä menee kotiin.`, `Hän antoivat kirjan.` still fire; the sentence with
+its original line break is a clean row in `syntax_diagnostics.json`.
 
 ### Phase 2 — a comma already at the boundary counts (rows 2–4)
 

@@ -1154,3 +1154,14 @@ intended/competing interpretation pair that fails.
   row. The plan also records two structural root causes: a newline ends a
   sentence (`sentence::separator_ends_sentence`), and a comma is invisible to
   the boundary tests when a quote or a relative clause sits beside it.
+- 2026-11-18: precision Phase 1 (inherited subject keeps its number). The
+  `tuuli` agreement row was not a bearer problem: the page wraps
+  `tuuli\npuhalteli`, so the newline sentence split leaves `tuuli` as a
+  one-word predicate, and `share_clause_roles` copied `tähdet` into that
+  clause because `clause_subject_person_number` looked only at subject tokens
+  inside the clause and returned unknown for an inherited one. It now includes
+  `clause.subject`, so a mismatching subject is not shared; the clause has no
+  controller and stays quiet. `page-2000`: 27 → 26, exactly the one row; the
+  original line break is a clean fixture in `syntax_diagnostics.json`.
+  Agreement true positives (`Koira nukkuvat.`, `Minä menee kotiin.`,
+  `Hän antoivat kirjan.`) still fire.

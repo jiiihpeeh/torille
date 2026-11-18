@@ -2101,3 +2101,8 @@ the two-reading lemmas, and classes `99` and `100`, which are the sanalista's
   the review tool it relies on). The 13 rows that reproduce outside the page
   are pinned in the prose fixture's `known_false_positives`, so a fix now
   fails the suite until the row is deliberately moved to `clean`.
+- 2026-11-18: grammar precision Phase 1 landed: an inherited subject now
+  carries its number into `share_clause_roles`, so the line-wrapped `tuuli`
+  clause no longer copies `tähdet` and reports a false agreement error.
+  `page-2000` 27 → 26 diagnostics; remaining work is phases 2–9 of
+  `PLAN_GRAMMAR_PRECISION.md`.

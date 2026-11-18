@@ -1386,11 +1386,21 @@ fn clause_subject_person_number(
     clause: &Clause,
     out: &[TokenSyntax],
 ) -> Option<(Person, Number)> {
-    let subjects: Vec<usize> = clause
+    let mut subjects: Vec<usize> = clause
         .tokens
         .clone()
         .filter(|&index| out[index].role == SyntacticRole::Subject)
         .collect();
+    // A clause that dropped its subject carries an index outside its own
+    // token range. The number must follow that inherited subject: after a
+    // line break (`... tähdet, kuu oli laskeutumaisillaan, tuuli\npuhalteli`)
+    // the short clause has no subject token, and treating the subject as
+    // unknown let the next clause share it without an agreement check.
+    if let Some(subject) = clause.subject
+        && !subjects.contains(&subject)
+    {
+        subjects.push(subject);
+    }
     if subjects.is_empty() {
         return None;
     }
