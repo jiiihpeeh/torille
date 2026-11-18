@@ -67,7 +67,7 @@ try {
   }));
 
   await page.$eval('#word', (el) => { el.value = 'puhua'; });
-  await page.select('#pos', 'verb');
+  await page.select('#pos', 'verbi');
   await page.click('#start');
   await page.waitForSelector('#question-card:not([hidden])', { timeout: 20_000 });
   const verbAnswers = {

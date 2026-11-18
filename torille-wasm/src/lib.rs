@@ -1065,7 +1065,7 @@ pub fn wizard_user_words(user_words_tsv: &str) -> JsValue {
                 let item = js_sys::Object::new();
                 wizard_set(&item, "word", entry.word.as_str());
                 wizard_set(&item, "class", entry.class.as_str());
-                wizard_set(&item, "pos", entry.pos.finnish());
+                wizard_set(&item, "pos", entry.pos_name.as_str());
                 array.push(&item);
             }
             wizard_set(&obj, "words", array);

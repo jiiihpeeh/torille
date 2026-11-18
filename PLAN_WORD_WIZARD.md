@@ -34,7 +34,8 @@ class, the evidence, and the paradigm.
 
 ## What the user does
 
-1. Type the word; choose noun / adjective / verb.
+1. Type the word; choose noun, adjective, numeral, ordinal, pronoun, proper
+   noun, or verb.
 2. The wizard says whether the word is already in the dictionary and, if so,
    its recorded class.
 3. It asks 1–5 questions, each with an example: *genitive singular? `talo` →
@@ -157,11 +158,14 @@ ill_sg	mökkiin
 ```tsv
 # torille-user-words v1
 mökki	5*A	substantiivi
-Helsinki	5	substantiivi
+Helsinki	5	erisnimi
+kahdeksas	45	järjestysluku
 ```
 
 - Three columns: word, class expression, part of speech. The class may be a dual
-  reading (`9, 10`) and is read by `kotus::parse_inflections`.
+  reading (`9, 10`) and is read by `kotus::parse_inflections`. The part-of-speech
+  label is kept as the user chose it (`erisnimi`, `numeraali`, ...); `erisnimi`
+  inflects as a noun.
 - The last line for a word wins; a delete rewrites the blob without that word.
 - Stored as one string under `torille-user-words`; export/import uses the same
   bytes.
@@ -329,8 +333,10 @@ vowel and consonant patterns the genitive leaves tied.
   the parts and the head's class and say the class comes from the head; the user
   usually does not need a new entry for a regular compound. The questions still
   work if they continue.
-- **Name.** The same flow. Save the surface as typed; match case-insensitively;
-  the checker's suggestion path restores case later.
+- **Name.** The same flow with `erisnimi`; save the surface as typed, match
+  case-insensitively, and capitalize the preview from the surface. The checker's
+  suggestion path restores case later. A numeral/ordinal uses the same nominal
+  cells with `numeraali`/`järjestysluku` as the reading.
 - **Indeclinable.** An explicit switch returns 99 and skips the questions. The
   sheet has no 99 (it is not a catalogue class); the UI hard-codes the
   explanation.

@@ -6,7 +6,8 @@
 //!   word_wizard mökki
 //!
 //! Batch:
-//!   word_wizard mökki --pos noun --form gen_sg=mökin --form par_sg=mökkiä
+//!   word_wizard mökki --pos substantiivi --form gen_sg=mökin --form par_sg=mökkiä
+//!   word_wizard Helsinki --pos erisnimi --form gen_sg=Helsingin
 //!   word_wizard mökki --answers answers.tsv --json
 //!   word_wizard mökki --answers answers.tsv --emit sanalista
 //!
@@ -155,6 +156,8 @@ fn usage() {
     eprintln!(
         "usage: word_wizard [WORD] [--pos POS] [--form CELL=FORM ...] [--answers FILE]\n\
          \x20                  [--json] [--emit sanalista|custom]\n\
+         \x20      POS: substantiivi | adjektiivi | numeraali | järjestysluku |\n\
+         \x20           pronomini | erisnimi | verbi\n\
          \x20      word_wizard --write-sheet PATH\n\
          \x20      word_wizard --check-sheet"
     );
@@ -402,12 +405,26 @@ fn print_examples(sheet: &Sheet, report: &Report) {
     }
 }
 
+fn capitalize_first(word: &str) -> String {
+    let mut chars = word.chars();
+    match chars.next() {
+        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+        None => String::new(),
+    }
+}
+
 fn print_result(report: &Report, cat: &Catalogues, emit: Option<&str>) {
     let Some(best) = report.ranked.first() else {
         println!("no candidate class");
         return;
     };
     println!("\nbest: {}", best.class);
+    let capitalize = report
+        .lemma
+        .chars()
+        .next()
+        .map(|first| first.is_uppercase())
+        .unwrap_or(false);
 
     let index = LexiconIndex::new(kotus::lemmas());
     let forms = inflect_in(
@@ -433,7 +450,17 @@ fn print_result(report: &Report, cat: &Catalogues, emit: Option<&str>) {
         words.sort_unstable();
         words.dedup();
         if !words.is_empty() {
-            println!("  {key:<8} {}", words.join("/"));
+            let shown: Vec<String> = words
+                .iter()
+                .map(|word| {
+                    if capitalize {
+                        capitalize_first(word)
+                    } else {
+                        (*word).to_string()
+                    }
+                })
+                .collect();
+            println!("  {key:<8} {}", shown.join("/"));
         }
     }
 

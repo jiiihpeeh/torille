@@ -50,6 +50,10 @@ two edits. The list is exportable and importable as the same `.txt`.
 The same text format is used by the demo page
 (`torille-wasm/demo/wizard.html`), which stores it in `localStorage`.
 
+The part-of-speech choices are `substantiivi`, `adjektiivi`, `numeraali`,
+`järjestysluku`, `pronomini`, `erisnimi` and `verbi`. A proper name keeps its
+initial capital in the preview and the saved list; it inflects as a noun.
+
 ## Grammar check
 
 Right-click a text field and choose **Tarkista kielioppi**, **Tarkista tyyli**

@@ -62,7 +62,7 @@ const VERB_KEYS = [
 ];
 
 function keysFor(pos: string): string[] {
-  return pos === 'verb' ? VERB_KEYS : CORE_KEYS;
+  return pos === 'verbi' ? VERB_KEYS : CORE_KEYS;
 }
 
 const CELL_LABELS: Record<string, string> = {
@@ -85,7 +85,7 @@ const CELL_LABELS: Record<string, string> = {
 
 const state = {
   word: '',
-  pos: 'noun',
+  pos: 'substantiivi',
   answers: new Map<string, string>(),
   report: null as Report | null,
   selected: null as string | null,
@@ -328,6 +328,15 @@ function showExamples(): void {
   byId('examples-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+function showForm(form: string): string {
+  const first = state.word.charAt(0);
+  if (first && first === first.toLocaleUpperCase('fi')
+      && first !== first.toLocaleLowerCase('fi')) {
+    return first + form.slice(1);
+  }
+  return form;
+}
+
 async function preview(cls: string): Promise<void> {
   try {
     const reply = await send<{ paradigm: Paradigm }>({
@@ -347,7 +356,8 @@ async function preview(cls: string): Promise<void> {
       const dt = document.createElement('dt');
       dt.textContent = CELL_LABELS[key] ?? key;
       const dd = document.createElement('dd');
-      dd.textContent = result.cells[key] ?? '—';
+      const form = result.cells[key];
+      dd.textContent = form ? showForm(form) : '—';
       grid.append(dt, dd);
     }
     const best = state.report?.candidates[0]?.class;
@@ -452,11 +462,7 @@ async function saveWord(): Promise<void> {
     message('Ei tallennettavaa luokkaa.', true);
     return;
   }
-  const pos = state.pos === 'adjective'
-    ? 'adjektiivi'
-    : state.pos === 'verb'
-      ? 'verbi'
-      : 'substantiivi';
+  const pos = state.pos;
   try {
     const reply = await send<{ result: TextResult }>({
       type: 'torille:wizard-user-words-add',
@@ -611,10 +617,18 @@ function restoreSession(): void {
     const word = localStorage.getItem(WORD_KEY);
     if (!word) return;
     state.word = word;
-    const savedPos = localStorage.getItem(POS_KEY);
-    state.pos = savedPos === 'adjective' || savedPos === 'verb'
-      ? savedPos
-      : 'noun';
+    const rawPos = localStorage.getItem(POS_KEY) ?? '';
+    const savedPos = rawPos === 'noun'
+      ? 'substantiivi'
+      : rawPos === 'adjective'
+        ? 'adjektiivi'
+        : rawPos === 'verb'
+          ? 'verbi'
+          : rawPos;
+    state.pos = [
+      'substantiivi', 'adjektiivi', 'numeraali', 'järjestysluku',
+      'pronomini', 'erisnimi', 'verbi',
+    ].includes(savedPos) ? savedPos : 'substantiivi';
     const text = localStorage.getItem(SESSION_KEY) ?? '';
     for (const raw of text.split('\n')) {
       const line = raw.endsWith('\r') ? raw.slice(0, -1) : raw;

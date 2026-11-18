@@ -76,7 +76,10 @@ pub struct UserWord {
     pub word: String,
     /// The canonical class expression, e.g. `5*A` or `9, 10`.
     pub class: String,
+    /// The reading the engine inflects with. A proper noun is a noun here.
     pub pos: PartOfSpeech,
+    /// The label the user chose (`substantiivi`, `erisnimi`, `numeraali`, ...).
+    pub pos_name: String,
 }
 
 /// `lowercased word -> entry`, the saved list.
@@ -352,6 +355,9 @@ pub fn pos_from_name(name: &str) -> Option<PartOfSpeech> {
         "ordinal" => PartOfSpeech::Ordinal,
         "verb" => PartOfSpeech::Verb,
         "adverb" => PartOfSpeech::Adverb,
+        // A proper noun is a noun for inflection; the label is kept in the
+        // saved word so the list can say what the user meant.
+        "erisnimi" | "proper noun" | "proper_noun" | "propernoun" => PartOfSpeech::Noun,
         _ => return None,
     })
 }
@@ -472,10 +478,11 @@ pub fn parse_user_words(text: &str) -> Result<UserWords, ParseError> {
                 format!("{class:?} is not a Kotus class expression"),
             ));
         }
-        let Some(pos) = pos_from_name(pos) else {
+        let pos_name = pos.trim().to_lowercase();
+        let Some(pos) = pos_from_name(&pos_name) else {
             return Err(ParseError::new(
                 line,
-                format!("{pos:?} is not a part of speech"),
+                format!("{pos_name:?} is not a part of speech"),
             ));
         };
         let canonical = inflections
@@ -489,6 +496,7 @@ pub fn parse_user_words(text: &str) -> Result<UserWords, ParseError> {
                 word: word.to_string(),
                 class: canonical,
                 pos,
+                pos_name,
             },
         );
     }
@@ -509,14 +517,7 @@ pub fn format_user_words(words: &UserWords) -> String {
     });
     let mut out = String::from("# torille-user-words v1\n");
     for entry in entries {
-        writeln!(
-            out,
-            "{}\t{}\t{}",
-            entry.word,
-            entry.class,
-            entry.pos.finnish()
-        )
-        .unwrap();
+        writeln!(out, "{}\t{}\t{}", entry.word, entry.class, entry.pos_name).unwrap();
     }
     out
 }
@@ -1330,7 +1331,7 @@ mod tests {
         assert!(words.is_err(), "an empty part of speech is not a word");
 
         let words = parse_user_words(
-            "# torille-user-words v1\nmökki\t5*A\tsubstantiivi\nHelsinki\t5\tsubstantiivi\n",
+            "# torille-user-words v1\nmökki\t5*A\tsubstantiivi\nHelsinki\t5\terisnimi\n",
         )
         .unwrap();
         assert_eq!(words.len(), 2);
@@ -1338,7 +1339,23 @@ mod tests {
         assert_eq!(word.word, "mökki");
         assert_eq!(word.class, "5*A");
         assert_eq!(word.pos, PartOfSpeech::Noun);
+        assert_eq!(word.pos_name, "substantiivi");
         assert_eq!(words["helsinki"].word, "Helsinki");
+        assert_eq!(words["helsinki"].pos, PartOfSpeech::Noun);
+        assert_eq!(words["helsinki"].pos_name, "erisnimi");
+        assert!(
+            format_user_words(&words).contains("Helsinki\t5\terisnimi"),
+            "the proper-noun label survives the round trip"
+        );
+    }
+
+    #[test]
+    fn the_part_of_speech_names_include_the_special_nominals() {
+        assert_eq!(pos_from_name("numeraali"), Some(PartOfSpeech::Numeral));
+        assert_eq!(pos_from_name("järjestysluku"), Some(PartOfSpeech::Ordinal));
+        assert_eq!(pos_from_name("pronomini"), Some(PartOfSpeech::Pronoun));
+        assert_eq!(pos_from_name("erisnimi"), Some(PartOfSpeech::Noun));
+        assert_eq!(pos_from_name("proper noun"), Some(PartOfSpeech::Noun));
     }
 
     #[test]
@@ -1616,6 +1633,17 @@ mod tests {
                 .all(|outcome| outcome.status == AnswerStatus::Hit)
         );
         assert!(!report.recorded.is_empty());
+    }
+
+    #[test]
+    fn an_ordinal_finds_its_class() {
+        let mut answers = Answers::new();
+        answers.insert("gen_sg".to_string(), "kahdeksannen".to_string());
+        answers.insert("par_sg".to_string(), "kahdeksatta".to_string());
+        answers.insert("ill_sg".to_string(), "kahdeksanteen".to_string());
+        let report = infer("kahdeksas", PartOfSpeech::Ordinal, &answers, catalogue()).unwrap();
+        assert_eq!(report.ranked[0].class.to_string(), "45");
+        assert!(report.recorded.iter().any(|class| class.class == 45));
     }
 
     #[test]

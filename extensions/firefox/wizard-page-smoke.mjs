@@ -178,7 +178,7 @@ try {
 
   // Verb flow: the same page must switch to a finite-form grid.
   await page.$eval('#word', (el) => { el.value = 'puhua'; });
-  await page.select('#pos', 'verb');
+  await page.select('#pos', 'verbi');
   await page.click('#start');
   await page.waitForSelector('#question-card:not([hidden])', { timeout: 20_000 });
 
@@ -211,6 +211,41 @@ try {
     text: localStorage.getItem('ext:torille-user-words'),
   }));
 
+  // Proper-noun flow: the nominal grid, the `erisnimi` label, and the
+  // surface capitalization in the preview.
+  await page.$eval('#word', (el) => { el.value = 'Pöräkki'; });
+  await page.select('#pos', 'erisnimi');
+  await page.click('#start');
+  await page.waitForSelector('#question-card:not([hidden])', { timeout: 20_000 });
+  const properAnswers = {
+    'genetiivi (yksikkö)': 'pöräkin',
+    'partitiivi (yksikkö)': 'pöräkkiä',
+    'illatiivi (yksikkö)': 'pöräkkiin',
+    'genetiivi (monikko)': 'pöräkkien',
+    'nominatiivi (monikko)': 'pöräkit',
+  };
+  for (let i = 0; i < 5; i++) {
+    const hidden = await page.$eval('#question-card', (el) => el.hidden);
+    if (hidden) break;
+    const label = await page.$eval('#question-label', (el) => el.textContent ?? '');
+    const answer = properAnswers[label];
+    if (!answer) throw new Error(`no proper-noun answer for ${label}`);
+    await page.$eval('#answer', (el) => { el.value = ''; });
+    await page.type('#answer', answer);
+    await page.click('#submit');
+    await sleep(300);
+  }
+  const properResult = await page.evaluate(() => ({
+    best: document.getElementById('best')?.textContent,
+    cells: Array.from(document.querySelectorAll('#paradigm dd')).map((el) => el.textContent),
+  }));
+  await page.click('#save');
+  await sleep(500);
+  const properSaved = await page.evaluate(() => ({
+    rows: Array.from(document.querySelectorAll('.saved-row')).map((el) => el.textContent),
+    text: localStorage.getItem('ext:torille-user-words'),
+  }));
+
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForFunction(
     () => document.getElementById('message')?.textContent === '',
@@ -229,11 +264,16 @@ try {
     verbResult.cells?.includes('puhun') &&
     verbSaved.rows?.some((row) => row.includes('puhua')) &&
     verbSaved.text?.includes('puhua\t52\tverbi') &&
+    properResult.best === '5*A' &&
+    properResult.cells?.includes('Pöräkin') &&
+    properSaved.rows?.some((row) => row.includes('Pöräkki')) &&
+    properSaved.text?.includes('Pöräkki\t5*A\terisnimi') &&
     afterReload.rows?.some((row) => row.includes('mökki')) &&
     afterReload.rows?.some((row) => row.includes('puhua')) &&
+    afterReload.rows?.some((row) => row.includes('Pöräkki')) &&
     errors.length === 0;
 
-  console.log(JSON.stringify({ result, saved, verbResult, verbSaved, afterReload, errors }, null, 2));
+  console.log(JSON.stringify({ result, saved, verbResult, verbSaved, properResult, properSaved, afterReload, errors }, null, 2));
   if (!ok) {
     console.error('wizard page smoke failed');
     process.exitCode = 1;

@@ -57,7 +57,7 @@ const VERB_KEYS = [
 ];
 
 function keysFor(pos: string): string[] {
-  return pos === 'verb' ? VERB_KEYS : CORE_KEYS;
+  return pos === 'verbi' ? VERB_KEYS : CORE_KEYS;
 }
 
 const CELL_LABELS: Record<string, string> = {
@@ -80,7 +80,7 @@ const CELL_LABELS: Record<string, string> = {
 
 const state = {
   word: '',
-  pos: 'noun',
+  pos: 'substantiivi',
   answers: new Map<string, string>(),
   report: null as Report | null,
   selected: null as string | null,
@@ -143,10 +143,18 @@ function restoreSession(): void {
     const word = localStorage.getItem(WORD_KEY);
     if (!word) return;
     state.word = word;
-    const savedPos = localStorage.getItem(POS_KEY);
-    state.pos = savedPos === 'adjective' || savedPos === 'verb'
-      ? savedPos
-      : 'noun';
+    const rawPos = localStorage.getItem(POS_KEY) ?? '';
+    const savedPos = rawPos === 'noun'
+      ? 'substantiivi'
+      : rawPos === 'adjective'
+        ? 'adjektiivi'
+        : rawPos === 'verb'
+          ? 'verbi'
+          : rawPos;
+    state.pos = [
+      'substantiivi', 'adjektiivi', 'numeraali', 'järjestysluku',
+      'pronomini', 'erisnimi', 'verbi',
+    ].includes(savedPos) ? savedPos : 'substantiivi';
     const text = localStorage.getItem(SESSION_KEY) ?? '';
     for (const raw of text.split('\n')) {
       const line = raw.endsWith('\r') ? raw.slice(0, -1) : raw;
@@ -320,6 +328,15 @@ function showExamples(): void {
   byId('examples-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+function showForm(form: string): string {
+  const first = state.word.charAt(0);
+  if (first && first === first.toLocaleUpperCase('fi')
+      && first !== first.toLocaleLowerCase('fi')) {
+    return first + form.slice(1);
+  }
+  return form;
+}
+
 function preview(cls: string): void {
   const result = bg.wizard_paradigm(state.word, cls, state.pos) as unknown as Paradigm;
   if (result.error) {
@@ -430,11 +447,7 @@ function saveWord(): void {
     message('Ei tallennettavaa luokkaa.', true);
     return;
   }
-  const pos = state.pos === 'adjective'
-    ? 'adjektiivi'
-    : state.pos === 'verb'
-      ? 'verbi'
-      : 'substantiivi';
+  const pos = state.pos;
   const result = bg.wizard_user_words_add(
     state.savedText, report.word, cls, pos,
   ) as unknown as TextResult;
