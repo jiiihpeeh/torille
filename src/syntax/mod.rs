@@ -22,6 +22,7 @@
 use std::cell::RefCell;
 use std::ops::Range;
 
+pub mod ast;
 pub mod features;
 mod predicates;
 mod roles;

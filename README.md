@@ -255,6 +255,7 @@ inventory is in [`tools/README.md`](tools/README.md).
 | `check_normal` | the per-keystroke gate the wasm demo uses |
 | `check_syntax` | grammar and punctuation diagnostics with corrections |
 | `check_style` | opt-in style suggestions (never an error) |
+| `syntax_tree` | print the typed syntax tree (`--json`, `--check`) |
 | `perf_grammar_style` | cold/warm morphology, rules, style and sentence-cache timings |
 | `derive` | productive derivations of a base word |
 | `hyphenate` | permitted Finnish line breaks, with `--json` offsets |

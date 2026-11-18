@@ -88,7 +88,8 @@ src/
   check.rs            combined grammar + style pass over one morphology result
   class_wizard.rs     find a Kotus class from example forms (sheet + inference)
   syntax/             on-demand clause/role analysis over the morphology engine
-                      (`features.rs` computes the word-order clause features)
+                      (`features.rs` computes the word-order clause features;
+                      `ast/` is the typed surface tree over the analysis)
   syntax_list.rs      list structure parser used by the syntax checker
   syntax_check/       grammar diagnostics + corrections over `syntax`
   hyphenation/        Finnish line-break hyphenation (patterns + policy)

@@ -1,8 +1,10 @@
 # PLAN_SYNTAX_AST — a typed surface tree over `syntax`
 
-Status: **proposal.** No code yet. The flat `syntax::SyntaxAnalysis` stays the
-authority; the tree is an additive view built on demand. This plan defines the
-node kinds, the construction pipeline, the invariants and the phase gates.
+Status: **Phase 0 landed.** The skeleton is in `src/syntax/ast/`: `Ast`,
+`Node`, `NodeKind`, the `seed`/`group` passes, the validator and the
+`syntax_tree` CLI. The flat `syntax::SyntaxAnalysis` stays the authority; the
+tree is an additive view built on demand. This plan defines the node kinds, the
+construction pipeline, the invariants and the phase gates.
 
 ## Decision summary
 
@@ -547,10 +549,10 @@ src/syntax/ast/
   mod.rs           Ast, NodeId, Node, NodeKind, ClauseKind, PhraseKind,
                    CoordKind, public build/validate
   seed.rs          Document/Sentence/Word skeleton
-  phrases.rs       phrase roots, head resolution, kind, contiguity
+  phrases.rs       phrase roots, head resolution, kind, contiguity (phase 1)
   clauses.rs       clause grouping, ClauseKind, host segments
-  attach.rs        lists, parentheticals, quotes
-  coordination.rs  the optional same-kind pass
+  attach.rs        lists, parentheticals, quotes (phase 3)
+  coordination.rs  the optional same-kind pass (phase 4)
   validate.rs      the invariants in §8
 ```
 
@@ -645,7 +647,7 @@ zero diagnostic diff.
 
 | phase | deliverable | gate |
 |---|---|---|
-| 0. Skeleton | types, `seed`, `group` (one Clause per flat clause, no host merge), `validate`, CLI dump | `Ast` builds for every text in `tests/fixtures/syntax_cases.json`; all invariants hold; `cargo test --release --workspace` green; no diagnostic change |
+| 0. Skeleton | types, `seed`, `group` (one Clause per flat clause, no host merge), `validate`, CLI dump | **landed**: `Ast` builds for every text in `tests/fixtures/syntax_cases.json`; all invariants hold; `cargo test --release --workspace` green; no diagnostic change |
 | 1. Phrases | phrase roots, kinds, contiguity, `head`/`governor` | fixture trees for NP/AP/NumP/PP/VP; every `Modifier`/`Auxiliary` flat edge appears as a tree edge; multi-word object and `kaksi miestä` covered |
 | 2. Clause grouping | clause kinds, predicate phrase, slot children, host merge | `Mies, joka tuli, söi` keeps three flat clauses but the tree has one host with two segments and the relative nested between them; `Talo on kaunis` has a separate AdjectivePhrase complement |
 | 3. Attach | lists, list items, parentheticals, quotes | list and nested-list fixtures; a clause-slot list replaces the slot phrase; unbalanced brackets leave the flat shape |
@@ -655,6 +657,13 @@ zero diagnostic diff.
 
 Phase 0 must name its first consumer. If nobody reads the tree, do not build
 it; the current workarounds are documented and the flat model is correct.
+
+**Phase 0 landing.** `src/syntax/ast/` now has `mod.rs`, `seed.rs`,
+`clauses.rs` and `validate.rs`. `syntax_tree` prints the skeleton, writes
+`--json` and runs `--check`; `tests/syntax_tree.rs` validates all 122 fixture
+sentences. Relative clauses are typed as `Clause(Relative)` but stay direct
+children of their sentence until phase 2's host merge, because the flat host
+range does not contain the relative yet.
 
 ## 11. Tests
 
