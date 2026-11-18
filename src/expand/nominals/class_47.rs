@@ -15,7 +15,13 @@ pub const CLASS: &str = "47";
 
 /// Inflect a class-47 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
-    let long = format!("{}ee", &lemma[..lemma.len() - 2]);
+    let Some(base) = lemma
+        .strip_suffix("ut")
+        .or_else(|| lemma.strip_suffix("yt"))
+    else {
+        return Vec::new();
+    };
+    let long = format!("{base}ee");
     let short = &long[..long.len() - 1];
     a_stem_inflect(lemma, possessives, &long, short, false, None)
 }

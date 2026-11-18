@@ -153,8 +153,10 @@ pub fn base_stem(lemma: &str) -> String {
 
 /// The long stem from a short stem: double the final vowel (hampa -> hampaa).
 pub fn long_stem(short: &str) -> String {
-    let last = short.chars().last().unwrap();
-    format!("{short}{last}")
+    match short.chars().last() {
+        Some(last) => format!("{short}{last}"),
+        None => String::new(),
+    }
 }
 
 /// Inflect a plain class-41 noun.
@@ -176,6 +178,11 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
                 .any(|reading| reading.number == Some(Number::Plural))
         });
         return forms;
+    }
+    // A singular class-41 word ends in `s` (ahnas, hammas); a word of
+    // another shape is not this class. The wizard tries every class.
+    if !lemma.ends_with('s') {
+        return Vec::new();
     }
     let short = base_stem(lemma);
     let long = long_stem(&short);
@@ -203,6 +210,10 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
 /// t-final lemma that shares this shape but must not take the plural-only
 /// branch above, so it calls this entry point directly.
 pub fn inflect_singular(lemma: &str, possessives: bool) -> Vec<Form> {
+    // Class 44's only word is `kevät`; the `t` is part of the shape.
+    if !lemma.ends_with('t') {
+        return Vec::new();
+    }
     let short = base_stem(lemma);
     let long = long_stem(&short);
     a_stem_inflect(lemma, possessives, &long, &short, false, None)

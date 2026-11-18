@@ -67,8 +67,7 @@ fn compound_ordinal(prefix: &str) -> Vec<Form> {
             let b = second.union();
             if b.case == Some(case) && b.number == Some(number) {
                 out.push(
-                    Form::new(format!("{}{}", first.word, second.word), a)
-                        .with(Confidence::Plain),
+                    Form::new(format!("{}{}", first.word, second.word), a).with(Confidence::Plain),
                 );
             }
         }
@@ -81,7 +80,12 @@ fn compound_ordinal(prefix: &str) -> Vec<Form> {
 /// The ordinal `kahdeksas -> kahdeksannen` gradation.
 pub fn ordinal(lemma: &str, possessives: bool) -> Vec<Form> {
     let mut b = Builder::new(lemma, possessives);
-    let stem = &lemma[..lemma.len() - 1]; // kahdeksa / tuha
+    let Some(stem) = lemma
+        .strip_suffix('s')
+        .or_else(|| lemma.strip_suffix('t'))
+    else {
+        return Vec::new();
+    };
     let ns = format!("{stem}ns"); // kahdeksans (plural)
     let nn = format!("{stem}nne"); // kahdeksanne (gen/locs)
     let nt = format!("{stem}nte"); // kahdeksante (ess/transl/illat)

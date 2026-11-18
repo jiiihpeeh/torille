@@ -20,7 +20,10 @@ pub const CLASS: &str = "43";
 /// Inflect a class-43 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     let mut b = Builder::new(lemma, possessives);
-    let estem = format!("{}e", &lemma[..lemma.len() - 1]); // airue
+    let Some(base) = lemma.strip_suffix('t') else {
+        return Vec::new();
+    };
+    let estem = format!("{base}e"); // airue
     let base = &estem[..estem.len() - 1]; // airu
     let (sg, pl) = (Number::Singular, Number::Plural);
 
@@ -45,8 +48,7 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
             // The plural nominative's possessives ride the e-stem
             // (`neitsyeni`, `neitsyensä`), not the bare consonant stem
             // (`*neitsyni`, `*neitsynsä`).
-            cell(Case::Nominative, pl, &estem, ["t", "t"], false)
-                .base_on(estem.clone(), ["", ""]),
+            cell(Case::Nominative, pl, &estem, ["t", "t"], false).base_on(estem.clone(), ["", ""]),
             cell(Case::Genitive, pl, base, ["iden", "iden"], false).on_ending(["ide", "ide"]),
             cell(Case::Genitive, pl, base, ["itten", "itten"], false).on_ending(["itte", "itte"]),
             cell(Case::Partitive, pl, base, ["ita", "itä"], true),
@@ -104,7 +106,10 @@ mod tests {
             assert!(w.contains(&good.to_string()), "neitsyt is missing {good}");
         }
         for bad in ["neitsyni", "neitsysi", "neitsynsä"] {
-            assert!(!w.contains(&bad.to_string()), "neitsyt must not offer {bad}");
+            assert!(
+                !w.contains(&bad.to_string()),
+                "neitsyt must not offer {bad}"
+            );
         }
     }
 }

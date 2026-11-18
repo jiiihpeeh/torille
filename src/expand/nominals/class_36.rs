@@ -24,13 +24,17 @@ use super::utility::{Builder, Decl, Ending, cell, nominal_tags, plain, rare};
 pub const CLASS: &str = "36";
 
 /// The superlative stems: strong, weak, weak-`i` from `lähin`.
-fn stems(lemma: &str) -> (String, String) {
+///
+/// A class 36 word ends in `n`; a word that does not is not this class at
+/// all. The wizard tries every class against every word, so this has to
+/// return `None` rather than slicing a byte off a multibyte ending.
+fn stems(lemma: &str) -> Option<(String, String)> {
+    let base = lemma.strip_suffix('n').filter(|base| !base.is_empty())?;
     let front = super::utility::front(lemma);
     let fv = if front { 'ä' } else { 'a' };
-    let base = &lemma[..lemma.len() - 1]; // drop the final n
     let strong = format!("{base}mp{fv}"); // lähimpä
     let weak = strong.replace("mp", "mm"); // lähimmä
-    (strong, weak)
+    Some((strong, weak))
 }
 
 /// The superlative engine. `part_on_strong` puts the partitive on the strong
@@ -43,7 +47,9 @@ pub fn superl_inflect(lemma: &str, possessives: bool, part_on_strong: bool) -> V
     // this class would override exactly the distinction the caller worked to
     // make, so the argument is threaded through to the builder.
     let mut b = Builder::new(lemma, possessives);
-    let (strong, weak) = stems(lemma);
+    let Some((strong, weak)) = stems(lemma) else {
+        return Vec::new();
+    };
     let c = strong[..strong.len() - strong.chars().last().unwrap().len_utf8()].to_string(); // lähimp
     // The weak-i stem: lähimmä -> lähimmi.
     let wi = format!(

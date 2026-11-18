@@ -14,7 +14,10 @@ pub const CLASS: &str = "42";
 
 /// Inflect a class-42 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
-    let estem = format!("{}he", &lemma[..lemma.len() - 1]);
+    let Some(base) = lemma.strip_suffix('s') else {
+        return Vec::new();
+    };
+    let estem = format!("{base}he");
     inflect_graded(lemma, possessives, &estem)
 }
 

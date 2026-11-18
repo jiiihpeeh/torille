@@ -124,8 +124,14 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     if lemma == "kiiru" || lemma == "ori" {
         return e_stem_inflect(lemma, possessives, lemma);
     }
-    let short = &lemma[..lemma.len() - 1]; // drop the final e -> aav
-    let short = format!("{short}e"); // aave
+    // An ordinary class-48 word ends in `e`; the short stem is the lemma
+    // itself (dropping and re-adding the final `e`). A word of any other
+    // shape is not this class, and the wizard tries every class, so do not
+    // slice a byte off a multibyte ending.
+    if !lemma.ends_with('e') {
+        return Vec::new();
+    }
+    let short = lemma.to_string(); // aave
     e_stem_inflect(lemma, possessives, &short)
 }
 
@@ -166,14 +172,7 @@ mod tests {
         }
         let ori = words("ori");
         for want in [
-            "ori",
-            "oriin",
-            "oritta",
-            "oriiseen",
-            "oriit",
-            "oriiden",
-            "oriita",
-            "oriitta",
+            "ori", "oriin", "oritta", "oriiseen", "oriit", "oriiden", "oriita", "oriitta",
         ] {
             assert!(ori.contains(&want.to_string()), "ori missing {want}");
         }

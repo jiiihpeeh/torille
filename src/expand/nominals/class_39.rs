@@ -108,7 +108,9 @@ fn use_pallas(lemma: &str, possessives: bool) -> Vec<Form> {
 /// class 40's `-uus` family).
 pub fn use_ude(lemma: &str, possessives: bool) -> Vec<Form> {
     let mut b = Builder::new(lemma, possessives);
-    let u = &lemma[..lemma.len() - 1]; // vakau
+    let Some(u) = lemma.strip_suffix('s') else {
+        return Vec::new();
+    };
     let ude = format!("{u}de");
     let ute = format!("{u}te");
     let uks = format!("{u}ks");

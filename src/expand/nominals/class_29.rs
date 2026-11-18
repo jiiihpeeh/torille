@@ -15,12 +15,18 @@ pub const CLASS: &str = "29";
 
 /// Inflect a class-29 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
+    // The class-29 word is `lapsi`; the partitive collapse is the trailing
+    // `ps` -> `s`. The wizard tries every class against every word, so a
+    // word without that shape is not this class.
+    let Some(base) = lemma.strip_suffix('i') else {
+        return Vec::new();
+    };
+    if !base.ends_with("ps") {
+        return Vec::new();
+    }
     let weak = e_stem(lemma); // lapse
-    let mut base = lemma.to_string();
-    base.pop(); // laps
     // Collapse the trailing `ps` to `s`: remove the `p` (keeping laps -> las).
-    let b = base.clone();
-    let ptp = format!("{}{}", &b[..b.len() - 2], &b[b.len() - 1..]);
+    let ptp = format!("{}s", &base[..base.len() - 2]);
     let st = Stems {
         strong: lemma.to_string(),
         weak: weak.clone(),

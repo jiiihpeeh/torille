@@ -16,12 +16,17 @@ pub const CLASS: &str = "30";
 
 /// Inflect a class-30 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
+    // The class-30 word ends in `-tsi`; the partitive collapse is `ts` -> `s`.
+    // A word of another shape is not this class (the wizard tries them all).
+    let Some(base) = lemma.strip_suffix('i') else {
+        return Vec::new();
+    };
+    if !base.ends_with("ts") {
+        return Vec::new();
+    }
     let weak = e_stem(lemma); // veitse
-    let mut base = lemma.to_string();
-    base.pop(); // veits
     // Collapse the trailing `ts` to `s`: drop the `t` (keeping veits -> veis).
-    let b = base.clone();
-    let ptp = format!("{}{}", &b[..b.len() - 2], &b[b.len() - 1..]);
+    let ptp = format!("{}s", &base[..base.len() - 2]);
     let st = Stems {
         strong: lemma.to_string(),
         weak: weak.clone(),
