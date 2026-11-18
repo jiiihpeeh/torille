@@ -24,6 +24,7 @@ illegal_evidence.py           omorfi_harness.py
 report_by_class.py            run_wordlist.py
 test_binding_agrees_with_binary.py
 test_illegal_evidence.py      walk_check.py
+wizard_eval.py
 ```
 
 Each of those files carries an SPDX header saying so. The other tools are
@@ -146,7 +147,7 @@ The remaining scripts fall into four groups:
   them, plus the combining forms of numerals/pronouns and classless compound
   heads.
 - **Audits and reports** — `audit_*`, `walk_check.py`, `fingerprint_nouns.py`,
-  `compound_recall.py`, `classify_lemma.py`, `report_by_class.py`,
+  `compound_recall.py`, `classify_lemma.py`, `wizard_eval.py`, `report_by_class.py`,
   `report_multiple_bases.py`, `show_illegals.py`.
 - **Diagnostics** — `csvtool.py`, `run_wordlist.py`, `make_*.py`,
   `omorfi_harness.py`, `check_hyphenation_against_voikko.py`.

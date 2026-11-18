@@ -35,6 +35,33 @@ declare module '*/torille_wasm_bg.js' {
   export const warm_caches: typeof Api.warm_caches;
   export const warm_form_set: typeof Api.warm_form_set;
 
+  /** Word wizard; the objects are the shapes `src/class_wizard.rs` builds. */
+  export function wizard_sheet(): string;
+  export function wizard_infer(
+    word: string,
+    pos: string,
+    answers_tsv: string,
+  ): Record<string, unknown>;
+  export function wizard_paradigm(
+    word: string,
+    className: string,
+    pos: string,
+  ): Record<string, unknown>;
+  export function wizard_user_forms(user_words_tsv: string): string[];
+  export function wizard_user_words(
+    user_words_tsv: string,
+  ): Record<string, unknown>;
+  export function wizard_user_words_add(
+    user_words_tsv: string,
+    word: string,
+    className: string,
+    pos: string,
+  ): Record<string, unknown>;
+  export function wizard_user_words_remove(
+    user_words_tsv: string,
+    word: string,
+  ): Record<string, unknown>;
+
   /** Attach a manually instantiated instance to the glue. */
   export function __wbg_set_wasm(exports: WebAssembly.Exports): void;
 }

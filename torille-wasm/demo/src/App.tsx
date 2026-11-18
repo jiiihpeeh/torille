@@ -171,6 +171,10 @@ export function App() {
         </button>
       </h1>
       <p class="extension-note">
+        Etsitkö sanan taivutusluokkaa?{' '}
+        <a href="wizard.html">Avaa sanaluokka-wizard</a>.
+      </p>
+      <p class="extension-note">
         Testing the browser extension? Open the{' '}
         <a href="extension-test.html">manual extension test page</a> — it has
         static, dynamic, contenteditable and iframe fields.

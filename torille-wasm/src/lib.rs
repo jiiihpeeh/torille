@@ -243,11 +243,8 @@ pub fn analyze_syntax_with_state(idx: u32, text: &str) -> js_sys::Object {
     if let Some(Some(state)) = slots.get_mut(idx as usize) {
         let morphology = torille::morphology::analyze_morphology(&tokens, &mut state.syntax_cache);
         let decisions = torille::disambiguation::disambiguate(&tokens, &morphology);
-        let analysis = torille::syntax::analyze_syntax_with_decisions(
-            &tokens,
-            &morphology,
-            &decisions,
-        );
+        let analysis =
+            torille::syntax::analyze_syntax_with_decisions(&tokens, &morphology, &decisions);
         return syntax_object(&tokens, &analysis);
     }
     drop(slots);
@@ -446,11 +443,7 @@ pub fn check_syntax(text: &str) -> js_sys::Object {
     let analysis = torille::syntax::analyze(&tokens);
     let diagnostics = torille::syntax_check::check_analysis(&tokens, &analysis);
     let obj = syntax_object(&tokens, &analysis);
-    set(
-        &obj,
-        "diagnostics",
-        diagnostics_array(&diagnostics).into(),
-    );
+    set(&obj, "diagnostics", diagnostics_array(&diagnostics).into());
     obj
 }
 
@@ -476,8 +469,7 @@ pub fn check_style(text: &str) -> js_sys::Object {
 pub fn check_style_with_state(idx: u32, text: &str) -> js_sys::Object {
     let mut slots = states().lock().expect("states mutex poisoned");
     if let Some(Some(state)) = slots.get_mut(idx as usize) {
-        let analysis =
-            torille::style_check::check_with_cache(text, &mut state.syntax_cache);
+        let analysis = torille::style_check::check_with_cache(text, &mut state.syntax_cache);
         return style_object(&analysis.diagnostics);
     }
     drop(slots);
@@ -504,18 +496,11 @@ pub fn check_syntax_with_state(idx: u32, text: &str) -> js_sys::Object {
     if let Some(Some(state)) = slots.get_mut(idx as usize) {
         let morphology = torille::morphology::analyze_morphology(&tokens, &mut state.syntax_cache);
         let decisions = torille::disambiguation::disambiguate(&tokens, &morphology);
-        let analysis = torille::syntax::analyze_syntax_with_decisions(
-            &tokens,
-            &morphology,
-            &decisions,
-        );
+        let analysis =
+            torille::syntax::analyze_syntax_with_decisions(&tokens, &morphology, &decisions);
         let diagnostics = torille::syntax_check::check_analysis(&tokens, &analysis);
         let obj = syntax_object(&tokens, &analysis);
-        set(
-            &obj,
-            "diagnostics",
-            diagnostics_array(&diagnostics).into(),
-        );
+        set(&obj, "diagnostics", diagnostics_array(&diagnostics).into());
         return obj;
     }
     drop(slots);
@@ -554,9 +539,7 @@ pub fn morphology_chunk(idx: u32, text: &str) -> js_sys::Uint8Array {
     let mut slots = states().lock().expect("states mutex poisoned");
     if let Some(Some(state)) = slots.get_mut(idx as usize) {
         let rows = torille::morphology::resolve_surfaces(&tokens, &mut state.syntax_cache);
-        return js_sys::Uint8Array::from(
-            torille::morphology::codec::encode_rows(&rows).as_slice(),
-        );
+        return js_sys::Uint8Array::from(torille::morphology::codec::encode_rows(&rows).as_slice());
     }
     drop(slots);
     let mut cache = torille::morphology::MorphologyCache::new();
@@ -703,9 +686,7 @@ pub fn check_grammar_style_with_state(
     obj
 }
 
-fn diagnostics_array(
-    diagnostics: &[torille::syntax_check::SyntaxDiagnostic],
-) -> js_sys::Array {
+fn diagnostics_array(diagnostics: &[torille::syntax_check::SyntaxDiagnostic]) -> js_sys::Array {
     use js_sys::Array;
 
     let array = Array::new();
@@ -730,9 +711,7 @@ fn diagnostics_array(
     array
 }
 
-fn style_diagnostics_array(
-    diagnostics: &[torille::style_check::StyleDiagnostic],
-) -> js_sys::Array {
+fn style_diagnostics_array(diagnostics: &[torille::style_check::StyleDiagnostic]) -> js_sys::Array {
     use js_sys::Array;
 
     let array = Array::new();
@@ -857,7 +836,11 @@ fn set_option<T: Into<JsValue>>(obj: &js_sys::Object, key: &str, value: Option<T
 /// `questionType` and `objectCase` are null when the clause has no question or
 /// no object. See `docs/word_order.md` for the vocabulary.
 fn item_features(obj: &js_sys::Object, features: &torille::syntax::ClauseFeatures) {
-    set(obj, "clauseType", JsValue::from(features.clause_type.name()));
+    set(
+        obj,
+        "clauseType",
+        JsValue::from(features.clause_type.name()),
+    );
     set(
         obj,
         "construction",
@@ -918,6 +901,263 @@ pub fn check_report(word: &str) -> js_sys::Object {
     }
     js_sys::Reflect::set(&obj, &"lemmas".into(), &lemmas).unwrap();
     obj
+}
+
+// ---------------------------------------------------------------------------
+// Word wizard
+//
+// The browser's side of `torille::class_wizard`. The sheet and the answer text
+// stay text at the boundary; the maps are built in Rust and handed out as JS
+// objects, so there is one parser.
+// ---------------------------------------------------------------------------
+
+/// The committed class sheet, as the text format `src/class_wizard.rs` parses.
+#[wasm_bindgen]
+pub fn wizard_sheet() -> String {
+    torille::class_wizard::SHEET.to_string()
+}
+
+fn wizard_set(obj: &js_sys::Object, key: &str, value: impl Into<JsValue>) {
+    js_sys::Reflect::set(obj, &JsValue::from_str(key), &value.into()).unwrap();
+}
+
+fn wizard_error(message: impl AsRef<str>) -> JsValue {
+    let obj = js_sys::Object::new();
+    wizard_set(&obj, "error", message.as_ref());
+    obj.into()
+}
+
+/// Infers the class from `answers_tsv` (`cell<TAB>form` lines).
+///
+/// Returns `{ error }` rather than throwing, so the wizard page can show the
+/// message in place. A successful report has the fields named in
+/// `class_wizard::Report` plus `total_candidates`.
+#[wasm_bindgen]
+pub fn wizard_infer(word: &str, pos: &str, answers_tsv: &str) -> JsValue {
+    use torille::class_wizard::{AnswerStatus, infer, parse_answers, pos_from_name};
+
+    let Some(pos) = pos_from_name(pos) else {
+        return wizard_error(format!("{pos:?} is not a part of speech"));
+    };
+    let answers = match parse_answers(answers_tsv) {
+        Ok(answers) => answers,
+        Err(error) => return wizard_error(error.to_string()),
+    };
+    let report = match infer(word, pos, &answers, torille::spec::Catalogues::embedded()) {
+        Ok(report) => report,
+        Err(error) => return wizard_error(error.to_string()),
+    };
+
+    let obj = js_sys::Object::new();
+    wizard_set(&obj, "word", report.lemma.as_str());
+    wizard_set(&obj, "pos", report.pos.name());
+    wizard_set(&obj, "tie", report.tie);
+
+    let recorded = js_sys::Array::new();
+    for inflection in &report.recorded {
+        recorded.push(&JsValue::from(inflection.to_string()));
+    }
+    wizard_set(&obj, "recorded", recorded);
+
+    match report.question_key() {
+        Some(key) => wizard_set(&obj, "question", key),
+        None => wizard_set(&obj, "question", JsValue::NULL),
+    }
+
+    let candidates = js_sys::Array::new();
+    for candidate in report.ranked.iter().take(25) {
+        let item = js_sys::Object::new();
+        wizard_set(&item, "class", candidate.class.to_string());
+        wizard_set(&item, "hits", candidate.hits as u32);
+        wizard_set(&item, "misses", candidate.misses as u32);
+        wizard_set(&item, "unknown", candidate.unknown as u32);
+        wizard_set(&item, "recorded", candidate.recorded);
+        wizard_set(&item, "tail_prior", candidate.tail_prior as u32);
+        wizard_set(&item, "prior", candidate.prior as u32);
+        candidates.push(&item);
+    }
+    wizard_set(&obj, "candidates", candidates);
+    wizard_set(&obj, "total_candidates", report.ranked.len() as u32);
+
+    let outcomes = js_sys::Array::new();
+    for outcome in &report.outcomes {
+        let item = js_sys::Object::new();
+        wizard_set(&item, "key", outcome.key.as_str());
+        wizard_set(&item, "form", outcome.form.as_str());
+        let status = match outcome.status {
+            AnswerStatus::Hit => "hit",
+            AnswerStatus::Miss => "miss",
+            AnswerStatus::Unknown => "unknown",
+            AnswerStatus::Skipped => "skipped",
+        };
+        wizard_set(&item, "status", status);
+        outcomes.push(&item);
+    }
+    wizard_set(&obj, "outcomes", outcomes);
+    obj.into()
+}
+
+/// The eight core cells of `word` in `class`, as `{ class, word, cells }`.
+///
+/// `cells` is an object keyed by `nom_sg`, `gen_sg`, ...; a cell the engine
+/// does not emit is `null`.
+#[wasm_bindgen]
+pub fn wizard_paradigm(word: &str, class: &str, pos: &str) -> JsValue {
+    use torille::class_wizard::{CORE_KEYS, Cell, VERB_KEYS, pos_from_name};
+    use torille::expand::{LexiconIndex, inflect_in};
+
+    let Some(inflection) = torille::kotus::parse_inflections(class).into_iter().next() else {
+        return wizard_error(format!("{class:?} is not a Kotus class expression"));
+    };
+    let pos = pos_from_name(pos).unwrap_or(torille::tags::PartOfSpeech::Noun);
+    let verb = matches!(
+        pos,
+        torille::tags::PartOfSpeech::Verb | torille::tags::PartOfSpeech::NegativeVerb
+    );
+    let keys: &[&str] = if verb { &VERB_KEYS } else { &CORE_KEYS };
+    let lemma = word.trim().to_lowercase();
+    let lexicon = torille::kotus::lemmas();
+    let index = LexiconIndex::new(lexicon);
+    let forms = inflect_in(
+        &lemma,
+        inflection,
+        torille::spec::Catalogues::embedded(),
+        Some(&index),
+        pos,
+        false,
+    );
+
+    let cells = js_sys::Object::new();
+    for key in keys {
+        let Some(cell) = Cell::parse(key) else {
+            continue;
+        };
+        let form = forms
+            .iter()
+            .filter(|form| form.readings.iter().any(|tags| cell.claims(tags)))
+            .min_by_key(|form| (!form.plain(), form.word.as_str()));
+        match form {
+            Some(form) => wizard_set(&cells, key, form.word.as_str()),
+            None => wizard_set(&cells, key, JsValue::NULL),
+        }
+    }
+
+    let obj = js_sys::Object::new();
+    wizard_set(&obj, "word", word);
+    wizard_set(&obj, "class", inflection.to_string());
+    wizard_set(&obj, "cells", cells);
+    obj.into()
+}
+
+/// The saved word list as `{ words: [{word, class, pos}], error }`.
+///
+/// One parser: the text is parsed by `class_wizard::parse_user_words`, not by
+/// a second JS copy.
+#[wasm_bindgen]
+pub fn wizard_user_words(user_words_tsv: &str) -> JsValue {
+    use torille::class_wizard::parse_user_words;
+
+    let obj = js_sys::Object::new();
+    match parse_user_words(user_words_tsv) {
+        Ok(words) => {
+            let array = js_sys::Array::new();
+            for entry in words.values() {
+                let item = js_sys::Object::new();
+                wizard_set(&item, "word", entry.word.as_str());
+                wizard_set(&item, "class", entry.class.as_str());
+                wizard_set(&item, "pos", entry.pos.finnish());
+                array.push(&item);
+            }
+            wizard_set(&obj, "words", array);
+            wizard_set(&obj, "error", JsValue::NULL);
+        }
+        Err(error) => {
+            wizard_set(&obj, "words", js_sys::Array::new());
+            wizard_set(&obj, "error", error.to_string());
+        }
+    }
+    obj.into()
+}
+
+/// Adds or replaces one saved word and returns `{ text, error }`.
+///
+/// On error the original text is returned, so a caller that writes the result
+/// back cannot destroy the store.
+#[wasm_bindgen]
+pub fn wizard_user_words_add(user_words_tsv: &str, word: &str, class: &str, pos: &str) -> JsValue {
+    use torille::class_wizard::add_user_word;
+
+    let obj = js_sys::Object::new();
+    match add_user_word(user_words_tsv, word, class, pos) {
+        Ok(text) => {
+            wizard_set(&obj, "text", text);
+            wizard_set(&obj, "error", JsValue::NULL);
+        }
+        Err(error) => {
+            wizard_set(&obj, "text", user_words_tsv);
+            wizard_set(&obj, "error", error.to_string());
+        }
+    }
+    obj.into()
+}
+
+/// Removes one saved word (case-insensitively) and returns `{ text, error }`.
+#[wasm_bindgen]
+pub fn wizard_user_words_remove(user_words_tsv: &str, word: &str) -> JsValue {
+    use torille::class_wizard::remove_user_word;
+
+    let obj = js_sys::Object::new();
+    match remove_user_word(user_words_tsv, word) {
+        Ok(text) => {
+            wizard_set(&obj, "text", text);
+            wizard_set(&obj, "error", JsValue::NULL);
+        }
+        Err(error) => {
+            wizard_set(&obj, "text", user_words_tsv);
+            wizard_set(&obj, "error", error.to_string());
+        }
+    }
+    obj.into()
+}
+
+/// Every lower-cased surface the saved word list generates, for the worker's
+/// custom-word set. A malformed blob yields an empty array; the options page
+/// validates before saving, so this is the safety net, not the parser.
+#[wasm_bindgen]
+pub fn wizard_user_forms(user_words_tsv: &str) -> JsValue {
+    use std::collections::BTreeSet;
+    use torille::class_wizard::parse_user_words;
+    use torille::expand::{LexiconIndex, inflect_in};
+
+    let words = match parse_user_words(user_words_tsv) {
+        Ok(words) => words,
+        Err(_) => return js_sys::Array::new().into(),
+    };
+    let lexicon = torille::kotus::lemmas();
+    let index = LexiconIndex::new(lexicon);
+    let mut forms: BTreeSet<String> = BTreeSet::new();
+    for entry in words.values() {
+        let lemma = entry.word.trim().to_lowercase();
+        forms.insert(lemma.clone());
+        for inflection in torille::kotus::parse_inflections(&entry.class) {
+            let generated = inflect_in(
+                &lemma,
+                inflection,
+                torille::spec::Catalogues::embedded(),
+                Some(&index),
+                entry.pos,
+                false,
+            );
+            for form in generated {
+                forms.insert(form.word.to_lowercase());
+            }
+        }
+    }
+    let array = js_sys::Array::new();
+    for form in forms {
+        array.push(&JsValue::from(form));
+    }
+    array.into()
 }
 
 /// Module init helper. Modern demos call `bg.default(bytes)`

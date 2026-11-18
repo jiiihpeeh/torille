@@ -159,6 +159,7 @@ const buildOptions = {
   entryPoints: [
     pathResolveAbs(__dirname, 'src/main.tsx'),
     pathResolveAbs(__dirname, 'src/extension-test.tsx'),
+    pathResolveAbs(__dirname, 'src/wizard.ts'),
     pathResolveAbs(__dirname, 'src/spell-worker.ts'),
     pathResolveAbs(__dirname, 'src/suggestion-worker.ts'),
     pathResolveAbs(__dirname, 'src/morphology-worker.ts'),

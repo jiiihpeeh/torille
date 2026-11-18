@@ -29,6 +29,18 @@ engine's MIT/Apache-2.0 license.
 Regenerate with the engine binding, then `cargo build -p torille`. Do not
 hand-edit; `tools/build/compare_engine_outputs.py --strict` is the check.
 
+## Generated wizard sheet (committed)
+
+| file | producer | used by |
+|---|---|---|
+| `class_examples.tsv` | `word_wizard --write-sheet` | the wizard's exemplar browser and `src/class_wizard.rs`'s `SHEET` |
+
+The sheet is the engine's rendering of the catalogue model for each nominal
+and verb class; it is not a second paradigm source. Regenerate it after a
+class-engine change; the `lemmas` count is informational and can be refreshed at
+the same time. `word_wizard --check-sheet` and
+`class_wizard::tests::the_sheet_is_current` are the gates.
+
 ## Frozen reference data
 
 These encode lexical facts the engine does not derive. Their generators are

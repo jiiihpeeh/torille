@@ -11,6 +11,13 @@ name = "inflect"
 path = "src/bin/inflect.rs"
 
 [[bin]]
+# Find a Kotus class from a few example forms. The class sheet is generated
+# from the catalogue and checked against the engine; the inference asks the
+# engine what each candidate class would generate.
+name = "word_wizard"
+path = "src/bin/word_wizard.rs"
+
+[[bin]]
 # Show permitted Finnish line breaks. Default output inserts hyphens;
 # `--json` exposes byte/character offsets, source and penalty for the
 # hyphenation corpus checks.

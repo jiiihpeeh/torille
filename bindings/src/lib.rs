@@ -403,6 +403,66 @@ impl Engine {
         Ok(list.unbind())
     }
 
+    /// Ranked class candidates from sparse example forms.
+    ///
+    /// `answers` is `[(cell, form), ...]`; an empty form is a skipped
+    /// question. `use_recorded=False` hides the sanalista's own class from the
+    /// tie-break, which the evaluation needs because it samples known words.
+    /// Returns `(candidates, next_question, tie, recorded)`, where each
+    /// candidate is `(class, hits, misses, unknown, recorded, tail_prior,
+    /// prior)`. Only the top ten are returned.
+    #[allow(clippy::type_complexity)]
+    #[pyo3(signature = (word, pos="noun", answers=None, use_recorded=true))]
+    fn class_candidates(
+        &self,
+        py: Python<'_>,
+        word: &str,
+        pos: &str,
+        answers: Option<Vec<(String, String)>>,
+        use_recorded: bool,
+    ) -> PyResult<(
+        Vec<(String, u32, u32, u32, bool, u32, u32)>,
+        Option<String>,
+        bool,
+        Vec<String>,
+    )> {
+        let Some(pos) = torille::class_wizard::pos_from_name(pos) else {
+            return Err(PyValueError::new_err(format!(
+                "{pos:?} is not a part of speech"
+            )));
+        };
+        let answers: std::collections::HashMap<String, String> =
+            answers.unwrap_or_default().into_iter().collect();
+        let cat = &self.data.catalogue;
+        let report = py
+            .allow_threads(|| {
+                torille::class_wizard::infer_with(word, pos, &answers, cat, use_recorded)
+            })
+            .map_err(|error| PyValueError::new_err(error.to_string()))?;
+        let ranked = report
+            .ranked
+            .iter()
+            .take(10)
+            .map(|candidate| {
+                (
+                    candidate.class.to_string(),
+                    candidate.hits as u32,
+                    candidate.misses as u32,
+                    candidate.unknown as u32,
+                    candidate.recorded,
+                    candidate.tail_prior as u32,
+                    candidate.prior as u32,
+                )
+            })
+            .collect();
+        Ok((
+            ranked,
+            report.question_key(),
+            report.tie,
+            report.recorded.iter().map(ToString::to_string).collect(),
+        ))
+    }
+
     /// The lemma's class expressions and part of speech, as the sanalista has
     /// them. Empty when the lemma is not in the sanalista.
     #[pyo3(signature = (lemma))]

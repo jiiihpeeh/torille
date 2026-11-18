@@ -109,7 +109,25 @@ type SpellCallPayload =
       style: boolean;
       payloads?: Uint8Array[];
     }
-  | { type: 'unique-surfaces'; text: string };
+  | { type: 'unique-surfaces'; text: string }
+  | { type: 'set-user-words'; text: string }
+  | { type: 'wizard-sheet' }
+  | { type: 'wizard-infer'; word: string; pos: string; answers: string }
+  | {
+      type: 'wizard-paradigm';
+      word: string;
+      class: string;
+      pos: string;
+    }
+  | { type: 'wizard-user-words'; text: string }
+  | {
+      type: 'wizard-user-words-add';
+      text: string;
+      word: string;
+      class: string;
+      pos: string;
+    }
+  | { type: 'wizard-user-words-remove'; text: string; word: string };
 
 type SpellResponse =
   | { id: number; type: 'check'; ok: boolean }
@@ -134,6 +152,13 @@ type SpellResponse =
       style: R_SyntaxDiagnostic[];
     }
   | { id: number; type: 'unique-surfaces'; surfaces: string[] }
+  | { id: number; type: 'wizard-sheet'; sheet: string }
+  | { id: number; type: 'wizard-infer'; report: unknown }
+  | { id: number; type: 'wizard-paradigm'; paradigm: unknown }
+  | { id: number; type: 'wizard-user-words'; result: unknown }
+  | { id: number; type: 'wizard-user-words-add'; result: unknown }
+  | { id: number; type: 'wizard-user-words-remove'; result: unknown }
+  | { id: number; type: 'set-user-words' }
   // Fire-and-forget ops (destroy/clear/update-state, debug) resolve
   // with this in the direct host, where there is no message id to
   // mirror. Callers ignore the value.
@@ -398,6 +423,49 @@ function spellCall(payload: SpellCallPayload): Promise<SpellResponse> {
     spellHandlers.set(id, { resolve, reject, timer });
     spellWorker!.postMessage({ id, ...payload });
   });
+}
+
+// ─── saved words (the user's personal list) ──────────────────────────
+//
+// The options/wizard page owns the text in `browser.storage.local`; the
+// background pushes it to the wasm host, which turns it into a set of
+// accepted surfaces. The host is created lazily, so the push happens on
+// the first check (or on a storage change when a host is already alive).
+
+const USER_WORDS_KEY = 'torille-user-words';
+let userWordsPushed = false;
+
+async function readUserWords(): Promise<string> {
+  const raw = await api.storage.local.get(USER_WORDS_KEY);
+  const text = raw[USER_WORDS_KEY];
+  return typeof text === 'string' ? text : '';
+}
+
+async function ensureUserWords(): Promise<void> {
+  if (userWordsPushed) return;
+  await ensureSpellWorkerForRequest();
+  const text = await readUserWords();
+  await spellCall({ type: 'set-user-words', text });
+  userWordsPushed = true;
+}
+
+function userWordsChanged(): void {
+  userWordsPushed = false;
+  if (spellWorker !== null || directCore !== null) {
+    void ensureUserWords().catch((e: unknown) =>
+      dbg('background', 'user-words sync failed', String(e)));
+  }
+}
+
+api.storage?.onChanged?.addListener((changes, area) => {
+  if (area === 'local' && changes[USER_WORDS_KEY] !== undefined) {
+    userWordsChanged();
+  }
+});
+
+async function wizardCall(payload: SpellCallPayload): Promise<SpellResponse> {
+  await ensureSpellWorkerForRequest();
+  return spellCall(payload);
 }
 
 // ─── grammar/style chunking ──────────────────────────────────────────
@@ -932,7 +1000,124 @@ api.runtime.onMessage.addListener((message: unknown, sender: { tab?: { id?: numb
     | R_CancelCheck
     | R_ContextMenuFired
     | R_SiteContextMenuFired
+    | R_WizardSheet
+    | R_WizardInfer
+    | R_WizardParadigm
+    | R_WizardUserWords
+    | R_WizardUserWordsAdd
+    | R_WizardUserWordsRemove
     | R_Debug;
+
+  // ─── word wizard ──────────────────────────────────────────────
+  // The options page has no wasm. These routes forward to the spell
+  // worker, which owns the class sheet, the inference and the saved
+  // word text parser. The response object is passed through untouched.
+  if (m?.type === 'torille:wizard-sheet') {
+    return (async (): Promise<{ sheet?: string; error?: string }> => {
+      try {
+        const r = await wizardCall({ type: 'wizard-sheet' });
+        return r.type === 'wizard-sheet'
+          ? { sheet: r.sheet }
+          : { error: 'worker returned unexpected response' };
+      } catch (e) {
+        dbg('background', 'wizard-sheet error', String(e));
+        return { error: String(e) };
+      }
+    })();
+  }
+
+  if (m?.type === 'torille:wizard-infer') {
+    return (async (): Promise<{ report?: unknown; error?: string }> => {
+      try {
+        const r = await wizardCall({
+          type: 'wizard-infer',
+          word: m.word,
+          pos: m.pos,
+          answers: m.answers,
+        });
+        return r.type === 'wizard-infer'
+          ? { report: r.report }
+          : { error: 'worker returned unexpected response' };
+      } catch (e) {
+        dbg('background', 'wizard-infer error', String(e));
+        return { error: String(e) };
+      }
+    })();
+  }
+
+  if (m?.type === 'torille:wizard-paradigm') {
+    return (async (): Promise<{ paradigm?: unknown; error?: string }> => {
+      try {
+        const r = await wizardCall({
+          type: 'wizard-paradigm',
+          word: m.word,
+          class: m.class,
+          pos: m.pos,
+        });
+        return r.type === 'wizard-paradigm'
+          ? { paradigm: r.paradigm }
+          : { error: 'worker returned unexpected response' };
+      } catch (e) {
+        dbg('background', 'wizard-paradigm error', String(e));
+        return { error: String(e) };
+      }
+    })();
+  }
+
+  if (m?.type === 'torille:wizard-user-words') {
+    return (async (): Promise<{ result?: unknown; error?: string }> => {
+      try {
+        const r = await wizardCall({
+          type: 'wizard-user-words',
+          text: m.text,
+        });
+        return r.type === 'wizard-user-words'
+          ? { result: r.result }
+          : { error: 'worker returned unexpected response' };
+      } catch (e) {
+        dbg('background', 'wizard-user-words error', String(e));
+        return { error: String(e) };
+      }
+    })();
+  }
+
+  if (m?.type === 'torille:wizard-user-words-add') {
+    return (async (): Promise<{ result?: unknown; error?: string }> => {
+      try {
+        const r = await wizardCall({
+          type: 'wizard-user-words-add',
+          text: m.text,
+          word: m.word,
+          class: m.class,
+          pos: m.pos,
+        });
+        return r.type === 'wizard-user-words-add'
+          ? { result: r.result }
+          : { error: 'worker returned unexpected response' };
+      } catch (e) {
+        dbg('background', 'wizard-user-words-add error', String(e));
+        return { error: String(e) };
+      }
+    })();
+  }
+
+  if (m?.type === 'torille:wizard-user-words-remove') {
+    return (async (): Promise<{ result?: unknown; error?: string }> => {
+      try {
+        const r = await wizardCall({
+          type: 'wizard-user-words-remove',
+          text: m.text,
+          word: m.word,
+        });
+        return r.type === 'wizard-user-words-remove'
+          ? { result: r.result }
+          : { error: 'worker returned unexpected response' };
+      } catch (e) {
+        dbg('background', 'wizard-user-words-remove error', String(e));
+        return { error: String(e) };
+      }
+    })();
+  }
 
   // Wasm spell-check: the content script's worker client sends a
   // `{type: 'torille:check' | 'torille:suggest'}` message; we route
@@ -945,6 +1130,7 @@ api.runtime.onMessage.addListener((message: unknown, sender: { tab?: { id?: numb
     return (async (): Promise<{ ok: boolean | null } | { suggestions: string[] }> => {
       try {
         await ensureSpellWorkerForRequest();
+        await ensureUserWords();
         if (m.type === 'torille:check') {
           const r = await spellCall({ type: 'check', word: m.word });
           return { ok: r.type === 'check' ? r.ok : null };
@@ -962,6 +1148,7 @@ api.runtime.onMessage.addListener((message: unknown, sender: { tab?: { id?: numb
     return (async (): Promise<R_CheckFastResponse> => {
       try {
         await ensureSpellWorkerForRequest();
+        await ensureUserWords();
         const r = await spellCall({
           type: 'check-fast', idx: m.idx, word: m.word,
         });
@@ -975,6 +1162,7 @@ api.runtime.onMessage.addListener((message: unknown, sender: { tab?: { id?: numb
 
   if (m?.type === 'torille:check-batch') {
     return (async (): Promise<R_CheckBatchResponse> => {
+      await ensureUserWords();
       const ok = await spellBatchCheck(m.inputId, m.items);
       return { inputId: m.inputId, gen: m.gen, ok };
     })();
@@ -1052,6 +1240,7 @@ api.runtime.onMessage.addListener((message: unknown, sender: { tab?: { id?: numb
     return (async (): Promise<R_AnalyzeTextResponse> => {
       try {
         await ensureSpellWorkerForRequest();
+        await ensureUserWords();
         const r = await spellCall({
           type: 'analyze-text', idx: m.idx, text: m.text, max: m.max,
         });

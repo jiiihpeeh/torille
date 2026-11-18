@@ -49,6 +49,9 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
   class-50 agent-tail regression, twin paradigms and rare-alternate evidence.
   Wiktionary's Finnish entry is the final authority; the plan records the API
   recipe and the validation gates.
+- `PLAN_WORD_WIZARD.md` — proposal for the user-phase word wizard: find a
+  word's Kotus class from example forms. Text-first TSV class sheets and
+  answer maps, inference through the engine, browser storage for saved words.
 
 ## Repository map
 
@@ -80,6 +83,7 @@ src/
   sentence.rs         sentence spans and token sentence/paragraph context
   morphology/         cached readings: case, number, POS, clitic, possessive
   check.rs            combined grammar + style pass over one morphology result
+  class_wizard.rs     find a Kotus class from example forms (sheet + inference)
   syntax/             on-demand clause/role analysis over the morphology engine
                       (`features.rs` computes the word-order clause features)
   syntax_list.rs      list structure parser used by the syntax checker
@@ -368,6 +372,9 @@ RoleConfidence}`; `syntax_list::{List, ListItem, ListKind, ListItemKind}`;
 `Suggestion` / `SuggestionSource` under `suggest`; `syntax_check::{check,
 check_with_cache, check_analysis, SentenceCache, SentenceCacheStats,
 SyntaxCheck, SyntaxDiagnostic, DiagnosticKind, Severity, Correction}`;
+`class_wizard::{infer, infer_with, parse_sheet, parse_answers, parse_user_words,
+format_user_words, add_user_word, remove_user_word, render_sheet, check_sheet,
+Report, Candidate, Cell, AnswerStatus, ParseError, WizardError}`;
 `style_check::{check, check_with_cache,
 check_tokens_with_morphology, StyleAnalysis, StyleDiagnostic, StyleKind}`;
 `check_all`, `check_all_with_cache`, `CheckAll`.
@@ -545,6 +552,7 @@ is gitignored and generated.
 | suggestion ranking | `src/suggest/candidates.rs` |
 | edit distance / keyboard tie-break | `src/suggest/levenshtein.rs` |
 | "which lemma is this a form of" | `src/expand/find_bases.rs`, `src/expand/lexicon_index.rs` |
+| the word/class wizard | `src/class_wizard.rs`, `data/class_examples.tsv`, `tools/src/bin/word_wizard.rs` |
 | the reverse index / class prior | `src/expand/build.rs` |
 | compile-time blob writers | `build.rs`, `build/csv_builders/`, `build/map_builders/`; blobs live in `maps/` |
 | fetch/publish the `maps` branch | `tools/maps-sync/` (`cargo run -p torille-maps -- status\|fetch\|publish`) |

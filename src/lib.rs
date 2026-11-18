@@ -7,6 +7,7 @@
 #![forbid(unsafe_code)]
 
 pub(crate) mod case;
+pub mod class_wizard;
 pub mod compound;
 pub mod derivation;
 pub mod diagnostic;

@@ -101,6 +101,54 @@ const tokenOk =
 console.log(`  ${tokenOk ? 'OK ' : 'BAD'} length & shape`);
 if (!tokenOk) failCount++;
 
+// 4. word wizard — the same functions the options page reaches through
+//    the background and the spell worker.
+console.log('\n4. word wizard:');
+const sheet = glue.wizard_sheet();
+const sheetRows = sheet.split('\n').filter((line) => line && !line.startsWith('#'));
+console.log(`  ${sheetRows.length > 400 ? 'OK ' : 'BAD'} class sheet: ${sheetRows.length} rows`);
+if (sheetRows.length <= 400) failCount++;
+
+const answers = [
+  '# torille-wizard-answers v1',
+  'gen_sg\tmökin',
+  'par_sg\tmökkiä',
+  'ill_sg\tmökkiin',
+  '',
+].join('\n');
+const report = glue.wizard_infer('mökki', 'noun', answers);
+const best = report.candidates?.[0];
+const wizardOk = best?.class === '5*A' && best?.hits === 3 && best?.tail_prior > 0;
+console.log(`  ${wizardOk ? 'OK ' : 'BAD'} infer: ${best?.class} hits=${best?.hits} tail=${best?.tail_prior}`);
+if (!wizardOk) failCount++;
+
+const paradigm = glue.wizard_paradigm('mökki', '5*A', 'noun');
+const paradigmOk =
+  paradigm.cells?.gen_sg === 'mökin' && paradigm.cells?.ill_pl === 'mökkeihin';
+console.log(`  ${paradigmOk ? 'OK ' : 'BAD'} paradigm: ${JSON.stringify(paradigm.cells)}`);
+if (!paradigmOk) failCount++;
+
+const saved = '# torille-user-words v1\nmökki\t5*A\tsubstantiivi\n';
+const forms = Array.from(glue.wizard_user_forms(saved));
+const formsOk = forms.includes('mökki') && forms.includes('mökin') && forms.includes('mökkeihin');
+console.log(`  ${formsOk ? 'OK ' : 'BAD'} user forms: ${forms.length}, includes mökin=${forms.includes('mökin')}`);
+if (!formsOk) failCount++;
+
+const parsed = glue.wizard_user_words(saved);
+const parsedOk = parsed.error === null && parsed.words?.length === 1 && parsed.words[0].class === '5*A';
+console.log(`  ${parsedOk ? 'OK ' : 'BAD'} user words: ${JSON.stringify(parsed)}`);
+if (!parsedOk) failCount++;
+
+const added = glue.wizard_user_words_add('', 'Helsinki', '5', 'substantiivi');
+const addedOk = added.error === null && added.text?.includes('Helsinki\t5\tsubstantiivi');
+console.log(`  ${addedOk ? 'OK ' : 'BAD'} add: ${JSON.stringify(added.text)}`);
+if (!addedOk) failCount++;
+
+const removed = glue.wizard_user_words_remove(added.text, 'Helsinki');
+const removedOk = removed.error === null && !removed.text?.includes('Helsinki');
+console.log(`  ${removedOk ? 'OK ' : 'BAD'} remove: ${JSON.stringify(removed.text)}`);
+if (!removedOk) failCount++;
+
 if (failCount > 0) {
   console.log(`\n${failCount} check(s) failed`);
   process.exit(1);

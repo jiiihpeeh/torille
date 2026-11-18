@@ -26,6 +26,30 @@ automatically to `storage.local` and apply live to open tabs:
 The same keys are read by the content script at startup and on
 `storage.onChanged`, so an options tab and a page being checked stay in sync.
 
+## Omat sanat (word wizard)
+
+The options page links to **Omat sanat** (`options/wizard.html`). It finds a
+Kotus class for a word that is not in the sanalista — a name, a loanword, a
+dialect word — by asking for a few inflected forms. The engine's own
+`inflect_in` decides what each candidate class would generate; the page only
+compares strings and shows the evidence.
+
+Saved words are stored as the `torille-user-words` text blob in
+`storage.local`:
+
+```text
+# torille-user-words v1
+mökki	5*A	substantiivi
+```
+
+The background pushes the blob to the wasm worker as `set-user-words`; the
+worker inlines every generated form into its accepted set, so a saved word and
+its inflections are no longer underlined and are offered as suggestions within
+two edits. The list is exportable and importable as the same `.txt`.
+
+The same text format is used by the demo page
+(`torille-wasm/demo/wizard.html`), which stores it in `localStorage`.
+
 ## Grammar check
 
 Right-click a text field and choose **Tarkista kielioppi**, **Tarkista tyyli**

@@ -63,6 +63,10 @@ await copyFile(
   path.join(__dirname, 'options.html'),
   path.join(dist, 'options', 'options.html'),
 );
+await copyFile(
+  path.join(__dirname, 'wizard.html'),
+  path.join(dist, 'options', 'wizard.html'),
+);
 
 step('bundling Solid options page');
 await esbuild.build({

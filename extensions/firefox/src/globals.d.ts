@@ -80,6 +80,42 @@ declare type R_SiteContextMenuFired = {
 };
 declare type R_Debug = { type: 'torille:debug'; on: boolean };
 
+// ─── word wizard (options page -> background -> wasm worker) ─────────
+//
+// The options page does not load the 17 MB wasm. It sends these to the
+// background, which forwards them to the spell worker and returns the
+// wasm-produced object. The user-word text is the same
+// `# torille-user-words v1` TSV that the browser page stores.
+declare type R_WizardSheet = { type: 'torille:wizard-sheet' };
+declare type R_WizardInfer = {
+  type: 'torille:wizard-infer';
+  word: string;
+  pos: string;
+  answers: string;
+};
+declare type R_WizardParadigm = {
+  type: 'torille:wizard-paradigm';
+  word: string;
+  class: string;
+  pos: string;
+};
+declare type R_WizardUserWords = {
+  type: 'torille:wizard-user-words';
+  text: string;
+};
+declare type R_WizardUserWordsAdd = {
+  type: 'torille:wizard-user-words-add';
+  text: string;
+  word: string;
+  class: string;
+  pos: string;
+};
+declare type R_WizardUserWordsRemove = {
+  type: 'torille:wizard-user-words-remove';
+  text: string;
+  word: string;
+};
+
 // ─── per-textbox state (the analyse_text render path) ────────────────
 //
 // A per-overlay wasm-side state is created on attach, taught
@@ -316,6 +352,31 @@ declare type R_WorkerInbound =
       payloads?: Uint8Array[];
     }
   | { id: number; type: 'unique-surfaces'; text: string }
+  | { id: number; type: 'set-user-words'; text: string }
+  | { id: number; type: 'wizard-sheet' }
+  | { id: number; type: 'wizard-infer'; word: string; pos: string; answers: string }
+  | {
+      id: number;
+      type: 'wizard-paradigm';
+      word: string;
+      class: string;
+      pos: string;
+    }
+  | { id: number; type: 'wizard-user-words'; text: string }
+  | {
+      id: number;
+      type: 'wizard-user-words-add';
+      text: string;
+      word: string;
+      class: string;
+      pos: string;
+    }
+  | {
+      id: number;
+      type: 'wizard-user-words-remove';
+      text: string;
+      word: string;
+    }
   | { type: 'debug'; on: boolean };
 declare type R_WorkerOutbound =
   | { type: 'ready' }
@@ -342,4 +403,11 @@ declare type R_WorkerOutbound =
       style: R_SyntaxDiagnostic[];
     }
   | { id: number; type: 'unique-surfaces'; surfaces: string[] }
+  | { id: number; type: 'wizard-sheet'; sheet: string }
+  | { id: number; type: 'wizard-infer'; report: unknown }
+  | { id: number; type: 'wizard-paradigm'; paradigm: unknown }
+  | { id: number; type: 'wizard-user-words'; result: unknown }
+  | { id: number; type: 'wizard-user-words-add'; result: unknown }
+  | { id: number; type: 'wizard-user-words-remove'; result: unknown }
+  | { id: number; type: 'set-user-words' }
   | { id: number; type: 'error'; for: string; word?: string; error: string };

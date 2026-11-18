@@ -104,6 +104,34 @@ export type R_WorkerInbound =
       payloads?: Uint8Array[];
     }
   | { id: number; type: 'unique-surfaces'; text: string }
+  // Word wizard and the saved word list. The report/paradigm/result
+  // objects are produced by the wasm and passed through untouched;
+  // the browser page owns their shape.
+  | { id: number; type: 'set-user-words'; text: string }
+  | { id: number; type: 'wizard-sheet' }
+  | { id: number; type: 'wizard-infer'; word: string; pos: string; answers: string }
+  | {
+      id: number;
+      type: 'wizard-paradigm';
+      word: string;
+      class: string;
+      pos: string;
+    }
+  | { id: number; type: 'wizard-user-words'; text: string }
+  | {
+      id: number;
+      type: 'wizard-user-words-add';
+      text: string;
+      word: string;
+      class: string;
+      pos: string;
+    }
+  | {
+      id: number;
+      type: 'wizard-user-words-remove';
+      text: string;
+      word: string;
+    }
   | { type: 'debug'; on: boolean }
   | { id: number; type: 'memory-info' };
 
@@ -155,6 +183,13 @@ export type R_WorkerOutbound =
       style: DiagnosticSpan[];
     }
   | { id: number; type: 'unique-surfaces'; surfaces: string[] }
+  | { id: number; type: 'wizard-sheet'; sheet: string }
+  | { id: number; type: 'wizard-infer'; report: unknown }
+  | { id: number; type: 'wizard-paradigm'; paradigm: unknown }
+  | { id: number; type: 'wizard-user-words'; result: unknown }
+  | { id: number; type: 'wizard-user-words-add'; result: unknown }
+  | { id: number; type: 'wizard-user-words-remove'; result: unknown }
+  | { id: number; type: 'set-user-words' }
   | { id: number; type: 'memory-info'; wasmBytes: number; pendingCount: number }
   | { id: number; type: 'error'; for: string; word?: string; error: string };
 

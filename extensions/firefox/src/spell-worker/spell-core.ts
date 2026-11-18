@@ -104,6 +104,72 @@ function checkCacheSet(word: string, ok: boolean): void {
 const suggestCache: Map<string, string[]> = new Map();
 const SUGGEST_CACHE_LIMIT = 2048;
 
+// Every surface the user's saved word list generates. `set-user-words`
+// rebuilds it; the check paths consult it before the wasm. It is a
+// global layer, not per-textbox: a saved word is accepted everywhere.
+let userForms: Set<string> = new Set();
+
+function isUserWord(word: string): boolean {
+  return userForms.has(word.toLowerCase());
+}
+
+/// Bounded Levenshtein for the saved-word suggestions. The set is small
+/// (one entry per saved word times its paradigm), and the popup asks for a
+/// handful of candidates, so a plain DP is enough.
+function editDistance(a: string, b: string, max: number): number {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  const previous = new Array<number>(b.length + 1);
+  const current = new Array<number>(b.length + 1);
+  for (let j = 0; j <= b.length; j++) previous[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    current[0] = i;
+    let rowMin = current[0];
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      current[j] = Math.min(
+        previous[j] + 1,
+        current[j - 1] + 1,
+        previous[j - 1] + cost,
+      );
+      if (current[j] < rowMin) rowMin = current[j];
+    }
+    if (rowMin > max) return max + 1;
+    for (let j = 0; j <= b.length; j++) previous[j] = current[j];
+  }
+  return previous[b.length];
+}
+
+/// Saved-word forms within two edits of `word`, closest first.
+function customSuggestions(word: string, max: number): string[] {
+  if (userForms.size === 0 || max <= 0) return [];
+  const lower = word.toLowerCase();
+  const found: { form: string; distance: number }[] = [];
+  for (const form of userForms) {
+    if (form === lower) continue;
+    const distance = editDistance(lower, form, 2);
+    if (distance <= 2) found.push({ form, distance });
+  }
+  found.sort((a, b) => a.distance - b.distance || a.form.localeCompare(b.form));
+  return found.slice(0, max).map((entry) => entry.form);
+}
+
+function mergeSuggestions(
+  custom: string[],
+  engine: string[],
+  max: number,
+): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const word of [...custom, ...engine]) {
+    if (!seen.has(word)) {
+      seen.add(word);
+      out.push(word);
+      if (out.length >= max) break;
+    }
+  }
+  return out;
+}
+
 function suggestCacheGet(word: string, max: number): string[] | undefined {
   const key = max + '\u0000' + word;
   const v = suggestCache.get(key);
@@ -151,7 +217,14 @@ export type CoreResponse =
       diagnostics: R_SyntaxDiagnostic[];
       style: R_SyntaxDiagnostic[];
     }
-  | { type: 'unique-surfaces'; surfaces: string[] };
+  | { type: 'unique-surfaces'; surfaces: string[] }
+  | { type: 'wizard-sheet'; sheet: string }
+  | { type: 'wizard-infer'; report: unknown }
+  | { type: 'wizard-paradigm'; paradigm: unknown }
+  | { type: 'wizard-user-words'; result: unknown }
+  | { type: 'wizard-user-words-add'; result: unknown }
+  | { type: 'wizard-user-words-remove'; result: unknown }
+  | { type: 'set-user-words' };
 
 // ───────────────────────────────────────────────────────────────────────
 // §5  Handlers
@@ -160,6 +233,10 @@ export type CoreResponse =
 function handleCheck(
   msg: Extract<R_WorkerInbound, { type: 'check' }>,
 ): CoreResponse {
+  if (isUserWord(msg.word)) {
+    dbg('core', 'check:user-word', msg.word);
+    return { type: 'check', ok: true };
+  }
   let ok = false;
   try {
     ok = bg.check(msg.word);
@@ -177,6 +254,10 @@ function handleCheck(
 function handleCheckFast(
   msg: Extract<R_WorkerInbound, { type: 'check-fast' }>,
 ): CoreResponse {
+  if (isUserWord(msg.word)) {
+    dbg('core', 'check-fast:user-word', msg.word);
+    return { type: 'check-fast', ok: true };
+  }
   // Same first-pass gate as `handleAnalyzeText`, scoped to one word.
   // A hit means "misspelled"; no hits means the fast gates accept it.
   // This is the popup's "is the word under the caret wrong?" probe --
@@ -191,7 +272,9 @@ function handleCheckFast(
 function handleSuggest(
   msg: Extract<R_WorkerInbound, { type: 'suggest' }>,
 ): CoreResponse {
-  const suggestions = Array.from(bg.suggest_words(msg.word, msg.max));
+  const engine = Array.from(bg.suggest_words(msg.word, msg.max));
+  const suggestions = mergeSuggestions(
+    customSuggestions(msg.word, msg.max), engine, msg.max);
   dbg('core', 'suggest', msg.word, '->', suggestions.length, 'candidates');
   suggestCacheSet(msg.word, msg.max, suggestions);
   return { type: 'suggest', suggestions };
@@ -207,6 +290,10 @@ function handleCheckBatch(
   const missIdx: number[] = [];
   const missWords: string[] = [];
   for (let i = 0; i < words.length; i++) {
+    if (isUserWord(words[i])) {
+      ok[i] = true;
+      continue;
+    }
     const cached = checkCacheGet(words[i]);
     if (cached !== undefined) {
       ok[i] = cached;
@@ -254,7 +341,9 @@ function handleSuggestBatch(
   for (let j = 0; j < missItems.length; j++) {
     const it = missItems[j];
     try {
-      const sugg = Array.from(bg.suggest_words(it.word, it.max));
+      const engine = Array.from(bg.suggest_words(it.word, it.max));
+      const sugg = mergeSuggestions(
+        customSuggestions(it.word, it.max), engine, it.max);
       results[missIdx[j]] = sugg;
       suggestCacheSet(it.word, it.max, sugg);
     } catch (err) {
@@ -320,6 +409,7 @@ function handleAnalyzeText(
   const hits: AnalyzeHit[] = [];
   for (let i = 0; i < arr.length; i++) {
     const h = arr[i] as { word: string; start: number; end: number };
+    if (isUserWord(h.word)) continue;
     const start = offsetMap[h.start];
     const end = offsetMap[h.end];
     if (start === undefined || end === undefined) {
@@ -340,8 +430,10 @@ function handleSuggestWithState(
   // Bounded Levenshtein over the lemma list (~10 ms), not the full
   // `suggest_words` pipeline (~4–5 s). This is the click path, so it
   // must feel instant.
-  const suggestions = Array.from(
+  const engine = Array.from(
     bg.suggest_for_misspell(msg.idx, msg.word, msg.max, 2));
+  const suggestions = mergeSuggestions(
+    customSuggestions(msg.word, msg.max), engine, msg.max);
   dbg('core', 'suggest-with-state',
       { word: msg.word, n: suggestions.length });
   return { type: 'suggest-with-state', suggestions };
@@ -442,6 +534,76 @@ function handleUniqueSurfaces(
   return { type: 'unique-surfaces', surfaces };
 }
 
+function handleSetUserWords(
+  msg: Extract<R_WorkerInbound, { type: 'set-user-words' }>,
+): CoreResponse {
+  try {
+    const forms = bg.wizard_user_forms(msg.text);
+    userForms = new Set(Array.from(forms, (form) => String(form).toLowerCase()));
+    // A word that was misspelled before this update may be a saved
+    // word now (and the reverse). Do not let the old verdict linger.
+    checkCache.clear();
+    suggestCache.clear();
+    dbg('core', 'set-user-words', { forms: userForms.size });
+  } catch (err) {
+    userForms = new Set();
+    dbg('core', 'set-user-words failed', String(err));
+  }
+  // Ack the push: the background awaits it before the first check, so
+  // a null (fire-and-forget) return would hang that request.
+  return { type: 'set-user-words' };
+}
+
+function handleWizardSheet(): CoreResponse {
+  return { type: 'wizard-sheet', sheet: bg.wizard_sheet() };
+}
+
+function handleWizardInfer(
+  msg: Extract<R_WorkerInbound, { type: 'wizard-infer' }>,
+): CoreResponse {
+  return {
+    type: 'wizard-infer',
+    report: bg.wizard_infer(msg.word, msg.pos, msg.answers),
+  };
+}
+
+function handleWizardParadigm(
+  msg: Extract<R_WorkerInbound, { type: 'wizard-paradigm' }>,
+): CoreResponse {
+  return {
+    type: 'wizard-paradigm',
+    paradigm: bg.wizard_paradigm(msg.word, msg.class, msg.pos),
+  };
+}
+
+function handleWizardUserWords(
+  msg: Extract<R_WorkerInbound, { type: 'wizard-user-words' }>,
+): CoreResponse {
+  return {
+    type: 'wizard-user-words',
+    result: bg.wizard_user_words(msg.text),
+  };
+}
+
+function handleWizardUserWordsAdd(
+  msg: Extract<R_WorkerInbound, { type: 'wizard-user-words-add' }>,
+): CoreResponse {
+  return {
+    type: 'wizard-user-words-add',
+    result: bg.wizard_user_words_add(
+      msg.text, msg.word, msg.class, msg.pos),
+  };
+}
+
+function handleWizardUserWordsRemove(
+  msg: Extract<R_WorkerInbound, { type: 'wizard-user-words-remove' }>,
+): CoreResponse {
+  return {
+    type: 'wizard-user-words-remove',
+    result: bg.wizard_user_words_remove(msg.text, msg.word),
+  };
+}
+
 function handleCheckGrammarStyle(
   msg: Extract<R_WorkerInbound, { type: 'check-grammar-style' }>,
 ): CoreResponse {
@@ -501,6 +663,13 @@ export function createSpellCore(): SpellCore {
         case 'check-style': return handleCheckStyle(msg);
         case 'check-grammar-style': return handleCheckGrammarStyle(msg);
         case 'unique-surfaces': return handleUniqueSurfaces(msg);
+        case 'set-user-words': return handleSetUserWords(msg);
+        case 'wizard-sheet': return handleWizardSheet();
+        case 'wizard-infer': return handleWizardInfer(msg);
+        case 'wizard-paradigm': return handleWizardParadigm(msg);
+        case 'wizard-user-words': return handleWizardUserWords(msg);
+        case 'wizard-user-words-add': return handleWizardUserWordsAdd(msg);
+        case 'wizard-user-words-remove': return handleWizardUserWordsRemove(msg);
         default: {
           const unknown = msg as { type?: string };
           throw new Error(`unknown message type: ${unknown.type ?? '?'}`);

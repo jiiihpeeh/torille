@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>torille — omat sanat</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f3f7ff;
+    --surface: #ffffff;
+    --surface-2: #f5f9ff;
+    --fg: #0c2340;
+    --muted: #5b6b84;
+    --accent: #003580;
+    --accent-soft: #e4efff;
+    --border: #dbe1ea;
+    --ok: #067647;
+    --bad: #b42318;
+    --warn: #b45309;
+    --shadow: 0 8px 28px rgba(23, 32, 51, 0.08);
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #071426;
+      --surface: #0d1d33;
+      --surface-2: #12263f;
+      --fg: #eaf2ff;
+      --muted: #9fb2cc;
+      --accent: #8ab4ff;
+      --accent-soft: #16345a;
+      --border: #2a3448;
+      --ok: #6ee7b7;
+      --bad: #ff8f86;
+      --warn: #fbbf24;
+      --shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    color: var(--fg);
+    background:
+      linear-gradient(180deg, var(--accent-soft), transparent 220px),
+      var(--bg);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    padding: 2rem 1.1rem 4rem;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; margin-bottom: 1rem;
+  }
+  header h1 { margin: 0; font-size: 1.45rem; letter-spacing: -0.02em; }
+  header h1 small { display: block; color: var(--muted); font-size: 0.8rem; font-weight: 400; }
+  a { color: var(--accent); }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.1rem 1.2rem;
+    margin-bottom: 1rem;
+  }
+  .card h2 { margin: 0 0 0.2rem; font-size: 1.02rem; }
+  .card h2 small { color: var(--muted); font-weight: 400; font-size: 0.8rem; }
+  .lead { margin: 0 0 0.9rem; color: var(--muted); font-size: 0.9rem; }
+  .tabs { display: flex; gap: 0.4rem; margin-bottom: 0.8rem; }
+  .tab {
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--fg); border-radius: 999px; padding: 0.35rem 0.85rem;
+    cursor: pointer; font: inherit;
+  }
+  .tab[aria-selected="true"] { background: var(--accent); color: white; border-color: var(--accent); }
+  .row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: end; }
+  .field { display: flex; flex-direction: column; gap: 0.2rem; }
+  .field label { color: var(--muted); font-size: 0.78rem; }
+  input[type="text"], select {
+    font: inherit; color: var(--fg); background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 8px; padding: 0.45rem 0.55rem;
+  }
+  input[type="text"] { min-width: 16rem; }
+  button.primary, button.ghost, button.danger {
+    font: inherit; border-radius: 8px; padding: 0.45rem 0.8rem; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--fg);
+  }
+  button.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  button.danger { color: var(--bad); }
+  button:disabled { opacity: 0.5; cursor: default; }
+  #message { min-height: 1.2rem; margin: 0.4rem 0 0; font-size: 0.9rem; }
+  #message[data-error="true"] { color: var(--bad); }
+  #message[data-ok="true"] { color: var(--ok); }
+  .muted { color: var(--muted); }
+  .question { background: var(--surface-2); border: 1px dashed var(--border); border-radius: 10px; padding: 0.8rem; }
+  .question .prompt { font-weight: 600; margin-bottom: 0.15rem; }
+  .question .hint { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.5rem; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: 0.28rem 0.4rem; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; font-size: 0.78rem; }
+  tr.selected { background: var(--accent-soft); }
+  .star { color: var(--warn); }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.5rem; }
+  .chip { border: 1px solid var(--border); border-radius: 999px; padding: 0.1rem 0.55rem; font-size: 0.8rem; }
+  .chip.hit { border-color: var(--ok); color: var(--ok); }
+  .chip.miss { border-color: var(--bad); color: var(--bad); }
+  .chip.skipped, .chip.unknown { color: var(--muted); }
+  .pill { display: inline-block; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 0.1rem 0.55rem; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; }
+  .grid dt { color: var(--muted); }
+  details { border-bottom: 1px solid var(--border); padding: 0.35rem 0; }
+  summary { cursor: pointer; }
+  .saved-row { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.3rem 0; border-bottom: 1px solid var(--border); }
+  .saved-word { font-weight: 600; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Omat sanat <small>etsi taivutusluokka esimerkkimuodoilla</small></h1>
+    <a href="options.html">← asetukset</a>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" id="tab-find" role="tab" aria-selected="true">Etsi luokka</button>
+    <button class="tab" id="tab-browse" role="tab" aria-selected="false">Selaa esimerkkejä</button>
+  </div>
+
+  <section id="pane-find">
+    <div class="card">
+      <h2>Etsi sana <small>vastaa 1–5 kysymykseen</small></h2>
+      <p class="lead">
+        Kirjoita sana ja vastaa kysymyksiin. Torille vertaa vastauksia siihen,
+        mitä jokainen taivutusluokka tuottaisi. Tallennetut sanat hyväksytään
+        oikeiksi tarkistimessa.
+      </p>
+      <div class="row">
+        <div class="field">
+          <label for="word">Sana</label>
+          <input id="word" type="text" placeholder="esim. mökki" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="pos">Sanaluokka</label>
+          <select id="pos">
+            <option value="noun">substantiivi</option>
+            <option value="adjective">adjektiivi</option>
+            <option value="verb">verbi</option>
+          </select>
+        </div>
+        <button id="start" class="primary">Aloita</button>
+      </div>
+      <p id="message"></p>
+      <p id="recorded" class="muted"></p>
+    </div>
+
+    <div class="card" id="question-card" hidden>
+      <h2>Kysymys</h2>
+      <div class="question">
+        <div class="prompt" id="question-label">—</div>
+        <div class="hint" id="question-hint"></div>
+        <div class="row">
+          <input id="answer" type="text" placeholder="kirjoita muoto" autocomplete="off" spellcheck="false">
+          <button id="submit" class="primary">Vastaa</button>
+          <button id="skip" class="ghost">Ohita</button>
+          <button id="examples" class="ghost">Näytä esimerkit</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="candidates-card" hidden>
+      <h2>Ehdokkaat <small id="candidates-count"></small></h2>
+      <table>
+        <thead><tr><th>Luokka</th><th>Osumat</th><th>Ohitukset</th><th title="Saman kolmen viimeisen kirjaimen sanojen yleisin luokka">Häntä</th><th>Yleisyys</th><th></th></tr></thead>
+        <tbody id="candidates"></tbody>
+      </table>
+      <div class="chips" id="outcomes"></div>
+    </div>
+
+    <div class="card" id="result-card" hidden>
+      <h2>Tulos</h2>
+      <p>Paras luokka: <span class="pill" id="best">—</span> <span id="tie" class="muted"></span></p>
+      <p class="muted" id="selected-note"></p>
+      <dl class="grid" id="paradigm"></dl>
+      <div class="toolbar">
+        <button id="save" class="primary">Tallenna</button>
+      </div>
+    </div>
+
+    <div class="card" id="examples-card" hidden>
+      <h2>Esimerkkisanat</h2>
+      <div id="examples"></div>
+    </div>
+
+    <div class="card">
+      <h2>Tallennetut sanat</h2>
+      <p class="lead">
+        Sanat tallennetaan selaimen omaan muistiin. Ne hyväksytään oikeiksi
+        kaikissa tekstikentissä ja niitä ehdotetaan korjauksina kahden
+        muokkauksen etäisyydellä.
+      </p>
+      <div id="saved"></div>
+      <div class="toolbar">
+        <button id="export" class="ghost">Vie tiedostoon</button>
+        <label class="ghost" style="display:inline-flex;align-items:center;gap:0.4rem;border:1px solid var(--border);border-radius:8px;padding:0.45rem 0.8rem;cursor:pointer">
+          Tuo tiedostosta
+          <input id="import-file" type="file" accept=".txt,.tsv,text/tab-separated-values" hidden>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <section id="pane-browse" hidden>
+    <div class="card">
+      <h2>Taivutusluokat <small>mallisanat ja kahdeksan perusmuotoa</small></h2>
+      <p class="lead">Järjestys on sanalistan yleisyys. Hae luokan numerolla tai mallisanalla.</p>
+      <div class="row">
+        <div class="field">
+          <label for="browse-search">Haku</label>
+          <input id="browse-search" type="text" placeholder="esim. 5, aari, äly" autocomplete="off">
+        </div>
+      </div>
+      <div id="browse-list"></div>
+    </div>
+  </section>
+</div>
+
+<script type="module" src="./wizard.js"></script>
+</body>
+</html>
