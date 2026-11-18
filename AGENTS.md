@@ -27,6 +27,9 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
   repetition and long-sentence thresholds, UI and baseline.
 - `misc_md/PLAN_SYNTAX_REFACTOR.md` — the modularisation plan for `syntax.rs`,
   `syntax_check/` and the extension content script.
+- `misc_md/PLAN_SYNTAX_AST.md` — the typed surface tree over `syntax`: node
+  kinds, the pass pipeline, invariants and the phase gates. Proposal; no code
+  yet.
 - `misc_md/PLAN_STYLE.md` — the separate opt-in style-layer plan: curated phrase/word
   tables, repetition and long-sentence metrics, suggestion-only diagnostics and
   a panel UI. Implemented; see `docs/style_checker.md`.

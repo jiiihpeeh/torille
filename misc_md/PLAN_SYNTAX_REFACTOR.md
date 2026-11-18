@@ -397,3 +397,10 @@ For the optional feature part (Phase 4/5/6), the gate is a new test that fails
 on the old model and a documented additive shape. If no consumer needs it,
 leave it out: a smaller model with a documented workaround is better than a
 speculative one.
+
+## 11. Next
+
+The structural layer those additive fields point at is now planned separately:
+[`PLAN_SYNTAX_AST.md`](PLAN_SYNTAX_AST.md) turns the flat clauses, roles and
+list arena into a typed surface tree with phrase, clause, list and
+coordination nodes. It is a derived view, not a replacement for this model.
