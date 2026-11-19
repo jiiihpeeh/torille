@@ -4,7 +4,7 @@ Status: **phases 1–4 landed; 5 closed as won’t-fix; 6 docs/cleanup complete.
 It follows the completed `PLAN_GRAMMAR_PRECISION.md` and the landed AST phases
 in `PLAN_SYNTAX_AST.md` / `PLAN_SYNTAX_AST_REST.md`.
 
-The checker is precise: 254 adjudicated clean prose rows / 6,034 words, 2 true
+The checker is precise: 266 adjudicated clean prose rows / 6,349 words, 2 true
 positive and 0 known false positives; `page-2000` is at 5 diagnostics. The
 remaining work is **structural coverage and narrow recall**, not another
 precision sweep.
@@ -19,7 +19,7 @@ precision sweep.
 | missing relative closing comma is quiet | `Mies, joka tuli söi.` → 0 diagnostics | checker false negative |
 | imperative connegative has no correction | `Älä menet.` → `connegative` with `corrections: []` | correction gap |
 | conditional/potential connegative | conditional 3sg accepted; potential left quiet by design | morphology-gated |
-| docs baseline | updated: `docs/syntax_checker.md` and `docs/grammar_syntax.md` now report 254 clean rows / 6,034 words and `page-2000` 5 | documentation (fixed) |
+| docs baseline | updated: `docs/syntax_checker.md` and `docs/grammar_syntax.md` now report 266 clean rows / 6,349 words and `page-2000` 5 | documentation (fixed) |
 
 Current AST baseline: 24 unit tests, the 122-sentence fixture corpus, the
 wasm AST shape test and `syntax_tree --check`.
@@ -403,7 +403,7 @@ duplicating the enum is less risky than a cross-layer dependency today.
 
 `docs/syntax_checker.md` still records the 2026-11-15/17 baseline. Refresh:
 
-- 254 clean adjudicated rows / 6,034 words;
+- 266 clean adjudicated rows / 6,349 words;
 - 2 true positives;
 - 0 known false positives;
 - `page-2000` 5 diagnostics;
@@ -477,6 +477,6 @@ No Python gate is needed unless a data table or morphology changes.
 - **done:** `Missä hän asuu?` and `Mies, joka tuli, söi.` expose their
   constituents in `syntax_tree --order` and the wasm AST;
 - **done:** conditional/potential is explicitly closed as won’t-fix;
-- **done:** docs show 254 clean rows / 6,034 words, 2 true positives, 0 false
+- **done:** docs show 266 clean rows / 6,349 words, 2 true positives, 0 false
   positives, page-2000 5;
 - clippy, the workspace suite, the AST corpus and the wasm check are green.

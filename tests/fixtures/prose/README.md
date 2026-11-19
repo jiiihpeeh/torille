@@ -58,7 +58,7 @@ were excluded.
 
 ## Current baseline
 
-As of 2026-11-19: **140 adjudicated rows + 114 curated rows = 254 clean rows /
-6,034 words**, 2 true positives and 0 known false positives. The exact count is
+As of 2026-11-19: **140 adjudicated rows + 126 curated rows = 266 clean rows /
+6,349 words**, 2 true positives and 0 known false positives. The exact count is
 whatever `syntax_prose` prints; update `docs/syntax_checker.md` and
 `docs/grammar_syntax.md` when it moves.

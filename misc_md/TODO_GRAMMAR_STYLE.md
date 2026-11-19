@@ -13,7 +13,7 @@ the explicitly gated items below (cold-page performance and the held `PREFER`
 rule), and the targeted suites are green.
 `page-2000` is at **5 adjudicated diagnostics with 0 false positives**
 (1 true positive, 3 accepted, 1 excerpt artefact), and the reviewed-prose gate
-is **254 clean rows / 6,034 words**, 2 true positives and 0 known false
+is **266 clean rows / 6,349 words**, 2 true positives and 0 known false
 positives. The precision plan
 [`PLAN_GRAMMAR_PRECISION.md`](PLAN_GRAMMAR_PRECISION.md) is complete. This
 file is the next roadmap, not a list of known red tests.
@@ -120,11 +120,11 @@ public-domain prose sample with reviewed findings and provenance.
 - [x] **Keep the constructed exact-output fixtures** as the per-rule gate.
 - [x] **Grow the prose sample to at least 1,000 correct words** and keep the
   known-false-positive rate per 1,000 words as the baseline. The sample is now
-  **254 clean rows / 6,034 words**, 2 true positives and 0 known false positives;
+  **266 clean rows / 6,349 words**, 2 true positives and 0 known false positives;
   the precision phases fixed the known findings and grew the sample from the
   original 1,021 words. The 2026-11-19 extensions added 61 clean Finlex
-  paragraphs (modern formal Finnish), 80 clean novel paragraphs from seven
-  Projekti Lönnrot works and 34 clean factual paragraphs from three Doria
+  paragraphs (modern formal Finnish), 86 clean novel paragraphs from seven
+  Projekti Lönnrot works and 40 clean factual paragraphs from three Doria
   books; the raw sources are gitignored and the provenance is in
   `tests/fixtures/prose/README.md`. New rows come from the same public-domain
   sources and were admitted only after `check_syntax` returned zero
@@ -1355,7 +1355,7 @@ intended/competing interpretation pair that fails.
   the suite checks every line. Moved the 106 Lönnrot/Doria rows there and added
   six reviewed Doria paragraphs and two Iisakki paragraphs. Added the 1900
   `ne voi` paragraph to `errors` as a second true positive. Suite: 140
-  adjudicated + 114 curated = **254 clean rows / 6,034 words**, 2 true
+  adjudicated + 126 curated = **266 clean rows / 6,349 words**, 2 true
   positives and 0 known false positives.
 - 2026-11-19: precision fixes from the new corpora. `connegative` now accepts a
   passive connegative after an intervening adverb (`ei toisin säädetä`) but

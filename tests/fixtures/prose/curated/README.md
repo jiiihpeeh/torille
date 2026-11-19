@@ -25,7 +25,7 @@ the named volunteers' projects.
 
 ## `lonnrot.txt` — Projekti Lönnrot novels
 
-80 narrative and dialogue paragraphs from seven public-domain novels and story
+86 narrative and dialogue paragraphs from seven public-domain novels and story
 collections. Some transcriptions are ISO-8859-1 rather than UTF-8; the source
 text was decoded accordingly before curation.
 
@@ -49,7 +49,7 @@ for the next precision round rather than forced into the clean set.
 
 ## `doria.txt` — Doria factual prose
 
-34 expository paragraphs from three **Public Domain Mark 1.0** books from 1900.
+40 expository paragraphs from three **Public Domain Mark 1.0** books from 1900.
 
 | item | author | work |
 |---|---|---|
@@ -67,7 +67,7 @@ used for the admitted rows are:
 | `spenaattia` | `pinaattia` |
 | `rabarbcria` | `rabarbia` |
 | `parsaheiuää` | `parsaheinää` |
-| `sei61` | `sellaisia` |
+| `sei61 laisia` | `sekalaisia` |
 | `lisalmeen` | `Iisalmeen` |
 | `tarvotaan` | `tarvitaan` |
 | `kuusain` | `kuusama` |
@@ -75,3 +75,22 @@ used for the admitted rows are:
 
 A paragraph is admitted only after the corrected text passes the individual
 check; an uncorrected or uncertain paragraph is left out.
+
+### Re-OCRing a PDF
+
+The source PDFs carry a publisher OCR layer. If a page is too damaged and a
+working `ocrmypdf` is available, re-OCR it with the Finnish Tesseract model:
+
+```bash
+ocrmypdf -l fin --force-ocr --output-type pdf input.pdf output.pdf
+pdftotext -layout output.pdf output.txt
+```
+
+Keep the re-OCR output under `../sources/` (gitignored) and commit only the
+reviewed corrections in the curated rows.
+
+A full `ocrmypdf -l fin --force-ocr` pass was run on *Suomen maantiede*. It
+fixes the diacritics and many word breaks (`parsaheinää`, `rabarberia`) but
+still leaves layout spacing and occasional slips (`Kanpan` for `Kaupan`), so
+the reviewed corrections above remain the authority; the re-OCR is a source,
+not an automatic replacement.

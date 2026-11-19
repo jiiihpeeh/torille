@@ -885,7 +885,7 @@ As of 2026-11-19:
 syntax_eval clean rows 154: 0 errors, 0 warnings, 0 suggestions
 syntax_eval cases 60: every emitted kind precision 1.00, recall 1.00
 syntax_diagnostics: 75 exact-output cases, 272 clean rows
-prose: 254 clean rows / 6,034 words, 2 true positives, 0 known false positives
+prose: 266 clean rows / 6,349 words, 2 true positives, 0 known false positives
 page-2000: 5 diagnostics
 ```
 
