@@ -1142,6 +1142,11 @@ The suffix filter does not close the wasm target by itself: the per-chunk wall
 is still dominated by paradigm construction. The next lever remains the
 form → readings table or a class-specific surface test, not another mask.
 
+A wider 256-bit suffix mask (four hashes per row, 64 bytes/row) was measured
+and rejected: native single-thread cold moved 1,330 → 1,504 ms and the
+4-worker path 450 → 490 ms. The extra hash cost outweighed the additional
+candidates it rejected, so the 64-bit suffix mask stays.
+
 ## 8. Measurement harness
 
 The harness is a tool, not a unit test: it must be runnable without a browser
