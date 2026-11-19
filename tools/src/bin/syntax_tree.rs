@@ -63,9 +63,10 @@ fn main() -> ExitCode {
         let clauses: Vec<Value> = (0..tree.analysis.clauses.len())
             .map(|index| order_json(&tree, index))
             .collect();
+        let hosts = hosts_json(&tree);
         println!(
             "{}",
-            serde_json::to_string_pretty(&json!({"clauses": clauses}))
+            serde_json::to_string_pretty(&json!({"clauses": clauses, "hosts": hosts}))
                 .expect("the order is serialisable")
         );
     } else if order {
@@ -91,13 +92,19 @@ fn main() -> ExitCode {
 }
 
 fn constituent_label(constituent: &Constituent) -> String {
-    constituent
+    let label = constituent
         .role
         .map(|role| role.name().to_string())
-        .unwrap_or_else(|| constituent.kind.name().to_string())
+        .unwrap_or_else(|| constituent.kind.name().to_string());
+    if constituent.interrogative {
+        format!("q:{label}")
+    } else {
+        label
+    }
 }
 
 fn print_order(tree: &ast::SyntaxTree) {
+    let mut seen_hosts = std::collections::BTreeSet::new();
     for index in 0..tree.analysis.clauses.len() {
         let constituents = tree.clause_constituents(index);
         let sequence: Vec<String> = constituents
@@ -123,36 +130,87 @@ fn print_order(tree: &ast::SyntaxTree) {
             .unwrap_or_else(|| "-".to_string());
         println!("clause {index}: {}", sequence.join(" "));
         println!("  first={first} fronted={fronted}");
+        if let Some(host) = tree.host_node(index)
+            && seen_hosts.insert(host.index())
+        {
+            let host_sequence: Vec<String> = tree
+                .host_constituents(index)
+                .iter()
+                .map(|constituent| {
+                    format!(
+                        "{}[{}..{}]",
+                        constituent_label(constituent),
+                        constituent.tokens.start,
+                        constituent.tokens.end
+                    )
+                })
+                .collect();
+            println!("  host: {}", host_sequence.join(" "));
+        }
     }
+}
+
+fn constituent_json(constituent: &Constituent) -> Value {
+    json!({
+        "node": constituent.node.index(),
+        "kind": constituent.kind.name(),
+        "role": constituent.role.map(|role| role.name()),
+        "tokens": [constituent.tokens.start, constituent.tokens.end],
+        "start": constituent.start,
+        "end": constituent.end,
+        "interrogative": constituent.interrogative,
+    })
 }
 
 fn order_json(tree: &ast::SyntaxTree, index: usize) -> Value {
     let constituents: Vec<Value> = tree
         .clause_constituents(index)
-        .into_iter()
-        .map(|constituent| {
-            json!({
-                "node": constituent.node.index(),
-                "kind": constituent.kind.name(),
-                "role": constituent.role.map(|role| role.name()),
-                "tokens": [constituent.tokens.start, constituent.tokens.end],
-                "start": constituent.start,
-                "end": constituent.end,
-            })
-        })
+        .iter()
+        .map(constituent_json)
         .collect();
     let first = tree
         .first_constituent(index)
-        .map(|constituent| constituent_label(&constituent));
+        .as_ref()
+        .map(constituent_label);
     let fronted = tree
         .fronted_constituent(index)
-        .map(|constituent| constituent_label(&constituent));
+        .as_ref()
+        .map(constituent_label);
     json!({
         "clause": index,
         "constituents": constituents,
         "first": first,
         "fronted": fronted,
     })
+}
+
+fn hosts_json(tree: &ast::SyntaxTree) -> Vec<Value> {
+    let mut hosts = Vec::new();
+    for (index, node) in tree.ast.nodes.iter().enumerate() {
+        if !matches!(node.kind, NodeKind::Clause(_)) || node.segments.len() < 2 {
+            continue;
+        }
+        let Some(clause) = node.clause else {
+            continue;
+        };
+        let constituents: Vec<Value> = tree
+            .host_constituents(clause)
+            .iter()
+            .map(constituent_json)
+            .collect();
+        let segments: Vec<Value> = node
+            .segments
+            .iter()
+            .map(|segment| json!([segment.start, segment.end]))
+            .collect();
+        hosts.push(json!({
+            "node": index,
+            "clause": node.clause,
+            "segments": segments,
+            "constituents": constituents,
+        }));
+    }
+    hosts
 }
 
 fn label(node: &Node) -> String {

@@ -9,9 +9,10 @@
 //! takes its own connegative and an infinitive complement (`en voi mennä`), so
 //! only the first verb after the auxiliary is checked.
 //!
-//! Imperative auxiliaries are detected but currently get no correction: the
-//! plural/third-person imperative connegatives (`älkää menkö`, `älköön menkö`)
-//! are not the declarative present connegative.
+//! The 2sg imperative auxiliary gets the plain 2sg imperative surface
+//! (`älä menet` -> `mene`). The plural/third-person imperative connegatives
+//! (`älkää menkö`, `älköön menkö`) are `Repaired` forms in the engine and must
+//! not be offered as corrections, so those findings stay uncorrected.
 
 use crate::syntax::{RoleConfidence, SyntaxAnalysis, is_verb_reading};
 use crate::tags::{Mood, Number, PartOfSpeech, Person, Polarity, Tags, Tense};
@@ -49,11 +50,7 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         else {
             continue;
         };
-        if !analysis.tokens[main]
-            .readings
-            .iter()
-            .any(is_verb_reading)
-        {
+        if !analysis.tokens[main].readings.iter().any(is_verb_reading) {
             continue;
         }
         let token = &analysis.tokens[main];
@@ -69,9 +66,7 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         // finite error. Some class engines do not give the plural participle a
         // negative-polarity reading, so accept the form itself.
         if token.readings.iter().any(|reading| {
-            is_verb_reading(reading)
-                && reading.mood.is_none()
-                && reading.tense == Some(Tense::Past)
+            is_verb_reading(reading) && reading.mood.is_none() && reading.tense == Some(Tense::Past)
         }) {
             continue;
         }
@@ -99,7 +94,18 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
             (Severity::Warning, Confidence::Likely)
         };
         let corrections = if is_imperative_auxiliary(&tokens[auxiliary]) {
-            Vec::new()
+            analysis.tokens[main]
+                .lemma
+                .as_deref()
+                .map(|lemma| {
+                    correction::imperative_connegative_corrections(
+                        lemma,
+                        &tokens[main],
+                        &tokens[auxiliary],
+                        crate::spec::Catalogues::embedded(),
+                    )
+                })
+                .unwrap_or_default()
         } else {
             analysis.tokens[main]
                 .lemma
@@ -170,6 +176,19 @@ mod tests {
     }
 
     #[test]
+    fn an_imperative_connegative_gets_the_2sg_form() {
+        let found = diagnostics("Älä menet.");
+        assert_eq!(found.len(), 1, "{found:#?}");
+        assert_eq!(found[0].corrections[0].edits[0].replacement, "mene");
+
+        // The plural/third-person connegative is a `Repaired` form in the
+        // catalogue, so it must stay uncorrected rather than offer `menkö`.
+        let found = diagnostics("Älkää menette.");
+        assert_eq!(found.len(), 1, "{found:#?}");
+        assert!(found[0].corrections.is_empty(), "{found:#?}");
+    }
+
+    #[test]
     fn a_connegative_main_verb_is_quiet() {
         for text in [
             "En mene.",
@@ -182,7 +201,11 @@ mod tests {
             "Älä mene.",
             "Älkää menkö.",
         ] {
-            assert!(diagnostics(text).is_empty(), "{text}: {:#?}", diagnostics(text));
+            assert!(
+                diagnostics(text).is_empty(),
+                "{text}: {:#?}",
+                diagnostics(text)
+            );
         }
     }
 
@@ -204,8 +227,14 @@ mod tests {
         for text in [
             "Ei, sillä Jumala hellytti pyövelien sydämet.",
             "ettei häntä pelottaisi",
+            "En menne.",
+            "En menisi.",
         ] {
-            assert!(diagnostics(text).is_empty(), "{text}: {:#?}", diagnostics(text));
+            assert!(
+                diagnostics(text).is_empty(),
+                "{text}: {:#?}",
+                diagnostics(text)
+            );
         }
     }
 }

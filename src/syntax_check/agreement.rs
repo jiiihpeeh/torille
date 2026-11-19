@@ -1062,26 +1062,6 @@ mod tests {
     use crate::syntax::ast::{self, NodeKind};
     use std::collections::BTreeSet;
 
-    /// A head the flat rule finds and the AST cannot express.
-    #[derive(Debug)]
-    struct Exception {
-        text: &'static str,
-        token: usize,
-        key: &'static str,
-        why: &'static str,
-    }
-
-    /// The parity audit is allowed to disagree only where the flat rule uses
-    /// a shape the flat model did not assert an edge for. Each entry must stay
-    /// until the phrase builder learns the shape or the rule stops using it.
-    const EXCEPTIONS: &[Exception] = &[Exception {
-        text: "Meille on niinkuin usein ennenkin haettu kotimieheksi Laukkasen Anni, Satu-Anni, koulumestarin kivuloinen ja kalpea tyttö, joka ei milloinkaan leiki eikä hymyile.",
-        token: 26,
-        key: "kalpea",
-        why: "predicate-less NP: the flat rule walks to `tyttö`, but the flat model gives \
-              `kalpea` no head edge and there is no clause slot to root a phrase",
-    }];
-
     fn corpus() -> Vec<String> {
         let mut texts = BTreeSet::new();
         for raw in [
@@ -1128,7 +1108,6 @@ mod tests {
     #[test]
     fn attribute_head_matches_the_ast_phrase_head() {
         let mut checked = 0usize;
-        let mut excepted = 0usize;
         let mut mismatches = Vec::new();
         for text in corpus() {
             let tokens = crate::tokenise::tokenise(&text);
@@ -1190,17 +1169,7 @@ mod tests {
                 checked += 1;
                 let flat = attribute_head(index, syntax, &tokens, analysis);
                 let tree_head = phrase_head_for(&tree.ast, index);
-                if flat == tree_head {
-                    continue;
-                }
-                if let Some(exception) = EXCEPTIONS.iter().find(|exception| {
-                    exception.text == text
-                        && exception.token == index
-                        && exception.key == syntax.key
-                }) {
-                    debug_assert!(!exception.why.is_empty());
-                    excepted += 1;
-                } else {
+                if flat != tree_head {
                     mismatches.push(format!(
                         "{text:?} token {index} {:?} role={:?}: flat={flat:?} ast={tree_head:?}",
                         syntax.key, syntax.role
@@ -1211,11 +1180,6 @@ mod tests {
         assert!(
             checked >= 20,
             "only {checked} attribute candidates were checked"
-        );
-        assert_eq!(
-            excepted,
-            EXCEPTIONS.len(),
-            "a parity exception is stale: {EXCEPTIONS:#?}"
         );
         assert!(
             mismatches.is_empty(),

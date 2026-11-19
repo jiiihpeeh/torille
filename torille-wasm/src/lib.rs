@@ -345,6 +345,43 @@ fn ast_object(
         clauses.push(&item);
     }
     set(&ast_obj, "clauses", clauses.into());
+
+    let hosts = Array::new();
+    for (index, node) in ast.nodes.iter().enumerate() {
+        if !matches!(node.kind, torille::syntax::ast::NodeKind::Clause(_))
+            || node.segments.len() < 2
+        {
+            continue;
+        }
+        let Some(clause) = node.clause else {
+            continue;
+        };
+        let Some(host) = ast.host_node(analysis, clause) else {
+            continue;
+        };
+        if host.index() != index {
+            continue;
+        }
+        let item = Object::new();
+        set(&item, "node", JsValue::from(index as u32));
+        set_option(&item, "clause", node.clause);
+        let segments = Array::new();
+        for segment in &node.segments {
+            let pair = Array::new();
+            pair.push(&JsValue::from(segment.start as u32));
+            pair.push(&JsValue::from(segment.end as u32));
+            segments.push(&pair);
+        }
+        set(&item, "segments", segments.into());
+        let constituents = Array::new();
+        for constituent in ast.host_constituents(analysis, host) {
+            constituents.push(&constituent_object(&constituent));
+        }
+        set(&item, "constituents", constituents.into());
+        hosts.push(&item);
+    }
+    set(&ast_obj, "hosts", hosts.into());
+
     set(&obj, "ast", ast_obj.into());
     obj
 }
@@ -418,6 +455,11 @@ fn constituent_object(constituent: &Constituent) -> js_sys::Object {
     );
     set(&item, "kind", JsValue::from(constituent.kind.name()));
     set_option(&item, "role", constituent.role.map(|role| role.name()));
+    set(
+        &item,
+        "interrogative",
+        JsValue::from(constituent.interrogative),
+    );
     let tokens = Array::new();
     tokens.push(&JsValue::from(constituent.tokens.start as u32));
     tokens.push(&JsValue::from(constituent.tokens.end as u32));
@@ -430,10 +472,15 @@ fn constituent_object(constituent: &Constituent) -> js_sys::Object {
 }
 
 fn constituent_label(constituent: &Constituent) -> String {
-    constituent
+    let label = constituent
         .role
         .map(|role| role.name().to_string())
-        .unwrap_or_else(|| constituent.kind.name().to_string())
+        .unwrap_or_else(|| constituent.kind.name().to_string());
+    if constituent.interrogative {
+        format!("q:{label}")
+    } else {
+        label
+    }
 }
 
 fn syntax_object(

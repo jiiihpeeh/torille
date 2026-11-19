@@ -42,10 +42,20 @@ const clause = result.ast.clauses[0];
 assert.equal(clause.index, 0);
 assert.equal(clause.first, 'object');
 assert.equal(clause.fronted, 'object');
+assert.equal(clause.constituents[0].interrogative, false);
 assert.deepEqual(
   clause.constituents.map((constituent) => constituent.role),
   ['object', 'predicate', 'adverbial'],
 );
+
+const question = analyze_ast('Missä hän asuu?');
+assert.equal(question.ast.clauses[0].constituents[0].interrogative, true);
+assert.equal(question.ast.clauses[0].first, 'q:unknown');
+
+const host = analyze_ast('Mies, joka tuli, söi.');
+assert.equal(host.ast.hosts.length, 1);
+assert.equal(host.ast.hosts[0].constituents.length, 3);
+assert.equal(host.ast.hosts[0].segments.length, 2);
 
 const state = create_text_area_state();
 update_state_from_text(state, text);

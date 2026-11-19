@@ -264,7 +264,7 @@
           "severity": "error",
           "start": 6,
           "end": 11,
-          "corrections": []
+          "corrections": ["mene"]
         }
       ]
     },
@@ -446,6 +446,19 @@
           "severity": "error",
           "start": 27,
           "end": 27,
+          "corrections": [","]
+        }
+      ]
+    },
+    {
+      "id": "relative_closing_comma",
+      "text": "Mies, joka tuli söi.",
+      "diagnostics": [
+        {
+          "kind": "comma_pair_unbalanced",
+          "severity": "error",
+          "start": 15,
+          "end": 15,
           "corrections": [","]
         }
       ]
@@ -1043,6 +1056,11 @@
     "Tyttö, joka laulaa, on iloinen.",
     "Kirjat, jotka luin, olivat hyviä.",
     "Mies, josta puhuit, tuli.",
+    "Mies, joka tuli, söi.",
+    "Mies joka tuli söi.",
+    "Mies, joka tuli.",
+    "Mies, joka tuli -- söi.",
+    "Mies, joka tuli ja söi.",
     "Joka päivä juon kahvia.",
     "Joka aamu juon kahvia.",
     "Joka vuosi matkustan Lappiin.",

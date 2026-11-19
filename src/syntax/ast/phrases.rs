@@ -99,69 +99,178 @@ pub(super) fn attach(
             if !word_set[root] || claimed[root] {
                 continue;
             }
-            let mut set = vec![false; tokens.len()];
-            let mut stack = vec![root];
-            while let Some(token) = stack.pop() {
-                if set[token] {
-                    continue;
-                }
-                set[token] = true;
-                stack.extend(dependents[token].iter().copied());
-            }
-
-            let mut min = usize::MAX;
-            let mut max = 0usize;
-            let mut any = false;
-            for (index, &in_set) in set.iter().enumerate() {
-                if in_set {
-                    min = min.min(index);
-                    max = max.max(index);
-                    any = true;
-                }
-            }
-            if !any {
-                continue;
-            }
-            let contiguous = (min..=max)
-                .all(|index| !tokens.get(index).is_some_and(Token::is_word) || set[index]);
-            if !contiguous {
-                continue;
-            }
-            if (0..tokens.len()).any(|index| set[index] && claimed[index]) {
-                continue;
-            }
-            let Some(kind) = phrase_kind(&set, root, analysis) else {
-                continue;
-            };
-
-            for (index, &in_set) in set.iter().enumerate() {
-                if in_set {
-                    claimed[index] = true;
-                }
-            }
-            let span = tokens[min].start..tokens[max].end;
-            let syntax = &analysis.tokens[root];
-            let phrase = builder.push(Node::phrase(
-                kind,
-                min..max + 1,
-                span,
+            let set = collect(root, &dependents, tokens.len());
+            try_attach(
                 root,
-                syntax,
+                &set,
+                tokens,
+                analysis,
+                builder,
+                seed,
+                clause_node,
                 clause_index,
-            ));
-            builder.attach(clause_node, phrase);
-            for (index, &in_set) in set.iter().enumerate() {
-                if !in_set {
+                &mut claimed,
+            );
+        }
+
+        // A predicate-less fragment has no clause slot to root a phrase. A
+        // narrow shape run still gives a heading or caption its noun phrase:
+        // adjective/ordinal/demonstrative modifiers immediately before a noun.
+        // It is deliberately weak and never invents a role.
+        if clause.predicate.is_none() {
+            let shape_roots = shape_roots(&words, analysis, &claimed);
+            for (head, set) in shape_roots {
+                if claimed[head] {
                     continue;
                 }
-                if let Some(leaf) = seed.words.get(index).copied().flatten() {
-                    builder.reparent(phrase, leaf);
-                }
+                try_attach(
+                    head,
+                    &set,
+                    tokens,
+                    analysis,
+                    builder,
+                    seed,
+                    clause_node,
+                    clause_index,
+                    &mut claimed,
+                );
             }
         }
 
         builder.sort_children();
     }
+}
+
+fn collect(root: usize, dependents: &[Vec<usize>], token_count: usize) -> Vec<bool> {
+    let mut set = vec![false; token_count];
+    let mut stack = vec![root];
+    while let Some(token) = stack.pop() {
+        if set[token] {
+            continue;
+        }
+        set[token] = true;
+        stack.extend(dependents[token].iter().copied());
+    }
+    set
+}
+
+#[allow(clippy::too_many_arguments)]
+fn try_attach(
+    root: usize,
+    set: &[bool],
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+    builder: &mut Builder,
+    seed: &Seed,
+    clause_node: NodeId,
+    clause_index: usize,
+    claimed: &mut [bool],
+) -> bool {
+    let mut min = usize::MAX;
+    let mut max = 0usize;
+    let mut any = false;
+    for (index, &in_set) in set.iter().enumerate() {
+        if in_set {
+            min = min.min(index);
+            max = max.max(index);
+            any = true;
+        }
+    }
+    if !any {
+        return false;
+    }
+    let contiguous =
+        (min..=max).all(|index| !tokens.get(index).is_some_and(Token::is_word) || set[index]);
+    if !contiguous {
+        return false;
+    }
+    if (0..tokens.len()).any(|index| set[index] && claimed[index]) {
+        return false;
+    }
+    let Some(kind) = phrase_kind(set, root, analysis) else {
+        return false;
+    };
+
+    for (index, &in_set) in set.iter().enumerate() {
+        if in_set {
+            claimed[index] = true;
+        }
+    }
+    let span = tokens[min].start..tokens[max].end;
+    let syntax = &analysis.tokens[root];
+    let phrase = builder.push(Node::phrase(
+        kind,
+        min..max + 1,
+        span,
+        root,
+        syntax,
+        clause_index,
+    ));
+    builder.attach(clause_node, phrase);
+    for (index, &in_set) in set.iter().enumerate() {
+        if !in_set {
+            continue;
+        }
+        if let Some(leaf) = seed.words.get(index).copied().flatten() {
+            builder.reparent(phrase, leaf);
+        }
+    }
+    true
+}
+
+fn shape_roots(
+    words: &[usize],
+    analysis: &SyntaxAnalysis,
+    claimed: &[bool],
+) -> Vec<(usize, Vec<bool>)> {
+    let mut out = Vec::new();
+    for (position, &head) in words.iter().enumerate() {
+        if claimed.get(head).copied().unwrap_or(false) || !is_noun_head(head, analysis) {
+            continue;
+        }
+        let mut set = vec![false; analysis.tokens.len()];
+        let mut modifiers = 0usize;
+        for &previous in words[..position].iter().rev() {
+            if claimed.get(previous).copied().unwrap_or(false)
+                || !is_shape_modifier(&analysis.tokens[previous])
+            {
+                break;
+            }
+            set[previous] = true;
+            modifiers += 1;
+        }
+        if modifiers == 0 {
+            continue;
+        }
+        set[head] = true;
+        out.push((head, set));
+    }
+    out
+}
+
+fn is_noun_head(index: usize, analysis: &SyntaxAnalysis) -> bool {
+    analysis.tokens.get(index).is_some_and(|token| {
+        token
+            .readings
+            .iter()
+            .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Noun))
+    })
+}
+
+fn is_shape_modifier(token: &crate::syntax::TokenSyntax) -> bool {
+    token.readings.iter().any(|reading| {
+        matches!(
+            reading.part_of_speech,
+            Some(PartOfSpeech::Adjective | PartOfSpeech::Ordinal)
+        ) || (reading.part_of_speech == Some(PartOfSpeech::Pronoun) && is_demonstrative(&token.key))
+    })
+}
+
+fn is_demonstrative(key: &str) -> bool {
+    matches!(
+        key,
+        "se" | "tämä" | "tuo" | "ne" | "nämä" | "nuo" | "sama" | "samat"
+    )
 }
 
 /// The lexical kind of a phrase, from its head and the role the flat model

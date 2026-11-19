@@ -65,15 +65,7 @@ fn cached_forms(
     if let Some(forms) = CACHE.with_borrow(|cache| cache.get(&key).cloned()) {
         return forms;
     }
-    let forms = Rc::new(forms_of(
-        lemma,
-        inflections,
-        cat,
-        None,
-        want,
-        pos,
-        false,
-    ));
+    let forms = Rc::new(forms_of(lemma, inflections, cat, None, want, pos, false));
     CACHE.with_borrow_mut(|cache| {
         if FORMS.with(Cell::get) + forms.len() > FORM_CACHE_CAP {
             cache.clear();
@@ -141,13 +133,15 @@ pub fn verb_agreement_corrections(
             continue;
         }
         let distance = crate::levenshtein_with_ops(&token.text, &form.word).0;
-        corrections.push(Correction::new(
-            vec![Edit::new(token.start, token.end, form.word.clone())],
-            distance as f32,
-            "subject_predicate_agreement",
-        )
-        .licensed_by(CorrectionLicense::Inflection)
-        .with_confidence(DiagnosticConfidence::Certain));
+        corrections.push(
+            Correction::new(
+                vec![Edit::new(token.start, token.end, form.word.clone())],
+                distance as f32,
+                "subject_predicate_agreement",
+            )
+            .licensed_by(CorrectionLicense::Inflection)
+            .with_confidence(DiagnosticConfidence::Certain),
+        );
     }
     corrections.sort_by(|a, b| {
         a.score
@@ -280,25 +274,106 @@ pub fn connegative_corrections(
                 && candidate.voice == Some(Voice::Active)
         });
         if !exact
-            || corrections
-                .iter()
-                .any(|seen| seen.edits.first().is_some_and(|edit| edit.replacement == form.word))
+            || corrections.iter().any(|seen| {
+                seen.edits
+                    .first()
+                    .is_some_and(|edit| edit.replacement == form.word)
+            })
         {
             continue;
         }
         let distance = crate::levenshtein_with_ops(&token.text, &form.word).0;
-        corrections.push(Correction::new(
-            vec![Edit::new(token.start, token.end, form.word.clone())],
-            distance as f32,
-            "connegative",
-        )
-        .licensed_by(CorrectionLicense::Inflection)
-        .with_confidence(DiagnosticConfidence::Certain));
+        corrections.push(
+            Correction::new(
+                vec![Edit::new(token.start, token.end, form.word.clone())],
+                distance as f32,
+                "connegative",
+            )
+            .licensed_by(CorrectionLicense::Inflection)
+            .with_confidence(DiagnosticConfidence::Certain),
+        );
     }
     corrections.sort_by(|a, b| {
         a.score
             .total_cmp(&b.score)
             .then_with(|| a.edits[0].replacement.cmp(&b.edits[0].replacement))
+    });
+    corrections
+}
+
+/// The imperative connegative for the 2sg `älä` construction.
+///
+/// The plural/third-person imperative connegatives (`älkää menkö`,
+/// `älköön menkö`) are `Repaired` forms in the engine, and `Repaired` forms
+/// are never offered as corrections. The 2sg surface (`älä mene`) is the
+/// plain imperative form `mene`, so it is the one safe repair.
+pub fn imperative_connegative_corrections(
+    lemma: &str,
+    token: &Token,
+    auxiliary: &Token,
+    cat: &Catalogues,
+) -> Vec<Correction> {
+    let Some((Person::Second, Number::Singular)) =
+        crate::expand::negation::person_number(&auxiliary.text)
+    else {
+        return Vec::new();
+    };
+    let Some(row) = sanalista().by_word(lemma).next() else {
+        return Vec::new();
+    };
+    let inflections: Vec<_> = row.inflections().collect();
+    let pos = PartOfSpeech::parse_all(row.part_of_speech())
+        .first()
+        .copied()
+        .unwrap_or(PartOfSpeech::Verb);
+    let mut want = Tags::UNKNOWN;
+    want.part_of_speech = Some(PartOfSpeech::Verb);
+    want.voice = Some(Voice::Active);
+    want.mood = Some(Mood::Imperative);
+    want.person = Some(Person::Second);
+    want.number = Some(Number::Singular);
+    want.tense = Some(Tense::Present);
+    want.polarity = Polarity::Affirmative;
+
+    let mut corrections: Vec<Correction> = Vec::new();
+    for form in cached_forms(lemma, &inflections, cat, &want, pos).iter() {
+        if form.confidence != Confidence::Plain
+            || form.word == token.text
+            || form.word.split_whitespace().count() != 1
+        {
+            continue;
+        }
+        let exact = form.readings.iter().any(|candidate| {
+            candidate.part_of_speech == Some(PartOfSpeech::Verb)
+                && candidate.mood == Some(Mood::Imperative)
+                && candidate.person == Some(Person::Second)
+                && candidate.number == Some(Number::Singular)
+                && candidate.voice == Some(Voice::Active)
+        });
+        if !exact
+            || corrections.iter().any(|seen| {
+                seen.edits
+                    .first()
+                    .is_some_and(|edit| edit.replacement == form.word)
+            })
+        {
+            continue;
+        }
+        let distance = crate::levenshtein_with_ops(&token.text, &form.word).0;
+        corrections.push(
+            Correction::new(
+                vec![Edit::new(token.start, token.end, form.word.clone())],
+                distance as f32,
+                "connegative",
+            )
+            .licensed_by(CorrectionLicense::Inflection)
+            .with_confidence(DiagnosticConfidence::Certain),
+        );
+    }
+    corrections.sort_by(|left, right| {
+        left.score
+            .total_cmp(&right.score)
+            .then_with(|| left.edits[0].replacement.cmp(&right.edits[0].replacement))
     });
     corrections
 }
@@ -369,13 +444,15 @@ pub fn attribute_agreement_corrections(
             continue;
         }
         let distance = crate::levenshtein_with_ops(&token.text, &form.word).0;
-        corrections.push(Correction::new(
-            vec![Edit::new(token.start, token.end, form.word.clone())],
-            distance as f32,
-            "attribute_agreement",
-        )
-        .licensed_by(CorrectionLicense::Inflection)
-        .with_confidence(DiagnosticConfidence::Certain));
+        corrections.push(
+            Correction::new(
+                vec![Edit::new(token.start, token.end, form.word.clone())],
+                distance as f32,
+                "attribute_agreement",
+            )
+            .licensed_by(CorrectionLicense::Inflection)
+            .with_confidence(DiagnosticConfidence::Certain),
+        );
     }
     corrections.sort_by(|a, b| {
         a.score
@@ -425,13 +502,15 @@ pub fn case_corrections(
             continue;
         }
         let distance = crate::levenshtein_with_ops(&token.text, &form.word).0;
-        corrections.push(Correction::new(
-            vec![Edit::new(token.start, token.end, form.word.clone())],
-            distance as f32,
-            "verb_rection",
-        )
-        .licensed_by(CorrectionLicense::Inflection)
-        .with_confidence(DiagnosticConfidence::Certain));
+        corrections.push(
+            Correction::new(
+                vec![Edit::new(token.start, token.end, form.word.clone())],
+                distance as f32,
+                "verb_rection",
+            )
+            .licensed_by(CorrectionLicense::Inflection)
+            .with_confidence(DiagnosticConfidence::Certain),
+        );
     }
     corrections.sort_by(|a, b| {
         a.score

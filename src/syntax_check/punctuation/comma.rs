@@ -9,7 +9,10 @@ use super::super::diagnostic::{
 };
 use super::clause::{ClauseKind, clause_kind};
 
-pub(super) fn clause_diagnostics(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
+pub(super) fn clause_diagnostics(
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+) -> Vec<SyntaxDiagnostic> {
     let mut out = Vec::new();
     for (index, clause) in analysis.clauses.iter().enumerate() {
         let kind = clause_kind(clause, tokens, analysis);
@@ -59,10 +62,7 @@ fn extra_comma(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnos
         let Some(comma) = comma_between_index(tokens, subject, predicate) else {
             continue;
         };
-        if tokens[subject + 1..predicate]
-            .iter()
-            .any(Token::is_word)
-        {
+        if tokens[subject + 1..predicate].iter().any(Token::is_word) {
             continue;
         }
         let token = &tokens[comma];
@@ -74,13 +74,15 @@ fn extra_comma(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnos
             "comma_extra",
         );
         diagnostic.expected = Some("no comma".to_string());
-        diagnostic.corrections = vec![Correction::new(
-            vec![Edit::new(token.start, token.end, "")],
-            0.0,
-            "comma_extra",
-        )
-        .licensed_by(CorrectionLicense::Punctuation)
-        .with_confidence(Confidence::Likely)];
+        diagnostic.corrections = vec![
+            Correction::new(
+                vec![Edit::new(token.start, token.end, "")],
+                0.0,
+                "comma_extra",
+            )
+            .licensed_by(CorrectionLicense::Punctuation)
+            .with_confidence(Confidence::Likely),
+        ];
         out.push(diagnostic);
     }
     out
@@ -111,12 +113,8 @@ fn subordinate_comma(
     // dash, or a sentence-initial `ja` needs no second comma inside it. This
     // is the prose pattern `..., jos ...`, `--kun ...`, and `Ja kun ...`.
     if let Some(first) = first_word(clause, tokens) {
-        let concord = |index: usize| {
-            matches!(
-                tokens[index].text.to_lowercase().as_str(),
-                "kun" | "jos"
-            )
-        };
+        let concord =
+            |index: usize| matches!(tokens[index].text.to_lowercase().as_str(), "kun" | "jos");
         let marked = |index: usize| {
             previous_word(tokens, index).is_some_and(|previous| {
                 comma_between(tokens, previous, index)
@@ -133,7 +131,8 @@ fn subordinate_comma(
     }
     if index > 0 && same_sentence(&analysis.clauses[index - 1], clause, tokens, analysis) {
         let previous = &analysis.clauses[index - 1];
-        if let (Some(left), Some(right)) = (last_word(previous, tokens), first_word(clause, tokens)) {
+        if let (Some(left), Some(right)) = (last_word(previous, tokens), first_word(clause, tokens))
+        {
             let previous_kind = clause_kind(previous, tokens, analysis);
             let boundary_needs_comma = previous_kind != ClauseKind::Subordinate
                 || clause_kind(clause, tokens, analysis) == ClauseKind::Subordinate;
@@ -142,7 +141,10 @@ fn subordinate_comma(
                 && !comma_between(tokens, left, right)
                 && !dash_between(tokens, left, right)
             {
-                out.push(comma_missing(tokens[left].end, DiagnosticKind::CommaMissing));
+                out.push(comma_missing(
+                    tokens[left].end,
+                    DiagnosticKind::CommaMissing,
+                ));
             }
         }
     }
@@ -154,7 +156,10 @@ fn subordinate_comma(
         && !comma_between(tokens, left, right)
         && !dash_between(tokens, left, right)
     {
-        out.push(comma_missing(tokens[left].end, DiagnosticKind::CommaMissing));
+        out.push(comma_missing(
+            tokens[left].end,
+            DiagnosticKind::CommaMissing,
+        ));
     }
 
     // The subordinate clause may still be merged with its main clause in one
@@ -172,7 +177,10 @@ fn subordinate_comma(
         && !comma_between(tokens, before, main)
         && !dash_between(tokens, before, main)
     {
-        out.push(comma_missing(tokens[before].end, DiagnosticKind::CommaMissing));
+        out.push(comma_missing(
+            tokens[before].end,
+            DiagnosticKind::CommaMissing,
+        ));
     }
     out
 }
@@ -195,6 +203,29 @@ fn relative_comma(
         return Vec::new();
     }
     let finite = finite_predicate_words(clause, tokens, analysis);
+    let Some(&first_predicate) = finite.first() else {
+        return Vec::new();
+    };
+    // Without the closing comma the parser keeps the host predicate inside
+    // the relative clause (`Mies, joka tuli söi`). The relative's own subject
+    // is then the finite word before that predicate; the missing delimiter
+    // belongs after it.
+    if let Some(before) = previous_word(tokens, first_predicate)
+        && before > first
+        && is_finite(&analysis.tokens[before])
+        && !matches!(
+            analysis.tokens[before].role,
+            SyntacticRole::Predicate | SyntacticRole::Auxiliary
+        )
+        && !comma_between(tokens, before, first_predicate)
+        && !dash_between(tokens, before, first_predicate)
+        && !line_break_between(tokens, before, first_predicate)
+    {
+        return vec![comma_missing(
+            tokens[before].end,
+            DiagnosticKind::CommaPairUnbalanced,
+        )];
+    }
     if finite.len() < 2 {
         return Vec::new();
     }
@@ -229,7 +260,24 @@ fn dash_between(tokens: &[Token], left: usize, right: usize) -> bool {
     tokens[start..end]
         .iter()
         .filter(|token| !token.is_word())
-        .any(|token| token.text.contains("--") || token.text.contains('—') || token.text.contains('–'))
+        .any(|token| {
+            token.text.contains("--") || token.text.contains('—') || token.text.contains('–')
+        })
+}
+
+fn line_break_between(tokens: &[Token], left: usize, right: usize) -> bool {
+    if left == right {
+        return false;
+    }
+    let (start, end) = if left < right {
+        (left + 1, right)
+    } else {
+        (right + 1, left)
+    };
+    tokens[start..end]
+        .iter()
+        .filter(|token| !token.is_word())
+        .any(|token| token.text.contains('\n'))
 }
 
 fn comma_missing(at: usize, kind: DiagnosticKind) -> SyntaxDiagnostic {
@@ -238,25 +286,20 @@ fn comma_missing(at: usize, kind: DiagnosticKind) -> SyntaxDiagnostic {
     } else {
         "comma_missing"
     };
-    let mut diagnostic = SyntaxDiagnostic::new(
-        kind,
-        Severity::Error,
-        Confidence::Certain,
-        at..at,
-        message,
-    );
-    diagnostic.corrections = vec![Correction::new(
-        vec![Edit::insertion(at, ",")],
-        0.0,
-        "comma_missing",
-    )
-    .licensed_by(CorrectionLicense::Punctuation)
-    .with_confidence(Confidence::Certain)];
+    let mut diagnostic =
+        SyntaxDiagnostic::new(kind, Severity::Error, Confidence::Certain, at..at, message);
+    diagnostic.corrections = vec![
+        Correction::new(vec![Edit::insertion(at, ",")], 0.0, "comma_missing")
+            .licensed_by(CorrectionLicense::Punctuation)
+            .with_confidence(Confidence::Certain),
+    ];
     diagnostic
 }
 
 fn previous_word(tokens: &[Token], index: usize) -> Option<usize> {
-    (0..index).rev().find(|&candidate| tokens[candidate].is_word())
+    (0..index)
+        .rev()
+        .find(|&candidate| tokens[candidate].is_word())
 }
 
 fn finite_predicate_words(
@@ -298,8 +341,15 @@ fn coordinated_between(tokens: &[Token], left: usize, right: usize) -> bool {
         .any(|token| {
             matches!(
                 token.text.to_lowercase().as_str(),
-                "ja" | "sekä" | "tai" | "vai"
-                    | "eikä" | "enkä" | "etkä" | "emme" | "ette" | "eivätkä"
+                "ja" | "sekä"
+                    | "tai"
+                    | "vai"
+                    | "eikä"
+                    | "enkä"
+                    | "etkä"
+                    | "emme"
+                    | "ette"
+                    | "eivätkä"
             )
         })
 }

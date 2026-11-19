@@ -22,8 +22,11 @@
 
 use std::ops::Range;
 
-use crate::syntax::{Clause, RoleConfidence, SyntacticRole, SyntaxAnalysis, TokenSyntax};
+use crate::syntax::{
+    Clause, QuestionType, RoleConfidence, SyntacticRole, SyntaxAnalysis, TokenSyntax,
+};
 use crate::syntax_list::{List, ListItem, ListKind};
+use crate::tags::Clitic;
 use crate::tokenise::Token;
 
 mod attach;
@@ -416,14 +419,7 @@ impl Ast {
         let Some(clause) = analysis.clauses.get(clause_index) else {
             return Vec::new();
         };
-        let Some(node_id) = self.nodes.iter().enumerate().find_map(|(index, node)| {
-            if !matches!(node.kind, NodeKind::Clause(_)) {
-                return None;
-            }
-            node.segments
-                .contains(&clause.tokens)
-                .then_some(NodeId::new(index))
-        }) else {
+        let Some(node_id) = self.clause_node(analysis, clause_index) else {
             return Vec::new();
         };
         self.node(node_id)
@@ -434,16 +430,97 @@ impl Ast {
                 if node.tokens.start < clause.tokens.start || node.tokens.end > clause.tokens.end {
                     return None;
                 }
-                Some(Constituent {
-                    node: child,
-                    kind: node.kind,
-                    role: node.role,
-                    tokens: node.tokens.clone(),
-                    start: node.span.start,
-                    end: node.span.end,
-                })
+                Some(self.constituent_of(analysis, Some(clause_index), child))
             })
             .collect()
+    }
+
+    /// The direct children of a multi-segment host, in source order.
+    ///
+    /// The relative clause appears as one `Constituent` with `role = None`;
+    /// the host’s own segments keep their flat-clause roles.
+    pub fn host_constituents(&self, analysis: &SyntaxAnalysis, host: NodeId) -> Vec<Constituent> {
+        let node = self.node(host);
+        if !matches!(node.kind, NodeKind::Clause(_)) || node.segments.len() < 2 {
+            return Vec::new();
+        }
+        node.children
+            .iter()
+            .map(|&child| {
+                let clause = self.node(child).clause.or(node.clause);
+                self.constituent_of(analysis, clause, child)
+            })
+            .collect()
+    }
+
+    /// The clause node that owns a flat clause, whether it is a normal node or
+    /// a host segment.
+    fn clause_node(&self, analysis: &SyntaxAnalysis, clause_index: usize) -> Option<NodeId> {
+        let clause = analysis.clauses.get(clause_index)?;
+        self.nodes.iter().enumerate().find_map(|(index, node)| {
+            if !matches!(node.kind, NodeKind::Clause(_)) {
+                return None;
+            }
+            node.segments
+                .contains(&clause.tokens)
+                .then_some(NodeId::new(index))
+        })
+    }
+
+    /// The multi-segment host that owns a flat clause, if there is one.
+    pub fn host_node(&self, analysis: &SyntaxAnalysis, clause_index: usize) -> Option<NodeId> {
+        let host = self.clause_node(analysis, clause_index)?;
+        (self.node(host).segments.len() > 1).then_some(host)
+    }
+
+    fn constituent_of(
+        &self,
+        analysis: &SyntaxAnalysis,
+        clause_index: Option<usize>,
+        child: NodeId,
+    ) -> Constituent {
+        let node = self.node(child);
+        Constituent {
+            node: child,
+            kind: node.kind,
+            role: node.role,
+            tokens: node.tokens.clone(),
+            start: node.span.start,
+            end: node.span.end,
+            interrogative: clause_index
+                .is_some_and(|clause| self.is_interrogative(analysis, clause, node)),
+        }
+    }
+
+    fn is_interrogative(
+        &self,
+        analysis: &SyntaxAnalysis,
+        clause_index: usize,
+        node: &Node,
+    ) -> bool {
+        let Some(clause) = analysis.clauses.get(clause_index) else {
+            return false;
+        };
+        let Some(head) = node.head else {
+            return false;
+        };
+        let Some(syntax) = analysis.tokens.get(head) else {
+            return false;
+        };
+        match clause.features.question_type {
+            Some(QuestionType::Wh | QuestionType::Echo) => {
+                crate::syntax::INTERROGATIVE_SURFACES.contains(&syntax.key.as_str())
+            }
+            Some(QuestionType::YesNo | QuestionType::Alternative) => {
+                syntax
+                    .readings
+                    .iter()
+                    .any(|reading| reading.clitic == Some(Clitic::Ko))
+                    || syntax.key.ends_with("ko")
+                    || syntax.key.ends_with("kö")
+            }
+            _ => false,
+        }
     }
 
     /// The first direct constituent of one flat clause.
@@ -501,6 +578,10 @@ pub struct Constituent {
     pub tokens: Range<usize>,
     pub start: usize,
     pub end: usize,
+    /// True when this constituent carries the clause's question focus: a wh
+    /// word in a `Wh`/`Echo` question, or a `-ko`/`-kö` host in a yes/no or
+    /// alternative question.
+    pub interrogative: bool,
 }
 
 /// The analysis plus its surface tree, from one morphology pass.
@@ -524,6 +605,19 @@ impl SyntaxTree {
     /// The first object/adverbial/complement before the predicate, if any.
     pub fn fronted_constituent(&self, clause: usize) -> Option<Constituent> {
         self.ast.fronted_constituent(&self.analysis, clause)
+    }
+
+    /// The direct children of the multi-segment host that owns a flat clause.
+    pub fn host_constituents(&self, clause: usize) -> Vec<Constituent> {
+        let Some(host) = self.ast.host_node(&self.analysis, clause) else {
+            return Vec::new();
+        };
+        self.ast.host_constituents(&self.analysis, host)
+    }
+
+    /// The multi-segment host node that owns a flat clause, if there is one.
+    pub fn host_node(&self, clause: usize) -> Option<NodeId> {
+        self.ast.host_node(&self.analysis, clause)
     }
 }
 
@@ -896,6 +990,31 @@ mod tests {
     }
 
     #[test]
+    fn a_wh_question_marks_its_initial_constituent() {
+        let (_, tree) = analyzed("Missä hän asuu?");
+        let first = tree.first_constituent(0).expect("a first constituent");
+        assert!(first.interrogative);
+        assert!(tree.fronted_constituent(0).is_none());
+    }
+
+    #[test]
+    fn a_yes_no_question_marks_the_clitic_host() {
+        let (_, tree) = analyzed("Tuleeko hän?");
+        let first = tree.first_constituent(0).expect("a first constituent");
+        assert!(first.interrogative);
+    }
+
+    #[test]
+    fn a_host_exposes_one_constituent_order() {
+        let (_, tree) = analyzed("Mies, joka tuli, söi.");
+        let host = tree.host_constituents(0);
+        assert_eq!(host.len(), 3);
+        assert_eq!(host[0].kind, NodeKind::Word);
+        assert_eq!(host[1].kind, NodeKind::Clause(ClauseKind::Relative));
+        assert_eq!(host[2].kind, NodeKind::Phrase(PhraseKind::Verb));
+    }
+
+    #[test]
     fn a_list_candidate_does_not_split_an_existing_phrase() {
         let (tokens, tree) = analyzed(
             "Oli ollut ihan hiljaista, sen kun Anni vain kertoi, koko ajan kynttilään katsoen, tasaisella äänellä.",
@@ -909,6 +1028,17 @@ mod tests {
         assert_eq!(phrase.children.len(), 2);
         assert!(phrase.tokens.contains(&ollut));
         validate(&tokens, &tree.analysis, &tree.ast).expect("phrase/list tree is valid");
+    }
+
+    #[test]
+    fn a_predicate_less_np_gets_a_shape_phrase() {
+        let (tokens, tree) = analyzed("Punainen auto.");
+        let phrase = phrase_for(&tree, &tokens, "auto");
+        assert_eq!(phrase.kind, NodeKind::Phrase(PhraseKind::Noun));
+        assert_eq!(phrase.role, Some(SyntacticRole::Unknown));
+        assert_eq!(phrase.confidence, RoleConfidence::Weak);
+        assert_eq!(phrase.children.len(), 2);
+        validate(&tokens, &tree.analysis, &tree.ast).expect("fragment tree is valid");
     }
 
     #[test]
