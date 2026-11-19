@@ -417,6 +417,18 @@ The Doria factual sweep adds expository prose. Its rejected windows are mostly
 comma and subject findings on OCR-damaged text; uncorrected text is not
 admitted, so only explicitly corrected, clean rows enter the corpus.
 
+Deeper gaps exposed by the curated rows, recorded rather than guessed at:
+
+- **Plural-only classless compounds.** `olosuhteet` and `ajosuunnat` are read
+  as singular nominatives, so `Erityiset olosuhteet vaativat` and
+  `oleva ajosuunnat erottava koroke` get false agreement findings. The fix
+  belongs in the classless compound/head morphology, not in the agreement rule.
+- **List continuation after a postposition.** `... kohtuutonta melua, ilman
+  pilaantumista ...` is missegmented into an extra clause, so the comma rule
+  wants a second comma after `kohtuuttonta`.
+- **Singular class-noun predicate.** `Sukset olivat kulkuneuvo` is flagged by
+  the predicative-noun rule even though the singular class reading is normal.
+
 ## P1 — shared diagnostic contract, confidence and explainability
 
 This is cross-cutting and should land before the rule expansion. It is the

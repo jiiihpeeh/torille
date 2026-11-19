@@ -32,8 +32,13 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
                 continue;
             }
             let mut complement = None;
+            let mut coordinated = false;
             for &index in &words[position + 1..] {
                 let token = &analysis.tokens[index];
+                if crate::syntax::is_coordinating(&token.key) {
+                    coordinated = true;
+                    continue;
+                }
                 let finite = token
                     .readings
                     .iter()
@@ -49,6 +54,11 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
                     complement = Some(index);
                     break;
                 }
+            }
+            // A coordinated numeral phrase (`kaksi tai useampia ajokaistoja`)
+            // has its own agreement; the single-numeral rule does not apply.
+            if coordinated {
+                continue;
             }
             let Some(complement) = complement else {
                 continue;
@@ -199,6 +209,7 @@ mod tests {
             "Kaksi kolmesta.",
             "Sata autoa.",
             "Kaksikymmentä lasta.",
+            "kaksi tai useampia ajokaistoja",
         ] {
             assert!(diagnostics(text).is_empty(), "{text}: {:#?}", diagnostics(text));
         }
