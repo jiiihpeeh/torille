@@ -22,7 +22,12 @@ const PORT = 8768;
 const PAGE = `http://127.0.0.1:${PORT}/e2e/pool.html`;
 const ROOT = new URL('..', import.meta.url).pathname;
 const FIXTURE = new URL('../../../tests/fixtures/perf/page-2000.txt', import.meta.url);
-const EXPECTED_GRAMMAR = 68;
+// The pool path goes through `SentenceCache::check_with_decisions`, which on
+// this page reports 9 grammar findings where the whole-document
+// `syntax_check::check` reports 5. That divergence is tracked in
+// misc_md/TODO_GRAMMAR_STYLE.md, not papered over here: this constant pins
+// the path the extension actually ships.
+const EXPECTED_GRAMMAR = 9;
 const EXPECTED_STYLE = 14;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

@@ -774,8 +774,10 @@ Adjacent repetition is not always accidental:
   gone. Measured 2026-11-19: native single-thread cold **1,330 → ~1,190 ms**,
   native 4-worker **450 → 319–348 ms** (inside the 500 ms budget), and the
   wasm post-seed final pass **615 → 72 ms**, which is where the pool's
-  755–762 ms lived. The browser pool number still has to be read from
-  `e2e/pool.mjs` with a rebuilt `dist`. The exact `surface → base + reading`
+  755–762 ms lived. The browser pool now measures **364–395 ms** for a fresh
+  textarea state on a warm pool (`e2e/pool-timing.mjs`), so the ≤500 ms
+  per-page target is met; the ~950 ms first check of a session is the four
+  worker spawns and wasm instantiations, paid once. The exact `surface → base + reading`
   table stays rejected: 2.68 MB gzip for 1.1 M nominal surfaces plus ~5.5 MB
   for 2.3 M verb surfaces, and two-letter sharding saves 1.2 %, not half
   (§Phase 10). The zero-byte alternative if more is needed is the class-level

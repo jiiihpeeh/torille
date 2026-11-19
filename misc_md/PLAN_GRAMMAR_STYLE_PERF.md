@@ -1,6 +1,6 @@
 # PLAN_GRAMMAR_STYLE_PERF — one morphology pass for grammar and style
 
-Status: **Phase 0–11 landed; the serial numeral upgrade is gone (native 4-worker 450 → ~340 ms, wasm final pass 615 → 72 ms); 256-bit prefix + 64-bit suffix stem-shape filter, shared paradigm probe and 4-worker morphology pool landed; cold page ~1.19 s native single-thread / ~0.34 s with 4 workers; the wasm pool tail that made ~0.76 s is measured and removed; the exact form table is priced (~8 MB gz) and stays rejected** · 2026-11-19 · branch `syntax` · baseline `2e5f13c`
+Status: **Phase 0–11 landed; the serial numeral upgrade is gone, native 4-worker is ~340 ms and the wasm pool meets ≤500 ms per page (364–395 ms fresh state) once the four workers exist; 256-bit prefix + 64-bit suffix stem-shape filter, shared paradigm probe and 4-worker morphology pool landed; cold page ~1.19 s native single-thread / ~0.34 s with 4 workers; a browser session pays one ~0.95 s worker start-up; the exact form table is priced (~8 MB gz) and stays rejected** · 2026-11-19 · branch `syntax` · baseline `2e5f13c`
 
 This is the performance plan for the two opt-in analysis layers:
 
@@ -1305,9 +1305,28 @@ Measured 2026-11-19 on `page-2000`:
 
 The rule change is semantic, not a shortcut: it stops a deep walk that was
 overwriting a correct essive/locative reading with a partitive-oriented one.
-The wasm pool number itself still has to be read from the browser e2e with a
-rebuilt `dist` (the committed one predates this fix), but the tail it was
-paying is gone.
+
+#### The browser pool, measured
+
+`extensions/firefox/e2e/pool-timing.mjs` builds the extension and warms the
+four-worker pool with a one-sentence check, then times the full page on a
+**fresh textarea state** — the cold-page cost a reader pays for each new
+article while the browser session is alive. Chrome `--headless=new`:
+
+| measurement | wall |
+|---|---:|
+| warm-up sentence (spawns the four workers) | 57 ms |
+| first full page in the session (cold workers and state) | ~950 ms |
+| full page, fresh state, warm pool #1 | **364–395 ms** |
+| #2 / #3 (worker caches warm from the previous page) | 273 / 237 ms |
+
+So the ≤500 ms cold-page target is **met once the pool exists** (364–395 ms),
+and the ~950 ms first check is worker start-up: four wasm instantiations of the
+31.8 MB module plus their first map access, paid once per browser session, not
+per page. `extensions/firefox/e2e/pool.mjs` pins the shipped path; its grammar
+expectation moved 68 → 9 because the engine changed, and the 9-vs-5 divergence
+between the sentence-cache path and the whole-document pass is tracked in
+`misc_md/TODO_GRAMMAR_STYLE.md` rather than hidden in the constant.
 
 ## 8. Measurement harness
 
