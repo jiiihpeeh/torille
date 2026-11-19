@@ -1,7 +1,8 @@
 # PLAN_FORM_TABLE — an exact surface → base + reading table
 
-Status: **implemented on branch `form-table`, measured, off by default** ·
-2026-11-19 · base `be4e13a` (same tree as `syntax`/`master`)
+Status: **part 1 implemented on branch `form-table`, measured, off by default;
+part 2 (negative evidence) planned** · 2026-11-19 · base `be4e13a` (same tree
+as `syntax`/`master`)
 
 The table is built: `gen_form_table` writes a 3.59 MB gzip / 22.2 MB raw blob,
 the resolver consults it behind the off-by-default `form-table` feature, and
@@ -24,7 +25,8 @@ Contents: [§1 the question](#1-the-question) ·
 [§5 wiring](#5-wiring-and-the-fallback-contract) ·
 [§6 generator](#6-the-generator) ·
 [§7 phases](#7-phases-and-gates) · [§8 risks](#8-risks-and-abort-criteria) ·
-[§9 harness](#9-measurement-harness) · [§10 decisions](#10-decisions)
+[§9 harness](#9-measurement-harness) · [§10 decisions](#10-decisions) ·
+[§11 part 2](#11-part-2--negative-evidence-planned-the-next-speed-step)
 
 ## 1. The question
 
@@ -302,3 +304,68 @@ correctness net; the exact-output fixtures are the parity net.
   download size until Gate D says the module growth is paid back.
 - **Possessives, clitics, classless compounds and derived layers stay out.**
   They are 26 of 1,124 surfaces on the fixture and each has its own path.
+
+## 11. Part 2 — negative evidence (planned, the next speed step)
+
+Part 1 bought ~10 % because the table is a **positive-only** cache: absence
+must fall back, so the 46 % of stem-map verifies that *fail* still build the
+paradigm. Those failures are now the largest remaining build cost — 394 of the
+1,342 stem-map verifies, plus 486 failing builds in the cheap gate.
+
+The next step makes absence mean "cannot emit". That is sound if the table
+records **every split**, not one per form:
+
+- **Generator:** for each form of base `B`, for every prefix `P` such that
+  `(P, B)` is a committed stem-map pair and the remainder `E` is in the runtime
+  strip list (and `P + E` is the form), record `(P, E, B)`. Part 1 records the
+  longest such prefix only.
+- **Resolver:** for a probed `(stem, ending)` where `STEM_BUCKETS_*` yields
+  candidates, the table answers both ways — hit accepts, miss rejects. The
+  stem-map ladders stop calling `emits_form` at all.
+
+Completeness is by construction: the recorded set is exactly the set of
+`(P, E, B)` the runtime can probe, so a miss means the row does not exist, and
+no row means `B` never emits `P + E`.
+
+What this does **not** cover, and what stays on the verify:
+
+| path | why |
+|---|---|
+| vowel-trimmed verb probe | the surface is `trimmed + vowels + ending`, not `trimmed + ending`; a table keyed by the trimmed stem would be a lie |
+| cheap gate (`check_normal_fast`) | it has its own static maps in `src/suggest/known/stems.rs`; sharing the table there is step 2 below |
+| head-1 walk | it names candidates by prefix, not by a stem pair |
+| the 33 % of forms with no split | derived forms, classless compounds, proper names |
+
+### Gates
+
+| gate | target | why |
+|---|---|---|
+| size | ≤ 6 MB gzip (expected 4.5–5.5 MB from ~1.5–2× the rows) | all splits multiply the row count; measure before wiring |
+| speed | single-thread ≤ 800 ms, 4-worker ≤ 260 ms | removes the 394 failed verifies and their `form_readings` walks |
+| parity | byte-identical on the fixtures and `page-2000` | the reject path must not change a reading |
+| **staleness** | exhaustive: for every lemma and form, table-miss ⇒ `emits_form` false | **this is the price of rejection**: a stale blob now *loses* forms instead of merely being slow |
+
+The staleness gate is the whole risk. Part 1's "never reject" property is what
+made a stale table harmless; part 2 trades it for the 40 %. The guard has to
+be the `derived_*` discipline: regenerate with the engine, test the blob
+against `inflect_all` exhaustively (ignored in the normal suite, mandatory in
+the nightly job), and treat a class-engine change without regeneration as a
+red build.
+
+### Size offset
+
+Once the table is complete for every probed split, the two stem maps
+(`stem_map_noun.bin.gz` 558 KB + `stem_map_verb.bin.gz` 438 KB) become
+redundant for the resolver and can be retired in a later step, so the net
+growth is ~3.5–4.5 MB rather than 4.5–5.5 MB.
+
+### Order after part 2
+
+1. **Cheap gate** — 599 builds, 486 failing, 220 ms. Give
+   `check_normal_fast` the same table (or make the morphology ladder and the
+   cheap gate share one base search) instead of a second static map.
+2. **Head-1 walk** — 43 builds, 15 ms, but it is the bound that makes unknown
+   words cost seconds on a page with many names.
+3. **Trimmed verb stems** — store the vowel run in the verb group so
+   `(trimmed, ending)` can be answered without the surface equal to the key.
+
