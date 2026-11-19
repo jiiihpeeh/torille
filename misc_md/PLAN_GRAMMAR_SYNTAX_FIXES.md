@@ -1,8 +1,8 @@
 # PLAN_GRAMMAR_SYNTAX_FIXES — the remaining grammar/syntax work
 
-Status: **proposal.** No code in this plan. It follows the completed
-`PLAN_GRAMMAR_PRECISION.md` and the landed AST phases in
-`PLAN_SYNTAX_AST.md` / `PLAN_SYNTAX_AST_REST.md`.
+Status: **phases 1–4 landed; 5 closed as won’t-fix; 6 docs/cleanup complete.**
+It follows the completed `PLAN_GRAMMAR_PRECISION.md` and the landed AST phases
+in `PLAN_SYNTAX_AST.md` / `PLAN_SYNTAX_AST_REST.md`.
 
 The checker is precise: 79 adjudicated clean prose rows / 1,233 words, 1 true
 positive and 0 known false positives; `page-2000` is at 5 diagnostics. The
@@ -44,12 +44,12 @@ are not required for the four user-facing fixes.
 
 | phase | work | risk | user value |
 |---|---|---|---|
-| 1 | predicate-less nominal phrases in the AST | low | removes the parity exception; headings/captions |
-| 2 | relative closing-comma diagnostic | medium | real grammar false negative |
-| 3 | imperative connegative corrections | low | real correction gap |
-| 4 | interrogative and host constituent views | low | word-order API/UI |
-| 5 | conditional/potential connegative | gated | recall, only with morphology evidence |
-| 6 | docs/API cleanup | low | maintainability |
+| 1 | predicate-less nominal phrases in the AST | **landed** | removes the parity exception; headings/captions |
+| 2 | relative closing-comma diagnostic | **landed** | real grammar false negative |
+| 3 | imperative connegative corrections | **landed (2sg)** | real correction gap |
+| 4 | interrogative and host constituent views | **landed** | word-order API/UI |
+| 5 | conditional/potential connegative | **won’t-fix** | no false-negative evidence |
+| 6 | docs/API cleanup | **docs landed; optional code deferred** | maintainability |
 
 Each phase is a separate commit. Phases 1 and 4 are AST-only and must not
 change a diagnostic. Phases 2 and 3 change checker output and need exact
@@ -121,6 +121,11 @@ the AST has no phrase and the 5c.1 audit cannot compare the head.
 - `syntax_tree --check` over the corpus;
 - `attribute_head_matches_the_ast_phrase_head` has **zero** exceptions;
 - `cargo test --release --workspace`; no diagnostics changed.
+
+**Phase 1 landed.** `phrases.rs` now adds a narrow shape phrase in a
+predicate-less clause: adjective/ordinal/demonstrative modifiers immediately
+before a noun, marked `Weak` and role `Unknown`. The 5c.1 parity audit has no
+exceptions, and `Punainen auto.` has a noun phrase.
 
 ## 5. Phase 2 — relative closing comma
 
@@ -201,6 +206,12 @@ exception before landing.
 - `page-2000` count does not rise;
 - `cargo test --release --workspace`.
 
+**Phase 2 landed.** `relative_comma` now detects a finite non-predicate word
+before the relative predicate when the opening comma is present and no closing
+comma/dash/line break is there. `Mies, joka tuli söi.` emits
+`comma_pair_unbalanced` after `tuli`; the clean, restrictive, final, dash and
+coordinated variants stay quiet. `page-2000` stays at 5 diagnostics.
+
 ## 6. Phase 3 — imperative connegative corrections
 
 ### Goal
@@ -263,6 +274,11 @@ the imperative connegative is not generated, phase 3 reduces to extending
 - exact correction fixture;
 - no new diagnostics on clean prose;
 - `cargo test --release --workspace`.
+
+**Phase 3 landed.** `Älä menet.` now offers `mene`. The plural/third-person
+imperative connegatives are `Repaired` in the catalogue, so they stay
+uncorrected; `connegative_imperative` is updated and a 2sg unit test pins the
+behaviour.
 
 ## 7. Phase 4 — interrogative and host constituents
 
@@ -340,6 +356,11 @@ Mies, joka tuli, söi.
 - `node --experimental-wasm-modules tests/ast-shape.mjs`;
 - `cargo test --release --workspace`.
 
+**Phase 4 landed.** `Constituent.interrogative` marks wh words and `-ko`/`-kö`
+hosts; `syntax_tree --order` prints `q:` and a `host:` line; wasm
+`analyze_ast` exposes the field and an additive `hosts` array.
+`Mies, joka tuli, söi.` has a three-constituent host order.
+
 ## 8. Phase 5 — conditional/potential connegative (gated)
 
 The conditional connegative is accepted as the 3sg conditional surface; the
@@ -355,6 +376,10 @@ Do not add a rule until a morphology fixture shows:
 If that evidence appears, add a narrow `connegative` case with the same
 `Warning`/`Likely` policy as the existing uncertain paths. Otherwise close the
 item as **won’t-fix**: quiet is better than a false positive.
+
+**Phase 5 closed.** `En menne.` and `En menisi.` are quiet and correct; no
+false negative was found, and the engine does not tag a potential connegative
+reliably enough to justify a guess. No rule is added.
 
 ## 9. Phase 6 — optional structural cleanup
 
@@ -387,6 +412,11 @@ duplicating the enum is less risky than a cross-layer dependency today.
 
 Update `PLAN_SYNTAX_AST_REST.md` / `PLAN_SYNTAX_AST.md` status when phase 1
 lands; the parity exception should disappear.
+
+**Phase 6 status.** The documentation baseline is refreshed below. The
+optional `Clause.sentence` and flat `ClauseKind` unification remain deferred:
+no current rule or UI needs them, and adding `Clause.sentence` would change
+the public struct, `PartialEq` and the wasm JSON without a consumer.
 
 ## 10. Test matrix
 
@@ -438,16 +468,15 @@ No Python gate is needed unless a data table or morphology changes.
 
 ## 12. Definition of done
 
-- predicate-less `kalpea tyttö` has an AST phrase and the 5c.1 parity audit
-  has no exceptions;
-- `Mies, joka tuli söi.` emits `comma_pair_unbalanced`, while the clean
-  variants stay quiet;
-- `Älä menet.` and its plural/third-person variants offer a correct
-  imperative connegative correction, or the catalogue limitation is
-  documented and no wrong form is offered;
-- `Missä hän asuu?` and `Mies, joka tuli, söi.` expose their constituents in
-  `syntax_tree --order` and the wasm AST;
-- conditional/potential is either evidence-backed or explicitly closed;
-- docs show 79 clean rows / 1,233 words, 1 true positive, 0 false positives,
-  page-2000 5;
+- **done:** predicate-less `kalpea tyttö` has an AST phrase and the 5c.1
+  parity audit has no exceptions;
+- **done:** `Mies, joka tuli söi.` emits `comma_pair_unbalanced`, while the
+  clean variants stay quiet;
+- **done (2sg):** `Älä menet.` offers `mene`; the plural/third-person
+  catalogue limitation is documented and no wrong form is offered;
+- **done:** `Missä hän asuu?` and `Mies, joka tuli, söi.` expose their
+  constituents in `syntax_tree --order` and the wasm AST;
+- **done:** conditional/potential is explicitly closed as won’t-fix;
+- **done:** docs show 79 clean rows / 1,233 words, 1 true positive, 0 false
+  positives, page-2000 5;
 - clippy, the workspace suite, the AST corpus and the wasm check are green.

@@ -100,14 +100,18 @@ competing reading that must not win for ambiguous surfaces (`joka päivä`,
 `ilman`, `sen`, `sinut`, and the determiner/relative split).
 `tests/fixtures/prose/adjudicated.json` is the reviewed-prose gate: clean rows
 must stay quiet, true positives must match their kinds, and known false
-positives pin the current bugs so a fix has to move the row. As of 2026-11-17
-the prose fixture has 66 clean rows / 1,021 words and no known false positives.
+positives pin the current bugs so a fix has to move the row. As of 2026-11-19
+the prose fixture has 79 clean rows / 1,233 words, 1 true positive and 0 known
+false positives; `page-2000` is at 5 diagnostics.
 
-Current baseline (2026-11-15):
+Current baseline (2026-11-19):
 
 ```text
-clean rows 154: 0 errors, 0 warnings, 0 suggestions
-cases 61: every emitted kind precision 1.00, recall 1.00
+syntax_eval clean rows 154: 0 errors, 0 warnings, 0 suggestions
+syntax_eval cases 60: every emitted kind precision 1.00, recall 1.00
+syntax_diagnostics: 75 exact-output cases, 272 clean rows
+prose: 79 clean rows / 1,233 words, 1 true positive, 0 known false positives
+page-2000: 5 diagnostics
 ```
 
 Run both gates:
@@ -248,8 +252,10 @@ class.
   (`väsynyt`) is resolved through the verb lemma before a correction is
   offered.
 - **Connegative findings are safest in declarative clauses.** `en mene`,
-  `hän ei menee` and the negative past are covered. Imperative auxiliaries
-  (`älä`, `älkää`) are detected but currently get no automatic correction; the
+  `hän ei menee` and the negative past are covered. The 2sg imperative
+  (`älä menet.`) now offers `mene`; the plural/third-person imperative
+  connegatives (`älkää menkö`, `älköön menkö`) are detected but stay
+  uncorrected because the engine emits those surfaces as `Repaired`. The
   conditional connegative is accepted as the 3sg conditional surface, and the
   potential is left quiet.
 - **Numeral government is deliberately narrow.** Only a nominative complement
@@ -319,8 +325,9 @@ class.
   quiet instead of naming the wrong word.
 - **Relative clauses are linked but not reparsed.** A relative clause carries
   `parent`, `children` and an `antecedent` token link, while the linear clause
-  ranges stay the source of truth. Comma diagnostics still work on the linear
-  ranges; a rule cannot yet ask for the host as one uninterrupted span.
+  ranges stay the source of truth. The closing comma is checked from the
+  linear clause pair when the parser swallowed the host predicate; a rule
+  still cannot ask for the host as one uninterrupted span.
 - **The extension grammar check is context-menu only.** There is no per-site
   toggle or keystroke trigger yet; the context menu is the opt-in.
 - **No grammar/style mixing.** Repetition, register and phrasing are a
@@ -329,9 +336,10 @@ class.
 
 ## Remaining work
 
-The next grammar/syntax fixes — predicate-less nominal phrases, missing
-relative closing commas, imperative connegative corrections, interrogative and
-host constituent views, and the optional `Clause.sentence` cleanup — are in
+The grammar/syntax fix plan is landed through the user-facing phases:
+predicate-less nominal phrases, missing relative closing commas, the 2sg
+imperative connegative correction, and interrogative/host constituent views.
+The conditional/potential connegative is closed as won’t-fix, and the optional
+`Clause.sentence` / flat `ClauseKind` cleanup remains deferred without a
+consumer. The full record is
 [`../misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md`](../misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md).
-The precision work is complete; this plan is about structural coverage and
-narrow recall, not another false-positive sweep.

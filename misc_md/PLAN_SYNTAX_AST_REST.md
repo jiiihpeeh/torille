@@ -13,7 +13,7 @@ This document covers what is left:
 | 3b | nested, mixed, clause and predicate lists | do only when a consumer needs it |
 | 4 | coordination nodes | **defer**; the list arena already covers most of it |
 | 5b | wasm `analyze_ast` export | **landed** |
-| 5c.1 | AST-backed attribute agreement | **parity audit landed**; one documented flat-only exception, migration deferred |
+| 5c.1 | AST-backed attribute agreement | **parity audit landed, zero exceptions**; migration deferred (no consumer) |
 | 5c.2 | word-order diagnostics | **defer**; suggestion-only, no safe rule yet |
 | 6 | API cleanup and helper migration | last, after the consumers settle |
 
@@ -400,13 +400,12 @@ Gate:
 **Phase 5c.1 landing.** `syntax_check/agreement.rs` now has the
 `attribute_head_matches_the_ast_phrase_head` audit over every syntax fixture
 and the adjudicated prose. It compares the flat `attribute_head` with the
-head of the AST `Phrase` containing the modifier. Every candidate agrees
-except one documented flat-only case: in a predicate-less NP
-(`... koulumestarin kivuloinen ja kalpea tyttö ...`) the flat rule walks to
-`tyttö`, while the flat model gives `kalpea` no head edge, so the AST has no
-phrase to read. The exception is pinned in the test. Because the audit is not
-perfectly clean, the checker migration is deferred; `check_attributes` stays
-on the flat head lookup with the AST as the future path.
+head of the AST `Phrase` containing the modifier. Every candidate now agrees:
+the predicate-less shape phrases added by `PLAN_GRAMMAR_SYNTAX_FIXES.md`
+cover the former `... kivuloinen ja kalpea tyttö ...` exception. The checker
+migration is still deferred because there is no consumer pressure and the flat
+rule is already correct; `check_attributes` stays on the flat head lookup with
+the AST as the future path.
 
 ### 6.2 Word-order diagnostics (5c.2)
 
