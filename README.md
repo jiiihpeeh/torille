@@ -411,6 +411,9 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
   underneath the checker.
 - [`misc_md/PLAN_SYNTAX_AST.md`](misc_md/PLAN_SYNTAX_AST.md) — the proposed typed surface
   tree over `syntax`: node kinds, the pass pipeline and the invariants.
+- [`misc_md/PLAN_SYNTAX_AST_REST.md`](misc_md/PLAN_SYNTAX_AST_REST.md) — the remaining
+  surface-tree work: nested lists, coordination, the wasm export and checker
+  consumers.
 - [`misc_md/PLAN_COMPOUND.md`](misc_md/PLAN_COMPOUND.md) — the compound engine's inflection
   model and remaining work.
 - [`misc_md/PLAN_HYPHENATION.md`](misc_md/PLAN_HYPHENATION.md) — the hyphenation milestones

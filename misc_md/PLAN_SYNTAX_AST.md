@@ -4,7 +4,8 @@ Status: **Phases 0–5a landed.** The skeleton, head-driven phrases, the
 multi-segment relative host, top-level nominal lists, parentheticals, quotes
 and the word-order constituent view are in `src/syntax/ast/`. The flat
 `syntax::SyntaxAnalysis` stays the authority; the tree is an additive view
-built on demand.
+built on demand. The remaining phases (3b, 4, 5b, 5c, 6) are detailed in
+[`PLAN_SYNTAX_AST_REST.md`](PLAN_SYNTAX_AST_REST.md).
 
 ## Decision summary
 
@@ -936,3 +937,6 @@ Clause(main)
 - [`../docs/word_order.md`](../docs/word_order.md) is the first intended
   consumer: its “constituent” language becomes a node, and `Clause::features`
   remains the clause-level feature source.
+- [`PLAN_SYNTAX_AST_REST.md`](PLAN_SYNTAX_AST_REST.md) continues the plan for
+  the remaining phases: 3b nested lists, 4 coordination, 5b wasm, 5c checker
+  consumers and 6 cleanup.
