@@ -32,6 +32,9 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
   landed; the remaining work is in `PLAN_SYNTAX_AST_REST.md`.
 - `misc_md/PLAN_SYNTAX_AST_REST.md` — the remaining AST work: nested/mixed
   lists, coordination, the wasm export, checker consumers and cleanup.
+- `misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md` — the remaining grammar/syntax work:
+  predicate-less phrases, relative closing commas, imperative connegative
+  corrections, interrogative/host constituent views and the optional cleanup.
 - `misc_md/PLAN_STYLE.md` — the separate opt-in style-layer plan: curated phrase/word
   tables, repetition and long-sentence metrics, suggestion-only diagnostics and
   a panel UI. Implemented; see `docs/style_checker.md`.

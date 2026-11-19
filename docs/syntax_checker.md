@@ -326,3 +326,12 @@ class.
 - **No grammar/style mixing.** Repetition, register and phrasing are a
   separate opt-in layer, [`docs/style_checker.md`](style_checker.md); the
   grammar checker does not emit those kinds.
+
+## Remaining work
+
+The next grammar/syntax fixes — predicate-less nominal phrases, missing
+relative closing commas, imperative connegative corrections, interrogative and
+host constituent views, and the optional `Clause.sentence` cleanup — are in
+[`../misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md`](../misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md).
+The precision work is complete; this plan is about structural coverage and
+narrow recall, not another false-positive sweep.
