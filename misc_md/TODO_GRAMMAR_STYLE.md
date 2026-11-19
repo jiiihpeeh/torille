@@ -768,19 +768,26 @@ Adjacent repetition is not always accidental:
   stay source-identical and pass their typecheck and unit tests.
 
 - [ ] **Cold page target**
-  `PLAN_GRAMMAR_STYLE_PERF.md` still records the ≤500 ms cold-page target as
-  open for the shipping wasm path. The 2026-11-19 re-measurement after the
-  suffix mask is **1,330 ms** cold morphology single-thread, **~989 ms**
-  fresh-cache style, and **450 ms** with the 4 native workers. The native
-  4-worker path now meets the ≤500 ms budget; the wasm pool is still above it
-  (**755–762 ms** with 4 workers, 777–852 ms with 8). Warm all stays ~93 ms
-  including morphology. What is left is per-chunk paradigm construction
-  (~66%) plus a duplicated unknown-word search (~20%); closing it needs a
-  form → readings table or a class-specific "can this class spell this
-  surface" test, not cheaper cells (the plan records the attribution
-  experiment). The reverse-index experiment stays rejected on blob size.
-  Performance remains a separate engineering objective, not a rule-correctness
-  gate.
+  `PLAN_GRAMMAR_STYLE_PERF.md` records the ≤500 ms cold-page target as open
+  for the shipping wasm path. Re-measured 2026-11-19: **1,330 ms** cold
+  morphology single-thread, **~989 ms** fresh-cache style, **450 ms** with the
+  4 native workers; the wasm pool is **755–762 ms** with 4 workers and
+  777–852 ms with 8. **The engine lever is now measured, not guessed**
+  (plan §Phase 10): paradigm construction is 685 ms of the pass across 1,984
+  builds of ~693 forms each, 908 of them failing; the suffix mask cannot help
+  because a ~700-form verb paradigm saturates a 64-bit (or 256-bit) Bloom
+  filter. An exact `surface → base + reading` table costs **2.68 MB gzip for
+  the 1.1 M nominal surfaces** and ~5.5 MB more for the 2.3 M verb surfaces
+  (`all_forms.csv` is nominal-only), so ~8 MB total; two-letter sharding saves
+  1.2 % of that, not half. No table under the 3 MB gate reaches 500 ms, and
+  even a perfect engine lands at ~550 ms wasm because 305 ms of the wall is
+  worker start-up and transport.
+  The next step is therefore **not** another engine change: measure the wasm
+  phases (instantiation vs chunk resolve vs transport) before spending bytes
+  on a table. The zero-byte alternative is the class-level
+  `accepts` test, which needs `expand/verbs/utility.rs::paradigm` restated as
+  data. Performance remains a separate engineering objective, not a
+  rule-correctness gate.
 
 ## P3 — future syntax roadmap
 

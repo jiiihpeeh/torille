@@ -1,6 +1,6 @@
 # PLAN_GRAMMAR_STYLE_PERF — one morphology pass for grammar and style
 
-Status: **Phase 0–8 landed/decided; 256-bit prefix + 64-bit suffix stem-shape filter, shared paradigm probe and 4-worker morphology pool landed; cold page ~1.33 s native single-thread / ~0.45 s with 4 workers; wasm pool ~0.76 s, ≤500 ms open; background and content-panel e2e landed** · 2026-11-19 · branch `syntax` · baseline `2e5f13c`
+Status: **Phase 0–10 landed/decided; 256-bit prefix + 64-bit suffix stem-shape filter, shared paradigm probe and 4-worker morphology pool landed; cold page ~1.33 s native single-thread / ~0.45 s with 4 workers; wasm pool ~0.76 s, ≤500 ms open and now attributed; the exact form table is measured and priced (~8 MB gz) but does not reach the target** · 2026-11-19 · branch `syntax` · baseline `2e5f13c`
 
 This is the performance plan for the two opt-in analysis layers:
 
@@ -89,6 +89,12 @@ Landed:
   findings on the perf fixture; the stem-map-first reorder also removes one
   false `verb_rection` on `korkean` (71 → 68 grammar diagnostics). The syntax
   corpus's `two_tuli` case is green again.
+- **Phases 8–10** — the shared paradigm probe, the stem-shape filter and the
+  exact-table decision. Cold morphology 2,016 → 1,330 ms single-thread and
+  753 → 450 ms on 4 workers. Phase 10 priced the one remaining engine lever
+  (an exact `surface → base + reading` table) at ~8 MB gzip and showed no
+  table under the 3 MB gate reaches 500 ms wasm, because 305 ms of that wall
+  is worker start-up and transport. See §Phase 10.
 
 Measured on the committed fixture, single-thread (wasm shape):
 
@@ -1146,6 +1152,115 @@ A wider 256-bit suffix mask (four hashes per row, 64 bytes/row) was measured
 and rejected: native single-thread cold moved 1,330 → 1,504 ms and the
 4-worker path 450 → 490 ms. The extra hash cost outweighed the additional
 candidates it rejected, so the 64-bit suffix mask stays.
+
+### Phase 10 — the exact form table, measured and rejected (decision)
+
+The remaining plan text said the next lever was "a form → readings table or a
+class-specific 'can this class spell this surface' test". Both were built far
+enough to price them. The answer is that the table does not fit the wasm
+budget and the mask cannot substitute for it. **Not shipped.**
+
+#### Where the cold pass actually goes
+
+`page-2000`, cold `analyze_morphology`, single-thread, release, median of
+three runs. The paradigm cache was instrumented by call site (the counters
+were removed after the run):
+
+| caller | builds | of which fail | form visits | build ms |
+|---|---:|---:|---:|---:|
+| noun stem-map verify | 740 | 123 | 62 k | 130 |
+| verb stem-map verify | 602 | 271 | 813 k | 320 |
+| head-1 walk | 43 | 28 | 30 k | 15 |
+| other (cheap gate, deep probes) | 599 | 486 | 469 k | 220 |
+| **total** | **1,984** | **908** | **1.38 M** | **685** |
+
+The pass is 1,420–1,580 ms, so paradigm construction is ~45 % of it and the
+rest is candidate scan, map probes and reading assembly. A build walks **693
+forms on average**; the verb stem map is 47 % of the build time on its own,
+because a verb paradigm is an order of magnitude bigger than a noun's.
+
+Two facts follow, and they close the mask line of work:
+
+- **46 % of the builds fail.** The surface was not in the candidate's
+  paradigm. That is the recoverable half.
+- **The suffix mask cannot reject those candidates for verbs.** A class-52
+  verb emits ~700 forms; the suffix mask is 64 bits with one bit per form, so
+  `P(bit never set) = (63/64)^700 ≈ 2·10^-5`. A verb row's suffix mask is
+  saturated — every bit set — and rejects nothing. The 256-bit experiment
+  failed for the same reason: 700 draws into 256 bits leaves ~7 % of the bits
+  clear, which is not a filter. Widening further is the same trade again.
+  Bloom masks over a *paradigm* cannot work; only a per-form structure can.
+
+#### What the form table costs
+
+A probe generated every non-possessive, non-clitic nominal form from
+`inflect_lemma` and encoded three layouts, each gzipped at the best level (the
+same codec `build.rs` uses):
+
+| layout | rows | raw | gzip |
+|---|---:|---:|---:|
+| flat `surface → base id` | 1,096,373 surfaces | 21.0 MB | **2.68 MB** |
+| two-letter shard (`aa` bucket, prefix once) | 385 shards | 18.7 MB | **2.65 MB** |
+| two-level `stem → (ending, base id)` | 234,537 stems | 11.8 MB | **2.85 MB** |
+
+The prefix-sharded layout — "`aavetta` points at the `aa` map, which holds the
+base" — saves **33 KB of 2.68 MB (1.2 %)**. Front-coding and gzip already
+exploit the shared prefixes, so sharding buys lookup locality, not bytes; the
+byte count is the information, not the layout. The two-level stem layout is
+*larger* compressed because the stem text repeats between neighbouring rows.
+
+Nouns alone are 2.7 MB gzip and they are the cheap half. `data/all_forms.csv`
+is **nominal only** (every case column is a nominal case), so the verb half
+has to be generated from scratch: 10,034 verb lemmas emit **2,298,321
+non-possessive, non-clitic forms over 2,275,732 unique surfaces**, and a verb
+reading carries mood, tense, person, voice and participle case on top of the
+nominal fields. At the measured nominal ratio that is ~5.5 MB gzip, so the
+exact table is **~8 MB compressed / ~25 MB raw** — against the 3 MB ceiling
+that already rejected the reverse index in Phase 6 and the +1 MB the
+stem-shape filter was allowed.
+
+#### What would still work, and what it costs
+
+| option | bytes | engine saving | cold page |
+|---|---:|---:|---|
+| exact `surface → base + reading`, all classes | ~8 MB gz | ≤ 45 % | ~550 ms wasm |
+| exact table, nouns only | 2.7 MB | ~10–13 % | ~690 ms wasm |
+| frequency-bounded table (Phase 6 subset, 86.6 % of tokens) | 3 MB | ~30 % | ~610 ms wasm |
+| class-level `accepts` (no data file) | 0 | ≤ 45 % | ~550 ms wasm |
+
+Nothing in the table column reaches 500 ms, and the reason is the next
+section: the wasm gap is not engine time.
+
+The class-level `accepts` test is the 0-byte alternative: ask the class whether
+it can spell the surface instead of materialising its grid. For nominals that
+is one generic walk over the cells a class already declares
+(`expand/nominals/utility.rs` plus the regenerated template). For verbs the
+paradigm is a single `paradigm(&Stems)` function in
+`expand/verbs/utility.rs` that formats and pushes every cell inline, so the
+same test needs that function restated as data (stem × ending × tags) and then
+driven — a rewrite of one 2,000-line file that 27 class modules share, gated by
+the catalogue tests. It removes both the failing and the succeeding builds,
+which is why it matches the table's saving without the bytes; the cost is code
+and risk, not download size.
+
+#### The wasm gap is not engine time
+
+Native 4-worker is 450 ms and wasm 4-worker is 755–762 ms for the same
+grouping and the same engine. The 305 ms difference is worker start-up, module
+instantiation, chunk transport and the final merged pass. Adding it to the
+best possible engine result (`450 × 0.55 + 305 ≈ 550 ms`) means **even a
+perfect form table does not reach ≤500 ms** unless part of that 305 ms is
+per-chunk work that shrinks with the engine. 8 workers already showed the gap
+is not simply "more parallelism" (777–852 ms: smaller chunks build the same
+lemmas in more workers).
+
+So the order of work is fixed: before spending 8 MB on a table, measure what
+the 305 ms is. If it is mostly instantiation, the ≤500 ms target is a browser
+budget, not an engine budget, and it should be re-scoped.
+
+**Decision:** no data table ships yet. The measured table prices are recorded
+above; the next step is the wasm-phase measurement, and until it lands the
+engine remains as fast as it gets under the current blob budget.
 
 ## 8. Measurement harness
 
