@@ -419,12 +419,9 @@ pub fn analyze_morphology(tokens: &[Token], cache: &mut MorphologyCache) -> Morp
         let Some(info) = words[index].clone() else {
             continue;
         };
-        let governed_by_numeral = previous.as_ref().is_some_and(|previous| {
-            previous
-                .readings
-                .iter()
-                .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Numeral))
-        });
+        let governed_by_numeral = previous
+            .as_ref()
+            .is_some_and(|previous| numeral_governs_partitive(previous));
         if governed_by_numeral
             && !info
                 .readings
@@ -587,12 +584,9 @@ pub fn analyze_morphology_parallel(
         let Some(info) = words[index].clone() else {
             continue;
         };
-        let governed_by_numeral = previous.as_ref().is_some_and(|previous| {
-            previous
-                .readings
-                .iter()
-                .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Numeral))
-        });
+        let governed_by_numeral = previous
+            .as_ref()
+            .is_some_and(|previous| numeral_governs_partitive(previous));
         if governed_by_numeral
             && !info
                 .readings
@@ -618,6 +612,24 @@ pub fn analyze_morphology_parallel(
         },
         stats,
     )
+}
+
+/// Whether `info` is a numeral that governs a partitive.
+///
+/// Only a nominative cardinal does: `kaksi lasta` takes the partitive, while
+/// `kahtena päivänä` and `kolmesta miehestä` agree with their head in the
+/// numeral's own case and govern nothing. The distinction is a performance
+/// one too: the upgrade it gates is the one automatic deep walk left in the
+/// first pass, and the twelve upgrades on the 1,958-word fixture were almost
+/// all governed by an inflected numeral (`päivänä`, `miehellä`, `suusta`,
+/// `kotona`, ...). They cost ~190 ms cold on the owning thread, after every
+/// pool worker had already finished
+/// (`PLAN_GRAMMAR_STYLE_PERF.md` §Phase 11).
+fn numeral_governs_partitive(info: &WordInfo) -> bool {
+    info.readings.iter().any(|reading| {
+        reading.part_of_speech == Some(PartOfSpeech::Numeral)
+            && reading.case.is_none_or(|case| case == Case::Nominative)
+    })
 }
 
 /// Resolve a lowercase word through the shallow ladder.
@@ -1854,6 +1866,25 @@ mod tests {
                 .any(|reading| reading.case == Some(Case::Partitive)),
             "lasta should gain the partitive reading: {:?}",
             info.readings()
+        );
+    }
+
+    /// Only a nominative numeral governs a partitive, so the numeral upgrade
+    /// — the one automatic deep walk in the first pass — must not fire after
+    /// an inflected numeral. `kahtena päivänä` agrees in the essive.
+    #[test]
+    fn an_inflected_numeral_does_not_trigger_the_partitive_upgrade() {
+        let (_, cache) = analyzed("kahtena päivänä");
+        assert_eq!(
+            cache.stats().deep_upgrades,
+            0,
+            "an essive numeral governs no partitive"
+        );
+        let (_, cache) = analyzed("kaksi lasta");
+        assert_eq!(
+            cache.stats().deep_upgrades,
+            1,
+            "a nominative numeral still upgrades its partitive"
         );
     }
 

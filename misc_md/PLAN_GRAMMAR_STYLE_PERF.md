@@ -1,6 +1,6 @@
 # PLAN_GRAMMAR_STYLE_PERF — one morphology pass for grammar and style
 
-Status: **Phase 0–10 landed/decided; 256-bit prefix + 64-bit suffix stem-shape filter, shared paradigm probe and 4-worker morphology pool landed; cold page ~1.33 s native single-thread / ~0.45 s with 4 workers; wasm pool ~0.76 s, ≤500 ms open and now attributed; the exact form table is measured and priced (~8 MB gz) but does not reach the target** · 2026-11-19 · branch `syntax` · baseline `2e5f13c`
+Status: **Phase 0–11 landed; the serial numeral upgrade is gone (native 4-worker 450 → ~340 ms, wasm final pass 615 → 72 ms); 256-bit prefix + 64-bit suffix stem-shape filter, shared paradigm probe and 4-worker morphology pool landed; cold page ~1.19 s native single-thread / ~0.34 s with 4 workers; the wasm pool tail that made ~0.76 s is measured and removed; the exact form table is priced (~8 MB gz) and stays rejected** · 2026-11-19 · branch `syntax` · baseline `2e5f13c`
 
 This is the performance plan for the two opt-in analysis layers:
 
@@ -1261,6 +1261,53 @@ budget, not an engine budget, and it should be re-scoped.
 **Decision:** no data table ships yet. The measured table prices are recorded
 above; the next step is the wasm-phase measurement, and until it lands the
 engine remains as fast as it gets under the current blob budget.
+
+### Phase 11 — the serial numeral upgrade (landed)
+
+Phase 10 ended by saying the wasm wall had to be decomposed before spending
+bytes on a table. It was, and the answer was not the table.
+
+Running the real engine in wasm (a `wasm-pack --target nodejs` build of
+`torille-wasm`, driven from node on the same fixture) showed the pool's
+post-chunk tail dominating:
+
+| step | before | after |
+|---|---:|---:|
+| four cold chunk states, sequential | 1,612 ms | 1,661 ms |
+| final grammar/style pass, first call | **615 ms** | **72 ms** |
+| final pass, second call | 117 ms | 7 ms |
+| `check_syntax` with its own morphology | 1,480 ms | 1,179 ms |
+
+The first final pass was 615 ms because it was not morphology — that part was
+seeded and hit. It was the **numeral-governed partitive upgrade**:
+`analyze_morphology` walks the document after every numeral and, when the next
+word has no partitive reading, runs `resolve_deep` — the head/tail search — on
+the owning thread, *after* every pool worker has returned. Twelve upgrades
+cost ~190 ms native and ~540 ms in wasm on this page.
+
+The upgrades were also mostly spurious. The trigger was "a numeral", without
+looking at the numeral's case, so `kahtena päivänä`, `kolmesta miehestä`,
+`kahdella miehellä`, `menoon`, `kotona` and `suusta` all fired one. Only a
+**nominative** cardinal governs a partitive; an inflected numeral agrees with
+its head in its own case. `numeral_governs_partitive` now checks the reading's
+case, and the sixteen-test first pass keeps three genuine upgrades (`kaksi
+lasta` still gains the `lapsi` partitive; the regression test asserts
+`deep_upgrades` is 0 for `kahtena päivänä` and 1 for `kaksi lasta`).
+
+Measured 2026-11-19 on `page-2000`:
+
+- native single-thread cold **1,330 → ~1,190 ms** (−10 %);
+- native 4-worker **450 → 319–348 ms** (−23 %), comfortably inside the 500 ms
+  budget for the first time;
+- the wasm final pass **615 → 72 ms**, which is where the pool wall lived;
+- diagnostics unchanged: 5 grammar / 14 style on the fixture, and the pool's
+  `check_syntax` path keeps 5.
+
+The rule change is semantic, not a shortcut: it stops a deep walk that was
+overwriting a correct essive/locative reading with a partitive-oriented one.
+The wasm pool number itself still has to be read from the browser e2e with a
+rebuilt `dist` (the committed one predates this fix), but the tail it was
+paying is gone.
 
 ## 8. Measurement harness
 

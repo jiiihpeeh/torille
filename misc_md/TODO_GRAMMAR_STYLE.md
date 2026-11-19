@@ -768,26 +768,34 @@ Adjacent repetition is not always accidental:
   stay source-identical and pass their typecheck and unit tests.
 
 - [ ] **Cold page target**
-  `PLAN_GRAMMAR_STYLE_PERF.md` records the ≤500 ms cold-page target as open
-  for the shipping wasm path. Re-measured 2026-11-19: **1,330 ms** cold
-  morphology single-thread, **~989 ms** fresh-cache style, **450 ms** with the
-  4 native workers; the wasm pool is **755–762 ms** with 4 workers and
-  777–852 ms with 8. **The engine lever is now measured, not guessed**
-  (plan §Phase 10): paradigm construction is 685 ms of the pass across 1,984
-  builds of ~693 forms each, 908 of them failing; the suffix mask cannot help
-  because a ~700-form verb paradigm saturates a 64-bit (or 256-bit) Bloom
-  filter. An exact `surface → base + reading` table costs **2.68 MB gzip for
-  the 1.1 M nominal surfaces** and ~5.5 MB more for the 2.3 M verb surfaces
-  (`all_forms.csv` is nominal-only), so ~8 MB total; two-letter sharding saves
-  1.2 % of that, not half. No table under the 3 MB gate reaches 500 ms, and
-  even a perfect engine lands at ~550 ms wasm because 305 ms of the wall is
-  worker start-up and transport.
-  The next step is therefore **not** another engine change: measure the wasm
-  phases (instantiation vs chunk resolve vs transport) before spending bytes
-  on a table. The zero-byte alternative is the class-level
-  `accepts` test, which needs `expand/verbs/utility.rs::paradigm` restated as
-  data. Performance remains a separate engineering objective, not a
+  `PLAN_GRAMMAR_STYLE_PERF.md` §Phase 11 landed the serial numeral upgrade:
+  only a nominative cardinal governs a partitive, so the deep walk that ran
+  after every inflected numeral (`kahtena päivänä`, `kolmesta miehestä`) is
+  gone. Measured 2026-11-19: native single-thread cold **1,330 → ~1,190 ms**,
+  native 4-worker **450 → 319–348 ms** (inside the 500 ms budget), and the
+  wasm post-seed final pass **615 → 72 ms**, which is where the pool's
+  755–762 ms lived. The browser pool number still has to be read from
+  `e2e/pool.mjs` with a rebuilt `dist`. The exact `surface → base + reading`
+  table stays rejected: 2.68 MB gzip for 1.1 M nominal surfaces plus ~5.5 MB
+  for 2.3 M verb surfaces, and two-letter sharding saves 1.2 %, not half
+  (§Phase 10). The zero-byte alternative if more is needed is the class-level
+  `accepts` test, which requires `expand/verbs/utility.rs::paradigm` restated
+  as data. Performance remains a separate engineering objective, not a
   rule-correctness gate.
+
+- [ ] **Sentence-cache path finds four more diagnostics than the whole-document
+  pass on `page-2000`.** Found while measuring the wasm pool: the shipping
+  `check_grammar_style_with_state` (sentence cache) returns **9** grammar
+  diagnostics where `check_syntax` and `syntax_check::check` return **5**. The
+  four extras are at offsets 236 (`existential_subject_case`), 711
+  (`comma_missing`), 9357 and 9882 (`question_mark_missing`); they are the
+  same on a second call, so it is not stale state. The parity test
+  `the_sentence_cache_matches_the_whole_text_pass` passes only on ten short
+  texts, so the divergence is specific to sentence boundaries in a long
+  document — most likely the neighbour context a sentence is checked with.
+  Either the extra four are real (and the whole-document pass is missing
+  them) or the sentence path is over-firing; adjudicate before changing
+  either, and add the found rows to the corpus once decided.
 
 ## P3 — future syntax roadmap
 
@@ -1337,6 +1345,17 @@ intended/competing interpretation pair that fails.
   single-thread cold is 1,497 → **1,330 ms** and the native 4-worker path is
   **450 ms**, under the ≤500 ms budget. The wasm pool is still **755–762 ms**
   with 4 workers, so the cold-page item stays open.
+- 2026-11-19: removed the serial numeral upgrade. The partitive upgrade fired
+  after *any* numeral, so `kahtena päivänä`, `kolmesta miehestä`,
+  `kahdella miehellä`, `menoon`, `kotona` and `suusta` each ran the head/tail
+  deep walk on the owning thread after every pool worker had finished. Only a
+  nominative cardinal governs a partitive; `numeral_governs_partitive` now
+  checks the reading's case. Native single-thread cold **1,330 → ~1,190 ms**,
+  native 4-worker **450 → 319–348 ms**, and the wasm post-seed final pass
+  **615 → 72 ms**. Diagnostics unchanged (5 grammar / 14 style on the
+  fixture); `a_numeral_upgrades_the_partitive_homonym` still passes and
+  `an_inflected_numeral_does_not_trigger_the_partitive_upgrade` pins
+  `deep_upgrades`. See `PLAN_GRAMMAR_STYLE_PERF.md` §Phase 11.
 - 2026-11-19: extended the prose corpus with 77 clean paragraphs from seven
   Projekti Lönnrot novels and story collections (Haanpää, Lassila, Lehtonen,
   Kilpi, Jotuni; 1900–1953). The raw zips are gitignored and

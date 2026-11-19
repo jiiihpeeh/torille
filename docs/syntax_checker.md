@@ -264,7 +264,11 @@ class.
 - **Numeral government is deliberately narrow.** Only a nominative complement
   or a partitive plural is flagged; a non-nominative, non-partitive complement
   (`kaksi kolmesta`) is left alone. `yksi`, plural numerals (`kahdet`) and
-  non-cardinal numerals (`toinen`) are skipped.
+  non-cardinal numerals (`toinen`) are skipped. The morphology follows the same
+  line: only a **nominative** cardinal triggers the partitive upgrade that
+  looks past a direct lemma (`kaksi lasta` finds the `lapsi` partitive), so
+  `kahtena päivänä` and `kolmesta miehestä` resolve shallowly and the deep
+  walk is not run after an inflected numeral.
 - **Adposition government is a curated list.** Only rows in
   `data/adposition_cases.csv` are checked; an adposition's case is lexical, so
   it is never inferred from the surface. The rule fires on a nominative or
