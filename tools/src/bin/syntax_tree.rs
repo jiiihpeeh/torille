@@ -14,22 +14,24 @@ use std::process::ExitCode;
 
 use serde_json::{Value, json};
 use torille::syntax::RoleConfidence;
-use torille::syntax::ast::{self, Ast, Node, NodeId, NodeKind};
+use torille::syntax::ast::{self, Ast, Constituent, Node, NodeId, NodeKind};
 use torille::tokenise::{Token, tokenise};
 
 fn main() -> ExitCode {
     let mut as_json = false;
     let mut check = false;
+    let mut order = false;
     let mut parts = Vec::new();
     for arg in std::env::args().skip(1) {
         match arg.as_str() {
             "--json" => as_json = true,
             "--check" => check = true,
+            "--order" => order = true,
             _ => parts.push(arg),
         }
     }
     if parts.is_empty() {
-        eprintln!("usage: syntax_tree [--json] [--check] \"TEXT\"");
+        eprintln!("usage: syntax_tree [--json] [--check] [--order] \"TEXT\"");
         return ExitCode::from(2);
     }
 
@@ -57,7 +59,18 @@ fn main() -> ExitCode {
         }
     }
 
-    if as_json {
+    if as_json && order {
+        let clauses: Vec<Value> = (0..tree.analysis.clauses.len())
+            .map(|index| order_json(&tree, index))
+            .collect();
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&json!({"clauses": clauses}))
+                .expect("the order is serialisable")
+        );
+    } else if order {
+        print_order(&tree);
+    } else if as_json {
         let nodes: Vec<Value> = tree
             .ast
             .walk()
@@ -75,6 +88,71 @@ fn main() -> ExitCode {
     }
 
     ExitCode::SUCCESS
+}
+
+fn constituent_label(constituent: &Constituent) -> String {
+    constituent
+        .role
+        .map(|role| role.name().to_string())
+        .unwrap_or_else(|| constituent.kind.name().to_string())
+}
+
+fn print_order(tree: &ast::SyntaxTree) {
+    for index in 0..tree.analysis.clauses.len() {
+        let constituents = tree.clause_constituents(index);
+        let sequence: Vec<String> = constituents
+            .iter()
+            .map(|constituent| {
+                format!(
+                    "{}[{}..{}]",
+                    constituent_label(constituent),
+                    constituent.tokens.start,
+                    constituent.tokens.end
+                )
+            })
+            .collect();
+        let first = tree
+            .first_constituent(index)
+            .as_ref()
+            .map(constituent_label)
+            .unwrap_or_else(|| "-".to_string());
+        let fronted = tree
+            .fronted_constituent(index)
+            .as_ref()
+            .map(constituent_label)
+            .unwrap_or_else(|| "-".to_string());
+        println!("clause {index}: {}", sequence.join(" "));
+        println!("  first={first} fronted={fronted}");
+    }
+}
+
+fn order_json(tree: &ast::SyntaxTree, index: usize) -> Value {
+    let constituents: Vec<Value> = tree
+        .clause_constituents(index)
+        .into_iter()
+        .map(|constituent| {
+            json!({
+                "node": constituent.node.index(),
+                "kind": constituent.kind.name(),
+                "role": constituent.role.map(|role| role.name()),
+                "tokens": [constituent.tokens.start, constituent.tokens.end],
+                "start": constituent.start,
+                "end": constituent.end,
+            })
+        })
+        .collect();
+    let first = tree
+        .first_constituent(index)
+        .map(|constituent| constituent_label(&constituent));
+    let fronted = tree
+        .fronted_constituent(index)
+        .map(|constituent| constituent_label(&constituent));
+    json!({
+        "clause": index,
+        "constituents": constituents,
+        "first": first,
+        "fronted": fronted,
+    })
 }
 
 fn label(node: &Node) -> String {

@@ -62,7 +62,7 @@ Everyday probes:
 | `check` | check a word, with the full compound-aware path |
 | `check_normal` | the per-keystroke gate the wasm demo uses |
 | `hyphenate` | show permitted Finnish line breaks, with `--json` offsets |
-| `syntax_tree` | print the typed syntax tree, with `--json` and `--check` |
+| `syntax_tree` | print the typed syntax tree, with `--json`, `--check` and `--order` |
 | `look_base` | show the bases and generated forms for one word |
 | `derive` | derivational forms of a base word |
 | `lookup_recall` | score lookup against `(form, lemma)` pairs on stdin; writes the ranked first base |

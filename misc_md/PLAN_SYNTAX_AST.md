@@ -1,10 +1,10 @@
 # PLAN_SYNTAX_AST — a typed surface tree over `syntax`
 
-Status: **Phases 0–3 landed.** The skeleton, head-driven phrases, the
-multi-segment relative host, top-level nominal lists, parentheticals and quotes
-are in `src/syntax/ast/`. The flat `syntax::SyntaxAnalysis` stays the authority;
-the tree is an additive view built on demand. This plan defines the node kinds,
-the construction pipeline, the invariants and the phase gates.
+Status: **Phases 0–5a landed.** The skeleton, head-driven phrases, the
+multi-segment relative host, top-level nominal lists, parentheticals, quotes
+and the word-order constituent view are in `src/syntax/ast/`. The flat
+`syntax::SyntaxAnalysis` stays the authority; the tree is an additive view
+built on demand.
 
 ## Decision summary
 
@@ -591,7 +591,7 @@ violations so a test can print them at once.
 ```text
 src/syntax/ast/
   mod.rs           Ast, NodeId, Node, NodeKind, ClauseKind, PhraseKind,
-                   CoordKind, public build/validate
+                   CoordKind, Constituent, public build/validate
   seed.rs          Document/Sentence/Word skeleton; sentence-span union
   phrases.rs       phrase roots, head resolution, kind, contiguity
   clauses.rs       clause grouping, ClauseKind, host segments
@@ -644,8 +644,9 @@ cheap and on-demand; a later phase can thread the contexts through
   receives `&Ast`; the first such rule gets a `check_analysis_with_tree`
   variant rather than changing the existing signature.
 - The first candidates are:
-  - **word-order features**: a fronted object/topic is the phrase node before
-    the predicate, not a token scan;
+  - **word-order features** (landed as `Ast::clause_constituents`,
+    `first_constituent` and `fronted_constituent`): a fronted object/topic is
+    the phrase node before the predicate, not a token scan;
   - **noun-phrase agreement**: adjective/numeral agreement inside a `Phrase`,
     which the flat token roles cannot express;
   - **list items**: an item that is a `Numeral` phrase or a `Noun` phrase,
@@ -656,7 +657,9 @@ cheap and on-demand; a later phase can thread the contexts through
 - `tools/src/bin/syntax_tree.rs`:
   - `syntax_tree "text"` prints the indented tree;
   - `--json` prints a stable node array;
-  - `--check` runs `validate` and exits non-zero on a violation.
+  - `--check` runs `validate` and exits non-zero on a violation;
+  - `--order` prints each clause's constituent sequence, first constituent and
+    fronted object/adverbial/complement (`--json --order` for the same data).
 - `torille-wasm` gains an additive `analyze_ast(text)` and
   `analyze_ast_with_state(idx, text)` in phase 5, with the same node fields as
   the Rust struct. No existing export changes.
@@ -695,7 +698,7 @@ zero diagnostic diff.
 | 2. Clause grouping | clause kinds, predicate phrase, slot children, host merge | **landed**: `Mies, joka tuli, söi` keeps three flat clauses but the tree has one host with two segments and the relative nested between them; `Talo on kaunis` has a separate AdjectivePhrase complement |
 | 3. Attach | lists, list items, parentheticals, quotes | **landed (3a)**: top-level nominal lists with Word/Phrase items, the conjunction as a list child, parentheticals and quotes; nested, mixed, clause and predicate lists stay flat |
 | 4. Coordination (optional) | same-kind phrase/clause coordination | `Sami söi puuron ja joi maidon`; mixed coordination stays flat; `word_order_allow` unchanged |
-| 5. Consumers | one checker rule or the word-order feature reads the tree; wasm export | the new rule's fixture fails on the flat path and passes on the tree; every existing diagnostic is byte-identical |
+| 5. Consumers | one checker rule or the word-order feature reads the tree; wasm export | **landed (word-order view)**: `Ast::clause_constituents`, `first_constituent` and `fronted_constituent`; `syntax_tree --order`; no diagnostic change |
 | 6. Cleanup | migrate ad hoc helpers only where the tree is equivalent | no helper is deleted until its last caller moves; the flat API stays |
 
 Phase 0 must name its first consumer. If nobody reads the tree, do not build
@@ -736,6 +739,15 @@ mixed lists and clause/predicate lists stay flat. `attach.rs` adds
 children. `seed.rs` now merges the raw sentence spans that one clause touches,
 so a bracket parenthetical stays in one tree sentence.
 
+**Phase 5a landing.** `Ast::clause_constituents` returns the direct children of
+a flat clause in source order, using the segment that matches the flat token
+range so a host's `Mies` and `söi` are seen separately. `first_constituent`
+and `fronted_constituent` expose the neutral first constituent and the first
+object/adverbial/complement before the predicate. `syntax_tree --order` prints
+the sequence and the fronted constituent; `--json --order` exposes the same
+fields. This is the word-order consumer the specification needs; no diagnostic
+changed.
+
 ## 11. Tests
 
 ### 11.1 Unit tests
@@ -751,6 +763,7 @@ In `src/syntax/ast/`, beside the code:
 - `lists`: nominal list ownership, the conjunction child, the colon list,
   nested/mixed lists staying flat;
 - `attach`: parenthetical and quote containers;
+- `constituents`: fronted object, neutral SVO, existential adverbial;
 - `coordination`: same-kind, mixed, shared subject;
 - `validate`: one test per invariant with a deliberately broken arena.
 

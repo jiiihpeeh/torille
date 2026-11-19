@@ -402,6 +402,105 @@ impl Ast {
         }
         out
     }
+
+    /// The direct constituents of one flat clause, in source order.
+    ///
+    /// A host clause is found by the segment whose token range is the flat
+    /// clause's range, so `Mies` and `söi` in `Mies, joka tuli, söi` are seen
+    /// as constituents of separate flat clauses even though they share a host.
+    pub fn clause_constituents(
+        &self,
+        analysis: &SyntaxAnalysis,
+        clause_index: usize,
+    ) -> Vec<Constituent> {
+        let Some(clause) = analysis.clauses.get(clause_index) else {
+            return Vec::new();
+        };
+        let Some(node_id) = self.nodes.iter().enumerate().find_map(|(index, node)| {
+            if !matches!(node.kind, NodeKind::Clause(_)) {
+                return None;
+            }
+            node.segments
+                .contains(&clause.tokens)
+                .then_some(NodeId::new(index))
+        }) else {
+            return Vec::new();
+        };
+        self.node(node_id)
+            .children
+            .iter()
+            .filter_map(|&child| {
+                let node = self.node(child);
+                if node.tokens.start < clause.tokens.start || node.tokens.end > clause.tokens.end {
+                    return None;
+                }
+                Some(Constituent {
+                    node: child,
+                    kind: node.kind,
+                    role: node.role,
+                    tokens: node.tokens.clone(),
+                    start: node.span.start,
+                    end: node.span.end,
+                })
+            })
+            .collect()
+    }
+
+    /// The first direct constituent of one flat clause.
+    pub fn first_constituent(
+        &self,
+        analysis: &SyntaxAnalysis,
+        clause_index: usize,
+    ) -> Option<Constituent> {
+        self.clause_constituents(analysis, clause_index)
+            .into_iter()
+            .next()
+    }
+
+    /// The first object, adverbial or complement that precedes the predicate.
+    ///
+    /// A subject before the predicate is the neutral order, not fronting, and
+    /// an unknown/modifier word is not asserted to be a moved constituent.
+    pub fn fronted_constituent(
+        &self,
+        analysis: &SyntaxAnalysis,
+        clause_index: usize,
+    ) -> Option<Constituent> {
+        let clause = analysis.clauses.get(clause_index)?;
+        let predicate = clause.predicate?;
+        let constituents = self.clause_constituents(analysis, clause_index);
+        let predicate_start = constituents
+            .iter()
+            .find(|constituent| constituent.tokens.contains(&predicate))
+            .map(|constituent| constituent.start)?;
+        constituents.into_iter().find(|constituent| {
+            constituent.start < predicate_start
+                && matches!(
+                    constituent.role,
+                    Some(
+                        SyntacticRole::Object
+                            | SyntacticRole::Adverbial
+                            | SyntacticRole::Complement
+                    )
+                )
+        })
+    }
+}
+
+/// One top-level constituent of a clause in the surface tree.
+///
+/// The word-order layer needs constituents, not token positions: `Kirjan
+/// luin eilen` has an object constituent before the predicate, while
+/// `Sami söi aamupuuronsa` has a subject there. A `Constituent` is a direct
+/// child of the clause node (a phrase, a list, a container or a bare word).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Constituent {
+    pub node: NodeId,
+    pub kind: NodeKind,
+    pub role: Option<SyntacticRole>,
+    pub tokens: Range<usize>,
+    pub start: usize,
+    pub end: usize,
 }
 
 /// The analysis plus its surface tree, from one morphology pass.
@@ -409,6 +508,23 @@ impl Ast {
 pub struct SyntaxTree {
     pub analysis: SyntaxAnalysis,
     pub ast: Ast,
+}
+
+impl SyntaxTree {
+    /// The direct constituents of one flat clause, in source order.
+    pub fn clause_constituents(&self, clause: usize) -> Vec<Constituent> {
+        self.ast.clause_constituents(&self.analysis, clause)
+    }
+
+    /// The first direct constituent of one flat clause.
+    pub fn first_constituent(&self, clause: usize) -> Option<Constituent> {
+        self.ast.first_constituent(&self.analysis, clause)
+    }
+
+    /// The first object/adverbial/complement before the predicate, if any.
+    pub fn fronted_constituent(&self, clause: usize) -> Option<Constituent> {
+        self.ast.fronted_constituent(&self.analysis, clause)
+    }
 }
 
 /// Build the surface tree from an existing analysis.
@@ -745,6 +861,38 @@ mod tests {
             .filter(|node| node.kind == NodeKind::Sentence)
             .count();
         assert_eq!(sentences, 1);
+    }
+
+    #[test]
+    fn a_fronted_object_is_a_constituent() {
+        let (_, tree) = analyzed("Kirjan luin eilen.");
+        let first = tree.first_constituent(0).expect("a first constituent");
+        assert_eq!(first.role, Some(SyntacticRole::Object));
+        assert_eq!(first.start, 0);
+        let fronted = tree.fronted_constituent(0).expect("a fronted object");
+        assert_eq!(fronted.role, Some(SyntacticRole::Object));
+        assert_eq!(fronted.start, 0);
+    }
+
+    #[test]
+    fn an_svo_clause_has_no_fronted_constituent() {
+        let (_, tree) = analyzed("Sami söi aamupuuronsa.");
+        assert_eq!(
+            tree.first_constituent(0)
+                .and_then(|constituent| constituent.role),
+            Some(SyntacticRole::Subject)
+        );
+        assert!(tree.fronted_constituent(0).is_none());
+    }
+
+    #[test]
+    fn an_existential_fronts_its_adverbial() {
+        let (_, tree) = analyzed("Pöydällä on kirja.");
+        assert_eq!(
+            tree.fronted_constituent(0)
+                .and_then(|constituent| constituent.role),
+            Some(SyntacticRole::Adverbial)
+        );
     }
 
     #[test]
