@@ -13,7 +13,7 @@ the explicitly gated items below (cold-page performance and the held `PREFER`
 rule), and the targeted suites are green.
 `page-2000` is at **5 adjudicated diagnostics with 0 false positives**
 (1 true positive, 3 accepted, 1 excerpt artefact), and the reviewed-prose gate
-is **140 clean rows / 2,439 words**, 1 true positive and 0 known false
+is **246 clean rows / 5,789 words**, 1 true positive and 0 known false
 positives. The precision plan
 [`PLAN_GRAMMAR_PRECISION.md`](PLAN_GRAMMAR_PRECISION.md) is complete. This
 file is the next roadmap, not a list of known red tests.
@@ -120,14 +120,16 @@ public-domain prose sample with reviewed findings and provenance.
 - [x] **Keep the constructed exact-output fixtures** as the per-rule gate.
 - [x] **Grow the prose sample to at least 1,000 correct words** and keep the
   known-false-positive rate per 1,000 words as the baseline. The sample is now
-  **140 clean rows / 2,439 words**, 1 true positive and 0 known false positives;
+  **246 clean rows / 5,789 words**, 1 true positive and 0 known false positives;
   the precision phases fixed the known findings and grew the sample from the
-  original 1,021 words. The 2026-11-19 extension added 61 clean Finlex
-  paragraphs (modern formal Finnish) from statute 729/2018; the raw XML is
-  gitignored and the provenance is in `tests/fixtures/prose/README.md`. New
-  rows come from the same public-domain sources and were admitted only after
-  `check_syntax` returned zero diagnostics; the seed note in
-  `tests/fixtures/prose/adjudicated.json` records that rule.
+  original 1,021 words. The 2026-11-19 extensions added 61 clean Finlex
+  paragraphs (modern formal Finnish), 77 clean novel paragraphs from seven
+  Projekti Lönnrot works and 29 clean factual paragraphs from three Doria
+  books; the raw sources are gitignored and the provenance is in
+  `tests/fixtures/prose/README.md`. New rows come from the same public-domain
+  sources and were admitted only after `check_syntax` returned zero
+  diagnostics; the seed note in `tests/fixtures/prose/adjudicated.json` records
+  that rule.
 
 Track these metrics:
 
@@ -345,7 +347,7 @@ keeps the later role rules from compensating for a bad reading.
    - Move each row to `clean` only when it has zero diagnostics. All four
      moved: the suite reported 66 clean rows and **1,021 clean words** at that
      point, with 0 known-FP words and 0 known errors. The later precision
-     phases raised the live baseline to **140 clean rows / 2,439 words**; see
+     phases raised the live baseline to **246 clean rows / 5,789 words**; see
      the work log and [`PLAN_GRAMMAR_PRECISION.md`](PLAN_GRAMMAR_PRECISION.md).
    - Run `cargo test --release --test syntax_prose`, then
      `cargo test --release --workspace`, clippy, the strict engine-output
@@ -403,6 +405,17 @@ for a future precision round. Representative examples:
 Each needs an ambiguity pair (the intended role plus the rejected reading)
 before a rule change. Do not add one to `known_false_positives` without the fix
 or a deliberate baseline move.
+
+The Projekti Lönnrot novel sweep shows the same classes in narrative and
+dialogue form: `comma_missing` before `ja vaikka` / `että`,
+`subject_predicate_agreement` on dialogue fragments, `verb_rection` on a
+conversational frame, and `object_case` on an imperative or dialogue object.
+These are candidates, not confirmed false positives; each still needs an
+ambiguity pair before a rule change.
+
+The Doria factual sweep adds expository prose. Its rejected windows are mostly
+comma and subject findings on OCR-damaged text; uncorrected text is not
+admitted, so only explicitly corrected, clean rows enter the corpus.
 
 ## P1 — shared diagnostic contract, confidence and explainability
 
@@ -1305,3 +1318,22 @@ intended/competing interpretation pair that fails.
   single-thread cold is 1,497 → **1,330 ms** and the native 4-worker path is
   **450 ms**, under the ≤500 ms budget. The wasm pool is still **755–762 ms**
   with 4 workers, so the cold-page item stays open.
+- 2026-11-19: extended the prose corpus with 77 clean paragraphs from seven
+  Projekti Lönnrot novels and story collections (Haanpää, Lassila, Lehtonen,
+  Kilpi, Jotuni; 1900–1953). The raw zips are gitignored and
+  `tests/fixtures/prose/README.md` records the IDs and licences. Every row was
+  admitted only after an individual `check_syntax` returned zero diagnostics.
+  The suite is now **217 clean rows / 4,861 words**, 1 true positive and 0
+  known false positives. The rejected novel paragraphs are dominated by
+  `comma_missing`, `subject_predicate_agreement`, `verb_rection` and
+  `object_case`; P0-C records the representative shapes for the next precision
+  round.
+- 2026-11-19: extended the prose corpus with 29 clean factual paragraphs from
+  three Doria (Kansalliskirjasto) Public Domain Mark 1.0 books: Hult's
+  *Suomen maantiede* and Setälä's *Äidinkielen oppikirja* (parts 1–2), all
+  1900. The raw PDFs and OCR text are gitignored; README records the item IDs
+  and the explicit OCR corrections (`parsaheiuää` → `parsaheinää`, etc.). A
+  corrected row was admitted only after it passed `check_syntax`; uncorrected
+  OCR text is not admitted. The suite is now **246 clean rows / 5,789 words**,
+  1 true positive and 0 known false positives. This adds expository prose to
+  the Gutenberg/Lönnrot fiction and Finlex legal text.

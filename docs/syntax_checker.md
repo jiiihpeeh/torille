@@ -104,7 +104,7 @@ competing reading that must not win for ambiguous surfaces (`joka päivä`,
 `tests/fixtures/prose/adjudicated.json` is the reviewed-prose gate: clean rows
 must stay quiet, true positives must match their kinds, and known false
 positives pin the current bugs so a fix has to move the row. As of 2026-11-19
-the prose fixture has 140 clean rows / 2,439 words, 1 true positive and 0 known
+the prose fixture has 246 clean rows / 5,789 words, 1 true positive and 0 known
 false positives; `page-2000` is at 5 diagnostics.
 
 Current baseline (2026-11-19):
@@ -113,7 +113,7 @@ Current baseline (2026-11-19):
 syntax_eval clean rows 154: 0 errors, 0 warnings, 0 suggestions
 syntax_eval cases 60: every emitted kind precision 1.00, recall 1.00
 syntax_diagnostics: 75 exact-output cases, 272 clean rows
-prose: 140 clean rows / 2,439 words, 1 true positive, 0 known false positives
+prose: 246 clean rows / 5,789 words, 1 true positive, 0 known false positives
 page-2000: 5 diagnostics
 ```
 

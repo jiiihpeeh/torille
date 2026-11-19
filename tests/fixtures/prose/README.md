@@ -33,6 +33,74 @@ The committed rows are excerpts, not new works. The raw downloads live under
   The sample is extracted from the `<p>` elements of the statute body. It is
   modern formal Finnish from a professionally edited legal text, which gives
   the checker a genre the 19th-century prose excerpt does not cover.
+- **Projekti Lönnrot** — seven public-domain novels and story collections by
+  Pentti Haanpää, Maiju Lassila, Joel Lehtonen, Volter Kilpi and Maria Jotuni.
+  The authors died by 1955, so the works are public domain in Finland and the
+  EU. Download each zip under `sources/lonnrot/`:
+
+  ```bash
+  mkdir -p tests/fixtures/prose/sources/lonnrot
+  for id in 3717 3715 2508 0988 0886 0559 0779; do
+    curl -L --fail -o "tests/fixtures/prose/sources/lonnrot/$id.zip" \
+      "https://lonnrot.net/kirjat/$id.zip"
+  done
+  ```
+
+  | id | author | work | year |
+  |---|---|---|---|
+  | 3717 | Pentti Haanpää | *Iisakki vähäpuheinen* | 1953 |
+  | 3715 | Pentti Haanpää | *Karavaani ja muita juttuja* | 1930 |
+  | 2508 | Maiju Lassila | *Pirttipohjalaiset* | 1911 |
+  | 0988 | Joel Lehtonen | *Punainen mylly* | 1913 |
+  | 0886 | Joel Lehtonen | *Sorron lapset (Punainen mies I)* | 1923 |
+  | 0559 | Volter Kilpi | *Bathseba* | 1900 |
+  | 0779 | Maria Jotuni | *Tyttö ruusutarhassa* | 1927 |
+
+  Some transcriptions are ISO-8859-1 rather than UTF-8; the extractor decodes
+  UTF-8 first and falls back to ISO-8859-1. The rows are narrative and
+  dialogue paragraphs from the middle of each work, admitted only after the
+  individual check.
+- **Doria (Kansalliskirjasto)** — three Public Domain Mark 1.0 factual books
+  from 1900, chosen to give the checker expository prose rather than fiction:
+
+  | item | author | work |
+  |---|---|---|
+  | [101475](https://doria.fi/handle/10024/101475) | Ragnar Hult | *Suomen maantiede* |
+  | [127971](https://doria.fi/handle/10024/127971) | E. N. Setälä | *Äidinkielen oppikirja kansakouluja varten, yleinen osa* |
+  | [127972](https://doria.fi/handle/10024/127972) | E. N. Setälä | *Äidinkielen oppikirja kansakouluja varten, toinen osa* |
+
+  Fetch the PDFs and extract the OCR layer:
+
+  ```bash
+  mkdir -p tests/fixtures/prose/sources/doria
+  curl -L --fail -o tests/fixtures/prose/sources/doria/Suomen_maantiede.pdf \
+    'https://doria.fi/bitstream/handle/10024/101475/Suomen_maantiede.pdf?sequence=1&isAllowed=y'
+  curl -L --fail -o tests/fixtures/prose/sources/doria/Aidinkielen_oppikirja_kansakouluja_varten_Yleinen_osa.pdf \
+    'https://doria.fi/bitstream/handle/10024/127971/Aidinkielen_oppikirja_kansakouluja_varten_Yleinen_osa.pdf?sequence=1&isAllowed=y'
+  curl -L --fail -o tests/fixtures/prose/sources/doria/Aidinkielen_oppikirja_kansakouluja_varten-Toinen_osa_Vuorokurssit.pdf \
+    'https://doria.fi/bitstream/handle/10024/127972/Aidinkielen_oppikirja_kansakouluja_varten-Toinen_osa_Vuorokurssit.pdf?sequence=1&isAllowed=y'
+  for f in tests/fixtures/prose/sources/doria/*.pdf; do
+    pdftotext -layout "$f" "${f%.pdf}.txt"
+  done
+  ```
+
+  The OCR layer has the usual confusions. Only **explicit, reviewed**
+  corrections are applied; there is no general OCR normalizer. The corrections
+  used for the admitted rows are:
+
+  | OCR | corrected |
+  |---|---|
+  | `spenaattia` | `pinaattia` |
+  | `rabarbcria` | `rabarbia` |
+  | `parsaheiuää` | `parsaheinää` |
+  | `sei61` | `sellaisia` |
+  | `lisalmeen` | `Iisalmeen` |
+  | `tarvotaan` | `tarvitaan` |
+  | `kuusain` | `kuusama` |
+  | `pyssy miehiä` | `pyssymiehiä` |
+
+  A paragraph is admitted only after the corrected text passes the individual
+  check; an uncorrected or uncertain paragraph is left out.
 
 ## Admission rule
 
@@ -50,6 +118,6 @@ were excluded.
 
 ## Current baseline
 
-As of 2026-11-19: **140 clean rows / 2,439 words**, 1 true positive and 0 known
+As of 2026-11-19: **246 clean rows / 5,789 words**, 1 true positive and 0 known
 false positives. The exact count is whatever `syntax_prose` prints; update
 `docs/syntax_checker.md` and `docs/grammar_syntax.md` when it moves.
