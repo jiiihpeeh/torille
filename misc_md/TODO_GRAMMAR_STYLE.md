@@ -777,13 +777,18 @@ Adjacent repetition is not always accidental:
   755–762 ms lived. The browser pool now measures **364–395 ms** for a fresh
   textarea state on a warm pool (`e2e/pool-timing.mjs`), so the ≤500 ms
   per-page target is met; the ~950 ms first check of a session is the four
-  worker spawns and wasm instantiations, paid once. The exact `surface → base + reading`
-  table stays rejected: 2.68 MB gzip for 1.1 M nominal surfaces plus ~5.5 MB
-  for 2.3 M verb surfaces, and two-letter sharding saves 1.2 %, not half
-  (§Phase 10). The zero-byte alternative if more is needed is the class-level
-  `accepts` test, which requires `expand/verbs/utility.rs::paradigm` restated
-  as data. Performance remains a separate engineering objective, not a
-  rule-correctness gate.
+  worker spawns and wasm instantiations, paid once. The exact table is priced,
+  not rejected: the **grouped** two-level layout (`stem → base → endings`, the
+  base written once per stem) is **3.15 MB gzip for nouns + verbs**, or
+  ~3.7 MB with a reading byte per entry, against ~8.1 MB for the flat
+  `surface → base` table. The naive two-level layout was 2.85 MB for nouns
+  alone — worse than flat — which is what made the first draft of Phase 10
+  call the idea dead. Only the reading byte pays for itself, because an
+  ending-only table still leaves `form_readings` building the paradigm. It is
+  a download-budget decision now that the per-page target is met; the
+  zero-byte alternative is the class-level `accepts` test, which requires
+  `expand/verbs/utility.rs::paradigm` restated as data. Performance remains a
+  separate engineering objective, not a rule-correctness gate.
 
 - [ ] **Sentence-cache path finds four more diagnostics than the whole-document
   pass on `page-2000`.** Found while measuring the wasm pool: the shipping

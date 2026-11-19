@@ -1194,46 +1194,75 @@ Two facts follow, and they close the mask line of work:
 #### What the form table costs
 
 A probe generated every non-possessive, non-clitic nominal form from
-`inflect_lemma` and encoded three layouts, each gzipped at the best level (the
+`inflect_lemma` and encoded five layouts, each gzipped at the best level (the
 same codec `build.rs` uses):
 
 | layout | rows | raw | gzip |
 |---|---:|---:|---:|
-| flat `surface → base id` | 1,096,373 surfaces | 21.0 MB | **2.68 MB** |
-| two-letter shard (`aa` bucket, prefix once) | 385 shards | 18.7 MB | **2.65 MB** |
-| two-level `stem → (ending, base id)` | 234,537 stems | 11.8 MB | **2.85 MB** |
+| flat `surface → base id`, u32 ids | 1,096,373 surfaces | 21.0 MB | **2.68 MB** |
+| flat `surface → base id`, varint ids | 1,096,373 surfaces | 19.3 MB | **2.66 MB** |
+| two-letter shard (`aa` bucket, prefix once) | 385 shards | 18.7 MB | 2.65 MB |
+| two-level `stem → (ending, base)`, base per entry | 234,537 stems | 11.8 MB | 2.85 MB |
+| **grouped `stem → base → endings`** | 234,537 stems | **8.2 MB** | **1.35 MB** |
 
-The prefix-sharded layout — "`aavetta` points at the `aa` map, which holds the
-base" — saves **33 KB of 2.68 MB (1.2 %)**. Front-coding and gzip already
-exploit the shared prefixes, so sharding buys lookup locality, not bytes; the
-byte count is the information, not the layout. The two-level stem layout is
-*larger* compressed because the stem text repeats between neighbouring rows.
+Two things fall out, and the second corrects this plan's first draft:
 
-Nouns alone are 2.7 MB gzip and they are the cheap half. `data/all_forms.csv`
-is **nominal only** (every case column is a nominal case), so the verb half
-has to be generated from scratch: 10,034 verb lemmas emit **2,298,321
-non-possessive, non-clitic forms over 2,275,732 unique surfaces**, and a verb
-reading carries mood, tense, person, voice and participle case on top of the
-nominal fields. At the measured nominal ratio that is ~5.5 MB gzip, so the
-exact table is **~8 MB compressed / ~25 MB raw** — against the 3 MB ceiling
-that already rejected the reverse index in Phase 6 and the +1 MB the
-stem-shape filter was allowed.
+- The prefix-sharded layout — "`aavetta` points at the `aa` map, which holds
+  the base" — saves **33 KB of 2.68 MB (1.2 %)**. Sharding buys lookup
+  locality, not bytes.
+- The **naive** two-level layout is worse compressed (2.85 MB) even though it
+  halves the raw size, because it writes the base id once per
+  `(ending, base)` entry and alternates text with binary ids. `static_table.rs`
+  records that **99.5 % of stem keys have exactly one base**, so grouping the
+  endings under their base and writing the id once per stem changes the answer
+  completely: **1.35 MB, half of the flat table.** Varint ids shave another
+  12 KB.
+
+`data/all_forms.csv` is **nominal only** (every case column is a nominal
+case), so the verb half was generated the same way, splitting each form at the
+longest prefix that is a committed `(stem, base)` key — exactly the key the
+runtime probes. 10,034 verb lemmas emit **2,275,732 non-possessive,
+non-clitic surfaces over 320,980 stems (2,295,351 entries)**:
+
+| verb layout | raw | gzip |
+|---|---:|---:|
+| flat `surface → base id`, varint ids | 40.8 MB | 5.44 MB |
+| **grouped `stem → base → suffixes`** | **15.4 MB** | **1.79 MB** |
+
+So the whole noun + verb table is **~3.15 MB gzip (23.6 MB raw)** in the
+grouped layout, against **~8.1 MB** flat. It omits the reading (case, number,
+and for verbs mood/tense/person/voice), which is ~1 byte per entry and pushes
+the total to **~3.7 MB**. That is over the 3 MB reverse-index ceiling of
+Phase 6, but it is the same order as that ceiling rather than three times it —
+the earlier "~8 MB" was the flat-table price, and the naive two-level encoding
+was not the right representation of this idea.
 
 #### What would still work, and what it costs
 
-| option | bytes | engine saving | cold page |
-|---|---:|---:|---|
-| exact `surface → base + reading`, all classes | ~8 MB gz | ≤ 45 % | ~550 ms wasm |
-| exact table, nouns only | 2.7 MB | ~10–13 % | ~690 ms wasm |
-| frequency-bounded table (Phase 6 subset, 86.6 % of tokens) | 3 MB | ~30 % | ~610 ms wasm |
-| class-level `accepts` (no data file) | 0 | ≤ 45 % | ~550 ms wasm |
+The wasm pool now measures **364–395 ms** per fresh page after Phase 11, so
+the table is no longer on the critical path for the ≤500 ms target. It stays
+interesting as a way to remove the remaining build cost, and the grouped
+encoding makes it a live trade rather than a rejected one:
 
-Nothing in the table column reaches 500 ms, and the reason is the next
-section: the wasm gap is not engine time.
+| option | bytes | engine saving |
+|---|---:|---:|
+| grouped two-level `stem → base → endings`, nouns + verbs | **3.15 MB** | ~10–13 % (verification only) |
+| the same with a reading byte per entry | **~3.7 MB** | ≤ 45 % |
+| flat `surface → base` table, nouns + verbs | ~8.1 MB | ≤ 45 % |
+| class-level `accepts` (no data file) | 0 | ≤ 45 % |
 
-The class-level `accepts` test is the 0-byte alternative: ask the class whether
-it can spell the surface instead of materialising its grid. For nominals that
-is one generic walk over the cells a class already declares
+Only the reading byte makes the table worth its bytes: an ending-only table
+removes the verification builds but every surviving base still needs its
+paradigm for `form_readings`, which is why the nominal-only variant saves just
+the failing verifies (~130 ms). A reading byte per entry costs ~0.5 MB and
+lets the resolver answer "which readings does this surface have" without
+building the grid at all, which is the full 45 %.
+
+3.7 MB is above the 3 MB ceiling that rejected the reverse index in Phase 6,
+so this is a download-budget decision rather than an engineering one. The
+class-level `accepts` test is the 0-byte alternative: ask the class whether it
+can spell the surface instead of materialising its grid. For nominals that is
+one generic walk over the cells a class already declares
 (`expand/nominals/utility.rs` plus the regenerated template). For verbs the
 paradigm is a single `paradigm(&Stems)` function in
 `expand/verbs/utility.rs` that formats and pushes every cell inline, so the
@@ -1245,22 +1274,17 @@ and risk, not download size.
 
 #### The wasm gap is not engine time
 
-Native 4-worker is 450 ms and wasm 4-worker is 755–762 ms for the same
-grouping and the same engine. The 305 ms difference is worker start-up, module
-instantiation, chunk transport and the final merged pass. Adding it to the
-best possible engine result (`450 × 0.55 + 305 ≈ 550 ms`) means **even a
-perfect form table does not reach ≤500 ms** unless part of that 305 ms is
-per-chunk work that shrinks with the engine. 8 workers already showed the gap
-is not simply "more parallelism" (777–852 ms: smaller chunks build the same
-lemmas in more workers).
+Native 4-worker was 450 ms and wasm 4-worker 755–762 ms for the same grouping
+and the same engine. Phase 11 then showed where that wall actually was: it was
+not startup or transport but the serial numeral upgrade (~540 ms in wasm),
+which has since been removed. The pool now measures 364–395 ms per fresh page
+with four workers alive, and ~950 ms for the first check of a session (four
+worker spawns plus their wasm instantiation).
 
-So the order of work is fixed: before spending 8 MB on a table, measure what
-the 305 ms is. If it is mostly instantiation, the ≤500 ms target is a browser
-budget, not an engine budget, and it should be re-scoped.
-
-**Decision:** no data table ships yet. The measured table prices are recorded
-above; the next step is the wasm-phase measurement, and until it lands the
-engine remains as fast as it gets under the current blob budget.
+**Decision:** no data table ships. The grouped two-level layout is priced at
+3.15 MB (3.7 MB with readings), so it is a download-budget question rather
+than an absurd one, and it is the lever to revisit if the remaining build cost
+ever matters again. The ≤500 ms target is met per page without it.
 
 ### Phase 11 — the serial numeral upgrade (landed)
 
