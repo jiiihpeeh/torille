@@ -38,6 +38,9 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
 - `misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md` — the remaining grammar/syntax work:
   predicate-less phrases, relative closing commas, imperative connegative
   corrections, interrogative/host constituent views and the optional cleanup.
+- `misc_md/PLAN_GRAMMAR_SYNTAX_REFERENCE.md` — the review-driven hardening plan
+  for `docs/grammar_syntax.md`: terminology, case evidence, construction
+  features, segmentation precedence, confidence, API and evaluation contracts.
 - `misc_md/PLAN_STYLE.md` — the separate opt-in style-layer plan: curated phrase/word
   tables, repetition and long-sentence metrics, suggestion-only diagnostics and
   a panel UI. Implemented; see `docs/style_checker.md`.

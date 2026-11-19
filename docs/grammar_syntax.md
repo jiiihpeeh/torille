@@ -672,3 +672,9 @@ These are not bugs; they are conservative boundaries:
   default.
 - **Word wizard** — Kotus-class inference from example forms; separate
   `class_wizard`/wasm pages.
+
+The review-driven hardening plan for this document is
+[`../misc_md/PLAN_GRAMMAR_SYNTAX_REFERENCE.md`](../misc_md/PLAN_GRAMMAR_SYNTAX_REFERENCE.md).
+It records the editorial restructuring, case-evidence model, construction
+features, segmentation precedence, confidence propagation, API contract and
+evaluation methodology still to be verified.
