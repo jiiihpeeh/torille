@@ -1,6 +1,6 @@
 # PLAN_GRAMMAR_STYLE_PERF — one morphology pass for grammar and style
 
-Status: **Phase 0–7 landed/decided; 256-bit stem-shape filter, shared paradigm probe and 4-worker morphology pool landed; cold page ~1.5 s native single-thread / ~0.54 s with 4 workers; ≤500 ms open; background and content-panel e2e landed** · 2026-11-18 · branch `syntax` · baseline `2e5f13c`
+Status: **Phase 0–8 landed/decided; 256-bit prefix + 64-bit suffix stem-shape filter, shared paradigm probe and 4-worker morphology pool landed; cold page ~1.33 s native single-thread / ~0.45 s with 4 workers; wasm pool ~0.76 s, ≤500 ms open; background and content-panel e2e landed** · 2026-11-19 · branch `syntax` · baseline `2e5f13c`
 
 This is the performance plan for the two opt-in analysis layers:
 
@@ -1114,6 +1114,33 @@ Rejected in this phase, with the measurement in hand:
 - **`format!` → `push_str` in `nominals/utility.rs` and `inflect.rs push`**:
   measured inside the noise. The 24% of instructions in `fmt` is dominated by
   the compound DP, not by the class builders.
+
+### Phase 9 — suffix mask and generator union (landed)
+
+The prefix mask rejects a candidate whose first four characters do not occur in
+a lemma's paradigm, but forms of one lemma share a prefix and differ in their
+endings (`talossa`, `talosta`, `talolle`). Each row now also carries a 64-bit
+suffix mask (a hash of the last four characters); `might_emit_row` checks it
+only after the four prefix bits pass. The blob is `LSS3`, 40 bytes per row
+(+187 KB gzipped), and classless rows stay all-ones.
+
+The generator also unions `inflect_all` with `None` and with
+`Some(&LexiconIndex)`. Class-50 compound heads emit some forms only through
+the index path, so the old prefix-only mask could reject a real form that the
+sample happened to admit by a hash collision. The generator spot-checks both
+paths, and `the_mask_accepts_real_forms` / `the_mask_accepts_the_noun_fixture`
+cover them at runtime.
+
+Measured 2026-11-19 on `page-2000`:
+
+- native single-thread cold **1,497 → 1,330 ms** (−11%);
+- native 4-worker **450 ms**, under the ≤500 ms native budget;
+- wasm 4-worker **755–762 ms**, 8-worker **777–852 ms**, still above 500 ms;
+- warm numbers unchanged; grammar/style diagnostics byte-identical.
+
+The suffix filter does not close the wasm target by itself: the per-chunk wall
+is still dominated by paradigm construction. The next lever remains the
+form → readings table or a class-specific surface test, not another mask.
 
 ## 8. Measurement harness
 

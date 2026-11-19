@@ -3,13 +3,14 @@
 //! `emits_form` answers "does this lemma's paradigm contain the surface?" by
 //! building (or probing) the whole paradigm. The walks try thousands of
 //! candidate lemmas, and most of them cannot emit the surface at all. This
-//! module is the cheap pre-filter: one 64-bit mask per lexicon row, holding
-//! the first three characters of every surface the row can generate.
+//! module is the cheap pre-filter: one 256-bit prefix mask and one 64-bit
+//! suffix mask per lexicon row.
 //!
 //! The mask is conservative by construction. The generator walks the same
-//! `inflect_all` sources as the runtime and sets a bit for every emitted form,
-//! so a real form can never be rejected. A hash collision only turns a
-//! rejection into a false positive, which takes the old `emits_form` path.
+//! `inflect_all` sources as the runtime and sets a prefix and suffix bit for
+//! every emitted form, so a real form can never be rejected. A hash collision
+//! only turns a rejection into a false positive, which takes the old
+//! `emits_form` path.
 //!
 //! Classless rows (compounds, proper-name-like entries) get an all-ones mask:
 //! their paradigm is assembled by the compound fallbacks, and the filter is
@@ -23,10 +24,12 @@ use std::sync::OnceLock;
 
 use crate::kotus::Lemma;
 
-/// Blob magic and header: `LSS2` + the row count as a little-endian `u32`.
-const MAGIC: &[u8; 4] = b"LSS2";
+/// Blob magic and header: `LSS3` + the row count as a little-endian `u32`.
+const MAGIC: &[u8; 4] = b"LSS3";
 const HEADER: usize = 8;
-const MASK_BYTES: usize = 32;
+const PREFIX_BYTES: usize = 32;
+const SUFFIX_BYTES: usize = 8;
+const MASK_BYTES: usize = PREFIX_BYTES + SUFFIX_BYTES;
 
 /// The embedded mask blob. `build.rs` writes an empty header (count 0) when
 /// the committed blob is absent, which disables the filter.
@@ -91,6 +94,32 @@ pub fn prefix_bit(surface: &str) -> u64 {
     prefix_bits(surface)[0]
 }
 
+/// The suffix bit for a surface's last four characters (or the whole surface
+/// when it is shorter).
+///
+/// The prefix mask rejects most candidates, but forms of one lemma share a
+/// prefix and differ in their endings (`talossa`, `talosta`, `talolle`). The
+/// suffix bit is the second half of the filter: it is checked only after the
+/// prefix bits pass, and it is conservative for the same reason.
+pub fn suffix_bits(surface: &str) -> u64 {
+    const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+    const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
+    const SEED: u64 = 0xa076_1d64_78bd_642f;
+    let mut hash = FNV_OFFSET ^ SEED;
+    // Reverse order is irrelevant: the generator and the runtime both read
+    // the tail this way, and it avoids allocating a reversed string.
+    for ch in surface.chars().rev().take(4) {
+        for lower in ch.to_lowercase() {
+            let mut buf = [0u8; 4];
+            for &byte in lower.encode_utf8(&mut buf).as_bytes() {
+                hash ^= byte as u64;
+                hash = hash.wrapping_mul(FNV_PRIME);
+            }
+        }
+    }
+    1u64 << (hash & 63)
+}
+
 /// The row index of `lemma` in the embedded lexicon, if it is one of its rows.
 ///
 /// The walks return `&Lemma` borrowed from the lexicon, so the row is the
@@ -139,7 +168,13 @@ pub(crate) fn might_emit_row(row: usize, surface: &str) -> bool {
             return false;
         }
     }
-    true
+    let bit = suffix_bits(surface);
+    let at = row * MASK_BYTES + PREFIX_BYTES;
+    let Some(bytes) = masks.get(at..at + SUFFIX_BYTES) else {
+        return true;
+    };
+    let mask = u64::from_le_bytes(bytes.try_into().expect("eight suffix bytes"));
+    mask == u64::MAX || mask & bit != 0
 }
 
 #[cfg(test)]
@@ -150,6 +185,12 @@ mod tests {
     fn the_prefix_bit_is_case_insensitive() {
         assert_eq!(prefix_bit("talo"), prefix_bit("TALO"));
         assert_eq!(prefix_bit("äiti"), prefix_bit("ÄITI"));
+    }
+
+    #[test]
+    fn the_suffix_bit_is_case_insensitive() {
+        assert_eq!(suffix_bits("talossa"), suffix_bits("TALOSSA"));
+        assert_eq!(suffix_bits("äidillä"), suffix_bits("ÄIDILLÄ"));
     }
 
     #[test]
