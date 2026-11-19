@@ -785,12 +785,14 @@ Adjacent repetition is not always accidental:
   alone — worse than flat — which is what made the first draft of Phase 10
   call the idea dead. Only the reading byte pays for itself, because an
   ending-only table still leaves `form_readings` building the paradigm. It is
-  a download-budget decision now that the per-page target is met. The
-  implementation plan is [`PLAN_FORM_TABLE.md`](PLAN_FORM_TABLE.md) (branch
-  `form-table`, not built); the zero-byte alternative is the class-level
-  `accepts` test, which requires `expand/verbs/utility.rs::paradigm` restated
-  as data. Performance remains a separate engineering objective, not a
-  rule-correctness gate.
+  a download-budget decision now that the per-page target is met. It has been
+  built on branch `form-table`
+  ([`PLAN_FORM_TABLE.md`](PLAN_FORM_TABLE.md) §7): 3.59 MB gzip, parity clean,
+  **~10 %** off the cold pass (1,129 → 1,021 ms single-thread), so it stays
+  **off by default** behind `--features form-table`. The zero-byte alternative
+  is the class-level `accepts` test, which requires
+  `expand/verbs/utility.rs::paradigm` restated as data. Performance remains a
+  separate engineering objective, not a rule-correctness gate.
 
 - [ ] **Sentence-cache path finds four more diagnostics than the whole-document
   pass on `page-2000`.** Found while measuring the wasm pool: the shipping

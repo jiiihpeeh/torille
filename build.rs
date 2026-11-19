@@ -317,6 +317,35 @@ fn main() {
         gzip::decompress_file(&gz, &out_dir.join(name));
     }
 
+    // The exact form table is optional and feature-gated: `gen_form_table`
+    // writes it, and the default build embeds a 40-byte empty header so the
+    // download does not grow. `form_table::FormTable` reads an empty table as
+    // "no entry", which the resolver treats as "walk the engine".
+    let table_gz = precomputed.join("form_table.bin.gz");
+    let table_raw = out_dir.join("form_table.bin");
+    println!("cargo:rerun-if-changed={}", table_gz.display());
+    println!("cargo:rerun-if-env-changed=CARGO_FEATURE_FORM_TABLE");
+    let embed_table = std::env::var_os("CARGO_FEATURE_FORM_TABLE").is_some();
+    if embed_table && table_gz.exists() {
+        gzip::decompress_file(&table_gz, &table_raw);
+    } else {
+        if embed_table {
+            eprintln!(
+                "build.rs: {} missing -- the form table is disabled; run \
+                 `cargo run --release -p torille-tools --bin gen_form_table`",
+                table_gz.display(),
+            );
+        }
+        let mut empty = Vec::with_capacity(40);
+        empty.extend_from_slice(b"FMT1");
+        empty.extend_from_slice(&[0u8; 8]);
+        empty.extend_from_slice(&40u32.to_le_bytes());
+        empty.extend_from_slice(&40u32.to_le_bytes());
+        empty.resize(40, 0);
+        std::fs::write(&table_raw, &empty)
+            .unwrap_or_else(|e| panic!("write {}: {e}", table_raw.display()));
+    }
+
     // The stem-shape mask is optional. `gen_lemma_stem_shapes` writes it, but
     // a clone without the blob must still build: an empty header disables the
     // filter (`stem_shape::masks` returns `None`).

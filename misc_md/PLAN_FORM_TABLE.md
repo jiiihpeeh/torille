@@ -1,14 +1,21 @@
 # PLAN_FORM_TABLE — an exact surface → base + reading table
 
-Status: **proposed, not implemented** · 2026-11-19 · branch `form-table` ·
-base `be4e13a` (same tree as `syntax`/`master`)
+Status: **implemented on branch `form-table`, measured, off by default** ·
+2026-11-19 · base `be4e13a` (same tree as `syntax`/`master`)
+
+The table is built: `gen_form_table` writes a 3.59 MB gzip / 22.2 MB raw blob,
+the resolver consults it behind the off-by-default `form-table` feature, and
+diagnostics are byte-identical on the fixture. It buys **~10 % of the cold
+morphology pass**, which does not pay for 22 MB of data segments in the wasm,
+so the default stays off and the work ships as an opt-in experiment with the
+numbers recorded in §7.
 
 This plan exists because one measured number changed: the grouped two-level
 reverse table costs **3.15 MB gzip without readings and ~3.7 MB with them**
 for the whole nominal + verb lexicon, not the ~8 MB a flat table costs. That is
 close enough to the Phase 6 ceiling to be a download-budget decision instead
-of an engineering impossibility. Nothing here is built yet — see
-`PLAN_GRAMMAR_STYLE_PERF.md` §Phase 10 for the pricing measurements.
+of an engineering impossibility. See `PLAN_GRAMMAR_STYLE_PERF.md` §Phase 10
+for the pricing measurements and §7 below for the built result.
 
 Contents: [§1 the question](#1-the-question) ·
 [§2 current cost](#2-what-the-cold-pass-costs-today) ·
@@ -222,12 +229,34 @@ nightly job; the normal suite samples every 97th lemma, the same pattern
 
 ### P5 — decide
 
-Pass → publish (`cargo run -p torille-maps -- publish`), add the blob and CSV
-to `data/README.md` and `maps/README.md`, make the feature default, update
-`AGENTS.md`, `README.md`, `PLAN_GRAMMAR_STYLE_PERF.md` and
-`TODO_GRAMMAR_STYLE.md`. Fail → record the negative result in the plan and on
-the roadmap, delete the generator and the reader, and keep the class-level
-`accepts` idea as the remaining lever.
+**Built and measured. Gate A passes, Gate C passes, Gates B and D do not, so
+the feature stays off by default.**
+
+| gate | target | measured |
+|---|---|---|
+| A: blob | ≤ 4.5 MB gzip | **3.59 MB gzip / 22.2 MB raw** (ending-only 2.97 MB) |
+| B: single-thread | ≤ 800 ms | **~1,021 ms**, from ~1,129 (−10 %) |
+| B: 4-worker | ≤ 260 ms | **275–315 ms**, from 319–348 (−10 %) |
+| B: pool per page | ≤ 300 ms | not re-measured; the engine delta is the same ~10 % |
+| C: parity | byte-identical | **5 grammar / 14 style**, diff empty on `page-2000` |
+| D: session start | no net regression | not run: 22 MB of data segments in a 31.8 MB module is a known cost |
+
+The generator emits 3,586,408 forms, splits 2,392,280 (66.7 %) and leaves
+1,194,128 (33.3 %) on the walk — mostly derived forms and verb stems the
+committed pair sets do not name. 2,367,158 merged rows over 514,620 stems,
+2,512,173 readings. The built-in spot check compares 25,958 forms against
+`form_readings` and they agree.
+
+The A/B is five interleaved runs of two pinned binaries (`plain` median
+1,129 ms, `table` median 1,021 ms); the spread is wide (1,014–1,133), so treat
+the win as **5–10 %**, not a precise figure.
+
+**Verdict: keep `form-table` off by default.** Ten percent of the morphology
+pass does not pay for 22 MB of new data segments in a wasm that four workers
+instantiate, and the ≤500 ms per-page target is already met without it. The
+branch keeps the generator, the reader, the wiring and the blob so the
+measurement is reproducible behind `--features form-table`, and the class-level
+`accepts` test remains the lever for a future attempt at the remaining builds.
 
 ## 8. Risks and abort criteria
 

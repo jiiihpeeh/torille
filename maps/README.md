@@ -108,6 +108,7 @@ one, or `map_gz compress|decompress` for a manual round-trip.
 | `lexical_adverbs.bin.gz` | `build.rs` | `src/expand/check_normal.rs` | established one-word adverb -> base (`alhaaltapäin` -> `alhaalta`) |
 | `pronoun_forms.bin.gz` | `gen_derived` → `tools/src/der1.rs` | `src/expand/check_normal.rs` | the closed pronoun paradigm |
 | `lemma_stem_shape.bin.gz` | `gen_lemma_stem_shapes` → raw `LSS1` u64 array | `src/expand/stem_shape.rs` | per-lemma first-three-character mask for the recognition walks |
+| `form_table.bin.gz` | `gen_form_table` → raw `FMT1` grouped table | `src/expand/form_table.rs` | exact `(stem, ending)` → bases + readings, embedded only with `--features form-table` |
 
 ## How to regenerate
 
@@ -125,7 +126,13 @@ cannot link the engine it is building):
 ```bash
 cargo run --release -p torille-tools --bin gen_derived
 cargo run --release -p torille-tools --bin gen_lemma_stem_shapes
+cargo run --release -p torille-tools --bin gen_form_table
 ```
+
+`form_table.bin.gz` is optional and off by default: `build.rs` embeds it only
+when the `form-table` feature is on, and otherwise writes a 40-byte empty
+header, so a clone without the blob still builds and behaves exactly as
+before.
 
 The oracle-derived table needs the materialised Kotus database:
 

@@ -1267,7 +1267,18 @@ pub fn collect_bases_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) 
         if stem.is_empty() {
             continue;
         }
+        // The exact table confirms a base for this split without building a
+        // paradigm. It is consulted per candidate rather than instead of the
+        // bucket: the generator records one split per form, and a base the
+        // caller can reach through a *different* split of the same surface
+        // must still go through the bucket's verify.
+        let exact = crate::expand::form_table::bases(stem, ending);
         if !STEM_BUCKETS_NOUN.contains(stem) {
+            for base in exact {
+                if !out.iter().any(|seen| seen == base) {
+                    out.push(base.to_string());
+                }
+            }
             continue;
         }
         let candidates: Vec<&str> = STEM_BUCKETS_NOUN.bases(stem).collect();
@@ -1280,6 +1291,15 @@ pub fn collect_bases_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) 
         }
         for base in candidates {
             if out.iter().any(|seen| seen == base) {
+                continue;
+            }
+            // A table entry for this exact split is the proof the verify
+            // would produce, so the paradigm is not built.
+            if exact.contains(&base) {
+                if verbose {
+                    println!("      gate 4: table {stem:?} + {ending:?} -> {base:?}");
+                }
+                out.push(base.to_string());
                 continue;
             }
             // O(1) hash lookup, not a scan over the whole lexicon: the
@@ -1322,6 +1342,31 @@ pub fn collect_bases_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) 
     out
 }
 
+/// The readings the exact table records for `base` spelling `surface`.
+///
+/// The surface is split the same way the stem-map ladders split it, so a hit
+/// is exactly the entry `collect_bases_via_stem_map` used to confirm the base.
+/// `None` means "no entry" and the caller walks the paradigm.
+pub fn table_readings(surface: &str, base: &str) -> Option<Vec<crate::tags::Tags>> {
+    for ending in std::iter::once("")
+        .chain(ENDINGS.iter().copied())
+        .chain(VERB_ENDINGS.iter().copied())
+    {
+        let Some(stem) = surface.strip_suffix(ending) else {
+            continue;
+        };
+        if stem.is_empty() {
+            continue;
+        }
+        if let Some(readings) = crate::expand::form_table::readings(stem, ending, base)
+            && !readings.is_empty()
+        {
+            return Some(readings);
+        }
+    }
+    None
+}
+
 pub fn find_base_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) -> Option<String> {
     collect_bases_via_stem_map(word, pos, verbose)
         .into_iter()
@@ -1358,6 +1403,11 @@ pub fn collect_bases_via_verb_stem_map(word: &str, verbose: bool) -> Vec<String>
         if stem.is_empty() {
             continue;
         }
+        // The exact table confirms the split the generator saw. The trimmed
+        // probe below still runs: the shared verb stem can stand for the
+        // whole participle paradigm, and a base reached that way is not the
+        // entry the table recorded for this ending.
+        let exact = crate::expand::form_table::bases(stem, ending);
         // The builder stores a non-finite stem with its trailing stem
         // vowels stripped (`lukeneen`, `lukeneita`, `lukenutta` all ->
         // `luken`), so one key covers a whole participle/infinitive
@@ -1378,6 +1428,16 @@ pub fn collect_bases_via_verb_stem_map(word: &str, verbose: bool) -> Vec<String>
             }
             for base in candidates {
                 if out.iter().any(|seen| seen == base) {
+                    continue;
+                }
+                if cand == stem && exact.contains(&base) {
+                    if verbose {
+                        println!(
+                            "      gate 4b: table {stem:?} + {ending:?} -> \
+                             {base:?}"
+                        );
+                    }
+                    out.push(base.to_string());
                     continue;
                 }
                 if trust {

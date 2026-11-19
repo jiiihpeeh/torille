@@ -1240,9 +1240,12 @@ was not the right representation of this idea.
 #### What would still work, and what it costs
 
 The wasm pool now measures **364–395 ms** per fresh page after Phase 11, so
-the table is no longer on the critical path for the ≤500 ms target. It stays
-interesting as a way to remove the remaining build cost, and the grouped
-encoding makes it a live trade rather than a rejected one:
+the table is no longer on the critical path for the ≤500 ms target. It has
+since been built on branch `form-table` (`PLAN_FORM_TABLE.md` §7): 3.59 MB
+gzip, diagnostics byte-identical, and **~10 % off the cold morphology pass**
+(1,129 → 1,021 ms single-thread, 4-worker 319–348 → 275–315 ms). That does not
+pay for 22 MB of data segments, so the feature stays off by default. The
+grouped encoding is still the right shape if the budget ever changes:
 
 | option | bytes | engine saving |
 |---|---:|---:|

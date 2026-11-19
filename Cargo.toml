@@ -24,6 +24,12 @@ generated-nominals = []
 # 0 illegal, and its forms are additive until every class it covers is
 # complete enough to supersede the type engine.
 generated-verbs = []
+# The exact `(stem, ending) -> bases + readings` table: `maps/form_table.bin.gz`
+# is embedded and the resolver answers stem-map verification and reading
+# extraction from it instead of building the paradigm. Off by default because
+# it grows the wasm download by several megabytes; see
+# misc_md/PLAN_FORM_TABLE.md.
+form-table = []
 # Optional M0 reading reranker. Off by default; enabling it embeds the
 # models/m0-tags-v1.bin artifact and lets `disambiguate` produce decisions.
 neural-m0 = []

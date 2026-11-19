@@ -685,6 +685,17 @@ pub fn form_readings(
     possessives: bool,
     surface: &str,
 ) -> Option<Vec<Tags>> {
+    // The exact table answers this without walking the paradigm. It is only
+    // consulted when the caller's inflections are the lemma's whole row set
+    // under one part of speech, which is what the table was generated from;
+    // any other subset walks, because the table's readings are the union over
+    // the rows. A miss falls through, so stale or missing data is slower, not
+    // wrong.
+    if !possessives
+        && let Some(readings) = table_readings_for(lemma, inflections, pos, surface)
+    {
+        return Some(readings);
+    }
     let key = (!inflections.is_empty())
         .then(|| paradigm_key(lemma, inflections, pos, possessives, lexicon));
     if let Some(key) = &key
@@ -734,6 +745,35 @@ pub fn form_readings(
         });
     }
     found.then_some(readings)
+}
+
+/// The table lookup [`form_readings`] makes before it walks.
+///
+/// The table stores the union of every lexicon row's readings, so it answers
+/// this call only when the caller passed exactly that union and every row
+/// agrees on the part of speech. Anything else — a caller reading one row, a
+/// homonym with a noun and a verb reading — walks the engine instead.
+fn table_readings_for(
+    lemma: &str,
+    inflections: &[Inflection],
+    pos: PartOfSpeech,
+    surface: &str,
+) -> Option<Vec<Tags>> {
+    let rows: Vec<_> = crate::kotus::sanalista().by_word(lemma).collect();
+    if rows.is_empty() {
+        return None;
+    }
+    let mut all = Vec::new();
+    for row in &rows {
+        if PartOfSpeech::parse_all(row.part_of_speech()).first().copied() != Some(pos) {
+            return None;
+        }
+        all.extend(row.inflections());
+    }
+    if all.as_slice() != inflections {
+        return None;
+    }
+    crate::expand::check_normal::table_readings(surface, lemma)
 }
 
 /// The key of the paradigm cache: the lemma, its inflections, the part of
@@ -985,6 +1025,7 @@ pub use sound::is_phonotactic;
 pub mod all_forms;
 mod blob;
 pub mod check_normal;
+pub mod form_table;
 pub mod closed_spellings;
 mod huffman_set;
 pub mod prefix_index;
