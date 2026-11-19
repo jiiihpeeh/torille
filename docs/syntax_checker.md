@@ -5,6 +5,9 @@ advisory analysis layer in [`src/syntax/`](../src/syntax/mod.rs). It answers a
 small, high-confidence set of questions and returns concrete corrections. It
 is **not** a parser, a style checker, or part of the keystroke path.
 
+For the full feature inventory across morphology, syntax and every diagnostic
+kind, see [`grammar_syntax.md`](grammar_syntax.md).
+
 ## Contract
 
 - `check(text)` tokenises, runs `syntax::analyze`, applies the rules, and

@@ -23,6 +23,9 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
 - `docs/lexicon.md` — the materialised noun lexicon used as the harness oracle.
 - `docs/syntax_checker.md` — grammar diagnostics, severity policy, corrections,
   evaluation and known limitations.
+- `docs/grammar_syntax.md` — the complete feature reference: morphology
+  categories, inflection model, syntax roles/features/lists, AST and every
+  grammar diagnostic kind.
 - `docs/style_checker.md` — the opt-in style layer: kinds, curated tables,
   repetition and long-sentence thresholds, UI and baseline.
 - `misc_md/PLAN_SYNTAX_REFACTOR.md` — the modularisation plan for `syntax.rs`,

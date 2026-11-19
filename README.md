@@ -389,6 +389,9 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
 
 - [`docs/syntax_checker.md`](docs/syntax_checker.md) — grammar diagnostics,
   severity policy, corrections, evaluation and known limitations.
+- [`docs/grammar_syntax.md`](docs/grammar_syntax.md) — the complete feature
+  reference for the morphology grammar, syntax analysis, AST and every grammar
+  diagnostic.
 - [`docs/style_checker.md`](docs/style_checker.md) — the opt-in style layer:
   curated tables, repetition and long-sentence rules, UI and baseline.
 - [`misc_md/PLAN_SYNTAX_REFACTOR.md`](misc_md/PLAN_SYNTAX_REFACTOR.md) — a phased
