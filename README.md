@@ -413,7 +413,7 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
   tree over `syntax`: node kinds, the pass pipeline and the invariants.
 - [`misc_md/PLAN_SYNTAX_AST_REST.md`](misc_md/PLAN_SYNTAX_AST_REST.md) — the remaining
   surface-tree work: nested lists, coordination, the wasm export and checker
-  consumers. Phase 5b (wasm `analyze_ast`) landed.
+  consumers. Phase 5b (wasm `analyze_ast`) and the 5c.1 parity audit landed.
 - [`misc_md/PLAN_COMPOUND.md`](misc_md/PLAN_COMPOUND.md) — the compound engine's inflection
   model and remaining work.
 - [`misc_md/PLAN_HYPHENATION.md`](misc_md/PLAN_HYPHENATION.md) — the hyphenation milestones

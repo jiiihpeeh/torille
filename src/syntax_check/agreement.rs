@@ -11,15 +11,11 @@
 //! `Kaksi miestä tuli` are all correct.
 
 use crate::syntax::{RoleConfidence, SyntacticRole, SyntaxAnalysis, TokenSyntax};
-use crate::tags::{
-    Case, Degree, Mood, Number, PartOfSpeech, Person, Polarity, Tags, Tense, Voice,
-};
+use crate::tags::{Case, Degree, Mood, Number, PartOfSpeech, Person, Polarity, Tags, Tense, Voice};
 use crate::tokenise::Token;
 
 use super::correction;
-use super::diagnostic::{
-    Confidence, Correction, DiagnosticKind, Severity, SyntaxDiagnostic,
-};
+use super::diagnostic::{Confidence, Correction, DiagnosticKind, Severity, SyntaxDiagnostic};
 
 #[derive(Debug, Clone, Copy)]
 struct Subject {
@@ -44,10 +40,7 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
     diagnostics
 }
 
-fn check_subject_predicate(
-    tokens: &[Token],
-    analysis: &SyntaxAnalysis,
-) -> Vec<SyntaxDiagnostic> {
+fn check_subject_predicate(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
     let mut diagnostics = Vec::new();
     for clause in &analysis.clauses {
         // Existential plural subjects take a singular verb.
@@ -172,10 +165,7 @@ fn check_subject_predicate(
 /// the participle agrees with the subject in number. Passive compound tenses
 /// (`talo on rakennettu`, `talot on rakennettu`) do not agree, so they are
 /// skipped.
-fn check_compound_participle(
-    tokens: &[Token],
-    analysis: &SyntaxAnalysis,
-) -> Vec<SyntaxDiagnostic> {
+fn check_compound_participle(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
     let mut diagnostics = Vec::new();
     for clause in &analysis.clauses {
         let Some(predicate) = clause.predicate else {
@@ -352,7 +342,12 @@ fn check_attributes(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         // `paljon hyvää`: the adjective is the head of the quantity phrase,
         // not an attribute of the following noun. A closed adverb set, the
         // same shape as the other lexical cues in this module.
-        if previous_word_is(index, &["paljon", "vähän", "runsaasti", "tarpeeksi"], tokens, analysis) {
+        if previous_word_is(
+            index,
+            &["paljon", "vähän", "runsaasti", "tarpeeksi"],
+            tokens,
+            analysis,
+        ) {
             continue;
         }
         // Ask for an unambiguous attribute shape first: a token that is not an
@@ -513,11 +508,7 @@ fn check_complements(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxD
                 tokens[complement].start..tokens[complement].end,
                 "predicative_agreement",
             );
-            diagnostic.expected = Some(format!(
-                "{} {}",
-                target_case.name(),
-                subject.number.name()
-            ));
+            diagnostic.expected = Some(format!("{} {}", target_case.name(), subject.number.name()));
             diagnostic.corrections = corrections;
             diagnostics.push(diagnostic);
             continue;
@@ -719,13 +710,9 @@ fn head_shape(token: &TokenSyntax) -> Option<(Case, Number)> {
 }
 
 fn attribute_pos(token: &TokenSyntax) -> Option<PartOfSpeech> {
-    token
-        .readings
-        .iter()
-        .find_map(|reading| {
-            is_attribute_pos(&token.key, reading.part_of_speech)
-                .then_some(reading.part_of_speech?)
-        })
+    token.readings.iter().find_map(|reading| {
+        is_attribute_pos(&token.key, reading.part_of_speech).then_some(reading.part_of_speech?)
+    })
 }
 
 /// Which readings can stand as an attributive modifier.
@@ -812,9 +799,7 @@ fn can_head_attribute(index: usize, tokens: &[Token], analysis: &SyntaxAnalysis)
         return false;
     }
     let key = syntax.key.as_str();
-    key != "kuin"
-        && !crate::syntax::is_coordinating(key)
-        && !crate::syntax::is_subordinator(key)
+    key != "kuin" && !crate::syntax::is_coordinating(key) && !crate::syntax::is_subordinator(key)
 }
 
 fn starts_with_subordinator(
@@ -962,7 +947,8 @@ fn bearer_of(
                     .readings
                     .iter()
                     .any(|reading| reading.part_of_speech == Some(PartOfSpeech::NegativeVerb))
-                && let Some((person, number)) = crate::expand::negation::person_number(&tokens[index].text)
+                && let Some((person, number)) =
+                    crate::expand::negation::person_number(&tokens[index].text)
             {
                 return Some(Bearer {
                     index,
@@ -1021,8 +1007,11 @@ fn has_non_finite_verb_reading(token: &TokenSyntax) -> bool {
 }
 
 pub(super) fn finite_reading(token: &TokenSyntax) -> Option<Tags> {
-    token.readings.iter().copied().find(|reading| {
-        match reading.part_of_speech {
+    token
+        .readings
+        .iter()
+        .copied()
+        .find(|reading| match reading.part_of_speech {
             Some(PartOfSpeech::Verb) => {
                 reading.polarity == Polarity::Affirmative
                     && matches!(
@@ -1032,8 +1021,7 @@ pub(super) fn finite_reading(token: &TokenSyntax) -> Option<Tags> {
             }
             Some(PartOfSpeech::NegativeVerb) => true,
             _ => false,
-        }
-    })
+        })
 }
 
 fn selected_readings(token: &TokenSyntax) -> impl Iterator<Item = &Tags> {
@@ -1055,12 +1043,7 @@ pub(super) fn pronoun_person_number(word: &str) -> Option<(Person, Number)> {
     })
 }
 
-fn has_coordinator(
-    tokens: &[Token],
-    analysis: &SyntaxAnalysis,
-    left: usize,
-    right: usize,
-) -> bool {
+fn has_coordinator(tokens: &[Token], analysis: &SyntaxAnalysis, left: usize, right: usize) -> bool {
     let (start, end) = if left < right {
         (left + 1, right)
     } else {
@@ -1071,4 +1054,173 @@ fn has_coordinator(
         .enumerate()
         .filter(|(_, token)| token.is_word())
         .any(|(offset, _)| matches!(analysis.tokens[start + offset].key.as_str(), "ja" | "sekä"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::syntax::ast::{self, NodeKind};
+    use std::collections::BTreeSet;
+
+    /// A head the flat rule finds and the AST cannot express.
+    #[derive(Debug)]
+    struct Exception {
+        text: &'static str,
+        token: usize,
+        key: &'static str,
+        why: &'static str,
+    }
+
+    /// The parity audit is allowed to disagree only where the flat rule uses
+    /// a shape the flat model did not assert an edge for. Each entry must stay
+    /// until the phrase builder learns the shape or the rule stops using it.
+    const EXCEPTIONS: &[Exception] = &[Exception {
+        text: "Meille on niinkuin usein ennenkin haettu kotimieheksi Laukkasen Anni, Satu-Anni, koulumestarin kivuloinen ja kalpea tyttö, joka ei milloinkaan leiki eikä hymyile.",
+        token: 26,
+        key: "kalpea",
+        why: "predicate-less NP: the flat rule walks to `tyttö`, but the flat model gives \
+              `kalpea` no head edge and there is no clause slot to root a phrase",
+    }];
+
+    fn corpus() -> Vec<String> {
+        let mut texts = BTreeSet::new();
+        for raw in [
+            include_str!("../../tests/fixtures/syntax_cases.json"),
+            include_str!("../../tests/fixtures/syntax_ambiguity.json"),
+            include_str!("../../tests/fixtures/word_order_cases.json"),
+        ] {
+            let root: serde_json::Value = serde_json::from_str(raw).expect("fixture json");
+            for case in root["cases"].as_array().expect("cases") {
+                if let Some(text) = case
+                    .get("sentence")
+                    .or_else(|| case.get("text"))
+                    .and_then(|value| value.as_str())
+                {
+                    texts.insert(text.to_string());
+                }
+            }
+        }
+        let prose: serde_json::Value =
+            serde_json::from_str(include_str!("../../tests/fixtures/prose/adjudicated.json"))
+                .expect("prose json");
+        for text in prose["clean"].as_array().expect("clean") {
+            texts.insert(text.as_str().expect("clean text").to_string());
+        }
+        for group in ["errors", "known_false_positives"] {
+            for entry in prose[group].as_array().expect("entries") {
+                if let Some(text) = entry.get("text").and_then(|value| value.as_str()) {
+                    texts.insert(text.to_string());
+                }
+            }
+        }
+        texts.into_iter().collect()
+    }
+
+    fn phrase_head_for(ast: &ast::Ast, token: usize) -> Option<usize> {
+        ast.nodes.iter().find_map(|node| {
+            if !matches!(node.kind, NodeKind::Phrase(_)) {
+                return None;
+            }
+            (node.tokens.contains(&token) && node.head != Some(token)).then_some(node.head)?
+        })
+    }
+
+    #[test]
+    fn attribute_head_matches_the_ast_phrase_head() {
+        let mut checked = 0usize;
+        let mut excepted = 0usize;
+        let mut mismatches = Vec::new();
+        for text in corpus() {
+            let tokens = crate::tokenise::tokenise(&text);
+            let tree = ast::analyze(&tokens);
+            let analysis = &tree.analysis;
+            let has_predicate: Vec<bool> = analysis
+                .clauses
+                .iter()
+                .map(|clause| clause.predicate.is_some())
+                .collect();
+            for (index, syntax) in analysis.tokens.iter().enumerate() {
+                if !tokens[index].is_word() {
+                    continue;
+                }
+                let predicate_less = has_predicate
+                    .get(syntax.clause)
+                    .is_none_or(|has_predicate| !has_predicate);
+                let candidate = if predicate_less {
+                    matches!(
+                        syntax.role,
+                        SyntacticRole::Modifier | SyntacticRole::Unknown | SyntacticRole::Adverbial
+                    )
+                } else {
+                    syntax.role == SyntacticRole::Modifier
+                };
+                if !candidate {
+                    continue;
+                }
+                if syntax
+                    .lemma
+                    .as_deref()
+                    .is_some_and(is_relative_pronoun_lemma)
+                    || syntax
+                        .lemma
+                        .as_deref()
+                        .is_some_and(is_invariant_attribute_lemma)
+                {
+                    continue;
+                }
+                let Some((attribute_case, _)) = attribute_shape(syntax) else {
+                    continue;
+                };
+                let Some(degree) = attribute_degree(syntax) else {
+                    continue;
+                };
+                if degree.is_none() && crate::expand::degree_base(&syntax.key).is_some() {
+                    continue;
+                }
+                if previous_word_is(
+                    index,
+                    &["paljon", "vähän", "runsaasti", "tarpeeksi"],
+                    &tokens,
+                    analysis,
+                ) || in_cardinal_phrase(index, &tokens, syntax, analysis)
+                    || attribute_case == Case::Genitive
+                {
+                    continue;
+                }
+                checked += 1;
+                let flat = attribute_head(index, syntax, &tokens, analysis);
+                let tree_head = phrase_head_for(&tree.ast, index);
+                if flat == tree_head {
+                    continue;
+                }
+                if let Some(exception) = EXCEPTIONS.iter().find(|exception| {
+                    exception.text == text
+                        && exception.token == index
+                        && exception.key == syntax.key
+                }) {
+                    debug_assert!(!exception.why.is_empty());
+                    excepted += 1;
+                } else {
+                    mismatches.push(format!(
+                        "{text:?} token {index} {:?} role={:?}: flat={flat:?} ast={tree_head:?}",
+                        syntax.key, syntax.role
+                    ));
+                }
+            }
+        }
+        assert!(
+            checked >= 20,
+            "only {checked} attribute candidates were checked"
+        );
+        assert_eq!(
+            excepted,
+            EXCEPTIONS.len(),
+            "a parity exception is stale: {EXCEPTIONS:#?}"
+        );
+        assert!(
+            mismatches.is_empty(),
+            "{} mismatches: {mismatches:#?}",
+            mismatches.len()
+        );
+    }
 }

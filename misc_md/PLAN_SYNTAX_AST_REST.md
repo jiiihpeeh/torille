@@ -1,8 +1,9 @@
 # PLAN_SYNTAX_AST_REST — the remaining surface-tree work
 
-Status: **Phase 5b landed; the rest is proposal.** Phases 0–5a plus the wasm
-`analyze_ast` export are in place. This document details the remaining 3b, 4,
-5c and 6 work. The base design is in
+Status: **Phases 5b and 5c.1 (parity audit) landed; the rest is proposal.**
+Phases 0–5a, the wasm `analyze_ast` export and the attribute-head parity audit
+are in place. This document details the remaining 3b, 4, 5c.2, 5c.3 and 6
+work. The base design is in
 [`PLAN_SYNTAX_AST.md`](PLAN_SYNTAX_AST.md).
 
 This document covers what is left:
@@ -12,7 +13,7 @@ This document covers what is left:
 | 3b | nested, mixed, clause and predicate lists | do only when a consumer needs it |
 | 4 | coordination nodes | **defer**; the list arena already covers most of it |
 | 5b | wasm `analyze_ast` export | **landed** |
-| 5c.1 | AST-backed attribute agreement | parity audit first, then migrate |
+| 5c.1 | AST-backed attribute agreement | **parity audit landed**; one documented flat-only exception, migration deferred |
 | 5c.2 | word-order diagnostics | **defer**; suggestion-only, no safe rule yet |
 | 6 | API cleanup and helper migration | last, after the consumers settle |
 
@@ -396,6 +397,17 @@ Gate:
 - `cargo test --release --workspace` and the Python gates that read syntax
   diagnostics.
 
+**Phase 5c.1 landing.** `syntax_check/agreement.rs` now has the
+`attribute_head_matches_the_ast_phrase_head` audit over every syntax fixture
+and the adjudicated prose. It compares the flat `attribute_head` with the
+head of the AST `Phrase` containing the modifier. Every candidate agrees
+except one documented flat-only case: in a predicate-less NP
+(`... koulumestarin kivuloinen ja kalpea tyttö ...`) the flat rule walks to
+`tyttö`, while the flat model gives `kalpea` no head edge, so the AST has no
+phrase to read. The exception is pinned in the test. Because the audit is not
+perfectly clean, the checker migration is deferred; `check_attributes` stays
+on the flat head lookup with the AST as the future path.
+
 ### 6.2 Word-order diagnostics (5c.2)
 
 Do **not** add a runtime `WordOrder` rule yet.
@@ -554,8 +566,9 @@ Open questions:
 
 1. **5b wasm export** — **landed**: additive, low risk, makes the tree usable
    and creates the first external shape contract.
-2. **5c.1 parity audit** — no behavior change; decide whether the checker
-   migration is worth it.
+2. **5c.1 parity audit** — **landed**; one flat-only exception. Migration is
+   deferred until the phrase builder can express that shape or the rule stops
+   needing it.
 3. **3b nested nominal lists** — only if the panel or a rule needs them.
 4. **4 coordination** — only on a named trigger.
 5. **6 cleanup** — after the consumers settle; `#[non_exhaustive]` with 5b.

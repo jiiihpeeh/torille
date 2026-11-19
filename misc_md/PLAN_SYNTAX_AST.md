@@ -1,11 +1,12 @@
 # PLAN_SYNTAX_AST — a typed surface tree over `syntax`
 
-Status: **Phases 0–5b landed.** The skeleton, head-driven phrases, the
-multi-segment relative host, top-level nominal lists, parentheticals, quotes,
-the word-order constituent view and the wasm `analyze_ast` export are in
-place. The flat `syntax::SyntaxAnalysis` stays the authority; the tree is an
-additive view built on demand. The remaining phases (3b, 4, 5c, 6) are detailed
-in [`PLAN_SYNTAX_AST_REST.md`](PLAN_SYNTAX_AST_REST.md).
+Status: **Phases 0–5b and the 5c.1 parity audit landed.** The skeleton,
+head-driven phrases, the multi-segment relative host, top-level nominal lists,
+parentheticals, quotes, the word-order constituent view, the wasm
+`analyze_ast` export and the attribute-head parity audit are in place. The flat
+`syntax::SyntaxAnalysis` stays the authority; the tree is an additive view
+built on demand. The remaining phases (3b, 4, 5c.2, 5c.3, 6) are detailed in
+[`PLAN_SYNTAX_AST_REST.md`](PLAN_SYNTAX_AST_REST.md).
 
 ## Decision summary
 
