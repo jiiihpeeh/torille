@@ -19,7 +19,7 @@ precision sweep.
 | missing relative closing comma is quiet | `Mies, joka tuli söi.` → 0 diagnostics | checker false negative |
 | imperative connegative has no correction | `Älä menet.` → `connegative` with `corrections: []` | correction gap |
 | conditional/potential connegative | conditional 3sg accepted; potential left quiet by design | morphology-gated |
-| docs baseline is stale | `docs/syntax_checker.md` says 66 clean rows / 1,021 words; fixture is 79 / 1,233 | documentation |
+| docs baseline | updated: `docs/syntax_checker.md` and `docs/grammar_syntax.md` now report 79 clean rows / 1,233 words and `page-2000` 5 | documentation (fixed) |
 
 Current AST baseline: 24 unit tests, the 122-sentence fixture corpus, the
 wasm AST shape test and `syntax_tree --check`.

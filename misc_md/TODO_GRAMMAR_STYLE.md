@@ -8,9 +8,15 @@ and style (`style_check`) layers. The design records are
 [`PLAN_SYNTAX_CHECKER.md`](PLAN_SYNTAX_CHECKER.md) and
 [`PLAN_STYLE.md`](PLAN_STYLE.md).
 
-Status on 2026-11-15: the planned phases are landed and the targeted syntax and
-style suites are green. The first false-positive slice is in. This file is the
-next roadmap, not a list of known red tests.
+Status on 2026-11-19: the grammar, syntax and style phases are landed except
+the explicitly gated items below (cold-page performance, the `koko` temporal
+check and the held `PREFER` rule), and the targeted suites are green.
+`page-2000` is at **5 adjudicated diagnostics with 0 false positives**
+(1 true positive, 3 accepted, 1 excerpt artefact), and the reviewed-prose gate
+is **79 clean rows / 1,233 words**, 1 true positive and 0 known false
+positives. The precision plan
+[`PLAN_GRAMMAR_PRECISION.md`](PLAN_GRAMMAR_PRECISION.md) is complete. This
+file is the next roadmap, not a list of known red tests.
 
 ## Principles
 
@@ -114,11 +120,12 @@ public-domain prose sample with reviewed findings and provenance.
 - [x] **Keep the constructed exact-output fixtures** as the per-rule gate.
 - [x] **Grow the prose sample to at least 1,000 correct words** and keep the
   known-false-positive rate per 1,000 words as the baseline. The sample is now
-  940 clean words + 81 known-false-positive words = **1,021 correct words**
-  (62 clean rows), with 9 known errors, **8.8 per 1,000 words**. The new
-  rows come from the same public-domain Gutenberg excerpt and were admitted
-  only after `check_syntax` returned zero diagnostics; the seed note in
-  `tests/fixtures/prose/adjudicated.json` records that rule.
+  **79 clean rows / 1,233 words**, 1 true positive and 0 known false positives;
+  the later precision phases fixed the known findings and grew the sample from
+  the original 1,021 words. New rows come from the same public-domain Gutenberg
+  excerpt and were admitted only after `check_syntax` returned zero
+  diagnostics; the seed note in `tests/fixtures/prose/adjudicated.json` records
+  that rule.
 
 Track these metrics:
 
@@ -329,8 +336,10 @@ keeps the later role rules from compensating for a bad reading.
 7. **Corpus, metrics and gates** — `tests/fixtures/prose/adjudicated.json`,
    `tests/syntax_prose.rs`, `TODO_GRAMMAR_STYLE.md`, `TODO.md`.
    - Move each row to `clean` only when it has zero diagnostics. All four
-     moved: the suite now reports 66 clean rows, **1,021 clean words**, 0
-     known-FP words, 0 known errors, **0.0 per 1,000 words**.
+     moved: the suite reported 66 clean rows and **1,021 clean words** at that
+     point, with 0 known-FP words and 0 known errors. The later precision
+     phases raised the live baseline to **79 clean rows / 1,233 words**; see
+     the work log and [`PLAN_GRAMMAR_PRECISION.md`](PLAN_GRAMMAR_PRECISION.md).
    - Run `cargo test --release --test syntax_prose`, then
      `cargo test --release --workspace`, clippy, the strict engine-output
      comparison, the n=5 evidence gate and the binding agreement test.
@@ -819,7 +828,7 @@ analysis refinements”.
   The connegative rule now accepts a past participle after a negative
   auxiliary even when the class engine gives it no negative-polarity reading
   (`eivät uupuneet`), removing a false positive the new split exposed.
-- [ ] **Remaining role/clause hardening.** `sillä` splitting and the
+- [x] **Remaining role/clause hardening — complete.** The `sillä` split and the
   negative-past participle are fixed, and so is the argument-selection half of
   the role pass (2026-11-18, below): a subject that agrees with its verb, a
   prenominal attribute, a postposed attribute and a participle complement are
@@ -831,34 +840,24 @@ analysis refinements”.
   and only a `Modifier` in a clause with a predicate is an attribute candidate.
   On `page-2000` the two rounds together remove 20 false positives
   (54 → 34 diagnostics) with none added.
-  A third round fixed inverted order (`Sen sanoi hän.`), the infinitive
-  clause's subject (`alkoi tulla … puute`, while `Haluan mennä koulu` still
-  fires), the 1st/2nd-person apposition (`Me suuremmat istumme`), and
-  `vaikka` as an adverb; `page-2000` is down to **27** diagnostics from 54,
-  with every removal adjudicated and none added.
-  Still open, in order of measured frequency:
-  - **absolute constructions.** `lapsi sylissä`, `Päivän vaietessa`,
-    `niitä seuraamaan`: a nominal plus an oblique or non-finite form that is
-    not the verb's argument. `Päivän vaietessa` is a genitive subject of an
-    impersonal non-finite verb, which no cue yet separates from the preposed
-    genitive object in `Kirjan luettuaan`.
-  - **a vocative is not an argument.** `Jumala, ole minulle armollinen`: the
-    nominative is detached by a comma and addresses someone.
-  - **`sen kun`** (`sen kun Anni vain kertoi`), the other subordinator-shaped
-    idiom in the comma rule.
-  - **the negated-clause object rule** beyond the reviewed `sillä` rows.
-  - **indirect questions**: `katsokaa, miten puut heiluvat.` is a reported
-    question and takes a period, not the question mark the rule offers.
-  - **colloquial `ne on`**, which the agreement rule reports as `ovat`
-    (defensible in written prose, but it is dialogue in the corpus).
-  The exact rows, their adjudication, the fixture they are pinned in and the
-  phase that fixes each one are in
-  [`PLAN_GRAMMAR_PRECISION.md`](PLAN_GRAMMAR_PRECISION.md). The 13 pinnable
-  rows are already in `known_false_positives`, so a fix fails the suite until
-  the row is deliberately moved to `clean`; the 8 page-only rows are tracked
-  by the plan's count invariant and a purpose-built fixture per phase.
+  The later precision phases fixed the remaining role/clause cues: absolute
+  constructions (`lapsi sylissä`, `Päivän vaietessa`, `niitä seuraamaan`), a
+  vocative that is not an argument, the fixed `sen kun` adverbial, the
+  infinitive's object, reported questions and the negated-clause object.
+  `page-2000` is now at **5 diagnostics**, every removal adjudicated and none
+  added; all five are adjudicated with 0 false positives:
+  - 2 `question_mark_missing` (1 accepted, 1 true positive);
+  - 2 `subject_predicate_agreement` on colloquial `ne on` (accepted);
+  - 1 `unbalanced_quote` where the excerpt ends inside a quote.
+  The exact rows, their adjudication, the fixture that pins each one and the
+  phase that fixed it are in
+  [`PLAN_GRAMMAR_PRECISION.md`](PLAN_GRAMMAR_PRECISION.md). The
+  known-false-positive list is empty; a new false positive must be added there
+  first, so a fix makes the suite fail until the row is deliberately moved to
+  `clean`.
   These are grammar-checker bugs independent of M0. Re-run `ud_m0_eval` and
-  `m0_prose_eval` after each fix; a larger model remains blocked meanwhile.
+  `m0_prose_eval` after each role change; a larger model remains blocked
+  meanwhile.
 
 ## Deliberate boundaries
 
@@ -1240,3 +1239,11 @@ intended/competing interpretation pair that fails.
   `page-2000`: 7 → 5. The precision plan is complete: 54 → 5 diagnostics, of
   which 0 false positives (1 true positive, 3 accepted, 1 excerpt artefact);
   the prefix counts are 20 words → 0, 96 → 0, 1,959 → 5.
+- 2026-11-19: reconciled this roadmap with the completed precision plan. The
+  live status now says `page-2000` is 5 diagnostics / 0 false positives and the
+  reviewed-prose gate is 79 clean rows / 1,233 words, 1 true positive, 0 known
+  false positives. The role/clause hardening item is closed: its stale "still
+  open" list (absolute constructions, vocative, `sen kun`, indirect questions)
+  all landed in `PLAN_GRAMMAR_PRECISION.md`. The only gated items left are the
+  cold-page target, the `koko` temporal verification and the held `PREFER`
+  rule. No engine or checker behaviour changed.
