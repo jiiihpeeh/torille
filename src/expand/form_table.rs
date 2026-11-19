@@ -9,11 +9,16 @@
 //!
 //! ## Contract
 //!
-//! **The table never rejects.** A lookup that misses — no such stem, no such
-//! ending, an empty table — falls through to the engine walk. Missing data can
-//! therefore only make the resolver slower, never wrong, and a partial table
-//! (a frequency-bounded subset, say) is a coverage question rather than a
-//! correctness one.
+//! The table records **every split** of every generated form, so for a stem it
+//! knows, its answer is a proof in both directions: a base that appears emits
+//! the surface, and a base that does not appear cannot. The resolver may
+//! therefore reject candidates at a known stem.
+//!
+//! A stem the table does not know is a **fallback**, not a rejection: an empty
+//! or partial table, a classless row, or a stem only a possessive form reaches
+//! all return `None`, and the engine walk runs unchanged. The guarantee is
+//! narrower than "never rejects" and sharper: it rejects only where it knows
+//! the stem, and it only knows stems the generator produced.
 //!
 //! ## Blob layout (`FMT1`)
 //!
@@ -70,9 +75,9 @@ pub fn table() -> &'static FormTable {
 
 /// The bases that spell `stem + ending` in the embedded table.
 ///
-/// Empty when the table has nothing to say, which the caller must treat as
-/// "walk the engine", not as "no base".
-pub fn bases(stem: &str, ending: &str) -> Vec<&'static str> {
+/// `None` means "the table does not know this stem" — walk the engine.
+/// `Some(list)` is authoritative, and an empty list means no base spells it.
+pub fn bases(stem: &str, ending: &str) -> Option<Vec<&'static str>> {
     table().bases(stem, ending)
 }
 
@@ -221,10 +226,13 @@ impl FormTable {
     }
 
     /// The bases that spell `stem + ending`, in stem-map order.
-    pub fn bases(&self, stem: &str, ending: &str) -> Vec<&'static str> {
+    ///
+    /// `None` when the stem is not in the table; `Some(vec![])` when it is but
+    /// no base takes this ending.
+    pub fn bases(&self, stem: &str, ending: &str) -> Option<Vec<&'static str>> {
         let mut out = Vec::new();
-        self.visit(stem, ending, |base, _| out.push(base));
-        out
+        self.visit(stem, ending, |base, _| out.push(base))
+            .then_some(out)
     }
 
     /// The readings recorded for `base` at `stem + ending`.
@@ -239,12 +247,20 @@ impl FormTable {
     }
 
     /// Call `visit` for every base that spells `stem + ending`.
-    fn visit(&self, stem: &str, ending: &str, mut visit: impl FnMut(&'static str, &[u32])) {
+    ///
+    /// Returns whether the table knows `stem` at all, which is what separates
+    /// "no base takes this ending" from "no data for this stem".
+    fn visit(
+        &self,
+        stem: &str,
+        ending: &str,
+        mut visit: impl FnMut(&'static str, &[u32]),
+    ) -> bool {
         if self.is_empty() || !self.is_valid() {
-            return;
+            return false;
         }
         let Some(index) = self.keys.find(stem) else {
-            return;
+            return false;
         };
         let group_offs = read_u32(self.blob, GROUP_OFFS_OFF) as usize;
         let at = read_u32(self.blob, group_offs + index * 4) as usize;
@@ -278,6 +294,7 @@ impl FormTable {
                 visit(self.base(base_id), &ids);
             }
         }
+        true
     }
 }
 
@@ -405,20 +422,13 @@ mod tests {
         assert!(table.is_valid());
         assert_eq!(table.len(), 2);
 
-        let mut bases = Vec::new();
-        table.visit("aave", "tta", |base, ids| bases.push((base, ids.to_vec())));
-        assert_eq!(bases.len(), 1);
-        assert_eq!(bases[0].0, "aave");
-
-        let mut found = Vec::new();
-        table.visit("talo", "ssa", |base, _| found.push(base));
-        assert_eq!(found, ["talo"]);
-
-        let mut none = Vec::new();
-        table.visit("talo", "tta", |base, _| none.push(base));
-        assert!(none.is_empty(), "the ending belongs to the other stem");
-        table.visit("kissa", "ssa", |base, _| none.push(base));
-        assert!(none.is_empty(), "unknown stem");
+        assert_eq!(table.bases("aave", "tta"), Some(vec!["aave"]));
+        assert_eq!(table.bases("talo", "ssa"), Some(vec!["talo"]));
+        // The stem is known but the ending belongs to the other stem, which is
+        // a rejection, not a fallback.
+        assert_eq!(table.bases("talo", "tta"), Some(Vec::new()));
+        // An unknown stem is no data at all.
+        assert_eq!(table.bases("kissa", "ssa"), None);
     }
 
     /// When the build embedded the generated table, a hit must return exactly
@@ -455,6 +465,76 @@ mod tests {
             );
             let from_table = crate::expand::check_normal::table_readings(surface, lemma);
             assert_eq!(from_table, walk, "{surface} / {lemma}");
+        }
+    }
+
+    /// The rejection half of the parity gate: at a stem the table knows, a
+    /// base it lists must be one the engine accepts, and a base it omits must
+    /// be one the engine rejects. Sampled over representative words; the
+    /// generator runs the full positive check over every 97th lemma.
+    #[test]
+    fn a_generated_table_rejects_only_what_the_engine_rejects() {
+        if table().is_empty() {
+            return;
+        }
+        let cat = crate::spec::Catalogues::embedded();
+        let lexicon = crate::kotus::lemmas();
+        let index = crate::expand::LexiconIndex::new(lexicon);
+        let mut endings: Vec<&'static str> = vec![""];
+        endings.extend(crate::expand::check_normal::ENDINGS.iter().copied());
+        endings.extend(crate::expand::check_normal::VERB_ENDINGS.iter().copied());
+        for (surface, base) in [
+            ("talossa", "talo"),
+            ("kerro", "kertoa"),
+            ("arvon", "arvo"),
+            ("voisi", "voida"),
+            ("uupuneet", "uupua"),
+            ("aavetta", "aave"),
+        ] {
+            let rows: Vec<_> = crate::kotus::sanalista().by_word(base).collect();
+            assert!(!rows.is_empty(), "{base} is a lemma");
+            for ending in &endings {
+                let Some(stem) = surface.strip_suffix(ending) else {
+                    continue;
+                };
+                if stem.is_empty() {
+                    continue;
+                }
+                // The table is authoritative only for a base the stem map
+                // would name from this stem: that is the set of pairs the
+                // resolver probes.
+                let in_bucket = crate::expand::check_normal::STEM_BUCKETS_NOUN
+                    .bases(stem)
+                    .any(|candidate| candidate == base)
+                    || crate::expand::check_normal::STEM_BUCKETS_VERB
+                        .bases(stem)
+                        .any(|candidate| candidate == base);
+                if !in_bucket {
+                    continue;
+                }
+                let Some(listed) = bases(stem, ending) else {
+                    continue;
+                };
+                let emitted = rows.iter().any(|row| {
+                    crate::expand::emits_form(
+                        base,
+                        &row.inflections().collect::<Vec<_>>(),
+                        cat,
+                        Some(&index),
+                        PartOfSpeech::parse_all(row.part_of_speech())
+                            .first()
+                            .copied()
+                            .unwrap_or(PartOfSpeech::Noun),
+                        false,
+                        surface,
+                    )
+                });
+                assert_eq!(
+                    listed.contains(&base),
+                    emitted,
+                    "{surface} / {base} at ({stem:?}, {ending:?})"
+                );
+            }
         }
     }
 

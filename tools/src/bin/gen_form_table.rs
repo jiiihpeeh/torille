@@ -22,7 +22,7 @@ use flate2::Compression;
 use flate2::write::GzEncoder;
 use std::io::Write;
 
-use torille::expand::check_normal::{ENDINGS, VERB_ENDINGS};
+use torille::expand::check_normal::{ENDINGS, POSSESSIVE_SUFFIXES, VERB_ENDINGS};
 use torille::expand::{LexiconIndex, form_readings, form_table, inflect_all};
 use torille::kotus::{EmbeddedLemma, Lemma, lemmas, sanalista};
 use torille::spec::Catalogues;
@@ -117,18 +117,28 @@ fn gz(bytes: &[u8]) -> Vec<u8> {
     encoder.finish().expect("gzip")
 }
 
-/// The longest prefix of `word` that is a stem-map key of `base` and leaves an
-/// ending the runtime strip list contains. `None` when no split works, which
-/// leaves the form on the engine walk.
-fn split<'a>(
+/// Every split of `word` that the runtime can probe: a prefix that is a
+/// stem-map key of `base`, and a remainder the strip list contains.
+///
+/// Part 1 took only the longest prefix per form. Recording all of them is what
+/// makes a miss mean "cannot emit" rather than "not recorded": the runtime
+/// probes a specific `(stem, ending)` pair, so every pair it can reach must be
+/// in the table for absence to be a proof.
+fn splits<'a>(
     word: &'a str,
     base: &str,
     noun: &Pairs,
     verb: &Pairs,
     noun_endings: &BTreeSet<&'static str>,
     verb_endings: &BTreeSet<&'static str>,
-) -> Option<(&'a str, &'a str)> {
-    for (at, _) in word.char_indices().rev() {
+) -> Vec<(&'a str, &'a str)> {
+    let mut out = Vec::new();
+    // `char_indices` never yields the end of the string, and the whole word as
+    // its own stem (the empty ending: `kerro` is the imperative of `kertoa`)
+    // is the probe the runtime makes first.
+    let mut bounds: Vec<usize> = word.char_indices().map(|(at, _)| at).collect();
+    bounds.push(word.len());
+    for at in bounds.into_iter().rev() {
         let stem = &word[..at];
         let ending = &word[at..];
         if stem.is_empty() {
@@ -137,10 +147,10 @@ fn split<'a>(
         let noun_ok = noun.has(stem, base) && (ending.is_empty() || noun_endings.contains(ending));
         let verb_ok = verb.has(stem, base) && (ending.is_empty() || verb_endings.contains(ending));
         if noun_ok || verb_ok {
-            return Some((stem, ending));
+            out.push((stem, ending));
         }
     }
-    None
+    out
 }
 
 #[derive(Clone)]
@@ -174,6 +184,9 @@ fn main() {
     let noun_endings: BTreeSet<&'static str> = ENDINGS.iter().copied().collect();
     let mut verb_endings: BTreeSet<&'static str> = VERB_ENDINGS.iter().copied().collect();
     verb_endings.extend(ENDINGS.iter().copied());
+    // The verb ladder chains the possessive suffixes too (`voisi` is `voida`
+    // reached through `voi` + `si`), so a split it can probe must be recorded.
+    verb_endings.extend(POSSESSIVE_SUFFIXES.iter().copied());
 
     let mut base_ids: HashMap<String, u32> = HashMap::new();
     let mut base_names: Vec<String> = Vec::new();
@@ -205,40 +218,40 @@ fn main() {
             pos,
             false,
         ) {
-            // Possessive and clitic forms are reached by stripping the suffix
-            // first (`resolve_word`'s possessive rung), not by this table, and
-            // their surface does not split on an ending the resolver strips.
-            if form.word.contains(' ')
-                || form
-                    .readings
-                    .iter()
-                    .any(|tags| tags.possessive.is_some() || tags.clitic.is_some())
-            {
+            if form.word.contains(' ') {
                 continue;
             }
             stats.forms += 1;
-            let Some((stem, ending)) = split(
+            // Every form is recorded, possessive and clitic ones included:
+            // `inflect_all(possessives = false)` still emits them, so the
+            // engine can accept those surfaces, and a table that omitted them
+            // could not be used to reject anything.
+            let splits = splits(
                 &form.word,
                 lemma.word,
                 &noun,
                 &verb,
                 &noun_endings,
                 &verb_endings,
-            ) else {
+            );
+            if splits.is_empty() {
                 stats.unsplit += 1;
                 continue;
-            };
+            }
             stats.split += 1;
-            rows.push(Row {
-                stem: stem.to_string(),
-                ending: ending.to_string(),
-                base,
-                readings: form
-                    .readings
-                    .iter()
-                    .map(form_table::encode_reading)
-                    .collect(),
-            });
+            let readings: Vec<_> = form
+                .readings
+                .iter()
+                .map(form_table::encode_reading)
+                .collect();
+            for (stem, ending) in splits {
+                rows.push(Row {
+                    stem: stem.to_string(),
+                    ending: ending.to_string(),
+                    base,
+                    readings: readings.clone(),
+                });
+            }
         }
     }
 
@@ -496,55 +509,50 @@ fn spot_check(
         let inflections: Vec<_> = rows.iter().flat_map(|row| row.inflections()).collect();
         let forms = inflect_all(lemma.word, &inflections, catalogue, Some(index), pos, false);
         for form in &forms {
-            if form.word.contains(' ')
-                || form
-                    .readings
-                    .iter()
-                    .any(|tags| tags.possessive.is_some() || tags.clitic.is_some())
-            {
+            if form.word.contains(' ') {
                 continue;
             }
-            let Some((stem, ending)) = split(
+            let splits = splits(
                 &form.word,
                 lemma.word,
                 noun,
                 verb,
                 noun_endings,
                 verb_endings,
-            ) else {
-                continue;
-            };
-            let from_table = table.readings(stem, ending, lemma.word);
-            let from_walk = form_readings(
-                lemma.word,
-                &inflections,
-                catalogue,
-                Some(index),
-                pos,
-                false,
-                &form.word,
             );
-            match (from_table, from_walk) {
-                (Some(table_readings), Some(walk_readings)) => {
-                    assert_eq!(
-                        table_readings, walk_readings,
-                        "{} / {}: table and walk disagree",
-                        lemma.word, form.word
-                    );
-                    checked += 1;
-                }
-                (None, Some(_)) => panic!(
-                    "{} / {} (stem {stem:?}, ending {ending:?}, pair {}): \
-                     the walk has readings but the table has no entry",
+            for (stem, ending) in splits {
+                let from_table = table.readings(stem, ending, lemma.word);
+                let from_walk = form_readings(
                     lemma.word,
-                    form.word,
-                    noun.has(stem, lemma.word) || verb.has(stem, lemma.word),
-                ),
-                (Some(_), None) => panic!(
-                    "{} / {}: the table has readings but the walk does not",
-                    lemma.word, form.word
-                ),
-                (None, None) => {}
+                    &inflections,
+                    catalogue,
+                    Some(index),
+                    pos,
+                    false,
+                    &form.word,
+                );
+                match (from_table, from_walk) {
+                    (Some(table_readings), Some(walk_readings)) => {
+                        assert_eq!(
+                            table_readings, walk_readings,
+                            "{} / {}: table and walk disagree",
+                            lemma.word, form.word
+                        );
+                        checked += 1;
+                    }
+                    (None, Some(_)) => panic!(
+                        "{} / {} (stem {stem:?}, ending {ending:?}, pair {}): \
+                         the walk has readings but the table has no entry",
+                        lemma.word,
+                        form.word,
+                        noun.has(stem, lemma.word) || verb.has(stem, lemma.word),
+                    ),
+                    (Some(_), None) => panic!(
+                        "{} / {}: the table has readings but the walk does not",
+                        lemma.word, form.word
+                    ),
+                    (None, None) => {}
+                }
             }
         }
     }

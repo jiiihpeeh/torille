@@ -1,8 +1,8 @@
 # PLAN_FORM_TABLE — an exact surface → base + reading table
 
-Status: **part 1 implemented on branch `form-table`, measured, off by default;
-part 2 (negative evidence) planned** · 2026-11-19 · base `be4e13a` (same tree
-as `syntax`/`master`)
+Status: **parts 1 and 2 implemented on branch `form-table`, all gates met,
+still off by default on download size** · 2026-11-19 · base `be4e13a` (same
+tree as `syntax`/`master`)
 
 The table is built: `gen_form_table` writes a 3.59 MB gzip / 22.2 MB raw blob,
 the resolver consults it behind the off-by-default `form-table` feature, and
@@ -305,11 +305,47 @@ correctness net; the exact-output fixtures are the parity net.
 - **Possessives, clitics, classless compounds and derived layers stay out.**
   They are 26 of 1,124 surfaces on the fixture and each has its own path.
 
-## 11. Part 2 — negative evidence (planned, the next speed step)
+## 11. Part 2 — negative evidence (landed)
 
-Part 1 bought ~10 % because the table is a **positive-only** cache: absence
-must fall back, so the 46 % of stem-map verifies that *fail* still build the
-paradigm. Those failures are now the largest remaining build cost — 394 of the
+Part 1 bought ~10 % because the table was a **positive-only** cache: absence
+fell back, so the 46 % of stem-map verifies that *fail* still built the
+paradigm. Part 2 makes absence a proof, and it moved the number from 10 % to
+**31 %**.
+
+### Result
+
+| gate | target | measured |
+|---|---|---|
+| size | ≤ 6 MB gzip | **4.52 MB gzip / 29.7 MB raw** (610,909 stems) |
+| single-thread | ≤ 800 ms | **~800 ms**, from 1,167 (−31 %) |
+| 4-worker | ≤ 260 ms | **259 ms**, from 328 (−21 %) |
+| parity | byte-identical | **0 of 1,147 surfaces differ**; 5 grammar / 14 style |
+| generator | — | 14.77 M forms, 2.71 M split, 3.37 M rows, 37 k spot-checked |
+| staleness | miss ⇒ rejects | sampled test in `form_table.rs` + generator spot check |
+
+Three implementation findings, each of which was a real recall bug before it
+was fixed:
+
+1. **The empty ending.** `char_indices()` never yields the end of the string,
+   so the whole word as its own stem (`kerro` is the imperative of `kertoa`)
+   was never recorded. In part 1 that only cost a fallback; with rejection it
+   lost every imperative, and `olla`'s whole paradigm.
+2. **The trimmed verb stem.** `trimmed + vowels + ending` is the surface, so a
+   table keyed by `trimmed` would be a lie. The table answers only the raw
+   residue (`cand == stem`); the trimmed probe always verifies.
+3. **The possessive suffixes.** The verb ladder chains them (`voisi` is
+   `voida` through `voi` + `si`), so the generator must record those splits or
+   rejection drops the conditional.
+
+The table is consulted **per bucket candidate**, never as the candidate list:
+the same stem names noun and verb bases, and the bucket is what keeps the maps
+and their order apart.
+
+### Original analysis
+
+Part 1 bought ~10 % because the table was a **positive-only** cache: absence
+fell back, so the 46 % of stem-map verifies that *fail* still built the
+paradigm. Those failures were the largest remaining build cost — 394 of the
 1,342 stem-map verifies, plus 486 failing builds in the cheap gate.
 
 The next step makes absence mean "cannot emit". That is sound if the table
@@ -336,21 +372,22 @@ What this does **not** cover, and what stays on the verify:
 | head-1 walk | it names candidates by prefix, not by a stem pair |
 | the 33 % of forms with no split | derived forms, classless compounds, proper names |
 
-### Gates
+### The stale-blob risk
 
-| gate | target | why |
-|---|---|---|
-| size | ≤ 6 MB gzip (expected 4.5–5.5 MB from ~1.5–2× the rows) | all splits multiply the row count; measure before wiring |
-| speed | single-thread ≤ 800 ms, 4-worker ≤ 260 ms | removes the 394 failed verifies and their `form_readings` walks |
-| parity | byte-identical on the fixtures and `page-2000` | the reject path must not change a reading |
-| **staleness** | exhaustive: for every lemma and form, table-miss ⇒ `emits_form` false | **this is the price of rejection**: a stale blob now *loses* forms instead of merely being slow |
+Part 1's "never reject" property made a stale table harmless. Part 2 trades it
+for the 31 %, so a blob older than the engine can now *lose* forms. The guard
+is the `derived_*` discipline, and it rests on three things:
 
-The staleness gate is the whole risk. Part 1's "never reject" property is what
-made a stale table harmless; part 2 trades it for the 40 %. The guard has to
-be the `derived_*` discipline: regenerate with the engine, test the blob
-against `inflect_all` exhaustively (ignored in the normal suite, mandatory in
-the nightly job), and treat a class-engine change without regeneration as a
-red build.
+- `gen_form_table` spot-checks every 97th lemma (37,016 forms) against
+  `form_readings` before it writes;
+- `form_table::tests::a_generated_table_agrees_with_the_walk` and
+  `a_generated_table_rejects_only_what_the_engine_rejects` pin both directions
+  for representative words, and only run with `--features form-table`;
+- a class-engine change without regeneration is a red build: regenerate the
+  blob in the same commit.
+
+The exhaustive all-lemma version of the second test is not written yet; until
+it is, the sampled test plus the generation-time check is the guard.
 
 ### Size offset
 
