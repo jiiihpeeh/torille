@@ -112,11 +112,13 @@
     //
     // ESM-wasm imports would-be simpler but browsers reject the
     // MIME types they use; the shim provides a `default()`
-    // function that takes the bytes we pass in.
+    // function that takes the bytes we pass in. wasm-bindgen 0.2
+    // wants the bytes named (`{ module_or_path }`); a bare
+    // `ArrayBuffer` still works but logs a deprecation warning.
     import init, { start } from './pkg/torille_wasm_leptos.js';
     const resp = await fetch(new URL('./pkg/torille_wasm_leptos_bg.wasm', import.meta.url));
     const bytes = await resp.arrayBuffer();
-    await init(bytes);
+    await init({ module_or_path: bytes });
     start();
   </script>
 </body>
