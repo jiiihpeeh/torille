@@ -191,7 +191,7 @@ fn candidates(
         let Some(parent) = node.parent else {
             continue;
         };
-        if parent != owner && contains(&token_range, &builder.nodes[parent.index()].tokens) {
+        if parent != owner && overlaps(&token_range, &builder.nodes[parent.index()].tokens) {
             continue;
         }
         if !is_descendant(builder, owner, id) {
@@ -254,6 +254,10 @@ fn bracket_pairs(tokens: &[Token]) -> Vec<(usize, usize)> {
 
 fn contains(outer: &Range<usize>, inner: &Range<usize>) -> bool {
     outer.start <= inner.start && inner.end <= outer.end
+}
+
+fn overlaps(left: &Range<usize>, right: &Range<usize>) -> bool {
+    left.start < right.end && right.start < left.end
 }
 
 fn is_descendant(builder: &Builder, ancestor: NodeId, mut node: NodeId) -> bool {

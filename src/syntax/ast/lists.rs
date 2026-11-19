@@ -124,7 +124,7 @@ fn item_candidates(
         let Some(parent) = node.parent else {
             continue;
         };
-        if parent != owner && contains(&item_tokens, &builder.nodes[parent.index()].tokens) {
+        if parent != owner && overlaps(&item_tokens, &builder.nodes[parent.index()].tokens) {
             continue;
         }
         if !is_descendant(builder, owner, id) {
@@ -195,6 +195,10 @@ fn covers_list(tokens: &[Token], builder: &Builder, list: &List, items: &[Vec<No
 
 fn contains(outer: &Range<usize>, inner: &Range<usize>) -> bool {
     outer.start <= inner.start && inner.end <= outer.end
+}
+
+fn overlaps(left: &Range<usize>, right: &Range<usize>) -> bool {
+    left.start < right.end && right.start < left.end
 }
 
 fn word_leaf(builder: &Builder, token_index: usize) -> Option<NodeId> {

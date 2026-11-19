@@ -896,6 +896,22 @@ mod tests {
     }
 
     #[test]
+    fn a_list_candidate_does_not_split_an_existing_phrase() {
+        let (tokens, tree) = analyzed(
+            "Oli ollut ihan hiljaista, sen kun Anni vain kertoi, koko ajan kynttilään katsoen, tasaisella äänellä.",
+        );
+        let ollut = tokens
+            .iter()
+            .position(|token| token.text == "ollut")
+            .expect("ollut");
+        let phrase = phrase_for(&tree, &tokens, "ollut");
+        assert_eq!(phrase.tokens, 0..3);
+        assert_eq!(phrase.children.len(), 2);
+        assert!(phrase.tokens.contains(&ollut));
+        validate(&tokens, &tree.analysis, &tree.ast).expect("phrase/list tree is valid");
+    }
+
+    #[test]
     fn walk_visits_every_node() {
         let (_, tree) = analyzed("Pöydällä on kirja.");
         let walked = tree.ast.walk();
