@@ -1596,6 +1596,26 @@ fn direct_reading(row: &crate::kotus::EmbeddedLemma) -> Tags {
         ) => Tags::nominal(Case::Nominative),
         _ => Tags::UNKNOWN,
     };
+    // A classless row ending in `-t` is a plural-only citation
+    // (`olosuhteet`, `ajosuunnat`, `vanhemmat`): singular Finnish nominatives
+    // do not end in `-t`. Without this the fallback reading makes the subject
+    // singular and the agreement rules fire on correct prose.
+    if tags.number == Some(Number::Singular)
+        && row.inflections().next().is_none()
+        && row.word().ends_with('t')
+        && matches!(
+            pos,
+            Some(
+                PartOfSpeech::Noun
+                    | PartOfSpeech::Adjective
+                    | PartOfSpeech::Pronoun
+                    | PartOfSpeech::Numeral
+                    | PartOfSpeech::Ordinal
+            )
+        )
+    {
+        tags.number = Some(Number::Plural);
+    }
     tags.part_of_speech = pos;
     tags
 }
@@ -1730,6 +1750,26 @@ mod tests {
         assert_eq!(info.case(), Some(Case::Genitive));
         assert_eq!(info.number(), Some(Number::Singular));
         assert_eq!(info.depth(), Depth::StemMap);
+    }
+
+    #[test]
+    fn a_classless_t_final_nominal_is_plural() {
+        // `olosuhteet` and `ajosuunnat` are classless rows whose citation is
+        // the nominative plural. The direct fallback must not call them
+        // singular, or attribute/subject agreement fires on correct prose.
+        for word in ["olosuhteet", "ajosuunnat"] {
+            let (morphology, _) = analyzed(word);
+            let info = morphology.word(0).expect("word resolved");
+            assert!(
+                info.readings().iter().any(|reading| {
+                    reading.part_of_speech == Some(PartOfSpeech::Noun)
+                        && reading.case == Some(Case::Nominative)
+                        && reading.number == Some(Number::Plural)
+                }),
+                "{word}: {:?}",
+                info.readings()
+            );
+        }
     }
 
     #[test]

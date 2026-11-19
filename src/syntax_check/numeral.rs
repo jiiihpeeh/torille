@@ -210,6 +210,7 @@ mod tests {
             "Sata autoa.",
             "Kaksikymmentä lasta.",
             "kaksi tai useampia ajokaistoja",
+            "kaksi tai enemmän ajokaistoja",
         ] {
             assert!(diagnostics(text).is_empty(), "{text}: {:#?}", diagnostics(text));
         }
