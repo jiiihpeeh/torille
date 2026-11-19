@@ -1,10 +1,9 @@
 # PLAN_SYNTAX_AST_REST — the remaining surface-tree work
 
-Status: **proposal.** No code in this plan. The base design and the landed
-phases are in [`PLAN_SYNTAX_AST.md`](PLAN_SYNTAX_AST.md). Phases 0–5a are in
-`src/syntax/ast/`: the skeleton, phrases, the multi-segment relative host,
-top-level nominal lists, parentheticals, quotes and the word-order
-constituent view.
+Status: **Phase 5b landed; the rest is proposal.** Phases 0–5a plus the wasm
+`analyze_ast` export are in place. This document details the remaining 3b, 4,
+5c and 6 work. The base design is in
+[`PLAN_SYNTAX_AST.md`](PLAN_SYNTAX_AST.md).
 
 This document covers what is left:
 
@@ -12,7 +11,7 @@ This document covers what is left:
 |---|---|---|
 | 3b | nested, mixed, clause and predicate lists | do only when a consumer needs it |
 | 4 | coordination nodes | **defer**; the list arena already covers most of it |
-| 5b | wasm `analyze_ast` export | do first; low risk, makes the tree visible |
+| 5b | wasm `analyze_ast` export | **landed** |
 | 5c.1 | AST-backed attribute agreement | parity audit first, then migrate |
 | 5c.2 | word-order diagnostics | **defer**; suggestion-only, no safe rule yet |
 | 6 | API cleanup and helper migration | last, after the consumers settle |
@@ -320,13 +319,27 @@ Optional debug consumer:
 ### 5.5 Tests and gate
 
 - `cargo check -p torille-wasm --target wasm32-unknown-unknown`;
+- `cargo clippy -p torille-wasm --target wasm32-unknown-unknown -- -D warnings`;
 - `wasm-pack build --release --target web` (or the existing demo build
   script);
-- a native unit test for the Rust helpers that build the node/order values,
-  so the JSON fields do not drift;
-- the demo page smoke test if one is added;
+- `torille-wasm/tests/ast-shape.mjs` with
+  `node --experimental-wasm-modules tests/ast-shape.mjs` from
+  `torille-wasm/` after a wasm-pack build:
+  it asserts the `{ syntax, ast }` envelope, the node fields and the
+  `object / predicate / adverbial` constituent order for
+  `Kirjan luin eilen.`, then repeats through `analyze_ast_with_state`;
 - no change to `analyze_syntax`, `check_syntax`, `check_style` or their
   existing consumers.
+
+**Phase 5b landing.** `analyze_ast` and `analyze_ast_with_state` are in
+`torille-wasm/src/lib.rs`. The object is `{ syntax, ast }`; `ast.nodes` is a
+pre-order node array with `id`, `kind`, `detail`, `span`, `tokens`, `segments`,
+`parent`, `children`, `head`, `governor`, `role`, `confidence`, `antecedent`
+and `clause`; `ast.clauses` carries the flat clause index, its constituents,
+`first` and `fronted`. The state path reuses `syntax_cache` and the
+disambiguation sidecar. `wasm-pack build --release` and
+`tests/ast-shape.mjs` (stateless and stateful, `Kirjan luin eilen.`) pass; no
+existing export changed.
 
 ## 6. Phase 5c — checker consumers
 
@@ -539,8 +552,8 @@ Open questions:
 
 ## 11. Recommended sequence
 
-1. **5b wasm export** — additive, low risk, makes the tree usable and creates
-   the first external shape contract.
+1. **5b wasm export** — **landed**: additive, low risk, makes the tree usable
+   and creates the first external shape contract.
 2. **5c.1 parity audit** — no behavior change; decide whether the checker
    migration is worth it.
 3. **3b nested nominal lists** — only if the panel or a rule needs them.

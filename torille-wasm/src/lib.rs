@@ -19,6 +19,8 @@
 //! called by the keystroke path and must stay out of the render loop.
 //! [`analyze_syntax_with_state`] is the same object through a textarea's
 //! word cache, for a panel that re-renders on the same document.
+//! [`analyze_ast`] adds the typed surface tree and its per-clause constituent
+//! order; [`analyze_ast_with_state`] is its cache-aware form.
 //! [`check_syntax`] adds grammar diagnostics and corrections to the analysis;
 //! [`check_syntax_with_state`] is its cache-aware form. [`check_style`] is
 //! the separate, suggestion-only style layer; it never returns an error or a
@@ -62,6 +64,7 @@ use wasm_bindgen::prelude::*;
 mod state;
 
 use crate::state::{Hit, TextAreaState};
+use torille::syntax::ast::{Ast, Constituent, NodeId};
 
 // Allocator: see the module doc. `wee_alloc` only under the opt-in
 // `wee-alloc` feature; the default is Rust's standard wasm allocator,
@@ -250,6 +253,187 @@ pub fn analyze_syntax_with_state(idx: u32, text: &str) -> js_sys::Object {
     drop(slots);
     let analysis = torille::syntax::analyze(&tokens);
     syntax_object(&tokens, &analysis)
+}
+
+/// The flat syntax analysis plus the typed surface tree.
+///
+/// This is the on-demand structural export for a diagnostic panel or a
+/// developer tool; it is not part of the keystroke path. The object is:
+///
+/// ```text
+/// {
+///   syntax: { ...the analyze_syntax shape... },
+///   ast: {
+///     root: 0,
+///     nodes: [{ id, kind, detail, span, tokens, segments, parent, children,
+///               head, governor, role, confidence, antecedent, clause }],
+///     clauses: [{ index, constituents, first, fronted }]
+///   }
+/// }
+/// ```
+///
+/// `ast.nodes` is a pre-order walk; `id` is the stable index for `parent`,
+/// `children`, `head`, `governor`, `antecedent` and `node`. `detail` is the
+/// clause/phrase/coordination kind, a list index, or `"list.item"`; it is
+/// null for the word/document/sentence/container nodes. `ast.clauses` is
+/// keyed by the flat clause index in `syntax.clauses`; `first` and `fronted`
+/// are role/kind labels, and `fronted` is null when the clause has no
+/// object/adverbial/complement before the predicate.
+#[wasm_bindgen]
+pub fn analyze_ast(text: &str) -> js_sys::Object {
+    let tokens = torille::tokenise::tokenise(text);
+    let analysis = torille::syntax::analyze(&tokens);
+    let ast = torille::syntax::ast::build(&tokens, &analysis);
+    ast_object(&tokens, &analysis, &ast)
+}
+
+/// The same AST export through the per-textarea word cache.
+///
+/// A stale or destroyed handle falls back to the stateless path.
+#[wasm_bindgen]
+pub fn analyze_ast_with_state(idx: u32, text: &str) -> js_sys::Object {
+    let tokens = torille::tokenise::tokenise(text);
+    let mut slots = states().lock().expect("states mutex poisoned");
+    if let Some(Some(state)) = slots.get_mut(idx as usize) {
+        let morphology = torille::morphology::analyze_morphology(&tokens, &mut state.syntax_cache);
+        let decisions = torille::disambiguation::disambiguate(&tokens, &morphology);
+        let analysis =
+            torille::syntax::analyze_syntax_with_decisions(&tokens, &morphology, &decisions);
+        let ast = torille::syntax::ast::build(&tokens, &analysis);
+        return ast_object(&tokens, &analysis, &ast);
+    }
+    drop(slots);
+    analyze_ast(text)
+}
+
+fn ast_object(
+    tokens: &[torille::tokenise::Token],
+    analysis: &torille::syntax::SyntaxAnalysis,
+    ast: &Ast,
+) -> js_sys::Object {
+    use js_sys::{Array, Object};
+
+    let syntax = syntax_object(tokens, analysis);
+    let obj = Object::new();
+    set(&obj, "syntax", syntax.into());
+    let ast_obj = Object::new();
+    set(&ast_obj, "root", JsValue::from(ast.root.index() as u32));
+
+    let nodes = Array::new();
+    for id in ast.walk() {
+        nodes.push(&node_object(ast, id));
+    }
+    set(&ast_obj, "nodes", nodes.into());
+
+    let clauses = Array::new();
+    for index in 0..analysis.clauses.len() {
+        let item = Object::new();
+        set(&item, "index", JsValue::from(index as u32));
+        let constituents = Array::new();
+        for constituent in ast.clause_constituents(analysis, index) {
+            constituents.push(&constituent_object(&constituent));
+        }
+        set(&item, "constituents", constituents.into());
+        let first = ast
+            .first_constituent(analysis, index)
+            .map(|constituent| constituent_label(&constituent));
+        let fronted = ast
+            .fronted_constituent(analysis, index)
+            .map(|constituent| constituent_label(&constituent));
+        set_option(&item, "first", first.as_deref());
+        set_option(&item, "fronted", fronted.as_deref());
+        clauses.push(&item);
+    }
+    set(&ast_obj, "clauses", clauses.into());
+    set(&obj, "ast", ast_obj.into());
+    obj
+}
+
+fn node_object(ast: &Ast, id: NodeId) -> js_sys::Object {
+    use js_sys::{Array, Object};
+
+    let node = ast.node(id);
+    let item = Object::new();
+    set(&item, "id", JsValue::from(id.index() as u32));
+    set(&item, "kind", JsValue::from(node.kind.name()));
+    let detail = match node.kind {
+        torille::syntax::ast::NodeKind::Clause(kind) => Some(kind.name().to_string()),
+        torille::syntax::ast::NodeKind::Phrase(kind) => Some(kind.name().to_string()),
+        torille::syntax::ast::NodeKind::Coordination(kind) => Some(kind.name().to_string()),
+        torille::syntax::ast::NodeKind::List { index } => Some(index.to_string()),
+        torille::syntax::ast::NodeKind::ListItem { list, item } => Some(format!("{list}.{item}")),
+        _ => None,
+    };
+    set_option(&item, "detail", detail.as_deref());
+
+    let span = Array::new();
+    span.push(&JsValue::from(node.span.start as u32));
+    span.push(&JsValue::from(node.span.end as u32));
+    set(&item, "span", span.into());
+
+    let tokens = Array::new();
+    tokens.push(&JsValue::from(node.tokens.start as u32));
+    tokens.push(&JsValue::from(node.tokens.end as u32));
+    set(&item, "tokens", tokens.into());
+
+    let segments = Array::new();
+    for segment in &node.segments {
+        let pair = Array::new();
+        pair.push(&JsValue::from(segment.start as u32));
+        pair.push(&JsValue::from(segment.end as u32));
+        segments.push(&pair);
+    }
+    set(&item, "segments", segments.into());
+
+    set_option(&item, "parent", node.parent.map(NodeId::index));
+    let children = Array::new();
+    for child in &node.children {
+        children.push(&JsValue::from(child.index() as u32));
+    }
+    set(&item, "children", children.into());
+    set_option(&item, "head", node.head);
+    set_option(&item, "governor", node.governor);
+    set_option(&item, "role", node.role.map(|role| role.name()));
+    set(
+        &item,
+        "confidence",
+        JsValue::from(match node.confidence {
+            torille::syntax::RoleConfidence::Likely => "likely",
+            torille::syntax::RoleConfidence::Weak => "weak",
+        }),
+    );
+    set_option(&item, "antecedent", node.antecedent);
+    set_option(&item, "clause", node.clause);
+    item
+}
+
+fn constituent_object(constituent: &Constituent) -> js_sys::Object {
+    use js_sys::{Array, Object};
+
+    let item = Object::new();
+    set(
+        &item,
+        "node",
+        JsValue::from(constituent.node.index() as u32),
+    );
+    set(&item, "kind", JsValue::from(constituent.kind.name()));
+    set_option(&item, "role", constituent.role.map(|role| role.name()));
+    let tokens = Array::new();
+    tokens.push(&JsValue::from(constituent.tokens.start as u32));
+    tokens.push(&JsValue::from(constituent.tokens.end as u32));
+    set(&item, "tokens", tokens.into());
+    let span = Array::new();
+    span.push(&JsValue::from(constituent.start as u32));
+    span.push(&JsValue::from(constituent.end as u32));
+    set(&item, "span", span.into());
+    item
+}
+
+fn constituent_label(constituent: &Constituent) -> String {
+    constituent
+        .role
+        .map(|role| role.name().to_string())
+        .unwrap_or_else(|| constituent.kind.name().to_string())
 }
 
 fn syntax_object(
@@ -1176,7 +1360,7 @@ pub fn init_panic_hook() {
         // Allow Rust `console.log!` etc. to print into the browser dev
         // tools console. The no-op branch on non-wasm keeps native
         // tests compilable.
-        let _ = console_error_panic_hook::set_once();
+        console_error_panic_hook::set_once();
     }
 }
 

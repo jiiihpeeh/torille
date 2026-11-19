@@ -1,11 +1,11 @@
 # PLAN_SYNTAX_AST — a typed surface tree over `syntax`
 
-Status: **Phases 0–5a landed.** The skeleton, head-driven phrases, the
-multi-segment relative host, top-level nominal lists, parentheticals, quotes
-and the word-order constituent view are in `src/syntax/ast/`. The flat
-`syntax::SyntaxAnalysis` stays the authority; the tree is an additive view
-built on demand. The remaining phases (3b, 4, 5b, 5c, 6) are detailed in
-[`PLAN_SYNTAX_AST_REST.md`](PLAN_SYNTAX_AST_REST.md).
+Status: **Phases 0–5b landed.** The skeleton, head-driven phrases, the
+multi-segment relative host, top-level nominal lists, parentheticals, quotes,
+the word-order constituent view and the wasm `analyze_ast` export are in
+place. The flat `syntax::SyntaxAnalysis` stays the authority; the tree is an
+additive view built on demand. The remaining phases (3b, 4, 5c, 6) are detailed
+in [`PLAN_SYNTAX_AST_REST.md`](PLAN_SYNTAX_AST_REST.md).
 
 ## Decision summary
 
@@ -699,7 +699,7 @@ zero diagnostic diff.
 | 2. Clause grouping | clause kinds, predicate phrase, slot children, host merge | **landed**: `Mies, joka tuli, söi` keeps three flat clauses but the tree has one host with two segments and the relative nested between them; `Talo on kaunis` has a separate AdjectivePhrase complement |
 | 3. Attach | lists, list items, parentheticals, quotes | **landed (3a)**: top-level nominal lists with Word/Phrase items, the conjunction as a list child, parentheticals and quotes; nested, mixed, clause and predicate lists stay flat |
 | 4. Coordination (optional) | same-kind phrase/clause coordination | `Sami söi puuron ja joi maidon`; mixed coordination stays flat; `word_order_allow` unchanged |
-| 5. Consumers | one checker rule or the word-order feature reads the tree; wasm export | **landed (word-order view)**: `Ast::clause_constituents`, `first_constituent` and `fronted_constituent`; `syntax_tree --order`; no diagnostic change |
+| 5. Consumers | one checker rule or the word-order feature reads the tree; wasm export | **landed (word-order view + wasm)**: `Ast::clause_constituents`, `first_constituent`, `fronted_constituent`; `syntax_tree --order`; `analyze_ast`/`analyze_ast_with_state`; no diagnostic change |
 | 6. Cleanup | migrate ad hoc helpers only where the tree is equivalent | no helper is deleted until its last caller moves; the flat API stays |
 
 Phase 0 must name its first consumer. If nobody reads the tree, do not build
