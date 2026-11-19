@@ -1,6 +1,10 @@
 # PLAN_GRAMMAR_SYNTAX_LAYOUT — a render-safe feature reference
 
-Status: **proposal.** This is a presentation and information-design plan for
+Status: **implemented.** The reference is now plain-text-first: numbered
+pipeline, definition lists instead of long table cells, a compact diagnostic
+index plus per-family sections, and `check_docs.py` column/cell/heading/
+box-art limits with an optional `pandoc` render check. This is a presentation
+and information-design plan for
 [`../docs/grammar_syntax.md`](../docs/grammar_syntax.md). It does not change
 the linguistic model. The semantic hardening plan is
 [`PLAN_GRAMMAR_SYNTAX_REFERENCE.md`](PLAN_GRAMMAR_SYNTAX_REFERENCE.md).
@@ -298,3 +302,38 @@ diff the sets; the exact-output and contract tests remain the executable check.
 answers *how* it must be laid out so those claims survive a real reader. Do the
 layout phase first only where it blocks review; do not reopen the semantic
 decisions while moving text.
+
+## 16. Implementation record
+
+Landed on 2026-11-19:
+
+- `docs/grammar_syntax.md` was rewritten in place:
+  - the branch-art pipeline is a numbered six-stage list;
+  - the terminology, word-class, case, API, role, feature, family, confidence,
+    data, performance, guarantee, coverage and file-map tables are definition
+    lists;
+  - the 21-row diagnostic mega-table is a three-column index plus family
+    sections (agreement; rection/case/objects; arguments/structure;
+    punctuation/lists/questions/quotes; reserved);
+  - the only remaining table is the diagnostic index.
+- `tools/check_docs.py` now enforces:
+  - at most three table columns;
+  - table-cell warning at 90 characters and failure at 140;
+  - no box-drawing characters outside a fence;
+  - a blank line before and after every heading;
+  - the existing row-count, link, anchor and fence checks;
+  - an opt-in `--render` that runs `pandoc -f gfm -t plain` and rejects
+    box-drawing or over-wide lines in the export.
+- Content preservation: the 496 inline-code identifiers in the old source were
+  diffed against the new source; only the standalone `ListKind` span was
+  re-added, and all diagnostic kinds, rule ids, examples and links remain.
+- Verification:
+  - `python3 tools/check_docs.py` and `python3 tools/check_docs.py --render`
+    pass;
+  - the pandoc plain export keeps one pipeline stage per line and one
+    diagnostic rule per bullet;
+  - `tests/syntax_contract.rs` is unchanged and still the executable contract.
+
+A single-column print CSS was not added: the document now renders safely as
+plain text, and a CSS sheet is only needed if a PDF becomes a required
+artifact. Do not commit generated HTML/PDF/plain copies.

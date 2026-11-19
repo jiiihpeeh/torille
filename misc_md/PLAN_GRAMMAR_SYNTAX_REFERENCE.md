@@ -36,7 +36,7 @@ traceable to code and tests.
 
 | phase | status |
 |---|---|
-| 0 editorial/terminology/table checks | done: reference restructured, TOC/terminology/pipeline authority added, `tools/check_docs.py` green |
+| 0 editorial/terminology/table checks | done: reference restructured, TOC/terminology/pipeline authority added, `tools/check_docs.py` green; the later layout pass made the reference plain-text-first and added column/cell/heading/box-art and `--render` checks |
 | 1 case evidence | done: three-level model, examples, `tests/syntax_contract.rs` |
 | 2 role vs construction | done: `SubjectKind`, `Construction::Necessive`, construction table; `Experiencer` gated |
 | 3 segmentation precedence | done: precedence table and worked examples in the reference |

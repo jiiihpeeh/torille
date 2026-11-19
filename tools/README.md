@@ -128,9 +128,12 @@ python3 tools/check_docs.py
 ```
 
 `check_docs.py` is the Markdown contract check for the grammar/syntax feature
-reference: table column counts, relative links, duplicate heading anchors and
-unbalanced code fences. It is `MIT OR Apache-2.0` and does not need Omorfi or
-Voikko.
+reference: table column counts and cell lengths, relative links, duplicate
+heading anchors, heading spacing, box-drawing art outside a fence and
+unbalanced code fences. `--render` additionally exports with
+`pandoc -f gfm -t plain` and rejects box-drawing or over-wide lines in the
+plain text. It is `MIT OR Apache-2.0` and does not need Omorfi or Voikko.
+`pandoc` is optional; without it the render step is skipped with a warning.
 
 `show_illegals.py` fingerprints the engine, data, harness and installed binding
 and refreshes the class report only when that fingerprint or the report's
