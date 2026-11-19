@@ -980,3 +980,10 @@ The review-driven hardening plan for this document is
 It records the editorial restructuring, case-evidence model, construction
 features, segmentation precedence, confidence propagation, API contract and
 evaluation methodology still to be verified.
+
+The render-safe layout plan is
+[`../misc_md/PLAN_GRAMMAR_SYNTAX_LAYOUT.md`](../misc_md/PLAN_GRAMMAR_SYNTAX_LAYOUT.md).
+It covers the collapsed tables and pipeline in exported/plain-text copies:
+replace the ASCII pipeline with a numbered list, convert long table cells to
+definition lists, split the diagnostic mega-table into a compact index plus
+family subsections, and add `pandoc`/`check_docs.py` render checks.

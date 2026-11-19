@@ -422,6 +422,8 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
   commas, imperative connegative corrections and constituent views.
 - [`misc_md/PLAN_GRAMMAR_SYNTAX_REFERENCE.md`](misc_md/PLAN_GRAMMAR_SYNTAX_REFERENCE.md) —
   the review-driven hardening plan for the grammar/syntax feature reference.
+- [`misc_md/PLAN_GRAMMAR_SYNTAX_LAYOUT.md`](misc_md/PLAN_GRAMMAR_SYNTAX_LAYOUT.md) —
+  the render-safe layout plan for the same reference.
 - [`misc_md/PLAN_COMPOUND.md`](misc_md/PLAN_COMPOUND.md) — the compound engine's inflection
   model and remaining work.
 - [`misc_md/PLAN_HYPHENATION.md`](misc_md/PLAN_HYPHENATION.md) — the hyphenation milestones
