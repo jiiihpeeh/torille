@@ -196,8 +196,8 @@ pub fn hyphenate(
 ///   clauses:   [{ start, end, tokensStart, tokensEnd, predicate, subject,
 ///                 object, complement, negative, existential, passive, parent,
 ///                 children, antecedent, clauseType, construction,
-///                 questionType, subjectPosition, objectCase, focusType,
-///                 topicPosition, register }],
+///                 subjectKind, questionType, subjectPosition, objectCase,
+///                 focusType, topicPosition, register }],
 ///   lists:     [{ start, end, tokensStart, tokensEnd, clause, role, head,
 ///                 kind, items, separators, conjunction, introducer, parent }],
 ///   tokens:    [{ word, start, end, role, confidence, clause, head,
@@ -1076,6 +1076,11 @@ fn item_features(obj: &js_sys::Object, features: &torille::syntax::ClauseFeature
         obj,
         "construction",
         JsValue::from(features.construction.name()),
+    );
+    set(
+        obj,
+        "subjectKind",
+        JsValue::from(features.subject_kind.name()),
     );
     set_option(
         obj,

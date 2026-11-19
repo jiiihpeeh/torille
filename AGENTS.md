@@ -385,7 +385,7 @@ ComponentInflection, Explanation, Action}`;
 SentenceSpan}`; `morphology::{analyze_morphology, MorphologyAnalysis,
 MorphologyCache, WordInfo, Depth, CacheStats}`; `syntax::{analyze,
 analyze_syntax, SyntaxAnalysis, Clause, TokenSyntax, SyntacticRole,
-RoleConfidence}`; `syntax::ast::{Ast, Node, NodeId, NodeKind, ClauseKind,
+RoleConfidence, SubjectKind}`; `syntax::ast::{Ast, Node, NodeId, NodeKind, ClauseKind,
 PhraseKind, CoordKind, Constituent, build, analyze, validate}`;
 `syntax_list::{List, ListItem, ListKind, ListItemKind}`;
 `Suggestion` / `SuggestionSource` under `suggest`; `syntax_check::{check,

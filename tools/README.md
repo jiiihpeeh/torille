@@ -124,7 +124,13 @@ python3 tools/show_illegals.py --refresh
 python3 tools/test_binding_agrees_with_binary.py
 python3 tools/test_reverse_lookup_recall.py
 python3 tools/report_multiple_bases.py reports/recall5.tsv
+python3 tools/check_docs.py
 ```
+
+`check_docs.py` is the Markdown contract check for the grammar/syntax feature
+reference: table column counts, relative links, duplicate heading anchors and
+unbalanced code fences. It is `MIT OR Apache-2.0` and does not need Omorfi or
+Voikko.
 
 `show_illegals.py` fingerprints the engine, data, harness and installed binding
 and refreshes the class report only when that fingerprint or the report's
@@ -152,7 +158,7 @@ The remaining scripts fall into four groups:
   `compound_recall.py`, `classify_lemma.py`, `wizard_eval.py`, `report_by_class.py`,
   `report_multiple_bases.py`, `show_illegals.py`.
 - **Diagnostics** — `csvtool.py`, `run_wordlist.py`, `make_*.py`,
-  `omorfi_harness.py`, `check_hyphenation_against_voikko.py`.
+  `omorfi_harness.py`, `check_hyphenation_against_voikko.py`, `check_docs.py`.
 - **Corpus fetches** — `fetch_wiktionary.py`, `fetch_finnish_books.py`,
   `rebuild_book_catalog.py`.
 

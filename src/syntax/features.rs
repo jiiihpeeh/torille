@@ -61,6 +61,9 @@ pub enum Construction {
     Copular,
     /// `Minulla on kirja` — an adessive possessor.
     Possessive,
+    /// `Minun täytyy mennä`, `Hänen pitää mennä` — a genitive subject with a
+    /// necessity predicate.
+    Necessive,
 }
 
 impl Construction {
@@ -71,6 +74,41 @@ impl Construction {
             Construction::Passive => "passive",
             Construction::Copular => "copular",
             Construction::Possessive => "possessive",
+            Construction::Necessive => "necessive",
+        }
+    }
+}
+
+/// How the clause subject is realised.
+///
+/// This is a construction/function feature, not a new [`crate::syntax::SyntacticRole`].
+/// The role stays `Subject`; the subject's shape and the agreement behaviour
+/// are read here.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SubjectKind {
+    /// A normal nominative subject.
+    Nominative,
+    /// A partitive subject, typically existential or quantity.
+    Partitive,
+    /// The genitive subject of a necessity construction.
+    GenitiveNecessive,
+    /// The postverbal subject of an existential.
+    Existential,
+    /// No overt subject.
+    Omitted,
+    /// A subject whose case is not one of the modelled shapes.
+    Other,
+}
+
+impl SubjectKind {
+    pub fn name(self) -> &'static str {
+        match self {
+            SubjectKind::Nominative => "nominative",
+            SubjectKind::Partitive => "partitive",
+            SubjectKind::GenitiveNecessive => "genitive_necessive",
+            SubjectKind::Existential => "existential",
+            SubjectKind::Omitted => "omitted",
+            SubjectKind::Other => "other",
         }
     }
 }
@@ -208,6 +246,7 @@ impl Register {
 pub struct ClauseFeatures {
     pub clause_type: ClauseType,
     pub construction: Construction,
+    pub subject_kind: SubjectKind,
     pub question_type: Option<QuestionType>,
     pub subject_position: SubjectPosition,
     pub object_case: Option<ObjectCase>,
@@ -221,6 +260,7 @@ impl Default for ClauseFeatures {
         Self {
             clause_type: ClauseType::Declarative,
             construction: Construction::Ordinary,
+            subject_kind: SubjectKind::Omitted,
             question_type: None,
             subject_position: SubjectPosition::Omitted,
             object_case: None,
@@ -240,6 +280,7 @@ impl ClauseFeatures {
         Some(match feature {
             "clause_type" => self.clause_type.name(),
             "construction" => self.construction.name(),
+            "subject_kind" => self.subject_kind.name(),
             "question_type" => self.question_type?.name(),
             "subject_position" => self.subject_position.name(),
             "object_case" => self.object_case?.name(),
@@ -251,9 +292,10 @@ impl ClauseFeatures {
     }
 
     /// Every feature name, in specification order.
-    pub const NAMES: [&'static str; 8] = [
+    pub const NAMES: [&'static str; 9] = [
         "clause_type",
         "construction",
+        "subject_kind",
         "question_type",
         "subject_position",
         "object_case",
@@ -319,10 +361,12 @@ fn features_of(clause: &Clause, tokens: &[Token], out: &[TokenSyntax]) -> Clause
     } else {
         None
     };
+    let construction = construction_of(clause, &words, predicate, out);
 
     ClauseFeatures {
         clause_type,
-        construction: construction_of(clause, &words, predicate, out),
+        construction,
+        subject_kind: subject_kind_of(clause, construction, out),
         question_type,
         subject_position: subject_position_of(clause, predicate),
         object_case: clause
@@ -483,6 +527,9 @@ fn construction_of(
     if clause.existential {
         return Construction::Existential;
     }
+    if is_necessive(clause, predicate, out) {
+        return Construction::Necessive;
+    }
     let copular = predicate.is_some_and(|predicate| {
         out[predicate].lemma.as_deref() == Some("olla") && clause.complement.is_some()
     });
@@ -490,6 +537,51 @@ fn construction_of(
         return Construction::Copular;
     }
     Construction::Ordinary
+}
+
+/// `Minun täytyy mennä`, `Hänen pitää mennä`, `Minun on mentävä`: a genitive
+/// subject with a necessity predicate.
+fn is_necessive(clause: &Clause, predicate: Option<usize>, out: &[TokenSyntax]) -> bool {
+    let Some(predicate) = predicate else {
+        return false;
+    };
+    let Some(subject) = clause.subject else {
+        return false;
+    };
+    if out[subject].case != Some(Case::Genitive) {
+        return false;
+    }
+    match out[predicate].lemma.as_deref() {
+        Some("täytyä" | "pitää" | "tarvita") => true,
+        Some("olla") => clause.complement.is_some_and(|complement| {
+            out[complement].readings.iter().any(|reading| {
+                reading.voice == Some(crate::tags::Voice::Passive)
+                    && reading.mood != Some(Mood::Infinitive)
+            })
+        }),
+        _ => false,
+    }
+}
+
+fn subject_kind_of(
+    clause: &Clause,
+    construction: Construction,
+    out: &[TokenSyntax],
+) -> SubjectKind {
+    if construction == Construction::Existential {
+        return SubjectKind::Existential;
+    }
+    let Some(subject) = clause.subject else {
+        return SubjectKind::Omitted;
+    };
+    match out[subject].case {
+        Some(Case::Nominative) => SubjectKind::Nominative,
+        Some(Case::Partitive) => SubjectKind::Partitive,
+        Some(Case::Genitive) if construction == Construction::Necessive => {
+            SubjectKind::GenitiveNecessive
+        }
+        _ => SubjectKind::Other,
+    }
 }
 
 /// `Minulla on kirja`, `Hänellä on auto`: an adessive personal possessor.
@@ -826,11 +918,42 @@ mod tests {
     }
 
     #[test]
+    fn a_necessity_clause_has_a_genitive_subject() {
+        let features = features("Minun täytyy mennä.");
+        assert_eq!(features.construction, Construction::Necessive);
+        assert_eq!(features.subject_kind, SubjectKind::GenitiveNecessive);
+    }
+
+    #[test]
+    fn a_necessity_olla_has_a_genitive_subject() {
+        let features = features("Minun on mentävä.");
+        assert_eq!(features.construction, Construction::Necessive);
+        assert_eq!(features.subject_kind, SubjectKind::GenitiveNecessive);
+    }
+
+    #[test]
+    fn a_normal_subject_is_nominative_and_an_existential_is_marked() {
+        assert_eq!(
+            features("Talo on kaunis.").subject_kind,
+            SubjectKind::Nominative
+        );
+        assert_eq!(
+            features("Pöydällä on kirja.").subject_kind,
+            SubjectKind::Existential
+        );
+        assert_eq!(
+            features("Täällä puhutaan suomea.").subject_kind,
+            SubjectKind::Omitted
+        );
+    }
+
+    #[test]
     fn every_feature_has_a_stable_name() {
         let existential = features("Talossa asuu ihmisiä.");
         for name in [
             "clause_type",
             "construction",
+            "subject_kind",
             "subject_position",
             "focus_type",
             "topic_position",

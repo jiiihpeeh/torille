@@ -48,6 +48,9 @@ assert.deepEqual(
   ['object', 'predicate', 'adverbial'],
 );
 
+const subject = analyze_ast('Sami söi aamupuuronsa.');
+assert.equal(subject.syntax.clauses[0].subjectKind, 'nominative');
+
 const question = analyze_ast('Missä hän asuu?');
 assert.equal(question.ast.clauses[0].constituents[0].interrogative, true);
 assert.equal(question.ast.clauses[0].first, 'q:unknown');

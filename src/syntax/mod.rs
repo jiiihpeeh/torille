@@ -36,7 +36,7 @@ use crate::tokenise::Token;
 pub use crate::morphology::MorphologyCache as AnalysisCache;
 pub use features::{
     ClauseFeatures, ClauseType, Construction, FocusType, ObjectCase, QuestionType, Register,
-    SubjectPosition, TopicPosition,
+    SubjectKind, SubjectPosition, TopicPosition,
 };
 pub(crate) use features::INTERROGATIVE_SURFACES;
 pub(crate) use predicates::{
