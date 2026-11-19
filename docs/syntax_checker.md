@@ -71,11 +71,11 @@ SVO is a preference rather than a correctness rule, and the future kind stays
 suggestion-only.
 
 The features that spec needs are already computed on `Clause::features`
-(`clause_type`, `construction`, `question_type`, `subject_position`,
-`object_case`, `focus_type`, `topic_position`, `register`). They are exposed
-through the analysis only — no rule reads them yet, and the `ALLOW` regression
-net (`tests/word_order_allow.rs`) proves the sentences a naive order rule would
-flag stay clean.
+(`clause_type`, `construction`, `subject_kind`, `question_type`,
+`subject_position`, `object_case`, `focus_type`, `topic_position`,
+`register`). They are exposed through the analysis only — no rule reads them
+yet, and the `ALLOW` regression net (`tests/word_order_allow.rs`) proves the
+sentences a naive order rule would flag stay clean.
 
 ## False-positive policy
 

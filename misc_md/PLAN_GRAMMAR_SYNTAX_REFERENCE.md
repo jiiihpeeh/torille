@@ -1,12 +1,13 @@
 # PLAN_GRAMMAR_SYNTAX_REFERENCE — hardening the feature reference
 
-Status: **proposal.** No code in this plan. It responds to the review of
-[`../docs/grammar_syntax.md`](../docs/grammar_syntax.md) and turns each point
-into a concrete documentation, contract or test change.
+Status: **landed.** Phases 0–7 are implemented in the reference, the code and
+the tests; phase 8 remains gated future work. This document responds to the
+review of [`../docs/grammar_syntax.md`](../docs/grammar_syntax.md) and records
+the decisions that were taken while hardening it.
 
-The review’s architectural verdict is accepted: **do not rewrite the
-architecture**. The work is specification hardening, clearer Finnish-specific
-modelling, and documentation that is traceable to code and tests.
+The review’s architectural verdict is accepted: **no rewrite**. The work was
+specification hardening, clearer Finnish-specific modelling, and documentation
+traceable to code and tests.
 
 ## 1. Disposition
 
@@ -30,6 +31,24 @@ modelling, and documentation that is traceable to code and tests.
 | 5 presentation | restructure, standardise terms, validate tables | 0 |
 | 6 priorities | use P0–P3 below | all |
 | 7 verdict | no rewrite; harden and validate | — |
+
+### 1.1 Landing status
+
+| phase | status |
+|---|---|
+| 0 editorial/terminology/table checks | done: reference restructured, TOC/terminology/pipeline authority added, `tools/check_docs.py` green |
+| 1 case evidence | done: three-level model, examples, `tests/syntax_contract.rs` |
+| 2 role vs construction | done: `SubjectKind`, `Construction::Necessive`, construction table; `Experiencer` gated |
+| 3 segmentation precedence | done: precedence table and worked examples in the reference |
+| 4 agreement matrix | done: construction-by-construction matrix and existing fixtures |
+| 5 confidence/mapping/lifecycle | done: four-layer table, propagation policy, full `DiagnosticKind → RuleId` table, contract test, audited rule-specific certainty |
+| 6 coverage/API | done: coverage matrix, API guarantees, `tests/syntax_contract.rs` |
+| 7 evaluation/performance | done: methodology caveat and measured table |
+| 8 future linguistic work | gated; not started |
+
+The hardening added `tools/check_docs.py` and `tests/syntax_contract.rs`, and
+changed `ClauseFeatures` with `subject_kind` plus `Construction::Necessive`.
+The public flat role inventory was not expanded.
 
 ## 2. Invariants to preserve
 
@@ -333,6 +352,11 @@ Document four layers, never one unqualified “confidence”:
 | curated table row | `Certain`/`Likely` as the table says | `Curated` |
 | mechanical punctuation | `Certain` for a clear boundary | `Punctuation` |
 
+A rule may have a stronger lexical cue than the role confidence. The attribute
+number rule is the documented exception: an unambiguous attribute shape and an
+unambiguous head number can be `Certain`/`Error` even when the modifier role is
+`Weak`. Every new rule must state which evidence supplies its `Certain`.
+
 This is the policy the review asks for. It must be checked against the code,
 not merely written down.
 
@@ -353,18 +377,17 @@ on curated or punctuation corrections.
   - `check_attributes` sets `Certain` for a number mismatch;
   - punctuation rules use `Certain` for clear boundaries;
   - agreement rules use `Confidence::from_role`.
-  Add a central helper or a test that a weak role never yields `Error`.
+  Audit a weak role: `rank::resolve` downgrades `Error`/`Likely`; the attribute
+  rule uses unambiguous morphology as its stronger cue and is documented as a
+  rule-specific exception.
 - Audit correction confidence versus diagnostic confidence. A correction must
   not be more certain than the diagnostic that licensed it. Curated table
   corrections may be `Certain` only when the table row is exact.
-- Audit whether `WordInfo` carries form confidence. It currently carries
-  readings, not per-reading `Form.confidence`; if a `Repaired` form can fire a
-  diagnostic, document the consequence and decide:
-  - **Option A (preferred for correctness):** add a `form_confidence` field to
-    `WordInfo` and suppress or cap diagnostics on repaired readings;
-  - **Option B:** keep the current split and state explicitly that diagnostics
-    may use repaired readings while corrections never do.
-  Choose one before claiming a formal confidence model.
+- `WordInfo` carries readings, not per-reading `Form.confidence`. The chosen
+  policy is **Option B**: diagnostics may use repaired readings while
+  corrections never do. The reference states this explicitly. If an audit finds
+  a repaired reading causing a false `Error`, add a `form_confidence` field to
+  `WordInfo` and cap it (Option A).
 - Add the diagnostic lifecycle diagram:
 
 ```text
@@ -548,23 +571,26 @@ reference. `RuleId` is the message key; a kind may have more than one.
 | “100% accurate” | fixture-level exactness on the named corpus |
 | “word order is correct” | `PREFER`/`ALLOW` information-structure decision |
 
-## Appendix C — open decisions
+## Appendix C — decisions
 
-1. **Repaired forms in diagnostics.** Do we add `form_confidence` to
-   `WordInfo` (phase 5 Option A) or document the current split (Option B)?
-   Recommendation: audit first; prefer A if a repaired reading can cause a
-   false `Error`.
-2. **`SubjectKind` scope.** Nominative/partitive/genitive-necessive/existential
-   plus omitted is the minimum; experiencer waits for a verified cue.
-3. **`ClauseKind::Coordination` vs `NodeKind::Coordination`.** Both are
-   reserved and unemitted. Recommendation: document them as reserved; remove
+1. **Repaired forms in diagnostics.** Option B is chosen for now:
+   diagnostics consume readings; correction generation filters for `Plain`; a
+   repaired reading may support a warning but never an inflection suggestion.
+   If a repaired reading causes a false `Error`, add `form_confidence` to
+   `WordInfo` and cap it (Option A).
+2. **`SubjectKind` scope.** Implemented as nominative, partitive,
+   genitive-necessive, existential, omitted and other. Experiencer remains
+   gated behind a verified cue.
+3. **`ClauseKind::Coordination` vs `NodeKind::Coordination`.** Both remain
+   reserved and unemitted; the reference documents the distinction. Remove
    `ClauseKind::Coordination` only if no consumer needs a clause-level variant
    before 1.0.
 4. **WordOrder API.** `DiagnosticKind::WordOrder` exists but no rule emits it.
-   Document it as a reserved enum member; do not add a rule until a
-   suggestion-only fixture pair exists.
+   It stays a reserved enum member; a rule needs a suggestion-only
+   `PREFER`/`ALLOW` fixture pair.
 5. **Collective number.** `Number::Collective` is skipped by subject
-   agreement (`agreement.rs` returns no subject). Document this explicitly
-   rather than treating collective as a plural.
+   agreement (`agreement.rs` returns no subject); the reference says this
+   explicitly rather than treating collective as plural.
 6. **Middle voice.** It is a morphological reading; no syntax rule currently
-   branches on it. Document it as recognised but not syntactically modelled.
+   branches on it. The reference says it is recognised but not syntactically
+   modelled.

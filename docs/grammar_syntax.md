@@ -1,6 +1,6 @@
 # Grammar and syntax — complete feature reference
 
-This document is the feature-level reference for the grammar engine, the
+This document is the feature-level reference for the morphology engine, the
 syntax analysis layer and the grammar checker. It lists the grammatical
 categories the engine understands, the syntax structures it builds, and every
 diagnostic kind the checker can emit.
@@ -9,8 +9,32 @@ It is deliberately **not** a list of the 104k sanalista lemmas or every Kotus
 class. Those are data; the class table is in `data/catalogue.csv` and the rule
 model is in [`morfologia.yaml`](morfologia.yaml). The detailed checker contract
 is [`syntax_checker.md`](syntax_checker.md); the word-order specification is
-[`word_order.md`](word_order.md); the AST plan is
+[`word_order.md`](word_order.md). The flat analysis model is
+[`../misc_md/PLAN_SYNTAX.md`](../misc_md/PLAN_SYNTAX.md); the AST design is
 [`../misc_md/PLAN_SYNTAX_AST.md`](../misc_md/PLAN_SYNTAX_AST.md).
+
+## Contents
+
+- The pipeline
+- Part I — Morphology and inflection
+- Part II — Syntax analysis
+- Part III — Grammar checker
+- Part IV — Contracts and guarantees
+- Part V — File map
+- Diagnostic mapping (Part III)
+- Coverage matrix and API contract (Part IV)
+- Terminology
+
+## Terminology
+
+| avoid | use |
+|---|---|
+| grammar engine (for inflection) | morphology engine |
+| grammar (for both layers) | morphology and inflection vs grammar checker |
+| confidence (unqualified) | form / role / diagnostic / correction confidence |
+| parser | flat syntax analysis / role resolver |
+| “100% accurate” | fixture-level exactness on the named corpus |
+| “word order is correct” | `PREFER` / `ALLOW` information-structure decision |
 
 ## 0. The pipeline
 
@@ -29,11 +53,16 @@ The morphology engine is the only stage that searches the lexicon. Syntax is
 advisory and on demand; the checker is opt-in and never on the keystroke path.
 `torille::check_all` runs grammar and style over one morphology pass.
 
+The **flat `SyntaxAnalysis` is authoritative**. The AST is a derived,
+additive view: it groups the flat roles, clauses and lists and never re-resolves
+a role or searches the lexicon. Diagnostics read the flat analysis; the AST
+serves structure, UI and the word-order constituent view.
+
 ---
 
-# Part I — Grammar (morphology)
+# Part I — Morphology and inflection
 
-The grammar engine recognises a surface word and generates the forms of a
+The morphology engine recognises a surface word and generates the forms of a
 lemma. It is dictionary-driven: the Kotus sanalista supplies the lemmas and
 class codes, the catalogue supplies the eight core slots, and the hand-written
 class engines plus the heuristic grammar fill the rest.
@@ -91,6 +120,33 @@ plural, participial or lexical).
 Case is a property of a reading, not a guess from position. `Tags.case` is
 absent when the readings disagree; `WordInfo.case` only exposes the agreed
 case. The checker never rewrites a case from word order.
+
+#### Case evidence and syncretism
+
+Three levels must never silently become interchangeable:
+
+| level | field | meaning |
+|---|---|---|
+| morphological reading | `Tags.case` on each reading | a case the form can express |
+| agreed morphology | `TokenSyntax.case` | the case all selected readings agree on, or `None` |
+| syntactic function | `Clause.object` / `Clause.features.object_case` | the function the clause resolved |
+
+Morphology proposes; syntax selects. A nominative/accusative syncretic surface
+can be an object, but the token’s `case` stays what the readings say.
+`ObjectCase::Accusative` is produced only from a real `Case::Accusative`
+reading, not from word order.
+
+| example | morphological evidence | syntactic result |
+|---|---|---|
+| `näen pojan` | genitive/accusative total object | object; `object_case` genitive or accusative |
+| `näen poikaa` | partitive | object; `object_case` partitive |
+| `poika tuli` | nominative | subject |
+| `pojan tulo` | genitive | modifier |
+| `Pöydällä on kirja` | nominative | existential subject |
+| `Pöydällä on kirjaa` | partitive | existential subject |
+
+The contract tests in `tests/syntax_contract.rs` pin these distinctions.
+
 
 ### 2.2 Number
 
@@ -293,6 +349,44 @@ merges. The linear clause list stays the source of truth; the relative tree is
 additive. A multi-segment host (`Mies, joka tuli, söi`) is exposed by the AST,
 not by a non-contiguous `Clause` range.
 
+### 3.1 Segmentation precedence
+
+The order in `src/syntax/segments.rs` is the specification:
+
+| priority | cue | effect |
+|---|---|---|
+| 1 | top-level semicolon | split |
+| 2 | `sillä` clause opener | split |
+| 3 | relative pronoun / relative opener | split |
+| 4 | comparison opener followed by a predicate | split |
+| 5 | subordinator (`että`/`vaikka` guarded) | split |
+| 6 | comma + capitalised word before a finite predicate | split at the capitalised word |
+| 7 | comma + personal pronoun + finite predicate | split at the pronoun |
+| 8 | coordinating conjunction before a finite predicate | split at the conjunction |
+| 9 | infinitive after a finite predicate | split at the infinitive |
+| 10 | comma + finite predicate after a finite predicate | split at the predicate |
+| 11 | no reliable cue | **no split** |
+
+`että` after `sekä` is not a clause opener; `vaikka` is only a subordinator when
+a predicate follows; a bracket-only sentence boundary is merged for clauses but
+not for the raw case spans. When cues compete, the later cue is not applied;
+when none is reliable, the run stays one clause and the role resolver returns
+`Unknown` rather than inventing a boundary.
+
+| example | result |
+|---|---|
+| `Tiedän, että hän tulee.` | main + subordinate |
+| `Mies, joka tuli, söi.` | host segment, relative, continuation |
+| `Kun tulin kotiin, söin.` | subordinate + main |
+| `Hän sanoi, ettei tule.` | main + negative subordinate |
+| `Sami ja Liisa söivät.` | one clause (coordinated subject) |
+| `Sami söi ja joi.` | two coordinated clauses |
+| `(Tämä on uusi virke.) Toinen virke.` | two sentences |
+| `omena (pieni, makea) ja banaani` | one clause; bracket boundary merged |
+
+The clause fixtures in `tests/fixtures/syntax_cases.json` and
+`syntax_ambiguity.json` are the oracle for these decisions.
+
 ## 4. Roles
 
 `SyntacticRole` is what a token is doing in its clause:
@@ -316,18 +410,43 @@ pass resolves it.
 
 ## 5. Clause features for word order
 
+`SyntacticRole` is a syntactic function, not a construction. Construction-
+specific behaviour is carried by `ClauseFeatures`, so the role inventory does
+not have to grow variants such as “existential subject” or “necessive subject”.
+
 `ClauseFeatures` is computed after role resolution:
 
 | field | values |
 |---|---|
 | `clause_type` | declarative, interrogative, imperative, subordinate |
-| `construction` | ordinary, existential, passive, copular, possessive |
+| `construction` | ordinary, existential, passive, copular, possessive, necessive |
+| `subject_kind` | nominative, partitive, genitive_necessive, existential, omitted, other |
 | `question_type` | wh, yes/no, alternative, echo |
 | `subject_position` | preverbal, postverbal, omitted |
 | `object_case` | partitive, accusative, genitive, nominative |
 | `focus_type` | neutral, contrastive |
 | `topic_position` | initial, non-initial |
 | `register` | neutral, colloquial |
+
+`subject_kind` is a construction/function feature: `Subject` remains the role,
+while the shape (nominative, partitive, genitive-necessive, existential,
+omitted, other) and the agreement behaviour are read here. A genitive subject
+is the necessive shape; a passive clause has no syntactic subject; an
+existential has the dedicated kind.
+
+| construction | subject/possessor | agreement behaviour |
+|---|---|---|
+| ordinary | nominative subject | subject–predicate person/number |
+| existential | postverbal nominative/partitive subject | singular predicate; no agreement error |
+| passive | no syntactic subject | no subject agreement |
+| copular | nominative subject | complement number agreement |
+| possessive | adessive possessor + `on` | the possessed nominal is the subject |
+| necessive | genitive subject + `täytyy`/`pitää`/`on` | 3sg predicate; no nominative subject agreement |
+
+`Number::Collective` is not a plural: the subject-agreement bearer currently
+returns no subject for a collective reading, so it never drives a
+subject–predicate comparison. Middle voice is a morphological reading; no
+syntax rule currently branches on it.
 
 Deliberately **not** produced: narrow/broad focus (needs prosody), formal
 register (no model), and a `FORCE` constraint level (no current hard rule).
@@ -383,6 +502,12 @@ let clauses = tree.clause_constituents(0);
 `PhraseKind`: `Noun`, `Adjective`, `Pronoun`, `Numeral`, `Adverb`,
 `Postposition`, `Preposition`, `Verb`, `Infinitive`, `Participle`.
 `CoordKind`: `Nominal`, `Verbal`, `Clausal`, `Mixed`.
+
+`NodeKind::Coordination` is a phrase-level coordination node and
+`ClauseKind::Coordination` is a clause-level structural kind. Both are
+**reserved and unemitted**; no current pass creates either. When a consumer
+needs coordination, the phrase-level node owns same-kind conjuncts and the
+clause-level kind is used only if a clause wrapper is required.
 
 A `Node` carries `span`, `tokens`, `segments`, `parent`, `children`, `head`,
 `governor`, `role`, `confidence`, `antecedent` and `clause`. `head` is the
@@ -481,24 +606,41 @@ any future rule must be suggestion-only. `clause_type`, `construction`,
 `question_type`, `subject_position`, `object_case`, `focus_type`,
 `topic_position` and `register` are already computed for it.
 
-### Stable rule ids
+### Stable rule ids and correction contract
 
-The `RuleId` used by ignore lists is the diagnostic's message key. The complete
-set is:
+The `RuleId` used by ignore lists is the diagnostic's message key. A kind may
+have more than one rule id; the correction license is part of the contract.
 
-| family | rule ids |
-|---|---|
-| agreement | `subject_predicate_agreement`, `connegative`, `attribute_agreement`, `predicative_agreement`, `predicative_noun_agreement`, `participle_agreement`, `possessive_agreement`, `possessive_missing` |
-| rection/case | `verb_rection`, `numeral_case`, `adposition_case`, `existential_subject_case`, `object_case`, `bare_nominative_object` |
-| arguments | `missing_argument`, `extra_argument` |
-| structure | `incomplete_coordination`, `missing_predicate` |
-| punctuation | `comma_missing`, `parenthetical_comma`, `comma_extra`, `comma_pair_unbalanced`, `question_mark_missing`, `unbalanced_quote` |
-| lists | `list_separator_missing`, `list_separator_duplicate`, `list_comma_before_conjunction`, `list_introducer_comma` |
+| DiagnosticKind | RuleId(s) | Typical severity | Correction |
+|---|---|---|---|
+| `SubjectPredicateAgreement` | `subject_predicate_agreement`, `participle_agreement` | Error / Warning (weak role) | Inflection |
+| `Connegative` | `connegative` | Error / Warning | Inflection; 2sg imperative only |
+| `AttributeAgreement` | `attribute_agreement` | Error (number) / Warning (case) | Inflection |
+| `PredicativeAgreement` | `predicative_agreement`, `predicative_noun_agreement` | Error / Warning | Inflection/curated |
+| `PossessiveAgreement` | `possessive_agreement`, `possessive_missing` | Warning / Suggestion | none |
+| `VerbRection` | `verb_rection` | Error / Warning | Inflection/curated |
+| `CaseSelection` | `numeral_case`, `adposition_case`, `existential_subject_case` | Error / Warning | Inflection/curated |
+| `ObjectCase` | `object_case`, `bare_nominative_object` | Error / Suggestion | Inflection |
+| `MissingArgument` | `missing_argument` | Warning | none |
+| `ExtraArgument` | `extra_argument` | Warning | none |
+| `ClauseStructure` | `incomplete_coordination`, `missing_predicate` | Warning | none |
+| `WordOrder` | **none emitted** | — | — |
+| `CommaMissing` | `comma_missing`, `parenthetical_comma` | Error / Suggestion | Punctuation |
+| `CommaExtra` | `comma_extra` | Warning | Punctuation |
+| `CommaPairUnbalanced` | `comma_pair_unbalanced` | Error | Punctuation |
+| `QuestionMarkMissing` | `question_mark_missing` | Error | Punctuation |
+| `UnbalancedQuote` | `unbalanced_quote` | Warning | none |
+| `ListSeparatorMissing` | `list_separator_missing` | Error | Punctuation |
+| `ListSeparatorDuplicate` | `list_separator_duplicate` | Error | Punctuation |
+| `ListCommaBeforeConjunction` | `list_comma_before_conjunction` | Suggestion | Punctuation |
+| `ListIntroducerComma` | `list_introducer_comma` | Error | Punctuation |
 
 A caller can dismiss one rule without hiding the rest of the checker. Some
 kinds have more than one message key because they cover distinct sub-rules
 (`case_selection`, `object_case`, `predicative_agreement`, `possessive_agreement`,
-`clause_structure`).
+`clause_structure`). The contract test
+`tests/syntax_contract.rs::every_fixture_diagnostic_has_a_contract_entry`
+checks every emitted pair against this table.
 
 ## 3. Rule families
 
@@ -516,6 +658,24 @@ kinds have more than one message key because they cover distinct sub-rules
 - **Connegative**: negative auxiliary + main verb; past participle and
   conditional/potential accepted; 2sg imperative gets `mene`, plural/third
   imperative connegatives stay uncorrected (`Repaired`).
+
+The agreement checks are separate, not interchangeable:
+
+| check | controller / bearer | construction | correction |
+|---|---|---|---|
+| subject–predicate | subject person/number; finite main verb or `olla` auxiliary | ordinary, copular | inflection |
+| negative auxiliary | negative auxiliary carries person/number; main verb is connegative | negative | connegative selection; 2sg imperative only |
+| compound tense | active past participle agrees in number with subject | ordinary/copular | inflection |
+| predicate complement | adjective/participle number; noun predicate only clear number mismatch | copular | inflection/curated |
+| attribute | adjective/ordinal/demonstrative agrees with its nominal head | any | inflection |
+| possessive | suffix matches adjacent genitive pronoun | any | none |
+| passive | no subject agreement; passive participle is not a subject target | passive | none |
+| existential | singular predicate; postverbal nominative/partitive subject | existential | none |
+| necessive | genitive subject; 3sg predicate | necessive | none |
+| experiencer | case-marked experiencer; no subject–predicate reuse | experiencer (gated) | rule-specific |
+
+The controller, the agreement bearer and the connegative selection are three
+different questions. A rule that changes one must not silently change another.
 
 ### 3.2 Rection, case and objects
 
@@ -561,6 +721,50 @@ kinds have more than one message key because they cover distinct sub-rules
 - An unbalanced quote is a warning; no quote-style correction.
 - A `WordOrder` diagnostic, if it ever lands, is suggestion-only.
 
+### 4.1 Confidence layers
+
+Do not use an unqualified “confidence”:
+
+| layer | values | owner |
+|---|---|---|
+| form | `Plain`, `Repaired`, `Guessed` | morphology generation |
+| role | `Likely`, `Weak` | syntax |
+| diagnostic | `Certain`, `Likely`, `Ambiguous` | checker |
+| correction | `Certain`, `Likely`, `Ambiguous` | correction |
+
+The propagation policy is:
+
+| input evidence | diagnostic ceiling | correction |
+|---|---|---|
+| single relevant reading + strong role | `Certain` | `Plain` form only |
+| single relevant reading + weak role | `Likely` | `Plain`, likely confidence |
+| competing readings | `Ambiguous` → suppressed | none |
+| repaired form | warning-level if the rule uses it | **never** an inflection suggestion |
+| guessed form | suppressed for correction | never |
+| curated table row | as the table states | `Curated` |
+| mechanical punctuation | `Certain` for a clear boundary | `Punctuation` |
+
+`Ambiguous` is suppressed before a caller sees it; an `Error` whose confidence
+is only `Likely` is downgraded to `Warning` in `rank::resolve`. The `Plain`
+restriction applies to **inflection** corrections; curated corrections come
+from a reviewed table, and punctuation edits are mechanical. They are separate
+licenses, not exceptions to the inflection rule.
+
+A rule may have a stronger lexical cue than the role confidence. The attribute
+number rule is the documented exception: an unambiguous attribute shape and an
+unambiguous head number can be `Certain`/`Error` even when the modifier role is
+`Weak`. This is a rule-specific certainty, not a licence to ignore role
+confidence everywhere; every new rule must state which evidence supplies its
+`Certain`.
+
+The current syntax layer does not carry `Form.confidence` per reading in
+`WordInfo`; diagnostics consume readings and correction generation filters for
+`Plain`. The chosen policy is the explicit split: **a repaired reading may
+support a diagnostic, but it may never support an inflection correction.** If
+the audit finds a repaired reading causing a false `Error`, add a
+`form_confidence` field to `WordInfo` and cap the diagnostic; do not claim the
+current model already does that.
+
 ## 5. Data files
 
 | file | content |
@@ -593,6 +797,41 @@ cargo test --release -p torille \
 
 The exact-output fixture is `tests/fixtures/syntax_diagnostics.json`; the
 adjudicated prose is `tests/fixtures/prose/adjudicated.json`.
+
+### 6.1 What the numbers mean
+
+These are **fixture-level** results on a curated corpus, not a claim of general
+Finnish accuracy.
+
+- `syntax_eval` clean rows are sentences with no expected diagnostic;
+  `syntax_eval` cases are reviewed expected-kind rows.
+- `syntax_diagnostics` is the exact-output fixture: the same kind, severity,
+  span and first correction.
+- `prose/adjudicated.json` separates reviewed clean rows, true positives and
+  known false positives. A known false positive is pinned so a fix must move
+  the row.
+- A larger independently adjudicated corpus is future work; a 1.00 on this
+  corpus means the curated rows match, not that the checker is perfect.
+
+### 6.2 Performance
+
+Measured on the committed fixture (`page-2000`, 1,959 words) and the demo/wasm
+shape:
+
+| workload | measurement |
+|---|---|
+| warm grammar rules | ~1.4 ms |
+| warm style | ~2.5–3 ms |
+| warm grammar + style | ~7–9 ms |
+| one edited sentence, native | 2.6–3.7 ms |
+| cold page, release wasm single-thread | ~3.0 s |
+| cold page, 4-worker pool | ~1.4 s |
+| cold-page target | ≤500 ms, still open |
+
+The morphology cache is per textarea and bounded; the sentence cache is keyed
+by sentence text; there is no AST cache. The wasm module carries the 104k-lemma
+sanalista (roughly 3–4 MB compressed), so a document is checked on demand, not
+in the keystroke loop.
 
 ## 7. Surfaces
 
@@ -635,7 +874,70 @@ These are not bugs; they are conservative boundaries:
 
 ---
 
-# Part IV — File map
+# Part IV — Contracts and guarantees
+
+## 1. Diagnostic lifecycle
+
+```text
+text
+  → tokenise
+  → morphology
+  → syntax analysis
+  → rule evaluation
+  → ambiguity filtering
+  → severity assignment (Error→Warning when Likely)
+  → correction generation
+  → rank (severity, confidence, span, kind)
+  → diagnostics
+```
+
+## 2. API guarantees
+
+| guarantee | contract |
+|---|---|
+| spans | half-open UTF-8 byte ranges `start..end` |
+| token indices | zero-based; refer to the full token stream, including separators |
+| word leaves | `Word` nodes cover only word tokens; separators are not leaves |
+| clause/list indices | zero-based; absent values are `Option` |
+| clause token ranges | endpoints are words; interior separators are included |
+| diagnostic order | severity, diagnostic confidence, `span.start`, `span.end`, kind; one diagnostic per span |
+| correction order | score, then note; edits applied from the end backwards |
+| cache reuse | same analysis and diagnostics; only cache/depth counters differ |
+| stable | `DiagnosticKind` names, `RuleId` strings, correction licenses and span semantics |
+| 0.x unstable | AST node kinds/fields, `Clause` fields and JSON shapes; additive changes are documented |
+
+The contract tests are `tests/syntax_contract.rs`; the exact diagnostics live
+in `tests/fixtures/syntax_diagnostics.json`. Run
+`python3 tools/check_docs.py` to check the Markdown tables, links, heading
+anchors and code fences in this document.
+
+## 3. Coverage matrix
+
+| feature | recognition | syntax integration | checking | correction |
+|---|---|---|---|---|
+| nominal inflection | yes | yes | case/rection/object | yes, confidence-dependent |
+| verb inflection | yes | yes | agreement/connegative | yes, confidence-dependent |
+| possessive suffixes | yes | partial | possessive agreement | no |
+| clitics | yes | question detection | question marks | limited |
+| compounds | yes | partial | limited | no |
+| derivations | yes | partial | style/spell separate | no |
+| numerals | yes | numeral phrases | numeral case | yes |
+| proper names | yes | subject/object | limited | no |
+| relative clauses | yes | host/AST | punctuation | limited |
+| lists | yes | list arena/AST | punctuation | yes |
+| parentheticals/quotes | yes | AST | punctuation | no |
+| word order | features | constituent view | reserved | no |
+| agreement | yes | roles/features | yes | yes |
+| rection | curated | roles | yes | curated |
+| argument structure | curated | roles | warnings | no |
+
+“Partial” means the feature is recognised but the syntax integration or the
+rule set is deliberately narrower than the morphology. The exact code path and
+the fixture for each row belong in the feature-specific sections above.
+
+---
+
+# Part V — File map
 
 | topic | files |
 |---|---|
