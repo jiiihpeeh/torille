@@ -23,6 +23,26 @@ use super::correction;
 use super::diagnostic::{Confidence, DiagnosticKind, Severity, SyntaxDiagnostic};
 
 pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
+    // Adverbs that can stand between the auxiliary and its main verb:
+    // `ei toisin säädetä`, `ei enää tule`. Anything else after the auxiliary
+    // ends the search, which keeps `eikä tarpeetonta estettä ...` from
+    // reaching a later participle.
+    const NEGATION_ADVERBS: &[&str] = &[
+        "toisin",
+        "enää",
+        "vielä",
+        "koskaan",
+        "ikin",
+        "sitten",
+        "nyt",
+        "aina",
+        "usein",
+        "myöskään",
+        "edes",
+        "ollenkaan",
+        "lainkaan",
+        "mitenkään",
+    ];
     let mut diagnostics = Vec::new();
     for clause in &analysis.clauses {
         if !clause.negative {
@@ -37,17 +57,28 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
         }) else {
             continue;
         };
-        // The auxiliary and the main verb are adjacent in the common negative
-        // clause (`en mene`, `hän ei menee`). Requiring adjacency keeps `Ei,
-        // sillä ...` and `Eikö hän ...` out: the `Ei` there is an interjection
-        // or the subject intervenes, and a wider scan would flag the next
-        // affirmative verb in the same clause.
-        let Some(main) = words
+        // The auxiliary and the main verb are usually adjacent (`en mene`,
+        // `hän ei menee`), but a closed set of adverbs can intervene
+        // (`ei toisin säädetä`, `ei enää tule`). Anything else after the
+        // auxiliary ends the search, so `eikä tarpeetonta estettä ...` does
+        // not reach a later participle.
+        let mut main = None;
+        for index in words
             .iter()
             .copied()
             .skip_while(|&index| index != auxiliary)
-            .nth(1)
-        else {
+            .skip(1)
+        {
+            let token = &analysis.tokens[index];
+            if NEGATION_ADVERBS.contains(&token.key.as_str()) {
+                continue;
+            }
+            if token.readings.iter().any(is_verb_reading) {
+                main = Some(index);
+            }
+            break;
+        }
+        let Some(main) = main else {
             continue;
         };
         if !analysis.tokens[main].readings.iter().any(is_verb_reading) {
@@ -220,6 +251,27 @@ mod tests {
     fn a_negative_past_participle_is_quiet() {
         assert!(diagnostics("He eivät uupuneet.").is_empty());
         assert!(diagnostics("En tullut.").is_empty());
+    }
+
+    #[test]
+    fn a_passive_connegative_after_an_adverb_is_quiet() {
+        for text in [
+            "Ei säädetä.",
+            "jos tässä laissa ei toisin säädetä.",
+        ] {
+            assert!(
+                diagnostics(text).is_empty(),
+                "{text}: {:#?}",
+                diagnostics(text)
+            );
+        }
+    }
+
+    #[test]
+    fn an_affirmative_passive_after_ei_is_an_error() {
+        let found = diagnostics("Ei säädetään.");
+        assert_eq!(found.len(), 1, "{found:#?}");
+        assert_eq!(found[0].kind, DiagnosticKind::Connegative);
     }
 
     #[test]

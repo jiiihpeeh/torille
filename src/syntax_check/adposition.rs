@@ -56,6 +56,16 @@ pub(super) fn check(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDi
                 continue;
             };
             let syntax = &analysis.tokens[complement];
+            // A possessive suffix can hide the case: `kykynsä mukaan` is a
+            // genitive complement, but the agreed case may be absent. Stay
+            // quiet rather than guess from the surface.
+            if syntax
+                .readings
+                .iter()
+                .any(|reading| reading.possessive.is_some())
+            {
+                continue;
+            }
             let Some(case) = nominal_case(syntax) else {
                 continue;
             };
