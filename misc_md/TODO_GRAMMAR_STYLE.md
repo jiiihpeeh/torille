@@ -13,7 +13,7 @@ the explicitly gated items below (cold-page performance and the held `PREFER`
 rule), and the targeted suites are green.
 `page-2000` is at **5 adjudicated diagnostics with 0 false positives**
 (1 true positive, 3 accepted, 1 excerpt artefact), and the reviewed-prose gate
-is **246 clean rows / 5,789 words**, 1 true positive and 0 known false
+is **254 clean rows / 6,034 words**, 2 true positives and 0 known false
 positives. The precision plan
 [`PLAN_GRAMMAR_PRECISION.md`](PLAN_GRAMMAR_PRECISION.md) is complete. This
 file is the next roadmap, not a list of known red tests.
@@ -120,11 +120,11 @@ public-domain prose sample with reviewed findings and provenance.
 - [x] **Keep the constructed exact-output fixtures** as the per-rule gate.
 - [x] **Grow the prose sample to at least 1,000 correct words** and keep the
   known-false-positive rate per 1,000 words as the baseline. The sample is now
-  **246 clean rows / 5,789 words**, 1 true positive and 0 known false positives;
+  **254 clean rows / 6,034 words**, 2 true positives and 0 known false positives;
   the precision phases fixed the known findings and grew the sample from the
   original 1,021 words. The 2026-11-19 extensions added 61 clean Finlex
-  paragraphs (modern formal Finnish), 77 clean novel paragraphs from seven
-  Projekti Lönnrot works and 29 clean factual paragraphs from three Doria
+  paragraphs (modern formal Finnish), 80 clean novel paragraphs from seven
+  Projekti Lönnrot works and 34 clean factual paragraphs from three Doria
   books; the raw sources are gitignored and the provenance is in
   `tests/fixtures/prose/README.md`. New rows come from the same public-domain
   sources and were admitted only after `check_syntax` returned zero
@@ -347,7 +347,7 @@ keeps the later role rules from compensating for a bad reading.
    - Move each row to `clean` only when it has zero diagnostics. All four
      moved: the suite reported 66 clean rows and **1,021 clean words** at that
      point, with 0 known-FP words and 0 known errors. The later precision
-     phases raised the live baseline to **246 clean rows / 5,789 words**; see
+     phases raised the live baseline to **248 clean rows / 5,862 words**; see
      the work log and [`PLAN_GRAMMAR_PRECISION.md`](PLAN_GRAMMAR_PRECISION.md).
    - Run `cargo test --release --test syntax_prose`, then
      `cargo test --release --workspace`, clippy, the strict engine-output
@@ -1337,3 +1337,18 @@ intended/competing interpretation pair that fails.
   OCR text is not admitted. The suite is now **246 clean rows / 5,789 words**,
   1 true positive and 0 known false positives. This adds expository prose to
   the Gutenberg/Lönnrot fiction and Finlex legal text.
+- 2026-11-19: made manually curated prose a first-class fixture.
+  `adjudicated.json` keeps the Gutenberg/Finlex adjudicated rows;
+  `tests/fixtures/prose/curated/*.txt` holds one curated paragraph per line and
+  the suite checks every line. Moved the 106 Lönnrot/Doria rows there and added
+  six reviewed Doria paragraphs and two Iisakki paragraphs. Added the 1900
+  `ne voi` paragraph to `errors` as a second true positive. Suite: 140
+  adjudicated + 114 curated = **254 clean rows / 6,034 words**, 2 true
+  positives and 0 known false positives.
+- 2026-11-19: precision fixes from the new corpora. `connegative` now accepts a
+  passive connegative after an intervening adverb (`ei toisin säädetä`) but
+  still stops at a coordinated negative (`eikä tarpeetonta estettä ...`).
+  `adposition_case` skips a possessive complement (`kykynsä mukaan`), whose
+  case the suffix hides. Both have regressions; the deeper
+  `erityiset olosuhteet` agreement and `ilman` comma segmentation findings are
+  recorded for the next round rather than guessed at.

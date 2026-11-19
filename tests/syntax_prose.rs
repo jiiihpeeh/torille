@@ -12,12 +12,46 @@
 //! reviewed again.
 
 use serde_json::Value;
+use std::path::{Path, PathBuf};
 use torille::syntax_check;
 use torille::tokenise::tokenise;
 
 fn fixture() -> Value {
     serde_json::from_str(include_str!("fixtures/prose/adjudicated.json"))
         .expect("tests/fixtures/prose/adjudicated.json is not valid JSON")
+}
+
+fn curated_dir() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/prose/curated")
+}
+
+/// Every `*.txt` under `tests/fixtures/prose/curated/`, sorted for a stable
+/// order. A curated file is one paragraph per line; `#` lines are comments.
+fn curated_rows() -> Vec<String> {
+    let dir = curated_dir();
+    let mut files: Vec<PathBuf> = std::fs::read_dir(&dir)
+        .unwrap_or_else(|error| panic!("cannot read {}: {error}", dir.display()))
+        .filter_map(|entry| entry.ok().map(|entry| entry.path()))
+        .filter(|path| path.extension().is_some_and(|extension| extension == "txt"))
+        .collect();
+    files.sort();
+    let mut rows = Vec::new();
+    for path in files {
+        let text = std::fs::read_to_string(&path)
+            .unwrap_or_else(|error| panic!("cannot read {}: {error}", path.display()));
+        for line in text.lines() {
+            let line = line.trim();
+            if line.is_empty() || line.starts_with('#') {
+                continue;
+            }
+            rows.push(line.to_string());
+        }
+    }
+    rows
+}
+
+fn curated_word_count(rows: &[String]) -> usize {
+    rows.iter().map(|text| word_count(text)).sum()
 }
 
 fn diagnostic_kinds(text: &str) -> Vec<String> {
@@ -77,10 +111,15 @@ fn entry_word_count(entries: &[Value]) -> usize {
 }
 
 #[test]
-fn adjudicated_clean_prose_is_quiet() {
+fn all_clean_prose_is_quiet() {
     let root = fixture();
     let clean = clean_rows(&root);
-    for text in &clean {
+    let curated = curated_rows();
+    for text in clean
+        .iter()
+        .copied()
+        .chain(curated.iter().map(String::as_str))
+    {
         let check = syntax_check::check(text);
         assert!(
             check.diagnostics.is_empty(),
@@ -88,10 +127,22 @@ fn adjudicated_clean_prose_is_quiet() {
             check.diagnostics
         );
     }
+    let adjudicated_words = clean_word_count(&root);
+    let curated_words = curated_word_count(&curated);
     eprintln!(
-        "adjudicated prose: {} clean rows, {} words",
+        "adjudicated prose: {} rows, {} words",
         clean.len(),
-        clean_word_count(&root)
+        adjudicated_words
+    );
+    eprintln!(
+        "curated prose: {} rows, {} words",
+        curated.len(),
+        curated_words
+    );
+    eprintln!(
+        "all clean prose: {} rows, {} words",
+        clean.len() + curated.len(),
+        adjudicated_words + curated_words
     );
 }
 
