@@ -1260,7 +1260,9 @@ building the grid at all, which is the full 45 %.
 
 3.7 MB is above the 3 MB ceiling that rejected the reverse index in Phase 6,
 so this is a download-budget decision rather than an engineering one. The
-class-level `accepts` test is the 0-byte alternative: ask the class whether it
+implementation plan, format and gates are
+[`PLAN_FORM_TABLE.md`](PLAN_FORM_TABLE.md); it is **not implemented**.
+The class-level `accepts` test is the 0-byte alternative: ask the class whether it
 can spell the surface instead of materialising its grid. For nominals that is
 one generic walk over the cells a class already declares
 (`expand/nominals/utility.rs` plus the regenerated template). For verbs the

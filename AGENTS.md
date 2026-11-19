@@ -50,6 +50,10 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
 - `misc_md/PLAN_GRAMMAR_STYLE_PERF.md` — the grammar and style performance plan: one
   shared morphology cache with cached case/number, cold-path candidate pruning,
   sentence-level incremental checks and worker chunking.
+- `misc_md/PLAN_FORM_TABLE.md` — the proposed exact `surface → base + reading`
+  table: the grouped two-level layout (3.15 MB gzip without readings, ~3.7 MB
+  with), the `FMT1` blob, the never-reject fallback contract and the phase
+  gates. Not implemented; branch `form-table`.
 - `docs/hyphenation.md` — line-break hyphenation: patterns, compound adapter,
   policy, offsets and exceptions. The plan is `misc_md/PLAN_HYPHENATION.md`.
 - `misc_md/TODO.md` — known gaps ordered by user-facing impact.
