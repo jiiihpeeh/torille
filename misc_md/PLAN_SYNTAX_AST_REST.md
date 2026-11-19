@@ -6,6 +6,11 @@ are in place. This document details the remaining 3b, 4, 5c.2, 5c.3 and 6
 work. The base design is in
 [`PLAN_SYNTAX_AST.md`](PLAN_SYNTAX_AST.md).
 
+Re-audited 2026-11-19: the checker still reads the flat analysis and the wasm
+surface still exposes the existing tree, so there is no new consumer for
+nested/mixed/clause lists or `Coordination`. Phases 3b, 4, 5c.2, 5c.3 and 6
+remain deliberately deferred; do not start them without a concrete consumer.
+
 This document covers what is left:
 
 | phase | work | recommendation |

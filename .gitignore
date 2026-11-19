@@ -51,6 +51,11 @@ target/criterion/
 # Downloaded Finnish Gutenberg corpus (tools/fetch_finnish_books.py)
 torille-wasm/demo/books/
 
+# Raw excerpt sources for the adjudicated prose fixture. The sources are
+# fetched on demand; only the adjudicated rows and their provenance are
+# committed under tests/fixtures/prose/.
+tests/fixtures/prose/sources/
+
 # Experimental derivative-flagged sanalista copy.
 data/nykysuomensanalista_derivedtest.csv
 

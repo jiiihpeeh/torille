@@ -145,6 +145,16 @@ fn the_clean_corpus_has_no_diagnostics() {
     }
 }
 
+/// `koko päivä` is a valid subject (`Koko päivä meni hukkaan.`), not a
+/// frequency adverbial like `joka päivä`. A first-person predicate with a
+/// nominal subject is a deliberate false negative, so the wrong 3sg `juoksi`
+/// must not be offered.
+#[test]
+fn koko_temporal_noun_does_not_offer_a_third_person_verb() {
+    let check = syntax_check::check("Koko päivä juoksin.");
+    assert!(check.diagnostics.is_empty(), "{:#?}", check.diagnostics);
+}
+
 macro_rules! diagnostic_tests {
     ($($test:ident),* $(,)?) => {
         $(

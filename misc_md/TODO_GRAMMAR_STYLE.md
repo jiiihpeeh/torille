@@ -9,11 +9,11 @@ and style (`style_check`) layers. The design records are
 [`PLAN_STYLE.md`](PLAN_STYLE.md).
 
 Status on 2026-11-19: the grammar, syntax and style phases are landed except
-the explicitly gated items below (cold-page performance, the `koko` temporal
-check and the held `PREFER` rule), and the targeted suites are green.
+the explicitly gated items below (cold-page performance and the held `PREFER`
+rule), and the targeted suites are green.
 `page-2000` is at **5 adjudicated diagnostics with 0 false positives**
 (1 true positive, 3 accepted, 1 excerpt artefact), and the reviewed-prose gate
-is **79 clean rows / 1,233 words**, 1 true positive and 0 known false
+is **140 clean rows / 2,439 words**, 1 true positive and 0 known false
 positives. The precision plan
 [`PLAN_GRAMMAR_PRECISION.md`](PLAN_GRAMMAR_PRECISION.md) is complete. This
 file is the next roadmap, not a list of known red tests.
@@ -120,12 +120,14 @@ public-domain prose sample with reviewed findings and provenance.
 - [x] **Keep the constructed exact-output fixtures** as the per-rule gate.
 - [x] **Grow the prose sample to at least 1,000 correct words** and keep the
   known-false-positive rate per 1,000 words as the baseline. The sample is now
-  **79 clean rows / 1,233 words**, 1 true positive and 0 known false positives;
-  the later precision phases fixed the known findings and grew the sample from
-  the original 1,021 words. New rows come from the same public-domain Gutenberg
-  excerpt and were admitted only after `check_syntax` returned zero
-  diagnostics; the seed note in `tests/fixtures/prose/adjudicated.json` records
-  that rule.
+  **140 clean rows / 2,439 words**, 1 true positive and 0 known false positives;
+  the precision phases fixed the known findings and grew the sample from the
+  original 1,021 words. The 2026-11-19 extension added 61 clean Finlex
+  paragraphs (modern formal Finnish) from statute 729/2018; the raw XML is
+  gitignored and the provenance is in `tests/fixtures/prose/README.md`. New
+  rows come from the same public-domain sources and were admitted only after
+  `check_syntax` returned zero diagnostics; the seed note in
+  `tests/fixtures/prose/adjudicated.json` records that rule.
 
 Track these metrics:
 
@@ -162,12 +164,17 @@ before the next rule lands.
   Area: `src/syntax/roles.rs`, `src/syntax/segments.rs`,
   `src/syntax/predicates.rs`.
 
-- [ ] **Verify `koko` + temporal noun**
-  `Koko päivä juoksin.` currently reads `päivä` as the subject and offers
-  `juoksi`. Standard Finnish more often uses `koko päivän`, so do not extend
-  the frequency-determiner pass until the construction is checked against
-  Kielitoimisto. If it is accepted, add it to the determiners and the ambiguity
-  fixture.
+- [x] **Verify `koko` + temporal noun** — verified, no pass extension.
+  `koko päivä` is a valid subject (`Koko päivä meni hukkaan.`), while
+  `koko päivän` is the duration adverbial (`Koko päivän juoksin.`). `koko` is
+  therefore **not** added to the frequency determiners; the ambiguity fixture
+  pins the subject reading and the clean corpus keeps both correct forms quiet.
+  `Koko päivä juoksin.` no longer offers the 3sg `juoksi`: a 1st/2nd-person
+  predicate with a nominal subject is a deliberate false negative, pinned by
+  `koko_temporal_noun_does_not_offer_a_third_person_verb`.
+  Evidence: attested subject use `Koko päivä meni tavaroiden kanniskeluun.`
+  (suomisanakirja.fi/kanniskella) and adverbial use `Hän kanniskeli
+  kauppakasseja koko päivän.` on the same page.
 
 - [x] **Prepositions and their complements** — landed.
   `Ilman rahaa en tule.`, `Ilman sinua en tule.`, `Ilman sinua minä en tule.`
@@ -338,7 +345,7 @@ keeps the later role rules from compensating for a bad reading.
    - Move each row to `clean` only when it has zero diagnostics. All four
      moved: the suite reported 66 clean rows and **1,021 clean words** at that
      point, with 0 known-FP words and 0 known errors. The later precision
-     phases raised the live baseline to **79 clean rows / 1,233 words**; see
+     phases raised the live baseline to **140 clean rows / 2,439 words**; see
      the work log and [`PLAN_GRAMMAR_PRECISION.md`](PLAN_GRAMMAR_PRECISION.md).
    - Run `cargo test --release --test syntax_prose`, then
      `cargo test --release --workspace`, clippy, the strict engine-output
@@ -371,6 +378,31 @@ the clean set stays quiet:
   (`sinä, Heintsi, sano ...`), where a comma separates the name from the
   predicate, and the negative-object rule skips the clause subject in a merged
   clause.
+
+#### Modern formal prose findings (2026-11-19)
+
+The Finlex 729/2018 sweep admitted 61 clean paragraphs and left 78 candidates
+with diagnostics. They are not in `known_false_positives`; they are the seed
+for a future precision round. Representative examples:
+
+- `case_selection` on a partitive object after a participle:
+  `... avustettava loukkaantuneita ...`.
+- `subject_predicate_agreement` on a coordinated singular subject:
+  `Valvottu jalankulkijaryhmä ja järjestäytynyt kulkue saa ...`.
+- `attribute_agreement` on an adverbial or quantifier modifier:
+  `... muullakin kuin sille tarkoitetulla tien osalla ...` and
+  `... ajosuunnat erottava koroke ...`.
+- `connegative` on a passive connegative:
+  `... jos tässä laissa ei toisin säädetä.`
+- `verb_rection` / `case_selection` on an infinitive or participial frame:
+  `... saa ajoneuvolla poistua risteyksestä sopivinta ajokaistaa käyttäen ...`.
+- `comma_missing` before `ellei`:
+  `... väistettävä oikealta lähestyvää ajoneuvoa ellei 2–4 momentissa toisin
+  säädetä.`
+
+Each needs an ambiguity pair (the intended role plus the rejected reading)
+before a rule change. Do not add one to `known_false_positives` without the fix
+or a deliberate baseline move.
 
 ## P1 — shared diagnostic contract, confidence and explainability
 
@@ -712,14 +744,15 @@ Adjacent repetition is not always accidental:
 
 - [ ] **Cold page target**
   `PLAN_GRAMMAR_STYLE_PERF.md` still records the ≤500 ms cold-page target as
-  open. The 2026-11-18 re-measurement after the shared paradigm probe is
-  **1,490 ms** cold morphology single-thread (was 2,016 ms), **~1,140 ms**
-  fresh-cache style (was ~1,410), and **537 ms** with the 4 native workers
-  (was 753). Warm all stays 97 ms. The native 4-worker path is within ~7% of
-  the target; the shipping wasm build is still above it. What is left is
-  paradigm construction (~66%) plus a duplicated unknown-word search (~20%);
-  closing it needs a form → readings table or a targeted "can this class spell
-  this surface" test, not cheaper cells (the plan records the attribution
+  open for the shipping wasm path. The 2026-11-19 re-measurement after the
+  suffix mask is **1,330 ms** cold morphology single-thread, **~989 ms**
+  fresh-cache style, and **450 ms** with the 4 native workers. The native
+  4-worker path now meets the ≤500 ms budget; the wasm pool is still above it
+  (**755–762 ms** with 4 workers, 777–852 ms with 8). Warm all stays ~93 ms
+  including morphology. What is left is per-chunk paradigm construction
+  (~66%) plus a duplicated unknown-word search (~20%); closing it needs a
+  form → readings table or a class-specific "can this class spell this
+  surface" test, not cheaper cells (the plan records the attribution
   experiment). The reverse-index experiment stays rejected on blob size.
   Performance remains a separate engineering objective, not a rule-correctness
   gate.
@@ -759,6 +792,9 @@ Adjacent repetition is not always accidental:
   the same rule, so a suggestion would fire on a sentence pinned clean. No
   `WordOrder` rule until there is a **structurally impossible** order (a
   genuine `FORCE`), not a merely less neutral one.
+  Re-audited 2026-11-19: the six rules in §6.1 still list each non-preferred
+  example as `ALLOW`, `tests/word_order_allow.rs` is green, and no `FORCE`
+  construction has been identified. The item stays open by design, not blocked.
 
 Keep the rest visible; do not implement it before the local agreement and case
 work is trustworthy. The current analysis is deliberately local and advisory.
@@ -1247,3 +1283,25 @@ intended/competing interpretation pair that fails.
   all landed in `PLAN_GRAMMAR_PRECISION.md`. The only gated items left are the
   cold-page target, the `koko` temporal verification and the held `PREFER`
   rule. No engine or checker behaviour changed.
+- 2026-11-19: extended the adjudicated prose corpus with 61 clean paragraphs of
+  modern formal Finnish from Finlex statute 729/2018 (Tieliikennelaki). The raw
+  Akoma Ntoso XML is gitignored under `tests/fixtures/prose/sources/`; only the
+  adjudicated rows and their provenance (`tests/fixtures/prose/README.md`) are
+  committed. Every row was admitted only after an individual `check_syntax`
+  returned zero diagnostics. The suite is now **140 clean rows / 2,439 words**,
+  1 true positive and 0 known false positives. The same sweep left 78 candidate
+  paragraphs with diagnostics; the representative false-positive shapes are
+  recorded under P0-C as the seed for the next precision round.
+- 2026-11-19: closed the `koko` + temporal-noun item. `koko päivä` is a valid
+  subject (`Koko päivä meni hukkaan.`) and `koko päivän` is the duration
+  adverbial, so `koko` is not added to the `joka`/`jokainen` frequency
+  determiners. The ambiguity fixture pins the subject reading, the clean corpus
+  keeps both correct forms quiet, and a unit test keeps `Koko päivä juoksin.`
+  from offering the 3sg `juoksi`.
+- 2026-11-19: added a 64-bit suffix stem-shape mask beside the 256-bit prefix
+  mask (`LSS3`, 40 bytes/row). The generator now unions `inflect_all` with
+  `None` and `Some(&LexiconIndex)`: class-50 compound heads emit forms only on
+  the index path, so the prefix-only mask could reject a real form. Native
+  single-thread cold is 1,497 → **1,330 ms** and the native 4-worker path is
+  **450 ms**, under the ≤500 ms budget. The wasm pool is still **755–762 ms**
+  with 4 workers, so the cold-page item stays open.

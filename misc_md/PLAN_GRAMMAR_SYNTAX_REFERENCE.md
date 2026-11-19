@@ -459,7 +459,7 @@ Update the wasm docs with the same contract.
 Replace “precision/recall 1.00” with a definition:
 
 - corpus: `syntax_eval` 154 clean / 60 cases; `syntax_diagnostics` 75 exact
-  cases / 272 clean; prose 79 clean / 1,233 words;
+  cases / 272 clean; prose 140 clean / 2,439 words;
 - adjudication: who reviewed, what counts as a true/false positive;
 - what 1.00 means: **fixture-level** exactness on this curated set, not general
   Finnish accuracy;

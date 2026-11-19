@@ -92,6 +92,39 @@
       "diagnostics": []
     },
     {
+      "id": "koko_paiva_subject",
+      "text": "Koko päivä meni hukkaan.",
+      "clauses": 1,
+      "subject": "päivä",
+      "predicate": "meni",
+      "roles": [
+        {
+          "word": "Koko",
+          "role": "modifier"
+        },
+        {
+          "word": "päivä",
+          "role": "subject",
+          "case": "nominative"
+        },
+        {
+          "word": "meni",
+          "role": "predicate"
+        },
+        {
+          "word": "hukkaan",
+          "role": "adverbial"
+        }
+      ],
+      "forbidden_roles": [
+        {
+          "word": "päivä",
+          "role": "adverbial"
+        }
+      ],
+      "diagnostics": []
+    },
+    {
       "id": "ilman_rahaa",
       "text": "Ilman rahaa en tule.",
       "clauses": 1,
