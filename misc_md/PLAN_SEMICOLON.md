@@ -1,6 +1,8 @@
 # Semicolon plan: from a scanning boundary to a precision-first rule
 
-Status: **Phase 0–2 landed; Phases 3–5 proposed.** Baseline `a80e616`; Phase 1 landed after the review. The review that motivates this plan
+Status: **Phase 0–3 landed; Phases 4–5 proposed.** Baseline `a80e616`;
+Phase 1 landed after the review, Phase 2 after the boundary fix, and Phase 3
+(the semicolon-aware list model) last. The review that motivates this plan
 is [`REVIEW_SEMICOLON.md`](REVIEW_SEMICOLON.md); the broader punctuation plan is
 [`PLAN_PUNCTUATION_SPEC.md`](PLAN_PUNCTUATION_SPEC.md).
 
@@ -109,20 +111,26 @@ so the AST and validation layers keep skipping them generically. Existing
 consumers that need comma positions keep using `comma_positions`; new consumers
 read `separator_kinds`.
 
-The parser splits on top-level semicolons first when a clause contains one;
-each group may contain internal commas. The resulting items are phrases, and
-the list is `Nominal` when every group is nominal and has no finite predicate.
-If there is no top-level semicolon, the existing comma parser is unchanged.
+The clause layer already splits at every top-level semicolon, so the parser
+joins the adjacent clauses of one sentence that a semicolon separates into one
+list. Each semicolon group is one item; a comma inside a group stays inside the
+item, so the item is a phrase (`Virtanen, toimitusjohtaja`). The first group is
+trimmed at its predicate (`Ostin omenoita; banaaneja` lists the objects), and a
+leading `ja`/`sekä`/`tai`/`vai` in the last group becomes the list conjunction.
+The list is `Nominal` when every group is nominal and has no finite predicate.
+If there is no top-level semicolon, the comma parser is unchanged.
 
 The old test `a_semicolon_does_not_make_one_list` is an intentional policy
-change: `Ostin omenoita; appelsiineja ja banaaneja.` should now be a list with
-semicolon separators. The test is updated to assert that shape, and the new
-behaviour is documented.
+change: `Ostin omenoita; appelsiineja ja banaaneja.` is now one `Nominal` list
+with semicolon separators (two items, because the second group is a single
+`ja`-coordinated phrase). The test asserts that shape, and the new behaviour is
+documented.
 
 ### List diagnostics and agreement
 
 - `lists.rs` runs comma-only checks (`duplicate`, `comma before conjunction`,
-  `introducer comma`) only when the separator at that position is a comma.
+  `introducer comma`) on the comma characters in the item gap, so a semicolon
+  boundary never triggers one. There is no separate separator guard.
 - A semicolon-separated simple list of three or more short, parallel items
   gets one `semicolon_simple_list` `Suggestion` correction that replaces each
   `;` with `,`. Do not add `ja` and do not change an item's internal commas.
@@ -256,8 +264,20 @@ quiet; no `Error`.
 
 ### Phase 3 — semicolon-aware lists and the agreement guard
 
+**Landed.** `syntax_list::List` gained `ListSeparator`/`separator_kinds`, and
+`parse` joins the clauses of a semicolon run in one sentence into a single
+list. `Ostin omenoita; appelsiineja ja banaaneja.` is now one list with
+semicolon separators; the complex `Kokoukseen …; …; …`, `Matkakohteita …; …; ja
+…` and `Osallistujat olivat Virtanen, Maija; …` rows stay quiet, and the last
+one no longer emits `predicative_agreement` because a complement that is a list
+item is skipped. `semicolon_simple_list` replaces every `;` with `,` in a short,
+comma-free, same-case parallel list of three or more items after a verb or a
+colon; the colon-introduced `Tarvitsemme kolme asiaa: aikaa; rahaa; osaamista.`
+row now gets that suggestion instead of the misfiled `missing_argument`.
+
 - Extend `syntax_list` with `ListSeparator`/`separator_kinds` and the
-  semicolon-first split.
+  semicolon-first split. *(Done: the clause layer already splits at the
+  semicolon, so the parser joins the run instead.)*
 - Update `a_semicolon_does_not_make_one_list` to assert the list shape.
 - Keep `Kokoukseen …; …; …` and `Matkakohteita …; …; ja …` quiet.
 - Fix `Osallistujat olivat Virtanen, Maija; Laine, Pekka; ja Korhonen, Anna.`
@@ -268,7 +288,7 @@ quiet; no `Error`.
   whose items are long clauses; a main-main semicolon pair.
 
 Gate: the complex-list rows are quiet; the simple-list row gets a suggestion;
-`page-2000` and the clean prose stay unchanged.
+`page-2000` and the clean prose stay unchanged. *(All gates pass.)*
 
 ### Phase 4 — typography
 
@@ -331,10 +351,10 @@ Add the rows to `tests/fixtures/syntax_diagnostics.json` for exact output and to
   replacing a comma with a semicolon or vice versa”. This plan keeps the
   no-style-upgrade half and allows a *forbidden* semicolon to be corrected to a
   comma/period, suggestion-only. That note was updated when Phase 2 landed.
-- **`missing_argument` on the colon list.** The current `Tarvitsemme kolme
-  asiaa: aikaa; rahaa; osaamista.` warning is the wrong layer. Phase 3 should
-  suppress it when the segment is a semicolon list, or Phase 2 should replace
-  it with the semicolon suggestion; do not leave both.
+- **`missing_argument` on the colon list.** Resolved in Phase 3: a
+  colon-introduced semicolon list after the clause supplies the argument, so
+  `missing_argument` is suppressed and the row gets `semicolon_simple_list`
+  instead.
 
 ## Files
 
@@ -344,8 +364,10 @@ Add the rows to `tests/fixtures/syntax_diagnostics.json` for exact output and to
 - `src/syntax_check/punctuation/mod.rs` — rule wiring;
 - `src/syntax_check/diagnostic.rs` — `SemicolonMisuse` kind;
 - `src/syntax_check/agreement.rs` — list-item complement guard;
-- `src/syntax_list.rs` — `ListSeparator`, `separator_kinds`, semicolon split;
-- `src/syntax_check/punctuation/lists.rs` — separator-aware list diagnostics;
+- `src/syntax_check/arguments.rs` — colon-list argument guard;
+- `src/syntax_list.rs` — `ListSeparator`, `separator_kinds`, semicolon run;
+- `src/syntax_check/punctuation/lists.rs` — separator-aware list diagnostics
+  and `semicolon_simple_list`;
 - `src/typography.rs` (new) — spacing and protected contexts;
 - `tests/fixtures/semicolon_spec.json` (new),
   `tests/fixtures/syntax_diagnostics.json`,
@@ -361,8 +383,8 @@ Phase 0 + Phase 1 together: the audit fixture and the boundary fix. That closes
 the `,;` defect without adding a new diagnostic, and it is the change most
 likely to affect the existing gates.
 
-Phase 2 is a separate commit. Phase 3 changes `syntax_list`, so it must be
-separate from the boundary fix; if a prose row moves, the diff is attributable.
+Phase 2 is a separate commit. Phase 3 changes `syntax_list`, so it is a separate
+commit from the boundary fix; if a prose row moves, the diff is attributable.
 
 Phase 4 is independent of Phases 1–3 and can land in either order once the
 protected-context scanner is tested.

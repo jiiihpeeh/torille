@@ -34,11 +34,11 @@ gate.
 | `Hän on; väsynyt.` | `semicolon_misuse` / `semicolon_phrase`, `Suggestion`, deletion |
 | `Hän on ystävällinen; kohtelias ja avulias.` | `semicolon_misuse` / `semicolon_coordination`, `Suggestion`, `;` → `,` |
 | `Hän lähti kotiin;` | `semicolon_misuse` / `semicolon_terminal`, `Suggestion`, `;` → `.` |
-| `Ostin omenoita; banaaneja; appelsiineja.` | quiet |
-| `Tarvitsemme kolme asiaa: aikaa; rahaa; osaamista.` | `missing_argument` `Warning`/`Likely` at `11..11` |
+| `Ostin omenoita; banaaneja; appelsiineja.` | `semicolon_misuse` / `semicolon_simple_list`, `Suggestion`, `;` → `,` for both |
+| `Tarvitsemme kolme asiaa: aikaa; rahaa; osaamista.` | `semicolon_misuse` / `semicolon_simple_list`, `Suggestion`; the old `missing_argument` is suppressed |
 | `sana ; toinen` | quiet |
 | `sana;toinen` | quiet |
-| `Osallistujat olivat Virtanen, Maija; Laine, Pekka; ja Korhonen, Anna.` | `predicative_agreement` `Warning`/`Certain` at `20..28`, rewriting `Virtanen` to `virtaset` / `virtasia` |
+| `Osallistujat olivat Virtanen, Maija; Laine, Pekka; ja Korhonen, Anna.` | quiet after Phase 3 (before Phase 3: `predicative_agreement` at `20..28`, rewriting `Virtanen` to `virtaset` / `virtasia`) |
 | `Kokoukseen osallistuivat Virtanen, toimitusjohtaja; Laine, projektipäällikkö; Korhonen, talousjohtaja.` | quiet |
 | `Matkakohteita olivat Helsinki, Suomi; Tukholma, Ruotsi; ja Oslo, Norja.` | quiet |
 | `Hän tuli (nopeasti; hiljaa) kotiin.` | quiet; one clause |
@@ -57,25 +57,27 @@ quiet and the exact fixture pins them.
 |---|---|---|
 | FI-SEM-001 two closely related independent clauses | **accepted by omission** | `Hän tuli; minä lähdin.` quiet. The spec says “allow”, not “require”; quiet is correct. |
 | FI-SEM-002 independent clauses without conjunction | **accepted** | `Hän lähti kotiin; minä jäin.` quiet. |
-| FI-SEM-003 complex list with internal commas | **partial** | The stylised `Kokoukseen …` and `Matkakohteita …` rows are quiet, but `Osallistujat olivat Virtanen, Maija; …` produces a false `predicative_agreement`. The semicolon groups are not modelled by `syntax_list`. |
+| FI-SEM-003 complex list with internal commas | **addressed (quiet)** | `syntax_list` joins the semicolon groups of one sentence into one list, each group a phrase item. All three complex rows are quiet, and the `Virtanen` agreement false positive is gone because a complement that is a list item is skipped. |
 | FI-SEM-004 long complex enumeration | **accepted by omission** | No rule; this is the safe stylistic default. |
 | FI-SEM-005 contrasting independent clauses | **accepted** | `Hän oli väsynyt; hän lähti kotiin.` quiet. |
 | FI-SEM-006 explanatory independent clauses | **accepted** | Same shape; no rule. |
 | FI-SEM-007 consecutive related statements | **accepted** | Same shape; no rule. |
 | FI-SEM-008 main + subordinate | **addressed (suggestion)** | `Tiedän; että …`, `Kun …; kaikki …` and `Koira, joka …; on …` get `semicolon_subordinate`. |
-| FI-SEM-009 simple list, prefer commas | **gap** | `Ostin omenoita; banaaneja; appelsiineja.` quiet. A suggestion is possible, but only with a confident list shape. |
+| FI-SEM-009 simple list, prefer commas | **addressed (suggestion)** | `Ostin omenoita; banaaneja; appelsiineja.` and the colon-introduced `Tarvitsemme …` row get one `semicolon_simple_list` correction replacing every `;` with `,`. |
 | FI-SEM-010 subject + predicate | **addressed (suggestion)** | `Opiskelijat; valmistautuivat kokeeseen.` gets `semicolon_phrase`. |
 | FI-SEM-011 verb + object | **addressed (suggestion)** | `Ostin; leipää.` and `Hän on; väsynyt.` get `semicolon_phrase`. |
-| FI-SEM-012 coordinated sentence elements | **addressed for complements (suggestion)** | `Hän on ystävällinen; kohtelias ja avulias.` gets `semicolon_coordination`; object/list coordination waits for Phase 3. |
+| FI-SEM-012 coordinated sentence elements | **addressed (suggestion)** | `Hän on ystävällinen; kohtelias ja avulias.` gets `semicolon_coordination`. Object coordination through a semicolon list is owned by the list layer: a short parallel list gets commas, a complex one keeps its hierarchy. |
 | FI-SEM-013 sentence termination | **addressed (suggestion)** | `Hän lähti kotiin;` gets `semicolon_terminal`. |
 | FI-SEM-014 whitespace before | **gap** | `sana ; toinen` quiet. |
 | FI-SEM-015 missing whitespace after | **gap** | `sana;toinen` quiet. |
 
 Two additional findings:
 
-1. The colon/semicolon simple list `Tarvitsemme kolme asiaa: aikaa; rahaa;
-   osaamista.` gets a `missing_argument` warning. That is the wrong layer and
-   the wrong explanation; the sentence is a list, not a missing verb argument.
+1. *Resolved in Phase 3.* The colon/semicolon simple list `Tarvitsemme kolme
+   asiaa: aikaa; rahaa; osaamista.` used to get a `missing_argument` warning.
+   That was the wrong layer and the wrong explanation; the sentence is a list,
+   not a missing verb argument. It is now one `semicolon_simple_list`
+   suggestion.
 2. Code and URL protection is untested. `let x = 1; let y = 2;` and
    `https://example.com/a;b` are quiet today only because no rule looks at
    them. A typography pass would need an explicit protected-context scanner.
@@ -158,9 +160,9 @@ refined, not reversed:
    `Suggestion`/`Likely` rules cover main+subordinate (`;` → `,`), complement
    coordination (`;` → `,`), subject/predicate or verb/object/complement
    (`;` deleted), and sentence-final (`;` → `.`).
-3. **Make the list layer semicolon-aware.** Model semicolon groups, keep the
-   complex-list examples quiet, and suppress the `Virtanen` agreement false
-   positive.
+3. **Make the list layer semicolon-aware.** *Done in Phase 3:* semicolon
+   groups are one list, the complex-list examples stay quiet, the `Virtanen`
+   agreement false positive is gone and a short parallel list gets commas.
 4. **Add the typography pass.** No space before `;`, one space after, duplicate
    semicolons; protect code, URLs and numeric/technical expressions.
 5. **Defer missing-semicolon insertion.** It needs the list hierarchy and a

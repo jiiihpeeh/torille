@@ -755,16 +755,19 @@ Adjacent repetition is not always accidental:
 
 ### Semicolon slice
 
-- [x] **Phase 0–2 landed: audit fixture, boundary fix and misuse rules.**
+- [x] **Phase 0–3 landed: audit fixture, boundary fix, misuse rules and lists.**
   A valid main-main semicolon is accepted, and the comma layer no longer writes
   `,;` at a subordinate boundary (`Kun tulin kotiin; kaikki nukkuivat.` is
   quiet). `SemicolonMisuse` now covers main+subordinate, complement
-  coordination, subject/predicate or verb/object/complement, and sentence-final
-  semicolons, all suggestion-only. `tests/fixtures/semicolon_spec.json` +
-  `tests/semicolon_spec.rs` record the FI-SEM matrix. The review is
+  coordination, subject/predicate or verb/object/complement, sentence-final
+  semicolons and short parallel lists, all suggestion-only. Semicolon-separated
+  lists are one list whose items are the semicolon groups, so complex lists
+  keep their hierarchy (and no longer produce a `Virtanen` agreement false
+  positive). `tests/fixtures/semicolon_spec.json` + `tests/semicolon_spec.rs`
+  record the FI-SEM matrix. The review is
   [`REVIEW_SEMICOLON.md`](REVIEW_SEMICOLON.md); the phased plan is
-  [`PLAN_SEMICOLON.md`](PLAN_SEMICOLON.md). Remaining: Phase 3 semicolon-aware
-  lists and the agreement guard, Phase 4 the separate typography pass.
+  [`PLAN_SEMICOLON.md`](PLAN_SEMICOLON.md). Remaining: Phase 4 the separate
+  typography pass, Phase 5 deferred missing-semicolon insertion.
 
 ### Other P2 items
 

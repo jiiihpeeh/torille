@@ -173,6 +173,7 @@ fn every_fixture_diagnostic_has_a_contract_entry() {
         ("semicolon_misuse", "semicolon_coordination"),
         ("semicolon_misuse", "semicolon_phrase"),
         ("semicolon_misuse", "semicolon_terminal"),
+        ("semicolon_misuse", "semicolon_simple_list"),
         ("comma_extra", "comma_extra"),
         ("comma_pair_unbalanced", "comma_pair_unbalanced"),
         ("question_mark_missing", "question_mark_missing"),

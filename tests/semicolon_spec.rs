@@ -69,10 +69,10 @@ fn covered_semicolon_cases_match_the_checker() {
         }
     }
 
-    // Phase 2 covers the structural misuse rows as well. Raise this floor when
-    // Phase 3/4 land; the gap count is the remaining work.
+    // Phase 3 covers the simple and complex semicolon lists. Raise this floor
+    // when Phase 4 lands; the gap count is the remaining work.
     assert!(
-        covered >= 20,
+        covered >= 24,
         "only {covered} covered semicolon-spec cases (gaps: {gaps})"
     );
 }

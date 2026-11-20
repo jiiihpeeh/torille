@@ -560,6 +560,24 @@
       "diagnostics": []
     },
     {
+      "id": "semicolon_simple_list",
+      "text": "Ostin omenoita; banaaneja; appelsiineja.",
+      "diagnostics": [
+        {
+          "kind": "semicolon_misuse",
+          "severity": "suggestion",
+          "start": 14,
+          "end": 26,
+          "corrections": [","]
+        }
+      ]
+    },
+    {
+      "id": "semicolon_two_item_list_is_quiet",
+      "text": "Ostin omenoita; appelsiineja ja banaaneja.",
+      "diagnostics": []
+    },
+    {
       "id": "semicolon_elliptical_clause_is_quiet",
       "text": "Hän on opettaja; minä lääkäri.",
       "diagnostics": []
@@ -572,6 +590,34 @@
     {
       "id": "semicolon_inside_parenthetical",
       "text": "Hän tuli (nopeasti; hiljaa) kotiin.",
+      "diagnostics": []
+    },
+    {
+      "id": "semicolon_colon_simple_list",
+      "text": "Tarvitsemme kolme asiaa: aikaa; rahaa; osaamista.",
+      "diagnostics": [
+        {
+          "kind": "semicolon_misuse",
+          "severity": "suggestion",
+          "start": 30,
+          "end": 38,
+          "corrections": [","]
+        }
+      ]
+    },
+    {
+      "id": "semicolon_complex_list_is_quiet",
+      "text": "Kokoukseen osallistuivat Virtanen, toimitusjohtaja; Laine, projektipäällikkö; Korhonen, talousjohtaja.",
+      "diagnostics": []
+    },
+    {
+      "id": "semicolon_complex_list_of_names_is_quiet",
+      "text": "Osallistujat olivat Virtanen, Maija; Laine, Pekka; ja Korhonen, Anna.",
+      "diagnostics": []
+    },
+    {
+      "id": "semicolon_complex_enumeration_is_quiet",
+      "text": "Matkakohteita olivat Rooma, Pariisi; Lontoo, Madrid; ja Berliini.",
       "diagnostics": []
     },
     {

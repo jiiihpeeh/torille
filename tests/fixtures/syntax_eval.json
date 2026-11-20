@@ -160,7 +160,10 @@
     "Sata autoa.",
     "Kaksikymmentä lasta.",
     "Ostin kaksi kirjaa.",
-    "Hän tuli; minä lähdin."
+    "Hän tuli; minä lähdin.",
+    "Osallistujat olivat Virtanen, Maija; Laine, Pekka; ja Korhonen, Anna.",
+    "Kokoukseen osallistuivat Virtanen, toimitusjohtaja; Laine, projektipäällikkö; Korhonen, talousjohtaja.",
+    "Matkakohteita olivat Rooma, Pariisi; Lontoo, Madrid; ja Berliini."
   ],
   "cases": [
     {
@@ -607,6 +610,13 @@
     {
       "id": "eval_semicolon_terminal",
       "text": "Hän lähti kotiin;",
+      "kinds": [
+        "semicolon_misuse"
+      ]
+    },
+    {
+      "id": "eval_semicolon_simple_list",
+      "text": "Ostin omenoita; banaaneja; appelsiineja.",
       "kinds": [
         "semicolon_misuse"
       ]

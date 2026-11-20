@@ -432,6 +432,16 @@ fn previous_word_is(
         .is_some_and(|previous| words.contains(&analysis.tokens[previous].key.as_str()))
 }
 
+/// The complement of `Osallistujat olivat Virtanen, Maija; …` is one item of a
+/// semicolon list; the agreement relation cannot be read across the list
+/// boundary.
+fn is_list_item(index: usize, analysis: &SyntaxAnalysis) -> bool {
+    analysis
+        .lists
+        .iter()
+        .any(|list| list.items.iter().any(|item| item.tokens.contains(&index)))
+}
+
 /// A predicative adjective agrees with the subject in number.
 ///
 /// `Talot ovat punainen` and `Talo on punaisia` are the common learner errors.
@@ -455,6 +465,12 @@ fn check_complements(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxD
         let Some(complement) = clause.complement else {
             continue;
         };
+        // `Osallistujat olivat Virtanen, Maija; …` puts one list item in the
+        // complement slot; the agreement relation is read across a list
+        // boundary the parser does not model, so the list layer owns it.
+        if is_list_item(complement, analysis) {
+            continue;
+        }
         // A coordinated subject phrase is collapsed to a plural controller by
         // `subject_of`; it returns `None` when the person cannot be resolved.
         let Some(subject) = subject_of(clause, tokens, analysis) else {

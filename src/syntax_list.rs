@@ -6,12 +6,20 @@
 //! and records the list for the diagnostic layer.
 //!
 //! It is deliberately conservative: a list needs at least one top-level comma
-//! or a colon introducer, and the parser only calls something a `Nominal` list
-//! when every item is nominal and none is a finite clause. `Mixed` lists are
-//! kept for analysis but never produce an automatic punctuation correction.
+//! or semicolon, or a colon introducer, and the parser only calls something a
+//! `Nominal` list when every item is nominal and none is a finite clause.
+//! `Mixed` lists are kept for analysis but never produce an automatic
+//! punctuation correction.
+//!
+//! A semicolon is a clause boundary, so the clause layer has already split a
+//! semicolon list into one clause per group. The parser therefore joins
+//! adjacent clauses that a top-level semicolon separates (within one sentence)
+//! into one list whose items are the clause groups; commas inside a group are
+//! item-internal, not list separators.
 
 use std::ops::Range;
 
+use crate::sentence::SentenceSpan;
 use crate::syntax::{Clause, SyntacticRole, TokenSyntax};
 use crate::tags::{Mood, PartOfSpeech, Polarity, Tags};
 use crate::tokenise::Token;
@@ -31,8 +39,10 @@ pub struct List {
     pub head: Option<usize>,
     pub kind: ListKind,
     pub items: Vec<ListItem>,
-    /// Comma token indices that separate top-level items.
+    /// Separator token indices that divide top-level items.
     pub separators: Vec<usize>,
+    /// How each entry of `separators` is written. Parallel to `separators`.
+    pub separator_kinds: Vec<ListSeparator>,
     /// Final `ja`/`sekä`/`tai`/`vai`, when present.
     pub conjunction: Option<usize>,
     /// Colon that introduces the list, when present.
@@ -62,6 +72,12 @@ pub enum ListKind {
     Predicate,
     /// Do not apply list punctuation automatically.
     Mixed,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ListSeparator {
+    Comma,
+    Semicolon,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -97,16 +113,209 @@ impl ListItemKind {
 
 /// Find lists in every clause.
 ///
+/// This is the compatibility entry point: it derives the sentence spans from
+/// the token stream and then calls [`parse_with_sentences`]. A caller that
+/// already has the syntax analysis should use the latter.
+pub fn parse(tokens: &[Token], clauses: &[Clause], out: &[TokenSyntax]) -> Vec<List> {
+    let contexts = crate::sentence::analyze(tokens);
+    let sentences = crate::sentence::spans_from_contexts(tokens, &contexts);
+    parse_with_sentences(tokens, clauses, &sentences, out)
+}
+
+/// Find lists in every clause with a caller-supplied sentence map.
+///
 /// The arena is post-order: a nested list is pushed before the list that
 /// contains it, so `parent` indices are always smaller than the list itself.
 /// `ListItemKind::List(indices)` names the children from the parent's
 /// `items`.
-pub fn parse(tokens: &[Token], clauses: &[Clause], out: &[TokenSyntax]) -> Vec<List> {
+///
+/// `sentences` is used only to keep a semicolon run inside one sentence; a
+/// semicolon never ends a sentence, so a run that crosses a period is not one
+/// list.
+pub fn parse_with_sentences(
+    tokens: &[Token],
+    clauses: &[Clause],
+    sentences: &[SentenceSpan],
+    out: &[TokenSyntax],
+) -> Vec<List> {
     let mut lists = Vec::new();
-    for (clause_index, clause) in clauses.iter().enumerate() {
-        parse_clause(clause_index, clause, tokens, out, &mut lists);
+    let mut index = 0;
+    while index < clauses.len() {
+        let end = semicolon_run_end(index, clauses, tokens, sentences);
+        if end > index + 1
+            && parse_semicolon_run(index..end, clauses, tokens, out, &mut lists).is_some()
+        {
+            index = end;
+            continue;
+        }
+        parse_clause(index, &clauses[index], tokens, out, &mut lists);
+        index += 1;
     }
     lists
+}
+
+/// One past the last clause joined to `start` by top-level semicolons.
+fn semicolon_run_end(
+    start: usize,
+    clauses: &[Clause],
+    tokens: &[Token],
+    sentences: &[SentenceSpan],
+) -> usize {
+    let mut end = start + 1;
+    while end < clauses.len() {
+        let previous = &clauses[end - 1];
+        let next = &clauses[end];
+        if sentence_index(previous.start, sentences) != sentence_index(next.start, sentences) {
+            break;
+        }
+        if separator_between(tokens, previous, next, ';').is_none() {
+            break;
+        }
+        end += 1;
+    }
+    end
+}
+
+fn sentence_index(byte: usize, sentences: &[SentenceSpan]) -> Option<usize> {
+    sentences
+        .iter()
+        .find(|sentence| byte >= sentence.start && byte < sentence.end)
+        .map(|sentence| sentence.index)
+}
+
+/// The separator token that writes `needle` between two clauses.
+fn separator_between(
+    tokens: &[Token],
+    left: &Clause,
+    right: &Clause,
+    needle: char,
+) -> Option<usize> {
+    let start = left.tokens.end;
+    let end = right.tokens.start;
+    if start >= end {
+        return None;
+    }
+    let mut depth = 0i32;
+    for (index, token) in tokens.iter().enumerate().take(end).skip(start) {
+        if token.is_word() {
+            continue;
+        }
+        for character in token.text.chars() {
+            match character {
+                '(' | '[' | '{' => depth += 1,
+                ')' | ']' | '}' => depth = (depth - 1).max(0),
+                c if c == needle && depth == 0 => return Some(index),
+                _ => {}
+            }
+        }
+    }
+    None
+}
+
+/// Join a semicolon-separated clause run into one list.
+///
+/// Each clause group is one item. The first group may hold the host predicate;
+/// the list starts after it (`Ostin omenoita; banaaneja` lists the objects).
+/// A leading `ja`/`sekä`/`tai`/`vai` in the last group becomes the list
+/// conjunction. Commas inside a group stay inside its item, so the group is a
+/// phrase (`Virtanen, toimitusjohtaja`), not a nested list.
+fn parse_semicolon_run(
+    run: Range<usize>,
+    clauses: &[Clause],
+    tokens: &[Token],
+    out: &[TokenSyntax],
+    lists: &mut Vec<List>,
+) -> Option<usize> {
+    let first_clause = &clauses[run.start];
+    let first_words = clause_words(first_clause, tokens);
+    // `Ostin omenoita; …` starts the list at `omenoita`, not at the predicate.
+    let first_comma = top_level_commas(tokens, first_clause.tokens.start, first_clause.tokens.end)
+        .into_iter()
+        .next()
+        .unwrap_or(first_clause.tokens.end);
+    let before_separator: Vec<usize> = first_words
+        .iter()
+        .copied()
+        .filter(|&index| index < first_comma)
+        .collect();
+    let start_position = before_separator
+        .iter()
+        .rposition(|&index| is_finite(&out[index]))
+        .map_or(0, |position| position + 1);
+    let start = *first_words.get(start_position)?;
+
+    let mut items = Vec::new();
+    let mut separators = Vec::new();
+    let mut conjunction = None;
+    for (offset, clause) in clauses[run.clone()].iter().enumerate() {
+        let (mut first, end) = word_run(tokens, clause.tokens.start, clause.tokens.end)?;
+        if offset == 0 {
+            first = start;
+        }
+        if offset + 1 == run.len() && is_conjunction_word(first, tokens) {
+            conjunction = Some(first);
+            first = word_run(tokens, first + 1, end)?.0;
+        }
+        if offset > 0 {
+            let previous = &clauses[run.start + offset - 1];
+            let separator = separator_between(tokens, previous, clause, ';')?;
+            separators.push(separator);
+        }
+        items.push(list_item(first, end, clause.tokens.end, tokens, out));
+    }
+    if items.len() < 2 {
+        return None;
+    }
+    let introducer = introducer_before(tokens, items[0].tokens.start);
+    let kind = classify(&items, out);
+    let first = items[0].tokens.start;
+    let last = items[items.len() - 1].tokens.end;
+    let span = tokens[first].start..tokens[last - 1].end;
+    let role = out.get(first).map(|syntax| syntax.role).filter(|role| {
+        matches!(
+            role,
+            SyntacticRole::Subject
+                | SyntacticRole::Object
+                | SyntacticRole::Adverbial
+                | SyntacticRole::Complement
+        )
+    });
+    let head = out.get(first).and_then(|syntax| syntax.head);
+    let index = lists.len();
+    lists.push(List {
+        span,
+        tokens: first..last,
+        clause: run.start,
+        role,
+        head,
+        kind,
+        items,
+        separator_kinds: vec![ListSeparator::Semicolon; separators.len()],
+        separators,
+        conjunction,
+        introducer,
+        parent: None,
+    });
+    Some(index)
+}
+
+fn clause_words(clause: &Clause, tokens: &[Token]) -> Vec<usize> {
+    clause
+        .tokens
+        .clone()
+        .filter(|&index| tokens[index].is_word())
+        .collect()
+}
+
+fn introducer_before(tokens: &[Token], first_token: usize) -> Option<usize> {
+    let mut before = first_token;
+    while before > 0 && !tokens[before - 1].is_word() {
+        before -= 1;
+        if tokens[before].text.contains(':') {
+            return Some(before);
+        }
+    }
+    None
 }
 
 fn parse_clause(
@@ -211,6 +420,7 @@ fn parse_clause(
             )
         });
     let head = out.get(first).and_then(|syntax| syntax.head);
+    let separator_count = commas.len();
     lists.push(List {
         span,
         tokens: first..last,
@@ -220,6 +430,7 @@ fn parse_clause(
         kind,
         items,
         separators: commas,
+        separator_kinds: vec![ListSeparator::Comma; separator_count],
         conjunction,
         introducer,
         parent: None,
@@ -437,13 +648,14 @@ fn word_run(tokens: &[Token], start: usize, end: usize) -> WordRun {
 }
 
 fn final_conjunction(tokens: &[Token], start: usize, end: usize) -> Option<usize> {
-    (start..end).rfind(|&index| {
-        tokens[index].is_word()
-            && matches!(
-                tokens[index].text.to_lowercase().as_str(),
-                "ja" | "sekä" | "tai" | "vai"
-            )
-    })
+    (start..end).rfind(|&index| is_conjunction_word(index, tokens))
+}
+
+fn is_conjunction_word(index: usize, tokens: &[Token]) -> bool {
+    matches!(
+        tokens[index].text.to_lowercase().as_str(),
+        "ja" | "sekä" | "tai" | "vai"
+    )
 }
 
 fn split_at_word(
@@ -586,8 +798,68 @@ mod tests {
     }
 
     #[test]
-    fn a_semicolon_does_not_make_one_list() {
-        let (_, lists) = lists("Ostin omenoita; appelsiineja ja banaaneja.");
+    fn a_semicolon_makes_a_list_with_semicolon_separators() {
+        let (tokens, lists) = lists("Ostin omenoita; appelsiineja ja banaaneja.");
+        assert_eq!(lists.len(), 1, "{lists:#?}");
+        let list = &lists[0];
+        assert_eq!(list.kind, ListKind::Nominal);
+        assert_eq!(list.items.len(), 2);
+        assert_eq!(
+            list.separators.len(),
+            list.separator_kinds.len(),
+            "the separator kinds are parallel to the separator tokens"
+        );
+        assert!(
+            list.separator_kinds
+                .iter()
+                .all(|kind| *kind == ListSeparator::Semicolon)
+        );
+        assert_eq!(&tokens[list.items[0].tokens.start].text, "omenoita");
+    }
+
+    #[test]
+    fn a_short_semicolon_list_is_one_nominal_list() {
+        let (tokens, lists) = lists("Ostin omenoita; banaaneja; appelsiineja.");
+        assert_eq!(lists.len(), 1, "{lists:#?}");
+        let list = &lists[0];
+        assert_eq!(list.kind, ListKind::Nominal);
+        assert_eq!(list.items.len(), 3);
+        assert_eq!(list.separator_kinds.len(), 2);
+        assert_eq!(list.separators.len(), 2);
+        assert_eq!(&tokens[list.items[0].tokens.start].text, "omenoita");
+    }
+
+    #[test]
+    fn a_complex_semicolon_list_keeps_its_internal_commas() {
+        let (_, lists) = lists(
+            "Kokoukseen osallistuivat Virtanen, toimitusjohtaja; \
+             Laine, projektipäällikkö; Korhonen, talousjohtaja.",
+        );
+        assert_eq!(lists.len(), 1, "{lists:#?}");
+        let list = &lists[0];
+        assert_eq!(list.items.len(), 3);
+        assert!(
+            list.items
+                .iter()
+                .all(|item| item.kind == ListItemKind::Phrase),
+            "each semicolon group is one phrase: {lists:#?}"
+        );
+        assert_eq!(list.separator_kinds.len(), 2);
+    }
+
+    #[test]
+    fn a_colon_introduced_semicolon_list_is_one_list() {
+        let (_, lists) = lists("Tarvitsemme kolme asiaa: aikaa; rahaa; osaamista.");
+        assert_eq!(lists.len(), 1, "{lists:#?}");
+        let list = &lists[0];
+        assert_eq!(list.kind, ListKind::Nominal);
+        assert!(list.introducer.is_some());
+        assert_eq!(list.items.len(), 3);
+    }
+
+    #[test]
+    fn a_main_main_semicolon_is_not_a_list() {
+        let (_, lists) = lists("Hän tuli; minä lähdin.");
         assert!(lists.is_empty(), "{lists:#?}");
     }
 }

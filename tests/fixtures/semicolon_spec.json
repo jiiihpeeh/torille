@@ -29,9 +29,9 @@
       "id": "fi_sem_003_complex_list_names",
       "rule": "FI-SEM-003",
       "phase": 3,
-      "status": "gap",
+      "status": "covered",
       "text": "Osallistujat olivat Virtanen, Maija; Laine, Pekka; ja Korhonen, Anna.",
-      "expect": { "absent_rule": "predicative_agreement" }
+      "expect": { "rule": null }
     },
     {
       "id": "fi_sem_004_long_enumeration",
@@ -93,9 +93,9 @@
       "id": "fi_sem_009_simple_list",
       "rule": "FI-SEM-009",
       "phase": 3,
-      "status": "gap",
+      "status": "covered",
       "text": "Ostin omenoita; banaaneja; appelsiineja.",
-      "expect": { "rule": "semicolon_simple_list" }
+      "expect": { "rule": "semicolon_simple_list", "start": 14 }
     },
     {
       "id": "fi_sem_010_subject_predicate",
@@ -197,9 +197,17 @@
       "id": "fi_sem_colon_simple_list",
       "rule": "FI-SEM-009",
       "phase": 3,
-      "status": "gap",
+      "status": "covered",
       "text": "Tarvitsemme kolme asiaa: aikaa; rahaa; osaamista.",
-      "expect": { "absent_rule": "missing_argument" }
+      "expect": { "rule": "semicolon_simple_list", "start": 30 }
+    },
+    {
+      "id": "fi_sem_complex_enumeration",
+      "rule": "FI-SEM-003",
+      "phase": 3,
+      "status": "covered",
+      "text": "Matkakohteita olivat Rooma, Pariisi; Lontoo, Madrid; ja Berliini.",
+      "expect": { "rule": null }
     },
     {
       "id": "fi_sem_elliptical_clause",

@@ -364,7 +364,7 @@ pub(crate) fn analyze_syntax_with_contexts_and_decisions(
     share_clause_roles(&mut clauses, &clause_groups_of, tokens, &out);
     features::assign(&mut clauses, tokens, &out);
 
-    let lists = crate::syntax_list::parse(tokens, &clauses, &out);
+    let lists = crate::syntax_list::parse_with_sentences(tokens, &clauses, &sentences, &out);
     SyntaxAnalysis {
         sentences,
         clauses,

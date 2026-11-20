@@ -251,8 +251,9 @@ for a clear non-restrictive relative; determiners stay quiet.
 
 - Extend `syntax_list` to recognize unseparated parallel items after a verb or
   a colon: same case/POS, three or more, and no conjunction-only pair.
-- Add semicolon-separated complex list support and the spec's
-  `Virtanen, Maija; Laine, Pekka; ja Korhonen, Anna.` shape.
+- Semicolon-separated complex list support and the spec's `Virtanen, Maija;
+  Laine, Pekka; ja Korhonen, Anna.` shape landed in the semicolon slice
+  ([`PLAN_SEMICOLON.md`](PLAN_SEMICOLON.md) Phase 3).
 - Keep the current separator/duplicate/conjunction rules.
 
 Gate: `Ostin omenoita banaaneja ja päärynöitä.` gains the missing comma;

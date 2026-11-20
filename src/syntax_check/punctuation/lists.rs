@@ -1,8 +1,13 @@
 //! List structure and list-separator diagnostics.
+//!
+//! The comma-only rules (duplicate separator, comma before conjunction,
+//! introducer comma) read the comma characters in the gap between two items.
+//! A semicolon-separated list has no comma in that gap by construction, so
+//! those rules stay quiet there without a separate guard.
 
-use crate::syntax::{SyntaxAnalysis, TokenSyntax};
-use crate::syntax_list::{List, ListItem, ListItemKind, ListKind};
-use crate::tags::PartOfSpeech;
+use crate::syntax::{SyntacticRole, SyntaxAnalysis, TokenSyntax};
+use crate::syntax_list::{List, ListItem, ListItemKind, ListKind, ListSeparator};
+use crate::tags::{Case, PartOfSpeech};
 use crate::tokenise::Token;
 
 use super::super::analysis::nominal_case;
@@ -73,8 +78,130 @@ pub(super) fn list_diagnostics(tokens: &[Token], analysis: &SyntaxAnalysis) -> V
                 }
             }
         }
+
+        if let Some(diagnostic) = simple_semicolon_list(tokens, analysis, list) {
+            out.push(diagnostic);
+        }
     }
     out
+}
+
+/// `Ostin omenoita; banaaneja; appelsiineja.` — a short parallel list should
+/// use commas.
+///
+/// Only three or more short, comma-free, same-case nominal items after a verb
+/// or a colon qualify. A complex list (an item contains its own comma) and a
+/// list of clauses keep the semicolon hierarchy, and a valid main-main
+/// semicolon is not a list at all.
+fn simple_semicolon_list(
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+    list: &List,
+) -> Option<SyntaxDiagnostic> {
+    if list.kind != ListKind::Nominal || list.items.len() < 3 {
+        return None;
+    }
+    if list.separator_kinds.len() != list.items.len() - 1
+        || list
+            .separator_kinds
+            .iter()
+            .any(|kind| *kind != ListSeparator::Semicolon)
+    {
+        return None;
+    }
+    let governed = list.introducer.is_some()
+        || matches!(
+            list.role,
+            Some(SyntacticRole::Object | SyntacticRole::Complement | SyntacticRole::Adverbial)
+        );
+    if !governed {
+        return None;
+    }
+
+    // Every item must be short, comma-free and case-compatible with the rest.
+    let mut shared: Option<Vec<Case>> = None;
+    for item in &list.items {
+        let words: Vec<usize> = item
+            .tokens
+            .clone()
+            .filter(|&index| tokens[index].is_word())
+            .collect();
+        if words.is_empty() || words.len() > 2 || item.kind == ListItemKind::Clause {
+            return None;
+        }
+        if tokens[item.tokens.clone()]
+            .iter()
+            .any(|token| !token.is_word() && token.text.contains(','))
+        {
+            return None;
+        }
+        let cases = nominal_cases(&analysis.tokens[words[0]]);
+        if cases.is_empty() {
+            return None;
+        }
+        shared = Some(match shared {
+            Some(previous) => previous
+                .into_iter()
+                .filter(|case| cases.contains(case))
+                .collect(),
+            None => cases,
+        });
+        if shared.as_ref().is_some_and(Vec::is_empty) {
+            return None;
+        }
+    }
+    shared.as_ref()?;
+
+    let mut edits = Vec::new();
+    for &index in &list.separators {
+        let offset = tokens[index].text.find(';')?;
+        let start = tokens[index].start + offset;
+        edits.push(Edit::new(start, start + 1, ","));
+    }
+    let first = edits.first()?;
+    let last = edits.last()?;
+    let mut diagnostic = SyntaxDiagnostic::new(
+        DiagnosticKind::SemicolonMisuse,
+        Severity::Suggestion,
+        Confidence::Likely,
+        first.start..last.end,
+        "semicolon_simple_list",
+    );
+    diagnostic.corrections = vec![
+        Correction::new(edits, 0.0, "semicolon_simple_list")
+            .licensed_by(CorrectionLicense::Punctuation)
+            .with_confidence(Confidence::Likely),
+    ];
+    Some(diagnostic)
+}
+
+/// The nominal readings' cases, without the verb homonym's case.
+///
+/// `osaamista` is a noun partitive and a verb elative; the syntax layer may
+/// choose the verb reading's case, so the list comparison reads the nominal
+/// readings only.
+fn nominal_cases(token: &TokenSyntax) -> Vec<Case> {
+    let mut cases = Vec::new();
+    for reading in &token.readings {
+        if !matches!(
+            reading.part_of_speech,
+            Some(
+                PartOfSpeech::Noun
+                    | PartOfSpeech::Adjective
+                    | PartOfSpeech::Pronoun
+                    | PartOfSpeech::Numeral
+                    | PartOfSpeech::Ordinal
+            )
+        ) {
+            continue;
+        }
+        if let Some(case) = reading.case
+            && !cases.contains(&case)
+        {
+            cases.push(case);
+        }
+    }
+    cases
 }
 
 fn missing_separators(
@@ -200,4 +327,60 @@ fn comma_positions(tokens: &[Token], start: usize, end: usize) -> Vec<(usize, us
         }
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn simple_list(text: &str) -> Option<SyntaxDiagnostic> {
+        let tokens = crate::tokenise::tokenise(text);
+        let analysis = crate::syntax::analyze(&tokens);
+        list_diagnostics(&tokens, &analysis)
+            .into_iter()
+            .find(|diagnostic| diagnostic.rule_id.as_str() == "semicolon_simple_list")
+    }
+
+    #[test]
+    fn a_short_semicolon_list_becomes_one_comma_correction() {
+        let diagnostic =
+            simple_list("Ostin omenoita; banaaneja; appelsiineja.").expect("a suggestion");
+        assert_eq!(diagnostic.corrections.len(), 1);
+        let edits = &diagnostic.corrections[0].edits;
+        assert_eq!(edits.len(), 2, "one edit per semicolon");
+        assert!(edits.iter().all(|edit| edit.replacement == ","));
+    }
+
+    #[test]
+    fn a_colon_introduced_semicolon_list_becomes_one_comma_correction() {
+        let diagnostic = simple_list("Tarvitsemme kolme asiaa: aikaa; rahaa; osaamista.")
+            .expect("a suggestion");
+        assert_eq!(diagnostic.corrections[0].edits.len(), 2);
+        assert_eq!(
+            diagnostic.corrections[0].edits[0].start,
+            "Tarvitsemme kolme asiaa: aikaa".len(),
+            "the first semicolon"
+        );
+    }
+
+    #[test]
+    fn a_complex_semicolon_list_keeps_its_hierarchy() {
+        assert!(
+            simple_list(
+                "Kokoukseen osallistuivat Virtanen, toimitusjohtaja; \
+                 Laine, projektipäällikkö; Korhonen, talousjohtaja."
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn a_semicolon_list_of_main_clauses_is_not_a_simple_list() {
+        assert!(simple_list("Hän tuli; minä lähdin; he jäivät.").is_none());
+    }
+
+    #[test]
+    fn an_elliptical_pair_is_not_a_simple_list() {
+        assert!(simple_list("Hän on opettaja; minä lääkäri.").is_none());
+    }
 }

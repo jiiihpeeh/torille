@@ -78,6 +78,12 @@ fn missing_argument(
         // and rection owns the finding. Do not double-report.
         return None;
     }
+    if completed_by_semicolon_list(clause, analysis) {
+        // `Tarvitsemme kolme asiaa: aikaa; rahaa; osaamista.` — the
+        // colon-introduced list supplies the argument in the next sentence,
+        // where the argument scan does not reach.
+        return None;
+    }
 
     let expected = obligatory
         .iter()
@@ -96,6 +102,23 @@ fn missing_argument(
     );
     diagnostic.expected = Some(expected);
     Some(diagnostic)
+}
+
+/// A colon-introduced semicolon list after the clause supplies its object.
+fn completed_by_semicolon_list(
+    clause: &crate::syntax::Clause,
+    analysis: &SyntaxAnalysis,
+) -> bool {
+    analysis.lists.iter().any(|list| {
+        list.kind == crate::syntax_list::ListKind::Nominal
+            && list
+                .separator_kinds
+                .contains(&crate::syntax_list::ListSeparator::Semicolon)
+            && list
+                .introducer
+                .is_some_and(|index| index >= clause.tokens.end)
+            && list.span.start > clause.end
+    })
 }
 
 fn extra_argument(
