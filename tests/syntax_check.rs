@@ -21,6 +21,21 @@ fn case_by_id<'a>(root: &'a Value, id: &str) -> &'a Value {
         .unwrap_or_else(|| panic!("no case {id:?} in syntax_diagnostics.json"))
 }
 
+#[test]
+fn a_niin_kauan_kuin_comparison_is_not_a_missing_comma() {
+    let text = "Sanoi täällä entinen rouvani, kun kuuntelin kerta oven takana, \
+                että suku on rakas niin kauan kuin kaikki ovat yhtä köyhiä.";
+    let check = syntax_check::check(text);
+    assert!(
+        !check
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.kind == DiagnosticKind::CommaMissing),
+        "{:?}",
+        check.diagnostics
+    );
+}
+
 fn kind(name: &str) -> DiagnosticKind {
     [
         DiagnosticKind::SubjectPredicateAgreement,

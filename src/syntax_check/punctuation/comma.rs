@@ -138,6 +138,7 @@ fn subordinate_comma(
                 || clause_kind(clause, tokens, analysis) == ClauseKind::Subordinate;
             if boundary_needs_comma
                 && !is_no_comma_pair(tokens, left, right)
+                && !comparison_kuin_between(tokens, left, right)
                 && !comma_between(tokens, left, right)
                 && !dash_between(tokens, left, right)
             {
@@ -153,6 +154,7 @@ fn subordinate_comma(
         && let (Some(left), Some(right)) = (last_word(clause, tokens), first_word(next, tokens))
         && clause_kind(next, tokens, analysis) == ClauseKind::Main
         && !is_no_comma_pair(tokens, left, right)
+        && !comparison_kuin_between(tokens, left, right)
         && !comma_between(tokens, left, right)
         && !dash_between(tokens, left, right)
     {
@@ -172,6 +174,7 @@ fn subordinate_comma(
         // A comma between the two finite words already marks the boundary
         // (`Kun se aamu valkeni, jolloin …`, `..., sen kun Anni vain kertoi,
         // koko ajan …`). The merged-subordinate path must not add another.
+        && !comparison_kuin_between(tokens, previous, main)
         && !comma_between(tokens, previous, main)
         && let Some(before) = previous_word(tokens, main)
         && !comma_between(tokens, before, main)
@@ -294,6 +297,27 @@ fn comma_missing(at: usize, kind: DiagnosticKind) -> SyntaxDiagnostic {
             .with_confidence(Confidence::Certain),
     ];
     diagnostic
+}
+
+/// Whether a comparison `kuin` lies between two finite words.
+///
+/// `niin kauan kuin kaikki ovat yhtä köyhiä` is one clause to the parser: the
+/// `kuin` is an adverbial, so the clause has two finite predicates (`on`,
+/// `ovat`) and the merged-subordinate heuristic would insert a comma before
+/// `ovat`. The `kuin` is a comparison boundary, not a main-clause boundary,
+/// and Finnish does not put a comma there.
+fn comparison_kuin_between(tokens: &[Token], left: usize, right: usize) -> bool {
+    if left == right {
+        return false;
+    }
+    let (start, end) = if left < right {
+        (left + 1, right)
+    } else {
+        (right + 1, left)
+    };
+    tokens[start..end]
+        .iter()
+        .any(|token| token.text.eq_ignore_ascii_case("kuin"))
 }
 
 fn previous_word(tokens: &[Token], index: usize) -> Option<usize> {
