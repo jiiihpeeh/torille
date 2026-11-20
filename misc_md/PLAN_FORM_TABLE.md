@@ -408,18 +408,24 @@ growth is ~3.5–4.5 MB rather than 4.5–5.5 MB.
 2. **Head-1 walk — not worth it.** It is 43 builds / 15 ms on the fixture; the
    bound is a safety limit for names, not a hot path, and tightening it risks
    recall on exactly the words it exists for.
-3. **Trimmed verb stems — rejected on size.** Answering `(trimmed, ending)`
-   needs either the vowel run stored per entry or a table keyed by every raw
-   residue the runtime can strip. The second is the honest version and it means
-   recording every `(residue, ending)` pair for every form — ~30 M rows, well
-   past the 6 MB gate. The remaining trimmed verifies stay.
+3. **Trimmed verb stems — measured and rejected.** The clean version is to key
+   the table by `(prefix, remainder)` instead of `(prefix, ending)`: the
+   resolver already knows `word[cand.len()..]`, so `lukeneen` would be answered
+   at `luken` + `een` without any ending list. That was built and measured —
+   every form has ~3.8 prefixes that are stem-map keys of its lemma, so the
+   rows go from 3.37 M to **56.2 M** and the blob from 4.52 MB to **170 MB
+   gzip (662 MB raw)**, in an 18-minute generation. Far past the gate, so the
+   ending-keyed table stays and the remaining trimmed verifies stay with it.
 
 ### Where the pass is now
 
 `callgrind` on the feature build still shows `inflect_in_raw` at 50.6 % of
-instructions: the trimmed verb verifies, the 33 % of forms the table cannot
-name (derived layers, possessive-only stems), and compound paths. The three
-levers above are done or priced; what is left is the class-level `accepts`
-test from `PLAN_GRAMMAR_STYLE_PERF.md` §Phase 10, which removes a grid build
-rather than caching its result.
+instructions. The biggest remaining source is the vowel-trimmed verb verify:
+1,880 `emits_form` calls from `collect_bases_via_verb_stem_map` in the part-2
+profile, each a ~700–1,200 form paradigm. Answering it needs either the
+remainder-keyed table (170 MB, rejected above) or a verb `accepts` test — the
+class-level test from `PLAN_GRAMMAR_STYLE_PERF.md` §Phase 10 — which means
+restating `expand/verbs/utility.rs::paradigm` as data (stem × ending × tags)
+and driving it, in a 2,000-line file shared by 27 hand-written class modules.
+That is the only lever left that removes a build rather than caching it.
 
