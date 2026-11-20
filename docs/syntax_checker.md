@@ -355,3 +355,5 @@ A clause-by-clause comparison with the programmatic Finnish punctuation
 specification — including the missing main-clause, indirect-question, vocative,
 apposition and typography layers — is in
 [`../misc_md/REVIEW_PUNCTUATION_SPEC.md`](../misc_md/REVIEW_PUNCTUATION_SPEC.md).
+The staged implementation plan is
+[`../misc_md/PLAN_PUNCTUATION_SPEC.md`](../misc_md/PLAN_PUNCTUATION_SPEC.md).

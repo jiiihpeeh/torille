@@ -72,6 +72,9 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
 - `misc_md/PLAN_PLURAL_ONLY.md` — the engine-level plural-only plan: the
   per-lemma bit in the sanalista blob, standalone forms versus combining stems,
   the `Form::combining` role, and the compound-preservation gates.
+- `misc_md/PLAN_PUNCTUATION_SPEC.md` — the staged punctuation plan after the
+  specification review: indirect questions, vocatives, typography, the
+  coordination split and main-clause commas, relative openings and lists.
 
 ## Repository map
 
