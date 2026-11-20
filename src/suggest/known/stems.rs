@@ -192,11 +192,26 @@ fn find_base_via_verb_stem_map_static(
 pub(super) fn verb_stem_probe(lower: &str, stem: &str) -> Option<String> {
     use crate::expand::check_normal::STEM_BUCKETS_VERB;
     let trimmed = stem.trim_end_matches(crate::is_vowel);
+    // Only the raw residue is `stem + ending`, which is the key the table
+    // holds. The trimmed residue stands for `trimmed + vowels + ending`, so
+    // the table cannot answer for it and the verify must run.
+    let ending = &lower[stem.len()..];
     for cand in [stem, trimmed] {
         if cand.is_empty() || !STEM_BUCKETS_VERB.contains(cand) {
             continue;
         }
+        let table = if cand == stem {
+            crate::expand::form_table::bases(cand, ending)
+        } else {
+            None
+        };
         for base in STEM_BUCKETS_VERB.bases(cand) {
+            if let Some(listed) = &table {
+                if listed.contains(&base) {
+                    return Some(base.to_string());
+                }
+                continue;
+            }
             if let Some(b) =
                 find_base_via_verb_stem_map_static(lower, cand, base, PartOfSpeech::Verb)
             {

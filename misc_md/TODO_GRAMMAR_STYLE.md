@@ -789,9 +789,10 @@ Adjacent repetition is not always accidental:
   built on branch `form-table`
   ([`PLAN_FORM_TABLE.md`](PLAN_FORM_TABLE.md) §11): 4.52 MB gzip, parity clean,
   and with negative evidence (every split recorded) **31 %** off the cold pass
-  (1,167 → ~800 ms single-thread, 328 → 259 ms on four workers). All gates met;
-  it stays **off by default** behind `--features form-table` because 29.7 MB of
-  data segments is a download decision. The zero-byte alternative
+  (1,167 → 618 ms single-thread, 287 → 181 ms on four workers once the cheap
+  gate shares the table). All gates met; it stays **off by default** behind
+  `--features form-table` because 29.7 MB of data segments is a download
+  decision. The zero-byte alternative
   is the class-level `accepts` test, which requires
   `expand/verbs/utility.rs::paradigm` restated as data. Performance remains a
   separate engineering objective, not a rule-correctness gate.

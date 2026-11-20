@@ -482,7 +482,16 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
         if !STEM_BUCKETS_NOUN.contains(stem) {
             continue;
         }
+        // The exact table answers this split in both directions when it knows
+        // the stem; otherwise the verify below runs unchanged.
+        let table = crate::expand::form_table::bases(stem, ending);
         for base in STEM_BUCKETS_NOUN.bases(stem) {
+            if let Some(listed) = &table {
+                if listed.contains(&base) {
+                    return Some(base.to_string());
+                }
+                continue;
+            }
             if let Some(b) = find_base_via_stem_map_static(&lower, stem, base, PartOfSpeech::Noun) {
                 return Some(b);
             }

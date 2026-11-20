@@ -1244,9 +1244,11 @@ the table is no longer on the critical path for the ≤500 ms target. It has
 since been built on branch `form-table`: part 1 (positive cache) bought ~10 %,
 and part 2 (negative evidence, every split recorded) **31 %** — single-thread
 1,167 → ~800 ms, 4-worker 328 → 259 ms, diagnostics byte-identical, on a
-4.52 MB gzip / 29.7 MB raw blob. The gates in `PLAN_FORM_TABLE.md` §11 are met;
-the feature stays off by default because 29.7 MB of data segments is a download
-decision, not an engine one. The grouped encoding is still the right shape:
+4.52 MB gzip / 29.7 MB raw blob, and sharing the table with the cheap gate
+took it further: **618 ms single-thread and 181 ms on four workers** (−41 % and
+−37 %). The gates in `PLAN_FORM_TABLE.md` §11 are met; the feature stays off by
+default because 29.7 MB of data segments is a download decision, not an engine
+one. The grouped encoding is still the right shape:
 
 | option | bytes | engine saving |
 |---|---:|---:|

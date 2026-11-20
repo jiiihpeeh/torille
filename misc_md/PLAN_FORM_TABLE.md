@@ -321,6 +321,7 @@ paradigm. Part 2 makes absence a proof, and it moved the number from 10 % to
 | 4-worker | ≤ 260 ms | **259 ms**, from 328 (−21 %) |
 | parity | byte-identical | **0 of 1,147 surfaces differ**; 5 grammar / 14 style |
 | generator | — | 14.77 M forms, 2.71 M split, 3.37 M rows, 37 k spot-checked |
+| cheap gate | — | + **−41 %** single-thread (618 ms), **−37 %** on four (181 ms) |
 | staleness | miss ⇒ rejects | sampled test in `form_table.rs` + generator spot check |
 
 Three implementation findings, each of which was a real recall bug before it
@@ -398,11 +399,27 @@ growth is ~3.5–4.5 MB rather than 4.5–5.5 MB.
 
 ### Order after part 2
 
-1. **Cheap gate** — 599 builds, 486 failing, 220 ms. Give
-   `check_normal_fast` the same table (or make the morphology ladder and the
-   cheap gate share one base search) instead of a second static map.
-2. **Head-1 walk** — 43 builds, 15 ms, but it is the bound that makes unknown
-   words cost seconds on a page with many names.
-3. **Trimmed verb stems** — store the vowel run in the verb group so
-   `(trimmed, ending)` can be answered without the surface equal to the key.
+1. **Cheap gate — done.** `check_normal_with`'s noun strip loop and
+   `verb_stem_probe` consult the table per bucket candidate, exactly like the
+   morphology ladders, and skip `emits_form` when the stem is known. Measured
+   on the same fixture: single-thread **618 ms** (from ~800, and 1,047 without
+   the feature), four workers **181 ms** (from 259, 287 without). Diagnostics
+   still byte-identical (0 of 1,147 surfaces differ).
+2. **Head-1 walk — not worth it.** It is 43 builds / 15 ms on the fixture; the
+   bound is a safety limit for names, not a hot path, and tightening it risks
+   recall on exactly the words it exists for.
+3. **Trimmed verb stems — rejected on size.** Answering `(trimmed, ending)`
+   needs either the vowel run stored per entry or a table keyed by every raw
+   residue the runtime can strip. The second is the honest version and it means
+   recording every `(residue, ending)` pair for every form — ~30 M rows, well
+   past the 6 MB gate. The remaining trimmed verifies stay.
+
+### Where the pass is now
+
+`callgrind` on the feature build still shows `inflect_in_raw` at 50.6 % of
+instructions: the trimmed verb verifies, the 33 % of forms the table cannot
+name (derived layers, possessive-only stems), and compound paths. The three
+levers above are done or priced; what is left is the class-level `accepts`
+test from `PLAN_GRAMMAR_STYLE_PERF.md` §Phase 10, which removes a grid build
+rather than caching its result.
 
