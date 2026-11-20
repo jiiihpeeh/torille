@@ -11,6 +11,7 @@ mod lists;
 mod parenthetical;
 mod question;
 mod quote;
+mod vocative;
 
 use crate::sentence;
 use crate::syntax::SyntaxAnalysis;
@@ -41,6 +42,7 @@ pub(super) fn check_without_quote_with_contexts(
 ) -> Vec<SyntaxDiagnostic> {
     let mut diagnostics = lists::list_diagnostics(tokens, analysis);
     diagnostics.extend(comma::clause_diagnostics(tokens, analysis));
+    diagnostics.extend(vocative::vocative_diagnostics(tokens, analysis));
     diagnostics.extend(question::question_diagnostics(tokens, analysis));
     diagnostics.extend(parenthetical::parenthetical_diagnostics(
         tokens,

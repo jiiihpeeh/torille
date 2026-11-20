@@ -1,6 +1,7 @@
 //! Clause-boundary comma diagnostics.
 
 use crate::syntax::{Clause, SyntacticRole, SyntaxAnalysis};
+use crate::tags::Clitic;
 use crate::tokenise::Token;
 
 use super::super::analysis::{comma_between, first_word, is_finite, last_word};
@@ -23,6 +24,7 @@ pub(super) fn clause_diagnostics(
             out.extend(relative_comma(clause, tokens, analysis));
         }
     }
+    out.extend(indirect_question_comma(tokens, analysis));
     out.extend(extra_comma(tokens, analysis));
     out
 }
@@ -37,6 +39,215 @@ const PERSONAL_SUBJECTS: &[&str] = &["minä", "sinä", "hän", "me", "te", "he"]
 /// sanoivat`); `sen kun` is the fixed adverbial “kept on …”. `siten, että` is
 /// deliberately absent: it does take the comma.
 const NO_COMMA_PAIRS: &[(&str, &str)] = &[("niin", "että"), ("sen", "kun")];
+
+/// Verbs whose complement can be an indirect question.
+///
+/// This is a closed class of reporting and mental verbs, not a lexical comma
+/// trigger: the verb is the syntactic evidence that the following wh-clause is
+/// an embedded question rather than a relative clause. A relative clause has an
+/// antecedent and is excluded separately.
+const REPORTING_VERBS: &[&str] = &[
+    "ajatella",
+    "arvella",
+    "epäillä",
+    "huomata",
+    "ihmetellä",
+    "kertoa",
+    "kuulla",
+    "kysellä",
+    "kysyä",
+    "luulla",
+    "mainita",
+    "mietiskellä",
+    "miettiä",
+    "muistaa",
+    "muistella",
+    "myöntää",
+    "pohtia",
+    "sanoa",
+    "selittää",
+    "tiedustella",
+    "tietää",
+    "toivoa",
+    "uskoa",
+    "väittää",
+    "ymmärtää",
+];
+
+/// An indirect question is a clause, not a word: it needs a reporting or
+/// mental predicate in the host clause plus an interrogative opener in the
+/// embedded clause.
+fn indirect_question_comma(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
+    let mut out = cross_clause_indirect_questions(tokens, analysis);
+    out.extend(merged_indirect_questions(tokens, analysis));
+    out
+}
+
+/// `En tiedä missä hän asuu.` — the embedded question already has its own
+/// clause, so the missing comma sits at the clause boundary.
+fn cross_clause_indirect_questions(
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+) -> Vec<SyntaxDiagnostic> {
+    let mut out = Vec::new();
+    for (index, clause) in analysis.clauses.iter().enumerate() {
+        // A relative clause has an antecedent; its comma is the relative pair
+        // rule's job, and `Hän kertoi jotain mikä yllätti minut` must stay a
+        // relative clause rather than an indirect question.
+        if clause.antecedent.is_some() {
+            continue;
+        }
+        let Some(first) = first_word(clause, tokens) else {
+            continue;
+        };
+        if !is_indirect_opener(first, tokens, analysis) {
+            continue;
+        }
+        let Some(previous) = index
+            .checked_sub(1)
+            .and_then(|previous| analysis.clauses.get(previous))
+        else {
+            continue;
+        };
+        if !same_sentence(previous, clause, tokens, analysis)
+            || !reporting_predicate(previous, analysis)
+        {
+            continue;
+        }
+        let Some(before) = previous_word(tokens, first) else {
+            continue;
+        };
+        if clause_separator_between(tokens, before, first) {
+            continue;
+        }
+        out.push(indirect_question_missing(
+            tokens[before].end,
+            Severity::Error,
+            Confidence::Certain,
+        ));
+    }
+    out
+}
+
+/// `En tiedä milloin hän tulee.` / `Hän kysyi tulemmeko mukaan.` — the parser
+/// keeps the embedded question inside the host clause, so the boundary is
+/// inferred from the opener and the reporting predicate.
+fn merged_indirect_questions(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiagnostic> {
+    let mut out = Vec::new();
+    for clause in &analysis.clauses {
+        let Some(predicate) = clause.predicate else {
+            continue;
+        };
+        if !reporting_predicate(clause, analysis) {
+            continue;
+        }
+        let words: Vec<usize> = clause
+            .tokens
+            .clone()
+            .filter(|&index| tokens[index].is_word())
+            .collect();
+        for &word in words.iter().filter(|&&word| word > predicate) {
+            if !is_indirect_opener(word, tokens, analysis) {
+                continue;
+            }
+            // A `-ko`/`-kö` verb is the embedded predicate itself; a wh-opener
+            // needs a finite predicate later in the same clause.
+            let complete = if has_ko_clitic(word, analysis) {
+                words.iter().any(|&later| later > word)
+            } else {
+                words
+                    .iter()
+                    .any(|&later| later > word && is_finite(&analysis.tokens[later]))
+            };
+            if !complete {
+                continue;
+            }
+            let Some(before) = previous_word(tokens, word) else {
+                continue;
+            };
+            if clause_separator_between(tokens, before, word) {
+                break;
+            }
+            out.push(indirect_question_missing(
+                tokens[before].end,
+                Severity::Warning,
+                Confidence::Likely,
+            ));
+            break;
+        }
+    }
+    out
+}
+
+fn indirect_question_missing(
+    at: usize,
+    severity: Severity,
+    confidence: Confidence,
+) -> SyntaxDiagnostic {
+    let mut diagnostic = SyntaxDiagnostic::new(
+        DiagnosticKind::CommaMissing,
+        severity,
+        confidence,
+        at..at,
+        "indirect_question_comma",
+    );
+    diagnostic.corrections = vec![
+        Correction::new(vec![Edit::insertion(at, ",")], 0.0, "comma_missing")
+            .licensed_by(CorrectionLicense::Punctuation)
+            .with_confidence(confidence),
+    ];
+    diagnostic
+}
+
+fn reporting_predicate(clause: &Clause, analysis: &SyntaxAnalysis) -> bool {
+    clause.predicate.is_some_and(|predicate| {
+        analysis.tokens[predicate]
+            .lemmas
+            .iter()
+            .any(|lemma| REPORTING_VERBS.contains(&lemma.as_str()))
+    })
+}
+
+/// The wh-word or `-ko` verb that opens an indirect question.
+fn is_indirect_opener(index: usize, tokens: &[Token], analysis: &SyntaxAnalysis) -> bool {
+    let lower = tokens[index].text.to_lowercase();
+    if crate::syntax::INTERROGATIVE_SURFACES.contains(&lower.as_str()) {
+        return true;
+    }
+    if has_ko_clitic(index, analysis) && is_finite(&analysis.tokens[index]) {
+        return true;
+    }
+    // `kenet`/`keneksi` are not in the surface list, but their lemma is.
+    analysis.tokens[index]
+        .lemmas
+        .iter()
+        .any(|lemma| matches!(lemma.as_str(), "kuka" | "ken"))
+}
+
+fn has_ko_clitic(index: usize, analysis: &SyntaxAnalysis) -> bool {
+    analysis.tokens[index]
+        .readings
+        .iter()
+        .any(|reading| reading.clitic == Some(Clitic::Ko))
+}
+
+/// A comma, colon, semicolon or dash is already a boundary; do not add a
+/// second mark in front of the opener.
+fn clause_separator_between(tokens: &[Token], left: usize, right: usize) -> bool {
+    if left >= right {
+        return false;
+    }
+    tokens[left + 1..right]
+        .iter()
+        .filter(|token| !token.is_word())
+        .any(|token| {
+            token
+                .text
+                .chars()
+                .any(|character| matches!(character, ',' | ';' | ':' | '–' | '—'))
+                || token.text.contains("--")
+        })
+}
 
 /// `Minä, menen kotiin.`: a comma directly between a personal-pronoun subject
 /// and its finite predicate.

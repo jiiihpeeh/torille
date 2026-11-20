@@ -11,8 +11,8 @@ use crate::tags::{Case, Mood, Person};
 use crate::tokenise::Token;
 
 use super::analysis::{
-    candidate_number, clause_words, comma_between, is_marker, nominal_case,
-    nominal_or_numeral_pos,
+    candidate_number, clause_words, comma_between, is_imperative, is_marker, looks_like_address,
+    nominal_case, nominal_or_numeral_pos,
 };
 use super::correction;
 use super::diagnostic::{
@@ -331,6 +331,14 @@ fn argument(
         }
         if syntax.role == SyntacticRole::Subject
             && is_genuine_subject(clause, clause_index, index, predicate, analysis)
+        {
+            continue;
+        }
+        // An address after an imperative is not the verb's argument:
+        // `Tule tänne Pekka!` must not be rewritten as an illative complement.
+        if syntax.role == SyntacticRole::Unknown
+            && is_imperative(&analysis.tokens[predicate])
+            && looks_like_address(index, tokens, analysis)
         {
             continue;
         }

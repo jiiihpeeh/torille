@@ -464,6 +464,86 @@
       ]
     },
     {
+      "id": "indirect_question_wh",
+      "text": "En tiedä missä hän asuu.",
+      "diagnostics": [
+        {
+          "kind": "comma_missing",
+          "severity": "error",
+          "start": 9,
+          "end": 9,
+          "corrections": [","]
+        }
+      ]
+    },
+    {
+      "id": "indirect_question_ko",
+      "text": "Hän kysyi tulemmeko mukaan.",
+      "diagnostics": [
+        {
+          "kind": "comma_missing",
+          "severity": "warning",
+          "start": 10,
+          "end": 10,
+          "corrections": [","]
+        }
+      ]
+    },
+    {
+      "id": "indirect_question_already_punctuated",
+      "text": "En tiedä, missä hän asuu.",
+      "diagnostics": []
+    },
+    {
+      "id": "relative_clause_is_not_an_indirect_question",
+      "text": "Hän kertoi jotain mikä yllätti minut.",
+      "diagnostics": []
+    },
+    {
+      "id": "vocative_greeting",
+      "text": "Hei Maija!",
+      "diagnostics": [
+        {
+          "kind": "comma_missing",
+          "severity": "suggestion",
+          "start": 3,
+          "end": 3,
+          "corrections": [","]
+        }
+      ]
+    },
+    {
+      "id": "vocative_leading_address",
+      "text": "Maija tule tänne.",
+      "diagnostics": [
+        {
+          "kind": "comma_missing",
+          "severity": "suggestion",
+          "start": 5,
+          "end": 5,
+          "corrections": [","]
+        }
+      ]
+    },
+    {
+      "id": "vocative_trailing_address",
+      "text": "Tule Pekka!",
+      "diagnostics": [
+        {
+          "kind": "comma_missing",
+          "severity": "suggestion",
+          "start": 4,
+          "end": 4,
+          "corrections": [","]
+        }
+      ]
+    },
+    {
+      "id": "vocative_object_is_not_an_address",
+      "text": "Tapaa Pekka!",
+      "diagnostics": []
+    },
+    {
       "id": "rection_elative",
       "text": "Pidän sinä.",
       "diagnostics": [

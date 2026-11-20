@@ -1,0 +1,250 @@
+{
+  "_comment": "Audit matrix for the programmatic Finnish punctuation specification. Covered cases are asserted by tests/punctuation_spec.rs; gap cases are skipped until their phase lands, so the suite reports progress without going red.",
+  "cases": [
+    {
+      "id": "indirect_question_wh",
+      "phase": 1,
+      "status": "covered",
+      "text": "En tiedä missä hän asuu.",
+      "expect": { "rule": "indirect_question_comma", "start": 9 }
+    },
+    {
+      "id": "indirect_question_ko",
+      "phase": 1,
+      "status": "covered",
+      "text": "Hän kysyi tulemmeko mukaan.",
+      "expect": { "rule": "indirect_question_comma", "start": 10 }
+    },
+    {
+      "id": "indirect_question_imperative",
+      "phase": 1,
+      "status": "covered",
+      "text": "Kerro mitä tapahtui.",
+      "expect": { "rule": "indirect_question_comma", "start": 5 }
+    },
+    {
+      "id": "indirect_question_conditional",
+      "phase": 1,
+      "status": "covered",
+      "text": "Mietin pitäisikö minun lähteä.",
+      "expect": { "rule": "indirect_question_comma", "start": 6 }
+    },
+    {
+      "id": "indirect_question_already_punctuated",
+      "phase": 1,
+      "status": "covered",
+      "text": "En tiedä, missä hän asuu.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "relative_clause_is_not_an_indirect_question",
+      "phase": 1,
+      "status": "covered",
+      "text": "Hän kertoi jotain mikä yllätti minut.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "subordinate_etta",
+      "phase": 1,
+      "status": "covered",
+      "text": "Tiedän että hän tulee.",
+      "expect": { "rule": "comma_missing", "start": 7 }
+    },
+    {
+      "id": "subordinate_initial",
+      "phase": 1,
+      "status": "covered",
+      "text": "Kun tulin kotiin kaikki nukkuivat.",
+      "expect": { "rule": "comma_missing", "start": 23 }
+    },
+    {
+      "id": "vocative_greeting",
+      "phase": 2,
+      "status": "covered",
+      "text": "Hei Maija!",
+      "expect": { "rule": "vocative_comma", "start": 3 }
+    },
+    {
+      "id": "vocative_greeting_terve",
+      "phase": 2,
+      "status": "covered",
+      "text": "Terve Pekka!",
+      "expect": { "rule": "vocative_comma", "start": 5 }
+    },
+    {
+      "id": "vocative_greeting_kiitos",
+      "phase": 2,
+      "status": "covered",
+      "text": "Kiitos ystäväni.",
+      "expect": { "rule": "vocative_comma", "start": 6 }
+    },
+    {
+      "id": "vocative_greeting_good_day",
+      "phase": 2,
+      "status": "covered",
+      "text": "Hyvää huomenta kaikki.",
+      "expect": { "rule": "vocative_comma", "start": 16 }
+    },
+    {
+      "id": "vocative_leading_address",
+      "phase": 2,
+      "status": "covered",
+      "text": "Maija tule tänne.",
+      "expect": { "rule": "vocative_comma", "start": 5 }
+    },
+    {
+      "id": "vocative_trailing_address",
+      "phase": 2,
+      "status": "covered",
+      "text": "Tule Pekka!",
+      "expect": { "rule": "vocative_comma", "start": 4 }
+    },
+    {
+      "id": "vocative_object_is_not_an_address",
+      "phase": 2,
+      "status": "covered",
+      "text": "Tapaa Pekka!",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "vocative_already_punctuated",
+      "phase": 2,
+      "status": "covered",
+      "text": "Hei, Maija!",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "question_mark_direct",
+      "phase": 2,
+      "status": "covered",
+      "text": "Mitä kuuluu.",
+      "expect": { "rule": "question_mark_missing", "start": 12 }
+    },
+    {
+      "id": "shared_subject_no_comma",
+      "phase": 4,
+      "status": "covered",
+      "text": "Menin kotiin ja söin ruokaa.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "relative_pair_already_punctuated",
+      "phase": 5,
+      "status": "covered",
+      "text": "Mies, joka asuu tuossa talossa, on opettaja.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "relative_closing_already_punctuated",
+      "phase": 5,
+      "status": "covered",
+      "text": "Ostin kirjan, joka oli todella kiinnostava.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "comparison_kuin_no_comma",
+      "phase": 1,
+      "status": "covered",
+      "text": "Hän on nopeampi kuin minä.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "list_with_commas",
+      "phase": 6,
+      "status": "covered",
+      "text": "Tarvitsemme aikaa, rahaa ja osaamista.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "semicolon_between_clauses",
+      "phase": 7,
+      "status": "covered",
+      "text": "Hän lähti kotiin; minä jäin.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "decimal_comma_protected",
+      "phase": 0,
+      "status": "covered",
+      "text": "3,14",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "date_dots_protected",
+      "phase": 0,
+      "status": "covered",
+      "text": "20.11.2026",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "quotation_before_reporting_clause",
+      "phase": 7,
+      "status": "covered",
+      "text": "”Tulen huomenna”, hän sanoi.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "main_clause_ja",
+      "phase": 4,
+      "status": "gap",
+      "text": "Menin kotiin ja hän jäi töihin.",
+      "expect": { "rule": "main_clause_comma" }
+    },
+    {
+      "id": "main_clause_mutta",
+      "phase": 4,
+      "status": "gap",
+      "text": "Satoi mutta lähdimme ulos.",
+      "expect": { "rule": "main_clause_comma" }
+    },
+    {
+      "id": "main_clause_juxtaposition",
+      "phase": 4,
+      "status": "gap",
+      "text": "Hän soitti minä en vastannut.",
+      "expect": { "rule": "main_clause_comma" }
+    },
+    {
+      "id": "relative_opening",
+      "phase": 5,
+      "status": "gap",
+      "text": "Mies joka tuli eilen on opettaja.",
+      "expect": { "rule": "relative_comma_open" }
+    },
+    {
+      "id": "unseparated_list",
+      "phase": 6,
+      "status": "gap",
+      "text": "Ostin omenoita banaaneja ja päärynöitä.",
+      "expect": { "rule": "list_separator_missing" }
+    },
+    {
+      "id": "apposition",
+      "phase": 6,
+      "status": "gap",
+      "text": "Helsinki Suomen pääkaupunki sijaitsee etelässä.",
+      "expect": { "rule": "comma_missing" }
+    },
+    {
+      "id": "spacing_before_comma",
+      "phase": 3,
+      "status": "gap",
+      "text": "sana , toinen",
+      "expect": { "rule": "typography_spacing" }
+    },
+    {
+      "id": "spacing_after_comma",
+      "phase": 3,
+      "status": "gap",
+      "text": "sana,toinen",
+      "expect": { "rule": "typography_spacing" }
+    },
+    {
+      "id": "reporting_colon",
+      "phase": 7,
+      "status": "gap",
+      "text": "Hän sanoi: Tulen huomenna.",
+      "expect": { "rule": "colon_missing" }
+    }
+  ]
+}

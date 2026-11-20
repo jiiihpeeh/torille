@@ -74,13 +74,16 @@ fn main() -> ExitCode {
             .first()
             .map(|correction| correction.edits[0].replacement.as_str())
             .unwrap_or("-");
+        let expected = diagnostic.expected.as_deref().unwrap_or("-");
         println!(
-            "{} {}..{} {:?} -> {}",
+            "{} {} {}..{} {:?} -> {} [{}]",
+            diagnostic.rule_id.as_str(),
             diagnostic.kind.name(),
             start,
             end,
             &text[start..end],
-            correction
+            correction,
+            expected
         );
         println!("    {}", text[left..right].replace('\n', " "));
     }

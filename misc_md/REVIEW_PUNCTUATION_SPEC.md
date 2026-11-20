@@ -2,7 +2,9 @@
 
 Status: **review.** Reviewed at `6e91518` with the current `check_syntax` and
 the prose/corpus gates. This is a gap analysis; the implementation order is in
-[`PLAN_PUNCTUATION_SPEC.md`](PLAN_PUNCTUATION_SPEC.md). The specification's own priority is high precision; the checker is
+[`PLAN_PUNCTUATION_SPEC.md`](PLAN_PUNCTUATION_SPEC.md). Phases 1–2
+(indirect-question and vocative commas) have since landed; the matrix below
+still records the original gaps for the remaining phases. The specification's own priority is high precision; the checker is
 deliberately conservative, so most gaps below are **missing recall**, not wrong
 corrections.
 

@@ -201,6 +201,50 @@ pub(super) fn comma_between(tokens: &[Token], left: usize, right: usize) -> bool
         .any(|token| token.text.contains(','))
 }
 
+/// Is the token a finite affirmative imperative verb?
+///
+/// `Hän tulee` also has an imperative homonym reading on `tulee` in some
+/// paradigms, so the mood is not enough on its own: the caller pairs it with a
+/// structural signal (a direct address, an object, or an exclamation mark).
+pub(super) fn is_imperative(token: &TokenSyntax) -> bool {
+    token.readings.iter().any(|reading| {
+        reading.part_of_speech == Some(PartOfSpeech::Verb)
+            && reading.mood == Some(Mood::Imperative)
+            && reading.polarity == Polarity::Affirmative
+    })
+}
+
+/// A capitalised or possessive-marked nominal is how an address presents
+/// itself when the lexicon has no proper-name paradigm for it (`Maija`,
+/// `Pekka`). A finite predicate is never an address, and a personal pronoun is
+/// a subject or object rather than a form of address (`En pidä sinä` is a
+/// rection error, not a vocative).
+pub(super) fn looks_like_address(
+    index: usize,
+    tokens: &[Token],
+    analysis: &crate::syntax::SyntaxAnalysis,
+) -> bool {
+    const PERSONAL_PRONOUNS: &[&str] = &["minä", "sinä", "hän", "me", "te", "he"];
+
+    let syntax = &analysis.tokens[index];
+    if is_finite(syntax) || PERSONAL_PRONOUNS.contains(&tokens[index].text.to_lowercase().as_str())
+    {
+        return false;
+    }
+    if tokens[index].is_capitalised()
+        || syntax
+            .readings
+            .iter()
+            .any(|reading| reading.possessive.is_some())
+    {
+        return true;
+    }
+    syntax
+        .readings
+        .iter()
+        .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Pronoun))
+}
+
 /// Is the token at `index` inside an unclosed `()`/`[]`/`{}` pair?
 ///
 /// `start` is the clause's first token; scanning begins there so an opening

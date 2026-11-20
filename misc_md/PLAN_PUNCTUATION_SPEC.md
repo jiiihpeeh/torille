@@ -1,6 +1,6 @@
 # Punctuation plan: from the high-precision core to the specification
 
-Status: **proposed.** The baseline is `b1ac21e`; the review that motivates this
+Status: **phases 0–2 landed; phases 3–7 proposed.** The baseline is `b1ac21e`; the review that motivates this
 plan is [`REVIEW_PUNCTUATION_SPEC.md`](REVIEW_PUNCTUATION_SPEC.md). The checker
 is deliberately precision-first: a missing comma is cheaper than a wrong one.
 This plan closes the highest-value gaps in that order.
@@ -85,6 +85,11 @@ Every rule must name the syntactic evidence it used:
 
 ### Phase 0 — audit harness
 
+**Landed.** `tests/fixtures/punctuation_spec.json` records the specification
+matrix with `covered`/`gap` status; `tests/punctuation_spec.rs` asserts every
+covered rule id and insertion point and skips the gaps. The exact-output net
+stays `tests/fixtures/syntax_diagnostics.json`.
+
 - Add `tests/fixtures/punctuation_spec.json` with the specification's required
   positive, negative and ambiguous examples. Initially mark unimplemented
   cases as `gap` so the suite can report progress without failing.
@@ -96,6 +101,20 @@ Gate: the fixture parses, the baseline counts are recorded, and no existing
 test moves.
 
 ### Phase 1 — indirect-question comma
+
+**Landed** in `src/syntax_check/punctuation/comma.rs`.
+
+Two paths share `indirect_question_comma`:
+
+- a wh-clause the parser already segmented (`En tiedä missä hän asuu.`) is a
+  cross-clause comma;
+- a wh-opener or `-ko`/`-kö` verb merged into the host clause
+  (`En tiedä milloin hän tulee.`, `Hän kysyi tulemmeko mukaan.`) is inferred
+  from the reporting predicate and the opener.
+
+A relative clause is excluded by `Clause::antecedent`, so
+`Hän kertoi jotain mikä yllätti minut.` stays a relative clause. A cross-clause
+wh-clause is `Error`/`Certain`; the merged path is `Warning`/`Likely`.
 
 Implement `indirect_question_comma`:
 
@@ -116,6 +135,32 @@ Gate: positives fire; direct questions and reported speech with an existing
 comma stay quiet; prose suite unchanged.
 
 ### Phase 2 — vocative
+
+**Landed** in `src/syntax_check/punctuation/vocative.rs`.
+
+The rule covers the three positions the specification names:
+
+- sentence-initial greeting (`Hei Maija!`, `Terve Pekka!`, `Kiitos ystäväni.`,
+  `Hyvää huomenta, kaikki.`);
+- leading address before a second-person imperative (`Maija tule tänne.`,
+  `Pekka tule!`);
+- trailing address after one (`Tule Pekka!`, `Tule tänne Pekka.`).
+
+Guards that keep it precise:
+
+- only a second-person imperative counts; `Herra olkoon kanssanne` and
+  `Jumala johdattakoon` are third-person jussives;
+- a predicate with a finite indicative homonym is not an imperative
+  (`Kunta saa periä maksun`);
+- an adjective homonym is not an imperative (`Kaksi pieni lapsi.`);
+- a leading address must be a `Subject`/`Unknown` nominal, not an adverbial
+  (`Ajoneuvolla saa ...`);
+- a trailing address is a name (or `kaikki`), never a possessive object
+  (`näe minun käteni`) or an adposition complement (`ilman Bathsebaa`);
+- rection skips an `Unknown`-role address after an imperative, so
+  `Tule Pekka!` is not rewritten as an illative complement.
+
+The finding is `Suggestion`/`Likely`; the comma is not an error.
 
 Implement `vocative_comma` narrowly:
 

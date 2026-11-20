@@ -167,6 +167,8 @@ fn every_fixture_diagnostic_has_a_contract_entry() {
         ("clause_structure", "missing_predicate"),
         ("comma_missing", "comma_missing"),
         ("comma_missing", "parenthetical_comma"),
+        ("comma_missing", "indirect_question_comma"),
+        ("comma_missing", "vocative_comma"),
         ("comma_extra", "comma_extra"),
         ("comma_pair_unbalanced", "comma_pair_unbalanced"),
         ("question_mark_missing", "question_mark_missing"),

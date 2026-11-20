@@ -741,6 +741,18 @@ Adjacent repetition is not always accidental:
   Page-2000 has no `style_duplicate_word` findings.
   Area: `src/style_check/repetition.rs`.
 
+### Punctuation specification phases 1–2
+
+- [x] **Indirect-question and vocative commas — landed.**
+  `En tiedä missä hän asuu.` and `Hän kysyi tulemmeko mukaan.` get their
+  comma, with the relative-clause antecedent excluded. `Hei Maija!`,
+  `Maija tule tänne.` and `Tule Pekka!` get a suggestion-only vocative comma;
+  indicative/adjective homonyms, possessive objects, adposition complements
+  and third-person jussives stay quiet. The audit matrix is
+  `tests/fixtures/punctuation_spec.json`; the remaining phases (typography,
+  main-clause coordination, relative opening, lists, quotation/colon) are in
+  [`PLAN_PUNCTUATION_SPEC.md`](PLAN_PUNCTUATION_SPEC.md).
+
 ### Other P2 items
 
 - [x] **Grow the style tables carefully** — landed.

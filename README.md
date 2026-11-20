@@ -420,6 +420,12 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
 - [`misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md`](misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md) — the
   remaining grammar/syntax fixes: predicate-less phrases, relative closing
   commas, imperative connegative corrections and constituent views.
+- [`misc_md/REVIEW_PUNCTUATION_SPEC.md`](misc_md/REVIEW_PUNCTUATION_SPEC.md) — the
+  clause-by-clause gap analysis against the programmatic Finnish punctuation
+  specification.
+- [`misc_md/PLAN_PUNCTUATION_SPEC.md`](misc_md/PLAN_PUNCTUATION_SPEC.md) — the staged
+  punctuation plan; indirect-question and vocative commas landed, typography,
+  main-clause coordination, relative openings and lists remain.
 - [`misc_md/PLAN_GRAMMAR_SYNTAX_REFERENCE.md`](misc_md/PLAN_GRAMMAR_SYNTAX_REFERENCE.md) —
   the review-driven hardening plan for the grammar/syntax feature reference.
 - [`misc_md/PLAN_GRAMMAR_SYNTAX_LAYOUT.md`](misc_md/PLAN_GRAMMAR_SYNTAX_LAYOUT.md) —

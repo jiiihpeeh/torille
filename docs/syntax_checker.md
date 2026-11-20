@@ -55,7 +55,7 @@ the checker only when the user presses the grammar button.
 | `missing_argument` | an obligatory slot from `data/verb_arguments.csv` is absent | `Warning` |
 | `extra_argument` | a closed intransitive frame has an object | `Warning` |
 | `clause_structure` | a declarative clause has no finite predicate, or ends in a coordinator without a coordinated predicate | `Warning`, never a correction |
-| `comma_missing` | subordinate clause needs a comma; `esimerkiksi` needs a parenthetical pair; a `kuin` comparison boundary does **not** need one | `Error`, or `Suggestion` for the parenthetical |
+| `comma_missing` | subordinate clause needs a comma; an indirect question after a reporting/mental predicate; a vocative address; `esimerkiksi` needs a parenthetical pair; a `kuin` comparison boundary does **not** need one | `Error` for a subordinate or clear wh-clause, `Warning` for a merged `-ko` clause, `Suggestion` for a vocative or parenthetical |
 | `comma_extra` | a comma directly between a personal-pronoun subject and its finite predicate | `Warning` with a `Likely` removal |
 | `comma_pair_unbalanced` | an opened relative-clause comma pair is not closed | `Error` |
 | `question_mark_missing` | a clear direct question ends with `.` or no mark; a dash-interrupted or line-wrapped question gets no mark at the break, and a correlative relative or rhetorical conditional stays quiet | `Error` |
@@ -92,6 +92,14 @@ Ship fewer rules, not more guesses.
 - An unbalanced quote is a `Warning`; quote style and dialogue dashes are not
   corrected.
 - Parenthetical commas are suggestions, limited to a closed cue list.
+- An indirect question needs a reporting/mental predicate and an interrogative
+  opener (`En tiedä missä hän asuu.`). A relative clause with an antecedent is
+  never an indirect question, and a direct question stays quiet.
+- A vocative is suggestion-only. The rule recognises a sentence-initial
+  greeting, a leading address before a second-person imperative, and a trailing
+  address after one. A possessive object (`näe minun käteni`), an adposition
+  complement, an indicative homonym (`Kunta saa periä`) and a third-person
+  jussive (`Herra olkoon kanssanne`) are not addresses.
 - A final conjunction without a comma is never an error in Finnish.
 
 ## Evaluation
@@ -103,24 +111,28 @@ competing reading that must not win for ambiguous surfaces (`joka päivä`,
 `ilman`, `sen`, `sinut`, and the determiner/relative split).
 `tests/fixtures/prose/adjudicated.json` is the reviewed-prose gate: clean rows
 must stay quiet, true positives must match their kinds, and known false
-positives pin the current bugs so a fix has to move the row. As of 2026-11-19
-the prose fixture has 266 clean rows / 6,349 words, 2 true positives and 0 known
-false positives; `page-2000` is at 5 diagnostics.
+positives pin the current bugs so a fix has to move the row.
+`tests/fixtures/punctuation_spec.json` is the audit matrix for the programmatic
+Finnish punctuation specification: covered cases assert a rule id and insertion
+point, gap cases are skipped until their phase lands. As of 2026-11-20 the prose
+fixture has 266 clean rows / 6,349 words, 2 true positives and 0 known false
+positives; `page-2000` is at 3 diagnostics (two agreement, one document-end
+quote).
 
-Current baseline (2026-11-19):
+Current baseline (2026-11-20):
 
 ```text
 syntax_eval clean rows 154: 0 errors, 0 warnings, 0 suggestions
 syntax_eval cases 60: every emitted kind precision 1.00, recall 1.00
-syntax_diagnostics: 75 exact-output cases, 272 clean rows
+syntax_diagnostics: 83 exact-output cases, 275 clean rows
 prose: 266 clean rows / 6,349 words, 2 true positives, 0 known false positives
-page-2000: 5 diagnostics
+page-2000: 3 diagnostics
 ```
 
 Run both gates:
 
 ```bash
-cargo test --release -p torille --test syntax_check --test syntax_eval --test syntax_ambiguity --test syntax_prose
+cargo test --release -p torille --test syntax_check --test syntax_eval --test syntax_ambiguity --test syntax_prose --test punctuation_spec
 ```
 
 The evaluation test prints the per-kind table; the exact-output fixture checks
