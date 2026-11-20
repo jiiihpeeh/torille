@@ -163,7 +163,7 @@ The remaining scripts fall into four groups:
 - **Diagnostics** — `csvtool.py`, `run_wordlist.py`, `make_*.py`,
   `omorfi_harness.py`, `check_hyphenation_against_voikko.py`, `check_docs.py`.
 - **Corpus fetches** — `fetch_wiktionary.py`, `fetch_finnish_books.py`,
-  `rebuild_book_catalog.py`.
+  `fetch_lonnrot_books.py`, `rebuild_book_catalog.py`.
 
 ## Conventions
 

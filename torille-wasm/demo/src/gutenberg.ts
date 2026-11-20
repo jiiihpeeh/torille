@@ -1,12 +1,17 @@
-// Finnish Project Gutenberg books for the demo's reader panel.
+// Finnish public-domain books for the demo's reader panel: Project Gutenberg
+// plus Projekti Lönnrot.
 //
-// The corpus is downloaded once by `tools/fetch_finnish_books.py` into
-// `books/`: one UTF-8 `<id>.txt` per book plus `catalog.json`. The reader
-// fetches both from the demo server, same-origin -- no gutendex, no
-// gutenberg.org, no CORS, no `/proxy`.
+// The Gutenberg corpus is downloaded once by `tools/fetch_finnish_books.py`
+// into `books/`: one UTF-8 `<id>.txt` per book plus `catalog.json`. The
+// Lönnrot texts are staged by `tools/fetch_lonnrot_books.py` into
+// `books/lonnrot/` and merged into the same catalogue by
+// `tools/rebuild_book_catalog.py`. The reader fetches both from the demo
+// server, same-origin -- no gutendex, no gutenberg.org, no CORS, no proxy.
 //
 // Regenerate with:
 //   python3 tools/fetch_finnish_books.py
+//   python3 tools/fetch_lonnrot_books.py
+//   python3 tools/rebuild_book_catalog.py
 
 import { countWords } from './tokenize';
 
@@ -19,10 +24,13 @@ export interface Chapter {
   body: string;
 }
 
+export type BookSource = 'gutenberg' | 'lonnrot';
+
 export interface Book {
   id: number;
   title: string;
   author: string;
+  source: BookSource;
   chapters: Chapter[];
 }
 
@@ -30,15 +38,17 @@ export interface CatalogEntry {
   id: number;
   title: string;
   author: string;
+  source: BookSource;
 }
 
 /** Directory the downloader writes, relative to the served page. */
 export const BOOKS_DIR = 'books';
 /** The catalogue file the downloader writes. */
 export const CATALOG_URL = `${BOOKS_DIR}/catalog.json`;
-/** The UTF-8 text of book `id`. */
-export function bookTextUrl(id: number): string {
-  return `${BOOKS_DIR}/${id}.txt`;
+/** The UTF-8 text of a catalogue entry. */
+export function bookTextUrl(entry: Pick<CatalogEntry, 'id' | 'source'>): string {
+  const directory = entry.source === 'lonnrot' ? 'lonnrot/' : '';
+  return `${BOOKS_DIR}/${directory}${entry.id}.txt`;
 }
 
 /**
@@ -61,7 +71,8 @@ export async function loadCatalog(signal?: AbortSignal): Promise<CatalogEntry[]>
     if (!Number.isFinite(id)) continue;
     const title = String(raw?.title ?? '').trim();
     const author = String(raw?.author ?? '').trim();
-    out.push({ id, title: title || `(#${id})`, author });
+    const source: BookSource = raw?.source === 'lonnrot' ? 'lonnrot' : 'gutenberg';
+    out.push({ id, title: title || `(#${id})`, author, source });
   }
   return out;
 }
@@ -86,13 +97,16 @@ function fold(value: string): string {
 export function filterCatalog(
   catalog: CatalogEntry[],
   query: string,
+  source: BookSource | 'all' = 'all',
 ): CatalogEntry[] {
   const raw = query.trim();
-  if (raw.length === 0) return catalog;
+  const bySource =
+    source === 'all' ? catalog : catalog.filter((c) => c.source === source);
+  if (raw.length === 0) return bySource;
   const q = fold(raw);
   const idQuery = raw.startsWith('#') ? raw.slice(1) : raw;
   const isId = /^\d+$/.test(idQuery);
-  return catalog.filter(
+  return bySource.filter(
     (c) =>
       fold(c.title).includes(q) ||
       fold(c.author).includes(q) ||
@@ -108,11 +122,14 @@ export async function loadBook(
   entry: CatalogEntry,
   signal?: AbortSignal,
 ): Promise<Book> {
-  const url = bookTextUrl(entry.id);
+  const url = bookTextUrl(entry);
   const response = await fetch(url, { signal });
   if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`);
   const raw = await response.text();
-  const body = stripBoilerplate(raw);
+  const body =
+    entry.source === 'lonnrot'
+      ? stripLonnrotNotice(stripBoilerplate(raw))
+      : stripBoilerplate(raw);
   // Chapters first, then pages: a chapter within the word budget stays a
   // single entry, a long one becomes several consecutive entries
   // ("LUKU I — osa 2/5"). `paginateChapter` copies the source chapter's
@@ -124,8 +141,22 @@ export async function loadBook(
     id: entry.id,
     title: entry.title,
     author: entry.author,
+    source: entry.source,
     chapters,
   };
+}
+
+/**
+ * Strip the Projekti Lönnrot notice and its production credits.
+ *
+ * The fetch script removes the leading `Tämän e-kirjan ovat tuottaneet …`
+ * block, but a hand-dropped text may still have it.
+ */
+function stripLonnrotNotice(text: string): string {
+  const marker = text.indexOf('Tämän e-kirjan ovat tuottaneet');
+  if (marker < 0) return text;
+  const next = text.indexOf('\n\n', marker);
+  return next < 0 ? text : text.slice(next + 2).replace(/^\s+/, '');
 }
 
 /**

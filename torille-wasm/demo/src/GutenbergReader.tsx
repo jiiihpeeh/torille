@@ -52,6 +52,7 @@ import {
 import type { DiagnosticSpan } from '../../protocol.js';
 import {
   Book,
+  BookSource,
   CatalogEntry,
   Chapter,
   filterCatalog,
@@ -122,10 +123,11 @@ export function GutenbergReader() {
 
   // Local filter + sort over the catalogue (title / author).
   const [filterQuery, setFilterQuery] = createSignal<string>('');
+  const [sourceFilter, setSourceFilter] = createSignal<BookSource | 'all'>('all');
   const [sortBy, setSortBy] = createSignal<SortKey>('id');
   const [page, setPage] = createSignal<number>(1);
   const sortedResults = createMemo<CatalogEntry[]>(() => {
-    const list = filterCatalog(catalog(), filterQuery()).slice();
+    const list = filterCatalog(catalog(), filterQuery(), sourceFilter()).slice();
     list.sort((a, b) => {
       switch (sortBy()) {
         case 'author':
@@ -155,6 +157,7 @@ export function GutenbergReader() {
   // keeps the page valid when a filter shrinks the result set.
   createEffect(() => {
     filterQuery();
+    sourceFilter();
     sortBy();
     setPage(1);
   });
@@ -615,18 +618,21 @@ export function GutenbergReader() {
   return (
     <div class="gutenberg-reader">
       <h2>
-        Project Gutenberg
+        Gutenberg &amp; Projekti Lönnrot
         <Show when={book()}>
           {' — '}
           <em>{book()!.title}</em>
           {' '}
           <small>{book()!.author}</small>
+          <span class="source-pill">
+            {book()!.source === 'lonnrot' ? 'Projekti Lönnrot' : 'Gutenberg'}
+          </span>
         </Show>
       </h2>
       <p class="subheading">
-        Editable chapter-by-chapter reader. Long chapters are split into
-        pages; the chapter menu lists each page. Spell-check + click-to-suggest
-        work as in the other panels.
+        Editable chapter-by-chapter reader over both public-domain corpora.
+        Long chapters are split into pages; the chapter menu lists each page.
+        Spell-check + click-to-suggest work as in the other panels.
       </p>
 
       <section class="book-picker" aria-label="Kirjavalinta">
@@ -670,6 +676,19 @@ export function GutenbergReader() {
                 ×
               </button>
             </Show>
+          </label>
+          <label class="sort-field">
+            <span>Lähde</span>
+            <select
+              value={sourceFilter()}
+              onChange={(e) =>
+                setSourceFilter(e.currentTarget.value as BookSource | 'all')
+              }
+            >
+              <option value="all">Kaikki</option>
+              <option value="gutenberg">Project Gutenberg</option>
+              <option value="lonnrot">Projekti Lönnrot</option>
+            </select>
           </label>
           <label class="sort-field">
             <span>Järjestä</span>
@@ -729,7 +748,9 @@ export function GutenbergReader() {
                     <span class="r-author">
                       {c.author.length > 0 ? c.author : 'Tuntematon'}
                     </span>
-                    <span class="r-id">#{c.id}</span>
+                    <span class="r-id">
+                      {c.source === 'lonnrot' ? 'Lönnrot · ' : ''}#{c.id}
+                    </span>
                   </span>
                   <Show when={c.id === bookId()}>
                     <span class="r-status">Valittu</span>

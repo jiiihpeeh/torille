@@ -104,6 +104,10 @@ elif [ ! -f "${SCRIPT_DIR}/books/catalog.json" ]; then
   echo "      Run:  python3 tools/fetch_finnish_books.py"
   echo "      (a few GB of text; the reader shows nothing until then.)"
 fi
+if [ ! -d "${SCRIPT_DIR}/books/lonnrot" ]; then
+  echo "note: Projekti Lönnrot texts are not staged yet."
+  echo "      Run:  python3 tools/fetch_lonnrot_books.py"
+fi
 
 echo ""
 echo "torille-wasm demo:  http://localhost:${PORT}/"

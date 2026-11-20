@@ -3,7 +3,8 @@
 """Rebuild the demo's Gutenberg catalogue from the local text files.
 
 `tools/fetch_finnish_books.py` writes `catalog.json` from the gutendex
-listing. That is correct on a fresh download, but it cannot see texts that
+listing, and `tools/fetch_lonnrot_books.py` writes the Projekti Lönnrot
+entries under `books/lonnrot/`; this script merges both. That is correct on a fresh download, but it cannot see texts that
 are already on disk after a partial fetch, and a hand-edited catalogue can
 easily fall behind the corpus. This script scans every `books/<id>.txt`,
 reads the Project Gutenberg header, and writes an entry for each text:
@@ -40,15 +41,21 @@ START_RE = re.compile(r"\*\*\*\s*START OF (THE|THIS)?\s*PROJECT GUTENBERG", re.I
 
 
 class Entry:
-    __slots__ = ("id", "title", "author")
+    __slots__ = ("id", "title", "author", "source")
 
-    def __init__(self, book_id: int, title: str, author: str) -> None:
+    def __init__(self, book_id: int, title: str, author: str, source: str = "gutenberg") -> None:
         self.id = book_id
         self.title = title
         self.author = author
+        self.source = source
 
     def as_dict(self) -> dict:
-        return {"id": self.id, "title": self.title, "author": self.author}
+        return {
+            "id": self.id,
+            "title": self.title,
+            "author": self.author,
+            "source": self.source,
+        }
 
 
 def header_of(text: str) -> str:
@@ -125,6 +132,32 @@ def collect(books_dir: Path) -> list[Entry]:
     return entries
 
 
+def collect_lonnrot(books_dir: Path) -> list[Entry]:
+    """The catalogue `fetch_lonnrot_books.py` writes beside its texts."""
+    path = books_dir / "lonnrot" / "catalog.json"
+    if not path.exists():
+        return []
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise SystemExit(f"rebuild-book-catalog: {path}: {error}")
+    if not isinstance(data, list):
+        raise SystemExit(f"rebuild-book-catalog: {path}: not an array")
+    entries = []
+    for raw in data:
+        if not isinstance(raw, dict):
+            continue
+        try:
+            book_id = int(raw.get("id"))
+        except (TypeError, ValueError):
+            continue
+        title = str(raw.get("title", "")).strip() or f"Kirja #{book_id}"
+        author = str(raw.get("author", "")).strip() or "Tuntematon"
+        entries.append(Entry(book_id, title, author, "lonnrot"))
+    entries.sort(key=lambda entry: entry.id)
+    return entries
+
+
 def write_catalog(books_dir: Path, entries: list[Entry]) -> Path:
     path = books_dir / "catalog.json"
     payload = json.dumps([entry.as_dict() for entry in entries], ensure_ascii=False, indent=2)
@@ -150,7 +183,7 @@ def main() -> int:
         print(f"rebuild-book-catalog: no such directory: {books_dir}", file=sys.stderr)
         return 2
 
-    entries = collect(books_dir)
+    entries = collect(books_dir) + collect_lonnrot(books_dir)
     if not entries:
         print(f"rebuild-book-catalog: no <id>.txt files in {books_dir}", file=sys.stderr)
         return 2
