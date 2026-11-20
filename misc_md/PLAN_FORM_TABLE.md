@@ -404,7 +404,13 @@ growth is ~3.5–4.5 MB rather than 4.5–5.5 MB.
    morphology ladders, and skip `emits_form` when the stem is known. Measured
    on the same fixture: single-thread **618 ms** (from ~800, and 1,047 without
    the feature), four workers **181 ms** (from 259, 287 without). Diagnostics
-   still byte-identical (0 of 1,147 surfaces differ).
+   still byte-identical (0 of 1,147 surfaces differ). An A/B over 66,763
+   sampled forms from `data/all_forms.csv` checks that this cost no recall:
+   **no form the old gate knew became unknown**, two that were unknown are now
+   known (`vol-au-venteinemme`, `AVIeinemme`), and of the 399 readings that
+   changed where the CSV carries the form's own lemma, the table's base is that
+   lemma in **394** cases where the old base was not. The change is a
+   correction, not only a speed-up.
 2. **Head-1 walk — not worth it.** It is 43 builds / 15 ms on the fixture; the
    bound is a safety limit for names, not a hot path, and tightening it risks
    recall on exactly the words it exists for.
