@@ -201,6 +201,34 @@ pub(super) fn comma_between(tokens: &[Token], left: usize, right: usize) -> bool
         .any(|token| token.text.contains(','))
 }
 
+/// Is there already a clause boundary between two token indices?
+///
+/// A comma, semicolon, colon or dash all mark a boundary. The comma rules use
+/// this to avoid inserting a second mark: without the semicolon the subordinate
+/// rule would write a comma before `;` (`Kun tulin kotiin; kaikki
+/// nukkuivat.`). This is a boundary test, not a claim that the mark is the
+/// right one; the semicolon rules decide that separately.
+pub(super) fn boundary_between(tokens: &[Token], left: usize, right: usize) -> bool {
+    if left == right {
+        return false;
+    }
+    let (start, end) = if left < right {
+        (left + 1, right)
+    } else {
+        (right + 1, left)
+    };
+    tokens[start..end]
+        .iter()
+        .filter(|token| !token.is_word())
+        .any(|token| {
+            token
+                .text
+                .chars()
+                .any(|character| matches!(character, ',' | ';' | ':' | '–' | '—'))
+                || token.text.contains("--")
+        })
+}
+
 /// Is the token a finite affirmative imperative verb?
 ///
 /// `Hän tulee` also has an imperative homonym reading on `tulee` in some

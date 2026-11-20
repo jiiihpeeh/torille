@@ -755,14 +755,15 @@ Adjacent repetition is not always accidental:
 
 ### Semicolon slice
 
-- [ ] **Review and plan landed; implementation pending.**
-  A valid main-main semicolon is already accepted, but the comma layer inserts
-  a comma before `;` at a subordinate boundary (`Kun tulin kotiin; kaikki
-  nukkuivat.` → `,;`), and the list/typography layers have no semicolon model.
-  The review is [`REVIEW_SEMICOLON.md`](REVIEW_SEMICOLON.md); the phased plan
-  is [`PLAN_SEMICOLON.md`](PLAN_SEMICOLON.md). Phase 1 is the boundary fix,
-  Phase 2 the suggestion-only `SemicolonMisuse` rules, Phase 3 semicolon-aware
-  lists, Phase 4 the separate typography pass.
+- [x] **Phase 0–1 landed: audit fixture and boundary fix.**
+  A valid main-main semicolon is accepted, and the comma layer no longer writes
+  `,;` at a subordinate boundary (`Kun tulin kotiin; kaikki nukkuivat.` is
+  quiet). `tests/fixtures/semicolon_spec.json` + `tests/semicolon_spec.rs`
+  record the FI-SEM matrix. The review is
+  [`REVIEW_SEMICOLON.md`](REVIEW_SEMICOLON.md); the phased plan is
+  [`PLAN_SEMICOLON.md`](PLAN_SEMICOLON.md). Remaining: Phase 2 suggestion-only
+  `SemicolonMisuse` rules, Phase 3 semicolon-aware lists and the agreement
+  guard, Phase 4 the separate typography pass.
 
 ### Other P2 items
 

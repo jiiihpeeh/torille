@@ -4,7 +4,7 @@ use crate::syntax::{Clause, SyntacticRole, SyntaxAnalysis};
 use crate::tags::Clitic;
 use crate::tokenise::Token;
 
-use super::super::analysis::{comma_between, first_word, is_finite, last_word};
+use super::super::analysis::{boundary_between, comma_between, first_word, is_finite, last_word};
 use super::super::diagnostic::{
     Confidence, Correction, CorrectionLicense, DiagnosticKind, Edit, Severity, SyntaxDiagnostic,
 };
@@ -117,7 +117,7 @@ fn cross_clause_indirect_questions(
         let Some(before) = previous_word(tokens, first) else {
             continue;
         };
-        if clause_separator_between(tokens, before, first) {
+        if boundary_between(tokens, before, first) {
             continue;
         }
         out.push(indirect_question_missing(
@@ -165,7 +165,7 @@ fn merged_indirect_questions(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec
             let Some(before) = previous_word(tokens, word) else {
                 continue;
             };
-            if clause_separator_between(tokens, before, word) {
+            if boundary_between(tokens, before, word) {
                 break;
             }
             out.push(indirect_question_missing(
@@ -229,24 +229,6 @@ fn has_ko_clitic(index: usize, analysis: &SyntaxAnalysis) -> bool {
         .readings
         .iter()
         .any(|reading| reading.clitic == Some(Clitic::Ko))
-}
-
-/// A comma, colon, semicolon or dash is already a boundary; do not add a
-/// second mark in front of the opener.
-fn clause_separator_between(tokens: &[Token], left: usize, right: usize) -> bool {
-    if left >= right {
-        return false;
-    }
-    tokens[left + 1..right]
-        .iter()
-        .filter(|token| !token.is_word())
-        .any(|token| {
-            token
-                .text
-                .chars()
-                .any(|character| matches!(character, ',' | ';' | ':' | '–' | '—'))
-                || token.text.contains("--")
-        })
 }
 
 /// `Minä, menen kotiin.`: a comma directly between a personal-pronoun subject
@@ -328,8 +310,7 @@ fn subordinate_comma(
             |index: usize| matches!(tokens[index].text.to_lowercase().as_str(), "kun" | "jos");
         let marked = |index: usize| {
             previous_word(tokens, index).is_some_and(|previous| {
-                comma_between(tokens, previous, index)
-                    || dash_between(tokens, previous, index)
+                boundary_between(tokens, previous, index)
                     || tokens[previous].text.eq_ignore_ascii_case("ja")
             })
         };
@@ -350,8 +331,7 @@ fn subordinate_comma(
             if boundary_needs_comma
                 && !is_no_comma_pair(tokens, left, right)
                 && !comparison_kuin_between(tokens, left, right)
-                && !comma_between(tokens, left, right)
-                && !dash_between(tokens, left, right)
+                && !boundary_between(tokens, left, right)
             {
                 out.push(comma_missing(
                     tokens[left].end,
@@ -366,8 +346,7 @@ fn subordinate_comma(
         && clause_kind(next, tokens, analysis) == ClauseKind::Main
         && !is_no_comma_pair(tokens, left, right)
         && !comparison_kuin_between(tokens, left, right)
-        && !comma_between(tokens, left, right)
-        && !dash_between(tokens, left, right)
+        && !boundary_between(tokens, left, right)
     {
         out.push(comma_missing(
             tokens[left].end,
@@ -386,10 +365,9 @@ fn subordinate_comma(
         // (`Kun se aamu valkeni, jolloin …`, `..., sen kun Anni vain kertoi,
         // koko ajan …`). The merged-subordinate path must not add another.
         && !comparison_kuin_between(tokens, previous, main)
-        && !comma_between(tokens, previous, main)
+        && !boundary_between(tokens, previous, main)
         && let Some(before) = previous_word(tokens, main)
-        && !comma_between(tokens, before, main)
-        && !dash_between(tokens, before, main)
+        && !boundary_between(tokens, before, main)
     {
         out.push(comma_missing(
             tokens[before].end,
@@ -431,8 +409,7 @@ fn relative_comma(
             analysis.tokens[before].role,
             SyntacticRole::Predicate | SyntacticRole::Auxiliary
         )
-        && !comma_between(tokens, before, first_predicate)
-        && !dash_between(tokens, before, first_predicate)
+        && !boundary_between(tokens, before, first_predicate)
         && !line_break_between(tokens, before, first_predicate)
     {
         return vec![comma_missing(
@@ -451,32 +428,13 @@ fn relative_comma(
     let Some(before) = previous_word(tokens, host) else {
         return Vec::new();
     };
-    if comma_between(tokens, before, host) {
+    if boundary_between(tokens, before, host) {
         return Vec::new();
     }
     vec![comma_missing(
         tokens[before].end,
         DiagnosticKind::CommaPairUnbalanced,
     )]
-}
-
-/// A dash is a clause boundary in the same places a comma is; do not ask for a
-/// comma after one.
-fn dash_between(tokens: &[Token], left: usize, right: usize) -> bool {
-    if left == right {
-        return false;
-    }
-    let (start, end) = if left < right {
-        (left + 1, right)
-    } else {
-        (right + 1, left)
-    };
-    tokens[start..end]
-        .iter()
-        .filter(|token| !token.is_word())
-        .any(|token| {
-            token.text.contains("--") || token.text.contains('—') || token.text.contains('–')
-        })
 }
 
 fn line_break_between(tokens: &[Token], left: usize, right: usize) -> bool {

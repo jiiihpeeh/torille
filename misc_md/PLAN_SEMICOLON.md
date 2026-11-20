@@ -1,6 +1,6 @@
 # Semicolon plan: from a scanning boundary to a precision-first rule
 
-Status: **proposed.** Baseline `a80e616`. The review that motivates this plan
+Status: **Phase 0–1 landed; Phases 2–5 proposed.** Baseline `a80e616`; Phase 1 landed after the review. The review that motivates this plan
 is [`REVIEW_SEMICOLON.md`](REVIEW_SEMICOLON.md); the broader punctuation plan is
 [`PLAN_PUNCTUATION_SPEC.md`](PLAN_PUNCTUATION_SPEC.md).
 
@@ -83,6 +83,8 @@ Add `DiagnosticKind::SemicolonMisuse` with distinct rule ids:
 - `semicolon_subordinate` — replace `;` with `,`;
 - `semicolon_coordination` — replace `;` with `,` between coordinated
   sentence elements;
+- `semicolon_simple_list` — replace each `;` with `,` in a short parallel
+  list;
 - `semicolon_phrase` — delete `;` (and the following space when present);
 - `semicolon_terminal` — replace `;` with `.`.
 
@@ -122,8 +124,8 @@ behaviour is documented.
 - `lists.rs` runs comma-only checks (`duplicate`, `comma before conjunction`,
   `introducer comma`) only when the separator at that position is a comma.
 - A semicolon-separated simple list of three or more short, parallel items
-  gets one `Suggestion` correction that replaces each `;` with `,`. Do not add
-  `ja` and do not change an item's internal commas.
+  gets one `semicolon_simple_list` `Suggestion` correction that replaces each
+  `;` with `,`. Do not add `ja` and do not change an item's internal commas.
 - A complex list with an internal comma in at least one item stays quiet: the
   semicolon hierarchy is the correct reading.
 - `agreement.rs::check_complements` skips a complement that is a list item.
@@ -154,21 +156,29 @@ must live in the typography pass rather than in `Token`.
 
 ### Phase 0 — audit fixture
 
-- Add `tests/fixtures/semicolon_spec.json` with FI-SEM-001 … FI-SEM-015 and
-  `covered`/`gap` status.
-- Add `tests/semicolon_spec.rs` to assert the covered rule id/span and skip the
-  gaps, mirroring `tests/punctuation_spec.rs`.
-- Record the seven clean-corpus semicolons as clean rows.
+**Landed.** `tests/fixtures/semicolon_spec.json` records FI-SEM-001 …
+FI-SEM-015 with `covered`/`gap` status; `tests/semicolon_spec.rs` asserts a
+covered rule/span, the absence of a named rule (the Phase 1 boundary fix), or
+complete quiet, and skips the gaps. The seven clean-corpus semicolons are
+covered rows.
 
 Gate: fixture parses; no runtime change; baseline counts recorded.
 
 ### Phase 1 — stop the comma-before-semicolon defect
 
-- Add `analysis::boundary_between` and use it in `subordinate_comma`,
-  `relative_comma`, `extra_comma` and the list/comma rules that ask “is there
-  already a boundary?”.
-- Keep `clause_separator_between` (the indirect-question helper) or fold it
-  into the shared predicate.
+**Landed.** `analysis::boundary_between` now treats comma, semicolon, colon and
+dash as an existing clause boundary. `subordinate_comma`, the relative closing
+comma and the indirect-question rule use it, so no comma is written before
+`;`. `tests/fixtures/syntax_diagnostics.json` pins
+`Kun tulin kotiin; kaikki nukkuivat.`, `Hän sanoi; että hän tulee.`, `Hän tuli;
+koska satoi.` and the main-main/parenthetical rows as quiet.
+
+- Add `analysis::boundary_between` and use it wherever a rule asks “is there
+  already a boundary?” before inserting a comma (`subordinate_comma`, the
+  relative closing comma, the indirect-question rule). Keep comma-only scans
+  (`extra_comma`, duplicate-list separators) comma-specific.
+- Fold the indirect-question helper `clause_separator_between` into the shared
+  predicate.
 
 Tests:
 

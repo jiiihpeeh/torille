@@ -438,6 +438,31 @@
       ]
     },
     {
+      "id": "semicolon_before_initial_subordinate",
+      "text": "Kun tulin kotiin; kaikki nukkuivat.",
+      "diagnostics": []
+    },
+    {
+      "id": "semicolon_before_subordinate_etta",
+      "text": "Hän sanoi; että hän tulee.",
+      "diagnostics": []
+    },
+    {
+      "id": "semicolon_before_causal_subordinate",
+      "text": "Hän tuli; koska satoi.",
+      "diagnostics": []
+    },
+    {
+      "id": "semicolon_between_main_clauses",
+      "text": "Hän tuli; minä lähdin.",
+      "diagnostics": []
+    },
+    {
+      "id": "semicolon_inside_parenthetical",
+      "text": "Hän tuli (nopeasti; hiljaa) kotiin.",
+      "diagnostics": []
+    },
+    {
       "id": "relative_comma_pair",
       "text": "Koira, joka nukkuu sohvalla on minun.",
       "diagnostics": [

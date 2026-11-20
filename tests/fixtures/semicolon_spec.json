@@ -1,0 +1,205 @@
+{
+  "_comment": "Audit matrix for the programmatic Finnish semicolon specification (FI-SEM-001..FI-SEM-015). Covered cases are asserted by tests/semicolon_spec.rs; gap cases are skipped until their phase lands. `absent_rule` pins the Phase 1 boundary fix without pinning the eventual SemicolonMisuse rule.",
+  "cases": [
+    {
+      "id": "fi_sem_001_independent_clauses",
+      "rule": "FI-SEM-001",
+      "phase": 1,
+      "status": "covered",
+      "text": "Ulkona satoi voimakkaasti; päätimme jäädä kotiin.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "fi_sem_002_without_conjunction",
+      "rule": "FI-SEM-002",
+      "phase": 1,
+      "status": "covered",
+      "text": "Minä lähdin kotiin; hän jäi toimistolle.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "fi_sem_003_complex_list_stylised",
+      "rule": "FI-SEM-003",
+      "phase": 3,
+      "status": "covered",
+      "text": "Kokoukseen osallistuivat Virtanen, toimitusjohtaja; Laine, projektipäällikkö; Korhonen, talousjohtaja.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "fi_sem_003_complex_list_names",
+      "rule": "FI-SEM-003",
+      "phase": 3,
+      "status": "gap",
+      "text": "Osallistujat olivat Virtanen, Maija; Laine, Pekka; ja Korhonen, Anna.",
+      "expect": { "absent_rule": "predicative_agreement" }
+    },
+    {
+      "id": "fi_sem_004_long_enumeration",
+      "rule": "FI-SEM-004",
+      "phase": 1,
+      "status": "covered",
+      "text": "Ensimmäinen ryhmä vastasi suunnittelusta ja aikataulutuksesta; toinen ryhmä vastasi toteutuksesta ja testauksesta; kolmas ryhmä huolehti dokumentoinnista.",
+      "expect": { "absent_rule": "comma_missing" }
+    },
+    {
+      "id": "fi_sem_005_contrast",
+      "rule": "FI-SEM-005",
+      "phase": 1,
+      "status": "covered",
+      "text": "Hän piti suunnitelmaa hyvänä; minä en ollut samaa mieltä.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "fi_sem_006_explanation",
+      "rule": "FI-SEM-006",
+      "phase": 1,
+      "status": "covered",
+      "text": "Hänellä oli yksi tavoite; hän halusi voittaa.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "fi_sem_007_consequence",
+      "rule": "FI-SEM-007",
+      "phase": 1,
+      "status": "covered",
+      "text": "Kaikki testit epäonnistuivat; järjestelmä ei ollut valmis julkaistavaksi.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "fi_sem_008_main_subordinate",
+      "rule": "FI-SEM-008",
+      "phase": 1,
+      "status": "covered",
+      "text": "Tiedän; että hän tulee.",
+      "expect": { "absent_rule": "comma_missing" }
+    },
+    {
+      "id": "fi_sem_008_initial_subordinate",
+      "rule": "FI-SEM-008",
+      "phase": 1,
+      "status": "covered",
+      "text": "Kun tulin kotiin; kaikki nukkuivat.",
+      "expect": { "absent_rule": "comma_missing" }
+    },
+    {
+      "id": "fi_sem_008_relative_clause",
+      "rule": "FI-SEM-008",
+      "phase": 1,
+      "status": "covered",
+      "text": "Koira, joka nukkuu; on minun.",
+      "expect": { "absent_rule": "comma_missing" }
+    },
+    {
+      "id": "fi_sem_009_simple_list",
+      "rule": "FI-SEM-009",
+      "phase": 3,
+      "status": "gap",
+      "text": "Ostin omenoita; banaaneja; appelsiineja.",
+      "expect": { "rule": "semicolon_simple_list" }
+    },
+    {
+      "id": "fi_sem_010_subject_predicate",
+      "rule": "FI-SEM-010",
+      "phase": 2,
+      "status": "gap",
+      "text": "Opiskelijat; valmistautuivat kokeeseen.",
+      "expect": { "rule": "semicolon_phrase" }
+    },
+    {
+      "id": "fi_sem_011_verb_object",
+      "rule": "FI-SEM-011",
+      "phase": 2,
+      "status": "gap",
+      "text": "Hän osti; uuden auton.",
+      "expect": { "rule": "semicolon_phrase" }
+    },
+    {
+      "id": "fi_sem_011_verb_complement",
+      "rule": "FI-SEM-011",
+      "phase": 2,
+      "status": "gap",
+      "text": "Hän on; väsynyt.",
+      "expect": { "rule": "semicolon_phrase" }
+    },
+    {
+      "id": "fi_sem_012_coordination",
+      "rule": "FI-SEM-012",
+      "phase": 2,
+      "status": "gap",
+      "text": "Hän on ystävällinen; kohtelias ja avulias.",
+      "expect": { "rule": "semicolon_coordination" }
+    },
+    {
+      "id": "fi_sem_013_terminal",
+      "rule": "FI-SEM-013",
+      "phase": 2,
+      "status": "gap",
+      "text": "Hän lähti kotiin;",
+      "expect": { "rule": "semicolon_terminal" }
+    },
+    {
+      "id": "fi_sem_014_space_before",
+      "rule": "FI-SEM-014",
+      "phase": 4,
+      "status": "gap",
+      "text": "sana ; toinen",
+      "expect": { "rule": "typography_semicolon_spacing" }
+    },
+    {
+      "id": "fi_sem_015_space_after",
+      "rule": "FI-SEM-015",
+      "phase": 4,
+      "status": "gap",
+      "text": "sana;toinen",
+      "expect": { "rule": "typography_semicolon_spacing" }
+    },
+    {
+      "id": "fi_sem_main_main_coordinator",
+      "rule": "FI-SEM-001",
+      "phase": 1,
+      "status": "covered",
+      "text": "Hän tuli; mutta minä jäin.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "fi_sem_parenthetical",
+      "rule": "FI-SEM-001",
+      "phase": 1,
+      "status": "covered",
+      "text": "Hän tuli (nopeasti; hiljaa) kotiin.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "fi_sem_quotation",
+      "rule": "FI-SEM-001",
+      "phase": 1,
+      "status": "covered",
+      "text": "Hän sanoi: \"Tulen huomenna; minä lähden.\"",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "fi_sem_protected_code",
+      "rule": "FI-SEM-014",
+      "phase": 4,
+      "status": "gap",
+      "text": "let x = 1; let y = 2;",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "fi_sem_protected_url",
+      "rule": "FI-SEM-015",
+      "phase": 4,
+      "status": "gap",
+      "text": "https://example.com/a;b",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "fi_sem_colon_simple_list",
+      "rule": "FI-SEM-009",
+      "phase": 3,
+      "status": "gap",
+      "text": "Tarvitsemme kolme asiaa: aikaa; rahaa; osaamista.",
+      "expect": { "absent_rule": "missing_argument" }
+    }
+  ]
+}

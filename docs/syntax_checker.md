@@ -87,7 +87,9 @@ Ship fewer rules, not more guesses.
   phrases suppress the rule.
 - A clean corpus failure is a release blocker.
 - A semicolon is never an error. A valid main-main semicolon stays quiet; a
-  structurally forbidden semicolon is a suggestion-only correction.
+  structurally forbidden semicolon is a suggestion-only correction. The comma
+  rules also treat `;` as an existing boundary, so they never write `,;`
+  (`Kun tulin kotiin; kaikki nukkuivat.`).
 - A question mark is an `Error` only when the sentence has one clause and its
   first word is interrogative or carries `-ko`/`-kö`.
 - An unbalanced quote is a `Warning`; quote style and dialogue dashes are not
@@ -113,19 +115,20 @@ competing reading that must not win for ambiguous surfaces (`joka päivä`,
 `tests/fixtures/prose/adjudicated.json` is the reviewed-prose gate: clean rows
 must stay quiet, true positives must match their kinds, and known false
 positives pin the current bugs so a fix has to move the row.
-`tests/fixtures/punctuation_spec.json` is the audit matrix for the programmatic
-Finnish punctuation specification: covered cases assert a rule id and insertion
-point, gap cases are skipped until their phase lands. As of 2026-11-20 the prose
-fixture has 266 clean rows / 6,349 words, 2 true positives and 0 known false
-positives; `page-2000` is at 3 diagnostics (two agreement, one document-end
-quote).
+`tests/fixtures/punctuation_spec.json` and
+`tests/fixtures/semicolon_spec.json` are the audit matrices for the
+programmatic Finnish punctuation and semicolon specifications: covered cases
+assert a rule id and insertion point (or the absence of a rule), gap cases are
+skipped until their phase lands. As of 2026-11-20 the prose fixture has 266
+clean rows / 6,349 words, 2 true positives and 0 known false positives;
+`page-2000` is at 3 diagnostics (two agreement, one document-end quote).
 
 Current baseline (2026-11-20):
 
 ```text
 syntax_eval clean rows 154: 0 errors, 0 warnings, 0 suggestions
 syntax_eval cases 60: every emitted kind precision 1.00, recall 1.00
-syntax_diagnostics: 83 exact-output cases, 275 clean rows
+syntax_diagnostics: 88 exact-output cases, 275 clean rows
 prose: 266 clean rows / 6,349 words, 2 true positives, 0 known false positives
 page-2000: 3 diagnostics
 ```
@@ -133,7 +136,7 @@ page-2000: 3 diagnostics
 Run both gates:
 
 ```bash
-cargo test --release -p torille --test syntax_check --test syntax_eval --test syntax_ambiguity --test syntax_prose --test punctuation_spec
+cargo test --release -p torille --test syntax_check --test syntax_eval --test syntax_ambiguity --test syntax_prose --test punctuation_spec --test semicolon_spec
 ```
 
 The evaluation test prints the per-kind table; the exact-output fixture checks

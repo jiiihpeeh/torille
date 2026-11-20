@@ -1,9 +1,11 @@
 # Review: semicolon handling against the programmatic Finnish semicolon specification
 
-Status: **review.** Baseline `a80e616`. The normative text is the programmatic
-specification for Finnish semicolons (FI-SEM-001 … FI-SEM-015); the existing
-punctuation review is [`REVIEW_PUNCTUATION_SPEC.md`](REVIEW_PUNCTUATION_SPEC.md)
-and the staged plan is [`PLAN_PUNCTUATION_SPEC.md`](PLAN_PUNCTUATION_SPEC.md).
+Status: **review.** Baseline `a80e616`; Phase 0–1 of the plan have since
+landed (audit fixture and the comma-boundary fix). The normative text is the
+programmatic specification for Finnish semicolons (FI-SEM-001 … FI-SEM-015);
+the existing punctuation review is
+[`REVIEW_PUNCTUATION_SPEC.md`](REVIEW_PUNCTUATION_SPEC.md) and the staged plan
+is [`PLAN_PUNCTUATION_SPEC.md`](PLAN_PUNCTUATION_SPEC.md).
 
 The short verdict: the engine already treats a top-level semicolon as a clause
 boundary, and valid main-clause semicolons stay quiet. It has **no semicolon
@@ -24,9 +26,9 @@ gate.
 | `Hän tuli; minä lähdin.` | quiet |
 | `Hän lähti kotiin; minä jäin.` | quiet |
 | `Hän tuli; mutta minä jäin.` | quiet |
-| `Kun tulin kotiin; kaikki nukkuivat.` | `comma_missing` `Error`/`Certain`, insertion at `16..16`, **before** the semicolon |
-| `Hän sanoi; että hän tulee.` | `comma_missing` `Error`/`Certain`, insertion at `10..10`, **before** the semicolon |
-| `Hän tuli; koska satoi.` | `comma_missing` `Error`/`Certain`, insertion at `9..9`, **before** the semicolon |
+| `Kun tulin kotiin; kaikki nukkuivat.` | quiet after Phase 1 (before Phase 1: `comma_missing` at `16..16`, **before** the semicolon) |
+| `Hän sanoi; että hän tulee.` | quiet after Phase 1 (before Phase 1: `comma_missing` at `10..10`, **before** the semicolon) |
+| `Hän tuli; koska satoi.` | quiet after Phase 1 (before Phase 1: `comma_missing` at `9..9`, **before** the semicolon) |
 | `Opiskelijat; valmistautuivat kokeeseen.` | quiet |
 | `Ostin; leipää.` | quiet |
 | `Hän on; väsynyt.` | quiet |
@@ -43,9 +45,11 @@ gate.
 | `Hän sanoi: "Tulen huomenna; minä lähden."` | quiet; quote does not split |
 | `let x = 1; let y = 2;` | quiet; no typography layer |
 
-The first three `comma_missing` rows are the critical defect: applying the
-correction would produce `Kun tulin kotiin,; kaikki nukkuivat.` The comma layer
-checks for a comma or dash between the clauses but not for `;`.
+The first three `comma_missing` rows were the critical defect: applying the
+correction would have produced `Kun tulin kotiin,; kaikki nukkuivat.` The
+comma layer checked for a comma or dash between the clauses but not for `;`.
+Phase 1 fixed it by sharing `analysis::boundary_between`; those rows are now
+quiet and the exact fixture pins them.
 
 ## Spec matrix
 
@@ -58,7 +62,7 @@ checks for a comma or dash between the clauses but not for `;`.
 | FI-SEM-005 contrasting independent clauses | **accepted** | `Hän oli väsynyt; hän lähti kotiin.` quiet. |
 | FI-SEM-006 explanatory independent clauses | **accepted** | Same shape; no rule. |
 | FI-SEM-007 consecutive related statements | **accepted** | Same shape; no rule. |
-| FI-SEM-008 main + subordinate | **buggy** | The comma rule inserts a comma before `;` in three variants. |
+| FI-SEM-008 main + subordinate | **boundary fixed; misuse rule pending** | Phase 1 makes the three variants quiet; Phase 2 adds the `semicolon_subordinate` suggestion. |
 | FI-SEM-009 simple list, prefer commas | **gap** | `Ostin omenoita; banaaneja; appelsiineja.` quiet. A suggestion is possible, but only with a confident list shape. |
 | FI-SEM-010 subject + predicate | **gap** | `Opiskelijat; valmistautuivat kokeeseen.` quiet. |
 | FI-SEM-011 verb + object | **gap** | `Ostin; leipää.` and `Hän on; väsynyt.` quiet. |
@@ -146,10 +150,10 @@ refined, not reversed:
 
 ## Recommended next slice
 
-1. **Fix the comma boundary bug first.** Share one boundary predicate across
-   `subordinate_comma`, `relative_comma` and the list/comma rules so a
-   semicolon is never preceded by an inserted comma. Add the three failing
-   sentences as exact tests.
+1. **Fix the comma boundary bug first.** *Done in Phase 1:* one shared
+   `boundary_between` now covers `subordinate_comma`, the relative closing
+   comma and the indirect-question rule, and the three failing sentences are
+   exact tests.
 2. **Add a narrow `SemicolonMisuse` suggestion.** Start with the four clear
    structural cases: main+subordinate (`;` → `,`), coordinated elements
    (`;` → `,`), subject/predicate or verb/object/complement (`;` deleted), and
