@@ -75,6 +75,10 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
 - `misc_md/PLAN_PUNCTUATION_SPEC.md` — the staged punctuation plan after the
   specification review: indirect questions, vocatives, typography, the
   coordination split and main-clause commas, relative openings and lists.
+- `misc_md/REVIEW_SEMICOLON.md` — the semicolon review: the current `,;`
+  boundary defect, the forbidden-semicolon cases, complex lists and spacing.
+- `misc_md/PLAN_SEMICOLON.md` — the semicolon slice: boundary fix, structural
+  misuse suggestions, list awareness and the separate typography pass.
 
 ## Repository map
 

@@ -86,7 +86,8 @@ Ship fewer rules, not more guesses.
 - Unknown words, unknown roles, ambiguous agreeing targets, and numeral
   phrases suppress the rule.
 - A clean corpus failure is a release blocker.
-- A semicolon is never an error.
+- A semicolon is never an error. A valid main-main semicolon stays quiet; a
+  structurally forbidden semicolon is a suggestion-only correction.
 - A question mark is an `Error` only when the sentence has one clause and its
   first word is interrogative or carries `-ko`/`-kö`.
 - An unbalanced quote is a `Warning`; quote style and dialogue dashes are not
@@ -369,3 +370,6 @@ apposition and typography layers — is in
 [`../misc_md/REVIEW_PUNCTUATION_SPEC.md`](../misc_md/REVIEW_PUNCTUATION_SPEC.md).
 The staged implementation plan is
 [`../misc_md/PLAN_PUNCTUATION_SPEC.md`](../misc_md/PLAN_PUNCTUATION_SPEC.md).
+The semicolon slice has its own review and plan:
+[`../misc_md/REVIEW_SEMICOLON.md`](../misc_md/REVIEW_SEMICOLON.md) and
+[`../misc_md/PLAN_SEMICOLON.md`](../misc_md/PLAN_SEMICOLON.md).

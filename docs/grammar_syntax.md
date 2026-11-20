@@ -823,7 +823,9 @@ checks every emitted pair against this catalogue.
 - Unknown words, unknown roles, ambiguous agreeing targets and numeral phrases
   suppress the rule.
 - Parenthetical commas are suggestions; a final conjunction without a comma is
-  never an error; a semicolon is never an error.
+  never an error; a semicolon is never an error. A valid main-main semicolon
+  stays quiet; a structurally forbidden semicolon is a suggestion-only
+  correction.
 - An unbalanced quote is a warning; no quote-style correction.
 - A `WordOrder` diagnostic, if it ever lands, is suggestion-only.
 

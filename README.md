@@ -426,6 +426,12 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
 - [`misc_md/PLAN_PUNCTUATION_SPEC.md`](misc_md/PLAN_PUNCTUATION_SPEC.md) — the staged
   punctuation plan; indirect-question and vocative commas landed, typography,
   main-clause coordination, relative openings and lists remain.
+- [`misc_md/REVIEW_SEMICOLON.md`](misc_md/REVIEW_SEMICOLON.md) — the semicolon
+  gap analysis: the `,;` boundary defect, forbidden-semicolon cases, complex
+  lists and spacing.
+- [`misc_md/PLAN_SEMICOLON.md`](misc_md/PLAN_SEMICOLON.md) — the semicolon slice:
+  boundary fix first, then suggestion-only misuse, list awareness and a
+  separate typography pass.
 - [`misc_md/PLAN_GRAMMAR_SYNTAX_REFERENCE.md`](misc_md/PLAN_GRAMMAR_SYNTAX_REFERENCE.md) —
   the review-driven hardening plan for the grammar/syntax feature reference.
 - [`misc_md/PLAN_GRAMMAR_SYNTAX_LAYOUT.md`](misc_md/PLAN_GRAMMAR_SYNTAX_LAYOUT.md) —

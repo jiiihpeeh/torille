@@ -261,6 +261,12 @@ and internal commas remain.
 
 ### Phase 7 — quotation, colon, semicolon and dash
 
+The semicolon slice now has a dedicated review and plan:
+[`REVIEW_SEMICOLON.md`](REVIEW_SEMICOLON.md) and
+[`PLAN_SEMICOLON.md`](PLAN_SEMICOLON.md). It starts with the comma boundary
+bug (`,;`), then adds suggestion-only structural misuse and a separate
+typography pass.
+
 Only once the quote/clause model can say which side owns the terminal mark:
 
 - reporting clause + quotation (`Hän sanoi: ”Tulen huomenna.”`);

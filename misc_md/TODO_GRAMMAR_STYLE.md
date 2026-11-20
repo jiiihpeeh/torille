@@ -753,6 +753,17 @@ Adjacent repetition is not always accidental:
   main-clause coordination, relative opening, lists, quotation/colon) are in
   [`PLAN_PUNCTUATION_SPEC.md`](PLAN_PUNCTUATION_SPEC.md).
 
+### Semicolon slice
+
+- [ ] **Review and plan landed; implementation pending.**
+  A valid main-main semicolon is already accepted, but the comma layer inserts
+  a comma before `;` at a subordinate boundary (`Kun tulin kotiin; kaikki
+  nukkuivat.` → `,;`), and the list/typography layers have no semicolon model.
+  The review is [`REVIEW_SEMICOLON.md`](REVIEW_SEMICOLON.md); the phased plan
+  is [`PLAN_SEMICOLON.md`](PLAN_SEMICOLON.md). Phase 1 is the boundary fix,
+  Phase 2 the suggestion-only `SemicolonMisuse` rules, Phase 3 semicolon-aware
+  lists, Phase 4 the separate typography pass.
+
 ### Other P2 items
 
 - [x] **Grow the style tables carefully** — landed.
