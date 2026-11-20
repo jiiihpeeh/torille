@@ -69,6 +69,9 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
 - `misc_md/PLAN_WORD_WIZARD.md` — proposal for the user-phase word wizard: find a
   word's Kotus class from example forms. Text-first TSV class sheets and
   answer maps, inference through the engine, browser storage for saved words.
+- `misc_md/PLAN_PLURAL_ONLY.md` — the engine-level plural-only plan: the
+  per-lemma bit in the sanalista blob, standalone forms versus combining stems,
+  the `Form::combining` role, and the compound-preservation gates.
 
 ## Repository map
 
@@ -576,6 +579,7 @@ is gitignored and generated.
 | edit distance / keyboard tie-break | `src/suggest/levenshtein.rs` |
 | "which lemma is this a form of" | `src/expand/find_bases.rs`, `src/expand/lexicon_index.rs` |
 | the word/class wizard | `src/class_wizard.rs`, `data/class_examples.tsv`, `tools/src/bin/word_wizard.rs` |
+| plural-only lemmas / combining stems | `misc_md/PLAN_PLURAL_ONLY.md`, `src/kotus.rs`, `src/expand/build.rs`, `src/tags.rs`, `build/csv_builders/sanalista.rs` |
 | the reverse index / class prior | `src/expand/build.rs` |
 | compile-time blob writers | `build.rs`, `build/csv_builders/`, `build/map_builders/`; blobs live in `maps/` |
 | fetch/publish the `maps` branch | `tools/maps-sync/` (`cargo run -p torille-maps -- status\|fetch\|publish`) |
