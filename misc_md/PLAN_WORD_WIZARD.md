@@ -7,8 +7,10 @@ the generated 76-class sheet; the wasm exposes the wizard and user-word
 functions; `torille-wasm/demo/wizard.html` stores in `localStorage`, and the
 Firefox and Chromium **Omat sanat** pages store in `browser.storage.local` and
 teach the spell worker the saved forms (accepted and suggested within two
-edits). The oracle curve is measured in `tools/wizard_eval.py`; only optional
-window dressing remains. This plan covers the
+edits). The oracle curve is measured in `tools/wizard_eval.py`. The saved list
+also carries an optional number restriction: plural-only (`number=pl`) and
+singular-only (`number=sg`) entries, with the plural question pool and a
+saved-form filter. This plan covers the
 **user-interaction phase**: a browser tool that finds a word's Kotus class from
 example forms. The build-phase CLI is the same core with a different front end;
 it is a reuse, not the first deliverable.
@@ -35,7 +37,10 @@ class, the evidence, and the paradigm.
 ## What the user does
 
 1. Type the word; choose noun, adjective, numeral, ordinal, pronoun, proper
-   noun, or verb.
+   noun, or verb. For a nominal, also choose **both**, **plural only** or
+   **singular only**. The number choice switches the question pool and the
+   saved entry's filter; a word that is only used in the plural (`kiikarit`)
+   is not asked for a genitive singular.
 2. The wizard says whether the word is already in the dictionary and, if so,
    its recorded class.
 3. It asks 1–5 questions, each with an example: *genitive singular? `talo` →
@@ -156,17 +161,28 @@ ill_sg	mökkiin
 ### `user-words.tsv` — the saved list
 
 ```tsv
-# torille-user-words v1
-mökki	5*A	substantiivi
-Helsinki	5	erisnimi
-kahdeksas	45	järjestysluku
-taipumaton sana	99	substantiivi
+# torille-user-words v2
+mökki	5*A	substantiivi	-
+Helsinki	5	erisnimi	-
+kahdeksas	45	järjestysluku	-
+kiikarit	1	substantiivi	number=pl
+maito	1*F	substantiivi	number=sg
 ```
 
-- Three columns: word, class expression, part of speech. The class may be a dual
-  reading (`9, 10`) and is read by `kotus::parse_inflections`. The part-of-speech
-  label is kept as the user chose it (`erisnimi`, `numeraali`, ...); `erisnimi`
-  inflects as a noun.
+- Four columns: word, class expression, part of speech, flags. The class may be
+  a dual reading (`9, 10`) and is read by `kotus::parse_inflections`. The
+  part-of-speech label is kept as the user chose it (`erisnimi`, `numeraali`,
+  ...); `erisnimi` inflects as a noun.
+- The flag column is `key=value` pairs separated by `;`; `-` means no flags.
+  v2 defines `number=pl` (plural-only) and `number=sg` (singular-only). An
+  unknown key or value is an error, so a typo cannot silently become
+  "accept everything".
+- A number restriction is nominal-only and must match the citation: `kiikarit`
+  with `number=pl` is a plural-only entry; `kiikari` with `number=pl` is
+  rejected because the word the user typed is the singular. The UI disables the
+  choice for verbs.
+- Version 1 (three columns) is still accepted; the next edit rewrites the blob
+  as v2.
 - The last line for a word wins; a delete rewrites the blob without that word.
 - Stored as one string under `torille-user-words`; export/import uses the same
   bytes.
@@ -196,7 +212,12 @@ Rust:
 ```rust
 type Sheet = HashMap<String, HashMap<String, String>>; // class -> key -> value
 type Answers = HashMap<String, String>;               // cell -> form
-struct UserWord { word: String, class: String, pos: PartOfSpeech }
+struct UserWord {
+    word: String,
+    class: String,
+    pos: PartOfSpeech,
+    number: Option<Number>, // None = both; Some = plural-only/singular-only
+}
 type UserWords = HashMap<String, UserWord>;           // lowercased word -> entry
 ```
 
@@ -225,7 +246,9 @@ Nominal: `nom gen par ill ine ela ade abl all ess tra abe com pro ins` ×
 `_sg` / `_pl`. The nominal question pool is the catalogue's eight slots minus
 the nominative: `gen_sg`, `par_sg`, `ill_sg`, `nom_pl`, `gen_pl`, `par_pl`,
 `ill_pl`. `acc_sg` is excluded because it is ambiguous with the
-nominative/genitive.
+nominative/genitive. A plural-only word uses `gen_pl`, `par_pl`, `ill_pl` (its
+nominative plural is the word); a singular-only word uses `gen_sg`, `par_sg`,
+`ill_sg`.
 
 Verb: `pres_1sg`, `pres_3sg`, `past_3sg`, `cond_3sg`, `imp_2sg` — the five the
 wizard asks — plus `pres_1pl` and the other persons in the sheet. A verb cell
@@ -352,6 +375,8 @@ vowel and consonant patterns the genitive leaves tied.
 pub const SHEET: &str = include_str!("../data/class_examples.tsv");
 pub const CORE_KEYS: [&str; 8] = [...];
 pub const QUESTION_POOL: [&str; 7] = [...];
+pub const PLURAL_QUESTION_POOL: [&str; 3] = ["gen_pl", "par_pl", "ill_pl"];
+pub const SINGULAR_QUESTION_POOL: [&str; 3] = ["gen_sg", "par_sg", "ill_sg"];
 pub const VERB_KEYS: [&str; 6] = [...];
 pub const VERB_QUESTION_POOL: [&str; 5] = [...];
 
@@ -360,7 +385,11 @@ pub fn parse_answers(text: &str) -> Result<Answers, ParseError>;
 pub fn parse_user_words(text: &str) -> Result<UserWords, ParseError>;
 pub fn format_user_words(words: &UserWords) -> String;
 pub fn add_user_word(text: &str, word: &str, class: &str, pos: &str) -> Result<String, ParseError>;
+pub fn add_user_word_with(text: &str, word: &str, class: &str, pos: &str,
+                          number: Option<Number>) -> Result<String, ParseError>;
 pub fn remove_user_word(text: &str, word: &str) -> Result<String, ParseError>;
+pub fn user_word_forms(entry: &UserWord, cat: &Catalogues,
+                       index: &LexiconIndex<'_>) -> Vec<String>;
 pub fn pos_from_name(name: &str) -> Option<PartOfSpeech>;
 pub fn render_sheet(cat: &Catalogues) -> String;
 pub fn check_sheet(cat: &Catalogues) -> Result<Vec<SheetMismatch>, ParseError>;
@@ -369,6 +398,9 @@ pub fn infer(lemma: &str, pos: PartOfSpeech, answers: &Answers,
 pub fn infer_with(lemma: &str, pos: PartOfSpeech, answers: &Answers,
                   cat: &Catalogues, use_recorded: bool)
     -> Result<Report, WizardError>;
+pub fn infer_with_number(lemma: &str, pos: PartOfSpeech, answers: &Answers,
+                         cat: &Catalogues, use_recorded: bool,
+                         number: Option<Number>) -> Result<Report, WizardError>;
 ```
 
 `Report` carries the ranked candidates, per-answer hit/miss/unknown, the next
@@ -381,7 +413,8 @@ display; a capitalized name therefore finds its lower-case paradigm.
 
 ```
 word_wizard [WORD] [--pos POS] [--form CELL=FORM ...] [--answers FILE]
-            [--indeclinable] [--json] [--emit sanalista|custom]
+            [--indeclinable] [--plural-only | --singular-only]
+            [--json] [--emit sanalista|custom]
             [--write-sheet PATH] [--check-sheet]
 ```
 
@@ -390,6 +423,8 @@ word_wizard [WORD] [--pos POS] [--form CELL=FORM ...] [--answers FILE]
 - `--answers`: batch mode for scripts and the build phase.
 - `--indeclinable`: return class 99 and skip the questions; only the lemma is
   accepted for the saved entry.
+- `--plural-only` / `--singular-only`: ask only that number's questions and add
+  the corresponding `number=` flag to `--emit custom`. Ignored for a verb.
 - `--emit sanalista`: print the CSV row (`word, homonym, pos, class`) and the
   `add_sanalista_word.py` command with a placeholder anchor.
 - `--emit custom`: print the user-words row.
@@ -404,10 +439,14 @@ word_wizard [WORD] [--pos POS] [--form CELL=FORM ...] [--answers FILE]
 ```rust
 #[wasm_bindgen] pub fn wizard_sheet() -> String;
 #[wasm_bindgen] pub fn wizard_infer(word: &str, pos: &str, answers_tsv: &str) -> js_sys::Object;
+#[wasm_bindgen] pub fn wizard_infer_with_number(word: &str, pos: &str,
+    answers_tsv: &str, number: &str) -> js_sys::Object;
 #[wasm_bindgen] pub fn wizard_paradigm(word: &str, class: &str, pos: &str) -> js_sys::Object;
 #[wasm_bindgen] pub fn wizard_user_forms(user_words_tsv: &str) -> js_sys::Array;
 #[wasm_bindgen] pub fn wizard_user_words(user_words_tsv: &str) -> js_sys::Object;
 #[wasm_bindgen] pub fn wizard_user_words_add(text: &str, word: &str, class: &str, pos: &str) -> js_sys::Object;
+#[wasm_bindgen] pub fn wizard_user_words_add_with_number(text: &str, word: &str,
+    class: &str, pos: &str, number: &str) -> js_sys::Object;
 #[wasm_bindgen] pub fn wizard_user_words_remove(text: &str, word: &str) -> js_sys::Object;
 ```
 
@@ -426,6 +465,9 @@ options page both call, so the saved text is never parsed in JS.
   parsed into a `Map`.
 - Two tabs: **Find a class** (questions, candidates, paradigm) and **Browse
   examples** (the sheet, sorted by `lemmas`, searchable by class or model).
+- The **Luku** select (`molemmat`, `vain monikko`, `vain yksikkö`) is disabled
+  for a verb. The saved list shows the restriction as `vain monikko` /
+  `vain yksikkö`.
 - Storage: `localStorage["torille-user-words"]` and
   `localStorage["torille-wizard-session"]`; import/export the text.
 - No build-step change beyond the new esbuild entry.
@@ -509,6 +551,11 @@ options page both call, so the saved text is never parsed in JS.
   a generated form, `analyze-text` filters it out and clearing the list rejects
   it; `extensions/firefox/smoke.mjs` covers the wasm functions. `npm test` keeps
   the source-sync copies identical; run `npm run build` first.
+- **Number restrictions**: v2 parses v1 and v2; an unknown flag is an error;
+  `number=pl`/`number=sg` must match the citation; `user_word_forms` drops the
+  other number (`kiikarit` has `kiikariihin` but not `kiikaria`; `maito` has
+  `maidolla` but not `maidoilla`); the plural pool starts at `gen_pl` and the
+  singular pool at `gen_sg`.
 - **No engine regression**: the full gates from `AGENTS.md` (`clippy`,
   `cargo test --release --workspace`, the binding and harness gates,
   `test_illegal_evidence.py`). The wizard changes no generated form, so the
@@ -578,6 +625,22 @@ and suggestions, and the measured adaptive-versus-fixed accuracy.
 
 ### Remaining work
 
-1. **Window dressing.** A result is saved with the surface as typed; a custom
+1. **Plural-only at the lexicon level.** The saved-entry flag covers user words
+   only. Known plural-only lemmas still rely on the per-class `-t` heuristic,
+   which is inconsistent: `talkoot` (class 17) and `pidot` (class `1*F`) still
+   emit singulars, and `check("talkoo")` accepts one. The fact is lexical, so
+   it belongs in a per-lemma bit in the sanalista map, sourced from the oracle
+   or a curated list — not from a suffix rule.
+2. **Compounds keep the singular stem.** `housukauppa`, `hääsunnittelija` and
+   `talkooväki` show that a plural-only lemma's singular stem is a combining
+   form. The bit must suppress standalone singular **forms** only; the stem map
+   and compound index must keep `housu`, `hää` and `talkoo`. A post-filter on
+   `inflect_in` would remove `hää` from the stem map (only the suppressed
+   singular cells use it) and break `hääkakku`.
+3. **Custom words and compounds.** The extension's custom-word set is a flat
+   surface set, so a saved `housut` does not make `housukauppa` acceptable. A
+   separate `userStems` set (or a compound-aware custom-word path) would be
+   needed; leave it out of v1.
+4. **Window dressing.** A result is saved with the surface as typed; a custom
    word's capitalization in suggestions follows the existing suggestion-case
    path. Nothing in the plan is blocked.

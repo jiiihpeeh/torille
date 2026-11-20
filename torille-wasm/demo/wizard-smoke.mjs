@@ -66,8 +66,45 @@ try {
     message: document.getElementById('message')?.textContent,
   }));
 
+  // Plural-only: the first question must be the plural genitive, and the
+  // saved entry must carry the number flag.
+  await page.$eval('#word', (el) => { el.value = 'kiikarit'; });
+  await page.select('#pos', 'substantiivi');
+  await page.select('#number', 'pl');
+  await page.click('#start');
+  await page.waitForSelector('#question-card:not([hidden])', { timeout: 20_000 });
+  const pluralAnswers = {
+    'genetiivi (monikko)': 'kiikarijen',
+    'partitiivi (monikko)': 'kiikarija',
+    'illatiivi (monikko)': 'kiikariihin',
+  };
+  const pluralAsked = [];
+  for (let i = 0; i < 3; i++) {
+    const hidden = await page.$eval('#question-card', (el) => el.hidden);
+    if (hidden) break;
+    const label = await page.$eval('#question-label', (el) => el.textContent ?? '');
+    pluralAsked.push(label);
+    const answer = pluralAnswers[label];
+    if (!answer) throw new Error(`no plural answer for ${label}`);
+    await page.$eval('#answer', (el) => { el.value = ''; });
+    await page.type('#answer', answer);
+    await page.click('#submit');
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  const pluralResult = await page.evaluate(() => ({
+    best: document.getElementById('best')?.textContent,
+    cells: Array.from(document.querySelectorAll('#paradigm dt')).map((el) => el.textContent),
+  }));
+  await page.click('#save');
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  const pluralSaved = await page.evaluate(() => ({
+    rows: Array.from(document.querySelectorAll('.saved-row')).map((el) => el.textContent),
+    storage: localStorage.getItem('torille-user-words'),
+  }));
+
   await page.$eval('#word', (el) => { el.value = 'puhua'; });
   await page.select('#pos', 'verbi');
+  await page.select('#number', 'both');
   await page.click('#start');
   await page.waitForSelector('#question-card:not([hidden])', { timeout: 20_000 });
   const verbAnswers = {
@@ -109,7 +146,18 @@ try {
     word: document.getElementById('word')?.value,
   }));
 
-  console.log(JSON.stringify({ asked, result, saved, verbResult, verbSaved, afterReload, errors }, null, 2));
+  console.log(JSON.stringify({
+    asked,
+    result,
+    saved,
+    pluralAsked,
+    pluralResult,
+    pluralSaved,
+    verbResult,
+    verbSaved,
+    afterReload,
+    errors,
+  }, null, 2));
 } finally {
   await browser.close();
 }

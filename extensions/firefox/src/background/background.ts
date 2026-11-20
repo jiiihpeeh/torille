@@ -112,7 +112,8 @@ type SpellCallPayload =
   | { type: 'unique-surfaces'; text: string }
   | { type: 'set-user-words'; text: string }
   | { type: 'wizard-sheet' }
-  | { type: 'wizard-infer'; word: string; pos: string; answers: string }
+  | { type: 'wizard-infer'; word: string; pos: string; answers: string;
+      number?: string }
   | {
       type: 'wizard-paradigm';
       word: string;
@@ -126,6 +127,7 @@ type SpellCallPayload =
       word: string;
       class: string;
       pos: string;
+      number?: string;
     }
   | { type: 'wizard-user-words-remove'; text: string; word: string };
 
@@ -1034,6 +1036,7 @@ api.runtime.onMessage.addListener((message: unknown, sender: { tab?: { id?: numb
           word: m.word,
           pos: m.pos,
           answers: m.answers,
+          number: m.number,
         });
         return r.type === 'wizard-infer'
           ? { report: r.report }
@@ -1090,6 +1093,7 @@ api.runtime.onMessage.addListener((message: unknown, sender: { tab?: { id?: numb
           word: m.word,
           class: m.class,
           pos: m.pos,
+          number: m.number,
         });
         return r.type === 'wizard-user-words-add'
           ? { result: r.result }

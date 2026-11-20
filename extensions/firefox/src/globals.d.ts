@@ -92,6 +92,8 @@ declare type R_WizardInfer = {
   word: string;
   pos: string;
   answers: string;
+  /** `pl`, `sg` or omitted; narrows the question pool and the saved entry. */
+  number?: string;
 };
 declare type R_WizardParadigm = {
   type: 'torille:wizard-paradigm';
@@ -109,6 +111,8 @@ declare type R_WizardUserWordsAdd = {
   word: string;
   class: string;
   pos: string;
+  /** `pl`, `sg` or omitted; stored as the entry's number flag. */
+  number?: string;
 };
 declare type R_WizardUserWordsRemove = {
   type: 'torille:wizard-user-words-remove';
@@ -354,7 +358,8 @@ declare type R_WorkerInbound =
   | { id: number; type: 'unique-surfaces'; text: string }
   | { id: number; type: 'set-user-words'; text: string }
   | { id: number; type: 'wizard-sheet' }
-  | { id: number; type: 'wizard-infer'; word: string; pos: string; answers: string }
+  | { id: number; type: 'wizard-infer'; word: string; pos: string; answers: string;
+      number?: string }
   | {
       id: number;
       type: 'wizard-paradigm';
@@ -370,6 +375,7 @@ declare type R_WorkerInbound =
       word: string;
       class: string;
       pos: string;
+      number?: string;
     }
   | {
       id: number;

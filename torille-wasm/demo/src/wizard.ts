@@ -12,6 +12,7 @@ const SESSION_KEY = 'torille-wizard-session';
 const WORD_KEY = 'torille-wizard-word';
 const POS_KEY = 'torille-wizard-pos';
 const INDECLINABLE_KEY = 'torille-wizard-indeclinable';
+const NUMBER_KEY = 'torille-wizard-number';
 
 type Candidate = {
   class: string;
@@ -44,7 +45,7 @@ type Paradigm = {
   error?: string | null;
 };
 
-type UserWord = { word: string; class: string; pos: string };
+type UserWord = { word: string; class: string; pos: string; number: string };
 type UserWordsResult = { words: UserWord[]; error: string | null };
 type TextResult = { text: string; error: string | null };
 
@@ -59,6 +60,19 @@ const VERB_KEYS = [
 
 function keysFor(pos: string): string[] {
   return pos === 'verbi' ? VERB_KEYS : CORE_KEYS;
+}
+
+function keysForNumber(keys: string[]): string[] {
+  if (state.number === 'both') return keys;
+  const suffix = state.number === 'pl' ? '_pl' : '_sg';
+  return keys.filter((key) => key.endsWith(suffix));
+}
+
+function numberArg(): string {
+  // The number restriction is nominal: a verb's citation form is the
+  // infinitive, which has neither reading.
+  if (state.pos === 'verbi') return '';
+  return state.number === 'both' ? '' : state.number;
 }
 
 const CELL_LABELS: Record<string, string> = {
@@ -82,6 +96,7 @@ const CELL_LABELS: Record<string, string> = {
 const state = {
   word: '',
   pos: 'substantiivi',
+  number: 'both' as 'both' | 'pl' | 'sg',
   answers: new Map<string, string>(),
   report: null as Report | null,
   selected: null as string | null,
@@ -135,6 +150,7 @@ function saveSession(): void {
     localStorage.setItem(SESSION_KEY, answersText());
     localStorage.setItem(WORD_KEY, state.word);
     localStorage.setItem(POS_KEY, state.pos);
+    localStorage.setItem(NUMBER_KEY, state.number);
     localStorage.setItem(INDECLINABLE_KEY, byId<HTMLInputElement>('indeclinable').checked ? '1' : '');
   } catch {
     /* private mode */
@@ -165,8 +181,13 @@ function restoreSession(): void {
       const [key, form = ''] = line.split('\t');
       if (key) state.answers.set(key, form);
     }
+    const savedNumber = localStorage.getItem(NUMBER_KEY) ?? '';
+    state.number = savedNumber === 'pl' || savedNumber === 'sg' ? savedNumber : 'both';
+    if (state.pos === 'verbi') state.number = 'both';
     byId<HTMLInputElement>('word').value = state.word;
     byId<HTMLSelectElement>('pos').value = state.pos;
+    byId<HTMLSelectElement>('number').value = state.number;
+    byId<HTMLSelectElement>('number').disabled = state.pos === 'verbi';
     const indeclinable = localStorage.getItem(INDECLINABLE_KEY) === '1';
     byId<HTMLInputElement>('indeclinable').checked = indeclinable;
     if (indeclinable) {
@@ -182,7 +203,9 @@ function restoreSession(): void {
 
 async function infer(): Promise<void> {
   if (!state.ready || !state.word) return;
-  const raw = bg.wizard_infer(state.word, state.pos, answersText()) as unknown as Report;
+  const raw = bg.wizard_infer_with_number(
+    state.word, state.pos, answersText(), numberArg(),
+  ) as unknown as Report;
   if (raw.error) {
     message(String(raw.error), true);
     return;
@@ -376,11 +399,12 @@ function preview(cls: string): void {
   }
   const grid = byId<HTMLDListElement>('paradigm');
   clear(grid);
-  for (const key of keysFor(state.pos)) {
+  for (const key of keysForNumber(keysFor(state.pos))) {
     const dt = document.createElement('dt');
     dt.textContent = CELL_LABELS[key] ?? key;
     const dd = document.createElement('dd');
-    dd.textContent = result.cells[key] ?? '—';
+    const form = result.cells[key];
+    dd.textContent = form ? showForm(form) : '—';
     grid.append(dt, dd);
   }
   const best = state.report?.candidates[0]?.class;
@@ -438,6 +462,10 @@ function start(): void {
   }
   state.word = word;
   state.pos = byId<HTMLSelectElement>('pos').value;
+  const selected = byId<HTMLSelectElement>('number').value;
+  state.number = state.pos === 'verbi'
+    ? 'both'
+    : selected === 'pl' || selected === 'sg' ? selected : 'both';
   const indeclinable = byId<HTMLInputElement>('indeclinable').checked;
   state.answers.clear();
   state.selected = null;
@@ -487,7 +515,10 @@ function renderSaved(): void {
     word.textContent = entry.word;
     const detail = document.createElement('span');
     detail.className = 'muted';
-    detail.textContent = `  ${entry.class} · ${entry.pos}`;
+    const number = entry.number === 'pl'
+      ? ' · vain monikko'
+      : entry.number === 'sg' ? ' · vain yksikkö' : '';
+    detail.textContent = `  ${entry.class} · ${entry.pos}${number}`;
     label.append(word, detail);
     const remove = document.createElement('button');
     remove.className = 'danger';
@@ -506,8 +537,8 @@ function saveWord(): void {
     return;
   }
   const pos = state.pos;
-  const result = bg.wizard_user_words_add(
-    state.savedText, report.word, cls, pos,
+  const result = bg.wizard_user_words_add_with_number(
+    state.savedText, report.word, cls, pos, numberArg(),
   ) as unknown as TextResult;
   if (result.error) {
     message(String(result.error), true);
@@ -543,7 +574,7 @@ function removeSaved(word: string): void {
 }
 
 function exportSaved(): void {
-  const text = state.savedText || '# torille-user-words v1\n';
+  const text = state.savedText || '# torille-user-words v2\n';
   const blob = new Blob([text], { type: 'text/tab-separated-values' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -637,6 +668,10 @@ function wire(): void {
   byId('tab-find').addEventListener('click', () => setTab('find'));
   byId('tab-browse').addEventListener('click', () => setTab('browse'));
   byId('browse-search').addEventListener('input', renderBrowse);
+  byId('pos').addEventListener('change', () => {
+    byId<HTMLSelectElement>('number').disabled =
+      byId<HTMLSelectElement>('pos').value === 'verbi';
+  });
   byId<HTMLInputElement>('answer').addEventListener('keydown', (event) => {
     if (event.key === 'Enter') submitAnswer();
   });

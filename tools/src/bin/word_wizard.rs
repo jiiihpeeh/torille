@@ -26,13 +26,13 @@ use std::process::ExitCode;
 
 use serde_json::json;
 use torille::class_wizard::{
-    self, AnswerStatus, Answers, Cell, Report, SHEET, Sheet, check_sheet, infer, parse_answers,
-    parse_sheet, pos_from_name, render_sheet,
+    self, AnswerStatus, Answers, Cell, Report, SHEET, Sheet, check_sheet, infer_with_number,
+    parse_answers, parse_sheet, pos_from_name, render_sheet,
 };
 use torille::expand::{LexiconIndex, inflect_in};
 use torille::kotus::{self, Inflection};
 use torille::spec::Catalogues;
-use torille::tags::PartOfSpeech;
+use torille::tags::{Number, PartOfSpeech};
 use torille_tools::catalogue;
 
 fn main() -> ExitCode {
@@ -45,6 +45,7 @@ fn main() -> ExitCode {
     let mut check = false;
     let mut json = false;
     let mut indeclinable = false;
+    let mut number: Option<Number> = None;
 
     let mut args = std::env::args().skip(1);
     while let Some(arg) = args.next() {
@@ -57,6 +58,8 @@ fn main() -> ExitCode {
             "--check-sheet" => check = true,
             "--json" => json = true,
             "--indeclinable" => indeclinable = true,
+            "--plural-only" => number = Some(Number::Plural),
+            "--singular-only" => number = Some(Number::Singular),
             "-h" | "--help" => {
                 usage();
                 return ExitCode::SUCCESS;
@@ -95,6 +98,11 @@ fn main() -> ExitCode {
         None => PartOfSpeech::Noun,
     };
 
+    if matches!(pos, PartOfSpeech::Verb | PartOfSpeech::NegativeVerb) && number.is_some() {
+        eprintln!("--plural-only/--singular-only applies to nominals; ignoring");
+        number = None;
+    }
+
     let word = match word {
         Some(word) => word,
         None => match read_line("word> ") {
@@ -122,7 +130,7 @@ fn main() -> ExitCode {
             print_json(&report);
         } else {
             print_report(&report, false);
-            print_result(&report, &cat, emit.as_deref());
+            print_result(&report, &cat, emit.as_deref(), number);
         }
         return ExitCode::SUCCESS;
     }
@@ -165,16 +173,17 @@ fn main() -> ExitCode {
             eprintln!("--json needs --answers or --form; the interactive flow prints text");
             return ExitCode::from(2);
         }
-        interactive_run(&word, pos, &cat, emit.as_deref())
+        interactive_run(&word, pos, &cat, emit.as_deref(), number)
     } else {
-        batch_run(&word, pos, &answers, &cat, emit.as_deref(), json)
+        batch_run(&word, pos, &answers, &cat, emit.as_deref(), json, number)
     }
 }
 
 fn usage() {
     eprintln!(
         "usage: word_wizard [WORD] [--pos POS] [--form CELL=FORM ...] [--answers FILE]\n\
-         \x20                  [--indeclinable] [--json] [--emit sanalista|custom]\n\
+         \x20                  [--indeclinable] [--plural-only | --singular-only]\n\
+         \x20                  [--json] [--emit sanalista|custom]\n\
          \x20      POS: substantiivi | adjektiivi | numeraali | järjestysluku |\n\
          \x20           pronomini | erisnimi | verbi\n\
          \x20      word_wizard --write-sheet PATH\n\
@@ -235,14 +244,15 @@ fn batch_run(
     cat: &Catalogues,
     emit: Option<&str>,
     json: bool,
+    number: Option<Number>,
 ) -> ExitCode {
-    match infer(word, pos, answers, cat) {
+    match infer_with_number(word, pos, answers, cat, true, number) {
         Ok(report) => {
             if json {
                 print_json(&report);
             } else {
                 print_report(&report, false);
-                print_result(&report, cat, emit);
+                print_result(&report, cat, emit, number);
             }
             ExitCode::SUCCESS
         }
@@ -258,6 +268,7 @@ fn interactive_run(
     pos: PartOfSpeech,
     cat: &Catalogues,
     emit: Option<&str>,
+    number: Option<Number>,
 ) -> ExitCode {
     let sheet = match parse_sheet(SHEET) {
         Ok(sheet) => sheet,
@@ -269,7 +280,7 @@ fn interactive_run(
     let mut answers = Answers::new();
 
     let final_report = 'outer: loop {
-        let report = match infer(word, pos, &answers, cat) {
+        let report = match infer_with_number(word, pos, &answers, cat, true, number) {
             Ok(report) => report,
             Err(error) => {
                 eprintln!("{error}");
@@ -313,7 +324,7 @@ fn interactive_run(
         }
     };
 
-    print_result(&final_report, cat, emit);
+    print_result(&final_report, cat, emit, number);
     ExitCode::SUCCESS
 }
 
@@ -432,7 +443,12 @@ fn capitalize_first(word: &str) -> String {
     }
 }
 
-fn print_result(report: &Report, cat: &Catalogues, emit: Option<&str>) {
+fn print_result(
+    report: &Report,
+    cat: &Catalogues,
+    emit: Option<&str>,
+    number: Option<Number>,
+) {
     let Some(best) = report.ranked.first() else {
         println!("no candidate class");
         return;
@@ -465,6 +481,11 @@ fn print_result(report: &Report, cat: &Catalogues, emit: Option<&str>) {
         } {
             let key = *key;
             let cell = Cell::parse(key).unwrap();
+            if !matches!(report.pos, PartOfSpeech::Verb | PartOfSpeech::NegativeVerb)
+                && number.is_some_and(|want| cell.number != Some(want))
+            {
+                continue;
+            }
             let mut words: Vec<&str> = forms
                 .iter()
                 .filter(|form| form.readings.iter().any(|tags| cell.claims(tags)))
@@ -499,7 +520,12 @@ fn print_result(report: &Report, cat: &Catalogues, emit: Option<&str>) {
             );
         }
         Some("custom") => {
-            println!("\n{word}\t{class}\t{pos}", word = report.lemma);
+            let flag = match number {
+                Some(Number::Singular) => "number=sg",
+                Some(Number::Plural) => "number=pl",
+                Some(Number::Collective) | None => "-",
+            };
+            println!("\n{word}\t{class}\t{pos}\t{flag}", word = report.lemma);
         }
         Some(other) => eprintln!("unknown --emit {other:?} (sanalista|custom)"),
         None => {}

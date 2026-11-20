@@ -163,6 +163,19 @@ declare module '*/torille_wasm_bg.js' {
 
   /** Word wizard; the objects are the shapes `src/class_wizard.rs` builds. */
   export function wizard_sheet(): string;
+  export function wizard_infer_with_number(
+    word: string,
+    pos: string,
+    answers_tsv: string,
+    number: string,
+  ): any;
+  export function wizard_user_words_add_with_number(
+    user_words_tsv: string,
+    word: string,
+    className: string,
+    pos: string,
+    number: string,
+  ): any;
   export function wizard_infer(
     word: string,
     pos: string,

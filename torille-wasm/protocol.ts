@@ -109,7 +109,8 @@ export type R_WorkerInbound =
   // the browser page owns their shape.
   | { id: number; type: 'set-user-words'; text: string }
   | { id: number; type: 'wizard-sheet' }
-  | { id: number; type: 'wizard-infer'; word: string; pos: string; answers: string }
+  | { id: number; type: 'wizard-infer'; word: string; pos: string; answers: string;
+      number?: string }
   | {
       id: number;
       type: 'wizard-paradigm';
@@ -125,6 +126,7 @@ export type R_WorkerInbound =
       word: string;
       class: string;
       pos: string;
+      number?: string;
     }
   | {
       id: number;

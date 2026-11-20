@@ -563,7 +563,8 @@ function handleWizardInfer(
 ): CoreResponse {
   return {
     type: 'wizard-infer',
-    report: bg.wizard_infer(msg.word, msg.pos, msg.answers),
+    report: bg.wizard_infer_with_number(
+      msg.word, msg.pos, msg.answers, msg.number ?? ''),
   };
 }
 
@@ -590,8 +591,8 @@ function handleWizardUserWordsAdd(
 ): CoreResponse {
   return {
     type: 'wizard-user-words-add',
-    result: bg.wizard_user_words_add(
-      msg.text, msg.word, msg.class, msg.pos),
+    result: bg.wizard_user_words_add_with_number(
+      msg.text, msg.word, msg.class, msg.pos, msg.number ?? ''),
   };
 }
 

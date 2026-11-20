@@ -86,6 +86,7 @@ try {
                 word: message.word,
                 pos: message.pos,
                 answers: message.answers,
+                number: message.number,
               });
               return { report: r.report };
             }
@@ -111,6 +112,7 @@ try {
                 word: message.word,
                 class: message.class,
                 pos: message.pos,
+                number: message.number,
               });
               return { result: r.result };
             }

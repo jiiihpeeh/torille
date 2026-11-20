@@ -150,6 +150,40 @@ check('verb paradigm', verbParadigm?.type === 'wizard-paradigm'
   && verbParadigm.paradigm?.cells?.imp_2sg === 'puhu',
   JSON.stringify(verbParadigm?.paradigm?.cells));
 
+const pluralReport = await core.handle({
+  type: 'wizard-infer',
+  word: 'kiikarit',
+  pos: 'noun',
+  number: 'pl',
+  answers: '# torille-wizard-answers v1\n',
+});
+check('plural question pool', pluralReport?.type === 'wizard-infer'
+  && pluralReport.report?.question === 'gen_pl',
+  JSON.stringify(pluralReport?.report?.question));
+
+await core.handle({
+  type: 'set-user-words',
+  text: '# torille-user-words v2\npöräkki\t5\tsubstantiivi\t-\n',
+});
+const pluralKnown = await core.handle({ type: 'check', word: 'pöräkkien' });
+check('the plural is a form without the filter',
+  pluralKnown?.type === 'check' && pluralKnown.ok === true,
+  JSON.stringify(pluralKnown));
+
+await core.handle({
+  type: 'set-user-words',
+  text: '# torille-user-words v2\npöräkki\t5\tsubstantiivi\tnumber=sg\n',
+});
+const singularAccepted = await core.handle({ type: 'check', word: 'pöräkkin' });
+check('singular-only accepts the singular',
+  singularAccepted?.type === 'check' && singularAccepted.ok === true,
+  JSON.stringify(singularAccepted));
+const pluralRejected = await core.handle({ type: 'check', word: 'pöräkkien' });
+check('singular-only rejects the plural',
+  pluralRejected?.type === 'check' && pluralRejected.ok === false,
+  JSON.stringify(pluralRejected));
+await core.handle({ type: 'set-user-words', text: '' });
+
 if (failures > 0) {
   console.log(`\n${failures} check(s) failed`);
   process.exit(1);

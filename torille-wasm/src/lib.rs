@@ -1163,6 +1163,15 @@ fn wizard_error(message: impl AsRef<str>) -> JsValue {
     obj.into()
 }
 
+fn wizard_number(name: &str) -> Result<Option<torille::tags::Number>, String> {
+    match name.trim() {
+        "" | "-" | "both" => Ok(None),
+        "pl" | "plural" => Ok(Some(torille::tags::Number::Plural)),
+        "sg" | "singular" => Ok(Some(torille::tags::Number::Singular)),
+        other => Err(format!("{other:?} is not pl, sg or both")),
+    }
+}
+
 /// Infers the class from `answers_tsv` (`cell<TAB>form` lines).
 ///
 /// Returns `{ error }` rather than throwing, so the wizard page can show the
@@ -1170,16 +1179,39 @@ fn wizard_error(message: impl AsRef<str>) -> JsValue {
 /// `class_wizard::Report` plus `total_candidates`.
 #[wasm_bindgen]
 pub fn wizard_infer(word: &str, pos: &str, answers_tsv: &str) -> JsValue {
-    use torille::class_wizard::{AnswerStatus, infer, parse_answers, pos_from_name};
+    wizard_infer_with_number(word, pos, answers_tsv, "")
+}
+
+/// `pl` restricts the questions and the saved entry to the plural, `sg` to
+/// the singular, and an empty string (or `-`) asks both.
+#[wasm_bindgen]
+pub fn wizard_infer_with_number(
+    word: &str,
+    pos: &str,
+    answers_tsv: &str,
+    number: &str,
+) -> JsValue {
+    use torille::class_wizard::{AnswerStatus, infer_with_number, parse_answers, pos_from_name};
 
     let Some(pos) = pos_from_name(pos) else {
         return wizard_error(format!("{pos:?} is not a part of speech"));
+    };
+    let number = match wizard_number(number) {
+        Ok(number) => number,
+        Err(error) => return wizard_error(error),
     };
     let answers = match parse_answers(answers_tsv) {
         Ok(answers) => answers,
         Err(error) => return wizard_error(error.to_string()),
     };
-    let report = match infer(word, pos, &answers, torille::spec::Catalogues::embedded()) {
+    let report = match infer_with_number(
+        word,
+        pos,
+        &answers,
+        torille::spec::Catalogues::embedded(),
+        true,
+        number,
+    ) {
         Ok(report) => report,
         Err(error) => return wizard_error(error.to_string()),
     };
@@ -1302,6 +1334,12 @@ pub fn wizard_user_words(user_words_tsv: &str) -> JsValue {
                 wizard_set(&item, "word", entry.word.as_str());
                 wizard_set(&item, "class", entry.class.as_str());
                 wizard_set(&item, "pos", entry.pos_name.as_str());
+                let number = match entry.number {
+                    Some(torille::tags::Number::Plural) => "pl",
+                    Some(torille::tags::Number::Singular) => "sg",
+                    _ => "-",
+                };
+                wizard_set(&item, "number", number);
                 array.push(&item);
             }
             wizard_set(&obj, "words", array);
@@ -1321,10 +1359,26 @@ pub fn wizard_user_words(user_words_tsv: &str) -> JsValue {
 /// back cannot destroy the store.
 #[wasm_bindgen]
 pub fn wizard_user_words_add(user_words_tsv: &str, word: &str, class: &str, pos: &str) -> JsValue {
-    use torille::class_wizard::add_user_word;
+    wizard_user_words_add_with_number(user_words_tsv, word, class, pos, "")
+}
 
+/// [`wizard_user_words_add`] with an explicit `pl`/`sg` number restriction.
+#[wasm_bindgen]
+pub fn wizard_user_words_add_with_number(
+    user_words_tsv: &str,
+    word: &str,
+    class: &str,
+    pos: &str,
+    number: &str,
+) -> JsValue {
+    use torille::class_wizard::add_user_word_with;
+
+    let number = match wizard_number(number) {
+        Ok(number) => number,
+        Err(error) => return wizard_error(error),
+    };
     let obj = js_sys::Object::new();
-    match add_user_word(user_words_tsv, word, class, pos) {
+    match add_user_word_with(user_words_tsv, word, class, pos, number) {
         Ok(text) => {
             wizard_set(&obj, "text", text);
             wizard_set(&obj, "error", JsValue::NULL);
@@ -1362,8 +1416,8 @@ pub fn wizard_user_words_remove(user_words_tsv: &str, word: &str) -> JsValue {
 #[wasm_bindgen]
 pub fn wizard_user_forms(user_words_tsv: &str) -> JsValue {
     use std::collections::BTreeSet;
-    use torille::class_wizard::parse_user_words;
-    use torille::expand::{LexiconIndex, inflect_in};
+    use torille::class_wizard::{parse_user_words, user_word_forms};
+    use torille::expand::LexiconIndex;
 
     let words = match parse_user_words(user_words_tsv) {
         Ok(words) => words,
@@ -1371,28 +1425,10 @@ pub fn wizard_user_forms(user_words_tsv: &str) -> JsValue {
     };
     let lexicon = torille::kotus::lemmas();
     let index = LexiconIndex::new(lexicon);
+    let cat = torille::spec::Catalogues::embedded();
     let mut forms: BTreeSet<String> = BTreeSet::new();
     for entry in words.values() {
-        let lemma = entry.word.trim().to_lowercase();
-        forms.insert(lemma.clone());
-        for inflection in torille::kotus::parse_inflections(&entry.class) {
-            if inflection.class == torille::class_wizard::INDECLINABLE_CLASS {
-                // The explicit "does not inflect" choice accepts the lemma
-                // only; class 99's loan machinery must not invent forms.
-                continue;
-            }
-            let generated = inflect_in(
-                &lemma,
-                inflection,
-                torille::spec::Catalogues::embedded(),
-                Some(&index),
-                entry.pos,
-                false,
-            );
-            for form in generated {
-                forms.insert(form.word.to_lowercase());
-            }
-        }
+        forms.extend(user_word_forms(entry, cat, &index));
     }
     let array = js_sys::Array::new();
     for form in forms {

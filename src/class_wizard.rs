@@ -51,6 +51,18 @@ pub const QUESTION_POOL: [&str; 7] = [
     "gen_sg", "par_sg", "ill_sg", "nom_pl", "gen_pl", "par_pl", "ill_pl",
 ];
 
+/// The questions for a plural-only word.
+///
+/// The nominative plural is the word the user typed, so it is not a question;
+/// the singular cells cannot be answered by a word that has no singular, and
+/// asking them only produces three `unknown` answers before the first useful
+/// one.
+pub const PLURAL_QUESTION_POOL: [&str; 3] = ["gen_pl", "par_pl", "ill_pl"];
+
+/// The questions for a singular-only word. The nominative singular is the
+/// word the user typed.
+pub const SINGULAR_QUESTION_POOL: [&str; 3] = ["gen_sg", "par_sg", "ill_sg"];
+
 /// The six verb cells in the sheet, and the five the wizard asks about.
 ///
 /// The nominative is the lemma itself. `pres_1pl` is a sheet-only extra: the
@@ -87,6 +99,9 @@ pub struct UserWord {
     pub pos: PartOfSpeech,
     /// The label the user chose (`substantiivi`, `erisnimi`, `numeraali`, ...).
     pub pos_name: String,
+    /// Which number the entry licenses. `None` means both; `Some` is the
+    /// explicit singular-only/plural-only restriction the user chose.
+    pub number: Option<Number>,
 }
 
 /// `lowercased word -> entry`, the saved list.
@@ -470,14 +485,23 @@ pub fn parse_answers(text: &str) -> Result<Answers, ParseError> {
 
 /// `word -> entry` from a saved list. The class expression is canonicalised,
 /// so `5*A` stays `5*A` and `(5)` becomes `5`.
+///
+/// Version 1 has three columns; version 2 adds a `key=value;...` flag column.
+/// Version 1 is still accepted, so an exported list keeps working.
 pub fn parse_user_words(text: &str) -> Result<UserWords, ParseError> {
-    check_version(text, "torille-user-words", 1)?;
+    let version = version_of(text, "torille-user-words", 2)?;
+    let columns = if version >= 2 { 4 } else { 3 };
     let mut words = UserWords::new();
-    for (line, fields) in data_rows(text, 3)? {
+    for (line, fields) in data_rows(text, columns)? {
         let (word, class, pos) = (fields[0], fields[1], fields[2]);
         if word.is_empty() || class.is_empty() || pos.is_empty() {
             return Err(ParseError::new(line, "empty word, class or part of speech"));
         }
+        let number = if columns == 4 {
+            parse_user_word_flags(fields[3], line)?
+        } else {
+            None
+        };
         let inflections = kotus::parse_inflections(class);
         if inflections.is_empty() {
             return Err(ParseError::new(
@@ -504,10 +528,63 @@ pub fn parse_user_words(text: &str) -> Result<UserWords, ParseError> {
                 class: canonical,
                 pos,
                 pos_name,
+                number,
             },
         );
     }
     Ok(words)
+}
+
+/// Reads the version 2 flag column.
+///
+/// The column is `key=value` pairs separated by `;`, with `-` meaning no
+/// flags. Unknown keys and values are errors: a typo in a restriction must not
+/// silently become "accept everything".
+fn parse_user_word_flags(flags: &str, line: usize) -> Result<Option<Number>, ParseError> {
+    let flags = flags.trim();
+    if flags.is_empty() || flags == "-" {
+        return Ok(None);
+    }
+    let mut number = None;
+    for flag in flags.split(';') {
+        let flag = flag.trim();
+        if flag.is_empty() {
+            continue;
+        }
+        let Some((key, value)) = flag.split_once('=') else {
+            return Err(ParseError::new(
+                line,
+                format!("{flag:?} is not a key=value flag"),
+            ));
+        };
+        match key.trim() {
+            "number" => {
+                let value = value.trim();
+                number = Some(match value {
+                    "sg" => Number::Singular,
+                    "pl" => Number::Plural,
+                    other => {
+                        return Err(ParseError::new(
+                            line,
+                            format!("{other:?} is not number=sg or number=pl"),
+                        ));
+                    }
+                });
+            }
+            other => {
+                return Err(ParseError::new(line, format!("unknown flag {other:?}")));
+            }
+        }
+    }
+    Ok(number)
+}
+
+fn number_flag(number: Option<Number>) -> &'static str {
+    match number {
+        Some(Number::Singular) => "number=sg",
+        Some(Number::Plural) => "number=pl",
+        _ => "-",
+    }
 }
 
 /// Serialises a saved-word map back to the text format.
@@ -522,9 +599,17 @@ pub fn format_user_words(words: &UserWords) -> String {
             .cmp(&b.word.to_lowercase())
             .then(a.word.cmp(&b.word))
     });
-    let mut out = String::from("# torille-user-words v1\n");
+    let mut out = String::from("# torille-user-words v2\n");
     for entry in entries {
-        writeln!(out, "{}\t{}\t{}", entry.word, entry.class, entry.pos_name).unwrap();
+        writeln!(
+            out,
+            "{}\t{}\t{}\t{}",
+            entry.word,
+            entry.class,
+            entry.pos_name,
+            number_flag(entry.number)
+        )
+        .unwrap();
     }
     out
 }
@@ -534,16 +619,69 @@ pub fn format_user_words(words: &UserWords) -> String {
 /// `text` may be empty; a non-empty blob must parse, so a corrupt store is
 /// reported instead of being silently overwritten.
 pub fn add_user_word(text: &str, word: &str, class: &str, pos: &str) -> Result<String, ParseError> {
+    add_user_word_with(text, word, class, pos, None)
+}
+
+/// [`add_user_word`] with an explicit number restriction.
+pub fn add_user_word_with(
+    text: &str,
+    word: &str,
+    class: &str,
+    pos: &str,
+    number: Option<Number>,
+) -> Result<String, ParseError> {
     let mut words = if text.trim().is_empty() {
         UserWords::new()
     } else {
         parse_user_words(text)?
     };
-    let line = format!("# torille-user-words v1\n{word}\t{class}\t{pos}\n");
+    let line = format!(
+        "# torille-user-words v2\n{word}\t{class}\t{pos}\t{}\n",
+        number_flag(number)
+    );
     for (key, value) in parse_user_words(&line)? {
+        check_citation_number(&value)?;
         words.insert(key, value);
     }
     Ok(format_user_words(&words))
+}
+
+/// A number restriction must match the word the entry is cited by.
+///
+/// `kiikarit` with `number=pl` is a plural-only entry; `kiikari` with
+/// `number=pl` would accept the singular citation and the plural cells, which
+/// is neither reading. The UI says the same thing before calling this, and the
+/// check keeps a hand-edited or imported list from breaking the invariant.
+fn check_citation_number(entry: &UserWord) -> Result<(), ParseError> {
+    let Some(want) = entry.number else {
+        return Ok(());
+    };
+    let inflections = kotus::parse_inflections(&entry.class);
+    if inflections
+        .iter()
+        .any(|inflection| inflection.class == INDECLINABLE_CLASS)
+    {
+        return Ok(());
+    }
+    let cat = Catalogues::embedded();
+    let index = LexiconIndex::new(kotus::lemmas());
+    let lemma = entry.word.trim().to_lowercase();
+    for inflection in inflections {
+        for form in inflect_in(&lemma, inflection, cat, Some(&index), entry.pos, false) {
+            if form.word.eq_ignore_ascii_case(&entry.word) && form.union().number == Some(want) {
+                return Ok(());
+            }
+        }
+    }
+    let (flag, label) = match want {
+        Number::Plural => ("number=pl", "plural"),
+        Number::Singular => ("number=sg", "singular"),
+        Number::Collective => ("number=collective", "collective"),
+    };
+    Err(ParseError::new(
+        2,
+        format!("{flag} needs a {label} citation form; type the nominative {label}"),
+    ))
 }
 
 /// Removes one word, case-insensitively, and returns the new text.
@@ -555,6 +693,43 @@ pub fn remove_user_word(text: &str, word: &str) -> Result<String, ParseError> {
     };
     words.remove(&word.trim().to_lowercase());
     Ok(format_user_words(&words))
+}
+
+/// Every lower-cased surface one saved entry licenses.
+///
+/// The entry's citation form is always accepted; the generated forms are
+/// filtered by the entry's number when it has one. Only a form that carries
+/// the *other* number is dropped: a numberless reading stays, because the
+/// restriction is about number and the form does not assert one. A plural-only
+/// entry therefore keeps `kiikariihin` and drops `kiikaria`, and a
+/// singular-only entry keeps `maidolla` and drops `maidoilla`. Class 99 stays
+/// lemma-only: its loan machinery must not invent forms.
+pub fn user_word_forms(
+    entry: &UserWord,
+    cat: &Catalogues,
+    index: &LexiconIndex<'_>,
+) -> Vec<String> {
+    use std::collections::BTreeSet;
+
+    let lemma = entry.word.trim().to_lowercase();
+    let mut forms: BTreeSet<String> = BTreeSet::new();
+    forms.insert(lemma.clone());
+    for inflection in kotus::parse_inflections(&entry.class) {
+        if inflection.class == INDECLINABLE_CLASS {
+            continue;
+        }
+        for form in inflect_in(&lemma, inflection, cat, Some(index), entry.pos, false) {
+            if entry.number.is_some_and(|want| {
+                form.union()
+                    .number
+                    .is_some_and(|have| have != want)
+            }) {
+                continue;
+            }
+            forms.insert(form.word.to_lowercase());
+        }
+    }
+    forms.into_iter().collect()
 }
 
 fn data_rows(text: &str, columns: usize) -> Result<Vec<(usize, Vec<&str>)>, ParseError> {
@@ -588,31 +763,41 @@ fn data_rows(text: &str, columns: usize) -> Result<Vec<(usize, Vec<&str>)>, Pars
 }
 
 fn check_version(text: &str, tag: &str, supported: u32) -> Result<(), ParseError> {
+    version_of(text, tag, supported).map(|_| ())
+}
+
+/// The declared format version, defaulting to 1 when the header is absent.
+///
+/// A version newer than `supported` is refused rather than misread, exactly as
+/// [`check_version`] did.
+fn version_of(text: &str, tag: &str, supported: u32) -> Result<u32, ParseError> {
+    let mut version = 1;
     for (index, raw) in text.lines().enumerate() {
         let line = raw.trim_start_matches('\u{feff}').trim();
         if line.is_empty() {
             continue;
         }
         if !line.starts_with('#') {
-            return Ok(());
+            return Ok(version);
         }
         let body = line.trim_start_matches('#').trim();
         if let Some(rest) = body.strip_prefix(tag)
             && let Some(rest) = rest.trim().strip_prefix('v')
         {
             let digits: String = rest.chars().take_while(char::is_ascii_digit).collect();
-            if let Ok(version) = digits.parse::<u32>()
-                && version > supported
-            {
-                return Err(ParseError::new(
-                    index + 1,
-                    format!("{tag} version {version} is newer than supported v{supported}"),
-                ));
+            if let Ok(parsed) = digits.parse::<u32>() {
+                if parsed > supported {
+                    return Err(ParseError::new(
+                        index + 1,
+                        format!("{tag} version {parsed} is newer than supported v{supported}"),
+                    ));
+                }
+                version = parsed;
             }
         }
-        return Ok(());
+        return Ok(version);
     }
-    Ok(())
+    Ok(version)
 }
 
 /// Inflects every class model and returns the text of a class sheet.
@@ -870,6 +1055,22 @@ pub fn infer_with(
     cat: &Catalogues,
     use_recorded: bool,
 ) -> Result<Report, WizardError> {
+    infer_with_number(lemma, pos, answers, cat, use_recorded, None)
+}
+
+/// [`infer_with`] restricted to one number.
+///
+/// `number` changes the question pool, not the candidate scoring: a
+/// plural-only word is asked `gen_pl`, `par_pl` and `ill_pl`, and its saved
+/// entry filters the singular cells out. `None` asks the full nominal pool.
+pub fn infer_with_number(
+    lemma: &str,
+    pos: PartOfSpeech,
+    answers: &Answers,
+    cat: &Catalogues,
+    use_recorded: bool,
+    number: Option<Number>,
+) -> Result<Report, WizardError> {
     let surface = lemma.trim();
     if surface.is_empty() {
         return Err(WizardError::EmptyWord);
@@ -877,7 +1078,7 @@ pub fn infer_with(
     if !is_supported(pos) {
         return Err(WizardError::UnsupportedPartOfSpeech(pos));
     }
-    let pool = question_pool(pos);
+    let pool = question_pool(pos, number);
     // The engine's lexicon and class engines work on the lower-case headword.
     // The surface is kept for display; the UI restores capitalization when it
     // shows the forms.
@@ -1029,11 +1230,14 @@ fn wants_verb(pos: PartOfSpeech) -> bool {
     matches!(pos, PartOfSpeech::Verb | PartOfSpeech::NegativeVerb)
 }
 
-fn question_pool(pos: PartOfSpeech) -> &'static [&'static str] {
+fn question_pool(pos: PartOfSpeech, number: Option<Number>) -> &'static [&'static str] {
     if wants_verb(pos) {
-        &VERB_QUESTION_POOL
-    } else {
-        &QUESTION_POOL
+        return &VERB_QUESTION_POOL;
+    }
+    match number {
+        Some(Number::Plural) => &PLURAL_QUESTION_POOL,
+        Some(Number::Singular) => &SINGULAR_QUESTION_POOL,
+        _ => &QUESTION_POOL,
     }
 }
 
@@ -1393,7 +1597,7 @@ mod tests {
         assert_eq!(words["helsinki"].pos, PartOfSpeech::Noun);
         assert_eq!(words["helsinki"].pos_name, "erisnimi");
         assert!(
-            format_user_words(&words).contains("Helsinki\t5\terisnimi"),
+            format_user_words(&words).contains("Helsinki\t5\terisnimi\t-"),
             "the proper-noun label survives the round trip"
         );
     }
@@ -1430,10 +1634,118 @@ mod tests {
     #[test]
     fn the_user_words_edits_an_empty_store() {
         let text = add_user_word("", "mökki", "5*A", "substantiivi").unwrap();
-        assert!(text.starts_with("# torille-user-words v1\n"));
-        assert!(text.contains("mökki\t5*A\tsubstantiivi"));
+        assert!(text.starts_with("# torille-user-words v2\n"));
+        assert!(text.contains("mökki\t5*A\tsubstantiivi\t-"));
         let text = remove_user_word(&text, "mökki").unwrap();
-        assert_eq!(text, "# torille-user-words v1\n");
+        assert_eq!(text, "# torille-user-words v2\n");
+    }
+
+    #[test]
+    fn a_version_two_list_reads_the_number_flag() {
+        let words = parse_user_words(
+            "# torille-user-words v2\n\
+             kiikarit\t7\tsubstantiivi\tnumber=pl\n\
+             maito\t1*F\tsubstantiivi\tnumber=sg\n\
+             mökki\t5*A\tsubstantiivi\t-\n",
+        )
+        .unwrap();
+        assert_eq!(words["kiikarit"].number, Some(Number::Plural));
+        assert_eq!(words["maito"].number, Some(Number::Singular));
+        assert_eq!(words["mökki"].number, None);
+    }
+
+    #[test]
+    fn a_version_one_list_still_parses() {
+        let words = parse_user_words("# torille-user-words v1\nmökki\t5*A\tsubstantiivi\n")
+            .unwrap();
+        assert_eq!(words["mökki"].number, None);
+    }
+
+    #[test]
+    fn an_unknown_saved_flag_is_rejected() {
+        let error =
+            parse_user_words("# torille-user-words v2\nmökki\t5*A\tsubstantiivi\tbogus=1\n")
+                .unwrap_err();
+        assert!(error.message.contains("unknown flag"), "{error}");
+    }
+
+    #[test]
+    fn a_saved_number_round_trips() {
+        let text = add_user_word_with("", "kiikarit", "1", "substantiivi", Some(Number::Plural))
+            .unwrap();
+        assert!(text.contains("kiikarit\t1\tsubstantiivi\tnumber=pl"));
+        let words = parse_user_words(&text).unwrap();
+        assert_eq!(words["kiikarit"].number, Some(Number::Plural));
+    }
+
+    #[test]
+    fn a_number_restriction_needs_a_matching_citation() {
+        assert!(
+            add_user_word_with("", "kiikarit", "1", "substantiivi", Some(Number::Plural)).is_ok()
+        );
+        let error =
+            add_user_word_with("", "kiikari", "1", "substantiivi", Some(Number::Plural))
+                .unwrap_err();
+        assert!(error.message.contains("plural citation"), "{error}");
+        let error =
+            add_user_word_with("", "kiikarit", "1", "substantiivi", Some(Number::Singular))
+                .unwrap_err();
+        assert!(error.message.contains("singular citation"), "{error}");
+    }
+
+    #[test]
+    fn a_plural_only_entry_asks_plural_questions() {
+        let report = infer_with_number(
+            "kiikarit",
+            PartOfSpeech::Noun,
+            &Answers::new(),
+            catalogue(),
+            false,
+            Some(Number::Plural),
+        )
+        .unwrap();
+        assert_eq!(report.question_key().as_deref(), Some("gen_pl"));
+
+        let report = infer_with_number(
+            "kiikarit",
+            PartOfSpeech::Noun,
+            &Answers::new(),
+            catalogue(),
+            false,
+            Some(Number::Singular),
+        )
+        .unwrap();
+        assert_eq!(report.question_key().as_deref(), Some("gen_sg"));
+    }
+
+    #[test]
+    fn a_plural_only_entry_drops_the_singular_forms() {
+        let entry = UserWord {
+            word: "kiikarit".to_string(),
+            class: "1".to_string(),
+            pos: PartOfSpeech::Noun,
+            pos_name: "substantiivi".to_string(),
+            number: Some(Number::Plural),
+        };
+        let index = LexiconIndex::new(kotus::lemmas());
+        let forms = user_word_forms(&entry, catalogue(), &index);
+        assert!(forms.iter().any(|form| form == "kiikariihin"));
+        assert!(!forms.iter().any(|form| form == "kiikaria"));
+    }
+
+    #[test]
+    fn a_singular_only_entry_drops_the_plural_forms() {
+        let entry = UserWord {
+            word: "maito".to_string(),
+            class: "1*F".to_string(),
+            pos: PartOfSpeech::Noun,
+            pos_name: "substantiivi".to_string(),
+            number: Some(Number::Singular),
+        };
+        let index = LexiconIndex::new(kotus::lemmas());
+        let forms = user_word_forms(&entry, catalogue(), &index);
+        assert!(forms.iter().any(|form| form == "maidolla"));
+        assert!(!forms.iter().any(|form| form == "maidoilla"));
     }
 
     #[test]

@@ -42,6 +42,12 @@ declare module '*/torille_wasm_bg.js' {
     pos: string,
     answers_tsv: string,
   ): Record<string, unknown>;
+  export function wizard_infer_with_number(
+    word: string,
+    pos: string,
+    answers_tsv: string,
+    number: string,
+  ): Record<string, unknown>;
   export function wizard_paradigm(
     word: string,
     className: string,
@@ -56,6 +62,13 @@ declare module '*/torille_wasm_bg.js' {
     word: string,
     className: string,
     pos: string,
+  ): Record<string, unknown>;
+  export function wizard_user_words_add_with_number(
+    user_words_tsv: string,
+    word: string,
+    className: string,
+    pos: string,
+    number: string,
   ): Record<string, unknown>;
   export function wizard_user_words_remove(
     user_words_tsv: string,
