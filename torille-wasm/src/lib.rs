@@ -1220,6 +1220,7 @@ pub fn wizard_infer_with_number(
     wizard_set(&obj, "word", report.lemma.as_str());
     wizard_set(&obj, "pos", report.pos.name());
     wizard_set(&obj, "tie", report.tie);
+    wizard_set(&obj, "recorded_plural_only", report.recorded_plural_only);
 
     let recorded = js_sys::Array::new();
     for inflection in &report.recorded {

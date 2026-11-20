@@ -386,7 +386,7 @@ pub fn inflect_in(
 /// walks this and [`inflect_in`] stays the ordered, merged list the listing
 /// API promises. [`form_readings`] keeps the merge, because it returns the
 /// readings.
-fn inflect_in_raw(
+fn inflect_in_unmarked(
     lemma: &str,
     inflection: Inflection,
     cat: &Catalogues,
@@ -400,6 +400,18 @@ fn inflect_in_raw(
     // outright. The public API must treat this as a no-op, not a panic.
     if lemma.is_empty() {
         return out;
+    }
+    // A plural-only citation can have a singular lemma row of its own
+    // (`pidot` / `pito`, `talkoot` / `talkoo`). Use that paradigm and keep its
+    // plural cells: the class engine's own `-t` handling is not enough when
+    // the citation's final `t` is part of the stem it would build.
+    if let Some(base) = plural_only_singular_base(lemma, inflection) {
+        let mut forms = inflect_in_unmarked(&base, inflection, cat, lexicon, pos, possessives);
+        forms.retain(|form| {
+            form.union().number == Some(crate::tags::Number::Plural)
+                || form.word.eq_ignore_ascii_case(lemma)
+        });
+        return forms;
     }
     if try_irregular(lemma, possessives, pos, &mut out) {
         return out;
@@ -559,6 +571,75 @@ struct GeneratedWalk<'a, 'row> {
 /// list ([`inflect_in`]) or the raw one ([`inflect_in_raw`]): a listing needs
 /// the merge, a membership test does not. [`inflect_all`], [`emits_form`] and
 /// [`form_readings`] share this one source list so the three cannot drift.
+/// The unmarked paradigm, with the plural-only role applied.
+fn inflect_in_raw(
+    lemma: &str,
+    inflection: Inflection,
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+    pos: PartOfSpeech,
+    possessives: bool,
+) -> Vec<Generated> {
+    let mut out = inflect_in_unmarked(lemma, inflection, cat, lexicon, pos, possessives);
+    mark_plural_only(lemma, &mut out);
+    out
+}
+
+/// The singular lemma behind a plural-only `-t` citation, when the lexicon
+/// has one.
+///
+/// `pidot` is the plural of `pito`, and the sanalista lists both rows. The
+/// plural-only row's class engine would otherwise build its paradigm from
+/// `pidot` as if it were a singular, producing `pidodn`/`pidodilla`. The
+/// singular row has the right stems, so the plural-only row borrows its
+/// plural cells. `talkoot`/`talkoo` is the same shape.
+fn plural_only_singular_base(lemma: &str, inflection: Inflection) -> Option<String> {
+    if !crate::kotus::is_plural_only_word(lemma) || !lemma.ends_with('t') {
+        return None;
+    }
+    let stem = &lemma[..lemma.len() - 1];
+    let mut candidates = vec![stem.to_string()];
+    // `pido` -> `pito`: the plural t voices the preceding d.
+    if let Some(index) = stem.rfind('d') {
+        let mut voiced = stem.to_string();
+        voiced.replace_range(index..index + 1, "t");
+        candidates.push(voiced);
+    }
+    for candidate in candidates {
+        if candidate == lemma || crate::kotus::is_plural_only_word(&candidate) {
+            continue;
+        }
+        for row in crate::kotus::sanalista().by_word(&candidate) {
+            if row.inflections().any(|have| have == inflection) {
+                return Some(candidate);
+            }
+        }
+    }
+    None
+}
+
+/// Mark the forms a plural-only lemma cannot use on their own.
+///
+/// The citation form is always standalone (for `talkoot` it carries no number
+/// reading at all), and the plural cells are standalone. Everything else is a
+/// combining form: `housu`, `hää`, `talkoo`.
+fn mark_plural_only(lemma: &str, forms: &mut [Generated]) {
+    if !crate::kotus::is_plural_only_word(lemma) {
+        return;
+    }
+    for form in forms {
+        mark_one_plural_only(lemma, form);
+    }
+}
+
+fn mark_one_plural_only(lemma: &str, form: &mut Generated) {
+    if !form.word.eq_ignore_ascii_case(lemma)
+        && form.union().number != Some(crate::tags::Number::Plural)
+    {
+        form.combining = true;
+    }
+}
+
 fn walk_generated(
     walk: GeneratedWalk<'_, '_>,
     dedup_core: bool,
@@ -572,6 +653,13 @@ fn walk_generated(
         pos,
         possessives,
     } = walk;
+    let plural_only = crate::kotus::is_plural_only_word(lemma);
+    let mark = |mut form: Generated| {
+        if plural_only {
+            mark_one_plural_only(lemma, &mut form);
+        }
+        form
+    };
     for inflection in inflections {
         let forms = if dedup_core {
             inflect_in(lemma, *inflection, cat, lexicon, pos, possessives)
@@ -579,7 +667,7 @@ fn walk_generated(
             inflect_in_raw(lemma, *inflection, cat, lexicon, pos, possessives)
         };
         for form in forms {
-            if !visit(form) {
+            if !visit(mark(form)) {
                 return false;
             }
         }
@@ -591,12 +679,12 @@ fn walk_generated(
     // derives the quantifier `usea`'s degrees (`useampi`, `usein`), so a
     // lemma outside the adjective tag is not necessarily a no-op here.
     for form in degree_forms(lemma, cat, lexicon) {
-        if !visit(form) {
+        if !visit(mark(form)) {
             return false;
         }
     }
     for form in numeral_forms(lemma, cat, lexicon) {
-        if !visit(form) {
+        if !visit(mark(form)) {
             return false;
         }
     }
@@ -608,7 +696,7 @@ fn walk_generated(
     // lemma has its own paradigm.
     if inflections.is_empty() {
         for form in compound_head_forms(lemma, cat, lexicon, pos, possessives) {
-            if !visit(form) {
+            if !visit(mark(form)) {
                 return false;
             }
         }
@@ -618,7 +706,7 @@ fn walk_generated(
         // cannot reach it, but the whole word inflects as the `-inen`
         // class.
         for form in derived_inen_forms(lemma, cat, lexicon, pos, possessives) {
-            if !visit(form) {
+            if !visit(mark(form)) {
                 return false;
             }
         }
@@ -627,7 +715,7 @@ fn walk_generated(
         // the verb case has its own path.
         if matches!(pos, PartOfSpeech::Verb | PartOfSpeech::Unknown) {
             for form in compound_verb_forms(lemma, cat, lexicon) {
-                if !visit(form) {
+                if !visit(mark(form)) {
                     return false;
                 }
             }
@@ -676,6 +764,51 @@ pub fn inflect_all(
 /// and readings. Every matching reading is kept and deduplicated with
 /// [`crate::tags::add_reading`], because a surface can be several forms of
 /// one lemma (`appi` is class `7*B` and `5*B`).
+/// [`emits_form`] restricted to standalone readings.
+///
+/// A plural-only lemma's singular cells are combining forms: `hää` is a stem
+/// of `häät` but not a word. The lookup gates ask this version, so a combining
+/// form never becomes a standalone base. The full [`emits_form`] stays for
+/// compound resolution, which needs the stem.
+pub fn emits_standalone_form(
+    lemma: &str,
+    inflections: &[Inflection],
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+    pos: PartOfSpeech,
+    possessives: bool,
+    word: &str,
+) -> bool {
+    if !emits_form(
+        lemma,
+        inflections,
+        cat,
+        lexicon,
+        pos,
+        possessives,
+        word,
+    ) {
+        return false;
+    }
+    if !crate::kotus::is_plural_only_word(lemma) || word.eq_ignore_ascii_case(lemma) {
+        return true;
+    }
+    form_readings(
+        lemma,
+        inflections,
+        cat,
+        lexicon,
+        pos,
+        possessives,
+        word,
+    )
+    .is_some_and(|readings| {
+        readings
+            .iter()
+            .any(|reading| reading.number == Some(crate::tags::Number::Plural))
+    })
+}
+
 pub fn form_readings(
     lemma: &str,
     inflections: &[Inflection],
@@ -3277,6 +3410,82 @@ mod tests {
                 assert_eq!(listed, emitted, "{lemma_word} / {word}");
             }
         }
+    }
+
+    #[test]
+    fn a_plural_only_lemma_marks_its_singulars_as_combining() {
+        let cat = cat();
+        let inflections = crate::kotus::parse_inflections("17");
+        let forms = inflect_in(
+            "talkoot",
+            inflections[0],
+            &cat,
+            None,
+            PartOfSpeech::Noun,
+            false,
+        );
+        let form = |word: &str| {
+            forms
+                .iter()
+                .find(|form| form.word == word)
+                .unwrap_or_else(|| panic!("talkoot should have {word}"))
+        };
+        assert!(!form("talkoot").combining, "the citation is standalone");
+        assert!(
+            forms
+                .iter()
+                .all(|form| form.union().number != Some(Number::Singular)),
+            "talkoot resolves through its singular lemma talkoo"
+        );
+
+        // `hynttyyt` has no singular lemma row, so the class engine still
+        // builds the singular cells; they are marked rather than dropped.
+        let hynttyyt = inflect_in(
+            "hynttyyt",
+            inflections[0],
+            &cat,
+            None,
+            PartOfSpeech::Noun,
+            false,
+        );
+        let singular = hynttyyt
+            .iter()
+            .find(|form| form.union().number == Some(Number::Singular))
+            .expect("class 17 builds a singular cell");
+        assert!(singular.combining, "{} is combining", singular.word);
+        assert!(
+            hynttyyt
+                .iter()
+                .filter(|form| form.union().number == Some(Number::Singular))
+                .all(|form| form.combining)
+        );
+
+        let housut = inflect_in(
+            "housut",
+            crate::kotus::parse_inflections("1")[0],
+            &cat,
+            None,
+            PartOfSpeech::Noun,
+            false,
+        );
+        assert!(
+            housut.iter().all(|form| !form.combining),
+            "a class-1 plural-only lemma has no singular cells to mark"
+        );
+
+        let kevat = inflect_in(
+            "kevät",
+            crate::kotus::parse_inflections("44")[0],
+            &cat,
+            None,
+            PartOfSpeech::Noun,
+            false,
+        );
+        assert!(
+            kevat.iter().any(|form| form.union().number == Some(Number::Singular)),
+            "kevät keeps its singular"
+        );
+        assert!(kevat.iter().all(|form| !form.combining));
     }
 
     /// `form_readings` must return exactly the readings `inflect_all` gives for

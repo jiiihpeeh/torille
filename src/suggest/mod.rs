@@ -923,6 +923,33 @@ mod tests {
     /// emits that shape. `teli + ja` is not a form of `teli`, so the
     /// misspelling `hääsunnittelija` must reach the suggestion path, not be
     /// accepted as `teli`.
+    /// A plural-only lemma's singular stem is a combining form, not a word;
+    /// the compounds it makes are words.
+    #[test]
+    fn plural_only_singulars_are_not_words_but_compounds_are() {
+        for form in ["hää", "housu", "hynttyy", "talkootn", "hääsunnittelija"] {
+            assert!(
+                is_known_word(form).is_none(),
+                "{form} is a combining stem, not a word"
+            );
+        }
+        for compound in ["housukauppa", "hääkakku", "hääsuunnittelija", "talkooväki", "talkootyö"] {
+            assert!(
+                is_known_word(compound).is_some(),
+                "{compound} is a compound of known parts"
+            );
+        }
+        assert!(is_known_word("housut").is_some());
+        assert!(is_known_word("häät").is_some());
+        assert!(is_known_word("talkoot").is_some());
+        for typo in ["talkootn", "pidodn"] {
+            assert!(
+                !suggest(typo, 10, 2).iter().any(|word| word == typo),
+                "{typo} must not be offered as its own correction"
+            );
+        }
+    }
+
     #[test]
     fn a_lemma_plus_ja_needs_a_real_partitive_plural() {
         assert_eq!(is_known_word("taloja").as_deref(), Some("talo"));

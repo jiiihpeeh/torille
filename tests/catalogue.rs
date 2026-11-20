@@ -521,7 +521,8 @@ fn a_word_that_is_several_words_keeps_every_reading() {
                 class,
                 gradation: None,
             }],
-        }
+                plural_only: false,
+}
     }
     let builder = torille::expand::build(
         &[
@@ -626,7 +627,8 @@ fn the_index_answers_for_a_word_and_keeps_the_agreed_parts() {
                 class,
                 gradation: None,
             }],
-        }
+                plural_only: false,
+}
     }
     let builder = torille::expand::build(
         &[
@@ -672,7 +674,8 @@ fn the_no_case_question_does_not_match_every_case() {
                 class,
                 gradation: None,
             }],
-        }
+                plural_only: false,
+}
     }
     let builder = torille::expand::build(
         &[
@@ -704,7 +707,8 @@ fn a_repaired_form_is_not_suggestible() {
                 class: 1,
                 gradation: Some(torille::kotus::Gradation(7)),
             }],
-        }],
+                plural_only: false,
+}],
         &cat,
     );
     assert!(

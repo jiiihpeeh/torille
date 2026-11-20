@@ -931,6 +931,15 @@ pub struct Form {
     pub readings: Vec<Tags>,
     /// How it was built.
     pub confidence: Confidence,
+    /// A form that is real as a compound part but not as a standalone word.
+    ///
+    /// The singular cells of a plural-only lemma (`housu`, `hää`, `talkoo`)
+    /// are built by the paradigm and are needed as combining stems, but they
+    /// are not words on their own. This is a role, not a confidence: the form
+    /// is `Plain` when the class engine attached the ending plainly, and the
+    /// caller decides whether it is asking for a standalone word or a
+    /// component.
+    pub combining: bool,
 }
 
 impl Form {
@@ -940,6 +949,7 @@ impl Form {
             word,
             readings: vec![tags],
             confidence: Confidence::Guessed,
+            combining: false,
         }
     }
 

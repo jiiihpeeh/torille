@@ -33,7 +33,8 @@ fn main() -> ExitCode {
         // its components are, and the compound is their concatenation.
         let compound = torille::compound::analyze(word, &builder);
         let explanation = torille::compound::explain(word, &builder);
-        let known = !builder.bases_of(word).is_empty() || builder.readings_of(word).is_some();
+        let known = !builder.standalone_bases_of(word).is_empty()
+            || builder.standalone_readings_of(word).is_some();
         if known {
             // A dictionary compound still has an analysis worth printing: the
             // parts, which of them inflect, and which are frozen.

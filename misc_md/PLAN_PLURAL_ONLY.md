@@ -1,9 +1,12 @@
 # Plural-only lemmas at the engine level
 
-Status: **proposed.** The wizard has a saved-entry `number=pl` flag; this plan
-moves the same fact into the lexicon, where it belongs for words the sanalista
-already contains. It is a separate change from the wizard slice and must not be
-mixed with it.
+Status: **implemented, core and data layers.** The lexicon now carries a
+per-row plural-only bit (`data/plural_only.tsv` → `SAN3` blob), `Form` has a
+`combining` role, and the lookup paths separate standalone words from compound
+stems. Phase 5 (removing the local per-class `-t` filters) is a cleanup left
+for after this lands; the bit already decides the answer. The wizard's
+saved-entry `number=pl` remains the assertion for a word the lexicon does not
+contain.
 
 ## The defect
 
@@ -30,9 +33,11 @@ The checks are inconsistent:
 | `talkoot`, `hynttyyt` | 17 | **88 singular forms** (`talkootn`, `talkootta`, …) |
 | `pidot` | `1*F` | **71 singular forms** (`pidodn`, `pidota`, …) |
 
-`check("talkoo")` therefore accepts a word that is not in the language, while
-`check("housu")` correctly rejects one. The wizard's `number=pl` cannot fix
-this: it only covers the user's own entries, not the 100 k sanalista rows.
+`check("talkootn")` and `check("pidodn")` therefore accept invented singulars,
+while `check("housu")` correctly rejects one. (`talkoo` is a real sanalista
+lemma of class 17; `talkoot` is the plural-only row that borrows `talkoo`'s
+plural cells.) The wizard's `number=pl` cannot fix this: it only covers the
+user's own entries, not the 100 k sanalista rows.
 
 ## What "plural-only" must mean
 
@@ -46,10 +51,11 @@ lemma still has a productive **combining stem**:
 
 So the engine needs two answers from one paradigm:
 
-1. **Standalone forms**: only the plural cells. `hää`, `housu` and `talkoo`
+1. **Standalone forms**: only the plural cells. `hää`, `housu` and `talkootn`
    are not words.
 2. **Combining forms/stems**: every stem, including the singular one. `hää`,
-   `housu` and `talkoo` are compound modifiers.
+   `housu` and `talkoo` are compound modifiers (`talkoo` is also a real lemma
+   of class 17; the point is the stem is available either way).
 
 A post-filter on `inflect_in` that drops singular forms is therefore wrong.
 For `häät`, only the suppressed singular cells use `hää`; the plural cells use
@@ -73,7 +79,7 @@ läksiäiset		wiktionary	-inen singular omitted
 
 - The key is `(lemma, homonymy)`, not the surface alone. `pito` and `pidot`
   are different rows and only the latter is plural-only.
-- `source` is one of `kotus`, `wiktionary`, `oracle`, `manual`; `note` is free
+- `source` is one of `engine`, `kotus`, `wiktionary`, `oracle`, `manual`; `note` is free
   text without tabs. The table is the auditable evidence, not a suffix list.
 - The table must be sorted, unique, and staleness-checked against the
   sanalista (a row whose lemma disappears is an error, not a silent miss).
@@ -204,6 +210,49 @@ A new `tools/oracle/build_plural_only.py` should write the candidate table
 from the oracle/sanalista; a human decides the exceptions. Do not run the
 oracle at build time.
 
+## What landed
+
+The first implementation is deliberately the smallest complete slice:
+
+- `data/plural_only.tsv` has 388 rows: the `-t` citations whose class engine
+  currently emits only plural forms (`source=engine`), plus three reviewed
+  class-17 / `1*F` gaps (`talkoot`, `hynttyyt`, `pidot`, `source=manual`). The
+  oracle's `ok='both'` singular rows are a contradiction check; the table is
+  the authority. `tools/oracle/build_plural_only.py` regenerates the candidate
+  list.
+- `SAN3` sanalista blob: one bit per row in a section addressed by the spare
+  header word at offset 44. `EmbeddedLemma::plural_only()` and
+  `Lemma::plural_only` expose it; `parse_sanalista` consults the same committed
+  table through `src/plural_only.rs`.
+- `Form.combining` marks a form that is real as a compound part but not as a
+  word. `inflect_in_raw` marks the class forms, and `walk_generated` marks the
+  classless/compound/derived layers.
+- `FormBuilder` keeps `known` as the union for compounds and adds a
+  `standalone` bitset; `standalone_bases_of`/`standalone_readings_of` are the
+  check-facing methods. The citation reading is nominative plural for a
+  plural-only row.
+- `find_bases`, `lemma_emit`, the stem-map probes and the `check` tool use
+  `emits_standalone_form`, so a combining singular never becomes a standalone
+  base. `compound` keeps the union.
+- A plural-only `-t` citation with a singular lemma row resolves through it:
+  `pidot` borrows `pito`'s plural cells, and `talkoot` borrows `talkoo`'s.
+  `hynttyyt`, which has no singular row, keeps its class-17 cells with the
+  singulars marked combining.
+- `gen_all_forms` excludes combining forms, so the fast form set no longer
+  contains `pidodn`/`talkootn`. `gen_stem_map_noun` keeps them, so `hää`,
+  `housu` and `talkoo` remain stems. `data/stem_to_base_map.csv`,
+  `maps/all_forms.bin.gz` and `maps/stem_map_noun.bin.gz` were regenerated.
+- The wizard report exposes `recorded_plural_only`; a known plural-only lemma
+  defaults to the `gen_pl` pool and the UI preselects **vain monikko**.
+
+`talkoo` is a real sanalista lemma (class 17) as well as the combining stem, so
+it is not in the table; `talkootn` is. `pito` and `pidot` are separate rows,
+and only `pidot` is marked.
+
+Phase 5 (removing the local class filters) is not part of this slice. The
+local filters are redundant with the bit, not contradictory; removing them is
+a follow-up cleanup with no user-facing answer to gain.
+
 ## Phases
 
 | phase | deliverable | gate |
@@ -211,7 +260,7 @@ oracle at build time.
 | 0 | Audit every class's `-t`/`-iset` behaviour; agree the TSV schema and the blob layout. No code. | The audit table is in this plan; the candidate list is reproducible. |
 | 1 | `data/plural_only.tsv`, `SAN3` blob bit, `Lemma::plural_only`, `EmbeddedLemma::plural_only`. No behaviour change. | Blob round-trip test; `cargo test`; `compare_engine_outputs --strict` unchanged; blob size recorded. |
 | 2 | `Form.combining`; `inflect_in` marks the suppressed singulars; no filtering yet. | The mark is visible and no existing test moves; `Form` constructors updated. |
-| 3 | Standalone vs combining in `FormBuilder`, `find_bases`, `check_normal`; citation reading changed. | `check("talkoo")`/`check("hää")` unknown; `check("talkoot")`/`check("häät")` known; existing tests green. |
+| 3 | Standalone vs combining in `FormBuilder`, `find_bases`, `check_normal`; citation reading changed. | `check("talkootn")`/`check("hää")` unknown; `check("talkoot")`/`check("häät")` known; existing tests green. |
 | 4 | Apply the table; fix class 17 and `1*F`; regenerate stem maps, `all_forms`, and the form table (when merged). | `talkoot` emits no standalone singular; `hääkakku`, `housukauppa`, `hääsunnittelija`, `talkooväki`, `talkootyö` stay known; stem map has `hää -> häät`, `housu -> housut`, `talkoo -> talkoot`. |
 | 5 | Remove the local per-class `-t` **filters** (not the stem construction); the bit is authoritative. | Each class's tests pass; no class-specific shape check remains where the bit decides. |
 | 6 | Wizard preselect, docs, `data/README.md`, `maps/README.md`, harness baselines. | Full gates below. |
@@ -223,12 +272,13 @@ commit with the regenerated maps so the diff is attributable.
 
 - **Blob**: a synthetic lexicon with a plural-only row and a singular homonym;
   the bitset round-trips, and `Lemma::plural_only` is per row.
-- **Marking**: `talkoot` class 17 has plural forms plus combining singulars;
-  `housut` has no standalone singular; `airsoft`, `olut`, `kevät` have no
-  combining forms.
-- **Standalone**: `hää`, `housu`, `talkoo`, `hynttyy` and the invented class-17
-  singulars are unknown; `housut`, `häät`, `talkoot`, `pidot` and `hynttyyt`
-  are known.
+- **Marking**: `hynttyyt` class 17 (no singular lemma row) has plural forms
+  plus combining singulars; `talkoot`/`pidot` resolve through `talkoo`/`pito`
+  and emit no singular cells; `housut` has no standalone singular; `airsoft`,
+  `olut`, `kevät` have no combining forms.
+- **Standalone**: `hää`, `housu`, `hynttyy`, `talkootn` and `pidodn` are
+  unknown; `housut`, `häät`, `talkoot`, `pidot` and `hynttyyt` are known.
+  `talkoo` and `pito` are real lemmas of their own.
 - **Compounds**: `housukauppa`, `housunkannattimet`, `hääkakku`,
   `hääsunnittelija`, `talkooväki`, `talkootyö` known; the singular stem is
   still a stem-map key.

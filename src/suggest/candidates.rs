@@ -400,6 +400,11 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     //    morphological readings the engine produced. The engine already
     //    dropped everything outside `max_distance`.
     for sf in &report.forms {
+        // A plural-only lemma's singular stem is a compound part, not a word:
+        // never offer `talkootn`/`pidodn` as a correction.
+        if sf.form.combining {
+            continue;
+        }
         candidates.push(Suggestion {
             word: sf.form.word.clone(),
             edit_distance: 0,

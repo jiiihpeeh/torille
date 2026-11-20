@@ -17,8 +17,13 @@ pub(crate) fn push_blob_string(strings: &mut Vec<u8>, body: &mut Vec<u8>, s: &st
 /// Pack the per-row records, headword strings, inflections, POS table,
 /// homonym side map, and the two sorted orders into one binary blob. See the
 /// layout diagram in [`generate`].
-pub(crate) fn build_sanalista_blob(rows: &[Row<'_>], order: &[u32]) -> Vec<u8> {
+pub(crate) fn build_sanalista_blob(
+    rows: &[Row<'_>],
+    order: &[u32],
+    plural_only: &[bool],
+) -> Vec<u8> {
     let n = rows.len();
+    assert_eq!(plural_only.len(), n, "one plural-only bit per row");
 
     // POS is one of ~50 strings ("substantiivi", "adjektiivi, substantiivi",
     // ...). Store the strings once and a u8 code per row: this replaces
@@ -60,6 +65,15 @@ pub(crate) fn build_sanalista_blob(rows: &[Row<'_>], order: &[u32]) -> Vec<u8> {
         .filter(|(_, r)| !r.homonymy.is_empty())
         .map(|(i, r)| (i as u32, hom_id[r.homonymy]))
         .collect();
+
+    // The plural-only bit is one bit per row, so the table is a small
+    // separate section rather than a byte in the hot 8-byte record.
+    let mut plural_bits = vec![0u8; n.div_ceil(8)];
+    for (row, &flag) in plural_only.iter().enumerate() {
+        if flag {
+            plural_bits[row / 8] |= 1u8 << (row % 8);
+        }
+    }
 
     // Per-row record, 8 bytes:
     //   u32 headword offset, u8 headword length, u8 POS code,
@@ -131,12 +145,13 @@ pub(crate) fn build_sanalista_blob(rows: &[Row<'_>], order: &[u32]) -> Vec<u8> {
     // section start, and the packed `(row, id)` entries are byte-aligned
     // reads through `read_u32_le`.
     const HEADER: usize = 48;
-    const MAGIC: u32 = 0x324E_4153; // "SAN2"
+    const MAGIC: u32 = 0x334E_4153; // "SAN3"
     let strings_off = HEADER + records.len();
     let infl_off = strings_off + strings.len();
     let pos_off = infl_off + infl_codes.len() * 2;
     let hom_off = pos_off + pos_table.len();
-    let word_off = hom_off + hom_table.len();
+    let plural_off = hom_off + hom_table.len();
+    let word_off = plural_off + plural_bits.len();
     let tail_off = word_off + 4 * n;
 
     let mut out: Vec<u8> = Vec::with_capacity(tail_off + 4 * n);
@@ -151,7 +166,7 @@ pub(crate) fn build_sanalista_blob(rows: &[Row<'_>], order: &[u32]) -> Vec<u8> {
     out.extend_from_slice(&(hom_entries.len() as u32).to_le_bytes());
     out.extend_from_slice(&(word_off as u32).to_le_bytes());
     out.extend_from_slice(&(tail_off as u32).to_le_bytes());
-    out.extend_from_slice(&0u32.to_le_bytes());
+    out.extend_from_slice(&(plural_off as u32).to_le_bytes());
     out.extend_from_slice(&records);
     out.extend_from_slice(&strings);
     for code in &infl_codes {
@@ -159,6 +174,7 @@ pub(crate) fn build_sanalista_blob(rows: &[Row<'_>], order: &[u32]) -> Vec<u8> {
     }
     out.extend_from_slice(&pos_table);
     out.extend_from_slice(&hom_table);
+    out.extend_from_slice(&plural_bits);
     for &r in order {
         out.extend_from_slice(&r.to_le_bytes());
     }
@@ -208,15 +224,41 @@ pub(crate) fn build_sanalista_blob(rows: &[Row<'_>], order: &[u32]) -> Vec<u8> {
 /// `FIELDS: [(&str, &str, &str); 104743]` and the per-headword phf
 /// index were both removed once the sorted `WORD_ORDER` section could
 /// serve `by_word` directly.
-pub(crate) fn generate(text: &str) -> Vec<u8> {
+pub(crate) fn generate(text: &str, plural_only_text: &str) -> Vec<u8> {
     let rows = parse_rows(text);
     assert!(!rows.is_empty(), "the sanalista parsed to no rows");
+    let plural_only = plural_only_table(plural_only_text);
 
     // Every lookup is served from the blob: the per-row records and
     // strings, the inflections, and `WORD_ORDER` (sorted by headword,
     // which `by_word` binary-searches). There is no separate phf index.
     let order = sorted_word_order(&rows);
-    build_sanalista_blob(&rows, &order)
+    let flags: Vec<bool> = rows
+        .iter()
+        .map(|row| plural_only.contains(&(row.word, row.homonymy)))
+        .collect();
+    build_sanalista_blob(&rows, &order, &flags)
+}
+
+/// Parse `data/plural_only.tsv` into `(lemma, homonymy)` keys.
+///
+/// The table is committed and reviewed; the bit is set from it, never guessed
+/// from a class or a suffix here.
+fn plural_only_table(text: &str) -> std::collections::HashSet<(&str, &str)> {
+    let mut out = std::collections::HashSet::new();
+    for line in text.lines() {
+        if line.trim().is_empty() || line.starts_with('#') {
+            continue;
+        }
+        let mut fields = line.split('\t');
+        let Some(word) = fields.next() else { continue };
+        let homonymy = fields.next().unwrap_or("");
+        if word.is_empty() {
+            continue;
+        }
+        out.insert((word, homonymy));
+    }
+    out
 }
 
 /// All row indices sorted by their word, ascending. Used by

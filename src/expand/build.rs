@@ -22,6 +22,13 @@ pub struct FormBuilder {
     suggestible: Vec<u64>,
     /// How many bits in [`Self::suggestible`] are set.
     suggestible_len: usize,
+    /// Which of `known`'s words have a standalone reading, one bit per
+    /// position in `known`.
+    ///
+    /// A plural-only lemma's singular stem is a real form for compound
+    /// resolution but not a word (`housu`, `hää`, `talkoo`). This is the
+    /// standalone half of the answer; `known` remains the union.
+    standalone: Vec<u64>,
     /// Lemmas only, for head detection in compound analysis.
     pub lemmas: WordSet,
     /// The readings of every word in `known`, in the order the words went in.
@@ -258,9 +265,15 @@ impl FormBuilder {
                 // word with no case at all, and the only thing to say about it
                 // is what it is.
                 _ if lemma.is_indeclinable() => Tags::UNKNOWN.of_pos(pos),
+                // A plural-only lemma is cited by its nominative plural:
+                // `housut`, `häät`, `talkoot`.
+                _ if lemma.plural_only => {
+                    Tags::of_number(Case::Nominative, Number::Plural).of_pos(pos)
+                }
                 _ => Tags::of_number(Case::Nominative, Number::Singular).of_pos(pos),
             };
             let p = self.accept(lemma.word, lemma.word, &[citation], Confidence::Plain);
+            self.mark_standalone(p);
             self.mark_suggestible(p);
             // An interjection is a word, not a nominal paradigm. The sanalista
             // gives `stop` class 5, but the noun is `stoppi`; running class 5
@@ -284,7 +297,7 @@ impl FormBuilder {
                 {
                     continue;
                 }
-                for form in inflect_in(
+                for mut form in inflect_in(
                     lemma.word,
                     *inflection,
                     cat,
@@ -292,10 +305,20 @@ impl FormBuilder {
                     pos,
                     lemma.part_of_speech.contains("substantiivi"),
                 ) {
+                    // The mark from `inflect_in` is word-level. This row is the
+                    // authority: a homonym that is not plural-only keeps the
+                    // form standalone.
+                    form.combining = lemma.plural_only
+                        && !form.word.eq_ignore_ascii_case(lemma.word)
+                        && form.union().number != Some(Number::Plural);
+                    let combining = form.combining;
                     let plain = form.plain() && is_phonotactic(&form.word);
                     let p = self.accept(&form.word, lemma.word, form.readings(), form.confidence);
-                    if plain {
-                        self.mark_suggestible(p);
+                    if !combining {
+                        self.mark_standalone(p);
+                        if plain {
+                            self.mark_suggestible(p);
+                        }
                     }
                 }
             }
@@ -339,6 +362,47 @@ impl FormBuilder {
             self.add_base(p, packed, cases);
         }
         p
+    }
+
+    /// Marks the word at `position` as having a standalone reading.
+    fn mark_standalone(&mut self, position: usize) {
+        let word = position / 64;
+        if word >= self.standalone.len() {
+            self.standalone.resize(word + 1, 0);
+        }
+        self.standalone[word] |= 1u64 << (position % 64);
+    }
+
+    /// Whether the word at `position` has a standalone reading.
+    fn standalone_bit(&self, position: usize) -> bool {
+        self.standalone
+            .get(position / 64)
+            .is_some_and(|word| word & (1u64 << (position % 64)) != 0)
+    }
+
+    /// Whether `word` has a standalone reading.
+    pub fn is_standalone(&self, word: &str) -> bool {
+        self.known
+            .position(word)
+            .is_some_and(|position| self.standalone_bit(position))
+    }
+
+    /// The standalone bases of `word`, excluding a compound-only stem.
+    pub fn standalone_bases_of(&self, word: &str) -> Vec<&str> {
+        if self.is_standalone(word) {
+            self.bases_of(word)
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// The readings of `word` when it has a standalone reading.
+    pub fn standalone_readings_of(&self, word: &str) -> Option<&[Tags]> {
+        if self.is_standalone(word) {
+            self.readings_of(word)
+        } else {
+            None
+        }
     }
 
     /// Marks the word at `position` as one a suggestion may offer.
@@ -782,6 +846,9 @@ impl FormBuilder {
             }
         }
         for (op, &p) in where_from.iter().enumerate() {
+            if other.standalone_bit(op) {
+                self.mark_standalone(p as usize);
+            }
             if other.suggestible_bit(op) {
                 self.mark_suggestible(p as usize);
             }
@@ -845,6 +912,7 @@ impl FormBuilder {
     /// word already in the set, and at 17M words that chain is seconds.
     pub fn reserve_words(&mut self, words: usize) {
         self.known.reserve(words);
+        self.standalone.reserve(words / 64);
         self.analyses.reserve(words);
         self.first_base.reserve(words);
         self.more_bases.reserve(words / 64);
@@ -1083,7 +1151,8 @@ mod tests {
                         gradation: None,
                     })
                     .collect(),
-            })
+                        plural_only: false,
+})
             .collect()
     }
 
@@ -1153,6 +1222,35 @@ mod tests {
 
     /// A repaired form is accepted but never offered as a correction.
     ///
+    /// A plural-only lemma's singular stem is a component, not a word.
+    #[test]
+    fn a_plural_only_lemma_keeps_its_stem_out_of_the_standalone_set() {
+        let cat = cat();
+        let lemma = Lemma {
+            word: "hynttyyt",
+            homonymy: "",
+            part_of_speech: "substantiivi",
+            inflections: crate::kotus::parse_inflections("17"),
+            plural_only: true,
+        };
+        let b = build(&[lemma], &cat);
+        assert!(b.known.contains("hynttyyt"));
+        assert!(
+            b.known.contains("hynttyytn"),
+            "the union keeps the class-17 stem form"
+        );
+        assert!(b.is_standalone("hynttyyt"), "the citation is a word");
+        assert!(!b.is_standalone("hynttyytn"), "the singular is combining");
+        assert!(
+            b.standalone_bases_of("hynttyytn").is_empty(),
+            "a combining form is not a standalone base"
+        );
+        assert!(
+            b.bases_of("hynttyytn").contains(&"hynttyyt"),
+            "compound resolution still sees the union"
+        );
+    }
+
     /// `väki` (class 7*D) has the genitive plural `väkien` beside the
     /// over-complete `väkein`; the first is plain, the second repaired. The
     /// index marks only the plain one suggestible.
@@ -1164,7 +1262,8 @@ mod tests {
             homonymy: "",
             part_of_speech: "substantiivi",
             inflections: crate::kotus::parse_inflections("7*D"),
-        };
+                plural_only: false,
+};
         let b = build(&[lemma], &cat);
         assert!(b.known.contains("väkien"), "the plain form is a word");
         assert!(b.known.contains("väkein"), "the repaired form is a word");
@@ -1319,7 +1418,8 @@ mod tests {
                     class: 99,
                     gradation: None,
                 }],
-            },
+                        plural_only: false,
+},
             Lemma {
                 word: "toiste",
                 homonymy: "2",
@@ -1328,7 +1428,8 @@ mod tests {
                     class: 48,
                     gradation: None,
                 }],
-            },
+                        plural_only: false,
+},
         ];
         let cat = cat();
         let mut b = FormBuilder::new();
@@ -1574,7 +1675,8 @@ mod tests {
                 class: 5,
                 gradation: None,
             }],
-        }];
+                plural_only: false,
+}];
         let cat = cat();
         let mut b = FormBuilder::new();
         for lemma in &lex {

@@ -35,6 +35,7 @@ type Report = {
   word: string;
   pos: string;
   recorded: string[];
+  recorded_plural_only: boolean;
   candidates: Candidate[];
   total_candidates: number;
   outcomes: Outcome[];
@@ -196,6 +197,14 @@ async function infer(): Promise<void> {
     }
     state.report = reply.report;
     state.selected = null;
+    if (
+      reply.report.recorded_plural_only
+      && state.number === 'both'
+      && state.answers.size === 0
+    ) {
+      state.number = 'pl';
+      byId<HTMLSelectElement>('number').value = 'pl';
+    }
     render();
   } catch (error) {
     message(String(error), true);
@@ -435,6 +444,7 @@ function indeclinableReport(): Report {
     word: state.word,
     pos: state.pos,
     recorded: [],
+    recorded_plural_only: false,
     candidates: [{
       class: '99',
       hits: 0,

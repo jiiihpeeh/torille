@@ -150,6 +150,18 @@ check('verb paradigm', verbParadigm?.type === 'wizard-paradigm'
   && verbParadigm.paradigm?.cells?.imp_2sg === 'puhu',
   JSON.stringify(verbParadigm?.paradigm?.cells));
 
+const knownPlural = await core.handle({
+  type: 'wizard-infer',
+  word: 'housut',
+  pos: 'noun',
+  answers: '# torille-wizard-answers v1\n',
+});
+check('known plural-only asks the plural pool',
+  knownPlural?.type === 'wizard-infer'
+    && knownPlural.report?.recorded_plural_only === true
+    && knownPlural.report?.question === 'gen_pl',
+  JSON.stringify(knownPlural?.report?.question));
+
 const pluralReport = await core.handle({
   type: 'wizard-infer',
   word: 'kiikarit',

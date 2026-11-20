@@ -74,7 +74,11 @@ fn main() {
     );
 
     let text = std::fs::read_to_string(&data).unwrap_or_else(|e| panic!("{}: {e}", data.display()));
-    let blob = generate(&text);
+    let plural_only = Path::new(&manifest).join("data/plural_only.tsv");
+    println!("cargo:rerun-if-changed={}", plural_only.display());
+    let plural_only_text = std::fs::read_to_string(&plural_only)
+        .unwrap_or_else(|e| panic!("{}: {e}", plural_only.display()));
+    let blob = generate(&text, &plural_only_text);
 
     // The uncompressed maps live in `OUT_DIR` and are what `include_bytes!`
     // embeds; the committed copies under `maps/` are gzip-compressed at the

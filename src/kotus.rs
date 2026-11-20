@@ -74,6 +74,9 @@ pub struct Lemma<'a> {
     /// The one owned field: it is a variable-length list, and packing it into
     /// the flat table would mean decoding on every read.
     pub inflections: Vec<Inflection>,
+    /// The lemma has no standalone singular paradigm; its singular stem is a
+    /// combining form. See `data/plural_only.tsv` and `Form::combining`.
+    pub plural_only: bool,
 }
 
 /// Whether a class number stands for a model declension rather than marking the
@@ -281,6 +284,7 @@ pub fn parse_sanalista(text: &str) -> Vec<Lemma<'_>> {
             homonymy,
             part_of_speech,
             inflections,
+            plural_only: crate::plural_only::contains(word, homonymy),
         });
     }
     out
@@ -448,6 +452,18 @@ fn row_infl_start(row: u32) -> u32 {
     read_u16(generated::BLOB, row_record(row) + 6) as u32
 }
 
+/// Whether `row` is marked plural-only in the blob's bitset.
+///
+/// The bitset section starts at the header word at offset 44; one bit per row,
+/// least-significant bit first.
+fn row_plural_only(row: u32) -> bool {
+    let b = generated::BLOB;
+    let base = read_u32(b, 44) as usize;
+    let bit = row as usize;
+    b.get(base + bit / 8)
+        .is_some_and(|byte| byte & (1u8 << (bit % 8)) != 0)
+}
+
 /// A row of the embedded lexicon, borrowed out of the blob.
 ///
 /// The struct carries only a `u32` row index. The three string
@@ -480,6 +496,12 @@ impl EmbeddedLemma {
     #[inline]
     pub fn homonymy(&self) -> &'static str {
         row_field(self.row, 1)
+    }
+
+    /// Whether the lemma has no standalone singular paradigm.
+    #[inline]
+    pub fn plural_only(&self) -> bool {
+        row_plural_only(self.row)
     }
 
     /// The part of speech, in the sanalista's own Finnish wording.
@@ -523,6 +545,16 @@ impl EmbeddedLemma {
     pub fn row(&self) -> u32 {
         self.row
     }
+}
+
+/// Whether any sanalista row for `word` is marked plural-only.
+///
+/// The row-level bit is [`EmbeddedLemma::plural_only`]; this is the word-level
+/// convenience the inflection layer uses when it has only a surface. A caller
+/// that has a [`Lemma`] should read `Lemma::plural_only` instead, because a
+/// homonym can have one plural-only row and one ordinary row.
+pub fn is_plural_only_word(word: &str) -> bool {
+    sanalista().by_word(word).any(|row| row.plural_only())
 }
 
 /// The embedded sanalista: the lexicon, parsed at build time.
@@ -687,6 +719,7 @@ impl Sanalista {
                 homonymy: e.homonymy(),
                 part_of_speech: e.part_of_speech(),
                 inflections: e.inflections().collect(),
+                plural_only: e.plural_only(),
             })
             .collect()
     }

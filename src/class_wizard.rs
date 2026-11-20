@@ -428,6 +428,9 @@ pub struct Report {
     pub pos: PartOfSpeech,
     /// The classes the sanalista records for this word, if it knows it.
     pub recorded: Vec<Inflection>,
+    /// Whether the recorded row says the lemma has no standalone singular.
+    /// The UI preselects the plural pool for such a word.
+    pub recorded_plural_only: bool,
     /// Every candidate class, best first.
     pub ranked: Vec<Candidate>,
     /// Each answer's verdict under `ranked[0]`.
@@ -719,6 +722,11 @@ pub fn user_word_forms(
             continue;
         }
         for form in inflect_in(&lemma, inflection, cat, Some(index), entry.pos, false) {
+            // The saved-word set is a list of words, not a compound-stem
+            // index: a plural-only lemma's singular cells are combining forms.
+            if form.combining {
+                continue;
+            }
             if entry.number.is_some_and(|want| {
                 form.union()
                     .number
@@ -1024,6 +1032,7 @@ pub fn indeclinable(lemma: &str, pos: PartOfSpeech) -> Result<Report, WizardErro
         lemma: surface.to_string(),
         pos,
         recorded,
+        recorded_plural_only: false,
         ranked: vec![Candidate {
             class: Inflection {
                 class: INDECLINABLE_CLASS,
@@ -1078,7 +1087,6 @@ pub fn infer_with_number(
     if !is_supported(pos) {
         return Err(WizardError::UnsupportedPartOfSpeech(pos));
     }
-    let pool = question_pool(pos, number);
     // The engine's lexicon and class engines work on the lower-case headword.
     // The surface is kept for display; the UI restores capitalization when it
     // shows the forms.
@@ -1090,6 +1098,15 @@ pub fn infer_with_number(
     }
     recorded.sort_by_key(|inflection| (inflection.class, inflection.gradation));
     recorded.dedup();
+    let recorded_plural_only = recorded.iter().any(|inflection| {
+        kotus::sanalista().by_word(&lemma).any(|row| {
+            row.plural_only() && row.inflections().any(|have| have == *inflection)
+        })
+    });
+    // A known plural-only lemma defaults to the plural pool. The user can still
+    // pass an explicit number; `number` is only the absence of a choice.
+    let number = number.or_else(|| recorded_plural_only.then_some(Number::Plural));
+    let pool = question_pool(pos, number);
 
     let mut asked: Vec<(String, Cell)> = answers
         .keys()
@@ -1205,6 +1222,7 @@ pub fn infer_with_number(
         lemma: surface.to_string(),
         pos,
         recorded,
+        recorded_plural_only,
         ranked: scored.iter().map(|scored| scored.candidate).collect(),
         outcomes,
         question,
@@ -1731,6 +1749,24 @@ mod tests {
         let forms = user_word_forms(&entry, catalogue(), &index);
         assert!(forms.iter().any(|form| form == "kiikariihin"));
         assert!(!forms.iter().any(|form| form == "kiikaria"));
+    }
+
+    #[test]
+    fn a_plural_only_entry_drops_the_combining_singulars() {
+        let entry = UserWord {
+            word: "hynttyyt".to_string(),
+            class: "17".to_string(),
+            pos: PartOfSpeech::Noun,
+            pos_name: "substantiivi".to_string(),
+            number: None,
+        };
+        let index = LexiconIndex::new(kotus::lemmas());
+        let forms = user_word_forms(&entry, catalogue(), &index);
+        assert!(forms.iter().any(|form| form == "hynttyyt"));
+        assert!(
+            !forms.iter().any(|form| form == "hynttyytn"),
+            "a combining singular is not a standalone saved word"
+        );
     }
 
     #[test]

@@ -81,7 +81,7 @@ pub(super) fn find_base_via_stem_map_static(
     // (surface, base) pair many times -- once per pass, per possessive variant,
     // per recursion -- and `emits_form` caches the built paradigm. Listing it
     // rebuilt a 1 200-form verb paradigm per ask.
-    let hit = crate::expand::emits_form(
+    let hit = crate::expand::emits_standalone_form(
         lemma.word(),
         &inflections,
         catalogue(),
@@ -142,7 +142,7 @@ pub(super) fn find_base_via_stem_map_static_possessive(word: &str, base: &str) -
     // numeral). Try every row before rejecting the stem.
     for lemma in sanalista().by_word(base) {
         let inflections: Vec<_> = lemma.inflections().collect();
-        if crate::expand::emits_form(
+        if crate::expand::emits_standalone_form(
             lemma.word(),
             &inflections,
             catalogue(),
@@ -169,7 +169,7 @@ fn find_base_via_verb_stem_map_static(
     let lex = sanalista();
     let lemma = lex.by_word(base).next()?;
     let inflections: Vec<_> = lemma.inflections().collect();
-    let hit = crate::expand::emits_form(
+    let hit = crate::expand::emits_standalone_form(
         lemma.word(),
         &inflections,
         catalogue(),

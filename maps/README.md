@@ -84,9 +84,9 @@ one, or `map_gz compress|decompress` for a manual round-trip.
 
 | blob | producer | reader | contents |
 |---|---|---|---|
-| `sanalista.bin.gz` | `build.rs` → `build/csv_builders/sanalista.rs` | `src/kotus.rs` | the 104 743-row lexicon: headwords, POS/inflection codes, and the by-word / by-reversed-word orders |
+| `sanalista.bin.gz` | `build.rs` → `build/csv_builders/sanalista.rs` | `src/kotus.rs` | the 104 743-row lexicon: headwords, POS/inflection codes, the plural-only bitset (`data/plural_only.tsv`), and the by-word / by-reversed-word orders |
+| `all_forms.bin.gz` | `build.rs` (from `data/all_forms.csv`) | `src/expand/all_forms.rs` | standalone fast forms; combining singulars of plural-only lemmas are excluded |
 | `catalogue.bin.gz` | `build.rs` → `build/csv_builders/catalogue.rs` | `src/spec.rs` | paradigm templates, 8 slots per class (`data/catalogue.csv`) |
-| `all_forms.bin.gz` | `build.rs` → `build/map_builders/front_coded.rs` | `src/expand/all_forms.rs` | front-coded set of lemma + genitive forms for the fast pass |
 | `stem_map_noun.bin.gz` | `build.rs` → `build/map_builders/front_coded.rs` | `src/expand/check_normal.rs` | noun `(stem → bases)` map |
 | `stem_map_verb.bin.gz` | `build.rs` → `build/map_builders/front_coded.rs` | `src/expand/check_normal.rs` | verb `(stem → bases)` map |
 | `proper_names.bin.gz` | `build.rs` → `build/map_builders/huffman.rs` | `src/expand/proper_names.rs` | `HST1` static-Huffman set of accepted proper-name forms |

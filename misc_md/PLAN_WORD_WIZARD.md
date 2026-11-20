@@ -625,18 +625,16 @@ and suggestions, and the measured adaptive-versus-fixed accuracy.
 
 ### Remaining work
 
-1. **Plural-only at the lexicon level.** The saved-entry flag covers user words
-   only. Known plural-only lemmas still rely on the per-class `-t` heuristic,
-   which is inconsistent: `talkoot` (class 17) and `pidot` (class `1*F`) still
-   emit singulars, and `check("talkoo")` accepts one. The fact is lexical, so
-   it belongs in a per-lemma bit in the sanalista map, sourced from the oracle
-   or a curated list — not from a suffix rule.
-2. **Compounds keep the singular stem.** `housukauppa`, `hääsunnittelija` and
-   `talkooväki` show that a plural-only lemma's singular stem is a combining
-   form. The bit must suppress standalone singular **forms** only; the stem map
-   and compound index must keep `housu`, `hää` and `talkoo`. A post-filter on
-   `inflect_in` would remove `hää` from the stem map (only the suppressed
-   singular cells use it) and break `hääkakku`.
+1. **Plural-only at the lexicon level — done.** See
+   `PLAN_PLURAL_ONLY.md`. `data/plural_only.tsv` sets a per-row bit in the
+   `SAN3` sanalista blob; `talkoot` and `pidot` resolve through `talkoo` and
+   `pito`, so their invented singulars no longer reach `check`. `talkoo`
+   itself is a real class-17 lemma, not a defect.
+2. **Compounds keep the singular stem — done.** `Form.combining` marks a
+   stem-only form; `FormBuilder` keeps the union for compounds and a
+   `standalone` bitset for `check`/`suggest`; the stem map keeps `housu`,
+   `hää` and `talkoo`. `housukauppa`, `hääkakku`, `hääsuunnittelija`,
+   `talkooväki` and `talkootyö` are regression tests.
 3. **Custom words and compounds.** The extension's custom-word set is a flat
    surface set, so a saved `housut` does not make `housukauppa` acceptable. A
    separate `userStems` set (or a compound-aware custom-word path) would be

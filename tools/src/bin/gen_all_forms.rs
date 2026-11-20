@@ -52,6 +52,11 @@ fn main() {
             continue;
         }
         for form in torille_tools::inflect_lemma(lemma.word, catalogue, &index) {
+            // A plural-only lemma's singular cells are combining stems, not
+            // words; the fast form set must not accept them.
+            if form.combining {
+                continue;
+            }
             let tags = form.union();
             if tags.polarity == Polarity::Negative || tags.clitic.is_some() {
                 continue;

@@ -763,7 +763,8 @@ mod tests {
                 class,
                 gradation: None,
             }],
-        }
+                plural_only: false,
+}
     }
 
     fn word_with_pos(word: &str, class: u16, pos: &'static str) -> Lemma<'static> {
@@ -775,7 +776,8 @@ mod tests {
                 class,
                 gradation: None,
             }],
-        }
+                plural_only: false,
+}
     }
 
     /// `kyky` is class `1*M`: the genitive is `kyvyn`, not `kykyn`.
@@ -788,7 +790,8 @@ mod tests {
                 class,
                 gradation: Some(crate::kotus::Gradation(13)),
             }],
-        }
+                plural_only: false,
+}
     }
 
     fn builder(lemmas: Vec<Lemma<'static>>) -> FormBuilder {

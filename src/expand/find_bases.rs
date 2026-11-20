@@ -766,7 +766,7 @@ fn lemma_emit(
     if !super::stem_shape::might_emit(lemma, word) {
         return false;
     }
-    super::emits_form(
+    super::emits_standalone_form(
         lemma.word,
         &lemma.inflections,
         cat,
@@ -904,7 +904,7 @@ fn find_bases_with_inner<'a>(
         // into `forms` paired with the lemma that produced it. After this
         // block `generated` is moved into `forms`, so the `any` decision
         // must come first.
-        let owns_input = generated.iter().any(|f| f.word == word);
+        let owns_input = generated.iter().any(|f| f.word == word && !f.combining);
         for f in generated {
             if keep_form.is_none_or(|keep| keep(&f.word)) {
                 forms.push(SourcedForm {
@@ -1065,7 +1065,7 @@ fn find_bases_with_inner<'a>(
                     pos,
                     possessives,
                 );
-                if generated.iter().any(|f| f.word == word) {
+                if generated.iter().any(|f| f.word == word && !f.combining) {
                     for f in generated {
                         if keep_form.is_none_or(|keep| keep(&f.word)) {
                             forms.push(SourcedForm {
@@ -1310,7 +1310,7 @@ fn walk_head1_chunk<'a>(
         // against the lemma's paradigm and we want to know whether this lemma
         // *is* the base of the input (edit distance 0). Both sides are
         // lowercased, so the comparison is case-stable.
-        let owns_input = generated.iter().any(|f| f.word == word);
+        let owns_input = generated.iter().any(|f| f.word == word && !f.combining);
         for f in generated {
             if keep_form.is_none_or(|keep| keep(&f.word)) {
                 out.forms.push(SourcedForm {

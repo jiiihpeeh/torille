@@ -235,6 +235,7 @@ pub(super) fn compound_paradigm(
                     word: format!("{h}{separator}{tail_surface}"),
                     readings: t.readings.clone(),
                     confidence: t.confidence,
+                    combining: t.combining,
                 });
             }
         }

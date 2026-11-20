@@ -213,7 +213,8 @@ mod tests {
             homonymy: "",
             part_of_speech: "substantiivi",
             inflections: Vec::new(),
-        };
+                plural_only: false,
+};
         assert_eq!(row_of(&other), None);
     }
 

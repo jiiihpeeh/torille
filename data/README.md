@@ -68,6 +68,7 @@ committed files are what a build uses.
 | `verb_connegatives.csv`, `verb_connectives.csv` | `tools/oracle/build_verb_lexicon.py` | connegatives and negation fusions |
 | `verb_rection.csv` | curated (Kotus/Kielitoimiston ohjepankki) | `lemma,case,frame,priority,note` valency frames used by the syntax checker |
 | `verb_arguments.csv` | curated (Kotus/Kielitoimiston ohjepankki) | `lemma,slot,case,requirement,note` argument-completeness frames used by the syntax checker |
+| `plural_only.tsv` | `tools/oracle/build_plural_only.py` | `(lemma, homonymy, source, note)` rows with no standalone singular; `build.rs` sets the sanalista bit |
 | `oracle_exceptions.json` | curated | evidence for the harness (`tools/test_illegal_evidence.py`) |
 | `wiktionary-taivutukset.txt` | Wiktionary | fetched paradigms used by `tests/catalogue.rs` |
 

@@ -19,6 +19,7 @@ pub mod check;
 pub(crate) mod harmony;
 pub mod hyphenation;
 pub mod kotus;
+mod plural_only;
 mod map_reader;
 pub mod morphology;
 pub mod pronoun;
