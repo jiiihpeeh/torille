@@ -253,6 +253,31 @@ Phase 5 (removing the local class filters) is not part of this slice. The
 local filters are redundant with the bit, not contradictory; removing them is
 a follow-up cleanup with no user-facing answer to gain.
 
+## Measured results
+
+The answer matrix after the change:
+
+| input | result |
+|---|---|
+| `housu`, `hää`, `hynttyy`, `talkootn`, `pidodn` | unknown (the last two also get the right suggestions) |
+| `housut`, `häät`, `talkoot`, `pidot`, `hynttyyt` | known |
+| `housukauppa`, `hääkakku`, `hääsuunnittelija`, `talkooväki`, `talkootyö` | known |
+| `talkoo`, `pito` | known (their own sanalista rows) |
+| `kevät`, `olut`, `airsoft` | known with their singulars |
+
+Gates:
+
+- `cargo test --release --workspace` and clippy clean;
+- binding agreement: all 23 lemmas identical;
+- reverse-lookup recall: 97.59 % first base, 5.81 % multi-base;
+- `compare_engine_outputs.py --strict`: `all_forms` 6,475,804 rows,
+  `stem_map_noun` 245,184 pairs, all shared, 0 lost/new; the pre-existing
+  `stem_map_verb` lost=4/new=4 remains;
+- `test_illegal_evidence.py`: 463 illegal / 8 missing / 3,711 unsupported,
+  every illegal row explained, 128 rules live;
+- wizard core/page smoke and both extension `npm test` suites pass;
+- maps republished to both remotes at `b65e190`.
+
 ## Phases
 
 | phase | deliverable | gate |
