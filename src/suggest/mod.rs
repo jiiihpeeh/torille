@@ -919,6 +919,22 @@ mod tests {
         assert_eq!(is_known_word("vettä").as_deref(), Some("vesi"));
     }
 
+    /// A lemma plus `-ja` is only a partitive plural if the class actually
+    /// emits that shape. `teli + ja` is not a form of `teli`, so the
+    /// misspelling `hääsunnittelija` must reach the suggestion path, not be
+    /// accepted as `teli`.
+    #[test]
+    fn a_lemma_plus_ja_needs_a_real_partitive_plural() {
+        assert_eq!(is_known_word("taloja").as_deref(), Some("talo"));
+        assert_eq!(is_known_word("telija"), None);
+        assert_eq!(is_known_word("sunnittelija"), None);
+        assert_eq!(is_known_word("hääsunnittelija"), None);
+        assert_eq!(
+            crate::suggest::suggest("hääsunnittelija", 1, 2).first().map(String::as_str),
+            Some("hääsuunnittelija")
+        );
+    }
+
     /// `is_known_word` still refuses misspellings that happen
     /// to end in a productive suffix.
     #[test]

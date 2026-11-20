@@ -466,9 +466,14 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
         if NOUN_LEMMA_PROBE_ENDINGS.contains(ending) && lex.contains(stem) {
             // A stem ending in `t` may be a plural-only lemma (`housut`), in
             // which case the singular-shaped strip is not a real form
-            // (`housutja`, `housutssa`). Verify those; the common singular
-            // stems keep the cheap lemma probe.
-            if !stem.ends_with('t') {
+            // (`housutja`, `housutssa`). The `-ja`/`-jä` probe is the
+            // partitive plural (`taloja`), but it is not a suffix every
+            // class uses and it follows vowel harmony: `teli` + `ja` is not
+            // a form of `teli` (`telijä` would not be either, because class
+            // 5's plural partitive is not that shape). Verify both rather
+            // than accepting any lemma plus `-ja`; the cheap probe stays for
+            // the case endings that have no such ambiguity.
+            if !stem.ends_with('t') && !matches!(*ending, "ja" | "jä") {
                 return Some(stem.to_string());
             }
             if let Some(base) =
