@@ -350,3 +350,8 @@ The conditional/potential connegative is closed as won’t-fix, and the optional
 `Clause.sentence` / flat `ClauseKind` cleanup remains deferred without a
 consumer. The full record is
 [`../misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md`](../misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md).
+
+A clause-by-clause comparison with the programmatic Finnish punctuation
+specification — including the missing main-clause, indirect-question, vocative,
+apposition and typography layers — is in
+[`../misc_md/REVIEW_PUNCTUATION_SPEC.md`](../misc_md/REVIEW_PUNCTUATION_SPEC.md).
