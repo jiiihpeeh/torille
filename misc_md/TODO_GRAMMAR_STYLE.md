@@ -1397,3 +1397,11 @@ intended/competing interpretation pair that fails.
   case the suffix hides. Both have regressions; the deeper
   `erityiset olosuhteet` agreement and `ilman` comma segmentation findings are
   recorded for the next round rather than guessed at.
+- 2026-11-20: punctuation precision. `comma_missing` no longer fires across a
+  `kuin` comparison (`niin kauan kuin kaikki ovat yhtä köyhiä`); `question_mark`
+  skips a dash-interrupted question at the dash, a question continued on the
+  next line, a correlative relative (`Minkä …, se …`) and a rhetorical
+  conditional (`Mitä … tulisinkaan …, jos …`), while still marking the final
+  period. `page-2000` is 5 → 3 diagnostics (the two agreement rows and the
+  document-end open quote remain); the prose suite stays 266 rows / 6,349 words
+  with 2 true positives and 0 known false positives.

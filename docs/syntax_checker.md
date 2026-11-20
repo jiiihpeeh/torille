@@ -55,10 +55,10 @@ the checker only when the user presses the grammar button.
 | `missing_argument` | an obligatory slot from `data/verb_arguments.csv` is absent | `Warning` |
 | `extra_argument` | a closed intransitive frame has an object | `Warning` |
 | `clause_structure` | a declarative clause has no finite predicate, or ends in a coordinator without a coordinated predicate | `Warning`, never a correction |
-| `comma_missing` | subordinate clause needs a comma; `esimerkiksi` needs a parenthetical pair | `Error`, or `Suggestion` for the parenthetical |
+| `comma_missing` | subordinate clause needs a comma; `esimerkiksi` needs a parenthetical pair; a `kuin` comparison boundary does **not** need one | `Error`, or `Suggestion` for the parenthetical |
 | `comma_extra` | a comma directly between a personal-pronoun subject and its finite predicate | `Warning` with a `Likely` removal |
 | `comma_pair_unbalanced` | an opened relative-clause comma pair is not closed | `Error` |
-| `question_mark_missing` | a clear direct question ends with `.` or no mark | `Error` |
+| `question_mark_missing` | a clear direct question ends with `.` or no mark; a dash-interrupted or line-wrapped question gets no mark at the break, and a correlative relative or rhetorical conditional stays quiet | `Error` |
 | `unbalanced_quote` | a quotation is still open at the end of the text | `Warning` |
 | `list_separator_missing` | two adjacent list items have no separator | `Error` |
 | `list_separator_duplicate` | a list item is separated twice | `Error` |

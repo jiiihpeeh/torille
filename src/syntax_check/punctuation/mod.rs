@@ -111,6 +111,57 @@ mod tests {
     }
 
     #[test]
+    fn a_dash_interrupted_question_marks_the_final_period() {
+        let text = "Muistatko--muistatko sen vanhan kirjan.";
+        let found = kind(text, DiagnosticKind::QuestionMarkMissing);
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].corrections[0].edits[0].start, text.len() - 1);
+    }
+
+    #[test]
+    fn a_rhetorical_question_with_a_conditional_is_not_forced() {
+        let text = "Mitä vaivaisveroa tulisinkaan maksamaan, jos panisin niihin \
+                    niiden todellisen arvon, niiden ainoan, sen, mikä niillä on \
+                    minulle.";
+        assert!(
+            kind(text, DiagnosticKind::QuestionMarkMissing).is_empty(),
+            "{:#?}",
+            diagnostics(text)
+        );
+    }
+
+    #[test]
+    fn a_correlative_relative_is_not_a_question() {
+        assert!(
+            kind(
+                "'Minkä kerran täytyy tapahtua, se tapahtuu.",
+                DiagnosticKind::QuestionMarkMissing,
+            )
+            .is_empty()
+        );
+    }
+
+    #[test]
+    fn a_relative_clause_does_not_hide_the_question_mark() {
+        let text = "Muistatko--muistatko sen vanhan kirjan, Genovevan, joka oli \
+                    kulunut minun käsissäni ja joka myöskin kului meidän lastemme \
+                    käsissä.";
+        let found = kind(text, DiagnosticKind::QuestionMarkMissing);
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].corrections[0].edits[0].start, text.len() - 1);
+    }
+
+    #[test]
+    fn a_question_continuing_on_the_next_line_is_not_forced() {
+        let text = "Voitteko Jumalan silmien edessä\ntehdä semmoista?";
+        assert!(
+            kind(text, DiagnosticKind::QuestionMarkMissing).is_empty(),
+            "{:#?}",
+            diagnostics(text)
+        );
+    }
+
+    #[test]
     fn a_quoted_question_gets_the_mark_inside_the_quote() {
         let found = kind(
             "»Missä sinä asut.»",

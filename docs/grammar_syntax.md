@@ -765,7 +765,11 @@ Implementation notes:
   punctuation. `Koira, joka nukkuu sohvalla on minun.`
 - **`question_mark_missing`** (`QuestionMarkMissing`) — a clear direct
   question ends with `.` or no mark. Severity: `Error`. Correction:
-  punctuation. `Missä sinä asut.` → `?`.
+  punctuation. `Missä sinä asut.` → `?`. A dash-interrupted or line-wrapped
+  question gets no mark at the break (`Muistatko--muistatko …`,
+  `Voitteko …\ntehdä …?`); a correlative relative (`Minkä …, se …`) and a
+  rhetorical conditional question (`Mitä … tulisinkaan …, jos …`) are not
+  direct questions and stay quiet.
 - **`unbalanced_quote`** (`UnbalancedQuote`) — a quotation is still open at the
   end of the text. Severity: `Warning`. Correction: none.
   `Hän sanoi: »Elä tule.`

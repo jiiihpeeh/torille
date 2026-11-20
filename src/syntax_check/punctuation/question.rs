@@ -5,6 +5,7 @@ use crate::syntax::{Clause, SyntaxAnalysis};
 use crate::tags::Clitic;
 use crate::tokenise::Token;
 
+use super::clause::{ClauseKind, clause_kind};
 use super::super::analysis::first_word;
 use super::super::diagnostic::{
     Confidence, Correction, CorrectionLicense, DiagnosticKind, Edit, Severity, SyntaxDiagnostic,
@@ -24,12 +25,25 @@ pub(super) fn question_diagnostics(tokens: &[Token], analysis: &SyntaxAnalysis) 
             .iter()
             .filter(|clause| clause.start >= sentence.start && clause.start < sentence.end)
             .collect();
-        // A question with a second clause is too ambiguous to punctuate
-        // automatically (`Missä olet ja mitä teet`); stay quiet.
-        if clauses.len() != 1 {
+        // A question with a second main or subordinate clause is too
+        // ambiguous to punctuate automatically (`Missä olet ja mitä teet`,
+        // `Mitä ... tulisinkaan ..., jos ...`). Relative clauses belong to the
+        // question and do not make the final mark ambiguous
+        // (`Muistatko ... kirjan, joka ...`).
+        if clauses.is_empty()
+            || clauses
+                .iter()
+                .skip(1)
+                .any(|clause| clause_kind(clause, tokens, analysis) != ClauseKind::Relative)
+        {
             continue;
         }
         let clause = clauses[0];
+        // A correlative relative (`Minkä kerran täytyy tapahtua, se
+        // tapahtuu.`) starts with a relative pronoun, not a direct question.
+        if is_correlative_relative(&clauses, tokens) {
+            continue;
+        }
         let Some(first) = first_word(clause, tokens) else {
             continue;
         };
@@ -87,6 +101,32 @@ pub(super) fn question_diagnostics(tokens: &[Token], analysis: &SyntaxAnalysis) 
         out.push(diagnostic);
     }
     out
+}
+
+/// A relative pronoun with a following demonstrative resumptive
+/// (`Minkä ... , se ...`) is a correlative construction, not a direct question.
+fn is_correlative_relative(clauses: &[&Clause], tokens: &[Token]) -> bool {
+    if clauses.len() < 2 {
+        return false;
+    }
+    let Some(first) = first_word(clauses[0], tokens) else {
+        return false;
+    };
+    let lower = tokens[first].text.to_lowercase();
+    if !matches!(
+        lower.as_str(),
+        "minkä" | "mikä" | "joka" | "jonka" | "jotka" | "mitä" | "jossa" | "josta"
+    ) {
+        return false;
+    }
+    clauses.iter().skip(1).any(|clause| {
+        clause.subject.is_some_and(|subject| {
+            matches!(
+                tokens[subject].text.to_lowercase().as_str(),
+                "se" | "ne" | "tämä" | "nuo" | "hän" | "he"
+            )
+        })
+    })
 }
 
 fn has_ko_clitic(index: usize, analysis: &SyntaxAnalysis) -> bool {
@@ -148,9 +188,21 @@ fn terminal_punctuation(tokens: &[Token], last_word: usize) -> Terminal {
     let mut dot = None;
     let mut question = false;
     let mut skip = false;
+    let mut newline = false;
+    let mut next_word = false;
+    let mut next_lower = false;
     for token in tokens.iter().skip(last_word + 1) {
         if token.is_word() {
+            next_word = true;
+            next_lower = token
+                .text
+                .chars()
+                .next()
+                .is_some_and(|character| character.is_lowercase());
             break;
+        }
+        if token.text.contains('\n') {
+            newline = true;
         }
         if token.text.contains("...") || token.text.contains('…') {
             skip = true;
@@ -158,8 +210,11 @@ fn terminal_punctuation(tokens: &[Token], last_word: usize) -> Terminal {
         for (offset, character) in token.text.char_indices() {
             match character {
                 '?' => question = true,
-                '!' => skip = true,
-                ',' | ';' | ':' => skip = true,
+                '!' | ',' | ';' | ':' => skip = true,
+                // A dash is an interruption, not a missing terminal mark:
+                // `Muistatko--muistatko sen kirjan.` is a deliberate break,
+                // not a question that ends at the dash.
+                '-' | '–' | '—' => skip = true,
                 '.' if dot.is_none() => dot = Some(token.start + offset),
                 _ => {}
             }
@@ -170,7 +225,16 @@ fn terminal_punctuation(tokens: &[Token], last_word: usize) -> Terminal {
     } else if skip {
         Terminal::Skip
     } else if let Some(at) = dot {
+        // A period at the end of a wrapped line is a real terminal mark even
+        // when the next line starts lowercase.
         Terminal::Dot(at)
+    } else if newline && (!next_word || next_lower) {
+        // The sentence splitter broke at a line wrap inside a direct
+        // question (`Voitteko ... tehdä ...?`); the mark belongs at the end
+        // of the continued sentence, not at the wrap. The per-sentence cache
+        // sees only the slice, so a trailing newline with no next word is
+        // treated the same way.
+        Terminal::Skip
     } else {
         Terminal::Insert(tokens[last_word].end)
     }

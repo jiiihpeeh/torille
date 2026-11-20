@@ -257,6 +257,7 @@ mod tests {
             "Hän sanoi: »Elä tule.",
             "Hän sanoi: »Tämä on hyvä. Omena esimerkiksi on hyvä.»",
             "Tyttö, joka laulaa, on iloinen.",
+            "Voitteko Jumalan silmien edessä\ntehdä semmoista?",
         ] {
             assert_eq!(sentence_cache_check(text), whole_check(text), "{text}");
         }
