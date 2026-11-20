@@ -1337,8 +1337,9 @@ separate rule library fed by clauses and list spans.
 **Semicolons**
 
 - A semicolon is a clause boundary for scanning, never an `Error`.
-- Do not suggest replacing a comma with a semicolon or vice versa; Finnish
-  usage is stylistic.
+- Do not suggest replacing a valid comma with a semicolon or vice versa;
+  Finnish usage is stylistic. A *forbidden* semicolon (see
+  `SemicolonMisuse`) is corrected suggestion-only.
 - Task: make `syntax_list` and clause-comma rules treat `;` as a boundary, so
   a semicolon cannot make two clauses look like one list.
 
@@ -1397,8 +1398,8 @@ Hän tuli; minä lähdin.    # clean: semicolon style
 
 Tasks:
 
-- [x] Treat `;` as a clause/list boundary in scanning; emit no diagnostic for
-      the semicolon itself.
+- [x] Treat `;` as a clause/list boundary in scanning; structural misuse is
+      the suggestion-only `SemicolonMisuse` rule (`PLAN_SEMICOLON.md`).
 - [x] Add `QuestionMarkMissing` (or the chosen kind) to `DiagnosticKind`, with
       the sentence-initial/only-main-clause guard.
 - [x] Add the unbalanced-quote warning from `quote_depth`; no style edits.
@@ -1409,7 +1410,10 @@ Tasks:
 Implementation notes:
 
 - A top-level `;` splits clauses in `syntax.rs`; a semicolon inside a
-  parenthetical or quotation does not. No semicolon diagnostic is emitted.
+  parenthetical or quotation does not. A structurally forbidden semicolon is a
+  `Suggestion` (`semicolon_subordinate`, `semicolon_coordination`,
+  `semicolon_phrase`, `semicolon_terminal`); a valid main-main semicolon stays
+  quiet. Semicolon list hierarchies and spacing are later phases.
 - The question rule fires only when a sentence has one clause and its first
   word is interrogative or carries `-ko`/`-kö`. It replaces the final `.`, or
   inserts `?` before a closing quote/bracket. Indirect questions and
@@ -1543,7 +1547,9 @@ Ship fewer rules, not more guesses.
   conjunction without a comma is never an error in Finnish, and a comma before
   it is only a suggestion. No other language policy applies.
 - A semicolon is never an error. It splits clauses for scanning, and a
-  semicolon inside a parenthetical or quotation does not split the host.
+  semicolon inside a parenthetical or quotation does not split the host. Only
+  structural misuse is a suggestion-only correction; the main-main stylistic
+  use stays quiet.
 - A missing question mark is an `Error` only when the sentence has one clause
   and its first word is interrogative or carries `-ko`/`-kö`. Indirect
   questions, `kuka tahansa`-style indefinites and sentences with a second

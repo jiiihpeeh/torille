@@ -29,11 +29,11 @@ gate.
 | `Kun tulin kotiin; kaikki nukkuivat.` | quiet after Phase 1 (before Phase 1: `comma_missing` at `16..16`, **before** the semicolon) |
 | `Hän sanoi; että hän tulee.` | quiet after Phase 1 (before Phase 1: `comma_missing` at `10..10`, **before** the semicolon) |
 | `Hän tuli; koska satoi.` | quiet after Phase 1 (before Phase 1: `comma_missing` at `9..9`, **before** the semicolon) |
-| `Opiskelijat; valmistautuivat kokeeseen.` | quiet |
-| `Ostin; leipää.` | quiet |
-| `Hän on; väsynyt.` | quiet |
-| `Hän on ystävällinen; kohtelias ja avulias.` | quiet |
-| `Hän lähti kotiin;` | quiet |
+| `Opiskelijat; valmistautuivat kokeeseen.` | `semicolon_misuse` / `semicolon_phrase`, `Suggestion`, deletion |
+| `Ostin; leipää.` | `semicolon_misuse` / `semicolon_phrase`, `Suggestion`, deletion |
+| `Hän on; väsynyt.` | `semicolon_misuse` / `semicolon_phrase`, `Suggestion`, deletion |
+| `Hän on ystävällinen; kohtelias ja avulias.` | `semicolon_misuse` / `semicolon_coordination`, `Suggestion`, `;` → `,` |
+| `Hän lähti kotiin;` | `semicolon_misuse` / `semicolon_terminal`, `Suggestion`, `;` → `.` |
 | `Ostin omenoita; banaaneja; appelsiineja.` | quiet |
 | `Tarvitsemme kolme asiaa: aikaa; rahaa; osaamista.` | `missing_argument` `Warning`/`Likely` at `11..11` |
 | `sana ; toinen` | quiet |
@@ -62,12 +62,12 @@ quiet and the exact fixture pins them.
 | FI-SEM-005 contrasting independent clauses | **accepted** | `Hän oli väsynyt; hän lähti kotiin.` quiet. |
 | FI-SEM-006 explanatory independent clauses | **accepted** | Same shape; no rule. |
 | FI-SEM-007 consecutive related statements | **accepted** | Same shape; no rule. |
-| FI-SEM-008 main + subordinate | **boundary fixed; misuse rule pending** | Phase 1 makes the three variants quiet; Phase 2 adds the `semicolon_subordinate` suggestion. |
+| FI-SEM-008 main + subordinate | **addressed (suggestion)** | `Tiedän; että …`, `Kun …; kaikki …` and `Koira, joka …; on …` get `semicolon_subordinate`. |
 | FI-SEM-009 simple list, prefer commas | **gap** | `Ostin omenoita; banaaneja; appelsiineja.` quiet. A suggestion is possible, but only with a confident list shape. |
-| FI-SEM-010 subject + predicate | **gap** | `Opiskelijat; valmistautuivat kokeeseen.` quiet. |
-| FI-SEM-011 verb + object | **gap** | `Ostin; leipää.` and `Hän on; väsynyt.` quiet. |
-| FI-SEM-012 coordinated sentence elements | **gap** | `Hän on ystävällinen; kohtelias ja avulias.` quiet. |
-| FI-SEM-013 sentence termination | **gap** | `Hän lähti kotiin;` quiet. |
+| FI-SEM-010 subject + predicate | **addressed (suggestion)** | `Opiskelijat; valmistautuivat kokeeseen.` gets `semicolon_phrase`. |
+| FI-SEM-011 verb + object | **addressed (suggestion)** | `Ostin; leipää.` and `Hän on; väsynyt.` get `semicolon_phrase`. |
+| FI-SEM-012 coordinated sentence elements | **addressed for complements (suggestion)** | `Hän on ystävällinen; kohtelias ja avulias.` gets `semicolon_coordination`; object/list coordination waits for Phase 3. |
+| FI-SEM-013 sentence termination | **addressed (suggestion)** | `Hän lähti kotiin;` gets `semicolon_terminal`. |
 | FI-SEM-014 whitespace before | **gap** | `sana ; toinen` quiet. |
 | FI-SEM-015 missing whitespace after | **gap** | `sana;toinen` quiet. |
 
@@ -154,10 +154,10 @@ refined, not reversed:
    `boundary_between` now covers `subordinate_comma`, the relative closing
    comma and the indirect-question rule, and the three failing sentences are
    exact tests.
-2. **Add a narrow `SemicolonMisuse` suggestion.** Start with the four clear
-   structural cases: main+subordinate (`;` → `,`), coordinated elements
-   (`;` → `,`), subject/predicate or verb/object/complement (`;` deleted), and
-   sentence-final (`;` → `.`).
+2. **Add a narrow `SemicolonMisuse` suggestion.** *Done in Phase 2:* four
+   `Suggestion`/`Likely` rules cover main+subordinate (`;` → `,`), complement
+   coordination (`;` → `,`), subject/predicate or verb/object/complement
+   (`;` deleted), and sentence-final (`;` → `.`).
 3. **Make the list layer semicolon-aware.** Model semicolon groups, keep the
    complex-list examples quiet, and suppress the `Virtanen` agreement false
    positive.

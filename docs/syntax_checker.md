@@ -58,6 +58,7 @@ the checker only when the user presses the grammar button.
 | `comma_missing` | subordinate clause needs a comma; an indirect question after a reporting/mental predicate; a vocative address; `esimerkiksi` needs a parenthetical pair; a `kuin` comparison boundary does **not** need one | `Error` for a subordinate or clear wh-clause, `Warning` for a merged `-ko` clause, `Suggestion` for a vocative or parenthetical |
 | `comma_extra` | a comma directly between a personal-pronoun subject and its finite predicate | `Warning` with a `Likely` removal |
 | `comma_pair_unbalanced` | an opened relative-clause comma pair is not closed | `Error` |
+| `semicolon_misuse` | a semicolon at a main/subordinate or coordinated-complement boundary, inside a subject/predicate or verb/object phrase, or at sentence end | `Suggestion` with a `Likely` replacement or removal |
 | `question_mark_missing` | a clear direct question ends with `.` or no mark; a dash-interrupted or line-wrapped question gets no mark at the break, and a correlative relative or rhetorical conditional stays quiet | `Error` |
 | `unbalanced_quote` | a quotation is still open at the end of the text | `Warning` |
 | `list_separator_missing` | two adjacent list items have no separator | `Error` |
@@ -126,9 +127,9 @@ clean rows / 6,349 words, 2 true positives and 0 known false positives;
 Current baseline (2026-11-20):
 
 ```text
-syntax_eval clean rows 154: 0 errors, 0 warnings, 0 suggestions
-syntax_eval cases 60: every emitted kind precision 1.00, recall 1.00
-syntax_diagnostics: 88 exact-output cases, 275 clean rows
+syntax_eval clean rows 155: 0 errors, 0 warnings, 0 suggestions
+syntax_eval cases 64: every emitted kind precision 1.00, recall 1.00
+syntax_diagnostics: 96 exact-output cases, 275 clean rows
 prose: 266 clean rows / 6,349 words, 2 true positives, 0 known false positives
 page-2000: 3 diagnostics
 ```

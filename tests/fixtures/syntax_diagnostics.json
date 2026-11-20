@@ -440,21 +440,133 @@
     {
       "id": "semicolon_before_initial_subordinate",
       "text": "Kun tulin kotiin; kaikki nukkuivat.",
-      "diagnostics": []
+      "diagnostics": [
+        {
+          "kind": "semicolon_misuse",
+          "severity": "suggestion",
+          "start": 16,
+          "end": 17,
+          "corrections": [","]
+        }
+      ]
     },
     {
       "id": "semicolon_before_subordinate_etta",
       "text": "Hän sanoi; että hän tulee.",
-      "diagnostics": []
+      "diagnostics": [
+        {
+          "kind": "semicolon_misuse",
+          "severity": "suggestion",
+          "start": 10,
+          "end": 11,
+          "corrections": [","]
+        }
+      ]
     },
     {
       "id": "semicolon_before_causal_subordinate",
       "text": "Hän tuli; koska satoi.",
-      "diagnostics": []
+      "diagnostics": [
+        {
+          "kind": "semicolon_misuse",
+          "severity": "suggestion",
+          "start": 9,
+          "end": 10,
+          "corrections": [","]
+        }
+      ]
+    },
+    {
+      "id": "semicolon_relative_clause",
+      "text": "Koira, joka nukkuu; on minun.",
+      "diagnostics": [
+        {
+          "kind": "semicolon_misuse",
+          "severity": "suggestion",
+          "start": 18,
+          "end": 19,
+          "corrections": [","]
+        }
+      ]
+    },
+    {
+      "id": "semicolon_coordination",
+      "text": "Hän on ystävällinen; kohtelias ja avulias.",
+      "diagnostics": [
+        {
+          "kind": "semicolon_misuse",
+          "severity": "suggestion",
+          "start": 22,
+          "end": 23,
+          "corrections": [","]
+        }
+      ]
+    },
+    {
+      "id": "semicolon_phrase_object",
+      "text": "Ostin; leipää.",
+      "diagnostics": [
+        {
+          "kind": "semicolon_misuse",
+          "severity": "suggestion",
+          "start": 5,
+          "end": 6,
+          "corrections": [""]
+        }
+      ]
+    },
+    {
+      "id": "semicolon_phrase_complement",
+      "text": "Hän on; väsynyt.",
+      "diagnostics": [
+        {
+          "kind": "semicolon_misuse",
+          "severity": "suggestion",
+          "start": 7,
+          "end": 8,
+          "corrections": [""]
+        }
+      ]
+    },
+    {
+      "id": "semicolon_subject_predicate",
+      "text": "Opiskelijat; valmistautuivat kokeeseen.",
+      "diagnostics": [
+        {
+          "kind": "semicolon_misuse",
+          "severity": "suggestion",
+          "start": 11,
+          "end": 12,
+          "corrections": [""]
+        }
+      ]
+    },
+    {
+      "id": "semicolon_terminal",
+      "text": "Hän lähti kotiin;",
+      "diagnostics": [
+        {
+          "kind": "semicolon_misuse",
+          "severity": "suggestion",
+          "start": 18,
+          "end": 19,
+          "corrections": ["."]
+        }
+      ]
     },
     {
       "id": "semicolon_between_main_clauses",
       "text": "Hän tuli; minä lähdin.",
+      "diagnostics": []
+    },
+    {
+      "id": "semicolon_elliptical_clause_is_quiet",
+      "text": "Hän on opettaja; minä lääkäri.",
+      "diagnostics": []
+    },
+    {
+      "id": "semicolon_afterthought_is_quiet",
+      "text": "Hän tuli; nopeasti.",
       "diagnostics": []
     },
     {

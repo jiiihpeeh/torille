@@ -71,6 +71,7 @@ export function syntaxKindLabel(kind: string): string {
     case 'list_separator_duplicate': return 'kaksinkertainen luettelopilkku';
     case 'list_comma_before_conjunction': return 'pilkku ennen konjunktiota';
     case 'list_introducer_comma': return 'pilkku kaksoispisteen jälkeen';
+    case 'semicolon_misuse': return 'puolipisteen käyttö';
     default: return kind;
   }
 }

@@ -53,6 +53,7 @@ fn kind(name: &str) -> DiagnosticKind {
         DiagnosticKind::CommaMissing,
         DiagnosticKind::CommaExtra,
         DiagnosticKind::CommaPairUnbalanced,
+        DiagnosticKind::SemicolonMisuse,
         DiagnosticKind::QuestionMarkMissing,
         DiagnosticKind::UnbalancedQuote,
         DiagnosticKind::ListSeparatorMissing,

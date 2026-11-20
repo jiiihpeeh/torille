@@ -159,7 +159,8 @@
     "Kaksi kolmesta.",
     "Sata autoa.",
     "Kaksikymmentä lasta.",
-    "Ostin kaksi kirjaa."
+    "Ostin kaksi kirjaa.",
+    "Hän tuli; minä lähdin."
   ],
   "cases": [
     {
@@ -580,6 +581,34 @@
       "text": "Omena kuten päärynä on hedelmä.",
       "kinds": [
         "comma_missing"
+      ]
+    },
+    {
+      "id": "eval_semicolon_subordinate",
+      "text": "Tiedän; että hän tulee.",
+      "kinds": [
+        "semicolon_misuse"
+      ]
+    },
+    {
+      "id": "eval_semicolon_coordination",
+      "text": "Hän on ystävällinen; kohtelias ja avulias.",
+      "kinds": [
+        "semicolon_misuse"
+      ]
+    },
+    {
+      "id": "eval_semicolon_phrase",
+      "text": "Ostin; leipää.",
+      "kinds": [
+        "semicolon_misuse"
+      ]
+    },
+    {
+      "id": "eval_semicolon_terminal",
+      "text": "Hän lähti kotiin;",
+      "kinds": [
+        "semicolon_misuse"
       ]
     }
   ]

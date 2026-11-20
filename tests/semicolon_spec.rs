@@ -69,10 +69,10 @@ fn covered_semicolon_cases_match_the_checker() {
         }
     }
 
-    // Phase 1 covers the valid main-clause rows and the boundary defect. Raise
-    // this floor when Phase 2/3/4 land; the gap count is the remaining work.
+    // Phase 2 covers the structural misuse rows as well. Raise this floor when
+    // Phase 3/4 land; the gap count is the remaining work.
     assert!(
-        covered >= 13,
+        covered >= 20,
         "only {covered} covered semicolon-spec cases (gaps: {gaps})"
     );
 }

@@ -215,6 +215,7 @@ fn kind_label(kind: DiagnosticKind) -> &'static str {
         DiagnosticKind::ListSeparatorDuplicate => "kaksinkertainen luettelopilkku",
         DiagnosticKind::ListCommaBeforeConjunction => "pilkku ennen konjunktiota",
         DiagnosticKind::ListIntroducerComma => "pilkku kaksoispisteen jälkeen",
+        DiagnosticKind::SemicolonMisuse => "puolipisteen käyttö",
     }
 }
 

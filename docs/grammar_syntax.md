@@ -623,6 +623,7 @@ message key used by ignore lists; a kind may have more than one.
 | `comma_missing` | `comma_missing`, `parenthetical_comma` | Error / Suggestion |
 | `comma_extra` | `comma_extra` | Warning |
 | `comma_pair_unbalanced` | `comma_pair_unbalanced` | Error |
+| `semicolon_misuse` | the four `semicolon_*` rule ids (see §3.4) | Suggestion |
 | `question_mark_missing` | `question_mark_missing` | Error |
 | `unbalanced_quote` | `unbalanced_quote` | Warning |
 | `list_separator_missing` | `list_separator_missing` | Error |
@@ -763,6 +764,14 @@ Implementation notes:
 - **`comma_pair_unbalanced`** (`CommaPairUnbalanced`) — an opened
   relative-clause comma pair is not closed. Severity: `Error`. Correction:
   punctuation. `Koira, joka nukkuu sohvalla on minun.`
+- **`semicolon_misuse`** (`SemicolonMisuse`) — a semicolon in a position the
+  specification forbids: a main/subordinate or coordinated-complement boundary,
+  a subject/predicate or verb/object/complement split, or a sentence-final
+  semicolon. Severity: `Suggestion`. Correction: punctuation (`;` → `,`,
+  deleted with its following space, or `;` → `.`).
+  `Kun tulin kotiin; kaikki nukkuivat.` The rule ids are
+  `semicolon_subordinate`, `semicolon_coordination`, `semicolon_phrase` and
+  `semicolon_terminal`.
 - **`question_mark_missing`** (`QuestionMarkMissing`) — a clear direct
   question ends with `.` or no mark. Severity: `Error`. Correction:
   punctuation. `Missä sinä asut.` → `?`. A dash-interrupted or line-wrapped
@@ -796,6 +805,9 @@ Implementation notes:
   are guarded.
 - Lists: missing/duplicate separators, comma before conjunction, colon
   introducer.
+- Semicolons: a valid main-main semicolon stays quiet; only structural misuse
+  is reported. Semicolon-separated list hierarchies and spacing typography are
+  separate passes.
 - Quotes: unbalanced quote warning; quote style/dialogue dashes are not
   corrected.
 

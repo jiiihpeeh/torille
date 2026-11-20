@@ -1,6 +1,6 @@
 # Semicolon plan: from a scanning boundary to a precision-first rule
 
-Status: **Phase 0–1 landed; Phases 2–5 proposed.** Baseline `a80e616`; Phase 1 landed after the review. The review that motivates this plan
+Status: **Phase 0–2 landed; Phases 3–5 proposed.** Baseline `a80e616`; Phase 1 landed after the review. The review that motivates this plan
 is [`REVIEW_SEMICOLON.md`](REVIEW_SEMICOLON.md); the broader punctuation plan is
 [`PLAN_PUNCTUATION_SPEC.md`](PLAN_PUNCTUATION_SPEC.md).
 
@@ -195,6 +195,15 @@ prose stay green.
 
 ### Phase 2 — structural semicolon misuse
 
+**Landed.** `src/syntax_check/punctuation/semicolon.rs` adds
+`DiagnosticKind::SemicolonMisuse` with `semicolon_subordinate`,
+`semicolon_coordination`, `semicolon_phrase` and `semicolon_terminal`, all
+`Suggestion`/`Likely`. The exact fixture covers the positive rows and the
+main-main, elliptical and afterthought negatives. `semicolon_coordination` is
+complement-only in this phase; object/list coordination is deferred to the
+semicolon-aware list pass, so the clean corpus row
+`Ostin omenoita; appelsiineja ja banaaneja.` stays quiet.
+
 Add `SemicolonMisuse` and the four narrow rules.
 
 `semicolon_subordinate`:
@@ -211,9 +220,9 @@ semicolon before `eivätkä`; do not flag main-main coordinators).
 
 `semicolon_coordination`:
 
-- the segment after `;` has no finite predicate and no overt subject, contains
-  a coordinator (`ja`/`sekä`/`tai`), and its coordinated adjectives/nominals
-  continue the previous clause's complement or object role;
+- the segment after `;` has no finite predicate and no overt subject, and its
+  coordinated adjectives/nominals continue the previous clause's complement
+  role (Phase 2 is complement-only; object/list coordination is Phase 3);
 - correction replaces `;` with `,`.
 
 Test: `Hän on ystävällinen; kohtelias ja avulias.` → `Hän on ystävällinen,
@@ -321,7 +330,7 @@ Add the rows to `tests/fixtures/syntax_diagnostics.json` for exact output and to
 - **Old policy conflict.** `PLAN_SYNTAX_CHECKER.md` says “never suggest
   replacing a comma with a semicolon or vice versa”. This plan keeps the
   no-style-upgrade half and allows a *forbidden* semicolon to be corrected to a
-  comma/period, suggestion-only. Update that note when Phase 2 lands.
+  comma/period, suggestion-only. That note was updated when Phase 2 landed.
 - **`missing_argument` on the colon list.** The current `Tarvitsemme kolme
   asiaa: aikaa; rahaa; osaamista.` warning is the wrong layer. Phase 3 should
   suppress it when the segment is a semicolon list, or Phase 2 should replace

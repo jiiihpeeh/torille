@@ -71,7 +71,7 @@
       "phase": 1,
       "status": "covered",
       "text": "Tiedän; että hän tulee.",
-      "expect": { "absent_rule": "comma_missing" }
+      "expect": { "rule": "semicolon_subordinate", "start": 7 }
     },
     {
       "id": "fi_sem_008_initial_subordinate",
@@ -79,7 +79,7 @@
       "phase": 1,
       "status": "covered",
       "text": "Kun tulin kotiin; kaikki nukkuivat.",
-      "expect": { "absent_rule": "comma_missing" }
+      "expect": { "rule": "semicolon_subordinate", "start": 16 }
     },
     {
       "id": "fi_sem_008_relative_clause",
@@ -87,7 +87,7 @@
       "phase": 1,
       "status": "covered",
       "text": "Koira, joka nukkuu; on minun.",
-      "expect": { "absent_rule": "comma_missing" }
+      "expect": { "rule": "semicolon_subordinate", "start": 18 }
     },
     {
       "id": "fi_sem_009_simple_list",
@@ -101,41 +101,41 @@
       "id": "fi_sem_010_subject_predicate",
       "rule": "FI-SEM-010",
       "phase": 2,
-      "status": "gap",
+      "status": "covered",
       "text": "Opiskelijat; valmistautuivat kokeeseen.",
-      "expect": { "rule": "semicolon_phrase" }
+      "expect": { "rule": "semicolon_phrase", "start": 11 }
     },
     {
       "id": "fi_sem_011_verb_object",
       "rule": "FI-SEM-011",
       "phase": 2,
-      "status": "gap",
+      "status": "covered",
       "text": "Hän osti; uuden auton.",
-      "expect": { "rule": "semicolon_phrase" }
+      "expect": { "rule": "semicolon_phrase", "start": 9 }
     },
     {
       "id": "fi_sem_011_verb_complement",
       "rule": "FI-SEM-011",
       "phase": 2,
-      "status": "gap",
+      "status": "covered",
       "text": "Hän on; väsynyt.",
-      "expect": { "rule": "semicolon_phrase" }
+      "expect": { "rule": "semicolon_phrase", "start": 7 }
     },
     {
       "id": "fi_sem_012_coordination",
       "rule": "FI-SEM-012",
       "phase": 2,
-      "status": "gap",
+      "status": "covered",
       "text": "Hän on ystävällinen; kohtelias ja avulias.",
-      "expect": { "rule": "semicolon_coordination" }
+      "expect": { "rule": "semicolon_coordination", "start": 22 }
     },
     {
       "id": "fi_sem_013_terminal",
       "rule": "FI-SEM-013",
       "phase": 2,
-      "status": "gap",
+      "status": "covered",
       "text": "Hän lähti kotiin;",
-      "expect": { "rule": "semicolon_terminal" }
+      "expect": { "rule": "semicolon_terminal", "start": 18 }
     },
     {
       "id": "fi_sem_014_space_before",
@@ -200,6 +200,22 @@
       "status": "gap",
       "text": "Tarvitsemme kolme asiaa: aikaa; rahaa; osaamista.",
       "expect": { "absent_rule": "missing_argument" }
+    },
+    {
+      "id": "fi_sem_elliptical_clause",
+      "rule": "FI-SEM-010",
+      "phase": 2,
+      "status": "covered",
+      "text": "Hän on opettaja; minä lääkäri.",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "fi_sem_afterthought",
+      "rule": "FI-SEM-011",
+      "phase": 2,
+      "status": "covered",
+      "text": "Hän tuli; nopeasti.",
+      "expect": { "rule": null }
     }
   ]
 }

@@ -11,6 +11,7 @@ mod lists;
 mod parenthetical;
 mod question;
 mod quote;
+mod semicolon;
 mod vocative;
 
 use crate::sentence;
@@ -43,6 +44,11 @@ pub(super) fn check_without_quote_with_contexts(
     let mut diagnostics = lists::list_diagnostics(tokens, analysis);
     diagnostics.extend(comma::clause_diagnostics(tokens, analysis));
     diagnostics.extend(vocative::vocative_diagnostics(tokens, analysis));
+    diagnostics.extend(semicolon::semicolon_diagnostics(
+        tokens,
+        analysis,
+        contexts,
+    ));
     diagnostics.extend(question::question_diagnostics(tokens, analysis));
     diagnostics.extend(parenthetical::parenthetical_diagnostics(
         tokens,
