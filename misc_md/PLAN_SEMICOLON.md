@@ -1,8 +1,9 @@
 # Semicolon plan: from a scanning boundary to a precision-first rule
 
-Status: **Phase 0–3 landed; Phases 4–5 proposed.** Baseline `a80e616`;
-Phase 1 landed after the review, Phase 2 after the boundary fix, and Phase 3
-(the semicolon-aware list model) last. The review that motivates this plan
+Status: **Phase 0–4 landed; Phase 5 proposed.** Baseline `a80e616`;
+Phase 1 landed after the review, Phase 2 after the boundary fix, Phase 3
+(the semicolon-aware list model) and Phase 4 (the separate typography pass)
+after it. The review that motivates this plan
 is [`REVIEW_SEMICOLON.md`](REVIEW_SEMICOLON.md); the broader punctuation plan is
 [`PLAN_PUNCTUATION_SPEC.md`](PLAN_PUNCTUATION_SPEC.md).
 
@@ -142,23 +143,25 @@ documented.
 
 ### Typography is separate
 
-Add `src/typography.rs` (or `src/syntax_check/typography.rs`) with its own
-`TypographyDiagnostic` and `check(text)`. It does not enter
-`SyntaxAnalysis` and is not part of the default grammar call.
+**Landed as `src/typography.rs`.** It does not enter `SyntaxAnalysis` and is
+not part of the default grammar call:
 
-Rules:
+```rust
+pub fn check(text: &str) -> Vec<TypographyDiagnostic>
+pub fn apply(text: &str, diagnostics: &[TypographyDiagnostic]) -> String
+```
 
-- remove whitespace before `;`;
-- insert one space after `;` unless it is end-of-line, end-of-text or before a
-  closing quote/bracket;
-- collapse a duplicated `;`;
-- never touch a semicolon inside a fenced code block, inline code, a URL, a
-  numeric/technical expression or a quoted passage the user chose.
+`TypographyDiagnostic` carries the rule, the exact edit span, the replacement
+and a stable message key. Rules:
 
-The protected-context scan is a small state machine over the raw text:
-fenced code (```), inline code (`...`), `http://`/`https://`/`www.` runs, and
-decimal/date/time runs. The existing tokeniser has no code-span model, so this
-must live in the typography pass rather than in `Token`.
+- `typography_semicolon_spacing` — remove whitespace before `;`; insert one
+  space after it unless the line, the text or a closing quote/bracket ends it;
+- `typography_semicolon_duplicate` — collapse a duplicated `;`.
+
+The protected-context scan in [`protected_ranges`] is a small state machine
+over the raw text: fenced code (``` or ~~~), inline code (`...`),
+`http://`/`https://`/`www.` runs, numeric/date/time runs and quoted passages.
+A semicolon inside one of them gets no diagnostic.
 
 ## Phases
 
@@ -292,20 +295,24 @@ Gate: the complex-list rows are quiet; the simple-list row gets a suggestion;
 
 ### Phase 4 — typography
 
-- Add the separate typography API and its protected-context scanner.
-- Semicolon rules: no space before, one after, collapse duplicates.
-- Do not emit these through `syntax_check` by default; the demo/extension can
-  show them behind a separate toggle or a separate panel section.
-- Add a typography fixture with:
-  `sana ; toinen` → `sana; toinen`,
-  `sana;toinen` → `sana; toinen`,
-  `sana;;toinen` → `sana; toinen`,
-  `https://example.com/a;b` unchanged,
-  `` `let x = 1; let y = 2;` `` unchanged,
-  `3,14` and `20.11.2026` unchanged.
+**Landed.** `src/typography.rs` adds `check`/`apply`, `TypographyDiagnostic`
+and `TypographyRule`, with `typography_semicolon_spacing` and
+`typography_semicolon_duplicate`. `tests/fixtures/typography.json` +
+`tests/typography.rs` pin:
 
-Gate: no grammar diagnostic changes; `page-2000` unchanged; code/URL rows are
-untouched.
+- `sana ; toinen` → `sana; toinen`,
+- `sana;toinen` → `sana; toinen`,
+- `sana;;toinen` → `sana; toinen`,
+- `https://example.com/a;b` unchanged,
+- `` `let x = 1;let y = 2;` `` and fenced code unchanged,
+- `3,14`, `20.11.2026` and `12:30` unchanged,
+- quoted passages and line-final semicolons unchanged.
+
+The semicolon spec harness routes `typography_*` rules to the typography pass,
+so FI-SEM-014/015, the duplicate, the protected code/URL and the quoted row
+are covered. The grammar output is untouched: `syntax_check` has no typography
+branch, the prose gate and `page-2000` are unchanged, and
+`typography_never_reaches_the_grammar_checker` pins the separation.
 
 ### Phase 5 — deferred: missing semicolons
 
@@ -369,7 +376,8 @@ Add the rows to `tests/fixtures/syntax_diagnostics.json` for exact output and to
 - `src/syntax_list.rs` — `ListSeparator`, `separator_kinds`, semicolon run;
 - `src/syntax_check/punctuation/lists.rs` — separator-aware list diagnostics
   and `semicolon_simple_list`;
-- `src/typography.rs` (new) — spacing and protected contexts;
+- `src/typography.rs` — spacing and protected contexts;
+- `tests/fixtures/typography.json`, `tests/typography.rs`;
 - `tests/fixtures/semicolon_spec.json` (new),
   `tests/fixtures/syntax_diagnostics.json`,
   `tests/semicolon_spec.rs` (new), `tests/syntax_check.rs`,

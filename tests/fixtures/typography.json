@@ -1,0 +1,82 @@
+{
+  "_comment": "Typography is a separate pass: these rows are the semicolon spacing edits and the protected contexts. `fixed` is the whole text after applying every diagnostic.",
+  "cases": [
+    {
+      "id": "space_before",
+      "text": "sana ; toinen",
+      "fixed": "sana; toinen",
+      "diagnostics": [
+        { "rule": "typography_semicolon_spacing", "start": 4, "end": 5, "replacement": "" }
+      ]
+    },
+    {
+      "id": "space_after",
+      "text": "sana;toinen",
+      "fixed": "sana; toinen",
+      "diagnostics": [
+        { "rule": "typography_semicolon_spacing", "start": 5, "end": 5, "replacement": " " }
+      ]
+    },
+    {
+      "id": "both_sides",
+      "text": "sana ;toinen",
+      "fixed": "sana; toinen",
+      "diagnostics": [
+        { "rule": "typography_semicolon_spacing", "start": 4, "end": 5, "replacement": "" },
+        { "rule": "typography_semicolon_spacing", "start": 6, "end": 6, "replacement": " " }
+      ]
+    },
+    {
+      "id": "duplicated",
+      "text": "sana;;toinen",
+      "fixed": "sana; toinen",
+      "diagnostics": [
+        { "rule": "typography_semicolon_duplicate", "start": 4, "end": 6, "replacement": ";" },
+        { "rule": "typography_semicolon_spacing", "start": 6, "end": 6, "replacement": " " }
+      ]
+    },
+    {
+      "id": "url_is_protected",
+      "text": "https://example.com/a;b",
+      "fixed": "https://example.com/a;b",
+      "diagnostics": []
+    },
+    {
+      "id": "inline_code_is_protected",
+      "text": "`let x = 1;let y = 2;`",
+      "fixed": "`let x = 1;let y = 2;`",
+      "diagnostics": []
+    },
+    {
+      "id": "fenced_code_is_protected",
+      "text": "```\nlet x = 1;let y = 2;\n```",
+      "fixed": "```\nlet x = 1;let y = 2;\n```",
+      "diagnostics": []
+    },
+    {
+      "id": "quotation_is_protected",
+      "text": "Hän sanoi: \"Tulen huomenna;minä lähden.\"",
+      "fixed": "Hän sanoi: \"Tulen huomenna;minä lähden.\"",
+      "diagnostics": []
+    },
+    {
+      "id": "proper_semicolon_is_quiet",
+      "text": "sana; toinen",
+      "fixed": "sana; toinen",
+      "diagnostics": []
+    },
+    {
+      "id": "sentence_final_is_quiet",
+      "text": "Hän lähti kotiin;",
+      "fixed": "Hän lähti kotiin;",
+      "diagnostics": []
+    },
+    {
+      "id": "line_break_is_quiet",
+      "text": "Hän tuli;\nminä lähdin.",
+      "fixed": "Hän tuli;\nminä lähdin.",
+      "diagnostics": []
+    }
+  ],
+  "clean": ["3,14", "20.11.2026", "12:30"]
+}

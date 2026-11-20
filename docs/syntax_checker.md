@@ -176,6 +176,33 @@ cargo run --release -p torille-tools --bin check_syntax -- "Koira nukkuvat."
 - **CLI:** `check_syntax` prints the analysis and diagnostics for one sentence
   or file.
 
+## Typography (separate pass)
+
+Spacing around punctuation is a mechanical edit, not a grammatical finding, so
+it lives in `torille::typography` and never appears in
+`syntax_check::check`. A surface calls it behind its own toggle or panel
+section:
+
+```rust
+let diagnostics = torille::typography::check(text);
+let corrected = torille::typography::apply(text, &diagnostics);
+```
+
+`TypographyDiagnostic` carries the rule, the exact edit span, the replacement
+and a stable message key. The rules are:
+
+| rule | edit |
+|---|---|
+| `typography_semicolon_spacing` | remove whitespace before `;`, insert one space after unless the line, the text or a closing quote/bracket ends it |
+| `typography_semicolon_duplicate` | collapse `;;` to `;` |
+
+Every finding stays inside ordinary prose. The scanner protects fenced code,
+inline code, URLs, numeric/date/time runs and quoted passages, so
+`https://example.com/a;b` and `` `let x = 1;let y = 2;` `` are untouched. The
+rows are in `tests/fixtures/typography.json`; the semicolon audit matrix
+(`FI-SEM-014`, `FI-SEM-015`) asserts the same behaviour through
+`tests/semicolon_spec.rs`.
+
 ## Performance
 
 The checker is on demand and must not run in the keystroke path. Its cost is

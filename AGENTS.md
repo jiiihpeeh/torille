@@ -116,6 +116,7 @@ src/
                       `ast/` is the typed surface tree over the analysis)
   syntax_list.rs      list structure parser used by the syntax checker
   syntax_check/       grammar diagnostics + corrections over `syntax`
+  typography.rs       separate punctuation-spacing pass (never in grammar)
   hyphenation/        Finnish line-break hyphenation (patterns + policy)
   gradation.rs        consonant gradation ("*X" code) strong<->weak
   harmony.rs          vowel-harmony primitives for the hand-written engines
@@ -410,6 +411,7 @@ render_sheet, check_sheet, INDECLINABLE_CLASS, Report, Candidate, Cell,
 AnswerStatus, ParseError, WizardError}`;
 `style_check::{check, check_with_cache,
 check_tokens_with_morphology, StyleAnalysis, StyleDiagnostic, StyleKind}`;
+`typography::{check, apply, TypographyDiagnostic, TypographyRule}`;
 `check_all`, `check_all_with_cache`, `CheckAll`.
 
 ## The binary maps (`maps/`)
@@ -597,6 +599,7 @@ is gitignored and generated.
 | word-order clause features / spec | `src/syntax/features.rs`, `docs/word_order.md`, `tests/word_order_allow.rs` |
 | grammar/style performance | `src/morphology/`, `src/syntax_check/`, `src/style_check/`, `misc_md/PLAN_GRAMMAR_STYLE_PERF.md` |
 | hyphenation patterns/policy | `src/hyphenation/`, `data/hyphenation/` |
+| punctuation spacing (typography) | `src/typography.rs`, `tests/fixtures/typography.json` |
 | the wasm/browser surface | `torille-wasm/src/`, `extensions/firefox/`, `extensions/chromium/` |
 | verification | `tools/*.py`, `tests/catalogue.rs`, `docs/harness.md` |
 

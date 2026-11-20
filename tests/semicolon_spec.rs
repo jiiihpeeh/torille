@@ -35,19 +35,15 @@ fn covered_semicolon_cases_match_the_checker() {
         let expect = &case["expect"];
 
         if let Some(rule) = expect["rule"].as_str() {
-            let found = check
-                .diagnostics
-                .iter()
-                .find(|diagnostic| diagnostic.rule_id.as_str() == rule)
-                .unwrap_or_else(|| {
-                    panic!(
-                        "case {id:?} ({text:?}) did not emit {rule:?}: {:#?}",
-                        check.diagnostics
-                    )
-                });
-            if let Some(start) = expect["start"].as_u64() {
+            let start = start_of(rule, text).unwrap_or_else(|| {
+                panic!(
+                    "case {id:?} ({text:?}) did not emit {rule:?}: {:#?}",
+                    check.diagnostics
+                )
+            });
+            if let Some(expected) = expect["start"].as_u64() {
                 assert_eq!(
-                    found.span.start, start as usize,
+                    start, expected as usize,
                     "case {id:?} ({text:?}) span start for {rule:?}"
                 );
             }
@@ -66,13 +62,33 @@ fn covered_semicolon_cases_match_the_checker() {
                 "case {id:?} ({text:?}) must stay quiet: {:#?}",
                 check.diagnostics
             );
+            let typography = torille::typography::check(text);
+            assert!(
+                typography.is_empty(),
+                "case {id:?} ({text:?}) must stay typographically quiet: {typography:#?}"
+            );
         }
     }
 
-    // Phase 3 covers the simple and complex semicolon lists. Raise this floor
-    // when Phase 4 lands; the gap count is the remaining work.
+    // Phase 4 covers the typography rows; the gap count is the remaining work.
     assert!(
-        covered >= 24,
+        covered >= 29,
         "only {covered} covered semicolon-spec cases (gaps: {gaps})"
     );
+    assert_eq!(gaps, 0, "the audit matrix should be fully covered");
+}
+
+/// The span start of `rule`, whichever pass owns it.
+fn start_of(rule: &str, text: &str) -> Option<usize> {
+    if rule.starts_with("typography_") {
+        return torille::typography::check(text)
+            .into_iter()
+            .find(|diagnostic| diagnostic.rule.name() == rule)
+            .map(|diagnostic| diagnostic.span.start);
+    }
+    syntax_check::check(text)
+        .diagnostics
+        .into_iter()
+        .find(|diagnostic| diagnostic.rule_id.as_str() == rule)
+        .map(|diagnostic| diagnostic.span.start)
 }

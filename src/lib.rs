@@ -34,6 +34,7 @@ pub mod syntax_check;
 pub mod syntax_list;
 pub mod tags;
 pub mod tokenise;
+pub mod typography;
 pub(crate) mod wordset;
 
 pub use kotus::EmbeddedLemma;

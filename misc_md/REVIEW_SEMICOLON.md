@@ -36,14 +36,14 @@ gate.
 | `Hän lähti kotiin;` | `semicolon_misuse` / `semicolon_terminal`, `Suggestion`, `;` → `.` |
 | `Ostin omenoita; banaaneja; appelsiineja.` | `semicolon_misuse` / `semicolon_simple_list`, `Suggestion`, `;` → `,` for both |
 | `Tarvitsemme kolme asiaa: aikaa; rahaa; osaamista.` | `semicolon_misuse` / `semicolon_simple_list`, `Suggestion`; the old `missing_argument` is suppressed |
-| `sana ; toinen` | quiet |
-| `sana;toinen` | quiet |
+| `sana ; toinen` | `typography_semicolon_spacing`, one deletion in the separate typography pass |
+| `sana;toinen` | `typography_semicolon_spacing`, one insertion in the separate typography pass |
 | `Osallistujat olivat Virtanen, Maija; Laine, Pekka; ja Korhonen, Anna.` | quiet after Phase 3 (before Phase 3: `predicative_agreement` at `20..28`, rewriting `Virtanen` to `virtaset` / `virtasia`) |
 | `Kokoukseen osallistuivat Virtanen, toimitusjohtaja; Laine, projektipäällikkö; Korhonen, talousjohtaja.` | quiet |
 | `Matkakohteita olivat Helsinki, Suomi; Tukholma, Ruotsi; ja Oslo, Norja.` | quiet |
 | `Hän tuli (nopeasti; hiljaa) kotiin.` | quiet; one clause |
 | `Hän sanoi: "Tulen huomenna; minä lähden."` | quiet; quote does not split |
-| `let x = 1; let y = 2;` | quiet; no typography layer |
+| `let x = 1; let y = 2;` | quiet; correctly spaced, and code-like text is protected anyway |
 
 The first three `comma_missing` rows were the critical defect: applying the
 correction would have produced `Kun tulin kotiin,; kaikki nukkuivat.` The
@@ -68,8 +68,8 @@ quiet and the exact fixture pins them.
 | FI-SEM-011 verb + object | **addressed (suggestion)** | `Ostin; leipää.` and `Hän on; väsynyt.` get `semicolon_phrase`. |
 | FI-SEM-012 coordinated sentence elements | **addressed (suggestion)** | `Hän on ystävällinen; kohtelias ja avulias.` gets `semicolon_coordination`. Object coordination through a semicolon list is owned by the list layer: a short parallel list gets commas, a complex one keeps its hierarchy. |
 | FI-SEM-013 sentence termination | **addressed (suggestion)** | `Hän lähti kotiin;` gets `semicolon_terminal`. |
-| FI-SEM-014 whitespace before | **gap** | `sana ; toinen` quiet. |
-| FI-SEM-015 missing whitespace after | **gap** | `sana;toinen` quiet. |
+| FI-SEM-014 whitespace before | **addressed (typography)** | `sana ; toinen` → `sana; toinen`; `;;` collapses to `;`. |
+| FI-SEM-015 missing whitespace after | **addressed (typography)** | `sana;toinen` → `sana; toinen`; URLs, code and quotations are protected. |
 
 Two additional findings:
 
@@ -78,9 +78,10 @@ Two additional findings:
    That was the wrong layer and the wrong explanation; the sentence is a list,
    not a missing verb argument. It is now one `semicolon_simple_list`
    suggestion.
-2. Code and URL protection is untested. `let x = 1; let y = 2;` and
-   `https://example.com/a;b` are quiet today only because no rule looks at
-   them. A typography pass would need an explicit protected-context scanner.
+2. *Resolved in Phase 4.* Code and URL protection was untested: `let x =
+   1; let y = 2;` and `https://example.com/a;b` were quiet only because no
+   rule looked at them. The typography pass now has an explicit
+   protected-context scanner for code, URLs, numeric runs and quotations.
 
 ## Where the behaviour comes from
 
@@ -88,29 +89,24 @@ Two additional findings:
   `top_level_semicolon` splits at a bracket-depth-zero semicolon and leaves
   semicolons inside parentheses and quotations alone. `syntax/mod.rs` has
   tests for both.
-- **The comma rules do not share that boundary predicate.**
-  `src/syntax_check/punctuation/comma.rs` uses `comma_between` and a local
-  `dash_between`. `subordinate_comma` therefore sees no boundary at `;` and
-  inserts a comma before it. The newer `indirect_question_comma` already has
-  `clause_separator_between`, which does include `;`; that helper is the
-  pattern the rest should share.
-- **`syntax_list` is comma-only.** `top_level_commas` drives item splitting,
-  `List.separators` holds comma token indices, and the explicit test
-  `a_semicolon_does_not_make_one_list` pins the current policy. The AST
-  consumers (`syntax/ast/lists.rs`, `syntax/ast/validate.rs`) only skip
-  separator tokens, so they can tolerate semicolon entries, but the parser
-  cannot produce them yet.
-- **`lists.rs` is comma-specific.** It finds duplicate separators and missing
-  separators with `comma_positions`. A semicolon list is not a list to this
-  layer, so the comma inside `Virtanen, Maija` is parsed as a two-item list
-  and the first item becomes the clause complement.
-- **`agreement.rs` does not consult lists.** `check_complements` sees the
-  singular `Virtanen` as a predicate complement of the plural subject
-  `Osallistujat` and offers `virtaset`/`virtasia`. This is the concrete false
-  positive to remove.
-- **There is no typography layer.** `syntax_check` has no spacing diagnostics
-  and no protected-context model, which is why `sana ; toinen` and
-  `sana;toinen` are both quiet.
+
+These were the gaps at the time of the review; Phases 1–4 closed them:
+
+- **The comma rules did not share a boundary predicate.** `comma.rs` used
+  `comma_between` and a local `dash_between`, so `subordinate_comma` inserted a
+  comma before `;`. Phase 1 replaced that with the shared
+  `analysis::boundary_between`.
+- **`syntax_list` was comma-only.** Phase 3 added `ListSeparator`/
+  `separator_kinds` and the semicolon run, so `List.separators` holds both
+  kinds and the old `a_semicolon_does_not_make_one_list` test is replaced by
+  the list-shape assertions.
+- **`lists.rs` was comma-specific.** It still reads comma characters for the
+  comma rules, but a semicolon group is now one item, so the comma inside
+  `Virtanen, Maija` is item-internal.
+- **`agreement.rs` did not consult lists.** `check_complements` now skips a
+  complement that is a list item, which removed the `Virtanen` false positive.
+- **There was no typography layer.** Phase 4 added `src/typography.rs` with
+  spacing rules and a protected-context scanner.
 
 ## Policy decisions
 
@@ -163,8 +159,9 @@ refined, not reversed:
 3. **Make the list layer semicolon-aware.** *Done in Phase 3:* semicolon
    groups are one list, the complex-list examples stay quiet, the `Virtanen`
    agreement false positive is gone and a short parallel list gets commas.
-4. **Add the typography pass.** No space before `;`, one space after, duplicate
-   semicolons; protect code, URLs and numeric/technical expressions.
+4. **Add the typography pass.** *Done in Phase 4:* `typography::check` enforces
+   no space before `;`, one space after and a single semicolon, and protects
+   code, URLs, numeric runs and quotations.
 5. **Defer missing-semicolon insertion.** It needs the list hierarchy and a
    reviewed corpus; the specification treats it as a recommendation, not a
    mandatory correction.

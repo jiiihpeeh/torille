@@ -755,7 +755,8 @@ Adjacent repetition is not always accidental:
 
 ### Semicolon slice
 
-- [x] **Phase 0–3 landed: audit fixture, boundary fix, misuse rules and lists.**
+- [x] **Phase 0–4 landed: audit fixture, boundary fix, misuse rules, lists and
+  typography.**
   A valid main-main semicolon is accepted, and the comma layer no longer writes
   `,;` at a subordinate boundary (`Kun tulin kotiin; kaikki nukkuivat.` is
   quiet). `SemicolonMisuse` now covers main+subordinate, complement
@@ -766,8 +767,10 @@ Adjacent repetition is not always accidental:
   positive). `tests/fixtures/semicolon_spec.json` + `tests/semicolon_spec.rs`
   record the FI-SEM matrix. The review is
   [`REVIEW_SEMICOLON.md`](REVIEW_SEMICOLON.md); the phased plan is
-  [`PLAN_SEMICOLON.md`](PLAN_SEMICOLON.md). Remaining: Phase 4 the separate
-  typography pass, Phase 5 deferred missing-semicolon insertion.
+  [`PLAN_SEMICOLON.md`](PLAN_SEMICOLON.md). `src/typography.rs` is the separate
+  spacing pass (`typography_semicolon_spacing`/`_duplicate`, protected code,
+  URLs, numeric runs and quotations). Remaining: Phase 5 deferred
+  missing-semicolon insertion.
 
 ### Other P2 items
 

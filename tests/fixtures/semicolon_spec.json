@@ -141,17 +141,25 @@
       "id": "fi_sem_014_space_before",
       "rule": "FI-SEM-014",
       "phase": 4,
-      "status": "gap",
+      "status": "covered",
       "text": "sana ; toinen",
-      "expect": { "rule": "typography_semicolon_spacing" }
+      "expect": { "rule": "typography_semicolon_spacing", "start": 4 }
     },
     {
       "id": "fi_sem_015_space_after",
       "rule": "FI-SEM-015",
       "phase": 4,
-      "status": "gap",
+      "status": "covered",
       "text": "sana;toinen",
-      "expect": { "rule": "typography_semicolon_spacing" }
+      "expect": { "rule": "typography_semicolon_spacing", "start": 5 }
+    },
+    {
+      "id": "fi_sem_duplicate",
+      "rule": "FI-SEM-014",
+      "phase": 4,
+      "status": "covered",
+      "text": "sana;;toinen",
+      "expect": { "rule": "typography_semicolon_duplicate", "start": 4 }
     },
     {
       "id": "fi_sem_main_main_coordinator",
@@ -181,15 +189,23 @@
       "id": "fi_sem_protected_code",
       "rule": "FI-SEM-014",
       "phase": 4,
-      "status": "gap",
+      "status": "covered",
       "text": "let x = 1; let y = 2;",
+      "expect": { "rule": null }
+    },
+    {
+      "id": "fi_sem_quoted_spacing",
+      "rule": "FI-SEM-015",
+      "phase": 4,
+      "status": "covered",
+      "text": "Hän sanoi: \"Tulen;minä lähden.\"",
       "expect": { "rule": null }
     },
     {
       "id": "fi_sem_protected_url",
       "rule": "FI-SEM-015",
       "phase": 4,
-      "status": "gap",
+      "status": "covered",
       "text": "https://example.com/a;b",
       "expect": { "rule": null }
     },
