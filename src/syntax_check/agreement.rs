@@ -11,6 +11,7 @@
 //! `Kaksi miestä tuli` are all correct.
 
 use crate::syntax::{RoleConfidence, SyntacticRole, SyntaxAnalysis, TokenSyntax};
+use crate::syntax_list::ListSeparator;
 use crate::tags::{Case, Degree, Mood, Number, PartOfSpeech, Person, Polarity, Tags, Tense, Voice};
 use crate::tokenise::Token;
 
@@ -435,11 +436,15 @@ fn previous_word_is(
 /// The complement of `Osallistujat olivat Virtanen, Maija; …` is one item of a
 /// semicolon list; the agreement relation cannot be read across the list
 /// boundary.
-fn is_list_item(index: usize, analysis: &SyntaxAnalysis) -> bool {
-    analysis
-        .lists
-        .iter()
-        .any(|list| list.items.iter().any(|item| item.tokens.contains(&index)))
+///
+/// Only semicolon lists use this guard. A comma list such as `Talot ovat
+/// punainen, kaunis.` still has a readable agreement relation, so it keeps the
+/// ordinary predicative check.
+fn is_semicolon_list_item(index: usize, analysis: &SyntaxAnalysis) -> bool {
+    analysis.lists.iter().any(|list| {
+        list.separator_kinds.contains(&ListSeparator::Semicolon)
+            && list.items.iter().any(|item| item.tokens.contains(&index))
+    })
 }
 
 /// A predicative adjective agrees with the subject in number.
@@ -468,7 +473,7 @@ fn check_complements(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxD
         // `Osallistujat olivat Virtanen, Maija; …` puts one list item in the
         // complement slot; the agreement relation is read across a list
         // boundary the parser does not model, so the list layer owns it.
-        if is_list_item(complement, analysis) {
+        if is_semicolon_list_item(complement, analysis) {
             continue;
         }
         // A coordinated subject phrase is collapsed to a plural controller by

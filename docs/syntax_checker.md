@@ -132,7 +132,7 @@ Current baseline (2026-11-20):
 ```text
 syntax_eval clean rows 158: 0 errors, 0 warnings, 0 suggestions
 syntax_eval cases 65: every emitted kind precision 1.00, recall 1.00
-syntax_diagnostics: 102 exact-output cases, 275 clean rows
+syntax_diagnostics: 103 exact-output cases, 275 clean rows
 prose: 266 clean rows / 6,349 words, 2 true positives, 0 known false positives
 page-2000: 3 diagnostics
 ```

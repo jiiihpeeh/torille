@@ -611,6 +611,19 @@
       "diagnostics": []
     },
     {
+      "id": "predicative_comma_list_still_checked",
+      "text": "Talot ovat punainen, kaunis.",
+      "diagnostics": [
+        {
+          "kind": "predicative_agreement",
+          "severity": "error",
+          "start": 11,
+          "end": 19,
+          "corrections": ["punaiset"]
+        }
+      ]
+    },
+    {
       "id": "semicolon_complex_list_of_names_is_quiet",
       "text": "Osallistujat olivat Virtanen, Maija; Laine, Pekka; ja Korhonen, Anna.",
       "diagnostics": []

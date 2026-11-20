@@ -309,7 +309,8 @@ untouched.
 
 ### Phase 5 — deferred: missing semicolons
 
-Do not implement until Phase 3 and a reviewed complex-list corpus exist.
+Do not implement until the semicolon list model has a reviewed complex-list
+corpus.
 
 - Suggest semicolons only when a list has more than one item, at least one item
   contains an internal comma, and every item boundary is unambiguous.

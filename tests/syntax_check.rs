@@ -263,4 +263,5 @@ diagnostic_tests!(
     semicolon_complex_list_is_quiet,
     semicolon_complex_list_of_names_is_quiet,
     semicolon_complex_enumeration_is_quiet,
+    predicative_comma_list_still_checked,
 );
