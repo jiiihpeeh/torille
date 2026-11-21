@@ -611,6 +611,42 @@
       "diagnostics": []
     },
     {
+      "id": "semicolon_complex_list_missing",
+      "text": "Kokoukseen osallistuivat Virtanen, toimitusjohtaja; Laine, projektipäällikkö, Korhonen, talousjohtaja.",
+      "diagnostics": [
+        {
+          "kind": "semicolon_missing",
+          "severity": "suggestion",
+          "start": 79,
+          "end": 80,
+          "corrections": [";"]
+        }
+      ]
+    },
+    {
+      "id": "semicolon_colon_hierarchy_missing",
+      "text": "Osallistujat: Virtanen, Maija, puheenjohtaja; Laine, Pekka, sihteeri, Korhonen, Liisa, talousjohtaja.",
+      "diagnostics": [
+        {
+          "kind": "semicolon_missing",
+          "severity": "suggestion",
+          "start": 68,
+          "end": 69,
+          "corrections": [";"]
+        }
+      ]
+    },
+    {
+      "id": "semicolon_fully_comma_list_is_quiet",
+      "text": "Kokoukseen osallistuivat Virtanen, toimitusjohtaja, Laine, projektipäällikkö, Korhonen, talousjohtaja.",
+      "diagnostics": []
+    },
+    {
+      "id": "semicolon_mixed_shape_is_quiet",
+      "text": "Virtanen, Maija; Laine, Pekka, sihteeri, Korhonen, Anna.",
+      "diagnostics": []
+    },
+    {
       "id": "predicative_comma_list_still_checked",
       "text": "Talot ovat punainen, kaunis.",
       "diagnostics": [

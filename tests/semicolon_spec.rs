@@ -70,9 +70,9 @@ fn covered_semicolon_cases_match_the_checker() {
         }
     }
 
-    // Phase 4 covers the typography rows; the gap count is the remaining work.
+    // Phase 5 completes the matrix: no gap remains.
     assert!(
-        covered >= 29,
+        covered >= 32,
         "only {covered} covered semicolon-spec cases (gaps: {gaps})"
     );
     assert_eq!(gaps, 0, "the audit matrix should be fully covered");

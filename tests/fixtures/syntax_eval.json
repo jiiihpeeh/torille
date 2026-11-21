@@ -163,6 +163,7 @@
     "Hän tuli; minä lähdin.",
     "Osallistujat olivat Virtanen, Maija; Laine, Pekka; ja Korhonen, Anna.",
     "Kokoukseen osallistuivat Virtanen, toimitusjohtaja; Laine, projektipäällikkö; Korhonen, talousjohtaja.",
+    "Kokoukseen osallistuivat Virtanen, toimitusjohtaja, Laine, projektipäällikkö, Korhonen, talousjohtaja.",
     "Matkakohteita olivat Rooma, Pariisi; Lontoo, Madrid; ja Berliini."
   ],
   "cases": [
@@ -619,6 +620,13 @@
       "text": "Ostin omenoita; banaaneja; appelsiineja.",
       "kinds": [
         "semicolon_misuse"
+      ]
+    },
+    {
+      "id": "eval_semicolon_missing_list",
+      "text": "Kokoukseen osallistuivat Virtanen, toimitusjohtaja; Laine, projektipäällikkö, Korhonen, talousjohtaja.",
+      "kinds": [
+        "semicolon_missing"
       ]
     }
   ]

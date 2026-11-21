@@ -72,6 +72,7 @@ export function syntaxKindLabel(kind: string): string {
     case 'list_comma_before_conjunction': return 'pilkku ennen konjunktiota';
     case 'list_introducer_comma': return 'pilkku kaksoispisteen jälkeen';
     case 'semicolon_misuse': return 'puolipisteen käyttö';
+    case 'semicolon_missing': return 'puuttuva puolipiste';
     default: return kind;
   }
 }

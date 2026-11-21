@@ -54,6 +54,7 @@ fn kind(name: &str) -> DiagnosticKind {
         DiagnosticKind::CommaExtra,
         DiagnosticKind::CommaPairUnbalanced,
         DiagnosticKind::SemicolonMisuse,
+        DiagnosticKind::SemicolonMissing,
         DiagnosticKind::QuestionMarkMissing,
         DiagnosticKind::UnbalancedQuote,
         DiagnosticKind::ListSeparatorMissing,
@@ -264,4 +265,8 @@ diagnostic_tests!(
     semicolon_complex_list_of_names_is_quiet,
     semicolon_complex_enumeration_is_quiet,
     predicative_comma_list_still_checked,
+    semicolon_complex_list_missing,
+    semicolon_colon_hierarchy_missing,
+    semicolon_fully_comma_list_is_quiet,
+    semicolon_mixed_shape_is_quiet,
 );

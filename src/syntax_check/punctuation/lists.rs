@@ -10,7 +10,7 @@ use crate::syntax_list::{List, ListItem, ListItemKind, ListKind, ListSeparator};
 use crate::tags::{Case, PartOfSpeech};
 use crate::tokenise::Token;
 
-use super::super::analysis::nominal_case;
+use super::super::analysis::{is_finite, nominal_case};
 use super::super::diagnostic::{
     Confidence, Correction, CorrectionLicense, DiagnosticKind, Edit, Severity, SyntaxDiagnostic,
 };
@@ -80,6 +80,9 @@ pub(super) fn list_diagnostics(tokens: &[Token], analysis: &SyntaxAnalysis) -> V
         }
 
         if let Some(diagnostic) = simple_semicolon_list(tokens, analysis, list) {
+            out.push(diagnostic);
+        }
+        if let Some(diagnostic) = missing_semicolons(tokens, analysis, list) {
             out.push(diagnostic);
         }
     }
@@ -173,6 +176,122 @@ fn simple_semicolon_list(
             .with_confidence(Confidence::Likely),
     ];
     Some(diagnostic)
+}
+
+/// `Virtanen, toimitusjohtaja; Laine, projektipäällikkö, Korhonen,
+/// talousjohtaja.` — a mixed complex list where one group already uses a
+/// semicolon, so the repeated group shape is known.
+///
+/// The first item must be the model group (`k` words). Every item must be a
+/// whole multiple of `k`, every chunk must be nominal and predicate-free, and
+/// each missing outer boundary must be exactly one comma. A fully
+/// comma-separated list has no model group and stays quiet; a group that does
+/// not fit the model stays quiet. The correction replaces every outer comma
+/// with a semicolon in one edit set.
+fn missing_semicolons(
+    tokens: &[Token],
+    analysis: &SyntaxAnalysis,
+    list: &List,
+) -> Option<SyntaxDiagnostic> {
+    if list.kind != ListKind::Nominal || list.items.len() < 2 {
+        return None;
+    }
+    if !list.separator_kinds.contains(&ListSeparator::Semicolon) {
+        return None;
+    }
+    if list.introducer.is_none() && list.role.is_none() {
+        return None;
+    }
+    if list
+        .items
+        .iter()
+        .any(|item| matches!(item.kind, ListItemKind::List(_)))
+    {
+        return None;
+    }
+
+    let first = item_words(tokens, list.items.first()?);
+    let width = first.len();
+    if width < 2 {
+        return None;
+    }
+
+    let mut edits = Vec::new();
+    let mut internal_comma = false;
+    for item in &list.items {
+        let words = item_words(tokens, item);
+        if words.is_empty() || !words.len().is_multiple_of(width) {
+            return None;
+        }
+        if words.iter().any(|&word| is_coordinator(word, tokens)) {
+            return None;
+        }
+        let commas =
+            crate::syntax_list::top_level_commas(tokens, item.tokens.start, item.tokens.end);
+        if !commas.is_empty() {
+            internal_comma = true;
+        }
+        let chunks: Vec<&[usize]> = words.chunks(width).collect();
+        for pair in chunks.windows(2) {
+            let left = *pair[0].last()?;
+            let right = *pair[1].first()?;
+            if !chunk_is_nominal(pair[0], analysis) || !chunk_is_nominal(pair[1], analysis) {
+                return None;
+            }
+            let boundary: Vec<usize> = commas
+                .iter()
+                .copied()
+                .filter(|&index| index > left && index < right)
+                .collect();
+            if boundary.len() != 1 {
+                return None;
+            }
+            let offset = tokens[boundary[0]].text.find(',')?;
+            let start = tokens[boundary[0]].start + offset;
+            edits.push(Edit::new(start, start + 1, ";"));
+        }
+    }
+    if !internal_comma || edits.is_empty() {
+        return None;
+    }
+
+    let first = edits.first()?;
+    let last = edits.last()?;
+    let mut diagnostic = SyntaxDiagnostic::new(
+        DiagnosticKind::SemicolonMissing,
+        Severity::Suggestion,
+        Confidence::Likely,
+        first.start..last.end,
+        "semicolon_list_hierarchy",
+    );
+    diagnostic.corrections = vec![
+        Correction::new(edits, 0.0, "semicolon_list_hierarchy")
+            .licensed_by(CorrectionLicense::Punctuation)
+            .with_confidence(Confidence::Likely),
+    ];
+    Some(diagnostic)
+}
+
+fn item_words(tokens: &[Token], item: &ListItem) -> Vec<usize> {
+    item.tokens
+        .clone()
+        .filter(|&index| tokens[index].is_word())
+        .collect()
+}
+
+fn chunk_is_nominal(chunk: &[usize], analysis: &SyntaxAnalysis) -> bool {
+    chunk.iter().any(|&index| {
+        analysis.tokens[index]
+            .readings
+            .iter()
+            .any(|reading| crate::syntax::is_nominal_pos(reading.part_of_speech))
+    }) && chunk
+        .iter()
+        .all(|&index| !is_finite(&analysis.tokens[index]))
+}
+
+fn is_coordinator(index: usize, tokens: &[Token]) -> bool {
+    crate::syntax::is_coordinating(&tokens[index].text.to_lowercase())
 }
 
 /// The nominal readings' cases, without the verb homonym's case.

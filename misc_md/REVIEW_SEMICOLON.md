@@ -1,7 +1,8 @@
 # Review: semicolon handling against the programmatic Finnish semicolon specification
 
-Status: **review.** Baseline `a80e616`; Phase 0–1 of the plan have since
-landed (audit fixture and the comma-boundary fix). The normative text is the
+Status: **review.** Baseline `a80e616`; all five phases of the plan have since
+landed (audit fixture, boundary fix, misuse rules, semicolon lists, typography
+and the mixed-list missing-semicolon suggestion). The normative text is the
 programmatic specification for Finnish semicolons (FI-SEM-001 … FI-SEM-015);
 the existing punctuation review is
 [`REVIEW_PUNCTUATION_SPEC.md`](REVIEW_PUNCTUATION_SPEC.md) and the staged plan
@@ -57,7 +58,7 @@ quiet and the exact fixture pins them.
 |---|---|---|
 | FI-SEM-001 two closely related independent clauses | **accepted by omission** | `Hän tuli; minä lähdin.` quiet. The spec says “allow”, not “require”; quiet is correct. |
 | FI-SEM-002 independent clauses without conjunction | **accepted** | `Hän lähti kotiin; minä jäin.` quiet. |
-| FI-SEM-003 complex list with internal commas | **addressed (quiet)** | `syntax_list` joins the semicolon groups of one sentence into one list, each group a phrase item. All three complex rows are quiet, and the `Virtanen` agreement false positive is gone because a complement that is a list item is skipped. |
+| FI-SEM-003 complex list with internal commas | **addressed (quiet + suggestion)** | `syntax_list` joins the semicolon groups of one sentence into one list, each group a phrase item. Correctly punctuated complex rows stay quiet, the `Virtanen` agreement false positive is gone, and a mixed list with one missing outer semicolon gets `semicolon_list_hierarchy`. A fully comma-separated complex list stays quiet as ambiguous. |
 | FI-SEM-004 long complex enumeration | **accepted by omission** | No rule; this is the safe stylistic default. |
 | FI-SEM-005 contrasting independent clauses | **accepted** | `Hän oli väsynyt; hän lähti kotiin.` quiet. |
 | FI-SEM-006 explanatory independent clauses | **accepted** | Same shape; no rule. |
@@ -127,11 +128,11 @@ refined, not reversed:
    object/complement, or at sentence end gets a `Suggestion`/`Likely`
    correction (`;` → `,`, deletion, or `;` → `.`). None of these is an
    `Error`.
-4. **Complex lists are accepted before they are corrected.** The first
-   deliverable is to model semicolon groups and stop the agreement false
-   positive. Missing-semicolon insertion is deferred until the list hierarchy
-   is reliable; the specification itself says not to replace all list commas
-   automatically.
+4. **Complex lists are accepted before they are corrected.** The list model
+   first stopped the agreement false positive. A missing outer semicolon is
+   suggested only in a mixed list whose first group and existing semicolon
+   establish the shape; a fully comma-separated list stays quiet, and the
+   specification's “do not replace all list commas” rule holds.
 5. **Spacing is a separate layer.** No whitespace around `;` is a
    `typo`/`typography` finding, not a grammar diagnostic, and it must not
    touch code, URLs or technical notation.
@@ -162,9 +163,10 @@ refined, not reversed:
 4. **Add the typography pass.** *Done in Phase 4:* `typography::check` enforces
    no space before `;`, one space after and a single semicolon, and protects
    code, URLs, numeric runs and quotations.
-5. **Defer missing-semicolon insertion.** It needs the list hierarchy and a
-   reviewed corpus; the specification treats it as a recommendation, not a
-   mandatory correction.
+5. **Missing-semicolon insertion.** *Done in Phase 5:* a mixed complex list
+   whose first group and an existing semicolon establish the shape gets one
+   complete `semicolon_list_hierarchy` edit set. A fully comma-separated list
+   stays quiet.
 
 The detailed phases, files, tests and gates are in
 [`PLAN_SEMICOLON.md`](PLAN_SEMICOLON.md).

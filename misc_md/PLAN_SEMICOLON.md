@@ -1,9 +1,9 @@
 # Semicolon plan: from a scanning boundary to a precision-first rule
 
-Status: **Phase 0–4 landed; Phase 5 proposed.** Baseline `a80e616`;
-Phase 1 landed after the review, Phase 2 after the boundary fix, Phase 3
-(the semicolon-aware list model) and Phase 4 (the separate typography pass)
-after it. The review that motivates this plan
+Status: **Phase 0–5 landed.** Baseline `a80e616`; Phase 1 landed after the
+review, Phase 2 after the boundary fix, Phase 3 (the semicolon-aware list
+model), Phase 4 (the separate typography pass) and Phase 5 (mixed-list missing
+semicolons) after it. The review that motivates this plan
 is [`REVIEW_SEMICOLON.md`](REVIEW_SEMICOLON.md); the broader punctuation plan is
 [`PLAN_PUNCTUATION_SPEC.md`](PLAN_PUNCTUATION_SPEC.md).
 
@@ -314,18 +314,22 @@ are covered. The grammar output is untouched: `syntax_check` has no typography
 branch, the prose gate and `page-2000` are unchanged, and
 `typography_never_reaches_the_grammar_checker` pins the separation.
 
-### Phase 5 — deferred: missing semicolons
+### Phase 5 — missing semicolons
 
-Do not implement until the semicolon list model has a reviewed complex-list
-corpus.
+**Landed.** `SemicolonMissing` / `semicolon_list_hierarchy` suggests a
+semicolon only in a *mixed* complex list: the first item is the model group
+(`k` words), every item is a whole multiple of `k`, every chunk is nominal and
+predicate-free, no chunk contains a coordinator, and each missing outer
+boundary is exactly one comma. The correction replaces every outer comma with
+`;` in one edit set.
 
-- Suggest semicolons only when a list has more than one item, at least one item
-  contains an internal comma, and every item boundary is unambiguous.
-- Emit one suggestion with a complete edit set, never a per-comma rewrite.
+- A fully comma-separated complex list has no model group and stays quiet.
+- A group that does not fit the model (or a name that is a verb homonym such as
+  `Anna`) stays quiet rather than guessing a boundary.
+- `Kokoukseen osallistuivat Virtanen, toimitusjohtaja; Laine,
+  projektipäällikkö, Korhonen, talousjohtaja.` gains the semicolon before
+  `Korhonen`.
 - Keep the “do not replace all list commas” rule from the specification.
-
-This phase is recorded so the audit fixture can mark FI-SEM-003 as a future
-recommendation rather than a silent gap.
 
 ## Tests
 

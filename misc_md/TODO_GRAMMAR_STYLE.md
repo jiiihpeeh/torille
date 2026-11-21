@@ -755,8 +755,7 @@ Adjacent repetition is not always accidental:
 
 ### Semicolon slice
 
-- [x] **Phase 0–4 landed: audit fixture, boundary fix, misuse rules, lists and
-  typography.**
+- [x] **Phase 0–5 landed: the complete semicolon slice.**
   A valid main-main semicolon is accepted, and the comma layer no longer writes
   `,;` at a subordinate boundary (`Kun tulin kotiin; kaikki nukkuivat.` is
   quiet). `SemicolonMisuse` now covers main+subordinate, complement
@@ -769,8 +768,10 @@ Adjacent repetition is not always accidental:
   [`REVIEW_SEMICOLON.md`](REVIEW_SEMICOLON.md); the phased plan is
   [`PLAN_SEMICOLON.md`](PLAN_SEMICOLON.md). `src/typography.rs` is the separate
   spacing pass (`typography_semicolon_spacing`/`_duplicate`, protected code,
-  URLs, numeric runs and quotations). Remaining: Phase 5 deferred
-  missing-semicolon insertion.
+  URLs, numeric runs and quotations). `SemicolonMissing` /
+  `semicolon_list_hierarchy` covers the mixed complex list whose first group
+  and an existing semicolon establish the shape; a fully comma-separated list
+  stays quiet.
 
 ### Other P2 items
 

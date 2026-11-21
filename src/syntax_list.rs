@@ -612,7 +612,7 @@ fn classify(items: &[ListItem], out: &[TokenSyntax]) -> ListKind {
     }
 }
 
-fn top_level_commas(tokens: &[Token], start: usize, end: usize) -> Vec<usize> {
+pub(crate) fn top_level_commas(tokens: &[Token], start: usize, end: usize) -> Vec<usize> {
     top_level_punctuation(tokens, start, end, ',')
 }
 

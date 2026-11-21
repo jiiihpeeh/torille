@@ -42,6 +42,7 @@ pub enum DiagnosticKind {
     CommaExtra,
     CommaPairUnbalanced,
     SemicolonMisuse,
+    SemicolonMissing,
     QuestionMarkMissing,
     UnbalancedQuote,
     ListSeparatorMissing,
@@ -69,6 +70,7 @@ impl DiagnosticKind {
             DiagnosticKind::CommaExtra => "comma_extra",
             DiagnosticKind::CommaPairUnbalanced => "comma_pair_unbalanced",
             DiagnosticKind::SemicolonMisuse => "semicolon_misuse",
+            DiagnosticKind::SemicolonMissing => "semicolon_missing",
             DiagnosticKind::QuestionMarkMissing => "question_mark_missing",
             DiagnosticKind::UnbalancedQuote => "unbalanced_quote",
             DiagnosticKind::ListSeparatorMissing => "list_separator_missing",
@@ -107,6 +109,7 @@ impl DiagnosticKind {
             | DiagnosticKind::CommaExtra
             | DiagnosticKind::CommaPairUnbalanced
             | DiagnosticKind::SemicolonMisuse
+            | DiagnosticKind::SemicolonMissing
             | DiagnosticKind::QuestionMarkMissing
             | DiagnosticKind::UnbalancedQuote
             | DiagnosticKind::ListSeparatorMissing

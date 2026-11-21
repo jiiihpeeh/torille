@@ -26,6 +26,7 @@ const EMITTED_KINDS: &[DiagnosticKind] = &[
     DiagnosticKind::CommaMissing,
     DiagnosticKind::CommaPairUnbalanced,
     DiagnosticKind::SemicolonMisuse,
+    DiagnosticKind::SemicolonMissing,
     DiagnosticKind::QuestionMarkMissing,
     DiagnosticKind::UnbalancedQuote,
     DiagnosticKind::ListSeparatorMissing,

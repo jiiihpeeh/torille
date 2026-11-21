@@ -59,6 +59,7 @@ the checker only when the user presses the grammar button.
 | `comma_extra` | a comma directly between a personal-pronoun subject and its finite predicate | `Warning` with a `Likely` removal |
 | `comma_pair_unbalanced` | an opened relative-clause comma pair is not closed | `Error` |
 | `semicolon_misuse` | a semicolon at a main/subordinate or coordinated-complement boundary, inside a subject/predicate or verb/object phrase, at sentence end, or in a short parallel list that wants commas | `Suggestion` with a `Likely` replacement or removal |
+| `semicolon_missing` | a complex list where an existing semicolon group establishes a repeated shape, but an outer comma still separates two groups | `Suggestion` with a `Likely` semicolon edit set |
 | `question_mark_missing` | a clear direct question ends with `.` or no mark; a dash-interrupted or line-wrapped question gets no mark at the break, and a correlative relative or rhetorical conditional stays quiet | `Error` |
 | `unbalanced_quote` | a quotation is still open at the end of the text | `Warning` |
 | `list_separator_missing` | two adjacent list items have no separator | `Error` |
@@ -94,6 +95,9 @@ Ship fewer rules, not more guesses.
 - Semicolon-separated lists are modelled as one list whose items are the
   semicolon groups. A complex list with an internal comma keeps its hierarchy;
   a short parallel list of three or more comma-free items is offered commas.
+- A missing semicolon in a complex list is suggested only when the first group
+  and an existing semicolon establish the group shape. A fully comma-separated
+  complex list is ambiguous and stays quiet.
 - A question mark is an `Error` only when the sentence has one clause and its
   first word is interrogative or carries `-ko`/`-kö`.
 - An unbalanced quote is a `Warning`; quote style and dialogue dashes are not
@@ -130,9 +134,9 @@ clean rows / 6,349 words, 2 true positives and 0 known false positives;
 Current baseline (2026-11-20):
 
 ```text
-syntax_eval clean rows 158: 0 errors, 0 warnings, 0 suggestions
-syntax_eval cases 65: every emitted kind precision 1.00, recall 1.00
-syntax_diagnostics: 103 exact-output cases, 275 clean rows
+syntax_eval clean rows 159: 0 errors, 0 warnings, 0 suggestions
+syntax_eval cases 66: every emitted kind precision 1.00, recall 1.00
+syntax_diagnostics: 107 exact-output cases, 275 clean rows
 prose: 266 clean rows / 6,349 words, 2 true positives, 0 known false positives
 page-2000: 3 diagnostics
 ```

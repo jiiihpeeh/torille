@@ -638,6 +638,7 @@ message key used by ignore lists; a kind may have more than one.
 | `comma_extra` | `comma_extra` | Warning |
 | `comma_pair_unbalanced` | `comma_pair_unbalanced` | Error |
 | `semicolon_misuse` | the five `semicolon_*` rule ids (see §3.4) | Suggestion |
+| `semicolon_missing` | `semicolon_list_hierarchy` | Suggestion |
 | `question_mark_missing` | `question_mark_missing` | Error |
 | `unbalanced_quote` | `unbalanced_quote` | Warning |
 | `list_separator_missing` | `list_separator_missing` | Error |
@@ -786,6 +787,11 @@ Implementation notes:
   space, or `;` → `.`). `Kun tulin kotiin; kaikki nukkuivat.` The rule ids are
   `semicolon_subordinate`, `semicolon_coordination`, `semicolon_phrase`,
   `semicolon_terminal` and `semicolon_simple_list`.
+- **`semicolon_missing`** (`SemicolonMissing`) — a complex list where the first
+  group and an existing semicolon establish a repeated group shape, but an
+  outer comma still separates two groups. Severity: `Suggestion`. Correction:
+  punctuation; replace every outer comma with `;` in one edit set
+  (`semicolon_list_hierarchy`). A fully comma-separated list stays quiet.
 - **`question_mark_missing`** (`QuestionMarkMissing`) — a clear direct
   question ends with `.` or no mark. Severity: `Error`. Correction:
   punctuation. `Missä sinä asut.` → `?`. A dash-interrupted or line-wrapped

@@ -240,6 +240,22 @@
       "status": "covered",
       "text": "Hän tuli; nopeasti.",
       "expect": { "rule": null }
+    },
+    {
+      "id": "fi_sem_003_complex_list_missing",
+      "rule": "FI-SEM-003",
+      "phase": 5,
+      "status": "covered",
+      "text": "Kokoukseen osallistuivat Virtanen, toimitusjohtaja; Laine, projektipäällikkö, Korhonen, talousjohtaja.",
+      "expect": { "rule": "semicolon_list_hierarchy", "start": 79 }
+    },
+    {
+      "id": "fi_sem_003_fully_comma_list_is_ambiguous",
+      "rule": "FI-SEM-003",
+      "phase": 5,
+      "status": "covered",
+      "text": "Kokoukseen osallistuivat Virtanen, toimitusjohtaja, Laine, projektipäällikkö, Korhonen, talousjohtaja.",
+      "expect": { "rule": null }
     }
   ]
 }
