@@ -34,6 +34,7 @@ pub mod negation;
 mod slot;
 mod sound;
 pub(crate) mod stem_endings;
+mod target;
 pub(super) mod split;
 pub mod stem_shape;
 
@@ -897,7 +898,8 @@ type ParadigmKey = (String, Vec<(u16, u8)>, u8, bool, bool);
 /// Only one probe is kept, so an entry costs a surface and its readings, not
 /// a second copy of the paradigm.
 struct Paradigm {
-    words: std::rc::Rc<FxHashSet<String>>,
+    /// The full word set, or `None` for a targeted probe that never built it.
+    words: Option<std::rc::Rc<FxHashSet<String>>>,
     probe: Option<(String, Vec<Tags>)>,
 }
 
@@ -915,6 +917,10 @@ thread_local! {
 /// set: one lemma's paradigm is a hundred words, so a few hundred lemmas is
 /// already megabytes.
 const PARADIGM_WORD_CAP: usize = 100_000;
+
+/// A cap on entries as well as words: a probe-only entry costs no words, and a
+/// large paste can ask about many lemmas.
+const PARADIGM_ENTRY_CAP: usize = 20_000;
 
 fn paradigm_key(
     lemma: &str,
@@ -949,11 +955,16 @@ fn paradigm_key(
 /// Insert a paradigm, evicting the whole cache when it would pass the cap.
 fn store_paradigm(key: ParadigmKey, paradigm: Paradigm) {
     PARADIGMS.with_borrow_mut(|cache| {
-        if PARADIGM_WORDS.with(std::cell::Cell::get) + paradigm.words.len() > PARADIGM_WORD_CAP {
+        let words = paradigm.words.as_ref().map_or(0, |words| words.len());
+        if cache.len() >= PARADIGM_ENTRY_CAP && !cache.contains_key(&key) {
             cache.clear();
             PARADIGM_WORDS.with(|counter| counter.set(0));
         }
-        PARADIGM_WORDS.with(|counter| counter.set(counter.get() + paradigm.words.len()));
+        if PARADIGM_WORDS.with(std::cell::Cell::get) + words > PARADIGM_WORD_CAP {
+            cache.clear();
+            PARADIGM_WORDS.with(|counter| counter.set(0));
+        }
+        PARADIGM_WORDS.with(|counter| counter.set(counter.get() + words));
         cache.insert(key, paradigm);
     });
 }
@@ -989,6 +1000,125 @@ pub fn emits_form(
         word,
         Caller::Other,
     )
+}
+
+/// Whether `lemma` produces `word`, using the target-aware verb builders.
+///
+/// A miss never writes a cache entry: the failed candidate's full paradigm is
+/// not useful. A hit builds and caches the ordinary full paradigm, so the
+/// successful and repeated-surface path keeps the cache it had before. The
+/// targeted walk is therefore only extra work on a hit and a saving on a
+/// miss.
+#[allow(clippy::too_many_arguments)]
+pub fn emits_target_form(
+    lemma: &str,
+    inflections: &[Inflection],
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+    pos: PartOfSpeech,
+    possessives: bool,
+    word: &str,
+) -> bool {
+    if !matches!(pos, PartOfSpeech::Verb) || inflections.is_empty() {
+        return emits_form(
+            lemma,
+            inflections,
+            cat,
+            lexicon,
+            pos,
+            possessives,
+            word,
+        );
+    }
+    let key = paradigm_key(lemma, inflections, pos, possessives, lexicon);
+    if let Some(hit) = PARADIGMS.with_borrow(|cache| {
+        cache.get(&key).and_then(|paradigm| {
+            if let Some(words) = &paradigm.words {
+                return Some(words.contains(word));
+            }
+            paradigm
+                .probe
+                .as_ref()
+                .filter(|(probed, _)| probed == word)
+                .map(|(_, readings)| !readings.is_empty())
+        })
+    }) {
+        return hit;
+    }
+    let mut matched: Option<Generated> = None;
+    target::with_target(Some(word), || {
+        walk_generated(
+            GeneratedWalk {
+                lemma,
+                inflections,
+                cat,
+                lexicon,
+                pos,
+                possessives,
+            },
+            false,
+            |form| {
+                if form.word == word {
+                    match &mut matched {
+                        Some(existing) => existing.absorb(&form),
+                        None => matched = Some(form.clone()),
+                    }
+                }
+                true
+            },
+        );
+    });
+    let hit = matched.is_some();
+    let readings = matched.map(|form| form.readings).unwrap_or_default();
+    store_paradigm(
+        key,
+        Paradigm {
+            words: None,
+            probe: Some((word.to_string(), readings)),
+        },
+    );
+    hit
+}
+
+/// [`emits_standalone_form`] through the target-aware verb walk.
+#[allow(clippy::too_many_arguments)]
+pub fn emits_target_standalone_form(
+    lemma: &str,
+    inflections: &[Inflection],
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+    pos: PartOfSpeech,
+    possessives: bool,
+    word: &str,
+) -> bool {
+    if !emits_target_form(
+        lemma,
+        inflections,
+        cat,
+        lexicon,
+        pos,
+        possessives,
+        word,
+    ) {
+        return false;
+    }
+    if !crate::kotus::is_plural_only_word(lemma) || word.eq_ignore_ascii_case(lemma) {
+        return true;
+    }
+    form_readings(
+        lemma,
+        inflections,
+        cat,
+        lexicon,
+        pos,
+        possessives,
+        word,
+    )
+    .is_some_and(|readings| {
+        readings
+            .iter()
+            .any(|reading| reading.number == Some(crate::tags::Number::Plural))
+    })
 }
 
 /// [`emits_form`] with a probe caller tag for the statistics.
@@ -1039,9 +1169,16 @@ pub(crate) fn emits_form_inner(
     // them ([`form_readings`]) does not walk the paradigm a second time.
     let key = paradigm_key(lemma, inflections, pos, possessives, lexicon);
     if let Some(hit) = PARADIGMS.with_borrow(|cache| {
-        cache
-            .get(&key)
-            .map(|paradigm| paradigm.words.contains(word))
+        cache.get(&key).and_then(|paradigm| {
+            if let Some(words) = &paradigm.words {
+                return Some(words.contains(word));
+            }
+            paradigm
+                .probe
+                .as_ref()
+                .filter(|(probed, _)| probed == word)
+                .map(|(_, readings)| !readings.is_empty())
+        })
     }) {
         return hit;
     }
@@ -1081,7 +1218,7 @@ pub(crate) fn emits_form_inner(
     store_paradigm(
         key,
         Paradigm {
-            words: std::rc::Rc::new(words),
+            words: Some(std::rc::Rc::new(words)),
             probe: matched.map(|form| (word.to_string(), form.readings)),
         },
     );
@@ -3590,6 +3727,89 @@ mod tests {
             )
             .unwrap_or_else(|| panic!("{lemma_word} / {word} not found"));
             assert_eq!(got, expected, "{lemma_word} / {word}");
+        }
+    }
+
+    /// The target-aware verb walk agrees with the full walk.
+    #[test]
+    fn targeted_membership_agrees_with_the_full_walk() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let index = LexiconIndex::new(&lexicon);
+        for class in ["52", "53", "67", "73"] {
+            let Some(lemma) = lexicon.iter().find(|lemma| {
+                lemma.part_of_speech.contains("verbi")
+                    && lemma
+                        .inflections
+                        .iter()
+                        .any(|inflection| inflection.to_string() == class)
+            }) else {
+                continue;
+            };
+            for possessives in [false, true] {
+                let forms = inflect_all(
+                    lemma.word,
+                    &lemma.inflections,
+                    &cat,
+                    Some(&index),
+                    PartOfSpeech::Verb,
+                    possessives,
+                );
+                for form in &forms {
+                    assert!(
+                        emits_target_form(
+                            lemma.word,
+                            &lemma.inflections,
+                            &cat,
+                            Some(&index),
+                            PartOfSpeech::Verb,
+                            possessives,
+                            &form.word,
+                        ),
+                        "class {class} possessives={possessives}: {} not found",
+                        form.word
+                    );
+                }
+            }
+            // A non-form must stay absent.
+            let absent = format!("{}zz", lemma.word);
+            assert!(!emits_target_form(
+                lemma.word,
+                &lemma.inflections,
+                &cat,
+                Some(&index),
+                PartOfSpeech::Verb,
+                false,
+                &absent,
+            ));
+            // A probe-only miss must not hide a later surface, and the full
+            // walk must still build the cache when another caller asks.
+            let forms = inflect_all(
+                lemma.word,
+                &lemma.inflections,
+                &cat,
+                Some(&index),
+                PartOfSpeech::Verb,
+                false,
+            );
+            assert!(emits_target_form(
+                lemma.word,
+                &lemma.inflections,
+                &cat,
+                Some(&index),
+                PartOfSpeech::Verb,
+                false,
+                &forms[0].word,
+            ));
+            assert!(emits_form(
+                lemma.word,
+                &lemma.inflections,
+                &cat,
+                Some(&index),
+                PartOfSpeech::Verb,
+                false,
+                &forms[1].word,
+            ));
         }
     }
 

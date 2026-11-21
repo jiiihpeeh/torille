@@ -1451,7 +1451,7 @@ pub fn collect_bases_via_verb_stem_map(word: &str, verbose: bool) -> Vec<String>
                         continue;
                     }
                     let inflections: Vec<_> = lemma.inflections().collect();
-                    if crate::expand::emits_form_inner(
+                    if crate::expand::emits_target_form(
                         lemma.word(),
                         &inflections,
                         cat(),
@@ -1459,7 +1459,6 @@ pub fn collect_bases_via_verb_stem_map(word: &str, verbose: bool) -> Vec<String>
                         lemma_pos(&lemma, PartOfSpeech::Verb),
                         false,
                         word,
-                        crate::probe_stats::Caller::VerbStem,
                     ) {
                         hit = true;
                         break;

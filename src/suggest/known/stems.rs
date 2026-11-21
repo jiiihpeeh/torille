@@ -189,7 +189,7 @@ fn find_base_via_verb_stem_map_static(
     let lex = sanalista();
     let lemma = lex.by_word(base).next()?;
     let inflections: Vec<_> = lemma.inflections().collect();
-    let hit = crate::expand::emits_standalone_form(
+    let hit = crate::expand::emits_target_standalone_form(
         lemma.word(),
         &inflections,
         catalogue(),

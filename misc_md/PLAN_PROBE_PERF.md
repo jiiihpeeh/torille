@@ -1,6 +1,6 @@
 # PLAN_PROBE_PERF — targeted membership and negative evidence for cold morphology
 
-Status: **Phases 0–3 landed; Phase 4 and 5 measured and rejected; Phase 6 measured, no action.** Builds on Phase 12 of
+Status: **Phases 0–4 landed; Phase 5 rejected; Phase 6 measured, no action.** Builds on Phase 12 of
 [`PLAN_GRAMMAR_STYLE_PERF.md`](PLAN_GRAMMAR_STYLE_PERF.md) at baseline
 `2a4b6c6`: `page-2000` cold morphology is **1,017 ms single-thread /
 293 ms on four native workers**, and the pass still spends most of its time
@@ -444,20 +444,41 @@ fallback.
 The class list for step 3 comes from the Phase 0 report. Do not write a
 class-specific generator before the report says it pays.
 
-**Measured 2026-11-21 — the builder-filter-only targeted path is rejected.**
-A target field on `VerbBuilder` with `wants(ending)` guards and a targeted
-membership walk that stores no full set (the caller full-builds only when it
-needs readings) was **21–24 % slower** on the clean, corrupted and all-unknown
-corpora, and 5 % slower on the homonym fixture. The full-paradigm cache is
-worth more than the suffix filter: the filtered walk still formats most cells
-because a short ending such as `i` matches many forms, and a successful or
-repeated probe loses the cache that the ordinary path would have kept. The
-39.7 % form ceiling is real but not enough to pay for that loss.
+**Measured 2026-11-21 — first attempt rejected, corrected cache policy landed.**
 
-The next attempt must preserve the cache. The options are direct per-cell
-generation for classes 52/73/53 that also builds the full set for the cache,
-or a two-level cache that filters only the *second* probe of a lemma. Neither
-is started; treat the builder filter as a dead end.
+*Attempt 1 (rejected).* A target field with a plain `wants(ending)` guard and a
+targeted walk that kept no cache was **21–24 % slower**: it still formatted most
+cells, and every successful or repeated probe lost the cache. Treat the plain
+builder filter as a dead end.
+
+*Attempt 2 (landed).* Two changes made it pay:
+
+1. `wants(stem, ending)` is exact — length, prefix and suffix — so a failed
+   candidate skips a cell before formatting.
+2. A targeted **hit** stores a probe-only cache entry with the matched
+   readings; `form_readings` answers from it. A targeted **miss** stores an
+   empty probe. A full paradigm is built and cached only when another caller
+   (`emits_form`, or a later surface that reaches it) asks for the full set.
+   `Paradigm.words` is now optional and probe-only entries have their own cap.
+
+The `decline` guard includes every final vowel; the missing `u`/`y` was caught
+by the passive-subject tests.
+
+Measured cold-only against the Phase 2 binary (min of 9 pinned runs):
+
+| corpus | before | after | change |
+|---|---:|---:|---:|
+| clean | 786.3 ms | **634.7 ms** | **−19.3 %** |
+| 8 % corrupted | 838.1 ms | **693.2 ms** | **−17.3 %** |
+| all unknown | 839.8 ms | **751.4 ms** | **−10.5 %** |
+
+The 4-worker cold pass is **196 ms**; diagnostics are 3 grammar / 14 style with
+single-thread parity true.
+
+The direct path is verb-only; nouns keep the ending signature plus the full
+cache. The parity test covers classes 52/53/67/73 with and without possessives,
+a non-form, a probe-only miss followed by a hit, and a full `emits_form` after a
+targeted entry.
 
 ### 9.3 Parity gates
 

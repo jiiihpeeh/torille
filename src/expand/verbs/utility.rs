@@ -367,6 +367,9 @@ pub struct Decl {
 pub struct VerbBuilder {
     out: Vec<Form>,
     front: bool,
+    /// The surface being verified, when the build is a targeted membership
+    /// check. `None` for an ordinary full paradigm.
+    target: Option<String>,
 }
 
 impl VerbBuilder {
@@ -374,11 +377,43 @@ impl VerbBuilder {
         Self {
             out: Vec::new(),
             front: front(lemma),
+            target: crate::expand::target::current(),
         }
     }
 
     pub fn front(&self) -> bool {
         self.front
+    }
+
+    /// Whether a cell built as `stem + ending` can equal the target.
+    ///
+    /// The length check makes this exact: a form with an extra internal part
+    /// (a possessive, a case) is not skipped by a shorter stem/ending pair.
+    pub fn wants(&self, stem: &str, ending: &str) -> bool {
+        self.target.as_ref().is_none_or(|target| {
+            target.len() == stem.len() + ending.len()
+                && target.starts_with(stem)
+                && target.ends_with(ending)
+        })
+    }
+
+    /// Whether a full word can be the target.
+    pub fn wants_word(&self, word: &str) -> bool {
+        self.target.as_ref().is_none_or(|target| target == word)
+    }
+
+    /// Whether any declined case or possessive can match the target.
+    fn wants_decline(&self) -> bool {
+        const SUFFIXES: &[&str] = &[
+            // A declined nominative can end in any vowel (`asuttu`, `tty`,
+            // `tehty`), not only in `a`/`ä`.
+            "a", "ä", "e", "i", "o", "u", "y", "ö", "n", "t", "ssa", "ssä", "sta", "stä",
+            "lla", "llä", "lta", "ltä", "lle", "ksi", "tta", "ttä", "na", "nä", "seen",
+            "ne", "ine", "in", "ni", "si", "nsa", "nsä", "mme", "nne", "an", "än", "en",
+        ];
+        self.target
+            .as_ref()
+            .is_none_or(|target| SUFFIXES.iter().any(|suffix| target.ends_with(suffix)))
     }
 
     /// The harmonic twin: `back` in the back half, `front_twin` in the front.
@@ -405,6 +440,9 @@ impl VerbBuilder {
     /// Push every case, number and possessive of a declined participle.
     /// `tags` supplies the reading for a (case, number, possessive) cell.
     pub fn decline(&mut self, d: &Decl, tags: impl Fn(Case, Number, Option<Possessive>) -> Tags) {
+        if !self.wants_decline() {
+            return;
+        }
         let front = self.front;
         for case in DECLENSION {
             // --- singular ---
@@ -515,17 +553,24 @@ impl VerbBuilder {
         mut make: impl FnMut(Possessive) -> Tags,
     ) {
         for (suf, p) in PERSONAL {
-            self.push(format!("{base}{suf}"), make(*p));
+            if self.wants(&base, suf) {
+                self.push(format!("{base}{suf}"), make(*p));
+            }
         }
         if third != ThirdPossessive::None {
             let long = if self.front { "nsä" } else { "nsa" };
-            self.push(format!("{base}{long}"), make(Possessive::Third));
+            if self.wants(&base, long) {
+                self.push(format!("{base}{long}"), make(Possessive::Third));
+            }
         }
         if third == ThirdPossessive::LongAndShort
             && let Some(last) = base.chars().last()
             && "aeiouyäö".contains(last)
         {
-            self.push(format!("{base}{last}n"), make(Possessive::Third));
+            let short = format!("{last}n");
+            if self.wants(&base, &short) {
+                self.push(format!("{base}{short}"), make(Possessive::Third));
+            }
         }
     }
 
@@ -535,11 +580,18 @@ impl VerbBuilder {
     /// short `kseen` and the long `ksensa`.
     fn possess_translative(&mut self, ks: String, mut make: impl FnMut(Possessive) -> Tags) {
         for (suf, p) in PERSONAL_E {
-            self.push(format!("{ks}{suf}"), make(*p));
+            if self.wants(&ks, suf) {
+                self.push(format!("{ks}{suf}"), make(*p));
+            }
         }
-        self.push(format!("{ks}een"), make(Possessive::Third));
+        if self.wants(&ks, "een") {
+            self.push(format!("{ks}een"), make(Possessive::Third));
+        }
         let long = if self.front { "sä" } else { "sa" };
-        self.push(format!("{ks}en{long}"), make(Possessive::Third));
+        let ending = format!("en{long}");
+        if self.wants(&ks, &ending) {
+            self.push(format!("{ks}{ending}"), make(Possessive::Third));
+        }
     }
 
     pub fn into_forms(self) -> Vec<Form> {
@@ -1264,6 +1316,9 @@ pub fn paradigm(s: &Stems) -> Vec<Form> {
         (&weak, "tte".to_string(), Person::Second, Number::Plural),
         (&stem, b.h("vat", "vät"), Person::Third, Number::Plural),
     ] {
+        if !b.wants(stem, &e) {
+            continue;
+        }
         b.push(
             format!("{stem}{e}"),
             verb_tags(
@@ -1294,8 +1349,12 @@ pub fn paradigm(s: &Stems) -> Vec<Form> {
             Number::Plural,
         ),
     ] {
+        let ending = absorb_i(past, e);
+        if !b.wants(past, &ending) {
+            continue;
+        }
         b.push(
-            format!("{past}{}", absorb_i(past, e)),
+            format!("{past}{ending}"),
             verb_tags(
                 Some(Tense::Past),
                 Some(Mood::Indicative),
@@ -1325,8 +1384,12 @@ pub fn paradigm(s: &Stems) -> Vec<Form> {
     let cond_stems = std::iter::once(&cond_stem).chain(s.cond_alt.iter());
     for stem in cond_stems {
         for (e, person, number) in cond_cells {
+            let ending = absorb_i(stem, e);
+            if !b.wants(stem, &ending) {
+                continue;
+            }
             b.push(
-                format!("{stem}{}", absorb_i(stem, e)),
+                format!("{stem}{ending}"),
                 verb_tags(
                     Some(Tense::Present),
                     Some(Mood::Conditional),
@@ -1357,8 +1420,12 @@ pub fn paradigm(s: &Stems) -> Vec<Form> {
     let pot_stems = std::iter::once(&s.pot).chain(s.alt.iter());
     for pot in pot_stems {
         for (e, person, number) in &pot_cells {
+            let ending = format!("{}{}", pot.lead, e);
+            if !b.wants(&pot.stem, &ending) {
+                continue;
+            }
             b.push(
-                format!("{}{}{}", pot.stem, pot.lead, e),
+                format!("{}{}", pot.stem, ending),
                 verb_tags(
                     Some(Tense::Present),
                     Some(Mood::Potential),
@@ -1393,6 +1460,9 @@ pub fn paradigm(s: &Stems) -> Vec<Form> {
         (format!("k{a}{a}"), Person::Second, Number::Plural),
         (format!("k{o}{o}t"), Person::Third, Number::Plural),
     ] {
+        if !b.wants(&s.imp_stem, &e) {
+            continue;
+        }
         b.push(
             format!("{}{e}", s.imp_stem),
             verb_tags(
