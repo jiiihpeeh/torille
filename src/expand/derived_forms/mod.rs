@@ -5,6 +5,7 @@
 //! had their say. The file was split by suffix family; the public paths are
 //! re-exported from `expand`, so callers do not change.
 
+use crate::fast_hash::FxHashMap;
 use crate::kotus::{EmbeddedLemma, Inflection};
 use crate::spec::Catalogues;
 use crate::tags::{Case, Confidence, Degree, Number, PartOfSpeech, Tags};
@@ -391,10 +392,8 @@ pub(crate) fn modifier_is_known(modifier: &str) -> bool {
     // `-mis`/`-inen`/numeral tails fall through to the compound recogniser,
     // which is the expensive part.
     thread_local! {
-        static MEMO: std::cell::RefCell<std::collections::HashMap<
-            String,
-            bool,
-        >> = std::cell::RefCell::new(std::collections::HashMap::new());
+        static MEMO: std::cell::RefCell<FxHashMap<String, bool>> =
+            std::cell::RefCell::new(FxHashMap::default());
     }
     const CAP: usize = 8_192;
     let key = modifier.strip_suffix('-').unwrap_or(modifier);

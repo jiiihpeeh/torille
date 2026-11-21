@@ -33,6 +33,7 @@ struct Args {
     threads: usize,
     json: bool,
     probe_stats: bool,
+    cold_only: bool,
 }
 
 fn parse_args() -> Args {
@@ -45,6 +46,7 @@ fn parse_args() -> Args {
         threads: 0,
         json: false,
         probe_stats: false,
+        cold_only: false,
     };
     let mut iter = std::env::args().skip(1);
     while let Some(arg) = iter.next() {
@@ -81,6 +83,7 @@ fn parse_args() -> Args {
             }
             "--json" => args.json = true,
             "--probe-stats" => args.probe_stats = true,
+            "--cold-only" => args.cold_only = true,
             other => panic!("unknown argument: {other}"),
         }
     }
@@ -249,6 +252,10 @@ fn main() {
         let stats = torille::probe_stats::snapshot();
         torille::probe_stats::disable();
         print_probe_stats(&stats);
+    }
+    if args.cold_only {
+        println!("cold morphology: {morphology_cold_ms:9.2} ms");
+        return;
     }
 
     if args.threads > 0 {

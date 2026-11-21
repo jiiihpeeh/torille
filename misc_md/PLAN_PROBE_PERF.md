@@ -1,6 +1,6 @@
 # PLAN_PROBE_PERF — targeted membership and negative evidence for cold morphology
 
-Status: **Phase 0 landed; Phases 1–6 proposed.** Builds on Phase 12 of
+Status: **Phases 0–1 landed; Phases 2–6 proposed.** Builds on Phase 12 of
 [`PLAN_GRAMMAR_STYLE_PERF.md`](PLAN_GRAMMAR_STYLE_PERF.md) at baseline
 `2a4b6c6`: `page-2000` cold morphology is **1,017 ms single-thread /
 293 ms on four native workers**, and the pass still spends most of its time
@@ -214,6 +214,16 @@ any structure whose iteration order can reach a diagnostic.
 **Gate:** ≥3 % instruction reduction on `page-2000`, no reading change on the
 homonym corpus, and a documented collision-resistance choice. Abort if the
 seeded variant erases the gain.
+
+**Landed 2026-11-21.** `src/fast_hash.rs` is a seeded Fx-style hasher: the
+state is initialised once per process from `RandomState`, so the collision
+surface stays closed. Switched: `Paradigm.words`, `KW_MEMO`, `FAST_CACHE`, the
+`modifier_is_known` memo and `MorphologyCache.words`. Measured cold-only on
+`page-2000`: **7.39 G → 6.96 G instructions (−5.8 %)**; the wall-clock gain is
+smaller (~1.5–2.5 %) and within the shared box's noise, which is why the
+instruction count is the gate. The unseeded Fx variant differs only in its
+initial state and was not kept. No reading or diagnostic change; the workspace
+tests, clippy and Python gates are green.
 
 ## 7. Phase 2 — shared probe context (medium)
 

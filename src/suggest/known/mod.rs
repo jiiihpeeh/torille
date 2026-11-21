@@ -5,6 +5,8 @@
 //! modules and are re-exported here so callers keep their paths.
 
 use std::collections::HashSet;
+
+use crate::fast_hash::FxHashMap;
 use std::sync::OnceLock;
 
 use crate::kotus::Lemma;
@@ -153,8 +155,8 @@ pub fn is_known_word_fast(word: &str) -> Option<String> {
 thread_local! {
     /// Memo for [`is_known_word_with_compound`], see there.
     static KW_MEMO: std::cell::RefCell<
-        std::collections::HashMap<String, [Option<Option<String>>; 2]>,
-    > = std::cell::RefCell::new(std::collections::HashMap::new());
+        FxHashMap<String, [Option<Option<String>>; 2]>,
+    > = std::cell::RefCell::new(FxHashMap::default());
 }
 
 /// The recognition stack, memoised per thread.

@@ -64,6 +64,7 @@ use crate::expand::static_table::StemMap;
 use crate::expand::{
     ClassPrior, find_all_bases_with, find_best_base_with, lemma_by_word, rank_lemma_bases,
 };
+use crate::fast_hash::FxHashMap;
 use crate::kotus::{Inflection, Lemma, Sanalista};
 use crate::spec::Catalogues;
 use crate::suggest::is_known_word;
@@ -594,8 +595,8 @@ thread_local! {
     /// Thread-local memo for [`check_normal_fast`]. Per-thread rather than
     /// process-wide so the native multi-threaded walks do not contend on a
     /// lock; the wasm is one thread.
-    static FAST_CACHE: RefCell<HashMap<String, NormalizedOutcome>> =
-        RefCell::new(HashMap::new());
+    static FAST_CACHE: RefCell<FxHashMap<String, NormalizedOutcome>> =
+        RefCell::new(FxHashMap::default());
 }
 
 const FAST_CACHE_LIMIT: usize = 16_384;

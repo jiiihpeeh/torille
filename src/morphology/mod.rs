@@ -23,6 +23,7 @@ use crate::expand::check_normal::{
     find_base_via_verb_stem_map,
 };
 use crate::expand::find_bases_for_analysis;
+use crate::fast_hash::FxHashMap;
 use crate::kotus::{Lemma, lemmas};
 use crate::sentence::SentenceSpan;
 use crate::spec::Catalogues;
@@ -214,7 +215,7 @@ impl WordInfo {
 /// growing the wasm heap without bound.
 #[derive(Debug, Default, Clone)]
 pub struct MorphologyCache {
-    words: HashMap<String, Arc<WordInfo>>,
+    words: FxHashMap<String, Arc<WordInfo>>,
     /// Surfaces whose entry came from the deep recognition walk.
     deep: std::collections::HashSet<String>,
     hits: u64,

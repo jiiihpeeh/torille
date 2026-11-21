@@ -181,6 +181,7 @@ pub fn compute_degree_forms() -> std::collections::HashMap<String, &'static str>
     map
 }
 
+use crate::fast_hash::FxHashSet;
 use crate::kotus::Inflection;
 use crate::probe_stats::{self, Caller};
 use crate::spec::Catalogues;
@@ -895,7 +896,7 @@ type ParadigmKey = (String, Vec<(u16, u8)>, u8, bool, bool);
 /// Only one probe is kept, so an entry costs a surface and its readings, not
 /// a second copy of the paradigm.
 struct Paradigm {
-    words: std::rc::Rc<HashSet<String>>,
+    words: std::rc::Rc<FxHashSet<String>>,
     probe: Option<(String, Vec<Tags>)>,
 }
 
@@ -1043,7 +1044,7 @@ pub(crate) fn emits_form_inner(
     }) {
         return hit;
     }
-    let mut words: HashSet<String> = HashSet::new();
+    let mut words: FxHashSet<String> = FxHashSet::default();
     // The probe is the merged form, not one entry per copy: `dedup` folds
     // same-word forms with `Form::absorb`, and this raw walk must produce the
     // same readings as the merged one. Absorbing here is that fold for the

@@ -13,6 +13,7 @@ pub mod derivation;
 pub mod diagnostic;
 pub mod disambiguation;
 pub mod expand;
+mod fast_hash;
 pub(crate) mod gradation;
 pub mod grammar;
 pub mod check;
