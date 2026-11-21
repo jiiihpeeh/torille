@@ -23,6 +23,10 @@ mod plural_only;
 mod map_reader;
 pub mod morphology;
 pub mod pronoun;
+#[cfg(feature = "probe-stats")]
+pub mod probe_stats;
+#[cfg(not(feature = "probe-stats"))]
+pub(crate) mod probe_stats;
 mod rejected;
 mod sanalista_overrides;
 pub mod sentence;

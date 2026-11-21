@@ -1953,3 +1953,112 @@ mod arkisin_tests {
         }));
     }
 }
+
+#[cfg(test)]
+mod homonym_tests {
+    use super::*;
+    use crate::tags::{Mood, Person, Tense};
+    use crate::tokenise::tokenise;
+
+    /// The committed homonym fixture pins the ambiguities an optimisation of
+    /// the probe path must not lose: a noun form that is also a verb form, a
+    /// numeral that is also a noun, and a partitive adjective that is also a
+    /// verb infinitive.
+    #[test]
+    fn the_homonym_fixture_keeps_every_reading() {
+        let text = include_str!("../../tests/fixtures/perf/homonyms.txt");
+        let tokens = tokenise(text);
+        let mut cache = MorphologyCache::new();
+        let analysis = analyze_morphology(&tokens, &mut cache);
+        let rows: Vec<(&str, &WordInfo)> = tokens
+            .iter()
+            .zip(&analysis.tokens)
+            .filter_map(|(token, word)| word.as_deref().map(|word| (token.text.as_str(), word)))
+            .collect();
+        let word = |surface: &str| -> &WordInfo {
+            rows.iter()
+                .find(|(text, _)| text.eq_ignore_ascii_case(surface))
+                .map(|(_, word)| *word)
+                .unwrap_or_else(|| panic!("{surface} did not resolve"))
+        };
+        let has_pos = |info: &WordInfo, pos| {
+            info.readings()
+                .iter()
+                .any(|reading| reading.part_of_speech == Some(pos))
+        };
+        let has_cell = |info: &WordInfo, pos, case, number| {
+            info.readings().iter().any(|reading| {
+                reading.part_of_speech == Some(pos)
+                    && reading.case == Some(case)
+                    && reading.number == Some(number)
+            })
+        };
+
+        let tuli = word("tuli");
+        assert!(has_pos(tuli, PartOfSpeech::Noun));
+        assert!(has_pos(tuli, PartOfSpeech::Verb));
+        assert!(
+            tuli.lemmas.iter().any(|lemma| lemma == "tulla"),
+            "tuli lost the tulla reading"
+        );
+
+        let kuusi = word("kuusi");
+        assert!(has_pos(kuusi, PartOfSpeech::Noun));
+        assert!(has_pos(kuusi, PartOfSpeech::Numeral));
+
+        let paloin = word("paloin");
+        assert!(has_cell(
+            paloin,
+            PartOfSpeech::Noun,
+            Case::Instructive,
+            Number::Plural
+        ));
+        assert!(paloin.readings().iter().any(|reading| {
+            reading.part_of_speech == Some(PartOfSpeech::Verb)
+                && reading.tense == Some(Tense::Past)
+                && reading.person == Some(Person::First)
+        }));
+
+        let pienia = word("pieniä");
+        assert!(pienia.readings().iter().any(|reading| {
+            reading.part_of_speech == Some(PartOfSpeech::Verb)
+                && reading.mood == Some(Mood::Infinitive)
+        }));
+        assert!(has_cell(
+            pienia,
+            PartOfSpeech::Adjective,
+            Case::Partitive,
+            Number::Plural
+        ));
+        assert!(
+            pienia.lemmas.iter().any(|lemma| lemma == "pieni"),
+            "pieniä lost the pieni reading"
+        );
+
+        let sataa = word("sataa");
+        assert!(has_pos(sataa, PartOfSpeech::Verb));
+        assert!(has_cell(
+            sataa,
+            PartOfSpeech::Numeral,
+            Case::Partitive,
+            Number::Singular
+        ));
+
+        for surface in ["itse", "mikä", "joka", "kuka"] {
+            assert!(has_pos(word(surface), PartOfSpeech::Pronoun), "{surface}");
+        }
+        assert!(has_pos(word("kuningatar"), PartOfSpeech::Noun));
+        assert!(has_pos(word("sen"), PartOfSpeech::Adverb));
+        assert!(has_cell(
+            word("sen"),
+            PartOfSpeech::Pronoun,
+            Case::Genitive,
+            Number::Singular
+        ));
+
+        assert!(
+            rows.iter().all(|(_, info)| !info.is_empty()),
+            "the homonym fixture has an unresolved word"
+        );
+    }
+}

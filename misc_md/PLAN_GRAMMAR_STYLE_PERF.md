@@ -1396,6 +1396,11 @@ Native 4-worker cold morphology on `page-2000` is **293 ms** (Phase 11 recorded
 (`matches single-thread: grammar=true, style=true`). There is no blob change
 and no wasm-size change.
 
+The next slice is [`PLAN_PROBE_PERF.md`](PLAN_PROBE_PERF.md). Its Phase 0
+instrumentation is landed: on the clean page the pass makes 2,539 paradigm
+builds (811 failed) and visits 1.50 M forms; classes 52, 73 and 53 account for
+1.39 M of them, and the cheap gate dominates all-unknown text.
+
 ## 8. Measurement harness
 
 The harness is a tool, not a unit test: it must be runnable without a browser

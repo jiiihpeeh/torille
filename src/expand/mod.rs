@@ -182,6 +182,7 @@ pub fn compute_degree_forms() -> std::collections::HashMap<String, &'static str>
 }
 
 use crate::kotus::Inflection;
+use crate::probe_stats::{self, Caller};
 use crate::spec::Catalogues;
 use crate::tags::{Confidence, PartOfSpeech, Tags};
 
@@ -582,6 +583,7 @@ fn inflect_in_raw(
 ) -> Vec<Generated> {
     let mut out = inflect_in_unmarked(lemma, inflection, cat, lexicon, pos, possessives);
     mark_plural_only(lemma, &mut out);
+    probe_stats::note_forms(inflection.class, out.len());
     out
 }
 
@@ -779,7 +781,7 @@ pub fn emits_standalone_form(
     possessives: bool,
     word: &str,
 ) -> bool {
-    if !emits_form(
+    if !emits_form_inner(
         lemma,
         inflections,
         cat,
@@ -787,6 +789,7 @@ pub fn emits_standalone_form(
         pos,
         possessives,
         word,
+        Caller::CheapGate,
     ) {
         return false;
     }
@@ -835,6 +838,8 @@ pub fn form_readings(
     }
     let mut readings: Vec<Tags> = Vec::new();
     let mut found = false;
+    let mut visited = 0usize;
+    probe_stats::begin_build();
     walk_generated(
         GeneratedWalk {
             lemma,
@@ -846,6 +851,7 @@ pub fn form_readings(
         },
         true,
         |form| {
+            visited += 1;
             if form.word == surface {
                 found = true;
                 for reading in form.readings {
@@ -855,6 +861,8 @@ pub fn form_readings(
             true
         },
     );
+    probe_stats::end_build();
+    probe_stats::note_build(inflections, Caller::Readings, !found, visited);
     if let Some(key) = key {
         // Refresh the probe of an entry the verification pass created; a
         // probe-only entry would make `emits_form` answer "no" for a word
@@ -969,8 +977,34 @@ pub fn emits_form(
     possessives: bool,
     word: &str,
 ) -> bool {
+    emits_form_inner(
+        lemma,
+        inflections,
+        cat,
+        lexicon,
+        pos,
+        possessives,
+        word,
+        Caller::Other,
+    )
+}
+
+/// [`emits_form`] with a probe caller tag for the statistics.
+#[allow(clippy::too_many_arguments)] // the public wrapper's arguments plus the tag
+pub(crate) fn emits_form_inner(
+    lemma: &str,
+    inflections: &[Inflection],
+    cat: &Catalogues,
+    lexicon: Option<&LexiconIndex>,
+    pos: PartOfSpeech,
+    possessives: bool,
+    word: &str,
+    caller: Caller,
+) -> bool {
     if inflections.is_empty() {
         let mut hit = false;
+        let mut visited = 0usize;
+        probe_stats::begin_build();
         walk_generated(
             GeneratedWalk {
                 lemma,
@@ -982,6 +1016,7 @@ pub fn emits_form(
             },
             true,
             |form| {
+                visited += 1;
                 if form.word == word {
                     hit = true;
                     false
@@ -990,6 +1025,8 @@ pub fn emits_form(
                 }
             },
         );
+        probe_stats::end_build();
+        probe_stats::note_build(inflections, caller, !hit, visited);
         return hit;
     }
     // The stem-map gates verify the same base once per token, and a page has
@@ -1012,6 +1049,8 @@ pub fn emits_form(
     // same readings as the merged one. Absorbing here is that fold for the
     // one word anyone asked about.
     let mut matched: Option<Generated> = None;
+    let mut visited = 0usize;
+    probe_stats::begin_build();
     walk_generated(
         GeneratedWalk {
             lemma,
@@ -1023,6 +1062,7 @@ pub fn emits_form(
         },
         false,
         |form| {
+            visited += 1;
             if form.word == word {
                 match &mut matched {
                     Some(existing) => existing.absorb(&form),
@@ -1033,7 +1073,9 @@ pub fn emits_form(
             true
         },
     );
+    probe_stats::end_build();
     let hit = words.contains(word);
+    probe_stats::note_build(inflections, caller, !hit, visited);
     store_paradigm(
         key,
         Paradigm {

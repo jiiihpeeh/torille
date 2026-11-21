@@ -124,6 +124,7 @@ python3 tools/show_illegals.py --refresh
 python3 tools/test_binding_agrees_with_binary.py
 python3 tools/test_reverse_lookup_recall.py
 python3 tools/report_multiple_bases.py reports/recall5.tsv
+python3 tools/gen_perf_corpora.py   # deterministic probe-benchmark corpora
 python3 tools/check_docs.py
 ```
 

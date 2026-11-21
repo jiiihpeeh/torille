@@ -32,6 +32,7 @@ struct Args {
     single_thread: bool,
     threads: usize,
     json: bool,
+    probe_stats: bool,
 }
 
 fn parse_args() -> Args {
@@ -43,6 +44,7 @@ fn parse_args() -> Args {
         single_thread: false,
         threads: 0,
         json: false,
+        probe_stats: false,
     };
     let mut iter = std::env::args().skip(1);
     while let Some(arg) = iter.next() {
@@ -78,6 +80,7 @@ fn parse_args() -> Args {
                     .expect("--threads must be a number")
             }
             "--json" => args.json = true,
+            "--probe-stats" => args.probe_stats = true,
             other => panic!("unknown argument: {other}"),
         }
     }
@@ -178,6 +181,47 @@ fn depths_json(stats: &CacheStats) -> String {
         .join(",")
 }
 
+fn print_probe_stats(stats: &torille::probe_stats::Snapshot) {
+    let failure_rate = if stats.builds == 0 {
+        0.0
+    } else {
+        100.0 * stats.failed as f64 / stats.builds as f64
+    };
+    println!(
+        "probe stats: builds {}  failed {} ({failure_rate:.1} %)  forms {}",
+        stats.builds, stats.failed, stats.forms
+    );
+    println!("  caller        builds   failed     forms");
+    for caller in torille::probe_stats::Caller::ALL {
+        let row = stats.by_caller[caller.index()];
+        if row.builds == 0 {
+            continue;
+        }
+        println!(
+            "  {:<12} {:>7} {:>8} {:>9}",
+            caller.label(),
+            row.builds,
+            row.failed,
+            row.forms
+        );
+    }
+    let classes = stats.classes();
+    if !classes.is_empty() {
+        println!("  class  builds   failed     forms");
+        for (class, row) in classes.iter().take(24) {
+            let name = if *class == torille::probe_stats::OTHER_CLASS {
+                "other".to_string()
+            } else {
+                class.to_string()
+            };
+            println!(
+                "  {:>5} {:>7} {:>8} {:>9}",
+                name, row.builds, row.failed, row.forms
+            );
+        }
+    }
+}
+
 fn main() {
     let args = parse_args();
     if args.single_thread {
@@ -193,10 +237,19 @@ fn main() {
 
     // Cold: a fresh per-textarea cache. This is the first check of a page.
     let mut cache = MorphologyCache::new();
+    if args.probe_stats {
+        torille::probe_stats::enable();
+        torille::probe_stats::reset();
+    }
     let cold = Instant::now();
     let morphology = analyze_morphology(&tokens, &mut cache);
     let morphology_cold_ms = ms(cold.elapsed());
     let cold_stats = cache.stats();
+    if args.probe_stats {
+        let stats = torille::probe_stats::snapshot();
+        torille::probe_stats::disable();
+        print_probe_stats(&stats);
+    }
 
     if args.threads > 0 {
         let t = Instant::now();

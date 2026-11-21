@@ -1,6 +1,6 @@
 # PLAN_PROBE_PERF — targeted membership and negative evidence for cold morphology
 
-Status: **Proposed.** Builds on Phase 12 of
+Status: **Phase 0 landed; Phases 1–6 proposed.** Builds on Phase 12 of
 [`PLAN_GRAMMAR_STYLE_PERF.md`](PLAN_GRAMMAR_STYLE_PERF.md) at baseline
 `2a4b6c6`: `page-2000` cold morphology is **1,017 ms single-thread /
 293 ms on four native workers**, and the pass still spends most of its time
@@ -121,51 +121,71 @@ It writes the corrupted and all-unknown variants with a fixed seed, plus a
 manifest of the substitutions. `reports/` stays the output directory for
 measurements.
 
-## 5. Phase 0 — instrumentation (first)
+## 5. Phase 0 — instrumentation (landed 2026-11-21)
 
 The class-level answer decides whether targeted generation is worth building.
 Do not start Phase 4 without it.
 
-Add a probe-statistics surface, compiled out or nearly free when disabled:
+Landed as `src/probe_stats.rs`, behind the `probe-stats` feature. The shipping
+build compiles the no-op module, so the call sites inline away; `torille-tools`
+enables the feature and `perf_grammar_style --probe-stats` records one cold
+pass. The counters are thread-local; the single-thread shape is the measured
+one.
 
-```rust
-// src/expand/probe_stats.rs
-pub(crate) struct ProbeStats {
-    pub builds: u64,
-    pub failed: u64,
-    pub forms: u64,
-    pub by_class: [ClassStats; 102],
-}
-```
+- `builds` — paradigm walks from `emits_form` and `form_readings`;
+- `failed` — the target surface was not in the walk;
+- `forms` — forms visited, derived layers included;
+- `by_class` — class paradigms only; a dual-class build counts once per class;
+- `by_caller` — `noun stem`, `verb stem`, `readings`, `cheap gate`, `other`.
 
-Collect at the two places that know the answer: `emits_form`'s cache-miss
-branch (builds, failures, forms visited) and `inflect_in_unmarked` (the class
-and gradation), keyed by `inflection.class` plus a caller tag (`noun stem`,
-`verb stem`, `cheap gate`, `head walk`). Expose it through
-`perf_grammar_style --probe-stats`; keep it behind an env flag
-(`TORILLE_PROBE_STATS=1`) or a feature so the shipping wasm pays nothing.
+The corpora are reproducible: `tools/gen_perf_corpora.py` writes the corrupted
+and all-unknown variants from `page-2000` with a fixed seed and a manifest;
+`tests/fixtures/perf/homonyms.txt` is committed and pinned by
+`the_homonym_fixture_keeps_every_reading`.
 
-The report must answer:
+Measured on `page-2000` (clean, 1,959 words; builds 2,539, failed 811 = 31.9 %,
+forms 1,498,716):
 
-| question | metric |
-|---|---|
-| Which classes dominate form visits? | forms and builds per class, sorted by total |
-| Are failures concentrated? | failed builds per class |
-| Is the verb path one class or many? | top-3 share of verb forms |
-| Is verification repeated? | verifies per `(base, surface)` |
-| How many candidates per surface? | candidate bases per stem-map call |
-| Where do allocations go? | counting allocator in the native perf tool |
+| caller | builds | failed | forms |
+|---|---:|---:|---:|
+| noun stem | 718 | 119 | 61,919 |
+| verb stem | 587 | 266 | 792,594 |
+| readings | 777 | 53 | 303,201 |
+| cheap gate | 435 | 363 | 336,253 |
+| other | 22 | 10 | 4,749 |
 
-Also count **duplicate candidate verifications**: the same `(map, stem, base,
-surface)` reached twice in one resolution. The paradigm cache makes the second
-build cheap, but the scan and hash lookup are still visible.
+| class | builds | failed | forms |
+|---|---:|---:|---:|
+| 52 | 205 | 106 | 549,810 |
+| 73 | 171 | 118 | 458,832 |
+| 53 | 143 | 46 | 383,370 |
+| 67 | 83 | 15 | 221,763 |
+| 10 | 204 | 68 | 35,073 |
+| 99 | 266 | 39 | 33,181 |
 
-Add a counting global allocator to `perf_grammar_style` for native runs. It is a
-tool-only concern; do not put it in the engine.
+The findings that shape the rest of the plan:
 
-**Gate:** the report exists and is reproducible on all four corpora. If the top
-three verb classes account for less than ~50 % of verb form visits, Phase 4
-starts as a general builder filter, not a direct generator.
+- **Classes 52, 73 and 53 dominate.** They account for ~1.39 M of the 1.50 M
+  form visits. Phase 4 starts with those three; class 67 is the next tier.
+- **The cheap gate is not small on error-heavy text.** It is 435 builds on the
+  clean page but **1,662 builds / 1,238 failed / 1.38 M forms** on the
+  all-unknown corpus. The negative-evidence signature must therefore cover
+  `find_base_via_stem_map_static` / `emits_standalone_form`, not only the
+  morphology's `collect_bases_*` calls.
+- **Reading extraction is mostly successful** (53 failures of 777). It costs
+  303 k forms, but targeted generation there is a latency/reuse question, not a
+  failed-probe problem.
+- **Verb stem verification is the expensive failure bucket**: 266 of 587
+  builds fail on the clean page and cost 793 k forms.
+
+The remaining Phase 0 metrics — duplicate verifies per `(base, surface)`,
+candidate bases per surface, and allocations per word — are deliberately
+second-pass measurements; they need no engine change and can be added to the
+same report when Phase 1 or 2 lands.
+
+**Gate:** met. The top three classes are well above the 50 % threshold, so
+Phase 4 can plan a class-specific path rather than a generic builder filter
+alone.
 
 ## 6. Phase 1 — faster internal hasher (low risk)
 
@@ -244,6 +264,11 @@ The signature is keyed by the stem the probe already looked up:
 ```text
 stem -> sorted ending ids from the probe's own ending table
 ```
+
+Apply it in **both** verify paths. The morphology's `collect_bases_*` is the
+clean-page path, but on all-unknown text the `emits_standalone_form` cheap gate
+is the dominant caller (1,662 builds, 1,238 failed, 1.38 M forms). A signature
+that only guards the morphology loop would miss most of the error-path waste.
 
 It is a **necessary condition**, never an exact test: it is the union over every
 base at that stem of endings some generated form can produce. A bit clear means
@@ -480,9 +505,10 @@ result and is recorded in the plan; it is not merged.
 
 ## 14. First week
 
-1. Add the probe-statistics module and the four-corpus generator.
-2. Capture the class table on all four corpora. Sort by total forms/time, not
-   call count.
+1. [x] Add the probe-statistics module and the four-corpus generator.
+2. [x] Capture the class table on all four corpora. Sort by total forms/time, not
+   call count. The result is in §5; classes 52/73/53 dominate and the cheap gate
+   dominates all-unknown text.
 3. Land the fast hasher experiment in isolation.
 4. Prototype the per-stem ending signature from the captured probe log and the
    engine forms; report size and rejection before touching `build.rs`.
@@ -496,6 +522,7 @@ signature → targeted verb generation.
 
 | area | files |
 |---|---|
+| probe statistics | `src/probe_stats.rs`, `Cargo.toml`, `tools/Cargo.toml`, `tools/src/bin/perf_grammar_style.rs` |
 | resolver/probe context | `src/morphology/mod.rs`, `src/expand/check_normal.rs` |
 | paradigm membership | `src/expand/mod.rs`, `src/expand/inflect.rs`, `src/expand/nominals/`, `src/expand/verbs/` |
 | stem maps / signature | `build.rs`, `build/map_builders/front_coded.rs`, `src/expand/static_table.rs`, `src/map_reader.rs`, `tools/src/bin/gen_stem_map_noun.rs`, `tools/src/bin/gen_stem_map_verb.rs` |

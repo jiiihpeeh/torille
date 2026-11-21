@@ -116,7 +116,7 @@ neural-m0 = ["torille/neural-m0"]
 neural-m0-stack = ["torille/neural-m0-stack"]
 
 [dependencies]
-torille = { path = ".." }
+torille = { path = "..", features = ["probe-stats"] }
 # The Phase 1 UD coverage harness reads CoNLL-U plus the manual ambiguity
 # fixture. No model or inference dependency is introduced here.
 serde = { version = "1", features = ["derive"] }
