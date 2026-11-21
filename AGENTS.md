@@ -50,6 +50,9 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
 - `misc_md/PLAN_GRAMMAR_STYLE_PERF.md` — the grammar and style performance plan: one
   shared morphology cache with cached case/number, cold-path candidate pruning,
   sentence-level incremental checks and worker chunking.
+- `misc_md/PLAN_PROBE_PERF.md` — the next probe-performance slice: per-stem
+  ending signatures, targeted membership checks for the dominant verb classes,
+  a shared stem-probe context and the remaining allocation/hasher work.
 - `docs/hyphenation.md` — line-break hyphenation: patterns, compound adapter,
   policy, offsets and exceptions. The plan is `misc_md/PLAN_HYPHENATION.md`.
 - `misc_md/TODO.md` — known gaps ordered by user-facing impact.
@@ -597,7 +600,7 @@ is gitignored and generated.
 | the grammar reading model | `src/tags.rs` |
 | grammar diagnostics/corrections | `src/syntax_check/`, `tests/syntax_check.rs`, `misc_md/PLAN_SYNTAX_CHECKER.md` |
 | word-order clause features / spec | `src/syntax/features.rs`, `docs/word_order.md`, `tests/word_order_allow.rs` |
-| grammar/style performance | `src/morphology/`, `src/syntax_check/`, `src/style_check/`, `misc_md/PLAN_GRAMMAR_STYLE_PERF.md` |
+| grammar/style performance | `src/morphology/`, `src/syntax_check/`, `src/style_check/`, `misc_md/PLAN_GRAMMAR_STYLE_PERF.md`, `misc_md/PLAN_PROBE_PERF.md` |
 | hyphenation patterns/policy | `src/hyphenation/`, `data/hyphenation/` |
 | punctuation spacing (typography) | `src/typography.rs`, `tests/fixtures/typography.json` |
 | the wasm/browser surface | `torille-wasm/src/`, `extensions/firefox/`, `extensions/chromium/` |
