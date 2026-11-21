@@ -1,6 +1,6 @@
 # PLAN_PROBE_PERF — targeted membership and negative evidence for cold morphology
 
-Status: **Phases 0, 1 and 3 landed; Phases 2 and 4–6 proposed.** Builds on Phase 12 of
+Status: **Phases 0, 1 and 3 landed; Phase 4 measured and rejected; Phases 2, 5 and 6 proposed.** Builds on Phase 12 of
 [`PLAN_GRAMMAR_STYLE_PERF.md`](PLAN_GRAMMAR_STYLE_PERF.md) at baseline
 `2a4b6c6`: `page-2000` cold morphology is **1,017 ms single-thread /
 293 ms on four native workers**, and the pass still spends most of its time
@@ -432,6 +432,21 @@ fallback.
 
 The class list for step 3 comes from the Phase 0 report. Do not write a
 class-specific generator before the report says it pays.
+
+**Measured 2026-11-21 — the builder-filter-only targeted path is rejected.**
+A target field on `VerbBuilder` with `wants(ending)` guards and a targeted
+membership walk that stores no full set (the caller full-builds only when it
+needs readings) was **21–24 % slower** on the clean, corrupted and all-unknown
+corpora, and 5 % slower on the homonym fixture. The full-paradigm cache is
+worth more than the suffix filter: the filtered walk still formats most cells
+because a short ending such as `i` matches many forms, and a successful or
+repeated probe loses the cache that the ordinary path would have kept. The
+39.7 % form ceiling is real but not enough to pay for that loss.
+
+The next attempt must preserve the cache. The options are direct per-cell
+generation for classes 52/73/53 that also builds the full set for the cache,
+or a two-level cache that filters only the *second* probe of a lemma. Neither
+is started; treat the builder filter as a dead end.
 
 ### 9.3 Parity gates
 
