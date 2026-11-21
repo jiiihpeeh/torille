@@ -1,6 +1,6 @@
 # PLAN_PROBE_PERF — targeted membership and negative evidence for cold morphology
 
-Status: **Phases 0, 1 and 3 landed; Phases 4 and 5 measured and rejected; Phases 2 and 6 proposed.** Builds on Phase 12 of
+Status: **Phases 0–3 landed; Phase 4 and 5 measured and rejected; Phase 6 measured, no action.** Builds on Phase 12 of
 [`PLAN_GRAMMAR_STYLE_PERF.md`](PLAN_GRAMMAR_STYLE_PERF.md) at baseline
 `2a4b6c6`: `page-2000` cold morphology is **1,017 ms single-thread /
 293 ms on four native workers**, and the pass still spends most of its time
@@ -257,6 +257,17 @@ not equivalent.
 corpora (`check_normal_fast` with and without the context), plus a count showing
 the duplicate stem scans are gone. Abort if the gain is under 2 % and the
 complexity is more than the local skip.
+
+**Landed 2026-11-21 — small win, below the gate.** `StemProbe {
+noun_exhausted, verb_exhausted }` is created in `resolve_word_fast` and passed
+to `resolve_cheap_fallback` → `check_normal_fast_with_probe`. Gates 4 and 4b
+skip only when the map was exhausted; compound checks still run. The parity
+test covers fifteen known, typo and homonym surfaces.
+
+Measured cold-only: **6,237.2 M → 6,219.9 M instructions** on the clean page
+(−0.28 %) and **6,421.8 M → 6,383.2 M** on all-unknown (−0.60 %). It is below
+the 2 % gate but is kept: it is local, removes the duplicate scans, and changes
+no public API.
 
 ## 8. Phase 3 — negative evidence (highest value, independent)
 
@@ -537,6 +548,13 @@ token/capitalisation-dependent and must not move to a worker.
 **Gate:** the wasm pool's fresh-state page does not regress, and the native
 four-worker path improves or the imbalance metric shows why not. Abort if the
 change only helps a synthetic corpus.
+
+**Measured 2026-11-21 — no action.** On `page-2000` the four workers got
+287/287/287/285 surfaces and took **192.5 / 228.5 / 240.7 / 210.1 ms**
+(max/mean **1.10**); the parallel wall was **254 ms**. A 10 % imbalance is
+inside the shipping budget (the wasm pool is 364–395 ms), and a cost-aware
+partition would break the first-four-character grouping that keeps the
+paradigm cache warm across case forms. No change.
 
 ## 12. Benchmarking additions
 

@@ -490,6 +490,18 @@ pub enum NormalizedOutcome {
 // engine), which is ~50-200 ms per word.
 // ---------------------------------------------------------------------------
 
+/// Stem-map work the caller has already done for this surface.
+///
+/// The morphology resolver runs the noun and verb stem maps before it falls
+/// back to the cheap gate. When a map found nothing, the fallback's gate 4 or
+/// 4b would repeat the same exhausted scan. The context only records the
+/// exhausted case; a found base would not reach the fallback.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub(crate) struct StemProbe {
+    pub noun_exhausted: bool,
+    pub verb_exhausted: bool,
+}
+
 /// Run the six-gate pipeline on `word` and return the first hit.
 ///
 /// The pipeline mirrors what the wasm's typing path fires for
@@ -502,7 +514,7 @@ pub enum NormalizedOutcome {
 /// (and what it tried) to stdout -- useful for debugging but
 /// not for the wasm's per-keystroke path.
 pub fn check_normal(word: &str, verbose: bool) -> NormalizedOutcome {
-    check_normal_with(word, verbose, /* engine_gate = */ true)
+    check_normal_with(word, verbose, /* engine_gate = */ true, None)
 }
 
 /// The same pipeline with the slow engine gate removed.
@@ -528,12 +540,12 @@ pub fn check_normal_fast(word: &str, verbose: bool) -> NormalizedOutcome {
     // wasm cache covers only one panel, so a thread-local memo pays for
     // itself even on the first render.
     if verbose {
-        return check_normal_with(word, true, /* engine_gate = */ false);
+        return check_normal_with(word, true, /* engine_gate = */ false, None);
     }
     if let Some(hit) = FAST_CACHE.with_borrow(|cache| cache.get(word).cloned()) {
         return hit;
     }
-    let outcome = check_normal_with(word, false, /* engine_gate = */ false);
+    let outcome = check_normal_with(word, false, /* engine_gate = */ false, None);
     FAST_CACHE.with_borrow_mut(|cache| {
         if cache.len() >= FAST_CACHE_LIMIT {
             // A large paste can hold tens of thousands of distinct tokens.
@@ -544,6 +556,18 @@ pub fn check_normal_fast(word: &str, verbose: bool) -> NormalizedOutcome {
         cache.insert(word.to_string(), outcome.clone());
     });
     outcome
+}
+
+/// [`check_normal_fast`] with the caller's already-exhausted stem maps.
+///
+/// This bypasses the memo: the outcome is the same as the ordinary fast path,
+/// but the probe is a per-surface fact and must not be cached as if it were
+/// part of the word's answer.
+pub(crate) fn check_normal_fast_with_probe(
+    word: &str,
+    probe: &StemProbe,
+) -> NormalizedOutcome {
+    check_normal_with(word, false, /* engine_gate = */ false, Some(probe))
 }
 
 /// Every base the engine can prove for `word`, ranked like `lookup`.
@@ -701,7 +725,12 @@ fn cheap_derived_base(word: &str) -> Option<String> {
     crate::expand::derived_agent_base(&lower, cat(), None)
 }
 
-fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> NormalizedOutcome {
+fn check_normal_with(
+    word: &str,
+    verbose: bool,
+    engine_gate: bool,
+    probe: Option<&StemProbe>,
+) -> NormalizedOutcome {
     if crate::expand::closed_spellings::is_nonword(word) {
         return NormalizedOutcome::Unknown;
     }
@@ -952,48 +981,62 @@ fn check_normal_with(word: &str, verbose: bool, engine_gate: bool) -> Normalized
     // sanalista lemma and is accepted at gate 1, before this point.
 
     // ── Gate 4: noun stem hashmap ───────────────────────────────────
-    if verbose {
-        println!("    gate 4: stem hashmap ({} known endings)", ENDINGS.len());
-    }
-    // The full path ranks the union of the noun and verb maps, because the
-    // maps are separate gates but the word is one question: `paloin` is both
-    // a noun form and a verb form. The fast path keeps the noun-first
-    // first-hit order -- it cannot afford the whole bucket per keystroke.
-    if engine_gate {
-        if let Some((base, gate)) = ranked_stem_map_base(word, verbose) {
-            if verbose {
-                println!("    gate 4: hit -> {base} ({gate})");
-            }
-            return NormalizedOutcome::Inflected { base, gate };
-        }
-    } else if let Some(base) = find_base_via_stem_map(word, PartOfSpeech::Noun, verbose) {
+    let noun_exhausted = probe.is_some_and(|probe| probe.noun_exhausted);
+    if noun_exhausted {
         if verbose {
-            println!("    gate 4: hit -> {base}");
+            println!("    gate 4: skipped (already searched)");
         }
-        return NormalizedOutcome::Inflected {
-            base,
-            gate: "noun stem",
-        };
-    }
-    if verbose {
-        println!("    gate 4: miss -> falling through to gate 4b");
+    } else {
+        if verbose {
+            println!("    gate 4: stem hashmap ({} known endings)", ENDINGS.len());
+        }
+        // The full path ranks the union of the noun and verb maps, because the
+        // maps are separate gates but the word is one question: `paloin` is both
+        // a noun form and a verb form. The fast path keeps the noun-first
+        // first-hit order -- it cannot afford the whole bucket per keystroke.
+        if engine_gate {
+            if let Some((base, gate)) = ranked_stem_map_base(word, verbose) {
+                if verbose {
+                    println!("    gate 4: hit -> {base} ({gate})");
+                }
+                return NormalizedOutcome::Inflected { base, gate };
+            }
+        } else if let Some(base) = find_base_via_stem_map(word, PartOfSpeech::Noun, verbose) {
+            if verbose {
+                println!("    gate 4: hit -> {base}");
+            }
+            return NormalizedOutcome::Inflected {
+                base,
+                gate: "noun stem",
+            };
+        }
+        if verbose {
+            println!("    gate 4: miss -> falling through to gate 4b");
+        }
     }
 
     // ── Gate 4b: verb stem hashmap ─────────────────────────────────
-    if verbose {
-        println!(
-            "    gate 4b: verb stem hashmap ({} known endings)",
-            VERB_ENDINGS.len()
-        );
-    }
-    if !engine_gate && let Some(base) = find_base_via_verb_stem_map(word, verbose) {
+    let verb_exhausted = probe.is_some_and(|probe| probe.verb_exhausted);
+    if verb_exhausted {
         if verbose {
-            println!("    gate 4b: hit -> {base}");
+            println!("    gate 4b: skipped (already searched)");
         }
-        return NormalizedOutcome::Inflected {
-            base,
-            gate: "verb stem",
-        };
+    } else {
+        if verbose {
+            println!(
+                "    gate 4b: verb stem hashmap ({} known endings)",
+                VERB_ENDINGS.len()
+            );
+        }
+        if !engine_gate && let Some(base) = find_base_via_verb_stem_map(word, verbose) {
+            if verbose {
+                println!("    gate 4b: hit -> {base}");
+            }
+            return NormalizedOutcome::Inflected {
+                base,
+                gate: "verb stem",
+            };
+        }
     }
     // ── Gate 4b-extension: `-toista` numeral ────────────────────────
     //
@@ -1938,6 +1981,25 @@ mod tests {
     /// The reported reading words that the class and derivation fixes now
     /// cover. This is the first-pass gate the wasm render uses, so a
     /// regression here is directly user-visible.
+    #[test]
+    fn the_exhausted_stem_probe_matches_the_full_fast_path() {
+        let words = [
+            "koirra", "taloo", "xyzzy", "aikaa", "paloin", "metsässä", "tuli", "kirjottaa",
+            "haukkoa", "puhua", "kysyä", "tietää", "talo", "talossa", "kuningas",
+        ];
+        for word in words {
+            let probe = StemProbe {
+                noun_exhausted: find_base_via_stem_map(word, PartOfSpeech::Noun, false).is_none(),
+                verb_exhausted: find_base_via_verb_stem_map(word, false).is_none(),
+            };
+            assert_eq!(
+                check_normal_fast(word, false),
+                check_normal_fast_with_probe(word, &probe),
+                "{word}"
+            );
+        }
+    }
+
     #[test]
     fn fast_variant_accepts_the_reported_missing_words() {
         for (word, base) in [

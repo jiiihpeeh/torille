@@ -20,8 +20,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::expand::check_normal::{
-    collect_bases_via_stem_map, collect_bases_via_verb_stem_map, find_base_via_stem_map,
-    find_base_via_verb_stem_map,
+    StemProbe, check_normal_fast_with_probe, collect_bases_via_stem_map,
+    collect_bases_via_verb_stem_map, find_base_via_stem_map, find_base_via_verb_stem_map,
 };
 use crate::expand::find_bases_for_analysis;
 use crate::fast_hash::FxHashMap;
@@ -867,6 +867,7 @@ fn resolve_word_fast(cat: &Catalogues, lower: &str) -> Option<WordInfo> {
     // `pieniä`). The stem map already keeps every base; collect them all
     // rather than sending the surface to the head/tail walk.
     let ambiguous = needs_full_base_search(lower);
+    let mut probe = StemProbe::default();
     if ambiguous
         && let Some(base) = cheap_base(lower)
         && let Some(info) = resolve_compound_surface(lower, &base, cat)
@@ -876,28 +877,32 @@ fn resolve_word_fast(cat: &Catalogues, lower: &str) -> Option<WordInfo> {
 
     let mut bases: Vec<String> = Vec::new();
     if ambiguous {
-        bases.extend(collect_bases_via_stem_map(
-            lower,
-            PartOfSpeech::Noun,
-            false,
-        ));
-        for base in collect_bases_via_verb_stem_map(lower, false) {
+        let noun = collect_bases_via_stem_map(lower, PartOfSpeech::Noun, false);
+        probe.noun_exhausted = noun.is_empty();
+        bases.extend(noun);
+        let verb = collect_bases_via_verb_stem_map(lower, false);
+        probe.verb_exhausted = verb.is_empty();
+        for base in verb {
             if !bases.contains(&base) {
                 bases.push(base);
             }
         }
     } else {
-        if let Some(base) = find_base_via_stem_map(lower, PartOfSpeech::Noun, false) {
+        let noun = find_base_via_stem_map(lower, PartOfSpeech::Noun, false);
+        probe.noun_exhausted = noun.is_none();
+        if let Some(base) = noun {
             bases.push(base);
         }
-        if let Some(base) = find_base_via_verb_stem_map(lower, false)
+        let verb = find_base_via_verb_stem_map(lower, false);
+        probe.verb_exhausted = verb.is_none();
+        if let Some(base) = verb
             && !bases.contains(&base)
         {
             bases.push(base);
         }
     }
     if bases.is_empty() {
-        return resolve_cheap_fallback(lower, cat);
+        return resolve_cheap_fallback(lower, cat, &probe);
     }
 
     let mut out = WordInfo::default();
@@ -922,7 +927,7 @@ fn resolve_word_fast(cat: &Catalogues, lower: &str) -> Option<WordInfo> {
         }
     }
     if !matched_any {
-        return resolve_cheap_fallback(lower, cat);
+        return resolve_cheap_fallback(lower, cat, &probe);
     }
     if out.lemma.is_none() {
         out.lemma = bases.first().cloned();
@@ -939,8 +944,12 @@ fn resolve_word_fast(cat: &Catalogues, lower: &str) -> Option<WordInfo> {
 /// A classless compound and a closed-class pronoun have no stem-map entry, and
 /// a suffixed surface is indexed by its host. The cheap gate names those, and
 /// the single-paradigm verification keeps the result a reading, not a guess.
-fn resolve_cheap_fallback(lower: &str, cat: &Catalogues) -> Option<WordInfo> {
-    let base = cheap_base(lower)?;
+fn resolve_cheap_fallback(
+    lower: &str,
+    cat: &Catalogues,
+    probe: &StemProbe,
+) -> Option<WordInfo> {
+    let base = cheap_base_with(lower, Some(probe))?;
     if is_classless_lemma(&base)
         && let Some(info) = resolve_from_base_surface(lower, &base, cat)
     {
@@ -1471,9 +1480,20 @@ fn finish(out: &mut WordInfo, depth: Depth, lower: &str) {
 /// exactly the set that catches a stem change the prefix neighbourhood misses,
 /// and it is much cheaper than the full reverse index.
 fn cheap_base(lower: &str) -> Option<String> {
+    cheap_base_with(lower, None)
+}
+
+fn cheap_base_with(
+    lower: &str,
+    probe: Option<&StemProbe>,
+) -> Option<String> {
     use crate::expand::check_normal::{NormalizedOutcome, check_normal_fast};
 
-    match check_normal_fast(lower, false) {
+    let outcome = match probe {
+        Some(probe) => check_normal_fast_with_probe(lower, probe),
+        None => check_normal_fast(lower, false),
+    };
+    match outcome {
         NormalizedOutcome::Lemma => Some(lower.to_string()),
         NormalizedOutcome::Inflected { base, .. } => Some(base),
         NormalizedOutcome::Unknown => None,
