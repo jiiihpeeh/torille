@@ -1391,8 +1391,10 @@ engine, which is stable under load; wall is `perf_grammar_style --single-thread`
 | every word made unknown (`…x`) | 9.55 G | **7.91 G** (−17 %) | — | — |
 
 Native 4-worker cold morphology on `page-2000` is **293 ms** (Phase 11 recorded
-319–348 ms), and the diagnostics are unchanged: 3 on the fixture, 5 in the old
-whole-document pool note. There is no blob change and no wasm-size change.
+319–348 ms), and the diagnostics are unchanged: 3 grammar / 14 style on
+`page-2000`, identical between the single-thread and 4-worker paths
+(`matches single-thread: grammar=true, style=true`). There is no blob change
+and no wasm-size change.
 
 ## 8. Measurement harness
 
