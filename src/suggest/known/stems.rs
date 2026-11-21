@@ -107,11 +107,15 @@ pub(super) fn possessive_base_via_stem_map(word: &str, host: &str) -> Option<Str
         let Some(stem) = host.strip_suffix(ending) else {
             continue;
         };
-        if stem.is_empty() || !crate::expand::check_normal::STEM_BUCKETS_NOUN.contains(stem) {
+        if stem.is_empty() {
+            continue;
+        }
+        let mut cans = crate::expand::check_normal::STEM_BUCKETS_NOUN.bases(stem).peekable();
+        if cans.peek().is_none() {
             continue;
         }
         let mut fallback = None;
-        for base in crate::expand::check_normal::STEM_BUCKETS_NOUN.bases(stem) {
+        for base in cans {
             if let Some(b) = find_base_via_stem_map_static_possessive(word, base) {
                 // `kotiinsa` is both `koti` + `-in` + `-sa` and the same
                 // surface from `kota`; prefer the nominative that is
@@ -193,7 +197,7 @@ pub(super) fn verb_stem_probe(lower: &str, stem: &str) -> Option<String> {
     use crate::expand::check_normal::STEM_BUCKETS_VERB;
     let trimmed = stem.trim_end_matches(crate::is_vowel);
     for cand in [stem, trimmed] {
-        if cand.is_empty() || !STEM_BUCKETS_VERB.contains(cand) {
+        if cand.is_empty() {
             continue;
         }
         for base in STEM_BUCKETS_VERB.bases(cand) {

@@ -111,44 +111,75 @@ impl FrontCodedKeys {
         (result, p - keys)
     }
 
-    /// Decode key `i` into `buf` and return it as bytes (always UTF-8).
+    /// The full key that starts block `block`.
     ///
-    /// Decodes from the nearest restart, at most `RESTART` records.
-    fn key_at<'a>(&self, i: usize, buf: &'a mut Vec<u8>) -> &'a [u8] {
+    /// The front-coder stores the first record of every block unchained
+    /// (`common == 0`), so its bytes can be compared without assembling a
+    /// buffer.
+    fn restart_key(&self, block: usize) -> &[u8] {
         let keys = self.keys_off();
-        let block = i / RESTART;
+        let (common, p1) = self.varint(self.restart(block));
+        debug_assert_eq!(common, 0, "a restart record must be a full key");
+        let (slen, p2) = self.varint(p1);
+        let start = keys + p2;
+        &self.blob[start..start + slen as usize]
+    }
+
+    /// Compare the records of one block against `target`, from its restart.
+    ///
+    /// The scan stops as soon as it passes `target`: the keys are sorted, so
+    /// nothing later in the map can match. Only the block that may contain the
+    /// key is scanned, and only its records are assembled.
+    fn find_in_block(&self, block: usize, target: &[u8], buf: &mut Vec<u8>) -> Option<usize> {
+        let keys = self.keys_off();
+        let first = block * RESTART;
+        let last = (first + RESTART).min(self.key_count());
         let mut off = self.restart(block);
         buf.clear();
-        let mut j = block * RESTART;
-        loop {
+        for i in first..last {
             let (common, p1) = self.varint(off);
             let (slen, p2) = self.varint(p1);
             let start = keys + p2;
             let end = start + slen as usize;
             buf.truncate(common as usize);
             buf.extend_from_slice(&self.blob[start..end]);
-            off = p2 + slen as usize;
-            if j == i {
-                return buf.as_slice();
-            }
-            j += 1;
-        }
-    }
-
-    /// The key ordinal for `key`, or `None`. Binary search over the
-    /// front-coded keys.
-    pub(crate) fn find(&self, key: &str) -> Option<usize> {
-        let target = key.as_bytes();
-        let mut buf = Vec::new();
-        let (mut lo, mut hi) = (0usize, self.key_count());
-        while lo < hi {
-            let mid = lo + (hi - lo) / 2;
-            match self.key_at(mid, &mut buf).cmp(target) {
-                std::cmp::Ordering::Less => lo = mid + 1,
-                std::cmp::Ordering::Greater => hi = mid,
-                std::cmp::Ordering::Equal => return Some(mid),
+            match buf.as_slice().cmp(target) {
+                std::cmp::Ordering::Less => off = p2 + slen as usize,
+                std::cmp::Ordering::Equal => return Some(i),
+                std::cmp::Ordering::Greater => return None,
             }
         }
         None
+    }
+
+    /// The key ordinal for `key`, or `None`.
+    ///
+    /// The key region is front-coded in blocks of [`RESTART`] records, so a
+    /// binary search over records would re-decode up to a block’s worth of
+    /// prefix diffs at every step. Search the blocks by their restart keys
+    /// first (one direct byte-slice comparison each), then scan the one block
+    /// that can contain the target.
+    pub(crate) fn find(&self, key: &str) -> Option<usize> {
+        let target = key.as_bytes();
+        let blocks = self.key_count().div_ceil(RESTART);
+        if blocks == 0 {
+            return None;
+        }
+        // The last block whose first key is <= target.
+        let (mut lo, mut hi) = (0usize, blocks);
+        while lo < hi {
+            let mid = lo + (hi - lo) / 2;
+            if self.restart_key(mid) <= target {
+                lo = mid + 1;
+            } else {
+                hi = mid;
+            }
+        }
+        if lo == 0 {
+            // `target` sorts before the very first key.
+            return None;
+        }
+        let mut buf = Vec::new();
+        self.find_in_block(lo - 1, target, &mut buf)
     }
 }

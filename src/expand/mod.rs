@@ -913,6 +913,17 @@ fn paradigm_key(
     possessives: bool,
     lexicon: Option<&LexiconIndex>,
 ) -> ParadigmKey {
+    // The lexicon only changes the output for the class-50/51 compound
+    // markers and for the numeral prefix walk. Every other classed paradigm
+    // is spelled the same with or without it, and the morphology path and the
+    // suggestion path ask about the same lemma with different `lexicon`
+    // arguments. Recording the flag unconditionally would make those two
+    // builds separate cache entries and rebuild a failing paradigm for the
+    // same surface twice.
+    let lexicon_sensitive = pos == PartOfSpeech::Numeral
+        || inflections
+            .iter()
+            .any(|inflection| matches!(inflection.class, 50 | 51));
     (
         lemma.to_string(),
         inflections
@@ -921,7 +932,7 @@ fn paradigm_key(
             .collect(),
         pos as u8,
         possessives,
-        lexicon.is_some(),
+        lexicon_sensitive && lexicon.is_some(),
     )
 }
 
@@ -3535,6 +3546,53 @@ mod tests {
             )
             .unwrap_or_else(|| panic!("{lemma_word} / {word} not found"));
             assert_eq!(got, expected, "{lemma_word} / {word}");
+        }
+    }
+
+    /// A classed paradigm is the same with or without a `LexiconIndex`.
+    ///
+    /// The cache key deliberately ignores the lexicon for classes that do not
+    /// use it (everything but the 50/51 compound markers and the numeral
+    /// walk). That is only sound if the generated forms really are identical,
+    /// so pin it on a noun, an adjective and a verb.
+    #[test]
+    fn a_classed_paradigm_ignores_the_lexicon_argument() {
+        let cat = cat();
+        let lexicon = crate::kotus::sanalista().to_lemmas();
+        let index = LexiconIndex::new(&lexicon);
+        for lemma_word in ["talo", "puhdas", "huomata"] {
+            let lemma = lexicon
+                .iter()
+                .find(|lemma| lemma.word == lemma_word)
+                .unwrap_or_else(|| panic!("{lemma_word} is not in the lexicon"));
+            let pos = PartOfSpeech::inflecting_reading(lemma.part_of_speech);
+            let with = inflect_all(
+                lemma.word,
+                &lemma.inflections,
+                &cat,
+                Some(&index),
+                pos,
+                false,
+            );
+            let without = inflect_all(lemma.word, &lemma.inflections, &cat, None, pos, false);
+            let shape = |forms: &[Generated]| {
+                forms
+                    .iter()
+                    .map(|form| {
+                        (
+                            form.word.clone(),
+                            form.readings.clone(),
+                            form.confidence,
+                            form.combining,
+                        )
+                    })
+                    .collect::<Vec<_>>()
+            };
+            assert_eq!(
+                shape(&with),
+                shape(&without),
+                "{lemma_word}: the lexicon changed the paradigm"
+            );
         }
     }
 

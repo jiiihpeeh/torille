@@ -351,9 +351,7 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
         // The direct probe above cannot see that; strip the `e` and
         // verify the full possessive form, so the acceptance is still
         // backed by the paradigm rather than by the shape alone.
-        if let Some(stem) = host.strip_suffix('e')
-            && STEM_BUCKETS_NOUN.contains(stem)
-        {
+        if let Some(stem) = host.strip_suffix('e') {
             for base in STEM_BUCKETS_NOUN.bases(stem) {
                 if let Some(b) = find_base_via_stem_map_static_possessive(&lower, base) {
                     return Some(b);
@@ -484,9 +482,6 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
         }
         // 2b. Stem-map probe. Handles multi-base stems
         //     (gradated, class-50/51 compounds, etc.).
-        if !STEM_BUCKETS_NOUN.contains(stem) {
-            continue;
-        }
         for base in STEM_BUCKETS_NOUN.bases(stem) {
             if let Some(b) = find_base_via_stem_map_static(&lower, stem, base, PartOfSpeech::Noun) {
                 return Some(b);

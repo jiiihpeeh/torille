@@ -1267,15 +1267,14 @@ pub fn collect_bases_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) 
         if stem.is_empty() {
             continue;
         }
-        if !STEM_BUCKETS_NOUN.contains(stem) {
+        let mut candidates = STEM_BUCKETS_NOUN.bases(stem).peekable();
+        if candidates.peek().is_none() {
             continue;
         }
-        let candidates: Vec<&str> = STEM_BUCKETS_NOUN.bases(stem).collect();
         if verbose {
             println!(
                 "      gate 4: stem {stem:?} (stripped {ending:?}) -> \
-                 {} candidate(s)",
-                candidates.len()
+                 candidate bases"
             );
         }
         for base in candidates {
@@ -1365,15 +1364,17 @@ pub fn collect_bases_via_verb_stem_map(word: &str, verbose: bool) -> Vec<String>
         // verify (re-inflect the base) keeps it honest.
         let trimmed = stem.trim_end_matches(crate::is_vowel);
         for cand in [stem, trimmed] {
-            if cand.is_empty() || !STEM_BUCKETS_VERB.contains(cand) {
+            if cand.is_empty() {
                 continue;
             }
-            let candidates: Vec<&str> = STEM_BUCKETS_VERB.bases(cand).collect();
+            let mut candidates = STEM_BUCKETS_VERB.bases(cand).peekable();
+            if candidates.peek().is_none() {
+                continue;
+            }
             if verbose {
                 println!(
                     "      gate 4b: stem {cand:?} (stripped {ending:?}) -> \
-                     {} candidate(s)",
-                    candidates.len()
+                     candidate bases"
                 );
             }
             for base in candidates {
@@ -1435,9 +1436,6 @@ pub fn find_base_via_verb_stem_map(word: &str, verbose: bool) -> Option<String> 
 /// original word. `sisare` + `nsa` gives `sisarensa`; the bare stem
 /// `sisare` is not a surface form, but the possessive is.
 fn find_base_via_possessive_noun(stem: &str, possessive_word: &str) -> Option<String> {
-    if !STEM_BUCKETS_NOUN.contains(stem) {
-        return None;
-    }
     for base in STEM_BUCKETS_NOUN.bases(stem) {
         for lemma in crate::kotus::sanalista().by_word(base) {
             if !crate::expand::stem_shape::might_emit_row(lemma.row_index(), possessive_word) {

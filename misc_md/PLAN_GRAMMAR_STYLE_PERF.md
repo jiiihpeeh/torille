@@ -1,6 +1,6 @@
 # PLAN_GRAMMAR_STYLE_PERF — one morphology pass for grammar and style
 
-Status: **Phase 0–11 landed; the serial numeral upgrade is gone, native 4-worker is ~340 ms and the wasm pool meets ≤500 ms per page (364–395 ms fresh state) once the four workers exist; 256-bit prefix + 64-bit suffix stem-shape filter, shared paradigm probe and 4-worker morphology pool landed; cold page ~1.19 s native single-thread / ~0.34 s with 4 workers; a browser session pays one ~0.95 s worker start-up; the exact form table is priced (~8 MB gz) and stays rejected** · 2026-11-19 · branch `syntax` · baseline `2e5f13c`
+Status: **Phase 0–12 landed; the serial numeral upgrade is gone, the probe path now seeks front-coded keys by block and shares one classed paradigm across the lexicon arguments, native 4-worker is ~293 ms and the wasm pool meets ≤500 ms per page (364–395 ms fresh state) once the four workers exist; 256-bit prefix + 64-bit suffix stem-shape filter, shared paradigm probe and 4-worker morphology pool landed; cold page ~1.02 s native single-thread / ~0.29 s with 4 workers; a browser session pays one ~0.95 s worker start-up; the exact form table is priced (~8 MB gz) and stays rejected** · 2026-11-21 · branch `syntax` · baseline `2e5f13c`
 
 This is the performance plan for the two opt-in analysis layers:
 
@@ -1351,6 +1351,48 @@ per page. `extensions/firefox/e2e/pool.mjs` pins the shipped path; its grammar
 expectation moved 68 → 9 because the engine changed, and the 9-vs-5 divergence
 between the sentence-cache path and the whole-document pass is tracked in
 `misc_md/TODO_GRAMMAR_STYLE.md` rather than hidden in the constant.
+
+### Phase 12 — the probe path itself (landed)
+
+Phase 10 showed that the remaining cold cost is *paradigm construction*, and
+that 46 % of stem-map verifies fail. The form table attacks those failures with
+data and was rejected on size. This phase takes the same failures without a new
+blob: make the probe infrastructure cheaper and stop asking it the same
+question twice.
+
+Three changes, none of which touches a class engine, a reading or a rule:
+
+1. **Front-coded search seeks by block, not by record.** `FrontCodedKeys::find`
+   used to binary-search the records and decode from the nearest restart at
+   every step: ~18 steps × up to 16 prefix-diff records. It now binary-searches
+   the restart keys (one direct byte-slice comparison each) and scans the one
+   block that can contain the target, stopping at the first key past it. Same
+   `MST2`/`SST2` bytes, no regeneration.
+2. **One lookup per stem, not two.** The stem loops asked
+   `STEM_BUCKETS_*.contains(stem)` and then `bases(stem)`, i.e. two full searches
+   for every hit. `bases()` already returns an empty iterator for a missing key,
+   so the guard is gone and the candidates are streamed without the intermediate
+   `Vec`.
+3. **A classed paradigm no longer depends on the `LexiconIndex` argument.** The
+   morphology path asks with an index and the suggestion path asks without one,
+   so the paradigm cache held two entries and rebuilt the same failing paradigm
+   for the same surface. The index only changes the output for the class-50/51
+   compound markers and the numeral walk; `paradigm_key` now records it only for
+   those. `a_classed_paradigm_ignores_the_lexicon_argument` pins the invariant on
+   a noun, an adjective and a verb.
+
+Measured 2026-11-21, same box. Instructions are `callgrind` on the release
+engine, which is stable under load; wall is `perf_grammar_style --single-thread`.
+
+| workload | Ir before | Ir after | wall before | wall after |
+|---|---:|---:|---:|---:|
+| `page-2000`, clean | 8.23 G | **7.39 G** (−10 %) | — | **1,017 ms** |
+| `page-2000`, 8 % of words corrupted | 8.48 G | **7.53 G** (−11 %) | — | — |
+| every word made unknown (`…x`) | 9.55 G | **7.91 G** (−17 %) | — | — |
+
+Native 4-worker cold morphology on `page-2000` is **293 ms** (Phase 11 recorded
+319–348 ms), and the diagnostics are unchanged: 3 on the fixture, 5 in the old
+whole-document pool note. There is no blob change and no wasm-size change.
 
 ## 8. Measurement harness
 
