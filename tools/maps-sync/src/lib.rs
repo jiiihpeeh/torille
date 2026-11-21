@@ -29,6 +29,8 @@ pub const REQUIRED: &[&str] = &[
     "adverb_possessive.bin.gz",
     "feminine_nouns.bin.gz",
     "oi_plural_lemmas.bin.gz",
+    "stem_endings_noun.bin.gz",
+    "stem_endings_verb.bin.gz",
 ];
 
 /// The remote to use unless `MAPS_REMOTE` overrides it.

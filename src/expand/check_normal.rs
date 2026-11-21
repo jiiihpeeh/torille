@@ -1268,8 +1268,10 @@ pub fn collect_bases_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) 
         if stem.is_empty() {
             continue;
         }
-        let mut candidates = STEM_BUCKETS_NOUN.bases(stem).peekable();
-        if candidates.peek().is_none() {
+        let Some(stem_index) = STEM_BUCKETS_NOUN.find_index(stem) else {
+            continue;
+        };
+        if !crate::expand::stem_endings::NOUN.allows(stem_index, ending) {
             continue;
         }
         if verbose {
@@ -1278,7 +1280,7 @@ pub fn collect_bases_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) 
                  candidate bases"
             );
         }
-        for base in candidates {
+        for base in STEM_BUCKETS_NOUN.bases_at(stem_index) {
             if out.iter().any(|seen| seen == base) {
                 continue;
             }
@@ -1309,6 +1311,14 @@ pub fn collect_bases_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) 
                     break;
                 }
             }
+            crate::probe_stats::record_verify(
+                crate::probe_stats::Map::Noun,
+                word,
+                stem,
+                ending,
+                base,
+                hit,
+            );
             if hit {
                 if verbose {
                     println!("      gate 4: verify {base:?} inflects to {word:?} (hit)");
@@ -1369,8 +1379,10 @@ pub fn collect_bases_via_verb_stem_map(word: &str, verbose: bool) -> Vec<String>
             if cand.is_empty() {
                 continue;
             }
-            let mut candidates = STEM_BUCKETS_VERB.bases(cand).peekable();
-            if candidates.peek().is_none() {
+            let Some(stem_index) = STEM_BUCKETS_VERB.find_index(cand) else {
+                continue;
+            };
+            if !crate::expand::stem_endings::VERB.allows(stem_index, ending) {
                 continue;
             }
             if verbose {
@@ -1379,7 +1391,7 @@ pub fn collect_bases_via_verb_stem_map(word: &str, verbose: bool) -> Vec<String>
                      candidate bases"
                 );
             }
-            for base in candidates {
+            for base in STEM_BUCKETS_VERB.bases_at(stem_index) {
                 if out.iter().any(|seen| seen == base) {
                     continue;
                 }
@@ -1410,6 +1422,14 @@ pub fn collect_bases_via_verb_stem_map(word: &str, verbose: bool) -> Vec<String>
                         break;
                     }
                 }
+                crate::probe_stats::record_verify(
+                    crate::probe_stats::Map::Verb,
+                    word,
+                    cand,
+                    ending,
+                    base,
+                    hit,
+                );
                 if hit {
                     if verbose {
                         println!(

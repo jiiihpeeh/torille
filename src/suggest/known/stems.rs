@@ -69,7 +69,8 @@ pub(super) fn compound_head_from_lemma(left: &str, right: &str) -> Option<String
 /// `any` probe is the right shape.
 pub(super) fn find_base_via_stem_map_static(
     word: &str,
-    _stem: &str,
+    stem: &str,
+    ending: &str,
     base: &str,
     pos: PartOfSpeech,
 ) -> Option<String> {
@@ -89,6 +90,14 @@ pub(super) fn find_base_via_stem_map_static(
         pos,
         false,
         word,
+    );
+    crate::probe_stats::record_verify(
+        crate::probe_stats::Map::Noun,
+        word,
+        stem,
+        ending,
+        base,
+        hit,
     );
     if hit {
         return Some(base.to_string());
@@ -165,7 +174,8 @@ pub(super) fn find_base_via_stem_map_static_possessive(word: &str, base: &str) -
 /// differ on the `pos` argument.
 fn find_base_via_verb_stem_map_static(
     word: &str,
-    _stem: &str,
+    stem: &str,
+    ending: &str,
     base: &str,
     pos: PartOfSpeech,
 ) -> Option<String> {
@@ -182,6 +192,14 @@ fn find_base_via_verb_stem_map_static(
         false,
         word,
     );
+    crate::probe_stats::record_verify(
+        crate::probe_stats::Map::Verb,
+        word,
+        stem,
+        ending,
+        base,
+        hit,
+    );
     if hit {
         return Some(base.to_string());
     }
@@ -193,16 +211,22 @@ fn find_base_via_verb_stem_map_static(
 /// trailing stem vowels (`lukeneen`, `lukeneita` and `lukenutta` all ->
 /// `luken`), so one key covers a whole participle/infinitive paradigm.
 /// The verify in `find_base_via_verb_stem_map_static` keeps it honest.
-pub(super) fn verb_stem_probe(lower: &str, stem: &str) -> Option<String> {
+pub(super) fn verb_stem_probe(lower: &str, stem: &str, ending: &str) -> Option<String> {
     use crate::expand::check_normal::STEM_BUCKETS_VERB;
     let trimmed = stem.trim_end_matches(crate::is_vowel);
     for cand in [stem, trimmed] {
         if cand.is_empty() {
             continue;
         }
-        for base in STEM_BUCKETS_VERB.bases(cand) {
+        let Some(index) = STEM_BUCKETS_VERB.find_index(cand) else {
+            continue;
+        };
+        if !crate::expand::stem_endings::VERB.allows(index, ending) {
+            continue;
+        }
+        for base in STEM_BUCKETS_VERB.bases_at(index) {
             if let Some(b) =
-                find_base_via_verb_stem_map_static(lower, cand, base, PartOfSpeech::Verb)
+                find_base_via_verb_stem_map_static(lower, cand, ending, base, PartOfSpeech::Verb)
             {
                 return Some(b);
             }

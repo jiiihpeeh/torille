@@ -1,6 +1,6 @@
 # PLAN_PROBE_PERF — targeted membership and negative evidence for cold morphology
 
-Status: **Phases 0–1 landed; Phases 2–6 proposed.** Builds on Phase 12 of
+Status: **Phases 0, 1 and 3 landed; Phases 2 and 4–6 proposed.** Builds on Phase 12 of
 [`PLAN_GRAMMAR_STYLE_PERF.md`](PLAN_GRAMMAR_STYLE_PERF.md) at baseline
 `2a4b6c6`: `page-2000` cold morphology is **1,017 ms single-thread /
 293 ms on four native workers**, and the pass still spends most of its time
@@ -333,6 +333,51 @@ a second lookup if folding is straightforward.
 Do not start with an exact `(base, surface)` negative cache. It has low reuse in
 a fresh pass and adds hashing to the path being made cheaper.
 
+**Landed 2026-11-21.** The full per-stem table is viable once the signatures
+are pattern-compressed. Sorted stems share a small number of ending sets:
+
+| map | stems | patterns | avg endings | blob gzip |
+|---|---:|---:|---:|---:|
+| noun | 242,328 | 634 | 6.26 | **67 KB** |
+| verb | 385,944 | 359 | 14.16 | **32 KB** |
+
+The blob stores the pattern dictionary plus one `u16` pattern id per stem; the
+id array is aligned with the stem map's sorted key order, so the runtime reuses
+the `find` it already does. `gen_stem_endings` (new) writes
+`maps/stem_endings_{noun,verb}.bin.gz`; the blobs are in `REQUIRED` and were
+published to the `maps` branch. `src/expand/stem_endings.rs` reads them; the
+checks sit in `collect_bases_*`, the cheap-gate noun loop and
+`verb_stem_probe`.
+
+Measured on the four corpora, with zero false rejects (the signature is
+derived from the same forms the verifier builds):
+
+| corpus | noun failures rejected | verb failures rejected |
+|---|---:|---:|
+| clean | 73.4 % | 41.4 % |
+| 8 % corrupted | 78.8 % | 41.5 % |
+| all unknown | 75.1 % | 30.3 % |
+| homonyms | 66.1 % | 29.3 % |
+
+Cold morphology against the Phase 1 binary (min of 9 pinned runs):
+
+| corpus | before | after | change |
+|---|---:|---:|---:|
+| clean | 1,003.9 ms | 897.5 ms | **−10.6 %** |
+| 8 % corrupted | 1,101.0 ms | 949.2 ms | **−13.8 %** |
+| all unknown | 1,152.6 ms | 994.8 ms | **−13.7 %** |
+| homonyms | 190.7 ms | 178.2 ms | **−6.6 %** |
+
+On the clean page the counters drop from 2,539 builds / 811 failed / 1.50 M
+forms to 2,246 / 503 / 1.30 M. The 4-worker cold pass is ~284 ms. The wasm
+grows by ~100 KB gzip, which is the two blobs; there is no other size change.
+
+The gate is met on the main corpora. The homonym verb sample is just under
+30 % (29.3 %), but it is a small fixture and the signature is exact; the
+clean/typo/all-unknown workloads are the ones that matter for the threshold.
+The noun table is included because it is only 67 KB and removes most noun
+failures, even though the noun path is the cheaper one.
+
 ## 9. Phase 4 — targeted membership (the long lever)
 
 After Phase 0, the target is the top verb classes, not every class.
@@ -520,8 +565,9 @@ result and is recorded in the plan; it is not merged.
    call count. The result is in §5; classes 52/73/53 dominate and the cheap gate
    dominates all-unknown text.
 3. Land the fast hasher experiment in isolation.
-4. Prototype the per-stem ending signature from the captured probe log and the
-   engine forms; report size and rejection before touching `build.rs`.
+4. [x] Prototype the per-stem ending signature from the captured probe log and
+   the engine forms. The pattern-compressed table is 99 KB gzip and rejects
+   30–79 % of failed verifies with zero false rejects; it is landed.
 5. Implement the shared probe context only for the exhausted-stem case.
 
 Then decide between Phase 3 consolidation (`MST3`) and Phase 4 step 1 based on

@@ -33,6 +33,7 @@ mod lexicon_index;
 pub mod negation;
 mod slot;
 mod sound;
+pub(crate) mod stem_endings;
 pub(super) mod split;
 pub mod stem_shape;
 

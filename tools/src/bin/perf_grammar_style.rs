@@ -33,6 +33,7 @@ struct Args {
     threads: usize,
     json: bool,
     probe_stats: bool,
+    probe_events: Option<String>,
     cold_only: bool,
 }
 
@@ -46,6 +47,7 @@ fn parse_args() -> Args {
         threads: 0,
         json: false,
         probe_stats: false,
+        probe_events: None,
         cold_only: false,
     };
     let mut iter = std::env::args().skip(1);
@@ -83,6 +85,9 @@ fn parse_args() -> Args {
             }
             "--json" => args.json = true,
             "--probe-stats" => args.probe_stats = true,
+            "--probe-events" => {
+                args.probe_events = Some(iter.next().expect("--probe-events needs a path"))
+            }
             "--cold-only" => args.cold_only = true,
             other => panic!("unknown argument: {other}"),
         }
@@ -240,7 +245,7 @@ fn main() {
 
     // Cold: a fresh per-textarea cache. This is the first check of a page.
     let mut cache = MorphologyCache::new();
-    if args.probe_stats {
+    if args.probe_stats || args.probe_events.is_some() {
         torille::probe_stats::enable();
         torille::probe_stats::reset();
     }
@@ -250,8 +255,27 @@ fn main() {
     let cold_stats = cache.stats();
     if args.probe_stats {
         let stats = torille::probe_stats::snapshot();
-        torille::probe_stats::disable();
         print_probe_stats(&stats);
+    }
+    if let Some(path) = &args.probe_events {
+        let events = torille::probe_stats::take_events();
+        let mut text = String::new();
+        for event in &events {
+            text.push_str(&format!(
+                "{}\t{}\t{}\t{}\t{}\t{}\n",
+                event.map.label(),
+                event.surface,
+                event.stem,
+                event.ending,
+                event.base,
+                u8::from(event.hit)
+            ));
+        }
+        std::fs::write(path, text).unwrap_or_else(|error| panic!("cannot write {path}: {error}"));
+        println!("probe events: {} -> {path}", events.len());
+    }
+    if args.probe_stats || args.probe_events.is_some() {
+        torille::probe_stats::disable();
     }
     if args.cold_only {
         println!("cold morphology: {morphology_cold_ms:9.2} ms");

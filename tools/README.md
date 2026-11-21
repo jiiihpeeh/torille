@@ -95,8 +95,14 @@ live in [`oracle/`](oracle/README.md). In short:
 cargo run --release -p torille-tools --bin gen_all_forms   # engine
 cargo run --release -p torille-tools --bin gen_stem_map_noun   # engine
 cargo run --release -p torille-tools --bin gen_derived   # derived tables (blobs)
+cargo run --release -p torille-tools --bin gen_stem_endings  # ending signatures
 python3 tools/oracle/build_oi_plural_lemmas.py   # class-10 -oi- plural set (oracle)
 ```
+
+`gen_stem_endings` writes `maps/stem_endings_{noun,verb}.bin.gz`, the per-stem
+ending signatures the stem-map verifier uses to skip a paradigm whose stem
+cannot take the surface's ending. Run it after a stem-map or engine change;
+it checks its key count against the embedded stem map.
 
 `gen_derived` writes `maps/derived_{by_form,nominal,modifiers}.bin`
 and `maps/pronoun_forms.bin.gz`, and is the one generator that must run

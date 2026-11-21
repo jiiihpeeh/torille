@@ -22,10 +22,8 @@ them. The root `build.rs` therefore fetches them on the first build:
 - `tools/maps-sync/` (`torille-maps`) is a **build-dependency**, so it
   compiles before `torille` and works even though the engine cannot. The same
   crate provides the `status`/`fetch`/`publish` CLI above.
-- `build.rs` checks the five blobs in `REQUIRED` (`derived_by_form`,
-  `derived_nominal`, `derived_modifiers`, `pronoun_forms`,
-  `oi_plural_lemmas`) — the ones the build cannot regenerate itself. If any
-  is missing it calls `fetch`.
+- `build.rs` checks the blobs in `REQUIRED` — the ones the build cannot
+  regenerate itself. If any is missing it calls `fetch`.
 - `fetch` uses the clone's **`origin`** remote by default; `MAPS_REMOTE`
   overrides the name. It runs `git fetch --force <remote> maps:<ref>` (where
   `<ref>` is `refs/remotes/<remote>/maps`), retries that network step up to
@@ -89,6 +87,8 @@ one, or `map_gz compress|decompress` for a manual round-trip.
 | `catalogue.bin.gz` | `build.rs` → `build/csv_builders/catalogue.rs` | `src/spec.rs` | paradigm templates, 8 slots per class (`data/catalogue.csv`) |
 | `stem_map_noun.bin.gz` | `build.rs` → `build/map_builders/front_coded.rs` | `src/expand/check_normal.rs` | noun `(stem → bases)` map |
 | `stem_map_verb.bin.gz` | `build.rs` → `build/map_builders/front_coded.rs` | `src/expand/check_normal.rs` | verb `(stem → bases)` map |
+| `stem_endings_noun.bin.gz` | `gen_stem_endings` | `src/expand/stem_endings.rs` | noun per-stem ending signatures (`ENDP` pattern ids aligned with the noun stem map) |
+| `stem_endings_verb.bin.gz` | `gen_stem_endings` | `src/expand/stem_endings.rs` | verb per-stem ending signatures (`ENDP` pattern ids aligned with the verb stem map) |
 | `proper_names.bin.gz` | `build.rs` → `build/map_builders/huffman.rs` | `src/expand/proper_names.rs` | `HST1` static-Huffman set of accepted proper-name forms |
 | `proper_name_lemmas.bin.gz` | `build.rs` → `build/map_builders/front_coded.rs` | `src/expand/proper_names.rs` | `(proper-name form → lemma)` map |
 | `proper_name_cases.bin.gz` | `build.rs` → `build/map_builders/front_coded.rs` | `src/expand/proper_names.rs` | `(proper-name form → case)` map |
@@ -117,6 +117,13 @@ The `build.rs` tables rerun automatically when their CSV changes;
 ```bash
 touch data/nykysuomensanalista.csv   # or the relevant CSV
 cargo build -p torille
+```
+
+The ending signatures are engine-derived and must be regenerated explicitly:
+
+```bash
+cargo run --release -p torille-tools --bin gen_stem_endings
+cargo run -p torille-maps -- publish
 ```
 
 The four engine-computed tables cannot be produced by a build script (it

@@ -67,6 +67,33 @@ impl Caller {
     }
 }
 
+/// The stem map a verification belongs to.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Map {
+    Noun,
+    Verb,
+}
+
+impl Map {
+    pub fn label(self) -> &'static str {
+        match self {
+            Map::Noun => "noun",
+            Map::Verb => "verb",
+        }
+    }
+}
+
+/// One `(stem, ending) -> base` verification, for the signature prototype.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ProbeEvent {
+    pub map: Map,
+    pub surface: String,
+    pub stem: String,
+    pub ending: String,
+    pub base: String,
+    pub hit: bool,
+}
+
 /// One cold pass, as recorded by the calling thread.
 #[derive(Clone, Debug)]
 pub struct Snapshot {
@@ -109,7 +136,7 @@ mod imp {
     use std::cell::{Cell, RefCell};
     use std::sync::atomic::{AtomicBool, Ordering};
 
-    use super::{ClassStats, Caller, OTHER_CLASS, Snapshot};
+    use super::{ClassStats, Caller, Map, OTHER_CLASS, ProbeEvent, Snapshot};
     use crate::kotus::Inflection;
 
     thread_local! {
@@ -117,6 +144,8 @@ mod imp {
         /// Nesting depth of `emits_form`/`form_readings` builds on this thread.
         /// `note_forms` records only inside a build.
         static DEPTH: Cell<u32> = const { Cell::new(0) };
+        /// Every stem-map verification, for the negative-evidence prototype.
+        static EVENTS: RefCell<Vec<ProbeEvent>> = const { RefCell::new(Vec::new()) };
     }
 
     static ENABLED: AtomicBool = AtomicBool::new(false);
@@ -138,6 +167,7 @@ mod imp {
     /// Clear this thread's counters.
     pub fn reset() {
         STATS.with_borrow_mut(|stats| *stats = Snapshot::default());
+        EVENTS.with_borrow_mut(Vec::clear);
         DEPTH.set(0);
     }
 
@@ -155,6 +185,35 @@ mod imp {
         if is_enabled() {
             DEPTH.set(DEPTH.get().saturating_sub(1));
         }
+    }
+
+    /// Record one `(stem, ending) -> base` verification.
+    pub fn record_verify(
+        map: Map,
+        surface: &str,
+        stem: &str,
+        ending: &str,
+        base: &str,
+        hit: bool,
+    ) {
+        if !is_enabled() {
+            return;
+        }
+        EVENTS.with_borrow_mut(|events| {
+            events.push(ProbeEvent {
+                map,
+                surface: surface.to_string(),
+                stem: stem.to_string(),
+                ending: ending.to_string(),
+                base: base.to_string(),
+                hit,
+            });
+        });
+    }
+
+    /// Take the recorded events, leaving the log empty.
+    pub fn take_events() -> Vec<ProbeEvent> {
+        EVENTS.with_borrow_mut(std::mem::take)
     }
 
     /// Count the forms of one class paradigm. Only recorded inside a build.
@@ -213,7 +272,7 @@ mod imp {
 #[cfg(not(feature = "probe-stats"))]
 #[allow(dead_code)]
 mod imp {
-    use super::{Caller, Snapshot};
+    use super::{Caller, Map, ProbeEvent, Snapshot};
     use crate::kotus::Inflection;
 
     pub fn enable() {}
@@ -224,6 +283,18 @@ mod imp {
     pub fn reset() {}
     pub fn snapshot() -> Snapshot {
         Snapshot::default()
+    }
+    pub fn record_verify(
+        _map: Map,
+        _surface: &str,
+        _stem: &str,
+        _ending: &str,
+        _base: &str,
+        _hit: bool,
+    ) {
+    }
+    pub fn take_events() -> Vec<ProbeEvent> {
+        Vec::new()
     }
     pub(crate) fn begin_build() {}
     pub(crate) fn end_build() {}

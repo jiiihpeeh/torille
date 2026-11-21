@@ -477,15 +477,23 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
                 return Some(stem.to_string());
             }
             if let Some(base) =
-                find_base_via_stem_map_static(&lower, stem, stem, PartOfSpeech::Noun)
+                find_base_via_stem_map_static(&lower, stem, ending, stem, PartOfSpeech::Noun)
             {
                 return Some(base);
             }
         }
         // 2b. Stem-map probe. Handles multi-base stems
         //     (gradated, class-50/51 compounds, etc.).
-        for base in STEM_BUCKETS_NOUN.bases(stem) {
-            if let Some(b) = find_base_via_stem_map_static(&lower, stem, base, PartOfSpeech::Noun) {
+        let Some(stem_index) = STEM_BUCKETS_NOUN.find_index(stem) else {
+            continue;
+        };
+        if !crate::expand::stem_endings::NOUN.allows(stem_index, ending) {
+            continue;
+        }
+        for base in STEM_BUCKETS_NOUN.bases_at(stem_index) {
+            if let Some(b) =
+                find_base_via_stem_map_static(&lower, stem, ending, base, PartOfSpeech::Noun)
+            {
                 return Some(b);
             }
         }
@@ -507,7 +515,7 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
     //     never tries the bare form. Probe the bare word first
     //     so 3sg-present verbs don't fall through to the FORM_SET
     //     probe and get flagged as misspellings by the typing path.
-    if let Some(b) = verb_stem_probe(&lower, lower.as_str()) {
+    if let Some(b) = verb_stem_probe(&lower, lower.as_str(), "") {
         return Some(b);
     }
 
@@ -522,7 +530,7 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
         if stem.is_empty() {
             continue;
         }
-        if let Some(b) = verb_stem_probe(&lower, stem) {
+        if let Some(b) = verb_stem_probe(&lower, stem, ending) {
             return Some(b);
         }
     }
@@ -560,7 +568,7 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
         if stem.is_empty() {
             continue;
         }
-        if let Some(b) = verb_stem_probe(&lower, stem) {
+        if let Some(b) = verb_stem_probe(&lower, stem, ending) {
             return Some(b);
         }
     }

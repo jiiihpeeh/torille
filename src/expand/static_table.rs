@@ -117,18 +117,18 @@ impl StemMap {
         self.keys.find(key).is_some()
     }
 
-    /// Iterate the values for `key`. Empty iterator if the key isn't in the
-    /// map.
-    pub fn bases(&self, key: &str) -> BasesIter<'_> {
-        let Some(i) = self.keys.find(key) else {
-            return BasesIter {
-                map: self,
-                single: None,
-                offset: 0,
-                remaining: 0,
-            };
-        };
-        let id = read_u32(self.keys.blob(), self.ids_off() + i * 4);
+    /// The key ordinal `key` has in the sorted key region, or `None`.
+    ///
+    /// The ending-signature sidecar is indexed by this ordinal, so a caller
+    /// can reuse one search for both the bases and the signature.
+    pub(crate) fn find_index(&self, key: &str) -> Option<usize> {
+        self.keys.find(key)
+    }
+
+    /// Iterate the values of the key at `index`.
+    pub(crate) fn bases_at(&self, index: usize) -> BasesIter<'_> {
+        debug_assert!(index < self.keys.key_count());
+        let id = read_u32(self.keys.blob(), self.ids_off() + index * 4);
         if id & MULTI == 0 {
             // 99.5 % of the noun stem map: one value, inlined.
             BasesIter {
@@ -146,6 +146,20 @@ impl StemMap {
                 offset: at + 1,
                 remaining: count,
             }
+        }
+    }
+
+    /// Iterate the values for `key`. Empty iterator if the key isn't in the
+    /// map.
+    pub fn bases(&self, key: &str) -> BasesIter<'_> {
+        match self.find_index(key) {
+            Some(index) => self.bases_at(index),
+            None => BasesIter {
+                map: self,
+                single: None,
+                offset: 0,
+                remaining: 0,
+            },
         }
     }
 
