@@ -47,17 +47,23 @@ pub(super) fn compound_head_from_lemma(left: &str, right: &str) -> Option<String
     }
     bases.sort();
     bases.dedup();
+    // One buffer for the candidate whole words; only a hit allocates the
+    // returned lemma.
+    let mut whole = String::with_capacity(left.len() + right.len());
     for base in bases {
-        if let Some(whole) = classless_compound_whole(left, &base) {
+        whole.clear();
+        whole.push_str(left);
+        whole.push_str(&base);
+        let Some(row) = lexicon.by_word(&whole).next() else {
+            continue;
+        };
+        if row.inflections().next().is_none() {
             // A classless row is a compound whose head is `base`; name the
             // whole lemma (`suurkaani`, `raitiotie`) rather than the head.
             return Some(whole);
         }
-        if lexicon.by_word(&format!("{left}{base}")).next().is_some() {
-            // A classed row is the head lemma itself and keeps the old
-            // answer.
-            return Some(base);
-        }
+        // A classed row is the head lemma itself and keeps the old answer.
+        return Some(base);
     }
     None
 }

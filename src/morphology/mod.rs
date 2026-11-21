@@ -15,6 +15,7 @@
 //! this layer: a grammar rule needs the case a reading licenses, not just the
 //! fact that the word is in the dictionary.
 
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -373,6 +374,18 @@ impl MorphologyAnalysis {
     }
 }
 
+/// The lowercased surface, borrowing when the token is already lowercase.
+///
+/// Finnish text is mostly lowercase; allocating a new `String` for every
+/// token only to look it up in the cache is wasted work on the hit path.
+fn lowercase(surface: &str) -> Cow<'_, str> {
+    if surface.chars().any(char::is_uppercase) {
+        Cow::Owned(surface.to_lowercase())
+    } else {
+        Cow::Borrowed(surface)
+    }
+}
+
 /// Resolve every word token and compute the sentence spans.
 ///
 /// This is stage 1 of the analysis. It is the only stage that searches the
@@ -387,8 +400,8 @@ pub fn analyze_morphology(tokens: &[Token], cache: &mut MorphologyCache) -> Morp
             words.push(None);
             continue;
         }
-        let lower = token.text.to_lowercase();
-        let info = cache.resolve(cat, &lower);
+        let lower = lowercase(token.text.as_str());
+        let info = cache.resolve(cat, lower.as_ref());
         let info = if info.readings.is_empty()
             && token.is_capitalised()
             && let Some(name) = crate::expand::proper_names::lemma(&token.text)
@@ -399,7 +412,7 @@ pub fn analyze_morphology(tokens: &[Token], cache: &mut MorphologyCache) -> Morp
                 &token.text,
                 name,
                 crate::expand::proper_names::case(&token.text),
-                &lower,
+                lower.as_ref(),
             ))
         } else {
             info
@@ -429,8 +442,8 @@ pub fn analyze_morphology(tokens: &[Token], cache: &mut MorphologyCache) -> Morp
                 .iter()
                 .any(|reading| reading.case == Some(Case::Partitive))
         {
-            let lower = token.text.to_lowercase();
-            let deep = cache.resolve_deep(lexicon, cat, &lower);
+            let lower = lowercase(token.text.as_str());
+            let deep = cache.resolve_deep(lexicon, cat, lower.as_ref());
             if !deep.readings.is_empty() {
                 words[index] = Some(deep);
             }
@@ -464,10 +477,13 @@ pub fn resolve_surfaces(
         if !token.is_word() {
             continue;
         }
-        let lower = token.text.to_lowercase();
-        if seen.insert(lower.clone()) {
-            rows.push((lower.clone(), cache.resolve(cat, &lower)));
+        let lower = lowercase(token.text.as_str());
+        if seen.contains(lower.as_ref()) {
+            continue;
         }
+        seen.insert(lower.as_ref().to_string());
+        let info = cache.resolve(cat, lower.as_ref());
+        rows.push((lower.into_owned(), info));
     }
     rows
 }
@@ -497,10 +513,12 @@ pub fn analyze_morphology_parallel(
         if !token.is_word() {
             continue;
         }
-        let lower = token.text.to_lowercase();
-        if seen.insert(lower.clone()) {
-            surfaces.push(lower);
+        let lower = lowercase(token.text.as_str());
+        if seen.contains(lower.as_ref()) {
+            continue;
         }
+        seen.insert(lower.as_ref().to_string());
+        surfaces.push(lower.into_owned());
     }
     surfaces.sort_by(|a, b| {
         let a_prefix: String = a.chars().take(4).collect();
@@ -549,9 +567,9 @@ pub fn analyze_morphology_parallel(
             words.push(None);
             continue;
         }
-        let lower = token.text.to_lowercase();
+        let lower = lowercase(token.text.as_str());
         let info = by_surface
-            .get(&lower)
+            .get(lower.as_ref())
             .cloned()
             .unwrap_or_else(|| Arc::new(WordInfo::default()));
         let info = if info.readings.is_empty()
@@ -564,7 +582,7 @@ pub fn analyze_morphology_parallel(
                 &token.text,
                 name,
                 crate::expand::proper_names::case(&token.text),
-                &lower,
+                lower.as_ref(),
             ))
         } else {
             info
@@ -594,8 +612,8 @@ pub fn analyze_morphology_parallel(
                 .iter()
                 .any(|reading| reading.case == Some(Case::Partitive))
         {
-            let lower = token.text.to_lowercase();
-            let deep = upgrades.resolve_deep(lexicon, cat, &lower);
+            let lower = lowercase(token.text.as_str());
+            let deep = upgrades.resolve_deep(lexicon, cat, lower.as_ref());
             if !deep.readings.is_empty() {
                 words[index] = Some(deep);
             }

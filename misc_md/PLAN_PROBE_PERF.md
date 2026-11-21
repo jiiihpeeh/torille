@@ -1,6 +1,6 @@
 # PLAN_PROBE_PERF — targeted membership and negative evidence for cold morphology
 
-Status: **Phases 0, 1 and 3 landed; Phase 4 measured and rejected; Phases 2, 5 and 6 proposed.** Builds on Phase 12 of
+Status: **Phases 0, 1 and 3 landed; Phases 4 and 5 measured and rejected; Phases 2 and 6 proposed.** Builds on Phase 12 of
 [`PLAN_GRAMMAR_STYLE_PERF.md`](PLAN_GRAMMAR_STYLE_PERF.md) at baseline
 `2a4b6c6`: `page-2000` cold morphology is **1,017 ms single-thread /
 293 ms on four native workers**, and the pass still spends most of its time
@@ -504,6 +504,19 @@ them, with a per-worker scratch context. This touches generated nominal code, so
 it needs the generator-side change, not a hand edit.
 
 **Gate:** ≥5 % instruction reduction, no reading change.
+
+**Measured 2026-11-21 — the probe-side allocation work is not the lever.**
+
+- `Cow` lowercase in the three morphology entry points: **6,235.1 M →
+  6,236.5 M instructions** (+0.02 %, noise). It removes a per-token allocation
+  on cache hits, but the pass is dominated by paradigm builds.
+- Reusable scratch buffers in `hyphenated_lexeme` and
+  `compound_head_from_lemma`: **6,240.4 M → 6,240.0 M** (0.0 %).
+
+The changes are kept as cleanups — one buffer per probe instead of one per
+character boundary — but the 5 % gate is not met. The remaining `format!` and
+`malloc` cost is inside the class builders, which is the Phase 4 problem.
+Further probe-side allocation micro-optimization is not worth a separate phase.
 
 ## 11. Phase 6 — parallel/pool (only if measured)
 

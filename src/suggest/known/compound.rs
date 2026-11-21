@@ -319,8 +319,13 @@ pub(crate) fn hyphenated_lexeme(word: &str) -> Option<String> {
         return None;
     }
     let lower = word.to_lowercase();
+    // One buffer for every split; the probe is a lookup, not a result.
+    let mut candidate = String::with_capacity(lower.len() + 1);
     for (i, _) in lower.char_indices().skip(1) {
-        let candidate = format!("{}-{}", &lower[..i], &lower[i..]);
+        candidate.clear();
+        candidate.push_str(&lower[..i]);
+        candidate.push('-');
+        candidate.push_str(&lower[i..]);
         if crate::kotus::sanalista()
             .by_word(&candidate)
             .next()
