@@ -382,6 +382,13 @@ failures, even though the noun path is the cheaper one.
 
 After Phase 0, the target is the top verb classes, not every class.
 
+The probe log also prices the ceiling. Failed verb verifies generate **1,265
+forms on average**, of which **502 (39.7 %)** end with the target ending. A
+suffix check before `format!` therefore skips ~60 % of the failed-build forms;
+nouns go from 56.5 to 27.5 (48.7 % skipped). The ending is necessary but not
+sufficient — many forms share a short ending such as `i` — so the feature mask
+in step 2 is the refinement, not the suffix filter alone.
+
 ### 9.1 API and contract
 
 ```rust

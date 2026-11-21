@@ -111,6 +111,8 @@ fn main() {
         let mut base_pairs: HashSet<(String, String)> = HashSet::new();
         let mut per_stem: HashMap<String, (usize, usize, usize)> = HashMap::new();
         let mut endings_total = 0usize;
+        let mut failed_forms_total = 0usize;
+        let mut failed_forms_matching = 0usize;
         let mut base_endings_total = 0usize;
         let mut pairs = 0usize;
         let list = match map {
@@ -182,6 +184,15 @@ fn main() {
             if !row.hit {
                 counter.0 += 1;
             }
+            if !row.hit
+                && let Some(forms) = form_cache.get(&(row.base.clone(), map))
+            {
+                failed_forms_total += forms.len();
+                failed_forms_matching += forms
+                    .iter()
+                    .filter(|form| form.ends_with(row.ending.as_str()))
+                    .count();
+            }
             if !signature.contains(&ending_index) {
                 rejected += 1;
                 counter.1 += 1;
@@ -236,6 +247,14 @@ fn main() {
             "  per-stem avg endings {avg:.2}, per-(stem,base) {base_avg:.2}; \
              map len {map_len}; sidecar raw ~{:.2} MB",
             raw / 1_000_000.0
+        );
+        println!(
+            "  failed verify forms: {failed_forms_total} generated, \
+             {failed_forms_matching} end with the target ending ({:.1}%); \
+             avg {:.1} -> {:.1}",
+            100.0 * failed_forms_matching as f64 / failed_forms_total.max(1) as f64,
+            failed_forms_total as f64 / failures.max(1) as f64,
+            failed_forms_matching as f64 / failures.max(1) as f64
         );
         let mut patterns: HashMap<Vec<usize>, usize> = HashMap::new();
         for ((_, stem), set) in signature_cache.iter().filter(|((m, _), _)| *m == map) {
