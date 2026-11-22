@@ -1,10 +1,11 @@
 # PLAN_FOLLOWUPS — the next four slices
 
-Status: **proposed.** Baseline `ccad6f4` (2026-11-21). The semicolon plan
-(0–5) and the probe-performance plan (0–6) are both closed, so these are the
-first items from the standing trackers rather than an open phase. Each slice
-is independent, lands as its own commit, and carries the standard gate list in
-§6.
+Status: **proposed.** Baseline `ccad6f4` (2026-11-21); the sentence-cache rows
+were re-verified on 2026-11-22. The semicolon plan (0–5) is closed, and the
+probe-performance plan is measured through Phase 6 (5–6 recorded as no
+action), so these are the first items from the standing trackers rather than
+an open phase. Each slice is independent, lands as its own commit, and carries
+the standard gate list in §6.
 
 Order of work:
 
@@ -46,7 +47,17 @@ cached 6 diagnostics, whole 3
 ```
 
 The three shared ones are the two `on` agreement rows and the document-end
-quote. The three extras are sentence-path artefacts, not new findings.
+quote. The three extras are sentence-path artefacts, not new findings:
+
+| rule at byte | cache slice | why the whole pass is right |
+|---|---|---|
+| `existential_subject_case` 236 | `Siellä oli laulujen\n` | the sentence continues `ja kanteleen maa.`; `laulujen` is not sentence-final |
+| `comma_missing` 711 | `kun ajattelin niitä arvoja, …\n` | the clause is preceded by `hauskuudekseni--`; the dash is the boundary |
+| `question_mark_missing` 9357 | `miten kauheasti … värisevät.\n` | the line continues the comma of `kuule,`; `miten` does not open a question |
+
+Simulating the fix confirms the reading: the 711 and 9357 slices are quiet as
+soon as the **previous word** is prepended, and the 236 fragment is quiet as
+soon as it is joined with its continuation.
 
 ### 2.2 Root cause (verified)
 
@@ -54,15 +65,20 @@ quote. The three extras are sentence-path artefacts, not new findings.
 by design: `spans` is the line/paragraph layer the case and spelling paths
 want. `SentenceCache::check` slices at `morphology.sentences`, and the spans
 partition the text with the **leading separators belonging to the previous
-span**. Therefore a cache unit can
+span**. A cache unit therefore has two defects:
 
-- start at the first word of a line, losing the comma, dash or newline the rule
-  reads (`preceded_by_comma` at 9357/711; `boundary_between` at 711), and
-- end at a newline in the middle of a clause, truncating it before the subject
-  or predicate (`Siellä oli laulujen` at 236).
+- **It starts at the first word**, so a rule that looks one word back sees
+  nothing. `question.rs::preceded_by_comma` (9357) and
+  `comma.rs::subordinate_comma`'s `marked` closure, which calls
+  `previous_word` and `boundary_between` (711), both need that word.
+- **It ends at the newline**, so a rule that asks "is this the end of the
+  sentence or the text?" sees the slice end as the text end.
+  `existential.rs::sentence_ends` walks the tokens after the last word and
+  returns true when it finds none (236).
 
-The whole-document pass builds clauses over the full token stream, so it sees
-the whole clause and the leading separator.
+The whole-document pass sees the previous word and the continuation, so it
+stays quiet. Note both passes split the *clause* at the newline; the defect is
+the context around the unit, not the clause segmentation itself.
 
 ### 2.3 Design
 
@@ -71,50 +87,81 @@ grammar unit in `sentence_cache.rs`:
 
 ```rust
 struct GrammarUnit {
-    /// The sentence range the unit's diagnostics must fall in.
+    /// The sentence range(s) whose diagnostics the unit owns.
     core: Range<usize>,
-    /// The text to analyse: the core plus the separators before it.
+    /// The text to analyse: the previous word, its separators and the core.
     slice: Range<usize>,
 }
 ```
 
-- **Merge line fragments.** Consecutive spans are one unit while the text
-  before the boundary does not end in a terminal mark (`.`/`!`/`?`, optionally
-  followed by a closing quote or a dialogue dash). A newline alone does not end
-  a grammar unit.
-- **Include the leading separators.** `slice.start` is the previous unit's last
-  word end (0 for the first unit), so the comma/dash/newline context is
-  visible. Consecutive slices overlap only on separators.
-- **Filter after the check.** Keep a diagnostic only when its span lies inside
-  `core` (relative to the slice). This prevents the shared separator from
-  producing the same finding twice.
-- **Cache key unchanged.** The hash already covers the exact slice text,
-  length and quote depth; a merged unit is just a different key.
+- **Merge line fragments.** Consecutive spans are one unit while the trailing
+  separator of the **previous span** carries no terminal mark, colon or closing
+  quote/bracket — a pure newline, comma or dialogue dash does not end a unit.
+  The boundary text lives at the end of the previous span (`span.end` is the
+  next span's start), so the test scans that span's tokens after its last
+  word, not the gap. A hard boundary keeps the split. Inside the unit,
+  `sentence::spans` still splits at newlines exactly as the whole pass does;
+  only the analysis window is larger.
+- **Include the previous word and its separators.** `slice.start` is the start
+  of the previous unit's **last word** (0 for the first unit), not its end.
+  The word is required: `previous_word` finds nothing when the slice starts at
+  the separator run, which is why 711 still fires with separators alone.
+  Consecutive slices then overlap on one word plus the separators.
+- **Seed the quote depth at the slice start, and key on it.** The leading word
+  may sit inside a different quote state than the core; pass the depth at
+  `slice.start` to `analyze_with_quote_depth` so the analyzer reaches the core
+  at the whole-pass depth. The cache key uses the same value.
+- **Filter after the check.** Store diagnostics relative to `slice.start` and
+  keep the ones whose `span.start` is at or after `core.start`. To avoid a
+  double report of a zero-width edit exactly on a boundary: a non-final unit
+  keeps `span.start < core.end`, while the final unit keeps an end-of-text
+  insertion with `span.end <= core.end`. The current unit owns an insertion at
+  its own first word.
+- **Shift by `slice.start`**, not by the core start, because the cached
+  diagnostics are relative to the slice that was analysed.
+- **Keep the counters honest.** `SentenceCacheStats` (and the perf tool's
+  labels) currently count sentences; the entries are grammar units now, so the
+  doc comments and the report label change with them. The 2,000-entry cap and
+  the hit/miss accounting stay.
 - Document-global rules stay where they are: the unbalanced-quote warning is
   still added once from the full token stream.
 
 Adjudicate the three rows while landing: the grammar reading says all three
 are sentence-path false positives (`laulujen ja kanteleen maa` is a legitimate
-nominative existential subject; the dash and comma already mark the `kun`
-boundary; the `miten` line continues a comma). Pin them as quiet in the unit
-tests, not as whole-pass regressions.
+nominative existential subject; the dash marks the `kun` boundary; the comma
+marks the `miten` continuation). Pin them as quiet in the unit tests, not as
+whole-pass regressions.
+
+A scratch simulation of this design on `page-2000` groups 309 spans into 130
+units (max 9 fragments) and reproduces the whole-pass diagnostics exactly, so
+the parity gate is reachable with this shape rather than with paragraph-sized
+units.
 
 ### 2.4 Steps
 
-- [ ] Add `grammar_units` with merging and leading-separator slices.
-- [ ] Switch `SentenceCache::check_with_decisions` to the units and the
-      `core` filter; keep `sentence::spans` untouched.
+- [ ] Add `grammar_units` with merging, the previous-word slice and the
+      slice-start quote depth.
+- [ ] Switch `SentenceCache::check_with_decisions` to the units, the
+      `core` filter and the `slice.start` shift; keep `sentence::spans`
+      untouched.
 - [ ] Add `tests/fixtures/perf/line-wrap.txt` with the three contexts (two
       preceding/following sentences each) and compare the cache path with the
       whole pass.
+- [ ] Pin each row both ways: the bare slice still fires, and the unit with
+      the previous word / continuation is quiet.
 - [ ] Add the three strings to the existing
       `the_sentence_cache_matches_the_whole_text_pass` list.
-- [ ] Add an `#[ignore]` full-`page-2000` parity test for the release gate.
+- [ ] Add a normal `page-2000` parity test in a new `tests/sentence_cache.rs`;
+      the suite already runs the page in `disambiguation_noop`, so the cost is
+      precedented.
 
 ### 2.5 Gate
 
 - Cache and whole pass are byte-identical on `line-wrap.txt` and `page-2000`.
 - `page-2000` stays at 3 diagnostics, prose and exact fixtures unchanged.
+- A zero-width edit exactly on a unit boundary is reported once, and a
+  sentence that starts after a quoted previous word keeps the whole-pass quote
+  depth.
 - The warm post-seed grammar pass is not slower than the recorded ~72 ms (the
   cache still hits unchanged units; a moved newline inside a unit is a miss).
 - `cargo test --release --workspace`, clippy and the perf harness are green.
@@ -122,14 +169,15 @@ tests, not as whole-pass regressions.
 ### 2.6 Stop condition
 
 If merging changes a rule's output on the clean corpus, the merged unit is
-wrong for that rule: fall back to passing the neighbouring sentence as context
-without merging, and record the rows that still diverge.
+wrong for that rule: keep the previous-word slice but do not merge, and record
+the rows that still diverge (the 236 row is the known one).
 
 ### 2.7 Files
 
 `src/syntax_check/sentence_cache.rs`, `src/sentence.rs` (read-only),
-`tests/fixtures/perf/line-wrap.txt` (new), `tests/syntax_prose.rs` or a new
-`tests/sentence_cache.rs`, `docs/syntax_checker.md` (known-limitations note).
+`tests/fixtures/perf/line-wrap.txt` (new), `tests/sentence_cache.rs` (new;
+the parity test can also join `tests/syntax_prose.rs`), and
+`docs/syntax_checker.md` (update the known-limitations note).
 
 ## 3. Slice 2 — possessive coverage
 
@@ -148,6 +196,20 @@ missing 1,241 → 1,078 but illegal 385 → 596, because the extra spellings are
 removed by demotion passes *after* the possessives are built and their
 possessives survive as orphans (`valtimoom` is gone, `valtimoommemme` is not).
 
+A is not one mechanism. The recorded split of the 1,659 `(lemma, case)` pairs
+with a missing oblique possessive is:
+
+| bucket | pairs |
+|---|---:|
+| the bare oblique is produced but not `Plain` (the `demote_contested` gate) | 1,092 |
+| the bare oblique is `Plain` on the wrong stem (the plural-stem defect) | 495 |
+| no bare oblique at all | 72 |
+
+The first bucket is slice A's target; the second is the class/stem defect the
+harness records separately; the third is an engine gap with no form to attach
+to. Scope A to the first bucket unless the measurement shows the same fix
+covers the others.
+
 The recorded A/B counts predate the last possessive round. **Measure first:**
 regenerate the 5-lemma class sweep and re-bucket A and B before touching code.
 
@@ -156,24 +218,27 @@ regenerate the 5-lemma class sweep and re-bucket A and B before touching code.
 **A — the demotion, not the possessive.** `docs/harness.md` records that the
 `lovi` shape (`lovessa` from the weak stem, `lovilta` from the strong) comes
 from `demote_contested` in `src/grammar/noun.rs`; the possessive layer then
-correctly skips the non-`Plain` oblique. Fix the class/stem reading so the
-singular obliques and the plural obliques are each `Plain` on their own stem,
-then the possessives follow. Start with `lovi`, `ovi`, `joki`, `noki`,
-`oikku`, `allergikko` and the 20-lemma sample from `TODO.md`.
+correctly skips the non-`Plain` oblique. Adjust that rule so the singular
+obliques and the plural obliques are each `Plain` on their own stem, then the
+possessives follow. Start with `lovi`, `ovi`, `joki`, `noki`, `oikku`,
+`allergikko` and the 20-lemma sample from `TODO.md`.
 
 **B — ordering.** Only after A:
 
 1. Collect every `Plain` spelling per slot into a `Vec<String>` instead of
    `.take(1)`.
-2. Let the demotion/retention passes for that slot run (the catalogue
-   retention at `inflect.rs` and the heuristic's `demote_contested`).
+2. Let the demotion pass for the slot run. For the catalogue path that is the
+   `alignment_plain`/`oblique_plain` demotion at the end of `inflect_from`
+   (the loop that turns a slid reading into `Guessed`), not the heuristic's
+   `demote_contested`, which owns the case layer in `grammar/noun.rs`.
 3. Build the possessives from the surviving spellings, as `add_possessives`
    already does for the oblique grid (`inflect.rs::add_possessives_for`).
    Attributes follow the surviving base spelling, not the slot.
-4. Check the authoritative per-class engines: for an authoritative class the
-   catalogue output is cleared and the generated engine owns the grid, so the
-   same ordering rule has to hold there (or the engine keeps its own
-   possessive build).
+4. Check the authoritative classes: `inflect_in_unmarked` clears the catalogue
+   output and the generated `nominals` engine owns the grid there. If the
+   missing rows come from a generated class, the fix belongs in the class rule
+   source (`rules/`, `tools/oracle/extract_class_rules.py`) and is regenerated;
+   do not hand-edit `src/expand/nominals/`.
 
 Do not add a possessive for a spelling that was demoted to `Guessed`/`Repaired`
 after the build; that is the orphan mechanism, not a coverage goal.
@@ -196,7 +261,7 @@ after the build; that is the orphan mechanism, not a coverage goal.
 - B: at least half of the recorded B rows are recovered and `illegal` does not
   rise above the pre-change baseline on the ten measured classes.
 - The full 5-lemma report keeps 0 illegal under the curated pass and does not
-  regress `missing`; `not-plain` stays 0.
+  regress `missing`; `not-plain` does not rise above the current 4,041.
 - `tests/catalogue.rs` and the `GAPS` staleness rules are untouched.
 
 ### 3.5 Stop condition
@@ -224,17 +289,20 @@ surface optional.
 Keep typography out of `check_syntax` and `check_grammar_style`; it is a
 separate, opt-in pass.
 
-- **wasm**: `check_typography(text) -> js_sys::Object` with the same edit shape
-  the panel already applies:
-  `{ kind: "typography", rule, severity: "suggestion", confidence: "certain",
-  start, end, message, corrections: [{ edits: [{ start, end, replacement }] }] }`.
-  No textarea state is needed; add a serializer next to `diagnostics_array`.
-- **Demo (Leptos)**: a **Typografia** toggle in `SyntaxPanel` that runs the
-  pass and lists/applies its diagnostics with the existing underline style.
+- **wasm**: `check_typography(text) -> js_sys::Object` using the **same field
+  names** as `diagnostic_object`: `kind: "typography"`, `rule_id` (the
+  typography rule), `severity: "suggestion"`, `confidence: "certain"`,
+  `start`, `end`, `message`, and `corrections[].edits[]` with
+  `start`/`end`/`replacement`. Add a `typography_diagnostics_array` next to
+  the existing serializers rather than inventing a second shape. No textarea
+  state is needed.
+- **Demo (Leptos)**: a **Typografia** toggle in `SyntaxPanel`. The crate already
+  depends on `torille`, so it can call `torille::typography::check` directly.
 - **Extensions**: a separate context-menu command **Tarkista typografia**
-  routed through `spell-worker/spell-core.ts`; the panel maps the two rule ids
-  (`typography_semicolon_spacing`, `typography_semicolon_duplicate`) to Finnish
-  labels. Keep Firefox and Chromium source-identical (the `npm test`
+  routed through `spell-worker/spell-core.ts`; the panel maps
+  `syntaxKindLabel("typography")` to `typografia` and can show the specific
+  `rule_id` (`typography_semicolon_spacing`, `typography_semicolon_duplicate`)
+  in the message. Keep Firefox and Chromium source-identical (the `npm test`
   source-sync check).
 - **Options**: one toggle, default off, so the existing commands never change
   behaviour for users who do not opt in.
@@ -264,7 +332,8 @@ separate, opt-in pass.
 `torille-wasm/src/lib.rs`, `torille-wasm-leptos/src/components/syntax.rs`,
 `extensions/{firefox,chromium}/src/content/*`,
 `extensions/{firefox,chromium}/src/background/*`,
-`extensions/{firefox,chromium}/src/spell-worker/*`,
+`extensions/{firefox,chromium}/src/spell-worker/*` (including
+`torille-wasm-glue.d.ts`), `extensions/{firefox,chromium}/src/globals.d.ts`,
 `extensions/{firefox,chromium}/src/options/*`, `extensions/README.md`,
 `docs/syntax_checker.md`.
 
@@ -275,9 +344,10 @@ separate, opt-in pass.
 `src/expand/closed_spellings.rs` still has **six** rows, all the `kuulten`
 family (`kuulten`, `kuultemme`, `kuulteni`, `kuultenne`, `kuultensa`,
 `kuultesi`), documented as the less common postpositional instructive of
-`kuulla`. The other 26 rows are gone and the engine resolves them. The
-tracker's header and Progress section say "32 → 0", which is stale; the header
-is corrected to 32 → 6 and the Progress list is the record of the 26 removals.
+`kuulla`. The other 26 rows are gone: some are engine-derived now, the rest
+are rejected as `is_nonword` (with a split-spelling suggestion) or pinned as
+misspellings. The tracker said "32 → 0" before this plan; it now records
+32 → 6, and its Progress list is the record of the 26 removals.
 
 ### 5.2 Design
 
@@ -292,21 +362,24 @@ harness the tracker's Phase 0 describes.
   surface with `surface`, `base`, `base_in_sanalista`, `engine_emits`,
   `find_bases_base`, `fast_resolves_without_closed`, `proper_name`, `authority`,
   `proposed_action`.
-- **Fixture.** Check in the historical 32 rows with their authority/action, so
-  a deletion or a re-addition is a reviewed change.
-- **Failure rules.** The audit fails when a row marked "engine cannot derive"
-  starts being derived (staleness), when a base is absent and undocumented,
-  when a "fast-only" row has no probe, or when `CLOSED` gains a row without a
-  source comment.
+- **Fixture.** Check in the historical 32 rows with `authority`,
+  `proposed_action` and `kind` (`derived`, `nonword`, `fast-only`, `lexical`),
+  so a deletion or a re-addition is a reviewed change.
+- **Failure rules.** The audit fails when a `derived` row stops resolving
+  (regression), when a `lexical` row starts resolving without `CLOSED`
+  (staleness), when a base is absent and undocumented, when a `fast-only` row
+  has no probe, or when `CLOSED` gains a row that has no fixture row carrying
+  an authority.
 - **Parity.** For every fixture surface, `check` and `check_fast` agree; the
-  six live rows resolve to `kuulla`; the deleted split forms offer the
-  two-word spelling.
-- **Tracker.** Correct the header and Progress to 32 → 6 and record the
-  `kuulten` decision (lexical, per the module doc) as closed.
+  six live rows resolve to `kuulla`; the rows marked `nonword` offer their
+  two-word spelling and the `derived` rows resolve without `CLOSED`.
+- **Tracker.** The header now records 32 → 6 and the Progress list the 26
+  removals; record the `kuulten` decision (lexical, per the module doc) as
+  closed.
 
 ### 5.3 Steps
 
-- [ ] Fix the tracker status and the Progress arithmetic.
+- [x] Fix the tracker status and the Progress arithmetic.
 - [ ] Add the `Closed` policy parameter and the audit binary.
 - [ ] Add the checked-in fixture and the failure rules.
 - [ ] Add the full/fast parity test over every fixture surface.
@@ -324,9 +397,12 @@ harness the tracker's Phase 0 describes.
 ### 5.5 Files
 
 `src/expand/closed_spellings.rs`, `src/expand/check_normal.rs`,
-`src/suggest/known/` (the fast table lookup), `tools/src/bin/audit_closed_spellings.rs`
-(new), `tests/fixtures/closed_spellings.json` (new),
-`tests/binding_agrees`-style parity test, `misc_md/TODO_CLOSED_SPELLINGS.md`.
+`src/suggest/known/mod.rs` (`is_known_word_with_compound_uncached`),
+`src/suggest/state.rs` (`check_fast`),
+`tools/src/bin/audit_closed_spellings.rs` (new),
+`tests/fixtures/closed_spellings.json` (new),
+`tests/closed_spellings.rs` (new parity test),
+`misc_md/TODO_CLOSED_SPELLINGS.md`.
 
 ## 6. Standard gates for every slice
 
@@ -352,9 +428,10 @@ Plus:
 ## 7. Risks
 
 - **The cache unit changes hit rate.** Merging line fragments makes a unit
-  larger, so an edit inside a wrapped sentence re-checks both lines. Measure
-  the warm-page pass; if the hit rate drops more than the parity is worth,
-  keep the units and accept the miss (they are still one sentence).
+  larger; on `page-2000` the 309 spans become 130 units, up to 9 fragments, so
+  an edit inside a wrapped block re-checks the whole block. Measure the warm
+  page; if the hit rate drops more than the parity is worth, keep the units
+  and accept the miss.
 - **The possessive ordering is cross-layer.** The catalogue, the heuristic and
   the generated engines each own part of the slot output. Land A first and
   keep B behind its own measurement; do not hand-edit generated files.
