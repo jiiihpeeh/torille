@@ -983,17 +983,6 @@
       "cell": {"case": "GEN", "number": "PL"},
       "source": "https://en.wiktionary.org/wiki/isosisar",
       "note": "isosisar is iso + sisar; the modifier-inflected genitive plural isojensisarien uses the head isojen with the tail's isosisarien, and live Voikko accepts it. The oracle records only isojensisarten; the other two spellings in this cell are covered by compound-51-fixed-prefix."
-    }
-,
-    {
-      "id": "lemma-48e-live-genitive-possessive-missing",
-      "classes": ["48*E"],
-      "lemmas": ["live"],
-      "predicate": "lemma",
-      "cell": {"case": "GEN", "number": "SG", "possessive": "PL2"},
-      "applies_to": ["missing"],
-      "source": "https://en.wiktionary.org/wiki/livet%C3%A4",
-      "note": "livenne is a form of the verb livetä, not the noun live; the noun's gradating stem gives lipeenne. The oracle is mixing the verb into the noun's cell."
     },
     {
       "id": "class-11-algebra-i-stem-plural",
