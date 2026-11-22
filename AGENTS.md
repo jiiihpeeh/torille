@@ -54,6 +54,9 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
   schema, driver, corpora, native/browser layers, baselines and tolerances.
 - `docs/benchmarking.md` — the suite's commands, report schema, corpora,
   methodology, reference baseline and current gaps.
+- `misc_md/PLAN_BRANCH_CONSOLIDATION.md` — the push of the 13-commit merge,
+  archive tags, the safe branch deletions and the branches that must not be
+  merged (`form-table`, backups, `maps`).
 - `misc_md/PLAN_PROBE_PERF.md` — the next probe-performance slice: per-stem
   ending signatures, targeted membership checks for the dominant verb classes,
   a shared stem-probe context and the remaining allocation/hasher work.
