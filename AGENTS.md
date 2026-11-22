@@ -31,11 +31,12 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
 - `misc_md/PLAN_SYNTAX_REFACTOR.md` — the modularisation plan for `syntax.rs`,
   `syntax_check/` and the extension content script.
 - `misc_md/PLAN_SYNTAX_AST.md` — the typed surface tree over `syntax`: node
-  kinds, the pass pipeline, invariants and the phase gates. Phases 0–5a
-  landed; the remaining work is in `PLAN_SYNTAX_AST_REST.md`.
+  kinds, the pass pipeline, invariants and the phase gates. Phases 0–5b and
+  the 5c.1 parity audit landed; the remaining work is in
+  `PLAN_SYNTAX_AST_REST.md`.
 - `misc_md/PLAN_SYNTAX_AST_REST.md` — the remaining AST work: nested/mixed
   lists, coordination, the wasm export, checker consumers and cleanup.
-- `misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md` — the remaining grammar/syntax work:
+- `misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md` — the grammar/syntax fix record:
   predicate-less phrases, relative closing commas, imperative connegative
   corrections, interrogative/host constituent views and the optional cleanup.
 - `misc_md/PLAN_GRAMMAR_SYNTAX_REFERENCE.md` — the review-driven hardening plan
