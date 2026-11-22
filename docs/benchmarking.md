@@ -106,15 +106,15 @@ The full report is `bench/baselines/reference.json`.
 
 | metric | median |
 |---|---|
-| `page-2000` cold morphology, single | 684.1 ms |
-| `page-2000` 4-worker morphology | 206.1 ms |
+| `page-2000` cold morphology, single | 673.7 ms |
+| `page-2000` 4-worker morphology | 201.9 ms |
 | `page-2000` warm morphology | 0.46 ms |
-| `page-2000` grammar+style warm | 19.39 ms |
-| `page-2000` sentence-cache warm | 0.76 ms |
-| 8 % typo corpus, cold morphology | 741.2 ms |
-| all-unknown corpus, cold morphology | 787.3 ms |
-| `check_suggest` p50 / p95 | 3 µs / 509 µs |
-| reverse-index build / size | 22.6 s / 1.23 GB |
+| `page-2000` grammar+style warm | 19.29 ms |
+| `page-2000` sentence-cache warm | 0.73 ms |
+| 8 % typo corpus, cold morphology | 729.3 ms |
+| all-unknown corpus, cold morphology | 769.5 ms |
+| `check_suggest` p50 / p95 | 3 µs / 506 µs |
+| reverse-index build / size | 23.0 s / 1.23 GB |
 
 Correctness in the same report: 3 diagnostics on `page-2000`, 6 on the 8 %
 corpus, 1 on the all-unknown corpus, and the eight form-canary hashes.

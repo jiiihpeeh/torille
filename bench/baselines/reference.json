@@ -1,0 +1,7700 @@
+{
+  "schema": 1,
+  "meta": {
+    "generator": "tools/bench.py",
+    "date": "2026-11-22T10:48:21+00:00",
+    "git": "9d5f73e",
+    "dirty": false,
+    "profile": "full",
+    "build_profile": "release",
+    "repeats": 7,
+    "taskset": null,
+    "fingerprint": "f762dae2d048b2a6",
+    "cpu": "AMD Ryzen 5 4600H with Radeon Graphics",
+    "os": "Linux-7.0.0-44-generic-x86_64-with-glibc2.43",
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+  },
+  "corpora": {
+    "page-2000": {
+      "path": "tests/fixtures/perf/page-2000.txt",
+      "bytes": 15280,
+      "words": 1959,
+      "sha256": "167b2ef8092ebcf3ad1a0d07cf1d0336140a6ee03af11f2a58af8715cc193023"
+    },
+    "homonyms": {
+      "path": "tests/fixtures/perf/homonyms.txt",
+      "bytes": 316,
+      "words": 49,
+      "sha256": "6794b76a14d93249431b97c8df94cfb611c5cec480298a01ff42f7e4f7e8d6d9"
+    },
+    "line-wrap": {
+      "path": "tests/fixtures/perf/line-wrap.txt",
+      "bytes": 407,
+      "words": 55,
+      "sha256": "587e244aa2ed5017e2afb44ef3a8470fd58dfafca06d4f48cf651fad8fc57b10"
+    },
+    "page-errors-8pct": {
+      "path": "reports/corpora/page-errors-8pct.txt",
+      "bytes": 15298,
+      "words": 1959,
+      "sha256": "51cc8fe46c8bce7433aca43e75cc9dc501617f5d4a1cff1b44cb7e113abc7377"
+    },
+    "page-errors-x": {
+      "path": "reports/corpora/page-errors-x.txt",
+      "bytes": 17258,
+      "words": 1959,
+      "sha256": "bb6b54b3f83f0161b40834818be299f62111f7021baca28b25d757f0d3d7ed3e"
+    }
+  },
+  "metrics": {
+    "grammar_style.page-2000.single.all_ms": {
+      "min": 18.842463,
+      "median": 19.289939999999998,
+      "max": 20.225963,
+      "runs": [
+        19.252644999999998,
+        19.3785,
+        19.307401,
+        19.289939999999998,
+        18.901828,
+        20.225963,
+        18.842463
+      ]
+    },
+    "grammar_style.page-2000.single.bytes": {
+      "min": 15280.0,
+      "median": 15280.0,
+      "max": 15280.0,
+      "runs": [
+        15280.0,
+        15280.0,
+        15280.0,
+        15280.0,
+        15280.0,
+        15280.0,
+        15280.0
+      ]
+    },
+    "grammar_style.page-2000.single.cold_cache.hits": {
+      "min": 829.0,
+      "median": 829.0,
+      "max": 829.0,
+      "runs": [
+        829.0,
+        829.0,
+        829.0,
+        829.0,
+        829.0,
+        829.0,
+        829.0
+      ]
+    },
+    "grammar_style.page-2000.single.cold_cache.misses": {
+      "min": 1149.0,
+      "median": 1149.0,
+      "max": 1149.0,
+      "runs": [
+        1149.0,
+        1149.0,
+        1149.0,
+        1149.0,
+        1149.0,
+        1149.0,
+        1149.0
+      ]
+    },
+    "grammar_style.page-2000.single.cold_cache.words": {
+      "min": 1146.0,
+      "median": 1146.0,
+      "max": 1146.0,
+      "runs": [
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0
+      ]
+    },
+    "grammar_style.page-2000.single.cold_deep_upgrades": {
+      "min": 3.0,
+      "median": 3.0,
+      "max": 3.0,
+      "runs": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ]
+    },
+    "grammar_style.page-2000.single.cold_depths.clitic": {
+      "min": 24.0,
+      "median": 24.0,
+      "max": 24.0,
+      "runs": [
+        24.0,
+        24.0,
+        24.0,
+        24.0,
+        24.0,
+        24.0,
+        24.0
+      ]
+    },
+    "grammar_style.page-2000.single.cold_depths.compound": {
+      "min": 18.0,
+      "median": 18.0,
+      "max": 18.0,
+      "runs": [
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0
+      ]
+    },
+    "grammar_style.page-2000.single.cold_depths.direct": {
+      "min": 342.0,
+      "median": 342.0,
+      "max": 342.0,
+      "runs": [
+        342.0,
+        342.0,
+        342.0,
+        342.0,
+        342.0,
+        342.0,
+        342.0
+      ]
+    },
+    "grammar_style.page-2000.single.cold_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-2000.single.cold_depths.possessive": {
+      "min": 3.0,
+      "median": 3.0,
+      "max": 3.0,
+      "runs": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ]
+    },
+    "grammar_style.page-2000.single.cold_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-2000.single.cold_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-2000.single.cold_depths.stem_map": {
+      "min": 706.0,
+      "median": 706.0,
+      "max": 706.0,
+      "runs": [
+        706.0,
+        706.0,
+        706.0,
+        706.0,
+        706.0,
+        706.0,
+        706.0
+      ]
+    },
+    "grammar_style.page-2000.single.cold_depths.unknown": {
+      "min": 53.0,
+      "median": 53.0,
+      "max": 53.0,
+      "runs": [
+        53.0,
+        53.0,
+        53.0,
+        53.0,
+        53.0,
+        53.0,
+        53.0
+      ]
+    },
+    "grammar_style.page-2000.single.cold_proper_names": {
+      "min": 13.0,
+      "median": 13.0,
+      "max": 13.0,
+      "runs": [
+        13.0,
+        13.0,
+        13.0,
+        13.0,
+        13.0,
+        13.0,
+        13.0
+      ]
+    },
+    "grammar_style.page-2000.single.morphology_cold_ms": {
+      "min": 653.012189,
+      "median": 673.730189,
+      "max": 701.124034,
+      "runs": [
+        679.843179,
+        653.012189,
+        657.813337,
+        673.730189,
+        678.3481409999999,
+        701.124034,
+        655.828497
+      ]
+    },
+    "grammar_style.page-2000.single.morphology_warm_ms": {
+      "min": 0.43951599999999996,
+      "median": 0.460329,
+      "max": 0.487358,
+      "runs": [
+        0.487358,
+        0.482538,
+        0.460329,
+        0.456138,
+        0.456347,
+        0.464798,
+        0.43951599999999996
+      ]
+    },
+    "grammar_style.page-2000.single.rules_ms": {
+      "min": 12.045091000000001,
+      "median": 12.341151,
+      "max": 12.52707,
+      "runs": [
+        12.341151,
+        12.52707,
+        12.230731,
+        12.39912,
+        12.045091000000001,
+        12.396605,
+        12.114374000000002
+      ]
+    },
+    "grammar_style.page-2000.single.sentence_cache_cold_ms": {
+      "min": 8.409186,
+      "median": 8.83592,
+      "max": 9.188343999999999,
+      "runs": [
+        8.409186,
+        8.427206,
+        8.619969,
+        9.135822,
+        8.971414000000001,
+        9.188343999999999,
+        8.83592
+      ]
+    },
+    "grammar_style.page-2000.single.sentence_cache_edit_hits": {
+      "min": 129.0,
+      "median": 129.0,
+      "max": 129.0,
+      "runs": [
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0
+      ]
+    },
+    "grammar_style.page-2000.single.sentence_cache_edit_misses": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.page-2000.single.sentence_cache_edit_ms": {
+      "min": 0.856123,
+      "median": 1.0059349999999998,
+      "max": 1.28195,
+      "runs": [
+        1.28195,
+        1.094075,
+        0.856123,
+        1.0059349999999998,
+        0.862479,
+        0.9001239999999999,
+        1.0087270000000002
+      ]
+    },
+    "grammar_style.page-2000.single.sentence_cache_edit_prep_ms": {
+      "min": 0.6976519999999999,
+      "median": 0.91095,
+      "max": 0.964867,
+      "runs": [
+        0.929108,
+        0.91095,
+        0.6976519999999999,
+        0.952645,
+        0.847742,
+        0.964867,
+        0.873514
+      ]
+    },
+    "grammar_style.page-2000.single.sentence_cache_edit_style_ms": {
+      "min": 1.286141,
+      "median": 1.4420279999999999,
+      "max": 1.5627149999999999,
+      "runs": [
+        1.5627149999999999,
+        1.4905680000000001,
+        1.297245,
+        1.4420279999999999,
+        1.4763199999999999,
+        1.352141,
+        1.286141
+      ]
+    },
+    "grammar_style.page-2000.single.sentence_cache_edit_total_ms": {
+      "min": 2.85102,
+      "median": 3.217132,
+      "max": 3.773773,
+      "runs": [
+        3.773773,
+        3.495593,
+        2.85102,
+        3.4006079999999996,
+        3.186541,
+        3.217132,
+        3.1683820000000003
+      ]
+    },
+    "grammar_style.page-2000.single.sentence_cache_entries": {
+      "min": 131.0,
+      "median": 131.0,
+      "max": 131.0,
+      "runs": [
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0
+      ]
+    },
+    "grammar_style.page-2000.single.sentence_cache_warm_ms": {
+      "min": 0.710852,
+      "median": 0.7287319999999999,
+      "max": 0.765469,
+      "runs": [
+        0.71623,
+        0.710852,
+        0.7287319999999999,
+        0.7307560000000001,
+        0.748427,
+        0.765469,
+        0.7132959999999999
+      ]
+    },
+    "grammar_style.page-2000.single.style_fresh_cache_ms": {
+      "min": 338.24143499999997,
+      "median": 342.842067,
+      "max": 367.64736,
+      "runs": [
+        342.842067,
+        341.413798,
+        342.48936499999996,
+        357.463419,
+        349.930192,
+        367.64736,
+        338.24143499999997
+      ]
+    },
+    "grammar_style.page-2000.single.style_ms": {
+      "min": 2.446565,
+      "median": 2.495455,
+      "max": 3.088763,
+      "runs": [
+        2.495455,
+        2.446565,
+        2.63011,
+        2.526674,
+        2.448451,
+        3.088763,
+        2.468844
+      ]
+    },
+    "grammar_style.page-2000.single.syntax_ms": {
+      "min": 5.188561,
+      "median": 5.411358,
+      "max": 5.873153,
+      "runs": [
+        5.411358,
+        5.779704,
+        5.686256,
+        5.371618,
+        5.190867,
+        5.873153,
+        5.188561
+      ]
+    },
+    "grammar_style.page-2000.single.tokenise_ms": {
+      "min": 0.5755680000000001,
+      "median": 0.614051,
+      "max": 1.748634,
+      "runs": [
+        0.5755680000000001,
+        0.586533,
+        0.583879,
+        0.614051,
+        0.6198469999999999,
+        1.748634,
+        1.6843789999999998
+      ]
+    },
+    "grammar_style.page-2000.single.warm_cache.hits": {
+      "min": 6757.0,
+      "median": 6757.0,
+      "max": 6757.0,
+      "runs": [
+        6757.0,
+        6757.0,
+        6757.0,
+        6757.0,
+        6757.0,
+        6757.0,
+        6757.0
+      ]
+    },
+    "grammar_style.page-2000.single.warm_cache.misses": {
+      "min": 1149.0,
+      "median": 1149.0,
+      "max": 1149.0,
+      "runs": [
+        1149.0,
+        1149.0,
+        1149.0,
+        1149.0,
+        1149.0,
+        1149.0,
+        1149.0
+      ]
+    },
+    "grammar_style.page-2000.single.warm_cache.words": {
+      "min": 1146.0,
+      "median": 1146.0,
+      "max": 1146.0,
+      "runs": [
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0
+      ]
+    },
+    "grammar_style.page-2000.single.warm_deep_upgrades": {
+      "min": 3.0,
+      "median": 3.0,
+      "max": 3.0,
+      "runs": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ]
+    },
+    "grammar_style.page-2000.single.warm_depths.clitic": {
+      "min": 24.0,
+      "median": 24.0,
+      "max": 24.0,
+      "runs": [
+        24.0,
+        24.0,
+        24.0,
+        24.0,
+        24.0,
+        24.0,
+        24.0
+      ]
+    },
+    "grammar_style.page-2000.single.warm_depths.compound": {
+      "min": 18.0,
+      "median": 18.0,
+      "max": 18.0,
+      "runs": [
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0
+      ]
+    },
+    "grammar_style.page-2000.single.warm_depths.direct": {
+      "min": 342.0,
+      "median": 342.0,
+      "max": 342.0,
+      "runs": [
+        342.0,
+        342.0,
+        342.0,
+        342.0,
+        342.0,
+        342.0,
+        342.0
+      ]
+    },
+    "grammar_style.page-2000.single.warm_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-2000.single.warm_depths.possessive": {
+      "min": 3.0,
+      "median": 3.0,
+      "max": 3.0,
+      "runs": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ]
+    },
+    "grammar_style.page-2000.single.warm_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-2000.single.warm_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-2000.single.warm_depths.stem_map": {
+      "min": 706.0,
+      "median": 706.0,
+      "max": 706.0,
+      "runs": [
+        706.0,
+        706.0,
+        706.0,
+        706.0,
+        706.0,
+        706.0,
+        706.0
+      ]
+    },
+    "grammar_style.page-2000.single.warm_depths.unknown": {
+      "min": 53.0,
+      "median": 53.0,
+      "max": 53.0,
+      "runs": [
+        53.0,
+        53.0,
+        53.0,
+        53.0,
+        53.0,
+        53.0,
+        53.0
+      ]
+    },
+    "grammar_style.page-2000.single.warm_proper_names": {
+      "min": 52.0,
+      "median": 52.0,
+      "max": 52.0,
+      "runs": [
+        52.0,
+        52.0,
+        52.0,
+        52.0,
+        52.0,
+        52.0,
+        52.0
+      ]
+    },
+    "grammar_style.page-2000.single.words": {
+      "min": 1959.0,
+      "median": 1959.0,
+      "max": 1959.0,
+      "runs": [
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.all_ms": {
+      "min": 18.33932,
+      "median": 18.775205,
+      "max": 21.196976,
+      "runs": [
+        18.33932,
+        18.775205,
+        21.196976,
+        18.738537,
+        20.045561,
+        20.075104,
+        18.428857999999998
+      ]
+    },
+    "grammar_style.page-2000.threads4.bytes": {
+      "min": 15280.0,
+      "median": 15280.0,
+      "max": 15280.0,
+      "runs": [
+        15280.0,
+        15280.0,
+        15280.0,
+        15280.0,
+        15280.0,
+        15280.0,
+        15280.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.cold_cache.hits": {
+      "min": 829.0,
+      "median": 829.0,
+      "max": 829.0,
+      "runs": [
+        829.0,
+        829.0,
+        829.0,
+        829.0,
+        829.0,
+        829.0,
+        829.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.cold_cache.misses": {
+      "min": 1149.0,
+      "median": 1149.0,
+      "max": 1149.0,
+      "runs": [
+        1149.0,
+        1149.0,
+        1149.0,
+        1149.0,
+        1149.0,
+        1149.0,
+        1149.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.cold_cache.words": {
+      "min": 1146.0,
+      "median": 1146.0,
+      "max": 1146.0,
+      "runs": [
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.cold_deep_upgrades": {
+      "min": 3.0,
+      "median": 3.0,
+      "max": 3.0,
+      "runs": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.cold_depths.clitic": {
+      "min": 24.0,
+      "median": 24.0,
+      "max": 24.0,
+      "runs": [
+        24.0,
+        24.0,
+        24.0,
+        24.0,
+        24.0,
+        24.0,
+        24.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.cold_depths.compound": {
+      "min": 18.0,
+      "median": 18.0,
+      "max": 18.0,
+      "runs": [
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.cold_depths.direct": {
+      "min": 342.0,
+      "median": 342.0,
+      "max": 342.0,
+      "runs": [
+        342.0,
+        342.0,
+        342.0,
+        342.0,
+        342.0,
+        342.0,
+        342.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.cold_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.cold_depths.possessive": {
+      "min": 3.0,
+      "median": 3.0,
+      "max": 3.0,
+      "runs": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.cold_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.cold_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.cold_depths.stem_map": {
+      "min": 706.0,
+      "median": 706.0,
+      "max": 706.0,
+      "runs": [
+        706.0,
+        706.0,
+        706.0,
+        706.0,
+        706.0,
+        706.0,
+        706.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.cold_depths.unknown": {
+      "min": 53.0,
+      "median": 53.0,
+      "max": 53.0,
+      "runs": [
+        53.0,
+        53.0,
+        53.0,
+        53.0,
+        53.0,
+        53.0,
+        53.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.cold_proper_names": {
+      "min": 13.0,
+      "median": 13.0,
+      "max": 13.0,
+      "runs": [
+        13.0,
+        13.0,
+        13.0,
+        13.0,
+        13.0,
+        13.0,
+        13.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.morphology_cold_ms": {
+      "min": 647.881663,
+      "median": 659.26158,
+      "max": 690.980672,
+      "runs": [
+        648.9274790000001,
+        690.980672,
+        659.26158,
+        647.881663,
+        679.722629,
+        673.551181,
+        656.294481
+      ]
+    },
+    "grammar_style.page-2000.threads4.morphology_warm_ms": {
+      "min": 0.46843,
+      "median": 0.506774,
+      "max": 0.57466,
+      "runs": [
+        0.474856,
+        0.46843,
+        0.506774,
+        0.471154,
+        0.533034,
+        0.57466,
+        0.555383
+      ]
+    },
+    "grammar_style.page-2000.threads4.parallel.grammar_diagnostics": {
+      "min": 3.0,
+      "median": 3.0,
+      "max": 3.0,
+      "runs": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.parallel.morphology_ms": {
+      "min": 193.28437200000002,
+      "median": 201.911115,
+      "max": 225.468541,
+      "runs": [
+        201.61121500000002,
+        209.78070200000002,
+        200.722195,
+        206.65632,
+        225.468541,
+        193.28437200000002,
+        201.911115
+      ]
+    },
+    "grammar_style.page-2000.threads4.parallel.style_diagnostics": {
+      "min": 14.0,
+      "median": 14.0,
+      "max": 14.0,
+      "runs": [
+        14.0,
+        14.0,
+        14.0,
+        14.0,
+        14.0,
+        14.0,
+        14.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.parallel.threads": {
+      "min": 4.0,
+      "median": 4.0,
+      "max": 4.0,
+      "runs": [
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.rules_ms": {
+      "min": 11.13903,
+      "median": 11.360149999999999,
+      "max": 12.232965,
+      "runs": [
+        11.360149999999999,
+        12.068697,
+        11.27613,
+        11.286885999999999,
+        11.756084,
+        12.232965,
+        11.13903
+      ]
+    },
+    "grammar_style.page-2000.threads4.sentence_cache_cold_ms": {
+      "min": 8.433281000000001,
+      "median": 8.817622,
+      "max": 9.695745,
+      "runs": [
+        8.433281000000001,
+        8.839273,
+        8.550056999999999,
+        8.817622,
+        8.860784,
+        9.695745,
+        8.563118
+      ]
+    },
+    "grammar_style.page-2000.threads4.sentence_cache_edit_hits": {
+      "min": 129.0,
+      "median": 129.0,
+      "max": 129.0,
+      "runs": [
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.sentence_cache_edit_misses": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.sentence_cache_edit_ms": {
+      "min": 0.854726,
+      "median": 0.8637360000000001,
+      "max": 1.1289259999999999,
+      "runs": [
+        0.8637360000000001,
+        0.863457,
+        0.854726,
+        0.859685,
+        0.874421,
+        1.1289259999999999,
+        0.892022
+      ]
+    },
+    "grammar_style.page-2000.threads4.sentence_cache_edit_prep_ms": {
+      "min": 0.6821470000000001,
+      "median": 0.714693,
+      "max": 0.960118,
+      "runs": [
+        0.960118,
+        0.689969,
+        0.6821470000000001,
+        0.714693,
+        0.758764,
+        0.790681,
+        0.7024009999999999
+      ]
+    },
+    "grammar_style.page-2000.threads4.sentence_cache_edit_style_ms": {
+      "min": 1.291658,
+      "median": 1.404104,
+      "max": 1.804437,
+      "runs": [
+        1.3141470000000002,
+        1.804437,
+        1.291658,
+        1.311283,
+        1.404104,
+        1.4318309999999999,
+        1.4189100000000001
+      ]
+    },
+    "grammar_style.page-2000.threads4.sentence_cache_edit_total_ms": {
+      "min": 2.828531,
+      "median": 3.0372890000000003,
+      "max": 3.357863,
+      "runs": [
+        3.138001,
+        3.357863,
+        2.828531,
+        2.885661,
+        3.0372890000000003,
+        3.351438,
+        3.0133330000000003
+      ]
+    },
+    "grammar_style.page-2000.threads4.sentence_cache_entries": {
+      "min": 131.0,
+      "median": 131.0,
+      "max": 131.0,
+      "runs": [
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.sentence_cache_warm_ms": {
+      "min": 0.730897,
+      "median": 0.7413730000000001,
+      "max": 0.821342,
+      "runs": [
+        0.7413730000000001,
+        0.741652,
+        0.734947,
+        0.730897,
+        0.821342,
+        0.74717,
+        0.740465
+      ]
+    },
+    "grammar_style.page-2000.threads4.style_fresh_cache_ms": {
+      "min": 344.457093,
+      "median": 349.188259,
+      "max": 369.329363,
+      "runs": [
+        344.457093,
+        364.489803,
+        346.05193499999996,
+        346.62024,
+        359.609872,
+        369.329363,
+        349.188259
+      ]
+    },
+    "grammar_style.page-2000.threads4.style_ms": {
+      "min": 2.284322,
+      "median": 2.391041,
+      "max": 2.631157,
+      "runs": [
+        2.365548,
+        2.284322,
+        2.421772,
+        2.631157,
+        2.391041,
+        2.3405449999999997,
+        2.40487
+      ]
+    },
+    "grammar_style.page-2000.threads4.syntax_ms": {
+      "min": 5.0130490000000005,
+      "median": 5.231864,
+      "max": 5.559213000000001,
+      "runs": [
+        5.0130490000000005,
+        5.04392,
+        5.364354,
+        5.559213000000001,
+        5.176968,
+        5.557048,
+        5.231864
+      ]
+    },
+    "grammar_style.page-2000.threads4.tokenise_ms": {
+      "min": 0.569911,
+      "median": 1.356052,
+      "max": 1.751498,
+      "runs": [
+        1.509355,
+        0.590304,
+        1.567185,
+        0.569911,
+        1.294102,
+        1.356052,
+        1.751498
+      ]
+    },
+    "grammar_style.page-2000.threads4.warm_cache.hits": {
+      "min": 6757.0,
+      "median": 6757.0,
+      "max": 6757.0,
+      "runs": [
+        6757.0,
+        6757.0,
+        6757.0,
+        6757.0,
+        6757.0,
+        6757.0,
+        6757.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.warm_cache.misses": {
+      "min": 1149.0,
+      "median": 1149.0,
+      "max": 1149.0,
+      "runs": [
+        1149.0,
+        1149.0,
+        1149.0,
+        1149.0,
+        1149.0,
+        1149.0,
+        1149.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.warm_cache.words": {
+      "min": 1146.0,
+      "median": 1146.0,
+      "max": 1146.0,
+      "runs": [
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.warm_deep_upgrades": {
+      "min": 3.0,
+      "median": 3.0,
+      "max": 3.0,
+      "runs": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.warm_depths.clitic": {
+      "min": 24.0,
+      "median": 24.0,
+      "max": 24.0,
+      "runs": [
+        24.0,
+        24.0,
+        24.0,
+        24.0,
+        24.0,
+        24.0,
+        24.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.warm_depths.compound": {
+      "min": 18.0,
+      "median": 18.0,
+      "max": 18.0,
+      "runs": [
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.warm_depths.direct": {
+      "min": 342.0,
+      "median": 342.0,
+      "max": 342.0,
+      "runs": [
+        342.0,
+        342.0,
+        342.0,
+        342.0,
+        342.0,
+        342.0,
+        342.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.warm_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.warm_depths.possessive": {
+      "min": 3.0,
+      "median": 3.0,
+      "max": 3.0,
+      "runs": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.warm_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.warm_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.warm_depths.stem_map": {
+      "min": 706.0,
+      "median": 706.0,
+      "max": 706.0,
+      "runs": [
+        706.0,
+        706.0,
+        706.0,
+        706.0,
+        706.0,
+        706.0,
+        706.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.warm_depths.unknown": {
+      "min": 53.0,
+      "median": 53.0,
+      "max": 53.0,
+      "runs": [
+        53.0,
+        53.0,
+        53.0,
+        53.0,
+        53.0,
+        53.0,
+        53.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.warm_proper_names": {
+      "min": 52.0,
+      "median": 52.0,
+      "max": 52.0,
+      "runs": [
+        52.0,
+        52.0,
+        52.0,
+        52.0,
+        52.0,
+        52.0,
+        52.0
+      ]
+    },
+    "grammar_style.page-2000.threads4.words": {
+      "min": 1959.0,
+      "median": 1959.0,
+      "max": 1959.0,
+      "runs": [
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0
+      ]
+    },
+    "check_suggest.page-2000.corpus.tokens": {
+      "min": 1959.0,
+      "median": 1959.0,
+      "max": 1959.0,
+      "runs": [
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0
+      ]
+    },
+    "check_suggest.page-2000.corpus.unknown": {
+      "min": 92.0,
+      "median": 92.0,
+      "max": 92.0,
+      "runs": [
+        92.0,
+        92.0,
+        92.0,
+        92.0,
+        92.0,
+        92.0,
+        92.0
+      ]
+    },
+    "check_suggest.page-2000.corpus.total_ms": {
+      "min": 318.646,
+      "median": 325.592,
+      "max": 336.622,
+      "runs": [
+        333.396,
+        336.622,
+        325.592,
+        324.976,
+        322.353,
+        325.777,
+        318.646
+      ]
+    },
+    "check_suggest.page-2000.corpus.per_token_ms": {
+      "min": 0.1627,
+      "median": 0.1662,
+      "max": 0.1718,
+      "runs": [
+        0.1702,
+        0.1718,
+        0.1662,
+        0.1659,
+        0.1645,
+        0.1663,
+        0.1627
+      ]
+    },
+    "check_suggest.page-2000.corpus.p50_us": {
+      "min": 3.0,
+      "median": 3.0,
+      "max": 3.0,
+      "runs": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ]
+    },
+    "check_suggest.page-2000.corpus.p95_us": {
+      "min": 495.0,
+      "median": 506.0,
+      "max": 523.0,
+      "runs": [
+        523.0,
+        521.0,
+        506.0,
+        506.0,
+        513.0,
+        501.0,
+        495.0
+      ]
+    },
+    "check_suggest.page-2000.corpus.p99_us": {
+      "min": 2317.0,
+      "median": 2510.0,
+      "max": 2684.0,
+      "runs": [
+        2510.0,
+        2684.0,
+        2546.0,
+        2412.0,
+        2684.0,
+        2317.0,
+        2320.0
+      ]
+    },
+    "check_suggest.page-2000.corpus.max_us": {
+      "min": 16247.0,
+      "median": 16393.0,
+      "max": 22105.0,
+      "runs": [
+        16247.0,
+        17997.0,
+        16389.0,
+        16270.0,
+        16393.0,
+        22105.0,
+        21723.0
+      ]
+    },
+    "grammar_style.homonyms.single.all_ms": {
+      "min": 0.16273200000000002,
+      "median": 0.165386,
+      "max": 0.177887,
+      "runs": [
+        0.16489700000000002,
+        0.164059,
+        0.165386,
+        0.16273200000000002,
+        0.16804,
+        0.177887,
+        0.176979
+      ]
+    },
+    "grammar_style.homonyms.single.bytes": {
+      "min": 316.0,
+      "median": 316.0,
+      "max": 316.0,
+      "runs": [
+        316.0,
+        316.0,
+        316.0,
+        316.0,
+        316.0,
+        316.0,
+        316.0
+      ]
+    },
+    "grammar_style.homonyms.single.cold_cache.hits": {
+      "min": 13.0,
+      "median": 13.0,
+      "max": 13.0,
+      "runs": [
+        13.0,
+        13.0,
+        13.0,
+        13.0,
+        13.0,
+        13.0,
+        13.0
+      ]
+    },
+    "grammar_style.homonyms.single.cold_cache.misses": {
+      "min": 37.0,
+      "median": 37.0,
+      "max": 37.0,
+      "runs": [
+        37.0,
+        37.0,
+        37.0,
+        37.0,
+        37.0,
+        37.0,
+        37.0
+      ]
+    },
+    "grammar_style.homonyms.single.cold_cache.words": {
+      "min": 36.0,
+      "median": 36.0,
+      "max": 36.0,
+      "runs": [
+        36.0,
+        36.0,
+        36.0,
+        36.0,
+        36.0,
+        36.0,
+        36.0
+      ]
+    },
+    "grammar_style.homonyms.single.cold_deep_upgrades": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.homonyms.single.cold_depths.clitic": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.single.cold_depths.compound": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.single.cold_depths.direct": {
+      "min": 19.0,
+      "median": 19.0,
+      "max": 19.0,
+      "runs": [
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0
+      ]
+    },
+    "grammar_style.homonyms.single.cold_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.single.cold_depths.possessive": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.single.cold_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.single.cold_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.single.cold_depths.stem_map": {
+      "min": 17.0,
+      "median": 17.0,
+      "max": 17.0,
+      "runs": [
+        17.0,
+        17.0,
+        17.0,
+        17.0,
+        17.0,
+        17.0,
+        17.0
+      ]
+    },
+    "grammar_style.homonyms.single.cold_depths.unknown": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.single.cold_proper_names": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.single.morphology_cold_ms": {
+      "min": 153.716645,
+      "median": 155.479947,
+      "max": 160.120598,
+      "runs": [
+        155.479947,
+        153.716645,
+        160.120598,
+        158.35981199999998,
+        154.196181,
+        156.135413,
+        155.335094
+      ]
+    },
+    "grammar_style.homonyms.single.morphology_warm_ms": {
+      "min": 0.011734,
+      "median": 0.012781,
+      "max": 0.018997,
+      "runs": [
+        0.018997,
+        0.01306,
+        0.012781,
+        0.012851,
+        0.011734,
+        0.012572,
+        0.012013
+      ]
+    },
+    "grammar_style.homonyms.single.rules_ms": {
+      "min": 0.059645000000000004,
+      "median": 0.063905,
+      "max": 0.11258499999999999,
+      "runs": [
+        0.11258499999999999,
+        0.060553,
+        0.08807100000000001,
+        0.063905,
+        0.06579199999999999,
+        0.059645000000000004,
+        0.062509
+      ]
+    },
+    "grammar_style.homonyms.single.sentence_cache_cold_ms": {
+      "min": 0.245704,
+      "median": 0.25087299999999996,
+      "max": 0.347115,
+      "runs": [
+        0.245704,
+        0.347115,
+        0.25087299999999996,
+        0.259254,
+        0.248289,
+        0.24772900000000003,
+        0.261908
+      ]
+    },
+    "grammar_style.homonyms.single.sentence_cache_edit_hits": {
+      "min": 16.0,
+      "median": 16.0,
+      "max": 16.0,
+      "runs": [
+        16.0,
+        16.0,
+        16.0,
+        16.0,
+        16.0,
+        16.0,
+        16.0
+      ]
+    },
+    "grammar_style.homonyms.single.sentence_cache_edit_misses": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.homonyms.single.sentence_cache_edit_ms": {
+      "min": 0.015923999999999997,
+      "median": 0.0176,
+      "max": 0.034781,
+      "runs": [
+        0.017110999999999998,
+        0.020883,
+        0.034781,
+        0.016132999999999998,
+        0.0176,
+        0.022419,
+        0.015923999999999997
+      ]
+    },
+    "grammar_style.homonyms.single.sentence_cache_edit_prep_ms": {
+      "min": 0.111258,
+      "median": 0.114401,
+      "max": 0.278181,
+      "runs": [
+        0.118033,
+        0.278181,
+        0.117474,
+        0.113633,
+        0.111258,
+        0.114401,
+        0.11300500000000001
+      ]
+    },
+    "grammar_style.homonyms.single.sentence_cache_edit_style_ms": {
+      "min": 0.033385,
+      "median": 0.033873,
+      "max": 0.040438,
+      "runs": [
+        0.033873,
+        0.035339999999999996,
+        0.037715,
+        0.033385,
+        0.033454000000000005,
+        0.040438,
+        0.033594
+      ]
+    },
+    "grammar_style.homonyms.single.sentence_cache_edit_total_ms": {
+      "min": 0.162312,
+      "median": 0.16901699999999997,
+      "max": 0.334404,
+      "runs": [
+        0.16901699999999997,
+        0.334404,
+        0.18997,
+        0.163151,
+        0.162312,
+        0.177258,
+        0.16252300000000003
+      ]
+    },
+    "grammar_style.homonyms.single.sentence_cache_entries": {
+      "min": 18.0,
+      "median": 18.0,
+      "max": 18.0,
+      "runs": [
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0
+      ]
+    },
+    "grammar_style.homonyms.single.sentence_cache_warm_ms": {
+      "min": 0.006635,
+      "median": 0.007193000000000001,
+      "max": 0.007892,
+      "runs": [
+        0.007193000000000001,
+        0.007892,
+        0.007194,
+        0.006635,
+        0.007613,
+        0.006705,
+        0.007124
+      ]
+    },
+    "grammar_style.homonyms.single.style_fresh_cache_ms": {
+      "min": 78.25781699999999,
+      "median": 80.305025,
+      "max": 82.736924,
+      "runs": [
+        81.28518799999999,
+        80.286447,
+        80.31592,
+        80.305025,
+        79.47879400000001,
+        82.736924,
+        78.25781699999999
+      ]
+    },
+    "grammar_style.homonyms.single.style_ms": {
+      "min": 0.046724,
+      "median": 0.05308,
+      "max": 0.059855000000000005,
+      "runs": [
+        0.059855000000000005,
+        0.05308,
+        0.056712,
+        0.051473,
+        0.05308,
+        0.052101999999999996,
+        0.046724
+      ]
+    },
+    "grammar_style.homonyms.single.syntax_ms": {
+      "min": 0.107417,
+      "median": 0.11160800000000001,
+      "max": 0.144363,
+      "runs": [
+        0.144363,
+        0.11111900000000001,
+        0.11957,
+        0.11077,
+        0.114052,
+        0.11160800000000001,
+        0.107417
+      ]
+    },
+    "grammar_style.homonyms.single.tokenise_ms": {
+      "min": 0.02228,
+      "median": 0.024165,
+      "max": 0.070959,
+      "runs": [
+        0.022350000000000002,
+        0.023816,
+        0.025702,
+        0.055873,
+        0.02228,
+        0.024165,
+        0.070959
+      ]
+    },
+    "grammar_style.homonyms.single.warm_cache.hits": {
+      "min": 163.0,
+      "median": 163.0,
+      "max": 163.0,
+      "runs": [
+        163.0,
+        163.0,
+        163.0,
+        163.0,
+        163.0,
+        163.0,
+        163.0
+      ]
+    },
+    "grammar_style.homonyms.single.warm_cache.misses": {
+      "min": 37.0,
+      "median": 37.0,
+      "max": 37.0,
+      "runs": [
+        37.0,
+        37.0,
+        37.0,
+        37.0,
+        37.0,
+        37.0,
+        37.0
+      ]
+    },
+    "grammar_style.homonyms.single.warm_cache.words": {
+      "min": 36.0,
+      "median": 36.0,
+      "max": 36.0,
+      "runs": [
+        36.0,
+        36.0,
+        36.0,
+        36.0,
+        36.0,
+        36.0,
+        36.0
+      ]
+    },
+    "grammar_style.homonyms.single.warm_deep_upgrades": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.homonyms.single.warm_depths.clitic": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.single.warm_depths.compound": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.single.warm_depths.direct": {
+      "min": 19.0,
+      "median": 19.0,
+      "max": 19.0,
+      "runs": [
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0
+      ]
+    },
+    "grammar_style.homonyms.single.warm_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.single.warm_depths.possessive": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.single.warm_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.single.warm_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.single.warm_depths.stem_map": {
+      "min": 17.0,
+      "median": 17.0,
+      "max": 17.0,
+      "runs": [
+        17.0,
+        17.0,
+        17.0,
+        17.0,
+        17.0,
+        17.0,
+        17.0
+      ]
+    },
+    "grammar_style.homonyms.single.warm_depths.unknown": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.single.warm_proper_names": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.single.words": {
+      "min": 49.0,
+      "median": 49.0,
+      "max": 49.0,
+      "runs": [
+        49.0,
+        49.0,
+        49.0,
+        49.0,
+        49.0,
+        49.0,
+        49.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.all_ms": {
+      "min": 0.151837,
+      "median": 0.178376,
+      "max": 0.456488,
+      "runs": [
+        0.178376,
+        0.16343,
+        0.41982,
+        0.205615,
+        0.456488,
+        0.173488,
+        0.151837
+      ]
+    },
+    "grammar_style.homonyms.threads4.bytes": {
+      "min": 316.0,
+      "median": 316.0,
+      "max": 316.0,
+      "runs": [
+        316.0,
+        316.0,
+        316.0,
+        316.0,
+        316.0,
+        316.0,
+        316.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.cold_cache.hits": {
+      "min": 13.0,
+      "median": 13.0,
+      "max": 13.0,
+      "runs": [
+        13.0,
+        13.0,
+        13.0,
+        13.0,
+        13.0,
+        13.0,
+        13.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.cold_cache.misses": {
+      "min": 37.0,
+      "median": 37.0,
+      "max": 37.0,
+      "runs": [
+        37.0,
+        37.0,
+        37.0,
+        37.0,
+        37.0,
+        37.0,
+        37.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.cold_cache.words": {
+      "min": 36.0,
+      "median": 36.0,
+      "max": 36.0,
+      "runs": [
+        36.0,
+        36.0,
+        36.0,
+        36.0,
+        36.0,
+        36.0,
+        36.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.cold_deep_upgrades": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.cold_depths.clitic": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.cold_depths.compound": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.cold_depths.direct": {
+      "min": 19.0,
+      "median": 19.0,
+      "max": 19.0,
+      "runs": [
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.cold_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.cold_depths.possessive": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.cold_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.cold_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.cold_depths.stem_map": {
+      "min": 17.0,
+      "median": 17.0,
+      "max": 17.0,
+      "runs": [
+        17.0,
+        17.0,
+        17.0,
+        17.0,
+        17.0,
+        17.0,
+        17.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.cold_depths.unknown": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.cold_proper_names": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.morphology_cold_ms": {
+      "min": 148.597856,
+      "median": 155.111321,
+      "max": 163.57652000000002,
+      "runs": [
+        156.036518,
+        149.804447,
+        163.57652000000002,
+        159.821465,
+        151.172023,
+        155.111321,
+        148.597856
+      ]
+    },
+    "grammar_style.homonyms.threads4.morphology_warm_ms": {
+      "min": 0.010825000000000001,
+      "median": 0.013689,
+      "max": 0.02661,
+      "runs": [
+        0.010825000000000001,
+        0.011594,
+        0.020812999999999998,
+        0.02214,
+        0.02661,
+        0.013689,
+        0.010896000000000001
+      ]
+    },
+    "grammar_style.homonyms.threads4.parallel.grammar_diagnostics": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.parallel.morphology_ms": {
+      "min": 72.961489,
+      "median": 80.014273,
+      "max": 86.477032,
+      "runs": [
+        75.92006599999999,
+        72.961489,
+        81.952808,
+        80.014273,
+        80.08635,
+        75.01232900000001,
+        86.477032
+      ]
+    },
+    "grammar_style.homonyms.threads4.parallel.style_diagnostics": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.parallel.threads": {
+      "min": 4.0,
+      "median": 4.0,
+      "max": 4.0,
+      "runs": [
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.rules_ms": {
+      "min": 0.043371,
+      "median": 0.046305,
+      "max": 0.13060400000000003,
+      "runs": [
+        0.044839000000000004,
+        0.045398,
+        0.10238799999999999,
+        0.08513799999999999,
+        0.13060400000000003,
+        0.046305,
+        0.043371
+      ]
+    },
+    "grammar_style.homonyms.threads4.sentence_cache_cold_ms": {
+      "min": 0.278391,
+      "median": 0.395166,
+      "max": 0.702541,
+      "runs": [
+        0.702541,
+        0.30046,
+        0.278391,
+        0.34495000000000003,
+        0.395166,
+        0.5521010000000001,
+        0.563206
+      ]
+    },
+    "grammar_style.homonyms.threads4.sentence_cache_edit_hits": {
+      "min": 16.0,
+      "median": 16.0,
+      "max": 16.0,
+      "runs": [
+        16.0,
+        16.0,
+        16.0,
+        16.0,
+        16.0,
+        16.0,
+        16.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.sentence_cache_edit_misses": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.sentence_cache_edit_ms": {
+      "min": 0.0176,
+      "median": 0.030032,
+      "max": 0.090446,
+      "runs": [
+        0.040089,
+        0.018997,
+        0.0176,
+        0.017669999999999998,
+        0.090446,
+        0.037994,
+        0.030032
+      ]
+    },
+    "grammar_style.homonyms.threads4.sentence_cache_edit_prep_ms": {
+      "min": 0.114401,
+      "median": 0.122014,
+      "max": 0.282441,
+      "runs": [
+        0.282441,
+        0.114401,
+        0.120058,
+        0.116985,
+        0.122014,
+        0.236345,
+        0.23697400000000002
+      ]
+    },
+    "grammar_style.homonyms.threads4.sentence_cache_edit_style_ms": {
+      "min": 0.034711,
+      "median": 0.038134,
+      "max": 0.074731,
+      "runs": [
+        0.038134,
+        0.03576,
+        0.034711,
+        0.049029,
+        0.037715,
+        0.074731,
+        0.039042
+      ]
+    },
+    "grammar_style.homonyms.threads4.sentence_cache_edit_total_ms": {
+      "min": 0.16915800000000003,
+      "median": 0.250175,
+      "max": 0.360664,
+      "runs": [
+        0.360664,
+        0.16915800000000003,
+        0.172369,
+        0.18368400000000001,
+        0.250175,
+        0.34907,
+        0.30604800000000004
+      ]
+    },
+    "grammar_style.homonyms.threads4.sentence_cache_entries": {
+      "min": 18.0,
+      "median": 18.0,
+      "max": 18.0,
+      "runs": [
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.sentence_cache_warm_ms": {
+      "min": 0.0070539999999999995,
+      "median": 0.007542999999999999,
+      "max": 0.017321,
+      "runs": [
+        0.015366000000000001,
+        0.007542999999999999,
+        0.0070539999999999995,
+        0.007542999999999999,
+        0.0070539999999999995,
+        0.017321,
+        0.013899
+      ]
+    },
+    "grammar_style.homonyms.threads4.style_fresh_cache_ms": {
+      "min": 74.90477299999999,
+      "median": 76.829758,
+      "max": 79.36425299999999,
+      "runs": [
+        74.90477299999999,
+        76.641114,
+        76.777237,
+        79.36425299999999,
+        79.147045,
+        77.91538100000001,
+        76.829758
+      ]
+    },
+    "grammar_style.homonyms.threads4.style_ms": {
+      "min": 0.045397,
+      "median": 0.046236,
+      "max": 0.122922,
+      "runs": [
+        0.045397,
+        0.045677,
+        0.118731,
+        0.072846,
+        0.122922,
+        0.046236,
+        0.045886
+      ]
+    },
+    "grammar_style.homonyms.threads4.syntax_ms": {
+      "min": 0.08367100000000001,
+      "median": 0.09379699999999999,
+      "max": 0.258974,
+      "runs": [
+        0.08367100000000001,
+        0.085277,
+        0.187875,
+        0.212669,
+        0.258974,
+        0.09379699999999999,
+        0.086884
+      ]
+    },
+    "grammar_style.homonyms.threads4.tokenise_ms": {
+      "min": 0.022279,
+      "median": 0.027098999999999998,
+      "max": 0.055455,
+      "runs": [
+        0.055455,
+        0.046235,
+        0.027239000000000003,
+        0.025283,
+        0.027098999999999998,
+        0.022279,
+        0.025353
+      ]
+    },
+    "grammar_style.homonyms.threads4.warm_cache.hits": {
+      "min": 163.0,
+      "median": 163.0,
+      "max": 163.0,
+      "runs": [
+        163.0,
+        163.0,
+        163.0,
+        163.0,
+        163.0,
+        163.0,
+        163.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.warm_cache.misses": {
+      "min": 37.0,
+      "median": 37.0,
+      "max": 37.0,
+      "runs": [
+        37.0,
+        37.0,
+        37.0,
+        37.0,
+        37.0,
+        37.0,
+        37.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.warm_cache.words": {
+      "min": 36.0,
+      "median": 36.0,
+      "max": 36.0,
+      "runs": [
+        36.0,
+        36.0,
+        36.0,
+        36.0,
+        36.0,
+        36.0,
+        36.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.warm_deep_upgrades": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.warm_depths.clitic": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.warm_depths.compound": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.warm_depths.direct": {
+      "min": 19.0,
+      "median": 19.0,
+      "max": 19.0,
+      "runs": [
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.warm_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.warm_depths.possessive": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.warm_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.warm_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.warm_depths.stem_map": {
+      "min": 17.0,
+      "median": 17.0,
+      "max": 17.0,
+      "runs": [
+        17.0,
+        17.0,
+        17.0,
+        17.0,
+        17.0,
+        17.0,
+        17.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.warm_depths.unknown": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.warm_proper_names": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.homonyms.threads4.words": {
+      "min": 49.0,
+      "median": 49.0,
+      "max": 49.0,
+      "runs": [
+        49.0,
+        49.0,
+        49.0,
+        49.0,
+        49.0,
+        49.0,
+        49.0
+      ]
+    },
+    "check_suggest.homonyms.corpus.tokens": {
+      "min": 49.0,
+      "median": 49.0,
+      "max": 49.0,
+      "runs": [
+        49.0,
+        49.0,
+        49.0,
+        49.0,
+        49.0,
+        49.0,
+        49.0
+      ]
+    },
+    "check_suggest.homonyms.corpus.unknown": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "check_suggest.homonyms.corpus.total_ms": {
+      "min": 19.967,
+      "median": 21.476,
+      "max": 24.036,
+      "runs": [
+        20.373,
+        23.222,
+        20.971,
+        19.967,
+        24.036,
+        21.476,
+        21.541
+      ]
+    },
+    "check_suggest.homonyms.corpus.per_token_ms": {
+      "min": 0.4075,
+      "median": 0.4383,
+      "max": 0.4905,
+      "runs": [
+        0.4158,
+        0.4739,
+        0.428,
+        0.4075,
+        0.4905,
+        0.4383,
+        0.4396
+      ]
+    },
+    "check_suggest.homonyms.corpus.p50_us": {
+      "min": 3.0,
+      "median": 4.0,
+      "max": 5.0,
+      "runs": [
+        3.0,
+        4.0,
+        4.0,
+        5.0,
+        3.0,
+        4.0,
+        3.0
+      ]
+    },
+    "check_suggest.homonyms.corpus.p95_us": {
+      "min": 572.0,
+      "median": 638.0,
+      "max": 716.0,
+      "runs": [
+        635.0,
+        667.0,
+        655.0,
+        572.0,
+        638.0,
+        716.0,
+        637.0
+      ]
+    },
+    "check_suggest.homonyms.corpus.p99_us": {
+      "min": 15277.0,
+      "median": 15977.0,
+      "max": 19087.0,
+      "runs": [
+        15277.0,
+        17978.0,
+        15977.0,
+        15322.0,
+        19087.0,
+        15370.0,
+        16471.0
+      ]
+    },
+    "check_suggest.homonyms.corpus.max_us": {
+      "min": 15277.0,
+      "median": 15977.0,
+      "max": 19087.0,
+      "runs": [
+        15277.0,
+        17978.0,
+        15977.0,
+        15322.0,
+        19087.0,
+        15370.0,
+        16471.0
+      ]
+    },
+    "grammar_style.line-wrap.single.all_ms": {
+      "min": 0.191506,
+      "median": 0.200656,
+      "max": 0.247031,
+      "runs": [
+        0.19346200000000002,
+        0.210573,
+        0.209107,
+        0.247031,
+        0.194719,
+        0.200656,
+        0.191506
+      ]
+    },
+    "grammar_style.line-wrap.single.bytes": {
+      "min": 407.0,
+      "median": 407.0,
+      "max": 407.0,
+      "runs": [
+        407.0,
+        407.0,
+        407.0,
+        407.0,
+        407.0,
+        407.0,
+        407.0
+      ]
+    },
+    "grammar_style.line-wrap.single.cold_cache.hits": {
+      "min": 8.0,
+      "median": 8.0,
+      "max": 8.0,
+      "runs": [
+        8.0,
+        8.0,
+        8.0,
+        8.0,
+        8.0,
+        8.0,
+        8.0
+      ]
+    },
+    "grammar_style.line-wrap.single.cold_cache.misses": {
+      "min": 48.0,
+      "median": 48.0,
+      "max": 48.0,
+      "runs": [
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0
+      ]
+    },
+    "grammar_style.line-wrap.single.cold_cache.words": {
+      "min": 48.0,
+      "median": 48.0,
+      "max": 48.0,
+      "runs": [
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0
+      ]
+    },
+    "grammar_style.line-wrap.single.cold_deep_upgrades": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.single.cold_depths.clitic": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.single.cold_depths.compound": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.single.cold_depths.direct": {
+      "min": 19.0,
+      "median": 19.0,
+      "max": 19.0,
+      "runs": [
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0
+      ]
+    },
+    "grammar_style.line-wrap.single.cold_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.single.cold_depths.possessive": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.single.cold_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.single.cold_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.single.cold_depths.stem_map": {
+      "min": 28.0,
+      "median": 28.0,
+      "max": 28.0,
+      "runs": [
+        28.0,
+        28.0,
+        28.0,
+        28.0,
+        28.0,
+        28.0,
+        28.0
+      ]
+    },
+    "grammar_style.line-wrap.single.cold_depths.unknown": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.line-wrap.single.cold_proper_names": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.single.morphology_cold_ms": {
+      "min": 39.735067,
+      "median": 46.082168,
+      "max": 48.110868,
+      "runs": [
+        46.082168,
+        46.612058999999995,
+        39.735067,
+        43.703559000000006,
+        46.35965,
+        42.175067,
+        48.110868
+      ]
+    },
+    "grammar_style.line-wrap.single.morphology_warm_ms": {
+      "min": 0.009359,
+      "median": 0.010896000000000001,
+      "max": 0.016412000000000003,
+      "runs": [
+        0.009359,
+        0.009917,
+        0.010896000000000001,
+        0.016412000000000003,
+        0.010406,
+        0.012013,
+        0.011943
+      ]
+    },
+    "grammar_style.line-wrap.single.rules_ms": {
+      "min": 0.068026,
+      "median": 0.07061,
+      "max": 0.102668,
+      "runs": [
+        0.07061,
+        0.07109900000000001,
+        0.068584,
+        0.102668,
+        0.068026,
+        0.069073,
+        0.087931
+      ]
+    },
+    "grammar_style.line-wrap.single.sentence_cache_cold_ms": {
+      "min": 0.223494,
+      "median": 0.236904,
+      "max": 0.256669,
+      "runs": [
+        0.237812,
+        0.228803,
+        0.223494,
+        0.242352,
+        0.256669,
+        0.236904,
+        0.230478
+      ]
+    },
+    "grammar_style.line-wrap.single.sentence_cache_edit_hits": {
+      "min": 6.0,
+      "median": 6.0,
+      "max": 6.0,
+      "runs": [
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0
+      ]
+    },
+    "grammar_style.line-wrap.single.sentence_cache_edit_misses": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.line-wrap.single.sentence_cache_edit_ms": {
+      "min": 0.066559,
+      "median": 0.068026,
+      "max": 0.071937,
+      "runs": [
+        0.068026,
+        0.066559,
+        0.070191,
+        0.069633,
+        0.071937,
+        0.067188,
+        0.067746
+      ]
+    },
+    "grammar_style.line-wrap.single.sentence_cache_edit_prep_ms": {
+      "min": 1.7347350000000001,
+      "median": 1.775733,
+      "max": 1.9738740000000001,
+      "runs": [
+        1.739973,
+        1.775733,
+        1.770425,
+        1.789003,
+        1.9738740000000001,
+        1.7347350000000001,
+        1.779365
+      ]
+    },
+    "grammar_style.line-wrap.single.sentence_cache_edit_style_ms": {
+      "min": 0.034292,
+      "median": 0.036177999999999995,
+      "max": 0.045397,
+      "runs": [
+        0.034292,
+        0.034293,
+        0.043023,
+        0.036177999999999995,
+        0.036667,
+        0.045397,
+        0.034851
+      ]
+    },
+    "grammar_style.line-wrap.single.sentence_cache_edit_total_ms": {
+      "min": 1.842291,
+      "median": 1.8819620000000001,
+      "max": 2.082478,
+      "runs": [
+        1.842291,
+        1.876585,
+        1.8836389999999998,
+        1.894814,
+        2.082478,
+        1.84732,
+        1.8819620000000001
+      ]
+    },
+    "grammar_style.line-wrap.single.sentence_cache_entries": {
+      "min": 8.0,
+      "median": 8.0,
+      "max": 8.0,
+      "runs": [
+        8.0,
+        8.0,
+        8.0,
+        8.0,
+        8.0,
+        8.0,
+        8.0
+      ]
+    },
+    "grammar_style.line-wrap.single.sentence_cache_warm_ms": {
+      "min": 0.005588,
+      "median": 0.006146,
+      "max": 0.006356,
+      "runs": [
+        0.006146,
+        0.005588,
+        0.006216,
+        0.006216,
+        0.006146,
+        0.005657000000000001,
+        0.006356
+      ]
+    },
+    "grammar_style.line-wrap.single.style_fresh_cache_ms": {
+      "min": 3.9082179999999997,
+      "median": 4.046855,
+      "max": 4.23892,
+      "runs": [
+        4.220691,
+        3.952079,
+        4.046855,
+        4.233612,
+        4.23892,
+        3.9393680000000004,
+        3.9082179999999997
+      ]
+    },
+    "grammar_style.line-wrap.single.style_ms": {
+      "min": 0.051054999999999996,
+      "median": 0.054896,
+      "max": 0.07109900000000001,
+      "runs": [
+        0.054407000000000004,
+        0.051054999999999996,
+        0.051124,
+        0.07109900000000001,
+        0.061531,
+        0.059506,
+        0.054896
+      ]
+    },
+    "grammar_style.line-wrap.single.syntax_ms": {
+      "min": 0.115728,
+      "median": 0.124878,
+      "max": 0.152116,
+      "runs": [
+        0.12515700000000002,
+        0.12397,
+        0.116008,
+        0.149252,
+        0.115728,
+        0.124878,
+        0.152116
+      ]
+    },
+    "grammar_style.line-wrap.single.tokenise_ms": {
+      "min": 0.024724,
+      "median": 0.031010000000000003,
+      "max": 0.050915,
+      "runs": [
+        0.049029,
+        0.04868,
+        0.028146,
+        0.026121,
+        0.024724,
+        0.031010000000000003,
+        0.050915
+      ]
+    },
+    "grammar_style.line-wrap.single.warm_cache.hits": {
+      "min": 176.0,
+      "median": 176.0,
+      "max": 176.0,
+      "runs": [
+        176.0,
+        176.0,
+        176.0,
+        176.0,
+        176.0,
+        176.0,
+        176.0
+      ]
+    },
+    "grammar_style.line-wrap.single.warm_cache.misses": {
+      "min": 48.0,
+      "median": 48.0,
+      "max": 48.0,
+      "runs": [
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0
+      ]
+    },
+    "grammar_style.line-wrap.single.warm_cache.words": {
+      "min": 48.0,
+      "median": 48.0,
+      "max": 48.0,
+      "runs": [
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0
+      ]
+    },
+    "grammar_style.line-wrap.single.warm_deep_upgrades": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.single.warm_depths.clitic": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.single.warm_depths.compound": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.single.warm_depths.direct": {
+      "min": 19.0,
+      "median": 19.0,
+      "max": 19.0,
+      "runs": [
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0
+      ]
+    },
+    "grammar_style.line-wrap.single.warm_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.single.warm_depths.possessive": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.single.warm_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.single.warm_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.single.warm_depths.stem_map": {
+      "min": 28.0,
+      "median": 28.0,
+      "max": 28.0,
+      "runs": [
+        28.0,
+        28.0,
+        28.0,
+        28.0,
+        28.0,
+        28.0,
+        28.0
+      ]
+    },
+    "grammar_style.line-wrap.single.warm_depths.unknown": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.line-wrap.single.warm_proper_names": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.single.words": {
+      "min": 55.0,
+      "median": 55.0,
+      "max": 55.0,
+      "runs": [
+        55.0,
+        55.0,
+        55.0,
+        55.0,
+        55.0,
+        55.0,
+        55.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.all_ms": {
+      "min": 0.181729,
+      "median": 0.19318300000000002,
+      "max": 0.465636,
+      "runs": [
+        0.30597799999999997,
+        0.199469,
+        0.465636,
+        0.19318300000000002,
+        0.186617,
+        0.181729,
+        0.18983
+      ]
+    },
+    "grammar_style.line-wrap.threads4.bytes": {
+      "min": 407.0,
+      "median": 407.0,
+      "max": 407.0,
+      "runs": [
+        407.0,
+        407.0,
+        407.0,
+        407.0,
+        407.0,
+        407.0,
+        407.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.cold_cache.hits": {
+      "min": 8.0,
+      "median": 8.0,
+      "max": 8.0,
+      "runs": [
+        8.0,
+        8.0,
+        8.0,
+        8.0,
+        8.0,
+        8.0,
+        8.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.cold_cache.misses": {
+      "min": 48.0,
+      "median": 48.0,
+      "max": 48.0,
+      "runs": [
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.cold_cache.words": {
+      "min": 48.0,
+      "median": 48.0,
+      "max": 48.0,
+      "runs": [
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.cold_deep_upgrades": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.cold_depths.clitic": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.cold_depths.compound": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.cold_depths.direct": {
+      "min": 19.0,
+      "median": 19.0,
+      "max": 19.0,
+      "runs": [
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.cold_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.cold_depths.possessive": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.cold_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.cold_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.cold_depths.stem_map": {
+      "min": 28.0,
+      "median": 28.0,
+      "max": 28.0,
+      "runs": [
+        28.0,
+        28.0,
+        28.0,
+        28.0,
+        28.0,
+        28.0,
+        28.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.cold_depths.unknown": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.cold_proper_names": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.morphology_cold_ms": {
+      "min": 39.233461999999996,
+      "median": 40.977905,
+      "max": 46.885839999999995,
+      "runs": [
+        42.025117,
+        40.907365,
+        40.061719000000004,
+        46.885839999999995,
+        39.233461999999996,
+        40.977905,
+        42.363989
+      ]
+    },
+    "grammar_style.line-wrap.threads4.morphology_warm_ms": {
+      "min": 0.010058,
+      "median": 0.011384,
+      "max": 0.02654,
+      "runs": [
+        0.011105,
+        0.010058,
+        0.02654,
+        0.011384,
+        0.010058,
+        0.014806,
+        0.022489000000000002
+      ]
+    },
+    "grammar_style.line-wrap.threads4.parallel.grammar_diagnostics": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.parallel.morphology_ms": {
+      "min": 8.862111,
+      "median": 10.785350000000001,
+      "max": 15.330597,
+      "runs": [
+        8.862111,
+        10.344368,
+        10.785350000000001,
+        15.330597,
+        10.326978,
+        11.270752,
+        13.837026
+      ]
+    },
+    "grammar_style.line-wrap.threads4.parallel.style_diagnostics": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.parallel.threads": {
+      "min": 4.0,
+      "median": 4.0,
+      "max": 4.0,
+      "runs": [
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.rules_ms": {
+      "min": 0.0528,
+      "median": 0.054546000000000004,
+      "max": 0.154211,
+      "runs": [
+        0.053359000000000004,
+        0.053499,
+        0.154211,
+        0.0528,
+        0.054826,
+        0.054546000000000004,
+        0.056921
+      ]
+    },
+    "grammar_style.line-wrap.threads4.sentence_cache_cold_ms": {
+      "min": 0.214974,
+      "median": 0.22091,
+      "max": 0.26141800000000004,
+      "runs": [
+        0.21644000000000002,
+        0.214974,
+        0.22091,
+        0.216859,
+        0.250943,
+        0.26141800000000004,
+        0.23515799999999998
+      ]
+    },
+    "grammar_style.line-wrap.threads4.sentence_cache_edit_hits": {
+      "min": 6.0,
+      "median": 6.0,
+      "max": 6.0,
+      "runs": [
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.sentence_cache_edit_misses": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.sentence_cache_edit_ms": {
+      "min": 0.065303,
+      "median": 0.069074,
+      "max": 0.088281,
+      "runs": [
+        0.06900400000000001,
+        0.069074,
+        0.065303,
+        0.066769,
+        0.088281,
+        0.07054,
+        0.069074
+      ]
+    },
+    "grammar_style.line-wrap.threads4.sentence_cache_edit_prep_ms": {
+      "min": 1.7353640000000001,
+      "median": 1.809396,
+      "max": 1.889855,
+      "runs": [
+        1.783275,
+        1.809396,
+        1.778597,
+        1.7353640000000001,
+        1.889855,
+        1.869531,
+        1.831467
+      ]
+    },
+    "grammar_style.line-wrap.threads4.sentence_cache_edit_style_ms": {
+      "min": 0.034292,
+      "median": 0.034781,
+      "max": 0.03548,
+      "runs": [
+        0.034781,
+        0.034293,
+        0.034781,
+        0.035339999999999996,
+        0.034292,
+        0.03548,
+        0.034781
+      ]
+    },
+    "grammar_style.line-wrap.threads4.sentence_cache_edit_total_ms": {
+      "min": 1.8374730000000001,
+      "median": 1.912763,
+      "max": 2.0124280000000003,
+      "runs": [
+        1.88706,
+        1.912763,
+        1.878681,
+        1.8374730000000001,
+        2.0124280000000003,
+        1.975551,
+        1.935322
+      ]
+    },
+    "grammar_style.line-wrap.threads4.sentence_cache_entries": {
+      "min": 8.0,
+      "median": 8.0,
+      "max": 8.0,
+      "runs": [
+        8.0,
+        8.0,
+        8.0,
+        8.0,
+        8.0,
+        8.0,
+        8.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.sentence_cache_warm_ms": {
+      "min": 0.005727,
+      "median": 0.006076,
+      "max": 0.006635,
+      "runs": [
+        0.006076,
+        0.005727,
+        0.005727,
+        0.006146,
+        0.006635,
+        0.005867,
+        0.006286
+      ]
+    },
+    "grammar_style.line-wrap.threads4.style_fresh_cache_ms": {
+      "min": 3.950264,
+      "median": 4.038543000000001,
+      "max": 4.398788,
+      "runs": [
+        4.109363,
+        3.950264,
+        4.0338639999999995,
+        3.9517299999999995,
+        4.055096,
+        4.038543000000001,
+        4.398788
+      ]
+    },
+    "grammar_style.line-wrap.threads4.style_ms": {
+      "min": 0.047073000000000004,
+      "median": 0.053499,
+      "max": 0.136262,
+      "runs": [
+        0.056083,
+        0.047562,
+        0.136262,
+        0.048191,
+        0.053499,
+        0.053709,
+        0.047073000000000004
+      ]
+    },
+    "grammar_style.line-wrap.threads4.syntax_ms": {
+      "min": 0.07920100000000001,
+      "median": 0.08402,
+      "max": 0.243958,
+      "runs": [
+        0.084788,
+        0.07969000000000001,
+        0.243958,
+        0.07920100000000001,
+        0.08178500000000001,
+        0.08402,
+        0.089677
+      ]
+    },
+    "grammar_style.line-wrap.threads4.tokenise_ms": {
+      "min": 0.025701,
+      "median": 0.029334,
+      "max": 0.055803,
+      "runs": [
+        0.025701,
+        0.027308,
+        0.029543000000000003,
+        0.055803,
+        0.029334,
+        0.02668,
+        0.036108
+      ]
+    },
+    "grammar_style.line-wrap.threads4.warm_cache.hits": {
+      "min": 176.0,
+      "median": 176.0,
+      "max": 176.0,
+      "runs": [
+        176.0,
+        176.0,
+        176.0,
+        176.0,
+        176.0,
+        176.0,
+        176.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.warm_cache.misses": {
+      "min": 48.0,
+      "median": 48.0,
+      "max": 48.0,
+      "runs": [
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.warm_cache.words": {
+      "min": 48.0,
+      "median": 48.0,
+      "max": 48.0,
+      "runs": [
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.warm_deep_upgrades": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.warm_depths.clitic": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.warm_depths.compound": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.warm_depths.direct": {
+      "min": 19.0,
+      "median": 19.0,
+      "max": 19.0,
+      "runs": [
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0,
+        19.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.warm_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.warm_depths.possessive": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.warm_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.warm_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.warm_depths.stem_map": {
+      "min": 28.0,
+      "median": 28.0,
+      "max": 28.0,
+      "runs": [
+        28.0,
+        28.0,
+        28.0,
+        28.0,
+        28.0,
+        28.0,
+        28.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.warm_depths.unknown": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.warm_proper_names": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.line-wrap.threads4.words": {
+      "min": 55.0,
+      "median": 55.0,
+      "max": 55.0,
+      "runs": [
+        55.0,
+        55.0,
+        55.0,
+        55.0,
+        55.0,
+        55.0,
+        55.0
+      ]
+    },
+    "check_suggest.line-wrap.corpus.tokens": {
+      "min": 55.0,
+      "median": 55.0,
+      "max": 55.0,
+      "runs": [
+        55.0,
+        55.0,
+        55.0,
+        55.0,
+        55.0,
+        55.0,
+        55.0
+      ]
+    },
+    "check_suggest.line-wrap.corpus.unknown": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "check_suggest.line-wrap.corpus.total_ms": {
+      "min": 32.901,
+      "median": 39.213,
+      "max": 41.029,
+      "runs": [
+        32.981,
+        40.546,
+        33.782,
+        41.029,
+        32.901,
+        40.247,
+        39.213
+      ]
+    },
+    "check_suggest.line-wrap.corpus.per_token_ms": {
+      "min": 0.5982,
+      "median": 0.713,
+      "max": 0.746,
+      "runs": [
+        0.5997,
+        0.7372,
+        0.6142,
+        0.746,
+        0.5982,
+        0.7318,
+        0.713
+      ]
+    },
+    "check_suggest.line-wrap.corpus.p50_us": {
+      "min": 15.0,
+      "median": 19.0,
+      "max": 30.0,
+      "runs": [
+        20.0,
+        30.0,
+        21.0,
+        18.0,
+        15.0,
+        19.0,
+        18.0
+      ]
+    },
+    "check_suggest.line-wrap.corpus.p95_us": {
+      "min": 537.0,
+      "median": 606.0,
+      "max": 678.0,
+      "runs": [
+        574.0,
+        658.0,
+        537.0,
+        619.0,
+        537.0,
+        678.0,
+        606.0
+      ]
+    },
+    "check_suggest.line-wrap.corpus.p99_us": {
+      "min": 10383.0,
+      "median": 10641.0,
+      "max": 11349.0,
+      "runs": [
+        11029.0,
+        10615.0,
+        11349.0,
+        10641.0,
+        11096.0,
+        10403.0,
+        10383.0
+      ]
+    },
+    "check_suggest.line-wrap.corpus.max_us": {
+      "min": 14415.0,
+      "median": 21063.0,
+      "max": 22598.0,
+      "runs": [
+        14420.0,
+        21954.0,
+        14844.0,
+        22598.0,
+        14415.0,
+        21175.0,
+        21063.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.all_ms": {
+      "min": 17.996885,
+      "median": 18.534249,
+      "max": 19.464266000000002,
+      "runs": [
+        19.464266000000002,
+        17.996885,
+        18.340927,
+        18.534249,
+        18.064003,
+        18.78163,
+        19.178612
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.bytes": {
+      "min": 15298.0,
+      "median": 15298.0,
+      "max": 15298.0,
+      "runs": [
+        15298.0,
+        15298.0,
+        15298.0,
+        15298.0,
+        15298.0,
+        15298.0,
+        15298.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.cold_cache.hits": {
+      "min": 821.0,
+      "median": 821.0,
+      "max": 821.0,
+      "runs": [
+        821.0,
+        821.0,
+        821.0,
+        821.0,
+        821.0,
+        821.0,
+        821.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.cold_cache.misses": {
+      "min": 1157.0,
+      "median": 1157.0,
+      "max": 1157.0,
+      "runs": [
+        1157.0,
+        1157.0,
+        1157.0,
+        1157.0,
+        1157.0,
+        1157.0,
+        1157.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.cold_cache.words": {
+      "min": 1154.0,
+      "median": 1154.0,
+      "max": 1154.0,
+      "runs": [
+        1154.0,
+        1154.0,
+        1154.0,
+        1154.0,
+        1154.0,
+        1154.0,
+        1154.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.cold_deep_upgrades": {
+      "min": 3.0,
+      "median": 3.0,
+      "max": 3.0,
+      "runs": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.cold_depths.clitic": {
+      "min": 22.0,
+      "median": 22.0,
+      "max": 22.0,
+      "runs": [
+        22.0,
+        22.0,
+        22.0,
+        22.0,
+        22.0,
+        22.0,
+        22.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.cold_depths.compound": {
+      "min": 25.0,
+      "median": 25.0,
+      "max": 25.0,
+      "runs": [
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.cold_depths.direct": {
+      "min": 321.0,
+      "median": 321.0,
+      "max": 321.0,
+      "runs": [
+        321.0,
+        321.0,
+        321.0,
+        321.0,
+        321.0,
+        321.0,
+        321.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.cold_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.cold_depths.possessive": {
+      "min": 5.0,
+      "median": 5.0,
+      "max": 5.0,
+      "runs": [
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.cold_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.cold_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.cold_depths.stem_map": {
+      "min": 653.0,
+      "median": 653.0,
+      "max": 653.0,
+      "runs": [
+        653.0,
+        653.0,
+        653.0,
+        653.0,
+        653.0,
+        653.0,
+        653.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.cold_depths.unknown": {
+      "min": 128.0,
+      "median": 128.0,
+      "max": 128.0,
+      "runs": [
+        128.0,
+        128.0,
+        128.0,
+        128.0,
+        128.0,
+        128.0,
+        128.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.cold_proper_names": {
+      "min": 12.0,
+      "median": 12.0,
+      "max": 12.0,
+      "runs": [
+        12.0,
+        12.0,
+        12.0,
+        12.0,
+        12.0,
+        12.0,
+        12.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.morphology_cold_ms": {
+      "min": 712.839817,
+      "median": 729.2853,
+      "max": 739.954295,
+      "runs": [
+        732.068017,
+        712.839817,
+        739.954295,
+        723.733979,
+        719.681398,
+        730.136115,
+        729.2853
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.morphology_warm_ms": {
+      "min": 0.440144,
+      "median": 0.470456,
+      "max": 0.6611940000000001,
+      "runs": [
+        0.440144,
+        0.470456,
+        0.465497,
+        0.534501,
+        0.6611940000000001,
+        0.448106,
+        0.506424
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.rules_ms": {
+      "min": 11.3642,
+      "median": 11.552145999999999,
+      "max": 11.931038,
+      "runs": [
+        11.473923000000001,
+        11.532449999999999,
+        11.873279,
+        11.552145999999999,
+        11.3642,
+        11.931038,
+        11.625061
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.sentence_cache_cold_ms": {
+      "min": 8.232276,
+      "median": 8.482728999999999,
+      "max": 9.135822,
+      "runs": [
+        8.482728999999999,
+        8.388932,
+        9.135822,
+        8.232276,
+        8.571289,
+        9.045586,
+        8.262448000000001
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.sentence_cache_edit_hits": {
+      "min": 129.0,
+      "median": 129.0,
+      "max": 129.0,
+      "runs": [
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.sentence_cache_edit_misses": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.sentence_cache_edit_ms": {
+      "min": 0.870511,
+      "median": 0.91032,
+      "max": 0.952575,
+      "runs": [
+        0.878961,
+        0.870511,
+        0.952575,
+        0.917095,
+        0.91032,
+        0.881196,
+        0.942378
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.sentence_cache_edit_prep_ms": {
+      "min": 0.795081,
+      "median": 1.034151,
+      "max": 1.251569,
+      "runs": [
+        1.034779,
+        0.9112979999999999,
+        1.159936,
+        0.920937,
+        1.034151,
+        0.795081,
+        1.251569
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.sentence_cache_edit_style_ms": {
+      "min": 1.2869089999999999,
+      "median": 1.356052,
+      "max": 1.4715019999999999,
+      "runs": [
+        1.403754,
+        1.2869089999999999,
+        1.4347640000000002,
+        1.2917969999999999,
+        1.356052,
+        1.296826,
+        1.4715019999999999
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.sentence_cache_edit_total_ms": {
+      "min": 2.973103,
+      "median": 3.300523,
+      "max": 3.6654489999999997,
+      "runs": [
+        3.317494,
+        3.0687179999999996,
+        3.547275,
+        3.129829,
+        3.300523,
+        2.973103,
+        3.6654489999999997
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.sentence_cache_entries": {
+      "min": 131.0,
+      "median": 131.0,
+      "max": 131.0,
+      "runs": [
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.sentence_cache_warm_ms": {
+      "min": 0.726148,
+      "median": 0.743747,
+      "max": 0.801786,
+      "runs": [
+        0.7427,
+        0.745283,
+        0.739208,
+        0.7845350000000001,
+        0.726148,
+        0.743747,
+        0.801786
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.style_fresh_cache_ms": {
+      "min": 359.038564,
+      "median": 363.633887,
+      "max": 385.207801,
+      "runs": [
+        359.61357300000003,
+        359.038564,
+        377.576864,
+        363.633887,
+        359.516772,
+        378.81264799999997,
+        385.207801
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.style_ms": {
+      "min": 2.42233,
+      "median": 2.600288,
+      "max": 2.7558249999999997,
+      "runs": [
+        2.42233,
+        2.447962,
+        2.600288,
+        2.6037790000000003,
+        2.6208210000000003,
+        2.490287,
+        2.7558249999999997
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.syntax_ms": {
+      "min": 5.084846,
+      "median": 5.266575,
+      "max": 5.741709999999999,
+      "runs": [
+        5.1776670000000005,
+        5.204277,
+        5.741709999999999,
+        5.413663,
+        5.266575,
+        5.084846,
+        5.440063
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.tokenise_ms": {
+      "min": 0.5847880000000001,
+      "median": 1.235435,
+      "max": 1.6308799999999999,
+      "runs": [
+        1.497622,
+        0.586044,
+        1.6308799999999999,
+        1.25541,
+        1.235435,
+        0.5847880000000001,
+        0.600711
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.warm_cache.hits": {
+      "min": 6752.0,
+      "median": 6752.0,
+      "max": 6752.0,
+      "runs": [
+        6752.0,
+        6752.0,
+        6752.0,
+        6752.0,
+        6752.0,
+        6752.0,
+        6752.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.warm_cache.misses": {
+      "min": 1157.0,
+      "median": 1157.0,
+      "max": 1157.0,
+      "runs": [
+        1157.0,
+        1157.0,
+        1157.0,
+        1157.0,
+        1157.0,
+        1157.0,
+        1157.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.warm_cache.words": {
+      "min": 1154.0,
+      "median": 1154.0,
+      "max": 1154.0,
+      "runs": [
+        1154.0,
+        1154.0,
+        1154.0,
+        1154.0,
+        1154.0,
+        1154.0,
+        1154.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.warm_deep_upgrades": {
+      "min": 3.0,
+      "median": 3.0,
+      "max": 3.0,
+      "runs": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.warm_depths.clitic": {
+      "min": 22.0,
+      "median": 22.0,
+      "max": 22.0,
+      "runs": [
+        22.0,
+        22.0,
+        22.0,
+        22.0,
+        22.0,
+        22.0,
+        22.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.warm_depths.compound": {
+      "min": 25.0,
+      "median": 25.0,
+      "max": 25.0,
+      "runs": [
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.warm_depths.direct": {
+      "min": 321.0,
+      "median": 321.0,
+      "max": 321.0,
+      "runs": [
+        321.0,
+        321.0,
+        321.0,
+        321.0,
+        321.0,
+        321.0,
+        321.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.warm_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.warm_depths.possessive": {
+      "min": 5.0,
+      "median": 5.0,
+      "max": 5.0,
+      "runs": [
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.warm_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.warm_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.warm_depths.stem_map": {
+      "min": 653.0,
+      "median": 653.0,
+      "max": 653.0,
+      "runs": [
+        653.0,
+        653.0,
+        653.0,
+        653.0,
+        653.0,
+        653.0,
+        653.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.warm_depths.unknown": {
+      "min": 128.0,
+      "median": 128.0,
+      "max": 128.0,
+      "runs": [
+        128.0,
+        128.0,
+        128.0,
+        128.0,
+        128.0,
+        128.0,
+        128.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.warm_proper_names": {
+      "min": 48.0,
+      "median": 48.0,
+      "max": 48.0,
+      "runs": [
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.single.words": {
+      "min": 1959.0,
+      "median": 1959.0,
+      "max": 1959.0,
+      "runs": [
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.all_ms": {
+      "min": 17.765428999999997,
+      "median": 18.441918,
+      "max": 20.985634,
+      "runs": [
+        17.765428999999997,
+        20.024189,
+        18.441918,
+        18.982076,
+        20.985634,
+        18.166460999999998,
+        17.986060000000002
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.bytes": {
+      "min": 15298.0,
+      "median": 15298.0,
+      "max": 15298.0,
+      "runs": [
+        15298.0,
+        15298.0,
+        15298.0,
+        15298.0,
+        15298.0,
+        15298.0,
+        15298.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.cold_cache.hits": {
+      "min": 821.0,
+      "median": 821.0,
+      "max": 821.0,
+      "runs": [
+        821.0,
+        821.0,
+        821.0,
+        821.0,
+        821.0,
+        821.0,
+        821.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.cold_cache.misses": {
+      "min": 1157.0,
+      "median": 1157.0,
+      "max": 1157.0,
+      "runs": [
+        1157.0,
+        1157.0,
+        1157.0,
+        1157.0,
+        1157.0,
+        1157.0,
+        1157.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.cold_cache.words": {
+      "min": 1154.0,
+      "median": 1154.0,
+      "max": 1154.0,
+      "runs": [
+        1154.0,
+        1154.0,
+        1154.0,
+        1154.0,
+        1154.0,
+        1154.0,
+        1154.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.cold_deep_upgrades": {
+      "min": 3.0,
+      "median": 3.0,
+      "max": 3.0,
+      "runs": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.cold_depths.clitic": {
+      "min": 22.0,
+      "median": 22.0,
+      "max": 22.0,
+      "runs": [
+        22.0,
+        22.0,
+        22.0,
+        22.0,
+        22.0,
+        22.0,
+        22.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.cold_depths.compound": {
+      "min": 25.0,
+      "median": 25.0,
+      "max": 25.0,
+      "runs": [
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.cold_depths.direct": {
+      "min": 321.0,
+      "median": 321.0,
+      "max": 321.0,
+      "runs": [
+        321.0,
+        321.0,
+        321.0,
+        321.0,
+        321.0,
+        321.0,
+        321.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.cold_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.cold_depths.possessive": {
+      "min": 5.0,
+      "median": 5.0,
+      "max": 5.0,
+      "runs": [
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.cold_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.cold_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.cold_depths.stem_map": {
+      "min": 653.0,
+      "median": 653.0,
+      "max": 653.0,
+      "runs": [
+        653.0,
+        653.0,
+        653.0,
+        653.0,
+        653.0,
+        653.0,
+        653.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.cold_depths.unknown": {
+      "min": 128.0,
+      "median": 128.0,
+      "max": 128.0,
+      "runs": [
+        128.0,
+        128.0,
+        128.0,
+        128.0,
+        128.0,
+        128.0,
+        128.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.cold_proper_names": {
+      "min": 12.0,
+      "median": 12.0,
+      "max": 12.0,
+      "runs": [
+        12.0,
+        12.0,
+        12.0,
+        12.0,
+        12.0,
+        12.0,
+        12.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.morphology_cold_ms": {
+      "min": 688.236015,
+      "median": 696.859058,
+      "max": 720.7205759999999,
+      "runs": [
+        696.859058,
+        720.7205759999999,
+        696.095266,
+        692.820374,
+        716.729734,
+        716.59878,
+        688.236015
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.morphology_warm_ms": {
+      "min": 0.48491300000000004,
+      "median": 0.51725,
+      "max": 0.5791299999999999,
+      "runs": [
+        0.49434200000000006,
+        0.5216500000000001,
+        0.5791299999999999,
+        0.487148,
+        0.51725,
+        0.518367,
+        0.48491300000000004
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.parallel.grammar_diagnostics": {
+      "min": 6.0,
+      "median": 6.0,
+      "max": 6.0,
+      "runs": [
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0,
+        6.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.parallel.morphology_ms": {
+      "min": 216.667401,
+      "median": 223.603479,
+      "max": 229.940034,
+      "runs": [
+        225.07700599999998,
+        228.042566,
+        229.940034,
+        216.667401,
+        219.998026,
+        223.603479,
+        222.001304
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.parallel.style_diagnostics": {
+      "min": 10.0,
+      "median": 10.0,
+      "max": 10.0,
+      "runs": [
+        10.0,
+        10.0,
+        10.0,
+        10.0,
+        10.0,
+        10.0,
+        10.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.parallel.threads": {
+      "min": 4.0,
+      "median": 4.0,
+      "max": 4.0,
+      "runs": [
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.rules_ms": {
+      "min": 10.541881,
+      "median": 10.757134,
+      "max": 11.996969,
+      "runs": [
+        10.541881,
+        11.315451000000001,
+        11.616121,
+        10.757134,
+        11.996969,
+        10.558713000000001,
+        10.702238
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.sentence_cache_cold_ms": {
+      "min": 8.532596999999999,
+      "median": 9.183594,
+      "max": 10.310494,
+      "runs": [
+        8.603696,
+        9.456048,
+        9.979584,
+        9.183594,
+        10.310494,
+        8.532596999999999,
+        8.976094
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.sentence_cache_edit_hits": {
+      "min": 129.0,
+      "median": 129.0,
+      "max": 129.0,
+      "runs": [
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.sentence_cache_edit_misses": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.sentence_cache_edit_ms": {
+      "min": 0.889158,
+      "median": 0.909343,
+      "max": 0.945451,
+      "runs": [
+        0.8903449999999999,
+        0.932461,
+        0.9065489999999999,
+        0.909343,
+        0.889158,
+        0.9118569999999999,
+        0.945451
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.sentence_cache_edit_prep_ms": {
+      "min": 0.820504,
+      "median": 0.93302,
+      "max": 1.231663,
+      "runs": [
+        0.820504,
+        1.231663,
+        0.945452,
+        0.854657,
+        0.83105,
+        0.93302,
+        1.062087
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.sentence_cache_edit_style_ms": {
+      "min": 1.2936130000000001,
+      "median": 1.420237,
+      "max": 1.5028599999999999,
+      "runs": [
+        1.315614,
+        1.5028599999999999,
+        1.420237,
+        1.3314679999999999,
+        1.2936130000000001,
+        1.4420279999999999,
+        1.4239389999999998
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.sentence_cache_edit_total_ms": {
+      "min": 3.013821,
+      "median": 3.2722379999999998,
+      "max": 3.6669840000000002,
+      "runs": [
+        3.026463,
+        3.6669840000000002,
+        3.2722379999999998,
+        3.095468,
+        3.013821,
+        3.286905,
+        3.431477
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.sentence_cache_entries": {
+      "min": 131.0,
+      "median": 131.0,
+      "max": 131.0,
+      "runs": [
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.sentence_cache_warm_ms": {
+      "min": 0.718115,
+      "median": 0.7306870000000001,
+      "max": 0.744445,
+      "runs": [
+        0.7306870000000001,
+        0.744445,
+        0.7267760000000001,
+        0.718115,
+        0.743607,
+        0.7195819999999999,
+        0.738789
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.style_fresh_cache_ms": {
+      "min": 346.143425,
+      "median": 357.142631,
+      "max": 366.831533,
+      "runs": [
+        346.143425,
+        352.795876,
+        366.831533,
+        357.142631,
+        358.97703199999995,
+        347.944929,
+        362.995321
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.style_ms": {
+      "min": 2.346063,
+      "median": 2.471638,
+      "max": 2.998876,
+      "runs": [
+        2.394463,
+        2.998876,
+        2.471638,
+        2.6264779999999996,
+        2.895928,
+        2.346063,
+        2.384755
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.syntax_ms": {
+      "min": 4.89334,
+      "median": 5.216149,
+      "max": 7.188557,
+      "runs": [
+        5.055373,
+        5.449001999999999,
+        5.340957,
+        5.216149,
+        7.188557,
+        5.0129090000000005,
+        4.89334
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.tokenise_ms": {
+      "min": 0.5815049999999999,
+      "median": 0.61007,
+      "max": 1.252127,
+      "runs": [
+        1.252127,
+        0.6058790000000001,
+        0.5815049999999999,
+        0.6306740000000001,
+        0.593657,
+        0.611048,
+        0.61007
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.warm_cache.hits": {
+      "min": 6752.0,
+      "median": 6752.0,
+      "max": 6752.0,
+      "runs": [
+        6752.0,
+        6752.0,
+        6752.0,
+        6752.0,
+        6752.0,
+        6752.0,
+        6752.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.warm_cache.misses": {
+      "min": 1157.0,
+      "median": 1157.0,
+      "max": 1157.0,
+      "runs": [
+        1157.0,
+        1157.0,
+        1157.0,
+        1157.0,
+        1157.0,
+        1157.0,
+        1157.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.warm_cache.words": {
+      "min": 1154.0,
+      "median": 1154.0,
+      "max": 1154.0,
+      "runs": [
+        1154.0,
+        1154.0,
+        1154.0,
+        1154.0,
+        1154.0,
+        1154.0,
+        1154.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.warm_deep_upgrades": {
+      "min": 3.0,
+      "median": 3.0,
+      "max": 3.0,
+      "runs": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.warm_depths.clitic": {
+      "min": 22.0,
+      "median": 22.0,
+      "max": 22.0,
+      "runs": [
+        22.0,
+        22.0,
+        22.0,
+        22.0,
+        22.0,
+        22.0,
+        22.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.warm_depths.compound": {
+      "min": 25.0,
+      "median": 25.0,
+      "max": 25.0,
+      "runs": [
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.warm_depths.direct": {
+      "min": 321.0,
+      "median": 321.0,
+      "max": 321.0,
+      "runs": [
+        321.0,
+        321.0,
+        321.0,
+        321.0,
+        321.0,
+        321.0,
+        321.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.warm_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.warm_depths.possessive": {
+      "min": 5.0,
+      "median": 5.0,
+      "max": 5.0,
+      "runs": [
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.warm_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.warm_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.warm_depths.stem_map": {
+      "min": 653.0,
+      "median": 653.0,
+      "max": 653.0,
+      "runs": [
+        653.0,
+        653.0,
+        653.0,
+        653.0,
+        653.0,
+        653.0,
+        653.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.warm_depths.unknown": {
+      "min": 128.0,
+      "median": 128.0,
+      "max": 128.0,
+      "runs": [
+        128.0,
+        128.0,
+        128.0,
+        128.0,
+        128.0,
+        128.0,
+        128.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.warm_proper_names": {
+      "min": 48.0,
+      "median": 48.0,
+      "max": 48.0,
+      "runs": [
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0,
+        48.0
+      ]
+    },
+    "grammar_style.page-errors-8pct.threads4.words": {
+      "min": 1959.0,
+      "median": 1959.0,
+      "max": 1959.0,
+      "runs": [
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0
+      ]
+    },
+    "check_suggest.page-errors-8pct.corpus.tokens": {
+      "min": 1959.0,
+      "median": 1959.0,
+      "max": 1959.0,
+      "runs": [
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0
+      ]
+    },
+    "check_suggest.page-errors-8pct.corpus.unknown": {
+      "min": 187.0,
+      "median": 187.0,
+      "max": 187.0,
+      "runs": [
+        187.0,
+        187.0,
+        187.0,
+        187.0,
+        187.0,
+        187.0,
+        187.0
+      ]
+    },
+    "check_suggest.page-errors-8pct.corpus.total_ms": {
+      "min": 358.434,
+      "median": 370.965,
+      "max": 381.17,
+      "runs": [
+        381.17,
+        376.248,
+        370.965,
+        366.378,
+        358.434,
+        373.094,
+        358.73
+      ]
+    },
+    "check_suggest.page-errors-8pct.corpus.per_token_ms": {
+      "min": 0.183,
+      "median": 0.1894,
+      "max": 0.1946,
+      "runs": [
+        0.1946,
+        0.1921,
+        0.1894,
+        0.187,
+        0.183,
+        0.1905,
+        0.1831
+      ]
+    },
+    "check_suggest.page-errors-8pct.corpus.p50_us": {
+      "min": 3.0,
+      "median": 3.0,
+      "max": 3.0,
+      "runs": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ]
+    },
+    "check_suggest.page-errors-8pct.corpus.p95_us": {
+      "min": 587.0,
+      "median": 598.0,
+      "max": 645.0,
+      "runs": [
+        638.0,
+        645.0,
+        627.0,
+        587.0,
+        591.0,
+        598.0,
+        592.0
+      ]
+    },
+    "check_suggest.page-errors-8pct.corpus.p99_us": {
+      "min": 2708.0,
+      "median": 2806.0,
+      "max": 3006.0,
+      "runs": [
+        3006.0,
+        2806.0,
+        2871.0,
+        2928.0,
+        2708.0,
+        2796.0,
+        2733.0
+      ]
+    },
+    "check_suggest.page-errors-8pct.corpus.max_us": {
+      "min": 14259.0,
+      "median": 14926.0,
+      "max": 15815.0,
+      "runs": [
+        15815.0,
+        15155.0,
+        14926.0,
+        14900.0,
+        14259.0,
+        15008.0,
+        14452.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.all_ms": {
+      "min": 8.916728,
+      "median": 9.131701000000001,
+      "max": 9.929506,
+      "runs": [
+        9.174933,
+        9.173466,
+        9.065421,
+        9.029940999999999,
+        8.916728,
+        9.131701000000001,
+        9.929506
+      ]
+    },
+    "grammar_style.page-errors-x.single.bytes": {
+      "min": 17258.0,
+      "median": 17258.0,
+      "max": 17258.0,
+      "runs": [
+        17258.0,
+        17258.0,
+        17258.0,
+        17258.0,
+        17258.0,
+        17258.0,
+        17258.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.cold_cache.hits": {
+      "min": 829.0,
+      "median": 829.0,
+      "max": 829.0,
+      "runs": [
+        829.0,
+        829.0,
+        829.0,
+        829.0,
+        829.0,
+        829.0,
+        829.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.cold_cache.misses": {
+      "min": 1146.0,
+      "median": 1146.0,
+      "max": 1146.0,
+      "runs": [
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.cold_cache.words": {
+      "min": 1146.0,
+      "median": 1146.0,
+      "max": 1146.0,
+      "runs": [
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.cold_deep_upgrades": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.cold_depths.clitic": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.cold_depths.compound": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.cold_depths.direct": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.cold_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.cold_depths.possessive": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.cold_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.cold_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.cold_depths.stem_map": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.cold_depths.unknown": {
+      "min": 1146.0,
+      "median": 1146.0,
+      "max": 1146.0,
+      "runs": [
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.cold_proper_names": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.morphology_cold_ms": {
+      "min": 767.3574960000001,
+      "median": 769.501716,
+      "max": 811.133341,
+      "runs": [
+        793.8520570000001,
+        799.7241630000001,
+        769.501716,
+        768.4505230000001,
+        767.3574960000001,
+        768.27096,
+        811.133341
+      ]
+    },
+    "grammar_style.page-errors-x.single.morphology_warm_ms": {
+      "min": 0.537783,
+      "median": 0.555383,
+      "max": 0.581784,
+      "runs": [
+        0.537783,
+        0.555383,
+        0.5484,
+        0.576266,
+        0.547352,
+        0.581784,
+        0.557828
+      ]
+    },
+    "grammar_style.page-errors-x.single.rules_ms": {
+      "min": 4.078074999999999,
+      "median": 4.219225,
+      "max": 4.37644,
+      "runs": [
+        4.349341,
+        4.11076,
+        4.37644,
+        4.253099,
+        4.164609,
+        4.078074999999999,
+        4.219225
+      ]
+    },
+    "grammar_style.page-errors-x.single.sentence_cache_cold_ms": {
+      "min": 4.0012479999999995,
+      "median": 4.100423,
+      "max": 4.184024,
+      "runs": [
+        4.157064999999999,
+        4.015495,
+        4.0012479999999995,
+        4.0661309999999995,
+        4.184024,
+        4.135903,
+        4.100423
+      ]
+    },
+    "grammar_style.page-errors-x.single.sentence_cache_edit_hits": {
+      "min": 129.0,
+      "median": 129.0,
+      "max": 129.0,
+      "runs": [
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.sentence_cache_edit_misses": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.sentence_cache_edit_ms": {
+      "min": 0.7827189999999999,
+      "median": 0.804789,
+      "max": 0.831748,
+      "runs": [
+        0.804789,
+        0.804929,
+        0.7827189999999999,
+        0.7894939999999999,
+        0.819945,
+        0.831748,
+        0.791729
+      ]
+    },
+    "grammar_style.page-errors-x.single.sentence_cache_edit_prep_ms": {
+      "min": 0.741931,
+      "median": 0.811773,
+      "max": 0.9769500000000001,
+      "runs": [
+        0.76931,
+        0.817501,
+        0.761697,
+        0.741931,
+        0.9543210000000001,
+        0.9769500000000001,
+        0.811773
+      ]
+    },
+    "grammar_style.page-errors-x.single.sentence_cache_edit_style_ms": {
+      "min": 1.138424,
+      "median": 1.201003,
+      "max": 1.369183,
+      "runs": [
+        1.216577,
+        1.369183,
+        1.186685,
+        1.138424,
+        1.201003,
+        1.196393,
+        1.241371
+      ]
+    },
+    "grammar_style.page-errors-x.single.sentence_cache_edit_total_ms": {
+      "min": 2.669849,
+      "median": 2.8448729999999998,
+      "max": 3.005091,
+      "runs": [
+        2.790676,
+        2.991613,
+        2.731101,
+        2.669849,
+        2.975269,
+        3.005091,
+        2.8448729999999998
+      ]
+    },
+    "grammar_style.page-errors-x.single.sentence_cache_entries": {
+      "min": 131.0,
+      "median": 131.0,
+      "max": 131.0,
+      "runs": [
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.sentence_cache_warm_ms": {
+      "min": 0.7093849999999999,
+      "median": 0.739278,
+      "max": 0.847881,
+      "runs": [
+        0.739278,
+        0.7424200000000001,
+        0.847881,
+        0.743398,
+        0.7093849999999999,
+        0.73369,
+        0.726147
+      ]
+    },
+    "grammar_style.page-errors-x.single.style_fresh_cache_ms": {
+      "min": 58.320162,
+      "median": 59.950064,
+      "max": 61.323856000000006,
+      "runs": [
+        61.04372,
+        61.323856000000006,
+        59.6114,
+        58.755836,
+        58.320162,
+        60.140104,
+        59.950064
+      ]
+    },
+    "grammar_style.page-errors-x.single.style_ms": {
+      "min": 2.327555,
+      "median": 2.343897,
+      "max": 2.8203590000000003,
+      "runs": [
+        2.8203590000000003,
+        2.379726,
+        2.505931,
+        2.336704,
+        2.341872,
+        2.327555,
+        2.343897
+      ]
+    },
+    "grammar_style.page-errors-x.single.syntax_ms": {
+      "min": 2.894113,
+      "median": 2.920932,
+      "max": 3.166566,
+      "runs": [
+        2.912342,
+        3.0088630000000003,
+        2.894113,
+        3.166566,
+        2.920932,
+        2.906405,
+        3.056076
+      ]
+    },
+    "grammar_style.page-errors-x.single.tokenise_ms": {
+      "min": 0.641359,
+      "median": 0.6667109999999999,
+      "max": 1.40117,
+      "runs": [
+        0.760789,
+        0.641359,
+        1.40117,
+        0.6667109999999999,
+        0.682007,
+        0.661613,
+        0.657632
+      ]
+    },
+    "grammar_style.page-errors-x.single.warm_cache.hits": {
+      "min": 6754.0,
+      "median": 6754.0,
+      "max": 6754.0,
+      "runs": [
+        6754.0,
+        6754.0,
+        6754.0,
+        6754.0,
+        6754.0,
+        6754.0,
+        6754.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.warm_cache.misses": {
+      "min": 1146.0,
+      "median": 1146.0,
+      "max": 1146.0,
+      "runs": [
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.warm_cache.words": {
+      "min": 1146.0,
+      "median": 1146.0,
+      "max": 1146.0,
+      "runs": [
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.warm_deep_upgrades": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.warm_depths.clitic": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.warm_depths.compound": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.warm_depths.direct": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.warm_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.warm_depths.possessive": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.warm_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.warm_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.warm_depths.stem_map": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.warm_depths.unknown": {
+      "min": 1146.0,
+      "median": 1146.0,
+      "max": 1146.0,
+      "runs": [
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.warm_proper_names": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.single.words": {
+      "min": 1959.0,
+      "median": 1959.0,
+      "max": 1959.0,
+      "runs": [
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.all_ms": {
+      "min": 8.846048,
+      "median": 9.275016,
+      "max": 10.159566,
+      "runs": [
+        8.846048,
+        9.001656,
+        9.297087000000001,
+        10.159566,
+        9.275016,
+        8.986709000000001,
+        9.623109
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.bytes": {
+      "min": 17258.0,
+      "median": 17258.0,
+      "max": 17258.0,
+      "runs": [
+        17258.0,
+        17258.0,
+        17258.0,
+        17258.0,
+        17258.0,
+        17258.0,
+        17258.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.cold_cache.hits": {
+      "min": 829.0,
+      "median": 829.0,
+      "max": 829.0,
+      "runs": [
+        829.0,
+        829.0,
+        829.0,
+        829.0,
+        829.0,
+        829.0,
+        829.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.cold_cache.misses": {
+      "min": 1146.0,
+      "median": 1146.0,
+      "max": 1146.0,
+      "runs": [
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.cold_cache.words": {
+      "min": 1146.0,
+      "median": 1146.0,
+      "max": 1146.0,
+      "runs": [
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.cold_deep_upgrades": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.cold_depths.clitic": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.cold_depths.compound": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.cold_depths.direct": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.cold_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.cold_depths.possessive": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.cold_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.cold_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.cold_depths.stem_map": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.cold_depths.unknown": {
+      "min": 1146.0,
+      "median": 1146.0,
+      "max": 1146.0,
+      "runs": [
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.cold_proper_names": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.morphology_cold_ms": {
+      "min": 764.929298,
+      "median": 769.9370399999999,
+      "max": 837.3495800000001,
+      "runs": [
+        769.2750080000001,
+        769.742739,
+        776.942331,
+        805.8508410000001,
+        769.9370399999999,
+        764.929298,
+        837.3495800000001
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.morphology_warm_ms": {
+      "min": 0.567466,
+      "median": 0.795011,
+      "max": 1.127459,
+      "runs": [
+        1.127459,
+        1.046233,
+        0.588488,
+        1.112234,
+        0.795011,
+        0.613073,
+        0.567466
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.parallel.grammar_diagnostics": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.parallel.morphology_ms": {
+      "min": 248.38474499999998,
+      "median": 252.202309,
+      "max": 265.332534,
+      "runs": [
+        265.332534,
+        257.508415,
+        248.38474499999998,
+        258.972233,
+        251.53217500000002,
+        252.10418,
+        252.202309
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.parallel.style_diagnostics": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.parallel.threads": {
+      "min": 4.0,
+      "median": 4.0,
+      "max": 4.0,
+      "runs": [
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.rules_ms": {
+      "min": 4.028486,
+      "median": 4.1062199999999995,
+      "max": 4.410662,
+      "runs": [
+        4.053629000000001,
+        4.08855,
+        4.136043,
+        4.289556,
+        4.028486,
+        4.1062199999999995,
+        4.410662
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.sentence_cache_cold_ms": {
+      "min": 4.030791,
+      "median": 4.133877999999999,
+      "max": 4.532325999999999,
+      "runs": [
+        4.046855,
+        4.047833,
+        4.181579999999999,
+        4.532325999999999,
+        4.133877999999999,
+        4.030791,
+        4.42924
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.sentence_cache_edit_hits": {
+      "min": 129.0,
+      "median": 129.0,
+      "max": 129.0,
+      "runs": [
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0,
+        129.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.sentence_cache_edit_misses": {
+      "min": 1.0,
+      "median": 1.0,
+      "max": 1.0,
+      "runs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.sentence_cache_edit_ms": {
+      "min": 0.7709159999999999,
+      "median": 0.795012,
+      "max": 0.947198,
+      "runs": [
+        0.795012,
+        0.838663,
+        0.7898430000000001,
+        0.947198,
+        0.7709159999999999,
+        0.780903,
+        0.806326
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.sentence_cache_edit_prep_ms": {
+      "min": 0.772103,
+      "median": 0.813101,
+      "max": 0.889507,
+      "runs": [
+        0.810307,
+        0.858778,
+        0.889507,
+        0.794663,
+        0.813101,
+        0.772103,
+        0.84432
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.sentence_cache_edit_style_ms": {
+      "min": 1.169853,
+      "median": 1.198558,
+      "max": 1.2797850000000002,
+      "runs": [
+        1.186266,
+        1.201491,
+        1.258343,
+        1.2797850000000002,
+        1.198558,
+        1.169853,
+        1.183542
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.sentence_cache_edit_total_ms": {
+      "min": 2.7228589999999997,
+      "median": 2.834188,
+      "max": 3.0216460000000005,
+      "runs": [
+        2.7915850000000004,
+        2.8989320000000003,
+        2.9376930000000003,
+        3.0216460000000005,
+        2.7825749999999996,
+        2.7228589999999997,
+        2.834188
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.sentence_cache_entries": {
+      "min": 131.0,
+      "median": 131.0,
+      "max": 131.0,
+      "runs": [
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0,
+        131.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.sentence_cache_warm_ms": {
+      "min": 0.706102,
+      "median": 0.713366,
+      "max": 0.740186,
+      "runs": [
+        0.716718,
+        0.7389290000000001,
+        0.7093849999999999,
+        0.713366,
+        0.712877,
+        0.706102,
+        0.740186
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.style_fresh_cache_ms": {
+      "min": 58.567751,
+      "median": 59.370306,
+      "max": 65.362329,
+      "runs": [
+        58.81143,
+        59.370306,
+        60.535619,
+        65.362329,
+        58.567751,
+        58.781747,
+        61.745281999999996
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.style_ms": {
+      "min": 2.030516,
+      "median": 2.129692,
+      "max": 2.423238,
+      "runs": [
+        2.423238,
+        2.215108,
+        2.17474,
+        2.0812209999999998,
+        2.129692,
+        2.030516,
+        2.075984
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.syntax_ms": {
+      "min": 2.569836,
+      "median": 2.6449860000000003,
+      "max": 3.7570110000000003,
+      "runs": [
+        2.721742,
+        2.8422899999999998,
+        2.640516,
+        3.7570110000000003,
+        2.6449860000000003,
+        2.569836,
+        2.570953
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.tokenise_ms": {
+      "min": 0.6364,
+      "median": 0.683055,
+      "max": 1.720837,
+      "runs": [
+        1.360452,
+        0.676699,
+        0.683055,
+        0.6364,
+        1.720837,
+        0.6963940000000001,
+        0.652044
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.warm_cache.hits": {
+      "min": 6754.0,
+      "median": 6754.0,
+      "max": 6754.0,
+      "runs": [
+        6754.0,
+        6754.0,
+        6754.0,
+        6754.0,
+        6754.0,
+        6754.0,
+        6754.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.warm_cache.misses": {
+      "min": 1146.0,
+      "median": 1146.0,
+      "max": 1146.0,
+      "runs": [
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.warm_cache.words": {
+      "min": 1146.0,
+      "median": 1146.0,
+      "max": 1146.0,
+      "runs": [
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.warm_deep_upgrades": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.warm_depths.clitic": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.warm_depths.compound": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.warm_depths.direct": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.warm_depths.heads_tails": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.warm_depths.possessive": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.warm_depths.prefix": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.warm_depths.proper_name": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.warm_depths.stem_map": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.warm_depths.unknown": {
+      "min": 1146.0,
+      "median": 1146.0,
+      "max": 1146.0,
+      "runs": [
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0,
+        1146.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.warm_proper_names": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0,
+      "runs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "grammar_style.page-errors-x.threads4.words": {
+      "min": 1959.0,
+      "median": 1959.0,
+      "max": 1959.0,
+      "runs": [
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0
+      ]
+    },
+    "check_suggest.page-errors-x.corpus.tokens": {
+      "min": 1959.0,
+      "median": 1959.0,
+      "max": 1959.0,
+      "runs": [
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0
+      ]
+    },
+    "check_suggest.page-errors-x.corpus.unknown": {
+      "min": 1959.0,
+      "median": 1959.0,
+      "max": 1959.0,
+      "runs": [
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0,
+        1959.0
+      ]
+    },
+    "check_suggest.page-errors-x.corpus.total_ms": {
+      "min": 757.045,
+      "median": 776.547,
+      "max": 815.271,
+      "runs": [
+        757.045,
+        791.381,
+        763.522,
+        768.847,
+        786.719,
+        815.271,
+        776.547
+      ]
+    },
+    "check_suggest.page-errors-x.corpus.per_token_ms": {
+      "min": 0.3864,
+      "median": 0.3964,
+      "max": 0.4162,
+      "runs": [
+        0.3864,
+        0.404,
+        0.3898,
+        0.3925,
+        0.4016,
+        0.4162,
+        0.3964
+      ]
+    },
+    "check_suggest.page-errors-x.corpus.p50_us": {
+      "min": 41.0,
+      "median": 43.0,
+      "max": 47.0,
+      "runs": [
+        43.0,
+        43.0,
+        41.0,
+        41.0,
+        44.0,
+        47.0,
+        41.0
+      ]
+    },
+    "check_suggest.page-errors-x.corpus.p95_us": {
+      "min": 1777.0,
+      "median": 1849.0,
+      "max": 1914.0,
+      "runs": [
+        1777.0,
+        1892.0,
+        1817.0,
+        1820.0,
+        1869.0,
+        1914.0,
+        1849.0
+      ]
+    },
+    "check_suggest.page-errors-x.corpus.p99_us": {
+      "min": 5850.0,
+      "median": 5997.0,
+      "max": 6055.0,
+      "runs": [
+        5850.0,
+        6007.0,
+        5936.0,
+        5890.0,
+        6055.0,
+        5997.0,
+        6031.0
+      ]
+    },
+    "check_suggest.page-errors-x.corpus.max_us": {
+      "min": 20753.0,
+      "median": 21797.0,
+      "max": 22411.0,
+      "runs": [
+        20753.0,
+        21818.0,
+        21824.0,
+        21644.0,
+        21282.0,
+        22411.0,
+        21797.0
+      ]
+    },
+    "index.single_thread.analyses_bytes": {
+      "min": 612886804.0,
+      "median": 612886804.0,
+      "max": 612886804.0,
+      "runs": [
+        612886804.0,
+        612886804.0,
+        612886804.0
+      ]
+    },
+    "index.single_thread.base_classes_bytes": {
+      "min": 191732.0,
+      "median": 191732.0,
+      "max": 191732.0,
+      "runs": [
+        191732.0,
+        191732.0,
+        191732.0
+      ]
+    },
+    "index.single_thread.base_poses_bytes": {
+      "min": 105931.0,
+      "median": 105931.0,
+      "max": 105931.0,
+      "runs": [
+        105931.0,
+        105931.0,
+        105931.0
+      ]
+    },
+    "index.single_thread.base_words_bytes": {
+      "min": 1176672.0,
+      "median": 1176672.0,
+      "max": 1176672.0,
+      "runs": [
+        1176672.0,
+        1176672.0,
+        1176672.0
+      ]
+    },
+    "index.single_thread.build_ms": {
+      "min": 22934.704776,
+      "median": 23038.974378,
+      "max": 23214.518857000003,
+      "runs": [
+        22934.704776,
+        23038.974378,
+        23214.518857000003
+      ]
+    },
+    "index.single_thread.first_base_bytes": {
+      "min": 136539576.0,
+      "median": 136539576.0,
+      "max": 136539576.0,
+      "runs": [
+        136539576.0,
+        136539576.0,
+        136539576.0
+      ]
+    },
+    "index.single_thread.known_bytes": {
+      "min": 471826268.0,
+      "median": 471826268.0,
+      "max": 471826268.0,
+      "runs": [
+        471826268.0,
+        471826268.0,
+        471826268.0
+      ]
+    },
+    "index.single_thread.lemmas": {
+      "min": 104293.0,
+      "median": 104293.0,
+      "max": 104293.0,
+      "runs": [
+        104293.0,
+        104293.0,
+        104293.0
+      ]
+    },
+    "index.single_thread.lemmas_bytes": {
+      "min": 2642420.0,
+      "median": 2642420.0,
+      "max": 2642420.0,
+      "runs": [
+        2642420.0,
+        2642420.0,
+        2642420.0
+      ]
+    },
+    "index.single_thread.more_bases_bytes": {
+      "min": 2830776.0,
+      "median": 2830776.0,
+      "max": 2830776.0,
+      "runs": [
+        2830776.0,
+        2830776.0,
+        2830776.0
+      ]
+    },
+    "index.single_thread.suggestible": {
+      "min": 16885834.0,
+      "median": 16885834.0,
+      "max": 16885834.0,
+      "runs": [
+        16885834.0,
+        16885834.0,
+        16885834.0
+      ]
+    },
+    "index.single_thread.suggestible_bytes": {
+      "min": 2133431.0,
+      "median": 2133431.0,
+      "max": 2133431.0,
+      "runs": [
+        2133431.0,
+        2133431.0,
+        2133431.0
+      ]
+    },
+    "index.single_thread.total_bytes": {
+      "min": 1230333610.0,
+      "median": 1230333610.0,
+      "max": 1230333610.0,
+      "runs": [
+        1230333610.0,
+        1230333610.0,
+        1230333610.0
+      ]
+    },
+    "index.single_thread.words": {
+      "min": 17067447.0,
+      "median": 17067447.0,
+      "max": 17067447.0,
+      "runs": [
+        17067447.0,
+        17067447.0,
+        17067447.0
+      ]
+    }
+  },
+  "correctness": {
+    "page-2000": {
+      "corpus": {
+        "path": "tests/fixtures/perf/page-2000.txt",
+        "bytes": 15280,
+        "words": 1959,
+        "sha256": "167b2ef8092ebcf3ad1a0d07cf1d0336140a6ee03af11f2a58af8715cc193023"
+      },
+      "diagnostics": {
+        "total": 3,
+        "hash": "db3f1c62931524bb",
+        "counts": {
+          "subject_predicate_agreement": 2,
+          "unbalanced_quote": 1
+        }
+      }
+    },
+    "homonyms": {
+      "corpus": {
+        "path": "tests/fixtures/perf/homonyms.txt",
+        "bytes": 316,
+        "words": 49,
+        "sha256": "6794b76a14d93249431b97c8df94cfb611c5cec480298a01ff42f7e4f7e8d6d9"
+      },
+      "diagnostics": {
+        "total": 0,
+        "hash": "cbf29ce484222325",
+        "counts": {}
+      }
+    },
+    "line-wrap": {
+      "corpus": {
+        "path": "tests/fixtures/perf/line-wrap.txt",
+        "bytes": 407,
+        "words": 55,
+        "sha256": "587e244aa2ed5017e2afb44ef3a8470fd58dfafca06d4f48cf651fad8fc57b10"
+      },
+      "diagnostics": {
+        "total": 0,
+        "hash": "cbf29ce484222325",
+        "counts": {}
+      }
+    },
+    "page-errors-8pct": {
+      "corpus": {
+        "path": "reports/corpora/page-errors-8pct.txt",
+        "bytes": 15298,
+        "words": 1959,
+        "sha256": "51cc8fe46c8bce7433aca43e75cc9dc501617f5d4a1cff1b44cb7e113abc7377"
+      },
+      "diagnostics": {
+        "total": 6,
+        "hash": "e962bef9ac5a8d2d",
+        "counts": {
+          "comma_missing": 2,
+          "possessive_agreement": 1,
+          "subject_predicate_agreement": 2,
+          "unbalanced_quote": 1
+        }
+      }
+    },
+    "page-errors-x": {
+      "corpus": {
+        "path": "reports/corpora/page-errors-x.txt",
+        "bytes": 17258,
+        "words": 1959,
+        "sha256": "bb6b54b3f83f0161b40834818be299f62111f7021baca28b25d757f0d3d7ed3e"
+      },
+      "diagnostics": {
+        "total": 1,
+        "hash": "52caca8b4b4013b7",
+        "counts": {
+          "unbalanced_quote": 1
+        }
+      }
+    },
+    "forms": {
+      "kissa": "e7b6c7889ab28d8ba5a279e862c19da97834ffaef0e11972be5bf57144d42e08",
+      "talo": "f1e559bb9a563169c4e81b958d9150cdaaa94bfea5bca47fe4ba7c733eb9f127",
+      "havas": "6e266c98f1440034ed5e545d9669e78d4679da9dfc22bca747567bfec0d25cdd",
+      "live": "cfa38c90a297e50cf7c675470926492b398e1b183f96298a7dc33c8d5f9918b2",
+      "juosta": "042176e7a5bed90bc15b9a6aed19aee7b93d6b99490ba4794673fe80db602a62",
+      "pieni": "24636a0cc2c55076a049735ab713c21bc59652bb443bf2d35e8ba6de1ecf5881",
+      "ahkeraliisa": "3d073a3ea0eeddd8822a20209b0cfc88a0821972026395639f1eb7b89342ba1a",
+      "pikkuaivot": "4876bbda0bead3fc60ff55e0ee2e83a4f77b08d380344d6e4665b7f14e5400fd"
+    }
+  },
+  "resources": {},
+  "raw": {}
+}

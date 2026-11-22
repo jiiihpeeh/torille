@@ -228,14 +228,14 @@ The first full suite run, recorded as `bench/baselines/reference.json`
 are not budgets.
 
 ```text
-page-2000 cold morphology      684.1 ms median (single), 206.1 ms (4 workers)
+page-2000 cold morphology      673.7 ms median (single), 201.9 ms (4 workers)
 page-2000 warm morphology        0.46 ms
-page-2000 grammar+style warm    19.39 ms
-page-2000 sentence-cache warm    0.76 ms
-8 % typo corpus cold           741.2 ms
-all-unknown corpus cold        787.3 ms
-check_suggest p50 / p95          3 us / 509 us
-reverse-index build / size      22.6 s / 1.23 GB
+page-2000 grammar+style warm    19.29 ms
+page-2000 sentence-cache warm    0.73 ms
+8 % typo corpus cold           729.3 ms
+all-unknown corpus cold        769.5 ms
+check_suggest p50 / p95          3 us / 506 us
+reverse-index build / size      23.0 s / 1.23 GB
 correctness                     3 / 6 / 1 diagnostics; 8 form canaries
 ```
 
