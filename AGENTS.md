@@ -50,6 +50,8 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
 - `misc_md/PLAN_GRAMMAR_STYLE_PERF.md` — the grammar and style performance plan: one
   shared morphology cache with cached case/number, cold-path candidate pruning,
   sentence-level incremental checks and worker chunking.
+- `misc_md/PLAN_BENCHMARK_SUITE.md` — the reproducible benchmark suite:
+  schema, driver, corpora, native/browser layers, baselines and tolerances.
 - `misc_md/PLAN_PROBE_PERF.md` — the next probe-performance slice: per-stem
   ending signatures, targeted membership checks for the dominant verb classes,
   a shared stem-probe context and the remaining allocation/hasher work.

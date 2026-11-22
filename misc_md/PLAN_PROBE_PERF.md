@@ -579,6 +579,11 @@ paradigm cache warm across case forms. No change.
 
 ## 12. Benchmarking additions
 
+The suite-level orchestration (one JSON report, corpora hashes, baselines and
+same-machine comparison) is planned in
+[`PLAN_BENCHMARK_SUITE.md`](PLAN_BENCHMARK_SUITE.md); the metrics below are
+the probe-specific inputs to it.
+
 Extend `perf_grammar_style` (or add a companion tool) with:
 
 | metric | why |

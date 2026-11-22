@@ -2,6 +2,10 @@
 
 Status: **plan, not implemented** (2026-10-29).
 
+The reproducible measurement layer is
+[`PLAN_BENCHMARK_SUITE.md`](PLAN_BENCHMARK_SUITE.md); this file owns the
+check/suggest optimisations it measures.
+
 This is the performance plan for the two user-facing operations:
 
 - **check** — is this word real? (`check`, `check_fast`, `check_normal`,
