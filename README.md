@@ -51,6 +51,7 @@ cargo run --release -p torille-demo-server      # serves the demo on :8765
 
 # extension
 (cd extensions/firefox && npm install && npm run build)   # dist/ and the XPI
+(cd extensions/chromium && npm install && npm run build)  # dist/
 ```
 
 Load the built extension from `extensions/firefox/dist/manifest.json` (or the
@@ -125,11 +126,12 @@ keystroke path, and `style_check` never emits an error or a warning.
 
 `torille::check_all` runs both over **one** morphology pass; `MorphologyCache`
 keeps the readings plus the agreed case and number for each surface. A
-per-textarea `SentenceCache` keys each sentence by its exact text and reuses
-its diagnostics across edits, so an edit re-checks only the sentences that
-changed. On a long text the demo resolves the morphology in a **4-worker
-pool**, then runs syntax/style once over the full document; the Firefox
-extension does the same with a `grammarThreads` setting (1–4, default 4).
+per-textarea `SentenceCache` keys each grammar unit (a sentence plus the left
+context its first word needs) by its text and reuses its diagnostics across
+edits, so an edit re-checks only the changed units. On a long text the demo
+resolves the morphology in a pool of up to **4 workers**, then runs
+syntax/style once over the full document; the Firefox extension does the same
+with a `grammarThreads` setting (1–4, default 4).
 Chromium's MV3 service worker cannot create nested workers, so it keeps the
 sentence-batch fallback. Both paths report progress and cancel on the next
 edit. The Gutenberg reader shows the same spans as underlays. In the
@@ -140,19 +142,25 @@ Measured on the committed 1,959-word fixture
 
 | workload | time |
 |---|---:|
-| cold morphology, native single-thread (wasm shape) | ~2.1–2.3 s |
-| cold grammar + style, release wasm, single thread | ~3.0 s |
-| cold grammar + style, release wasm, 4-worker pool | ~1.4 s |
-| warm grammar rules | ~1.4 ms |
-| warm style | ~2.5–3 ms |
-| warm grammar + style | ~7–9 ms |
-| one edited sentence (native) | 2.6–3.7 ms |
+| cold morphology, native single-thread | 674 ms |
+| cold morphology, native 4-worker | 202 ms |
+| warm morphology | 0.46 ms |
+| warm syntax analysis | 5.41 ms |
+| warm grammar rules | 12.34 ms |
+| warm style | 2.50 ms |
+| warm grammar + style (full pass) | 19.29 ms |
+| one edited sentence (native) | 3.22 ms |
+| cold page, release wasm, 4 workers alive | 364–395 ms |
+| first check of a browser session (worker start-up) | ~950 ms |
 
-The first progress lands at ~110 ms on the full page, so it is not frozen
-while the cold pass runs. The **≤500 ms cold-page target is still open**: the
-pool halves the page, but the merged context pass and the per-lemma paradigm
-walk remain. A precomputed reverse index for the wasm was measured and
-rejected on size and coverage (86.6% at 2.1 MB; 95% would exceed 3 MB). See
+The native rows are the benchmark reference below; the browser rows are the
+last recorded wasm measurements. The **≤500 ms per-page target is met** once
+the four workers exist: a fresh page takes 364–395 ms, and the first check of a
+session pays one ~950 ms start-up for the four worker spawns and wasm
+instantiations. The first progress lands at ~110 ms on the full page, so it is
+not frozen while the cold pass runs. A precomputed reverse index for the wasm was
+measured and rejected on size and coverage (86.6% at 2.1 MB; 95% would exceed
+3 MB). See
 [`misc_md/PLAN_GRAMMAR_STYLE_PERF.md`](misc_md/PLAN_GRAMMAR_STYLE_PERF.md),
 [`misc_md/PLAN_COLD_SEARCH.md`](misc_md/PLAN_COLD_SEARCH.md) and
 [`misc_md/PLAN_COLD_READINGS_CACHE.md`](misc_md/PLAN_COLD_READINGS_CACHE.md).
@@ -191,15 +199,16 @@ torille/
   tests/                catalogue, candidate generation, hyphenation,
                         syntax/style, Wiktionary
   bench/                corpora manifest and the recorded reference report
+  benches/              the Criterion hot-path benchmarks
   docs/                 harness, lexicon, syntax/style checkers,
                         hyphenation, morfologia, benchmarking
 ```
 
 The root package is the library and the workspace root. `tools`,
-`tools/maps-sync` (the `torille-maps` maps-branch helper), `bindings`, the
-wasm crates and the demo server are members, so one `cargo build` covers the
-Rust side. The library has no third-party dependencies: the lexicon and
-the maps are embedded with `include_str!` / `include_bytes!`, so a consumer
+`tools/maps-sync` (the `torille-maps` maps-branch helper), `bindings`,
+`wrapper`, the wasm crates and the demo server are members, so
+`cargo build --workspace` covers the Rust side. The library has no third-party dependencies: the lexicon
+and the maps are embedded with `include_str!` / `include_bytes!`, so a consumer
 needs no data file at runtime.
 
 ## Data and regeneration
@@ -237,9 +246,9 @@ the `-oi-` plural set, the class-6/15 tables — are frozen reference data; thei
 generators live in [`tools/oracle/`](tools/oracle/README.md) and need
 Omorfi/Voikko.
 
-A clean clone builds from the tracked files alone; this was verified by
-cloning `HEAD`, building `--workspace --all-targets` and running the test
-suite with no untracked data. See [`data/README.md`](data/README.md) and
+A clean clone builds with no local data files; this was verified by cloning
+`HEAD`, building `--workspace --all-targets` and running the test suite after
+the automatic `maps` fetch. See [`data/README.md`](data/README.md) and
 [`misc_md/FIX_GENGAPS.md`](misc_md/FIX_GENGAPS.md).
 
 ## Command-line tools
@@ -268,21 +277,21 @@ inventory is in [`tools/README.md`](tools/README.md).
 $ cargo run --release -q -p torille-tools --bin inflect -- talo
 talo  class 1  substantiivi
 
-## plain (160)
+## plain (159)
 talo                        plain    noun nominative singular
 taloa                       plain    noun partitive singular
 ...
 ```
 
-The transcript is abridged; the full paradigm has 160 plain forms, including
-the possessive and comitative columns.
+The transcript is abridged; the full paradigm has 159 plain forms (plus 3
+repaired), including the possessive and comitative columns.
 
 The three confidence sections are separate on purpose: suggestions, accepted
 forms, and merely tolerated forms. `lookup` builds the whole reverse index
 (about 17 million words) once on the command line, then answers instantly;
-bases are ranked by `ClassPrior`, the same ranking the Python binding uses.
-The index is a tool, not a wasm payload: shipping it to the wasm is the route
-the cold-page work rejected on size and coverage.
+bases are ranked by `ClassPrior`. The index is a tool, not a wasm payload:
+shipping it to the wasm is the route the cold-page work rejected on size and
+coverage.
 
 Generators (`gen_*`) and the verification harness are described in
 [`tools/build/README.md`](tools/build/README.md) and
@@ -307,6 +316,10 @@ python3 tools/test_binding_agrees_with_binary.py
 python3 tools/test_reverse_lookup_recall.py
 python3 tools/build/compare_engine_outputs.py --strict
 python3 tools/test_illegal_evidence.py
+(cd extensions/firefox && npm run typecheck && npm test)
+(cd extensions/chromium && npm run typecheck && npm test)
+python3 tools/check_docs.py
+python3 tools/bench.py selftest
 ```
 
 `cargo test` at the repository root tests only `torille` and silently skips
@@ -318,7 +331,8 @@ touched instead.
 For a class-level defect, the report tools turn findings into a change:
 
 ```bash
-python3 tools/report_by_class.py -n 5 -j 8 --split reports/classes
+python3 tools/report_by_class.py -n 5 -j 8 \
+  -o reports/noun-classes.json --split reports/classes
 python3 tools/summarize_class_report.py reports/noun-classes.json
 ```
 
@@ -328,11 +342,11 @@ simply have the most forms. `reports/` is gitignored and regenerable.
 ## Benchmarks
 
 `tools/bench.py` is the reproducible suite. It does not measure anything
-itself: it runs the release `perf_*` drivers, normalises their JSON into one
-versioned report, fingerprints the corpora and the correctness output, and
-compares two reports from the same machine. The measurement primitives remain
-the Criterion bench (`benches/torille.rs`) and the `perf_*` tools in
-`tools/src/bin/`.
+itself: it runs the release tools (`perf_*`, `dump_diagnostics`), normalises
+their JSON into one versioned report, hashes the full paradigm of eight canary
+lemmas, fingerprints the corpora and the correctness output, and compares two
+reports from the same machine. The measurement primitives remain the Criterion
+bench (`benches/torille.rs`) and the `perf_*` tools in `tools/src/bin/`.
 
 ```bash
 python3 tools/bench.py corpora --check       # verify or generate the corpora
@@ -370,10 +384,11 @@ release reference (`bench/baselines/reference.json`, fingerprint
 | `check` / `suggest` p50 / p95 | 3 µs / 506 µs |
 | reverse-index build / size | 23.0 s / 1.23 GB |
 
-These are native release numbers; the wasm-shape table above is the browser
-shape and is slower. The commands, the full schema, the corpus manifest and
-the methodology are in [`docs/benchmarking.md`](docs/benchmarking.md); the
-staged design is [`misc_md/PLAN_BENCHMARK_SUITE.md`](misc_md/PLAN_BENCHMARK_SUITE.md).
+These are native release numbers; the browser (wasm) shape is measured
+separately and is not part of this report. The commands, the full schema, the
+corpus manifest and the methodology are in
+[`docs/benchmarking.md`](docs/benchmarking.md); the staged design is
+[`misc_md/PLAN_BENCHMARK_SUITE.md`](misc_md/PLAN_BENCHMARK_SUITE.md).
 
 ## The Python binding
 
@@ -386,7 +401,7 @@ e = Engine()
 e.inflect("kissa")                   # every form, with named fields
 e.inflect("kissa", klass="9", pos="substantiivi")
 e.lookup("kauppa")                   # [('9*B', 'substantiivi')]
-e.words("substantiivi")              # every lemma of that POS with its class
+e.words("substantiivi")              # every classed lemma of that POS with its first class
 e.hyphenate("tietokoneohjelmointi")  # points with byte/char offsets + source
 ```
 
@@ -423,8 +438,8 @@ to Python. Soft hyphens are preserved and returned as explicit
 ## License
 
 The engine and the shipping surfaces — `src/`, `tests/`, `benches/`,
-`bench/`, `bindings/`, `wrapper/`, the wasm crates, the demo server and the
-browser extensions — are dual-licensed under **MIT OR Apache-2.0**. Pick either; the
+`bindings/`, `wrapper/`, the wasm crates, the demo server and the browser
+extensions — are dual-licensed under **MIT OR Apache-2.0**. Pick either; the
 texts are in [LICENSE-MIT](LICENSE-MIT) and [LICENSE-APACHE](LICENSE-APACHE).
 
 The tooling in `tools/` is also **MIT OR Apache-2.0**, except the files tied to
@@ -443,6 +458,8 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
 - [`docs/grammar_syntax.md`](docs/grammar_syntax.md) — the complete feature
   reference for the morphology grammar, syntax analysis, AST and every grammar
   diagnostic.
+- [`docs/word_order.md`](docs/word_order.md) — the word-order specification:
+  clause features, the allow-list and the construction tests.
 - [`docs/style_checker.md`](docs/style_checker.md) — the opt-in style layer:
   curated tables, repetition and long-sentence rules, UI and baseline.
 - [`docs/benchmarking.md`](docs/benchmarking.md) — the benchmark suite's
@@ -451,7 +468,7 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
   suite's staged design and the recorded reference.
 - [`misc_md/PLAN_SYNTAX_REFACTOR.md`](misc_md/PLAN_SYNTAX_REFACTOR.md) — a phased
   modularisation plan for the syntax layer, checker and extension content.
-- [`misc_md/PLAN_STYLE.md`](misc_md/PLAN_STYLE.md) — the design for a separate opt-in style
+- [`misc_md/PLAN_STYLE.md`](misc_md/PLAN_STYLE.md) — the implemented opt-in style
   layer: suggestion-only diagnostics, curated tables and a panel UI.
 - [`misc_md/PLAN_GRAMMAR_STYLE_PERF.md`](misc_md/PLAN_GRAMMAR_STYLE_PERF.md) — the grammar and
   style performance plan: one morphology pass with cached case information,
@@ -467,14 +484,14 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
   diagnostics, ranking and evaluation.
 - [`misc_md/PLAN_SYNTAX.md`](misc_md/PLAN_SYNTAX.md) — the advisory syntax analysis layer
   underneath the checker.
-- [`misc_md/PLAN_SYNTAX_AST.md`](misc_md/PLAN_SYNTAX_AST.md) — the proposed typed surface
+- [`misc_md/PLAN_SYNTAX_AST.md`](misc_md/PLAN_SYNTAX_AST.md) — the typed surface
   tree over `syntax`: node kinds, the pass pipeline and the invariants.
 - [`misc_md/PLAN_SYNTAX_AST_REST.md`](misc_md/PLAN_SYNTAX_AST_REST.md) — the remaining
   surface-tree work: nested lists, coordination, the wasm export and checker
   consumers. Phase 5b (wasm `analyze_ast`) and the 5c.1 parity audit landed.
 - [`misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md`](misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md) — the
-  remaining grammar/syntax fixes: predicate-less phrases, relative closing
-  commas, imperative connegative corrections and constituent views.
+  grammar/syntax fix record: predicate-less phrases, relative closing commas,
+  imperative connegative corrections and constituent views.
 - [`misc_md/REVIEW_PUNCTUATION_SPEC.md`](misc_md/REVIEW_PUNCTUATION_SPEC.md) — the
   clause-by-clause gap analysis against the programmatic Finnish punctuation
   specification.
@@ -485,8 +502,8 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
   gap analysis: the `,;` boundary defect, forbidden-semicolon cases, complex
   lists and spacing.
 - [`misc_md/PLAN_SEMICOLON.md`](misc_md/PLAN_SEMICOLON.md) — the semicolon slice:
-  boundary fix first, then suggestion-only misuse, list awareness and a
-  separate typography pass.
+  the boundary fix, suggestion-only misuse, list awareness and the separate
+  typography pass.
 - [`misc_md/PLAN_GRAMMAR_SYNTAX_REFERENCE.md`](misc_md/PLAN_GRAMMAR_SYNTAX_REFERENCE.md) —
   the review-driven hardening plan for the grammar/syntax feature reference.
 - [`misc_md/PLAN_GRAMMAR_SYNTAX_LAYOUT.md`](misc_md/PLAN_GRAMMAR_SYNTAX_LAYOUT.md) —
@@ -503,6 +520,8 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
 - [`docs/hyphenation.md`](docs/hyphenation.md) — patterns, compound adapter,
   typographic policy and offsets.
 - [`docs/lexicon.md`](docs/lexicon.md) — the materialised noun lexicon oracle.
+- [`docs/remotes.md`](docs/remotes.md) — the two remotes and the branch/`maps`
+  sync procedure.
 - [`data/README.md`](data/README.md) — every file in `data/`, its origin and
   what regenerates it.
 - [`maps/README.md`](maps/README.md) — the embedded maps and their formats.

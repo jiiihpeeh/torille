@@ -955,19 +955,27 @@ Finnish accuracy.
 
 ### 6.2 Performance
 
-Measured on the committed fixture (`page-2000`, 1,959 words) and the demo/wasm
-shape:
+Measured on the committed fixture (`page-2000`, 1,959 words), the native
+release build and the demo/wasm shape:
 
-- **warm grammar rules** — ~1.4 ms.
-- **warm style** — ~2.5–3 ms.
-- **warm grammar + style** — ~7–9 ms.
-- **one edited sentence, native** — 2.6–3.7 ms.
-- **cold page, release wasm single-thread** — ~3.0 s.
-- **cold page, 4-worker pool** — ~1.4 s.
-- **cold-page target** — ≤500 ms, still open.
+- **cold morphology, native single-thread** — 674 ms.
+- **cold morphology, native 4-worker** — 202 ms.
+- **warm morphology** — 0.46 ms.
+- **warm syntax analysis** — 5.41 ms.
+- **warm grammar rules** — 12.34 ms.
+- **warm style** — 2.50 ms.
+- **warm grammar + style (full pass)** — 19.29 ms.
+- **one edited sentence, native** — 3.22 ms.
+- **cold page, release wasm, 4 workers alive** — 364–395 ms.
+- **first check of a browser session** — ~950 ms (worker start-up).
+- **cold-page target** — ≤500 ms per page, met once the workers exist.
+
+The native rows are the benchmark reference; the wasm rows are the last
+recorded browser measurement. The first check of a session pays the four
+worker spawns and wasm instantiations once.
 
 The morphology cache is per textarea and bounded; the sentence cache is keyed
-by sentence text; there is no AST cache. The wasm module carries the 104k-lemma
+by grammar-unit text; there is no AST cache. The wasm module carries the 104k-lemma
 sanalista (roughly 3–4 MB compressed), so a document is checked on demand, not
 in the keystroke loop.
 
