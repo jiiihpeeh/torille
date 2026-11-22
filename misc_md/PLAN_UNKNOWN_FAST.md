@@ -129,6 +129,10 @@ Phases 0–3 are landed and measured on the reference machine:
 | signature/naming parity | **0 mismatches** over 45,607 surfaces |
 | signature blobs | **1.20 MB gzip** (141 KB noun + 1,061 KB verb) |
 
+The v2 blobs were published to the `maps` branch (`85eb933`) and are the
+ones a clean clone fetches. A clean clone build plus the noun and verb
+exactness tests were re-run against that branch.
+
 The state-level probe is `TextAreaState::find_misspells` on `page-2000`
 after `update`, release build; it is the user-visible first pass. The
 first-pass tool is the deduplicated cold gate and includes its own startup.
