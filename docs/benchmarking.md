@@ -74,7 +74,7 @@ rustc, build profile) must match, or `compare` refuses unless
 |---|---|---|
 | `grammar_style.<corpus>.single` | `perf_grammar_style --single-thread` | `morphology_cold_ms`, `all_ms`, `sentence_cache_warm_ms` |
 | `grammar_style.<corpus>.threads4` | `perf_grammar_style --threads 4` | the same keys, 4-worker |
-| `check_suggest.<corpus>` | `perf_check_suggest` | `corpus.p50_us`, `words.<n>.check_us` |
+| `check_suggest.<corpus>` | `perf_check_suggest` | `corpus.p50_us`, `word.<word>.check_us` |
 | `index.single_thread` | `perf_index` | `build_ms`, `known_bytes`, `total_bytes` |
 
 `morphology_cold_ms` is the fresh-process morphology pass; `morphology_warm_ms`
@@ -99,9 +99,25 @@ tool output.
 ## Reference
 
 The current reference is the first `full` run recorded on the development
-machine (AMD Ryzen 5 4600H, Linux, rustc 1.99.0, release). Reproduce it with
+machine (AMD Ryzen 5 4600H, Linux, rustc 1.99.0, release,
+fingerprint `f762dae2d048b2a6`). Reproduce it with
 `bench.py run --profile full`; a different machine records its own baseline.
-The raw numbers are in `bench/baselines/reference.json`.
+The full report is `bench/baselines/reference.json`.
+
+| metric | median |
+|---|---|
+| `page-2000` cold morphology, single | 684.1 ms |
+| `page-2000` 4-worker morphology | 206.1 ms |
+| `page-2000` warm morphology | 0.46 ms |
+| `page-2000` grammar+style warm | 19.39 ms |
+| `page-2000` sentence-cache warm | 0.76 ms |
+| 8 % typo corpus, cold morphology | 741.2 ms |
+| all-unknown corpus, cold morphology | 787.3 ms |
+| `check_suggest` p50 / p95 | 3 µs / 509 µs |
+| reverse-index build / size | 22.6 s / 1.23 GB |
+
+Correctness in the same report: 3 diagnostics on `page-2000`, 6 on the 8 %
+corpus, 1 on the all-unknown corpus, and the eight form-canary hashes.
 
 `cargo bench --bench torille` is the warmed hot-path complement: it covers
 Levenshtein, `suggest`, `form_of` and the `check*` recognition entry points

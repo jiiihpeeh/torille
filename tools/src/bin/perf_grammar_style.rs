@@ -16,6 +16,8 @@
 
 use std::time::Instant;
 
+use serde_json::{Value, json};
+
 use torille::check::check_all_with_cache;
 use torille::morphology::{
     CacheStats, Depth, MorphologyCache, analyze_morphology, analyze_morphology_parallel,
@@ -182,12 +184,15 @@ fn depths(stats: &CacheStats) -> String {
 }
 
 /// The same counters as a JSON object.
-fn depths_json(stats: &CacheStats) -> String {
-    Depth::ALL
-        .iter()
-        .map(|depth| format!("\"{}\":{}", depth.label(), stats.by_depth[depth.index()]))
-        .collect::<Vec<_>>()
-        .join(",")
+fn depths_value(stats: &CacheStats) -> Value {
+    let mut map = serde_json::Map::new();
+    for depth in Depth::ALL {
+        map.insert(
+            depth.label().to_string(),
+            json!(stats.by_depth[depth.index()]),
+        );
+    }
+    Value::Object(map)
 }
 
 fn print_probe_stats(stats: &torille::probe_stats::Snapshot) {
@@ -283,6 +288,7 @@ fn main() {
         return;
     }
 
+    let mut parallel: Option<(usize, f64, bool, bool, usize, usize)> = None;
     if args.threads > 0 {
         let t = Instant::now();
         let (parallel_morphology, parallel_stats) =
@@ -300,6 +306,14 @@ fn main() {
             == diagnostic_keys(&parallel_diagnostics);
         let style_matches = style_keys(&single_style.diagnostics)
             == style_keys(&parallel_style.diagnostics);
+        parallel = Some((
+            args.threads,
+            parallel_ms,
+            grammar_matches,
+            style_matches,
+            parallel_diagnostics.len(),
+            parallel_style.diagnostics.len(),
+        ));
         println!(
             "parallel morphology ({} threads): {parallel_ms:9.2} ms",
             args.threads
@@ -410,56 +424,56 @@ fn main() {
 
     let stats = cache.stats();
     if args.json {
-        println!(
-            "{{\"file\":\"{}\",\"words\":{},\"bytes\":{},\"single_thread\":{},\
-             \"tokenise_ms\":{:.2},\"morphology_cold_ms\":{:.2},\
-             \"morphology_warm_ms\":{:.2},\"syntax_ms\":{:.2},\
-             \"rules_ms\":{:.2},\"style_ms\":{:.2},\"all_ms\":{:.2},\
-             \"style_fresh_cache_ms\":{:.2},\
-             \"sentence_cache_cold_ms\":{:.2},\"sentence_cache_warm_ms\":{:.2},\
-             \"sentence_cache_edit_ms\":{:.2},\"sentence_cache_edit_style_ms\":{:.2},\
-             \"sentence_cache_edit_prep_ms\":{:.2},\
-             \"sentence_cache_edit_total_ms\":{:.2},\
-             \"sentence_cache_entries\":{},\"sentence_cache_edit_hits\":{},\
-             \"sentence_cache_edit_misses\":{},\
-             \"cold_cache\":{{\"words\":{},\"hits\":{},\"misses\":{}}},\
-             \"cold_depths\":{{{}}},\"cold_deep_upgrades\":{},\"cold_proper_names\":{},\
-             \"warm_cache\":{{\"words\":{},\"hits\":{},\"misses\":{}}},\
-             \"warm_depths\":{{{}}},\"warm_deep_upgrades\":{},\"warm_proper_names\":{}}}",
-            args.file,
-            words,
-            text.len(),
-            args.single_thread,
-            tokenise_ms,
-            morphology_cold_ms,
-            median(warm_morphology),
-            median(warm_syntax),
-            median(warm_rules),
-            median(warm_style),
-            median(warm_all),
-            style_fresh_cache_ms,
-            sentence_cold,
-            sentence_warm,
-            sentence_edit,
-            sentence_edit_style,
-            sentence_edit_prep,
-            sentence_edit_total,
-            sentence_cache.stats().entries,
-            edit_hits,
-            edit_misses,
-            cold_stats.words,
-            cold_stats.hits,
-            cold_stats.misses,
-            depths_json(&cold_stats),
-            cold_stats.deep_upgrades,
-            cold_stats.proper_names,
-            stats.words,
-            stats.hits,
-            stats.misses,
-            depths_json(&stats),
-            stats.deep_upgrades,
-            stats.proper_names,
-        );
+        let mut value = json!({
+            "file": args.file,
+            "words": words,
+            "bytes": text.len(),
+            "single_thread": args.single_thread,
+            "tokenise_ms": tokenise_ms,
+            "morphology_cold_ms": morphology_cold_ms,
+            "morphology_warm_ms": median(warm_morphology),
+            "syntax_ms": median(warm_syntax),
+            "rules_ms": median(warm_rules),
+            "style_ms": median(warm_style),
+            "all_ms": median(warm_all),
+            "style_fresh_cache_ms": style_fresh_cache_ms,
+            "sentence_cache_cold_ms": sentence_cold,
+            "sentence_cache_warm_ms": sentence_warm,
+            "sentence_cache_edit_ms": sentence_edit,
+            "sentence_cache_edit_style_ms": sentence_edit_style,
+            "sentence_cache_edit_prep_ms": sentence_edit_prep,
+            "sentence_cache_edit_total_ms": sentence_edit_total,
+            "sentence_cache_entries": sentence_cache.stats().entries,
+            "sentence_cache_edit_hits": edit_hits,
+            "sentence_cache_edit_misses": edit_misses,
+            "cold_cache": {
+                "words": cold_stats.words,
+                "hits": cold_stats.hits,
+                "misses": cold_stats.misses,
+            },
+            "cold_depths": depths_value(&cold_stats),
+            "cold_deep_upgrades": cold_stats.deep_upgrades,
+            "cold_proper_names": cold_stats.proper_names,
+            "warm_cache": {
+                "words": stats.words,
+                "hits": stats.hits,
+                "misses": stats.misses,
+            },
+            "warm_depths": depths_value(&stats),
+            "warm_deep_upgrades": stats.deep_upgrades,
+            "warm_proper_names": stats.proper_names,
+        });
+        if let Some((threads, milliseconds, grammar, style, grammar_n, style_n)) = parallel {
+            value["parallel"] = json!({
+                "threads": threads,
+                "morphology_ms": milliseconds,
+                "grammar_matches": grammar,
+                "style_matches": style,
+                "grammar_diagnostics": grammar_n,
+                "style_diagnostics": style_n,
+            });
+        }
+        println!("{value}");
         return;
     }
 

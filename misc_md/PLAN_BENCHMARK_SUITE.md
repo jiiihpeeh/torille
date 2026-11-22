@@ -1,6 +1,7 @@
 # PLAN_BENCHMARK_SUITE — one reproducible suite for every layer
 
-Status: **proposed.** Baseline `2e5e8e4` (2026-11-22). The tree already has
+Status: **Phase 0 landed 2026-11-22; Phases 1–4 proposed.** Baseline
+`2e5e8e4`. The tree already has
 good measurement primitives — a Criterion hot-path bench, `perf_grammar_style`,
 `perf_check_suggest`, `perf_index`, `profile_hot`, the browser pool scripts and
 the four probe corpora — but they are separate tools with separate arguments,
@@ -121,7 +122,15 @@ run list is not written. The browser section is optional and carries its own
 
 ## 5. Phases
 
-### Phase 0 — schema, driver skeleton, fingerprints
+### Phase 0 — schema, driver skeleton, fingerprints (landed)
+
+**Landed 2026-11-22:** `tools/bench.py` with `run/compare/record/corpora/
+selftest`, the versioned report, `bench/corpora.json` with hashes, the
+correctness fingerprint (diagnostics plus the full paradigm of eight canary
+lemmas), and `--json` on `perf_index`/`dump_diagnostics`. The quick profile is
+110 metrics over `page-2000` and `homonyms`; the full profile is 7 fresh
+processes over all five corpora, both thread shapes and the index build.
+`docs/benchmarking.md` is the contract.
 
 - Define the schema as a Rust struct in `tools/src/bin/bench_report.rs` (or a
   JSON schema in `tools/bench_schema.json`) and have `bench.py` validate it.
@@ -214,20 +223,25 @@ correctness-only (CI is engine-only and noisy).
 
 ## 7. Reference baseline (2026-11-22, this machine)
 
-These are the numbers the suite will pin first; they are not budgets.
+The first full suite run, recorded as `bench/baselines/reference.json`
+(fingerprint `f762dae2d048b2a6`). These are the numbers the suite pins; they
+are not budgets.
 
 ```text
-perf_grammar_style --words 0 --repeat 5 --single-thread
-  tokenise 0.60 ms, morphology cold 696.79 ms, morphology warm 0.50 ms
-  syntax 5.52, rules 10.21, style 2.18, all 16.67 ms
-  sentence cache cold 9.50, warm 0.80, edit 0.93 ms
-perf_grammar_style --threads 4 (probe plan, same page): morphology cold 196 ms
-perf_check_suggest: per-word p50/p95/p99 table + corpus totals (tool output)
-perf_index: build time and per-field MB (tool output)
+page-2000 cold morphology      684.1 ms median (single), 206.1 ms (4 workers)
+page-2000 warm morphology        0.46 ms
+page-2000 grammar+style warm    19.39 ms
+page-2000 sentence-cache warm    0.76 ms
+8 % typo corpus cold           741.2 ms
+all-unknown corpus cold        787.3 ms
+check_suggest p50 / p95          3 us / 509 us
+reverse-index build / size      22.6 s / 1.23 GB
+correctness                     3 / 6 / 1 diagnostics; 8 form canaries
 ```
 
-The suite records its own reference after the driver lands; the numbers above
-are only the sanity check that the primitives are wired to the same corpus.
+The full report has 544 metrics over five corpora, both thread shapes and the
+index build. A different machine records its own baseline; `compare` refuses a
+fingerprint mismatch.
 
 ## 8. Files
 

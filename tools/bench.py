@@ -251,10 +251,40 @@ def flatten(prefix: str, value, out: dict) -> None:
     if isinstance(value, dict):
         for key, item in value.items():
             flatten(f"{prefix}{key}.", item, out)
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            flatten(f"{prefix}{index}.", item, out)
     elif isinstance(value, bool) or value is None:
         return
     elif isinstance(value, (int, float)):
         out[f"{prefix.rstrip('.')}"] = float(value)
+
+
+def flatten_check_suggest(name: str, data: dict, samples: dict) -> None:
+    """Readable keys for the wordlist/book tool.
+
+    Its JSON puts the totals in a `corpus` list and the per-word rows in
+    `words`; the generic list flatten would name them `.0.` and `.1.`, which
+    is useless in a comparison table.
+    """
+    for key, value in data.items():
+        if key in ("corpus", "words"):
+            continue
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            run_samples(samples, f"check_suggest.{name}.{key}", float(value))
+    for row in data.get("corpus") or []:
+        for key, value in row.items():
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                run_samples(samples, f"check_suggest.{name}.corpus.{key}", float(value))
+    for row in data.get("words") or []:
+        word = str(row.get("word", "")).replace(" ", "_")
+        for key, value in row.items():
+            if key == "word":
+                continue
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                run_samples(
+                    samples, f"check_suggest.{name}.word.{word}.{key}", float(value)
+                )
 
 
 def run_samples(samples: dict, key: str, value: float) -> None:
@@ -366,10 +396,7 @@ def run_report(args: argparse.Namespace) -> dict:
                     "--json",
                 ]
             )
-            flat = {}
-            flatten("", data, flat)
-            for key, value in flat.items():
-                run_samples(samples, f"check_suggest.{name}.{key}", value)
+            flatten_check_suggest(name, data, samples)
             if run == 0:
                 raw[f"check_suggest.{name}"] = data
 
