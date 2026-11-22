@@ -227,7 +227,12 @@ pub(super) fn verb_stem_probe(lower: &str, stem: &str, ending: &str) -> Option<S
         let Some(index) = STEM_BUCKETS_VERB.find_index(cand) else {
             continue;
         };
-        if !crate::expand::stem_endings::VERB.allows(index, ending) {
+        if crate::expand::stem_endings::VERB.is_remainder_table() {
+            let remainder = &lower[cand.len()..];
+            if crate::expand::stem_endings::VERB.allows_remainder(index, remainder) != Some(true) {
+                continue;
+            }
+        } else if !crate::expand::stem_endings::VERB.allows(index, ending) {
             continue;
         }
         for base in STEM_BUCKETS_VERB.bases_at(index) {

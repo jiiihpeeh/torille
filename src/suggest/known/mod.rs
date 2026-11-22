@@ -516,7 +516,11 @@ fn is_known_word_with_compound_uncached(
         let Some(stem_index) = STEM_BUCKETS_NOUN.find_index(stem) else {
             continue;
         };
-        if !crate::expand::stem_endings::NOUN.allows(stem_index, ending) {
+        if crate::expand::stem_endings::NOUN.is_remainder_table() {
+            if crate::expand::stem_endings::NOUN.allows_known(stem_index, ending) != Some(true) {
+                continue;
+            }
+        } else if !crate::expand::stem_endings::NOUN.allows(stem_index, ending) {
             continue;
         }
         for base in STEM_BUCKETS_NOUN.bases_at(stem_index) {

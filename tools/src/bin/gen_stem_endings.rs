@@ -2,9 +2,12 @@
 //! `gen_stem_endings` — write the per-stem ending-signature blobs.
 //!
 //! For every `(stem, base)` row in the committed stem-map CSV, generate the
-//! base's forms and record the endings the runtime probe can strip to that
-//! stem. Many stems share a signature, so the blob stores a pattern dictionary
-//! plus one `u16` pattern id per stem key, in the stem map's sorted key order.
+//! base's forms and record the **full remainder after the stem key** (version
+//! 2 of the blob): `lukeneita` gives stem `luken` + remainder `eita`, and
+//! `ollut` gives stem `oll` + remainder `ut`. That is exact for verbs as well
+//! as nouns. Many stems share a signature, so the blob stores a pattern
+//! dictionary plus one `u16` pattern id per stem key, in the stem map's sorted
+//! key order.
 //!
 //! Run after a stem-map or engine change, then rebuild and publish the maps
 //! branch:
@@ -24,12 +27,10 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 
 use torille::expand::LexiconIndex;
-use torille::expand::check_normal::{ENDINGS, STEM_BUCKETS_NOUN, STEM_BUCKETS_VERB, VERB_ENDINGS};
+use torille::expand::check_normal::{STEM_BUCKETS_NOUN, STEM_BUCKETS_VERB};
 use torille::kotus::{lemmas, sanalista};
 use torille::spec::Catalogues;
 use torille::tags::PartOfSpeech;
-
-const POSSESSIVE_SUFFIXES: &[&str] = &["nsa", "nsä", "nne", "mme", "si", "ni", "an", "än", "en"];
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Map {
@@ -51,21 +52,6 @@ impl Map {
             Map::Verb => "data/verb_stem_to_base_map.csv",
         }
     }
-}
-
-fn endings(map: Map) -> Vec<&'static str> {
-    let mut out: Vec<&'static str> = vec![""];
-    match map {
-        Map::Noun => out.extend(ENDINGS.iter().copied()),
-        Map::Verb => {
-            out.extend(VERB_ENDINGS.iter().copied());
-            out.extend(ENDINGS.iter().copied());
-            out.extend(POSSESSIVE_SUFFIXES.iter().copied());
-        }
-    }
-    let mut seen: HashSet<&'static str> = HashSet::new();
-    out.retain(|ending| seen.insert(ending));
-    out
 }
 
 fn trim_vowels(word: &str) -> &str {
@@ -108,60 +94,76 @@ fn generate(map: Map) {
     let cat = Catalogues::embedded();
     let lexicon = lemmas();
     let index = LexiconIndex::new(lexicon);
-    let ending_list = endings(map);
-    let ending_ids: HashMap<&str, u8> = ending_list
-        .iter()
-        .enumerate()
-        .map(|(id, ending)| (*ending, id as u8))
-        .collect();
 
-    let mut signatures: HashMap<String, HashSet<u8>> = HashMap::new();
+    // Every stem key gets an entry, including the keys no form reaches; the
+    // id array is indexed by the stem map's ordinal, so a missing key would
+    // misalign every later row.
+    let mut signatures: HashMap<String, HashSet<String>> = HashMap::new();
     for stem in stem_bases.keys() {
         signatures.insert(stem.clone(), HashSet::new());
     }
-    let max_ending_bytes = ending_list.iter().map(|ending| ending.len()).max().unwrap_or(0);
     for (base, stems) in &base_to_stems {
-        let forms = base_forms(base, map, cat, &index);
-        for form in &forms {
-            let first = form
-                .char_indices()
-                .map(|(index, _)| index)
-                .find(|&index| form.len() - index <= max_ending_bytes)
-                .unwrap_or(form.len());
-            for start in form[first..]
-                .char_indices()
-                .map(|(index, _)| first + index)
-                .chain(std::iter::once(form.len()))
-            {
-                let Some(&ending_id) = ending_ids.get(&form[start..]) else {
+        for form in base_forms(base, map, cat, &index) {
+            for stem in stems {
+                if form.len() < stem.len() {
                     continue;
-                };
-                let candidate = &form[..start];
-                for stem in stems {
-                    let matches = match map {
-                        Map::Noun => candidate == stem,
-                        Map::Verb => candidate == stem || trim_vowels(candidate) == stem,
-                    };
-                    if matches {
-                        signatures
-                            .get_mut(stem)
-                            .expect("stem inserted")
-                            .insert(ending_id);
+                }
+                let matches = match map {
+                    Map::Noun => form.starts_with(stem),
+                    // The stem map stores the vowel-trimmed stem, but it
+                    // also keeps untrimmed imperative keys (`anna`). A form
+                    // that starts with the key is `key + remainder`; a form
+                    // whose prefix trims to the key is the trimmed-key case
+                    // (`lukeneita` is `luken` + `eita`).
+                    Map::Verb => {
+                        form.starts_with(stem)
+                            || form
+                                .char_indices()
+                                .map(|(k, _)| k)
+                                .chain(std::iter::once(form.len()))
+                                .any(|k| k >= stem.len() && trim_vowels(&form[..k]) == stem)
                     }
+                };
+                if matches {
+                    signatures
+                        .get_mut(stem)
+                        .expect("stem inserted")
+                        .insert(form[stem.len()..].to_string());
                 }
             }
         }
     }
 
-    let mut patterns: HashMap<Vec<u8>, u16> = HashMap::new();
+    let mut remainders: Vec<String> = signatures.values().flatten().cloned().collect();
+    remainders.sort_unstable();
+    remainders.dedup();
+    let remainder_ids: HashMap<&str, u32> = remainders
+        .iter()
+        .enumerate()
+        .map(|(id, remainder)| {
+            assert!(
+                remainder.len() <= u8::MAX as usize,
+                "remainder {remainder:?} is too long"
+            );
+            (remainder.as_str(), id as u32)
+        })
+        .collect();
+
+    let mut patterns: HashMap<Vec<u32>, u16> = HashMap::new();
     let mut rows: Vec<(&String, u16)> = Vec::with_capacity(signatures.len());
     // Assign pattern ids in sorted stem order so the blob is reproducible.
     let mut stems: Vec<&String> = signatures.keys().collect();
     stems.sort_unstable();
     for stem in stems {
-        let set = &signatures[stem];
-        let mut pattern: Vec<u8> = set.iter().copied().collect();
+        let mut pattern: Vec<u32> = signatures[stem]
+            .iter()
+            .map(|remainder| *remainder_ids.get(remainder.as_str()).expect("remainder id"))
+            .collect();
         pattern.sort_unstable();
+        assert!(
+            pattern.len() <= u16::MAX as usize,
+            "pattern for {stem:?} is too long"
+        );
         let next = patterns.len() as u16;
         let id = *patterns.entry(pattern).or_insert(next);
         rows.push((stem, id));
@@ -181,23 +183,26 @@ fn generate(map: Map) {
 
     let mut out: Vec<u8> = Vec::new();
     out.write_all(b"ENDP").unwrap();
-    out.write_all(&[1, map as u8, 0, 0]).unwrap();
-    out.write_all(&(ending_list.len() as u32).to_le_bytes()).unwrap();
-    out.write_all(&(patterns.len() as u32).to_le_bytes()).unwrap();
+    // Version 2: full remainders, u16 remainder ids, u16 pattern ids.
+    out.write_all(&[2, map as u8, 0, 0]).unwrap();
+    out.write_all(&(remainders.len() as u32).to_le_bytes())
+        .unwrap();
+    out.write_all(&(patterns.len() as u32).to_le_bytes())
+        .unwrap();
     out.write_all(&(rows.len() as u32).to_le_bytes()).unwrap();
-    for ending in &ending_list {
-        out.write_all(&[ending.len() as u8]).unwrap();
-        out.write_all(ending.as_bytes()).unwrap();
+    for remainder in &remainders {
+        out.write_all(&[remainder.len() as u8]).unwrap();
+        out.write_all(remainder.as_bytes()).unwrap();
     }
-    let mut pattern_rows: Vec<(&Vec<u8>, &u16)> = patterns.iter().collect();
+    let mut pattern_rows: Vec<(&Vec<u32>, &u16)> = patterns.iter().collect();
     pattern_rows.sort_by_key(|(_, id)| **id);
     for (pattern, _) in &pattern_rows {
-        out.write_all(&[pattern.len() as u8]).unwrap();
-        out.write_all(pattern).unwrap();
+        out.write_all(&(pattern.len() as u16).to_le_bytes()).unwrap();
+        for id in pattern.iter() {
+            out.write_all(&id.to_le_bytes()).unwrap();
+        }
     }
-    // The id array is aligned with the stem map's sorted key order. The
-    // prototype writes only the ids; a real integration folds this into the
-    // map blob so there is no second key lookup.
+    // The id array is aligned with the stem map's sorted key order.
     for (_, id) in &rows {
         out.write_all(&id.to_le_bytes()).unwrap();
     }
@@ -207,12 +212,12 @@ fn generate(map: Map) {
     sizes.sort_unstable();
     let avg = sizes.iter().sum::<usize>() as f64 / sizes.len().max(1) as f64;
     println!(
-        "{}: stems {}, bases {}, patterns {}, endings {}, avg {:.2}",
+        "{}: stems {}, bases {}, patterns {}, remainders {}, avg {:.2}",
         map.label(),
         signatures.len(),
         base_to_stems.len(),
         patterns.len(),
-        ending_list.len(),
+        remainders.len(),
         avg
     );
     let gz = std::fs::metadata(&out_path).map(|m| m.len()).unwrap_or(0);

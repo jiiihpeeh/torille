@@ -1011,7 +1011,7 @@ fn check_normal_with(
                 gate: "clitic of known word",
             };
         }
-        if let Some(base) = find_base_via_verb_stem_map(&host, verbose) {
+        if let Some(base) = find_base_via_verb_stem_map_mode(&host, verbose, stems) {
             return NormalizedOutcome::Inflected {
                 base,
                 gate: "clitic of verb stem",
@@ -1111,7 +1111,7 @@ fn check_normal_with(
                 VERB_ENDINGS.len()
             );
         }
-        if !engine_gate && let Some(base) = find_base_via_verb_stem_map(word, verbose) {
+        if !engine_gate && let Some(base) = find_base_via_verb_stem_map_mode(word, verbose, stems) {
             if verbose {
                 println!("    gate 4b: hit -> {base}");
             }
@@ -1133,7 +1133,7 @@ fn check_normal_with(
         && !prefix.is_empty()
     {
         if let Some(base) = find_base_via_stem_map_mode(prefix, PartOfSpeech::Noun, verbose, stems)
-            .or_else(|| find_base_via_verb_stem_map(prefix, verbose))
+            .or_else(|| find_base_via_verb_stem_map_mode(prefix, verbose, stems))
         {
             let base = format!("{base}toista");
             if verbose {
@@ -1397,7 +1397,13 @@ pub fn collect_bases_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) 
         let Some(stem_index) = STEM_BUCKETS_NOUN.find_index(stem) else {
             continue;
         };
-        if !crate::expand::stem_endings::NOUN.allows(stem_index, ending) {
+        // The v2 remainder table is exact for the noun split; the v1 table
+        // only knows the fixed endings.
+        if crate::expand::stem_endings::NOUN.is_remainder_table() {
+            if crate::expand::stem_endings::NOUN.allows_known(stem_index, ending) != Some(true) {
+                continue;
+            }
+        } else if !crate::expand::stem_endings::NOUN.allows(stem_index, ending) {
             continue;
         }
         if verbose {
@@ -1553,8 +1559,22 @@ pub fn collect_bases_via_verb_stem_map(word: &str, verbose: bool) -> Vec<String>
             let Some(stem_index) = STEM_BUCKETS_VERB.find_index(cand) else {
                 continue;
             };
-            if !crate::expand::stem_endings::VERB.allows(stem_index, ending) {
-                continue;
+            // The v2 table records the full remainder after the stem key,
+            // including any trimmed vowels (`luken` + `nutta`). A miss is a
+            // real reject for that split; a v1 table only knows the fixed
+            // ending.
+            if !trust {
+                if crate::expand::stem_endings::VERB.is_remainder_table() {
+                    let remainder = &word[cand.len()..];
+                    if crate::expand::stem_endings::VERB
+                        .allows_remainder(stem_index, remainder)
+                        != Some(true)
+                    {
+                        continue;
+                    }
+                } else if !crate::expand::stem_endings::VERB.allows(stem_index, ending) {
+                    continue;
+                }
             }
             if verbose {
                 println!(
@@ -1624,6 +1644,66 @@ pub fn find_base_via_verb_stem_map(word: &str, verbose: bool) -> Option<String> 
         .next()
 }
 
+/// [`find_base_via_verb_stem_map`] with an explicit stem-check mode.
+///
+/// `StemCheck::Signature` is exact only when the verb table records full
+/// remainders (v2). A remainder hit means the stem actually spelled
+/// `stem + remainder`, so the boolean caller can skip `emits_target_form`.
+/// A v1 table, a negation fusion or an empty/unknown table falls back to the
+/// verified path.
+fn find_base_via_verb_stem_map_mode(
+    word: &str,
+    verbose: bool,
+    stems: StemCheck,
+) -> Option<String> {
+    if stems == StemCheck::Verify
+        || !crate::expand::stem_endings::VERB.is_remainder_table()
+        || crate::expand::negation::negation_base(word).is_some()
+    {
+        return find_base_via_verb_stem_map(word, verbose);
+    }
+    let endings = std::iter::once("");
+    for ending in endings
+        .chain(VERB_ENDINGS.iter().copied())
+        .chain(ENDINGS.iter().copied())
+        .chain(POSSESSIVE_SUFFIXES.iter().copied())
+    {
+        let Some(stem) = word.strip_suffix(ending) else {
+            continue;
+        };
+        if stem.is_empty() {
+            continue;
+        }
+        let trimmed = stem.trim_end_matches(crate::is_vowel);
+        for cand in [stem, trimmed] {
+            if cand.is_empty() {
+                continue;
+            }
+            let Some(stem_index) = STEM_BUCKETS_VERB.find_index(cand) else {
+                continue;
+            };
+            let remainder = &word[cand.len()..];
+            match crate::expand::stem_endings::VERB.allows_remainder(stem_index, remainder) {
+                Some(true) => {
+                    if let Some(base) = STEM_BUCKETS_VERB.bases_at(stem_index).next() {
+                        if verbose {
+                            println!(
+                                "      gate 4b: signature {cand:?}+{remainder:?} -> {base:?}"
+                            );
+                        }
+                        return Some(base.to_string());
+                    }
+                }
+                Some(false) => continue,
+                // An empty/stale table must not accept everything; take the
+                // verified path instead.
+                None => return find_base_via_verb_stem_map(word, verbose),
+            }
+        }
+    }
+    None
+}
+
 /// Resolve a noun stem that a possessive was stripped from, by asking
 /// whether the stem's candidate base inflects *with possessives* to the
 /// original word. `sisare` + `nsa` gives `sisarensa`; the bare stem
@@ -1679,7 +1759,7 @@ fn find_through_possessive(
             }
             return Some((base, "possessive of noun"));
         }
-        if let Some(base) = find_base_via_verb_stem_map(inner, verbose) {
+        if let Some(base) = find_base_via_verb_stem_map_mode(inner, verbose, stems) {
             return Some((base, "possessive of verb"));
         }
         if let Some(base) = crate::expand::degree_base(inner) {
@@ -2560,6 +2640,10 @@ mod tests {
     fn the_noun_signature_is_exact_for_every_stem_row() {
         use std::collections::{HashMap, HashSet};
 
+        assert!(
+            crate::expand::stem_endings::NOUN.is_remainder_table(),
+            "the noun signature must be the v2 remainder table"
+        );
         let csv = std::fs::read_to_string(
             std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("data/stem_to_base_map.csv"),
         )
@@ -2609,9 +2693,85 @@ mod tests {
             }
             for ending in std::iter::once("").chain(ENDINGS.iter().copied()) {
                 let surface = format!("{stem}{ending}");
-                let allowed = crate::expand::stem_endings::NOUN.allows(stem_index, ending);
+                let allowed = crate::expand::stem_endings::NOUN
+                    .allows_known(stem_index, ending)
+                    .expect("the v2 noun table answers every value");
                 let real = union.contains(surface.as_str());
                 assert_eq!(allowed, real, "{stem:?}+{ending:?} = {surface:?}");
+            }
+        }
+    }
+
+    /// The verb v2 signature records the full remainder after the stem key
+    /// (`luken` + `eita`, `anna` + `""`). Sample every 25th base, build its
+    /// forms, and check that every attributed form's remainder is present in
+    /// the embedded table. Release-only: it builds a few hundred paradigms.
+    #[cfg(not(debug_assertions))]
+    #[test]
+    fn the_verb_signature_covers_a_deterministic_base_sample() {
+        use std::collections::HashMap;
+
+        let csv = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("data/verb_stem_to_base_map.csv"),
+        )
+        .expect("read data/verb_stem_to_base_map.csv");
+        let cat = crate::spec::Catalogues::embedded();
+        let lexicon = crate::kotus::lemmas();
+        let index = crate::expand::LexiconIndex::new(lexicon);
+        let mut base_to_stems: HashMap<String, Vec<String>> = HashMap::new();
+        for line in csv.lines() {
+            let mut parts = line.split('\t');
+            let Some(stem) = parts.next() else { continue };
+            let Some(base) = parts.next() else { continue };
+            base_to_stems
+                .entry(base.to_string())
+                .or_default()
+                .push(stem.to_string());
+        }
+        let mut bases: Vec<(&String, &Vec<String>)> = base_to_stems.iter().collect();
+        bases.sort_by_key(|(base, _)| *base);
+        for (base, stems) in bases.into_iter().step_by(25) {
+            let mut forms = Vec::new();
+            for row in crate::kotus::sanalista().by_word(base) {
+                let inflections: Vec<_> = row.inflections().collect();
+                let pos = crate::tags::PartOfSpeech::parse_all(row.part_of_speech())
+                    .first()
+                    .copied()
+                    .unwrap_or(crate::tags::PartOfSpeech::Verb);
+                for form in
+                    crate::expand::inflect_all(base, &inflections, cat, Some(&index), pos, false)
+                {
+                    forms.push(form.word);
+                }
+            }
+            for stem in stems {
+                let Some(stem_index) = STEM_BUCKETS_VERB.find_index(stem) else {
+                    panic!("verb stem {stem:?} is not in the embedded stem map");
+                };
+                for form in &forms {
+                    if form.len() < stem.len() {
+                        continue;
+                    }
+                    let matches = form.starts_with(stem)
+                        || form
+                            .char_indices()
+                            .map(|(k, _)| k)
+                            .chain(std::iter::once(form.len()))
+                            .any(|k| {
+                                k >= stem.len()
+                                    && form[..k].trim_end_matches(crate::is_vowel) == *stem
+                            });
+                    if matches {
+                        let remainder = &form[stem.len()..];
+                        assert_eq!(
+                            crate::expand::stem_endings::VERB
+                                .allows_remainder(stem_index, remainder),
+                            Some(true),
+                            "{base}: {stem:?}+{remainder:?} missing from the verb signature"
+                        );
+                    }
+                }
             }
         }
     }

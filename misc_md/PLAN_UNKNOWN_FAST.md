@@ -1,6 +1,6 @@
 # PLAN_UNKNOWN_FAST — a faster misspell first pass
 
-Status: **Phases 0–2 landed** (2026-11-22); Phases 3–6 proposed. Baseline
+Status: **Phases 0–3 landed** (2026-11-22); Phases 4–6 proposed. Baseline
 `6de70e7`; the code changes are on top of `778da8a`.
 
 The first pass that decides “is this token a misspelling?” is
@@ -115,24 +115,30 @@ DP then asks the same question again for every prefix.
 
 ### 1.4 Results so far (2026-11-22)
 
-Phases 0–2 are landed and measured on the reference machine:
+Phases 0–3 are landed and measured on the reference machine:
 
 | step | measurement |
 |---|---:|
 | state-level `find_misspells`, before Phase 1 | **247.9 ms** |
 | after Phase 1 (proper-name short-circuit) | **218.6 ms** |
 | after Phase 2 (noun signature accept) | **192.4 ms** |
+| after Phase 3 (verb full-remainder signature) | **84.0 ms** |
 | first-pass tool, unique surfaces, before | **318 ms** |
-| first-pass tool, unique surfaces, after | **271 ms** |
-| signature/naming parity | **0 mismatches** over 42,253 unique surfaces |
+| after Phase 2 | **271 ms** |
+| after Phase 3 | **170 ms** |
+| signature/naming parity | **0 mismatches** over 45,607 surfaces |
+| signature blobs | **1.20 MB gzip** (141 KB noun + 1,061 KB verb) |
 
 The state-level probe is `TextAreaState::find_misspells` on `page-2000`
 after `update`, release build; it is the user-visible first pass. The
 first-pass tool is the deduplicated cold gate and includes its own startup.
 The parity corpus is `page-2000`, the 8 %-error and all-unknown corpora,
 `homonyms`, `line-wrap`, and the 7,000 and 45,448 books. The all-unknown
-corpus did **not** improve (about 799 ms): it has no known nouns to verify,
-which is the branch this plan targets.
+corpus went from about 799 ms to about 550 ms; the page still has the same
+36 unique unknown surfaces (93 occurrences), so no known word became a
+false flag. The one regression found on the way — `lukenutta` and
+`närkästyneenä` were briefly rejected because the naming path applied the
+v2 remainder table to the fixed ending — is covered by the participle tests.
 
 ## 2. Constraints
 
@@ -259,6 +265,10 @@ catalogue and harness tests are green.
 ---
 
 ### Phase 3 — Make the verb signature exact, then stop verifying verbs
+
+**Landed** (2026-11-22): the v2 `ENDP` table records full remainders with
+u32 ids; the accept gate skips `emits_target_form` on a remainder hit, and
+the naming paths use the same remainder. Blob size 1.20 MB gzip.
 
 The noun trick does not transfer to verbs yet. The verb stem map stores the
 **vowel-trimmed** stem (`luken`), while a form such as `lukeneita` is
