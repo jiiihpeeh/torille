@@ -420,7 +420,12 @@ def main(argv: list[str]) -> int:
             if inner:
                 return (1, int(inner.split("*")[0]), inner)
             return (1, 10**9, "")
-        return (0, int(c.split("*")[0]), c)
+        # A parenthesised class is Kotus's uncertain reading; sort it after the
+        # confirmed classes. A raw multi-class row (`9, 50`) keys on its first
+        # class, which is the one the binding would report.
+        paren = 1 if c.startswith("(") else 0
+        base = c.strip("()").split(",")[0].strip()
+        return (paren, int(base.split("*")[0]), c)
     if args.classes != "all":
         wanted = [c.strip() for c in args.classes.split(",") if c.strip()]
         # `9B` and `9*B` are the same class written two ways; accept both.
