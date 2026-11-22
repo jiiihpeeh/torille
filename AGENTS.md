@@ -52,6 +52,8 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
   sentence-level incremental checks and worker chunking.
 - `misc_md/PLAN_BENCHMARK_SUITE.md` — the reproducible benchmark suite:
   schema, driver, corpora, native/browser layers, baselines and tolerances.
+- `docs/benchmarking.md` — the suite's commands, report schema, corpora,
+  methodology, reference baseline and current gaps.
 - `misc_md/PLAN_PROBE_PERF.md` — the next probe-performance slice: per-stem
   ending signatures, targeted membership checks for the dominant verb classes,
   a shared stem-probe context and the remaining allocation/hasher work.
@@ -610,6 +612,7 @@ is gitignored and generated.
 | grammar/style performance | `src/morphology/`, `src/syntax_check/`, `src/style_check/`, `misc_md/PLAN_GRAMMAR_STYLE_PERF.md`, `misc_md/PLAN_PROBE_PERF.md` |
 | hyphenation patterns/policy | `src/hyphenation/`, `data/hyphenation/` |
 | punctuation spacing (typography) | `src/typography.rs`, `tests/fixtures/typography.json` |
+| benchmarking | `tools/bench.py`, `benches/torille.rs`, `docs/benchmarking.md`, `misc_md/PLAN_BENCHMARK_SUITE.md` |
 | the wasm/browser surface | `torille-wasm/src/`, `extensions/firefox/`, `extensions/chromium/` |
 | verification | `tools/*.py`, `tests/catalogue.rs`, `docs/harness.md` |
 

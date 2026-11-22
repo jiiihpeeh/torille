@@ -16,6 +16,8 @@
 use std::process::ExitCode;
 use std::time::Instant;
 
+use serde_json::json;
+
 use torille_tools::{catalogue, sanalista};
 
 fn mb(bytes: usize) -> String {
@@ -23,7 +25,9 @@ fn mb(bytes: usize) -> String {
 }
 
 fn main() -> ExitCode {
-    let single_thread = std::env::args().any(|a| a == "--single-thread");
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    let single_thread = args.iter().any(|a| a == "--single-thread");
+    let json = args.iter().any(|a| a == "--json");
     if single_thread {
         torille::expand::set_single_thread(true);
     }
@@ -51,6 +55,41 @@ fn main() -> ExitCode {
         .map(|p| p.len() * std::mem::size_of::<torille::tags::PartOfSpeech>())
         .sum::<usize>();
 
+    let known_bytes = builder.known.total_bytes();
+    let suggestible_bytes = words.div_ceil(8);
+    let lemmas_bytes = builder.lemmas.total_bytes();
+    let total_bytes = known_bytes
+        + suggestible_bytes
+        + lemmas_bytes
+        + analyses_heap
+        + first_base
+        + more_bases
+        + base_words
+        + base_classes
+        + base_poses;
+    if json {
+        println!(
+            "{}",
+            json!({
+                "single_thread": single_thread,
+                "build_ms": elapsed.as_secs_f64() * 1000.0,
+                "words": words,
+                "suggestible": suggestible,
+                "lemmas": lemmas,
+                "known_bytes": known_bytes,
+                "suggestible_bytes": suggestible_bytes,
+                "lemmas_bytes": lemmas_bytes,
+                "analyses_bytes": analyses_heap,
+                "first_base_bytes": first_base,
+                "more_bases_bytes": more_bases,
+                "base_words_bytes": base_words,
+                "base_classes_bytes": base_classes,
+                "base_poses_bytes": base_poses,
+                "total_bytes": total_bytes,
+            })
+        );
+        return ExitCode::SUCCESS;
+    }
     println!("build: {elapsed:?} (single_thread={single_thread}, {words} words)");
     println!("known       {words:>9} entries  {}", mb(builder.known.total_bytes()));
     println!(

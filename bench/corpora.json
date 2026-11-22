@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "corpora": {
+    "page-2000": {
+      "path": "tests/fixtures/perf/page-2000.txt",
+      "kind": "committed",
+      "bytes": 15280,
+      "words": 1959,
+      "sha256": "167b2ef8092ebcf3ad1a0d07cf1d0336140a6ee03af11f2a58af8715cc193023"
+    },
+    "homonyms": {
+      "path": "tests/fixtures/perf/homonyms.txt",
+      "kind": "committed",
+      "bytes": 316,
+      "words": 49,
+      "sha256": "6794b76a14d93249431b97c8df94cfb611c5cec480298a01ff42f7e4f7e8d6d9"
+    },
+    "line-wrap": {
+      "path": "tests/fixtures/perf/line-wrap.txt",
+      "kind": "committed",
+      "bytes": 407,
+      "words": 55,
+      "sha256": "587e244aa2ed5017e2afb44ef3a8470fd58dfafca06d4f48cf651fad8fc57b10"
+    },
+    "page-errors-8pct": {
+      "path": "reports/corpora/page-errors-8pct.txt",
+      "kind": "generated",
+      "source": "tests/fixtures/perf/page-2000.txt",
+      "seed": 7,
+      "percent": 8,
+      "bytes": 15298,
+      "words": 1959,
+      "sha256": "51cc8fe46c8bce7433aca43e75cc9dc501617f5d4a1cff1b44cb7e113abc7377"
+    },
+    "page-errors-x": {
+      "path": "reports/corpora/page-errors-x.txt",
+      "kind": "generated",
+      "source": "tests/fixtures/perf/page-2000.txt",
+      "seed": 7,
+      "percent": 8,
+      "bytes": 17258,
+      "words": 1959,
+      "sha256": "bb6b54b3f83f0161b40834818be299f62111f7021baca28b25d757f0d3d7ed3e"
+    }
+  }
+}
