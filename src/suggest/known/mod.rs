@@ -852,9 +852,19 @@ fn is_known_word_with_compound_uncached(
 pub fn warm_caches() {
     let _ = lemma_set();
     let _ = catalogue();
+    // The first unknown word of a process used to pay for the 104k-lemma
+    // list and the two signature tables, which made the first complex word
+    // (`lempiviikko`, `lempiviikkomme`) look like a compound-DP cost. Pay
+    // them here, at worker boot, instead.
+    let _ = crate::kotus::lemmas();
+    let _ = crate::expand::stem_endings::NOUN.key_count();
+    let _ = crate::expand::stem_endings::VERB.key_count();
     // The non-compound detector is the last lazy layer: it builds the
     // derivation tables and the stem-map verifiers. A miss warms all of them
     // without accepting a word, so the first unknown word on a page does not
     // pay the ~100 ms cold start.
     let _ = is_known_word_no_compound("xyzzy");
+    // The compound path initializes the bound-suffix table separately; a
+    // miss here warms it without accepting anything.
+    let _ = is_known_word("xyzzy");
 }

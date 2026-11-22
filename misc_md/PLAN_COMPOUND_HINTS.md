@@ -1,7 +1,7 @@
 # PLAN_COMPOUND_HINTS — a precomputed lexical-compound split table
 
-Status: **prototyped, measured and parked** · 2026-11-22 · baseline
-`ee7b7f9` (after Phase 3 of
+Status: **table prototyped and parked; the lazy-initialization tail was
+fixed** · 2026-11-22 · baseline `ee7b7f9` (after Phase 3 of
 [`PLAN_UNKNOWN_FAST.md`](PLAN_UNKNOWN_FAST.md))
 
 ## 0. Result
@@ -23,6 +23,23 @@ did not meet the go gate:
 the cold-start tool and below the ≥10 % gate. The top tail
 (`lempiviikkomme`, `perunkirjoittamista`) is novel, not lexical, and is not
 covered. The reader-shaped 7,000 book gets almost no hits.
+
+### 0.1 The `lempiviikko` tail was lazy initialization
+
+The 23–26 ms `lempiviikko` / `lempiviikkomme` cost was not the compound DP.
+Callgrind showed most of it in one-time `Once` initialization:
+`lemmas()` (the 104k-lemma list), the two `stem_endings` tables and the
+bound-suffix table. After `warm_caches` pre-warms those at worker boot:
+
+| measurement | cold | after `warm_caches` |
+|---|---:|---:|
+| `lempiviikko` | 26.4 ms | **2.4 ms** |
+| `lempiviikkomme` | 23.7 ms | **1.6 ms** |
+| `page-2000` first pass | 131 ms | **102 ms** |
+
+That is a real ~22 % warm-page improvement and it is independent of the split
+table. The change landed in `suggest::known::warm_caches`; the demo and both
+extensions already call it at worker boot.
 
 A separate check over **1,963 sampled list lemmas** generated **99,951
 forms**; **94.3 %** of those forms hit the hint. The misses are degree and
