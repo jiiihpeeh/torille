@@ -98,6 +98,7 @@ Do not delete a reading to make the live pair quiet.
 |---|---:|---|
 | n=5 live, before the union | 79,830 | 140 / 6 / 0 |
 | n=5 live, after all fixes | **80,277** | **0 / 0 / 0** |
+| n=20 live, after all fixes | **229,472** (1,505 lemmas) | **0 / 0 / 0** |
 
 The per-word live check has 0 missing for `live` (`livenne` is now confirmed);
 its remaining `illegal` rows are the Voikko coverage gap from §1.4, including

@@ -355,7 +355,8 @@ so the class table below is ranked by *rate*.
 lexicon path (`_audit_lexicon`) already did. Before that, `havas`
 (`41*E, 39`) reported the forms of its 39-class reading as missing. With the
 fresh binding the n=5 live sweep is **80,277 confirmed, 0 missing, 0 not
-plain, 0 illegal** (3,049 unsupported). Two Wiktionary-confirmed readings are
+plain, 0 illegal** (3,049 unsupported); the n=20 confirmation is **229,472
+confirmed, 0 / 0 / 0** over 1,505 lemmas. Two Wiktionary-confirmed readings are
 not in Voikko: `havas (41-E)` and the dialectal `live (48-E)` noun. The engine
 keeps both; the per-word live check reports them as a coverage gap, not an
 engine defect.
