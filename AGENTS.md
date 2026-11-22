@@ -61,6 +61,9 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
 - `misc_md/PLAN_PROBE_PERF.md` — the next probe-performance slice: per-stem
   ending signatures, targeted membership checks for the dominant verb classes,
   a shared stem-probe context and the remaining allocation/hasher work.
+- `misc_md/PLAN_UNKNOWN_FAST.md` — the misspell first-pass plan: the measured
+  known/unknown split, single-base noun signature accepts, full-remainder verb
+  signatures and the compound-probe cleanup.
 - `docs/hyphenation.md` — line-break hyphenation: patterns, compound adapter,
   policy, offsets and exceptions. The plan is `misc_md/PLAN_HYPHENATION.md`.
 - `misc_md/TODO.md` — known gaps ordered by user-facing impact.
