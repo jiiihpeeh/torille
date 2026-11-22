@@ -1,7 +1,7 @@
 # PLAN_UNKNOWN_FAST — a faster misspell first pass
 
-Status: **Phases 0–3 landed** (2026-11-22); Phases 4–6 proposed. Baseline
-`6de70e7`; the code changes are on top of `778da8a`.
+Status: **Phases 0–3 landed; Phase 4 parked; Phases 5–6 proposed**
+(2026-11-22). Baseline `6de70e7`; the code changes are on top of `778da8a`.
 
 The first pass that decides “is this token a misspelling?” is
 `find_misspells` → `check_normal_fast` per token. It is not the suggestion
@@ -125,7 +125,7 @@ Phases 0–3 are landed and measured on the reference machine:
 | after Phase 3 (verb full-remainder signature) | **84.0 ms** |
 | first-pass tool, unique surfaces, before | **318 ms** |
 | after Phase 2 | **271 ms** |
-| after Phase 3 | **170 ms** |
+| after Phase 3 | **130.8 ms** (quick-suite median) |
 | signature/naming parity | **0 mismatches** over 45,607 surfaces |
 | signature blobs | **1.20 MB gzip** (141 KB noun + 1,061 KB verb) |
 
@@ -143,6 +143,9 @@ corpus went from about 799 ms to about 550 ms; the page still has the same
 false flag. The one regression found on the way — `lukenutta` and
 `närkästyneenä` were briefly rejected because the naming path applied the
 v2 remainder table to the fixed ending — is covered by the participle tests.
+The remaining tail is one possessive compound (`lempiviikkomme`, ~23 ms);
+the p95 is 356 µs and the max 23.8 ms, so the total target is met but the
+tail target is not.
 
 ## 2. Constraints
 
@@ -333,6 +336,13 @@ are ≤1.5 MB gzip; no fast-only accept; diagnostics and readings unchanged.
 
 ### Phase 4 — Stop asking the compound DP the same question twice
 
+**Measured 2026-11-22 — parked.** Phases 1–3 meet the first-pass target, so
+this is optional. A possessive-host DP probe (`lempiviikko` before the
+full-word segmenter) did not move `lempiviikkomme` (still ~23 ms) and nudged
+the page from 133 to 149 ms; it was reverted. The remaining cost is the
+full-word compound DP, not the modifier probe the plan expected. Revisit only
+if the max-token tail becomes a user-visible problem.
+
 After Phases 2–3, remeasure `modifier_is_known` and `is_known_compound_dp`.
 If they are still hot:
 
@@ -420,6 +430,11 @@ the ordinary `tests/catalogue.rs` gaps.
 | time to first underline | ~325 ms | **≤50 ms** (Phase 5) |
 | wasm blob growth | 100 KB signatures | **≤1.5 MB gzip** |
 
+Measured after Phase 3: **130.8 ms** in the first-pass tool and **84.0 ms**
+at the state level; p95 356 µs, p99 1.9 ms, max 23.8 ms; blobs 1.20 MB
+gzip. The total and blob targets are met; the p95/p99/max tail is not, and
+Phase 4 is parked because the remaining cost is the full-word compound DP.
+
 The targets are hypotheses. A phase that misses its gate is a measured
 negative result and is recorded, not merged:
 
@@ -450,9 +465,9 @@ negative result and is recorded, not merged:
 - **Compound acceptance.** The DP is the most delicate part of the checker;
   every Phase 4 change needs the classless-compound report and the
   `page-2000` diagnostic parity, not just a timing win.
-- **Blob size.** 2.5 MB raw is an estimate from a prototype; the gzip result
-  and the wasm module size decide Phase 3. If the blob is too large, ship
-  Phase 2 and the compound probe work only.
+- **Blob size.** The shipped v2 tables are 2.98 MB raw / 1.20 MB gzip
+  (141 KB noun + 1,061 KB verb), under the 1.5 MB gate. A future engine change
+  that adds many remainders must re-measure this and the wasm module size.
 
 ## 6. What not to do
 
