@@ -9,6 +9,7 @@ use leptos::prelude::*;
 use torille::syntax_check::{
     self, Correction, DiagnosticKind, Relation, Severity, SyntaxDiagnostic,
 };
+use torille::typography::{self, TypographyDiagnostic, TypographyRule};
 
 #[component]
 pub fn SyntaxPanel(
@@ -58,6 +59,110 @@ pub fn SyntaxPanel(
                 }}
             </Show>
         </section>
+    }
+}
+
+/// The separate typography pass: semicolon spacing, opt-in and never part of
+/// the grammar check.
+#[component]
+pub fn TypographyPanel(
+    /// The textarea's current text.
+    text: ReadSignal<String>,
+    /// Writer the correction buttons use to replace the text.
+    set_text: WriteSignal<String>,
+) -> impl IntoView {
+    let (diagnostics, set_diagnostics) = signal(Vec::<TypographyDiagnostic>::new());
+    let (checked, set_checked) = signal(false);
+
+    let run_check = move || {
+        let current = text.get_untracked();
+        set_diagnostics.set(typography::check(&current));
+        set_checked.set(true);
+    };
+
+    view! {
+        <section class="syntax-panel">
+            <h2>"Typografia"</h2>
+            <p class="hint">
+                "Puolipisteiden välit. Erillinen, valinnainen tarkistus."
+            </p>
+            <button type="button" class="syntax-check" on:click=move |_| run_check()>
+                "Tarkista typografia"
+            </button>
+            <Show when=move || checked.get()>
+                {move || {
+                    let items = diagnostics.get();
+                    if items.is_empty() {
+                        view! { <p class="ok">"Ei huomautuksia."</p> }.into_any()
+                    } else {
+                        view! {
+                            <ul class="syntax-list">
+                                {items.into_iter().map(|diagnostic| {
+                                    typography_row(
+                                        diagnostic,
+                                        text,
+                                        set_text,
+                                        set_diagnostics,
+                                        set_checked,
+                                    )
+                                }).collect_view()}
+                            </ul>
+                        }.into_any()
+                    }
+                }}
+            </Show>
+        </section>
+    }
+}
+
+fn typography_row(
+    diagnostic: TypographyDiagnostic,
+    text: ReadSignal<String>,
+    set_text: WriteSignal<String>,
+    set_diagnostics: WriteSignal<Vec<TypographyDiagnostic>>,
+    set_checked: WriteSignal<bool>,
+) -> impl IntoView {
+    let rule = diagnostic.rule;
+    let span = diagnostic.span.clone();
+    let replacement = diagnostic.replacement.clone();
+    let action = typography_action(rule, &replacement);
+
+    view! {
+        <li class="syntax-diag syntax-suggestion">
+            <div class="syntax-head">
+                <strong>{typography_label(rule)}</strong>
+                <span class="syntax-severity">"ehdotus"</span>
+            </div>
+            <div class="syntax-corrections">
+                <button
+                    type="button"
+                    on:click=move |_| {
+                        let current = text.get_untracked();
+                        let mut updated = current.clone();
+                        updated.replace_range(span.clone(), &replacement);
+                        set_text.set(updated.clone());
+                        set_diagnostics.set(typography::check(&updated));
+                        set_checked.set(true);
+                    }
+                >{action}</button>
+            </div>
+        </li>
+    }
+}
+
+fn typography_label(rule: TypographyRule) -> &'static str {
+    match rule {
+        TypographyRule::SemicolonSpacing => "puolipisteen väli",
+        TypographyRule::SemicolonDuplicate => "kaksinkertainen puolipiste",
+    }
+}
+
+fn typography_action(rule: TypographyRule, replacement: &str) -> &'static str {
+    match (rule, replacement) {
+        (TypographyRule::SemicolonDuplicate, _) => "lyhennä puolipisteeksi",
+        (TypographyRule::SemicolonSpacing, "") => "poista välilyönti",
+        (TypographyRule::SemicolonSpacing, " ") => "lisää välilyönti",
+        (TypographyRule::SemicolonSpacing, _) => "korjaa väli",
     }
 }
 

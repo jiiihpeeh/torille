@@ -201,6 +201,13 @@ declare type R_CheckStyle = {
 declare type R_CheckStyleResponse = {
   diagnostics: R_SyntaxDiagnostic[];
 };
+declare type R_CheckTypography = {
+  type: 'torille:check-typography';
+  text: string;
+};
+declare type R_CheckTypographyResponse = {
+  diagnostics: R_SyntaxDiagnostic[];
+};
 declare type R_CheckGrammarStyle = {
   type: 'torille:check-grammar-style';
   idx: number;
@@ -305,11 +312,15 @@ declare type R_CheckStylePendingInputMessage = {
 declare type R_CheckAllPendingInputMessage = {
   type: 'torille:check-all-pending-input';
 };
+declare type R_CheckTypographyPendingInputMessage = {
+  type: 'torille:check-typography-pending-input';
+};
 declare type R_ContentInboundMessage =
   | R_TogglePendingInputMessage
   | R_CheckGrammarPendingInputMessage
   | R_CheckStylePendingInputMessage
   | R_CheckAllPendingInputMessage
+  | R_CheckTypographyPendingInputMessage
   | R_CheckProgress;
 declare type R_ToggleResponse = { disabled: boolean };
 declare type R_CheckGrammarResponse = { checked: boolean };
@@ -346,6 +357,7 @@ declare type R_WorkerInbound =
     }
   | { id: number; type: 'check-syntax'; idx: number; text: string }
   | { id: number; type: 'check-style'; idx: number; text: string }
+  | { id: number; type: 'check-typography'; text: string }
   | {
       id: number;
       type: 'check-grammar-style';
@@ -402,6 +414,7 @@ declare type R_WorkerOutbound =
   | { id: number; type: 'suggest-with-state'; suggestions: string[] }
   | { id: number; type: 'check-syntax'; diagnostics: R_SyntaxDiagnostic[] }
   | { id: number; type: 'check-style'; diagnostics: R_SyntaxDiagnostic[] }
+  | { id: number; type: 'check-typography'; diagnostics: R_SyntaxDiagnostic[] }
   | {
       id: number;
       type: 'check-grammar-style';

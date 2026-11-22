@@ -244,6 +244,13 @@ export function createWorkerClient(opts: { dbg: DebugFn; inputId: number }) {
       });
       return Array.isArray(r?.diagnostics) ? r.diagnostics : null;
     },
+    // The separate, opt-in typography pass (semicolon spacing).
+    async checkTypographyAsync(text: string): Promise<R_SyntaxDiagnostic[] | null> {
+      const r = await send<R_CheckTypographyResponse>({
+        type: 'torille:check-typography', text,
+      });
+      return Array.isArray(r?.diagnostics) ? r.diagnostics : null;
+    },
     // One combined grammar + style pass for the "Tarkista kielioppi ja tyyli"
     // command. The background shares the morphology work between the two
     // layers and returns both streams.

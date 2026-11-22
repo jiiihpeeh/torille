@@ -32,6 +32,18 @@ The build compiles TypeScript, bundles the Solid options page with esbuild,
 copies the wasm-pack output, and writes the loadable `dist/` directory
 (plus the zip/XPI).
 
+## Commands
+
+Right-click a text field and choose one:
+
+- **Tarkista kielioppi** — the grammar pass.
+- **Tarkista tyyli** — the opt-in style pass.
+- **Tarkista kielioppi ja tyyli** — one combined pass for both layers.
+- **Tarkista typografia** — mechanical semicolon spacing. This is a separate,
+  opt-in pass and never runs inside the grammar or combined commands.
+- **Älä tarkasta tätä tekstiä** / **Älä tarkasta tällä sivulla** — the
+  per-input and per-site toggles.
+
 ## Load in Chromium
 
 1. Open `chrome://extensions` (or `brave://extensions`,

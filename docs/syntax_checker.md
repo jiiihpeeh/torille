@@ -207,6 +207,12 @@ rows are in `tests/fixtures/typography.json`; the semicolon audit matrix
 (`FI-SEM-014`, `FI-SEM-015`) asserts the same behaviour through
 `tests/semicolon_spec.rs`.
 
+The wasm export `check_typography` returns the same diagnostic shape with
+`kind: "typography"` and the stable `typography_*` `rule_id`. The Leptos demo
+has a separate **Typografia** panel and the extensions have a **Tarkista
+typografia** context-menu command; neither is part of the grammar or combined
+commands.
+
 ## Performance
 
 The checker is on demand and must not run in the keystroke path. Its cost is

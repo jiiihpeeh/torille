@@ -16,7 +16,7 @@ use leptos::prelude::*;
 
 use crate::components::editor::Editor;
 use crate::components::style::StylePanel;
-use crate::components::syntax::SyntaxPanel;
+use crate::components::syntax::{SyntaxPanel, TypographyPanel};
 
 /// Default text. Re-used from `torille-wasm/demo` so the demo
 /// both ways shows the same misspellings (taloo, koirra,
@@ -90,6 +90,7 @@ pub fn App() -> impl IntoView {
             misspellings=misspellings
         />
         <SyntaxPanel text=text set_text=set_text />
+        <TypographyPanel text=text set_text=set_text />
         <StylePanel text=text set_text=set_text />
         <section class="hyphenation">
             <h2>"Hyphenation"</h2>

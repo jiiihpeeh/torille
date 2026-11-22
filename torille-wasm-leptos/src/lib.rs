@@ -38,7 +38,7 @@ pub use app::App;
 pub use components::editor::Editor;
 pub use components::popup::SuggestionsPopup;
 pub use components::style::StylePanel;
-pub use components::syntax::SyntaxPanel;
+pub use components::syntax::{SyntaxPanel, TypographyPanel};
 
 /// Mount the `App` component to `<body>`. The default `index.html`
 /// we ship sets the wasm-bindgen `start()` export to point at

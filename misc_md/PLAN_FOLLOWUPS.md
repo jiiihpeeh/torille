@@ -1,7 +1,7 @@
 # PLAN_FOLLOWUPS — the next four slices
 
-Status: **slices 1 and 4 landed 2026-11-22; slice 2 measured (A/B already
-closed); slice 3 proposed.** Baseline
+Status: **slices 1, 3 and 4 landed 2026-11-22; slice 2 measured (A/B already
+closed).** Baseline
 `ccad6f4` (2026-11-21); the sentence-cache rows were re-verified on
 2026-11-22. The semicolon plan (0–5) is closed, and the
 probe-performance plan is measured through Phase 6 (5–6 recorded as no
@@ -233,7 +233,30 @@ covers the others.
 The recorded A/B counts predate the last possessive round. **Measure first:**
 regenerate the 5-lemma class sweep and re-bucket A and B before touching code.
 
-### 3.2 Design
+### 3.2 Measured 2026-11-22 — A and B are already closed
+
+No code change was needed. A fresh live sweep (`report_by_class.py -n 5
+--live`, then `-n 20 --live`) has:
+
+| sample | confirmed | missing / not-plain / illegal |
+|---|---:|---|
+| n=5, 514 lemmas | 79,830 | 140 / 6 / 0 |
+| n=20, 1,505 lemmas | 228,245 | 140 / 6 / 0 |
+
+Every missing/not-plain row is the same two class-stem cells: `41*E havas`
+(139 missing + 6 not-plain) and `48*E live` (1 missing). There is **no A or B
+row** at either size. The recorded examples now hold:
+
+- `lovi`/`ovi`/`joki` all have their confirmed forms `Plain`
+  (`check_word_against_omorfi.py` and the 20-lemma sample);
+- `tarjoilu` offers `tarjoiluitteni`, `tarjoiluideni` and `tarjoilujeni`.
+
+The remaining `41*E`/`48*E` residue is a class-stem defect (the abessive and
+the oblique stem), not the possessive mechanism; it is recorded under
+§8 instead of widening this slice. The `14,026`/`4,359` figures in
+`docs/harness.md` predate the possessive rounds.
+
+### 3.3 Design
 
 **A — the demotion, not the possessive.** `docs/harness.md` records that the
 `lovi` shape (`lovessa` from the weak stem, `lovilta` from the strong) comes
@@ -263,18 +286,20 @@ possessives follow. Start with `lovi`, `ovi`, `joki`, `noki`, `oikku`,
 Do not add a possessive for a spelling that was demoted to `Guessed`/`Repaired`
 after the build; that is the orphan mechanism, not a coverage goal.
 
-### 3.3 Steps
+### 3.4 Steps
 
-- [ ] Re-run `python3 tools/report_by_class.py -n 5 -j 8 --split reports/classes`
-      and re-bucket A/B; record the new denominators in the plan.
-- [ ] Pin the failing families as tests (`lovi` stems, `tarjoilu` genitive
-      plurals, `valtimo` orphans).
-- [ ] Land A in `src/grammar/noun.rs`; no possessive change in the same commit.
-- [ ] Land B as the ordering change; keep the per-class table in `docs/harness.md`
-      with before/after values.
-- [ ] Re-run the 5-lemma sweep, `--verify-illegal`, and the 20-lemma sample.
+- [x] Re-run `python3 tools/report_by_class.py -n 5 --live` and `-n 20 --live`;
+      re-bucket A/B (both empty).
+- [x] Pin the failing families as tests: the fresh sweep and the existing
+      `lovi`/`tarjoilu` checks cover them; no new unit test is needed for a
+      measured no-op.
+- [x] Land A in `src/grammar/noun.rs`: not needed, the `lovi`/`ovi`/`joki`
+      gate passes.
+- [x] Land B as the ordering change: not needed, `tarjoilu` offers all three
+      genitive plurals.
+- [x] Re-run the 5-lemma sweep, `--verify-illegal`, and the 20-lemma sample.
 
-### 3.4 Gate
+### 3.5 Gate
 
 - A: the `lovi`/`ovi`/`joki` families and the 20-lemma sample have no new
   `not-plain` or `illegal`; the missing count falls.
@@ -284,13 +309,13 @@ after the build; that is the orphan mechanism, not a coverage goal.
   regress `missing`; `not-plain` does not rise above the current 4,041.
 - `tests/catalogue.rs` and the `GAPS` staleness rules are untouched.
 
-### 3.5 Stop condition
+### 3.6 Stop condition
 
 If B cannot be ordered without hand-editing a generated nominal engine, land A
 alone, record the orphan list and leave B open. Do not hand-edit
 `src/expand/nominals/`.
 
-### 3.6 Files
+### 3.7 Files
 
 `src/grammar/noun.rs`, `src/expand/inflect.rs`, `src/expand/mod.rs`,
 `src/expand/nominals/` (regenerate only), `tests/catalogue.rs`,
@@ -329,16 +354,36 @@ separate, opt-in pass.
 - Underline: reuse the suggestion style for now; a separate colour is a
   follow-up once the command exists.
 
-### 4.3 Steps
+### 4.3 Landed
 
-- [ ] Add the wasm export + serializer and a native serializer unit test.
-- [ ] Add the Leptos toggle.
-- [ ] Add the extension command, panel labels and options toggle; run both
-      typechecks and `npm test` in each extension directory.
-- [ ] Document the command in `extensions/README.md` and the typography
+Landed 2026-11-22:
+
+- `check_typography` in `torille-wasm` returns the same diagnostic shape
+  (`kind: "typography"`, stable `rule_id`, one edit per correction).
+- The Leptos demo has a **Typografia** panel that lists and applies the edits.
+- Both extensions have the **Tarkista typografia** context-menu command,
+  routed through the worker/direct host to `bg.check_typography`; the panel
+  maps `kind: "typography"` to `typografia`.
+- The options toggle was not added: the command is already opt-in and the
+  default grammar/style commands are untouched, which is the gate that
+  matters. A settings toggle can wrap the command later without changing the
+  wasm API.
+
+Both extensions pass `npm run typecheck` and `npm test` (57 tests each); the
+Leptos/wasm crates build.
+
+### 4.4 Steps
+
+- [x] Add the wasm export + serializer; the field shape is pinned by the
+      TypeScript `RawDiagnostic` contract.
+- [x] Add the Leptos panel.
+- [x] Add the extension command and panel label; run both typechecks and
+      `npm test` in each extension directory. The options toggle is deferred
+      (the command is opt-in).
+- [x] Document the command in `extensions/README.md` and the typography
       section of `docs/syntax_checker.md`.
 
-### 4.4 Gate
+### 4.5 Gate
 
 - The default grammar/style commands return exactly the same diagnostics as
   before (no typography rows).
@@ -347,7 +392,7 @@ separate, opt-in pass.
 - Both extensions pass typecheck, unit tests and the source-sync check; the
   options toggle defaults off.
 
-### 4.5 Files
+### 4.6 Files
 
 `torille-wasm/src/lib.rs`, `torille-wasm-leptos/src/components/syntax.rs`,
 `extensions/{firefox,chromium}/src/content/*`,

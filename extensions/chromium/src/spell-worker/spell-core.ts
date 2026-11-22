@@ -212,6 +212,7 @@ export type CoreResponse =
   | { type: 'suggest-with-state'; suggestions: string[] }
   | { type: 'check-syntax'; diagnostics: R_SyntaxDiagnostic[] }
   | { type: 'check-style'; diagnostics: R_SyntaxDiagnostic[] }
+  | { type: 'check-typography'; diagnostics: R_SyntaxDiagnostic[] }
   | {
       type: 'check-grammar-style';
       diagnostics: R_SyntaxDiagnostic[];
@@ -525,6 +526,16 @@ function handleCheckStyle(
   return { type: 'check-style', diagnostics };
 }
 
+function handleCheckTypography(
+  msg: Extract<R_WorkerInbound, { type: 'check-typography' }>,
+): CoreResponse {
+  const raw = bg.check_typography(msg.text);
+  const diagnostics = toContentDiagnostics(msg.text, raw.diagnostics ?? []);
+  dbg('core', 'check-typography',
+      { len: msg.text.length, diagnostics: diagnostics.length });
+  return { type: 'check-typography', diagnostics };
+}
+
 function handleUniqueSurfaces(
   msg: Extract<R_WorkerInbound, { type: 'unique-surfaces' }>,
 ): CoreResponse {
@@ -662,6 +673,7 @@ export function createSpellCore(): SpellCore {
         case 'suggest-with-state': return handleSuggestWithState(msg);
         case 'check-syntax': return handleCheckSyntax(msg);
         case 'check-style': return handleCheckStyle(msg);
+        case 'check-typography': return handleCheckTypography(msg);
         case 'check-grammar-style': return handleCheckGrammarStyle(msg);
         case 'unique-surfaces': return handleUniqueSurfaces(msg);
         case 'set-user-words': return handleSetUserWords(msg);

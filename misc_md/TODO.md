@@ -135,7 +135,12 @@ still open.
   another suffix strip to `is_known_word`; every fixed form goes through the
   derivation layer so the whole class gains it.
 
-- [ ] **An oblique form that is not `Plain` gets no possessive**
+- [x] **An oblique form that is not `Plain` gets no possessive**
+  *Closed 2026-11-22.* The fresh live sweep has no A rows: `lovi`, `ovi` and
+  `joki` are plain, and the 20-lemma sample has 0 missing/not-plain/illegal.
+  The only missing/not-plain residue is the class-stem pair `41*E havas`
+  (139 + 6) and `48*E live` (1), which is not the possessive mechanism; keep
+  those on the class-stem tracker.
   The `demote_contested` gating is now bypassed for the unmarked member of a
   two-stem class: class 7 `ovi`/`lovi` take the shallow `ove` stem and offer
   `ovessa` and `ovella` as `Plain`; `joki` keeps the deeper `joe` only with its
@@ -152,7 +157,10 @@ still open.
 
   Evidence: `docs/harness.md` → Known defects → A.
 
-- [ ] **Offer a possessive off every plain spelling of a slot, not the first**
+- [x] **Offer a possessive off every plain spelling of a slot, not the first**
+  *Closed 2026-11-22.* The live n=5 and n=20 sweeps have no B rows, and
+  `tarjoilu` now offers `tarjoiluitteni`, `tarjoiluideni` and
+  `tarjoilujeni`. The `14,026`/`4,359` figures predate the possessive rounds.
   **4359 missing forms across 92 classes** (GEN 1962/82, ILL 2397/86, PAR
   1117/60, NOM 740/54). The slot loop takes the first `Plain` spelling for a
   slot and hangs the possessive off that alone; when a class legitimately has

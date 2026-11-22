@@ -101,6 +101,7 @@ type SpellCallPayload =
   | { type: 'suggest-with-state'; idx: number; word: string; max: number }
   | { type: 'check-syntax'; idx: number; text: string }
   | { type: 'check-style'; idx: number; text: string }
+  | { type: 'check-typography'; text: string }
   | {
       type: 'check-grammar-style';
       idx: number;
@@ -147,6 +148,7 @@ type SpellResponse =
   | { id: number; type: 'suggest-with-state'; suggestions: string[] }
   | { id: number; type: 'check-syntax'; diagnostics: R_SyntaxDiagnostic[] }
   | { id: number; type: 'check-style'; diagnostics: R_SyntaxDiagnostic[] }
+  | { id: number; type: 'check-typography'; diagnostics: R_SyntaxDiagnostic[] }
   | {
       id: number;
       type: 'check-grammar-style';
@@ -926,6 +928,7 @@ const MENU_DISABLE_SITE = 'torille-disable-site';
 const MENU_CHECK_GRAMMAR = 'torille-check-grammar';
 const MENU_CHECK_STYLE = 'torille-check-style';
 const MENU_CHECK_ALL = 'torille-check-all';
+const MENU_CHECK_TYPOGRAPHY = 'torille-check-typography';
 
 const MENU_ITEMS: browser.contextMenus._CreateCreateProperties[] = [
   {
@@ -941,6 +944,11 @@ const MENU_ITEMS: browser.contextMenus._CreateCreateProperties[] = [
   {
     id: MENU_CHECK_ALL,
     title: 'Tarkista kielioppi ja tyyli',
+    contexts: ['editable'],
+  },
+  {
+    id: MENU_CHECK_TYPOGRAPHY,
+    title: 'Tarkista typografia',
     contexts: ['editable'],
   },
   {
@@ -998,6 +1006,7 @@ api.runtime.onMessage.addListener((message: unknown, sender: { tab?: { id?: numb
     | R_SuggestWithState
     | R_CheckSyntax
     | R_CheckStyle
+    | R_CheckTypography
     | R_CheckGrammarStyle
     | R_CancelCheck
     | R_ContextMenuFired
@@ -1314,6 +1323,24 @@ api.runtime.onMessage.addListener((message: unknown, sender: { tab?: { id?: numb
     })();
   }
 
+  // The separate, opt-in typography pass. It is stateless on the wasm side,
+  // so it goes through the same worker/direct host as the other checks.
+  if (m?.type === 'torille:check-typography') {
+    return (async (): Promise<R_CheckTypographyResponse> => {
+      try {
+        await ensureSpellWorkerForRequest();
+        const r = await spellCall({ type: 'check-typography', text: m.text });
+        if (r.type !== 'check-typography') {
+          throw new Error('worker returned unexpected response');
+        }
+        return { diagnostics: r.diagnostics };
+      } catch (e) {
+        dbg('background', 'check-typography route error', String(e));
+        return { diagnostics: [] };
+      }
+    })();
+  }
+
   // An edit cancels the running check for that input. The background
   // checks the generation before each batch; the content script also
   // discards any result whose text changed.
@@ -1365,6 +1392,10 @@ api.contextMenus.onClicked.addListener(async (info, tab) => {
     await handleCheckAllClick(tab);
     return;
   }
+  if (info.menuItemId === MENU_CHECK_TYPOGRAPHY) {
+    await handleCheckTypographyClick(tab);
+    return;
+  }
   if (info.menuItemId === MENU_DISABLE_INPUT) {
     await handleDisableInputClick(tab);
     return;
@@ -1391,6 +1422,17 @@ async function handleCheckStyleClick(tab: browser.tabs.Tab | undefined): Promise
   try {
     await api.tabs.sendMessage(tab.id, {
       type: 'torille:check-style-pending-input',
+    });
+  } catch (_) {
+    // No content script on this tab; nothing to check.
+  }
+}
+
+async function handleCheckTypographyClick(tab: browser.tabs.Tab | undefined): Promise<void> {
+  if (!tab || tab.id == null) return;
+  try {
+    await api.tabs.sendMessage(tab.id, {
+      type: 'torille:check-typography-pending-input',
     });
   } catch (_) {
     // No content script on this tab; nothing to check.

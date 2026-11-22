@@ -59,6 +59,27 @@ declare module '*/torille_wasm_bg.js' {
     max_n: number,
   ): string[];
 
+  /** Mechanical typography (semicolon spacing), separate from grammar. */
+  export function check_typography(text: string): {
+    diagnostics: {
+      kind: string;
+      rule_id: string;
+      severity: string;
+      confidence: string;
+      start: number;
+      end: number;
+      message: string;
+      expected: string | null;
+      corrections: {
+        score: number;
+        note: string;
+        license: string;
+        confidence: string;
+        edits: { start: number; end: number; replacement: string }[];
+      }[];
+    }[];
+  };
+
   /** Grammar diagnostics with UTF-8 byte offsets and edit lists. */
   export function check_syntax_with_state(
     idx: number,

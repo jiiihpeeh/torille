@@ -717,6 +717,63 @@ fn style_object(diagnostics: &[torille::style_check::StyleDiagnostic]) -> js_sys
     obj
 }
 
+/// Mechanical typography: semicolon spacing, outside the grammar checker.
+///
+/// This is a separate, opt-in pass. The object is `{ diagnostics: [...] }`
+/// with the same field shape as `check_syntax`; `kind` is `"typography"` and
+/// `rule_id` is the stable `typography_*` rule. A UI keeps it behind its own
+/// command or toggle.
+#[wasm_bindgen]
+pub fn check_typography(text: &str) -> js_sys::Object {
+    let obj = js_sys::Object::new();
+    set(
+        &obj,
+        "diagnostics",
+        typography_diagnostics_array(&torille::typography::check(text)).into(),
+    );
+    obj
+}
+
+fn typography_diagnostics_array(
+    diagnostics: &[torille::typography::TypographyDiagnostic],
+) -> js_sys::Array {
+    use js_sys::Array;
+
+    let array = Array::new();
+    for diagnostic in diagnostics {
+        let item = js_sys::Object::new();
+        set(&item, "kind", JsValue::from("typography"));
+        set(&item, "rule_id", JsValue::from(diagnostic.rule.name()));
+        set(&item, "severity", JsValue::from("suggestion"));
+        set(&item, "confidence", JsValue::from("certain"));
+        set(&item, "start", JsValue::from(diagnostic.span.start as u32));
+        set(&item, "end", JsValue::from(diagnostic.span.end as u32));
+        set(&item, "message", JsValue::from(diagnostic.message));
+        set(&item, "expected", JsValue::NULL);
+        let correction = js_sys::Object::new();
+        set(&correction, "score", JsValue::from(0.0));
+        set(&correction, "note", JsValue::from(diagnostic.rule.name()));
+        set(&correction, "license", JsValue::from("punctuation"));
+        set(&correction, "confidence", JsValue::from("certain"));
+        let edits = Array::new();
+        let edit = js_sys::Object::new();
+        set(&edit, "start", JsValue::from(diagnostic.span.start as u32));
+        set(&edit, "end", JsValue::from(diagnostic.span.end as u32));
+        set(
+            &edit,
+            "replacement",
+            JsValue::from(diagnostic.replacement.as_str()),
+        );
+        edits.push(&edit);
+        set(&correction, "edits", edits.into());
+        let corrections = Array::new();
+        corrections.push(&correction);
+        set(&item, "corrections", corrections.into());
+        array.push(&item);
+    }
+    array
+}
+
 /// The same diagnostics through the per-textarea word cache.
 ///
 /// A stale or destroyed handle falls back to the stateless path.

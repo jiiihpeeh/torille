@@ -19,7 +19,7 @@ import { createBlacklist } from './blacklist';
 import { createTextboxToggle } from './context-menu';
 import {
   editorText, hideCheckProgress, showCheckProgress, showCombinedPanel,
-  showGrammarPanel, showStylePanel,
+  showGrammarPanel, showStylePanel, showTypographyPanel,
 } from './grammar-panel';
 import { createOverlay } from './overlay';
 import { createScanner } from './scanner';
@@ -279,6 +279,35 @@ createTextboxToggle({
       render(syntax, style);
     }).catch((e: unknown) => {
       dbg('content', 'checkAll failed', String(e));
+    }).finally(() => {
+      if (checkTokens.get(inputId) === token) hideCheckProgress(inputId);
+    });
+  },
+  async checkTypography(input: HTMLElement): Promise<void> {
+    await ignoredRulesReady;
+    const overlay = perInput.get(input);
+    if (!overlay) return;
+    const text = editorText(input);
+    const inputId = overlay.workerClient.inputId;
+    const token = nextCheckToken(inputId);
+    const apply = (correction: R_SyntaxCorrection): boolean => {
+      if (editorText(input) !== text) return false;
+      return overlay.applyTextEdits(correction.edits);
+    };
+    showCheckProgress(inputId, 'Tarkistetaan typografiaa…');
+    overlay.workerClient.checkTypographyAsync(text).then((diagnostics) => {
+      if (diagnostics === null) return;
+      if (editorText(input) !== text) return;
+      const render = (list: R_SyntaxDiagnostic[]): void => {
+        overlay.setGrammarDiagnostics(list);
+        showTypographyPanel(input, list, apply, (ruleId) => {
+          ignoreRule(ruleId);
+          render(list.filter((d) => ruleOf(d) !== ruleId));
+        });
+      };
+      render(filterIgnored(diagnostics));
+    }).catch((e: unknown) => {
+      dbg('content', 'checkTypography failed', String(e));
     }).finally(() => {
       if (checkTokens.get(inputId) === token) hideCheckProgress(inputId);
     });

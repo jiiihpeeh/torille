@@ -73,6 +73,7 @@ export function syntaxKindLabel(kind: string): string {
     case 'list_introducer_comma': return 'pilkku kaksoispisteen jälkeen';
     case 'semicolon_misuse': return 'puolipisteen käyttö';
     case 'semicolon_missing': return 'puuttuva puolipiste';
+    case 'typography': return 'typografia';
     default: return kind;
   }
 }
@@ -143,6 +144,20 @@ export function showGrammarPanel(
   showPanel(input, diagnostics, apply, ignore, {
     title: 'Kielioppi',
     empty: 'Ei huomautuksia.',
+    kindLabel: syntaxKindLabel,
+  });
+}
+
+/// The separate typography command: semicolon spacing only.
+export function showTypographyPanel(
+  input: HTMLElement,
+  diagnostics: R_SyntaxDiagnostic[],
+  apply: (correction: R_SyntaxCorrection) => boolean,
+  ignore: (ruleId: string) => void,
+): void {
+  showPanel(input, diagnostics, apply, ignore, {
+    title: 'Typografia',
+    empty: 'Ei typografiahuomautuksia.',
     kindLabel: syntaxKindLabel,
   });
 }
