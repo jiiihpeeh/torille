@@ -1,7 +1,34 @@
 # PLAN_COMPOUND_HINTS — a precomputed lexical-compound split table
 
-Status: **proposal** · 2026-11-22 · baseline `ee7b7f9` (after Phase 3 of
+Status: **prototyped, measured and parked** · 2026-11-22 · baseline
+`ee7b7f9` (after Phase 3 of
 [`PLAN_UNKNOWN_FAST.md`](PLAN_UNKNOWN_FAST.md))
+
+## 0. Result
+
+The idea was implemented end-to-end and measured. The lexical table is real:
+**48,973 splits from 56,487 classless lemmas (87 %)**, 48,973 unique rows,
+**173 KB gzip** (2.4 MB CSV). The runtime hint was correct — parity with the
+naming gate was 0 on all corpora and the unknown set was unchanged — but it
+did not meet the go gate:
+
+| corpus | hint hits / calls | share |
+|---|---:|---:|
+| `page-2000` | 21 / 88 | 24 % |
+| 8 %-error page | 19 / 168 | 11 % |
+| book `45448` | 884 / 3,358 | 26 % |
+| book `7000` | 186 / 9,008 | 2 % |
+
+`page-2000` improved from ~131 ms to ~119 ms (about 9 %), inside the noise of
+the cold-start tool and below the ≥10 % gate. The top tail
+(`lempiviikkomme`, `perunkirjoittamista`) is novel, not lexical, and is not
+covered. The reader-shaped 7,000 book gets almost no hits.
+
+The go gate required ≥30 % of compound-DP calls and a win on both books; it
+failed, so the runtime hook, generator, CSV and build table were reverted.
+This file is the measured record. A future attempt needs a richer source
+(common novel compounds or modifier-frequency evidence) or a cheaper miss
+path, not only the classless rows.
 
 The idea: many Finnish compounds are not discoveries. The Kotus *sanalista*
 already lists 56,486 classless rows, and Kotus omits the class precisely
