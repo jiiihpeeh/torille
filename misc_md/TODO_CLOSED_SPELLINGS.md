@@ -1,11 +1,15 @@
 # TODO: shrink `closed_spellings::CLOSED`
 
-Status: **complete (32 → 0 rows)** · owner: — · created: 2026-11-08
+Status: **32 → 6 rows** (the `kuulten` family) · owner: — · created: 2026-11-08
 
-The closed-spelling table in `src/expand/closed_spellings.rs` has 32
-`(surface, base)` pairs. Most are not closed spellings: they are ordinary
-inflection, productive derivation, compound analysis, proper-name data, or
-plain misspellings. The table also serves the fast per-keystroke path, so a row
+The audit harness and the residue decision are slice 4 of
+[`PLAN_FOLLOWUPS.md`](PLAN_FOLLOWUPS.md). The Phase 0 checklist below is the
+remaining work; the Progress section records the 26 rows that were removed.
+
+The closed-spelling table in `src/expand/closed_spellings.rs` started with 32
+`(surface, base)` pairs; six remain, the `kuulten` family. Most were not closed
+spellings: they are ordinary inflection, productive derivation, compound
+analysis, proper-name data, or plain misspellings. The table also serves the fast per-keystroke path, so a row
 can only go when **both** the full engine and `check_normal_fast` resolve the
 surface without it.
 
@@ -50,7 +54,7 @@ Read-only probes on the current tree (`inflect(base)`, `look_base`,
 
 ## Progress (2026-11-08)
 
-Removed from `CLOSED` (32 → 0 rows):
+Removed from `CLOSED` (26 of 32 rows; the `kuulten` family remains):
 
 - [x] `edeltäkäsin`, `itsekunkin`, `niinkauan`, `senjälkeen`, `silloinkun`,
       `yhtäkaikki` — Kotus two-word spellings; moved to `is_nonword`.

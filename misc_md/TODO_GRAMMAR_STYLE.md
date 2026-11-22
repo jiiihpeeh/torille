@@ -836,6 +836,9 @@ Adjacent repetition is not always accidental:
   them) or the sentence path is over-firing; adjudicate before changing
   either, and add the found rows to the corpus once decided.
 
+The sentence-cache divergence above is slice 1 of
+[`PLAN_FOLLOWUPS.md`](PLAN_FOLLOWUPS.md); the typography surface is slice 3.
+
 ## P3 — future syntax roadmap
 
 ### Word-order specification

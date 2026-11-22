@@ -82,6 +82,9 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
   boundary defect, the forbidden-semicolon cases, complex lists and spacing.
 - `misc_md/PLAN_SEMICOLON.md` — the semicolon slice: boundary fix, structural
   misuse suggestions, list awareness and the separate typography pass.
+- `misc_md/PLAN_FOLLOWUPS.md` — the next four independent slices:
+  sentence-cache parity, possessive coverage, typography surfaces and the
+  closed-spelling audit.
 
 ## Repository map
 

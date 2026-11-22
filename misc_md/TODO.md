@@ -9,6 +9,10 @@ The closed-spelling table cleanup has its own checklist:
 The grammar, syntax and style layers have their own roadmap and gap list:
 [`TODO_GRAMMAR_STYLE.md`](TODO_GRAMMAR_STYLE.md).
 
+The next four independent slices, with their ordering, gates and stop
+conditions, are in [`PLAN_FOLLOWUPS.md`](PLAN_FOLLOWUPS.md). The possessives
+below are slice 2 there.
+
 ## High priority
 
 Ordered by user-facing impact, which is not the same as gap size: an engine that
