@@ -1,7 +1,7 @@
 # PLAN_FOLLOWUPS — the next four slices
 
-Status: **slices 1, 3 and 4 landed 2026-11-22; slice 2 measured (A/B already
-closed).** Baseline
+Status: **all four slices addressed 2026-11-22.** Slices 1, 3 and 4 landed;
+slice 2 is a measured no-op (A/B were already closed). Baseline
 `ccad6f4` (2026-11-21); the sentence-cache rows were re-verified on
 2026-11-22. The semicolon plan (0–5) is closed, and the
 probe-performance plan is measured through Phase 6 (5–6 recorded as no
@@ -526,4 +526,7 @@ Plus:
 - The grouped form-table download budget and the class-level `accepts` test
   (`TODO_GRAMMAR_STYLE.md`, cold-page target).
 - Neural reading disambiguation M0 (`docs/neural_disambiguation.md`).
+- The `41*E havas` (139 missing + 6 not-plain) and `48*E live` (1 missing)
+  class-stem residue found by the slice-2 sweep; it is a class engine defect,
+  not the possessive mechanism.
 - Any new suffix-stripper entry in `is_known_word`.
