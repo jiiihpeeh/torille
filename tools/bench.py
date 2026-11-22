@@ -268,7 +268,7 @@ def flatten_check_suggest(name: str, data: dict, samples: dict) -> None:
     is useless in a comparison table.
     """
     for key, value in data.items():
-        if key in ("corpus", "words"):
+        if key in ("corpus", "words", "first_pass"):
             continue
         if isinstance(value, (int, float)) and not isinstance(value, bool):
             run_samples(samples, f"check_suggest.{name}.{key}", float(value))
@@ -276,6 +276,12 @@ def flatten_check_suggest(name: str, data: dict, samples: dict) -> None:
         for key, value in row.items():
             if isinstance(value, (int, float)) and not isinstance(value, bool):
                 run_samples(samples, f"check_suggest.{name}.corpus.{key}", float(value))
+    for row in data.get("first_pass") or []:
+        for key, value in row.items():
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                run_samples(
+                    samples, f"check_suggest.{name}.first_pass.{key}", float(value)
+                )
     for row in data.get("words") or []:
         word = str(row.get("word", "")).replace(" ", "_")
         for key, value in row.items():
@@ -399,6 +405,19 @@ def run_report(args: argparse.Namespace) -> dict:
             flatten_check_suggest(name, data, samples)
             if run == 0:
                 raw[f"check_suggest.{name}"] = data
+
+            first = invoke(
+                [
+                    str(tool("check_suggest")),
+                    "--corpus", str(path),
+                    "--tokens", str(max(stats["words"], 1)),
+                    "--json",
+                    "--first-pass",
+                ]
+            )
+            flatten_check_suggest(name, first, samples)
+            if run == 0:
+                raw[f"check_suggest.{name}.first_pass"] = first
 
     if args.profile == "full":
         for run in range(min(repeats, 3)):

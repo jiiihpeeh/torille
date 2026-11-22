@@ -34,7 +34,9 @@
 
 use std::collections::{HashMap, HashSet};
 
-use torille::expand::check_normal::{NormalizedOutcome, check_normal_fast};
+use torille::expand::check_normal::{
+    NormalizedOutcome, check_normal_fast, check_normal_fast_accept,
+};
 
 /// One spelling error in the text.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -255,18 +257,28 @@ impl TextAreaState {
             // re-checks only the word that changed, not the whole page on
             // every keystroke. The cache is lexical, so textarea updates
             // and `clear` leave it in place.
-            let known = if let Some(&known) = self.known.get(&lower) {
+            //
+            // The proper-name decision is cheaper than the lexical gate and
+            // is enough on its own for a capitalised name: `case_accepts`
+            // accepts it and `recognised` is already true. Resolve it first
+            // so a page of names does not pay `check_normal_fast` once per
+            // name. Do not cache the skipped answer: the same surface in
+            // lowercase must still run the lexical gate, because it may be
+            // an ordinary common word.
+            let proper = self.proper_nouns.contains(&lower)
+                || torille::expand::proper_names::contains_capitalised(&tok.text);
+            let known = if proper && tok.is_capitalised() {
+                false
+            } else if let Some(&known) = self.known.get(&lower) {
                 known
             } else {
-                let known = !matches!(check_normal_fast(&lower, false), NormalizedOutcome::Unknown);
+                let known = check_normal_fast_accept(&lower);
                 if self.known.len() >= KNOWN_CACHE_LIMIT {
                     self.known.clear();
                 }
                 self.known.insert(lower.clone(), known);
                 known
             };
-            let proper = self.proper_nouns.contains(&lower)
-                || torille::expand::proper_names::contains_capitalised(&tok.text);
             let recognised = known || proper;
             let case_ok = case_accepts(&tok.text, known, contexts[i].sentence_start, proper);
             if recognised && case_ok {
@@ -502,6 +514,26 @@ mod tests {
         let mut st = TextAreaState::new();
         st.update("Helsinki on iso. Kaupunki Helsinki on kaunis.");
         assert!(st.knows_proper_noun("helsinki"));
+    }
+
+    #[test]
+    fn a_learned_name_skips_the_lexical_gate_without_poisoning_the_cache() {
+        // A mid-sentence capital is learned as a proper noun. A later
+        // capitalised occurrence is accepted from that signal alone; the
+        // lexical `known` gate must not run, and the skipped answer must not
+        // be written into the lowercase cache.
+        let mut st = TextAreaState::new();
+        st.update("Tapasin Zorbon eilen. Kerroin Zorbon tarinan.");
+        assert!(st.knows_proper_noun("zorbon"));
+        let hits = st.find_misspells("Zorbon tuli.");
+        assert!(
+            hits.is_empty(),
+            "learned name must not be flagged: {hits:?}"
+        );
+        assert!(
+            !st.known.contains_key("zorbon"),
+            "the proper-name short-circuit must not cache a lexical answer"
+        );
     }
 
     #[test]

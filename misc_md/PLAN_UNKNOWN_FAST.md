@@ -1,6 +1,7 @@
 # PLAN_UNKNOWN_FAST — a faster misspell first pass
 
-Status: **proposal** · 2026-11-22 · baseline `6de70e7`
+Status: **Phases 0–2 landed** (2026-11-22); Phases 3–6 proposed. Baseline
+`6de70e7`; the code changes are on top of `778da8a`.
 
 The first pass that decides “is this token a misspelling?” is
 `find_misspells` → `check_normal_fast` per token. It is not the suggestion
@@ -112,6 +113,27 @@ The shares overlap (they are inclusive), but the ranking is unambiguous:
 **building paradigms to answer a boolean** is the whole cost. The compound
 DP then asks the same question again for every prefix.
 
+### 1.4 Results so far (2026-11-22)
+
+Phases 0–2 are landed and measured on the reference machine:
+
+| step | measurement |
+|---|---:|
+| state-level `find_misspells`, before Phase 1 | **247.9 ms** |
+| after Phase 1 (proper-name short-circuit) | **218.6 ms** |
+| after Phase 2 (noun signature accept) | **192.4 ms** |
+| first-pass tool, unique surfaces, before | **318 ms** |
+| first-pass tool, unique surfaces, after | **271 ms** |
+| signature/naming parity | **0 mismatches** over 42,253 unique surfaces |
+
+The state-level probe is `TextAreaState::find_misspells` on `page-2000`
+after `update`, release build; it is the user-visible first pass. The
+first-pass tool is the deduplicated cold gate and includes its own startup.
+The parity corpus is `page-2000`, the 8 %-error and all-unknown corpora,
+`homonyms`, `line-wrap`, and the 7,000 and 45,448 books. The all-unknown
+corpus did **not** improve (about 799 ms): it has no known nouns to verify,
+which is the branch this plan targets.
+
 ## 2. Constraints
 
 - **The fast path must stay a subset of the full path.** No new accept may
@@ -137,6 +159,9 @@ DP then asks the same question again for every prefix.
 
 ### Phase 0 — Measure the first pass, not the slow check
 
+**Landed** (2026-11-22): `perf_check_suggest --first-pass` and `--parity`;
+the suite records `check_suggest.<corpus>.first_pass.*`.
+
 Add a reproducible gate-level measurement before changing the gate.
 
 - Extend `tools/src/bin/perf_check_suggest.rs` (or add a sibling
@@ -161,6 +186,9 @@ within noise; the wasm first pass is measured once with the demo probe.
 ---
 
 ### Phase 1 — Do not pay for a name twice
+
+**Landed** (2026-11-22): the proper-name short-circuit and the
+cache-poisoning test.
 
 `find_misspells` currently computes the expensive lexical `known` answer
 first, then computes `proper` and ORs them. For a capitalized name in the
@@ -190,6 +218,10 @@ new flags; the extension tests and the case-only fixtures are unchanged.
 ---
 
 ### Phase 2 — Accept a noun stem without building its paradigm
+
+**Landed** (2026-11-22): `check_normal_fast_accept` uses the noun signature
+for the boolean misspell gate; the naming path still verifies. The exactness
+test runs over every noun stem row in release.
 
 The noun stem signature (`src/expand/stem_endings.rs`) records the endings
 that **some base at a stem** can take. The generator derives it from the

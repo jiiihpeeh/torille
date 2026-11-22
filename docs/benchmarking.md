@@ -75,6 +75,7 @@ rustc, build profile) must match, or `compare` refuses unless
 | `grammar_style.<corpus>.single` | `perf_grammar_style --single-thread` | `morphology_cold_ms`, `all_ms`, `sentence_cache_warm_ms` |
 | `grammar_style.<corpus>.threads4` | `perf_grammar_style --threads 4` | the same keys, 4-worker |
 | `check_suggest.<corpus>` | `perf_check_suggest` | `corpus.p50_us`, `word.<word>.check_us` |
+| `check_suggest.<corpus>.first_pass` | `perf_check_suggest --first-pass` | `total_ms`, `p95_us`, `known_us`, `unknown_us` |
 | `index.single_thread` | `perf_index` | `build_ms`, `known_bytes`, `total_bytes` |
 
 `morphology_cold_ms` is the fresh-process morphology pass; `morphology_warm_ms`
@@ -115,6 +116,11 @@ The full report is `bench/baselines/reference.json`.
 | all-unknown corpus, cold morphology | 769.5 ms |
 | `check_suggest` p50 / p95 | 3 µs / 506 µs |
 | reverse-index build / size | 23.0 s / 1.23 GB |
+
+`check_suggest.<corpus>.first_pass` is the deduplicated cold first pass (one
+call per unique surface, which is the shape the misspell gate pays on a fresh
+page). It was added after the recorded reference, so the numbers appear in a
+fresh full run but not in the reference table above.
 
 Correctness in the same report: 3 diagnostics on `page-2000`, 6 on the 8 %
 corpus, 1 on the all-unknown corpus, and the eight form-canary hashes.

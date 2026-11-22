@@ -502,6 +502,20 @@ pub(crate) struct StemProbe {
     pub verb_exhausted: bool,
 }
 
+/// How a stem-map hit is resolved.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum StemCheck {
+    /// Build the candidate's paradigm to name the base that emitted the
+    /// surface. This is the shape every naming caller needs.
+    Verify,
+    /// Accept a signature hit without building. The noun signature records
+    /// `stem + ending` only when a generated form is literally that string,
+    /// so the surface is real; the returned base is a witness from the stem
+    /// bucket, not necessarily the base that emitted it. Only a caller that
+    /// needs a yes/no answer may use this.
+    Signature,
+}
+
 /// Run the six-gate pipeline on `word` and return the first hit.
 ///
 /// The pipeline mirrors what the wasm's typing path fires for
@@ -514,7 +528,14 @@ pub(crate) struct StemProbe {
 /// (and what it tried) to stdout -- useful for debugging but
 /// not for the wasm's per-keystroke path.
 pub fn check_normal(word: &str, verbose: bool) -> NormalizedOutcome {
-    check_normal_with(word, verbose, /* engine_gate = */ true, None, Closed::Enabled)
+    check_normal_with(
+        word,
+        verbose,
+        /* engine_gate = */ true,
+        None,
+        Closed::Enabled,
+        StemCheck::Verify,
+    )
 }
 
 /// The same pipeline with the slow engine gate removed.
@@ -546,6 +567,7 @@ pub fn check_normal_fast(word: &str, verbose: bool) -> NormalizedOutcome {
             /* engine_gate = */ false,
             None,
             Closed::Enabled,
+            StemCheck::Verify,
         );
     }
     if let Some(hit) = FAST_CACHE.with_borrow(|cache| cache.get(word).cloned()) {
@@ -557,6 +579,7 @@ pub fn check_normal_fast(word: &str, verbose: bool) -> NormalizedOutcome {
         /* engine_gate = */ false,
         None,
         Closed::Enabled,
+        StemCheck::Verify,
     );
     FAST_CACHE.with_borrow_mut(|cache| {
         if cache.len() >= FAST_CACHE_LIMIT {
@@ -568,6 +591,29 @@ pub fn check_normal_fast(word: &str, verbose: bool) -> NormalizedOutcome {
         cache.insert(word.to_string(), outcome.clone());
     });
     outcome
+}
+
+/// The boolean misspell gate: the same cheap pipeline as
+/// [`check_normal_fast`], but a noun stem-map hit is accepted from the
+/// generated signature without building the candidate’s paradigm.
+///
+/// The signature records `stem + ending` only when a generated form is
+/// exactly that string, so a hit means the surface is real. The base is not
+/// returned because a multi-base stem bucket can contain the surface without
+/// the first base being the one that emitted it; callers that need the name
+/// use [`check_normal_fast`], which verifies.
+pub fn check_normal_fast_accept(word: &str) -> bool {
+    !matches!(
+        check_normal_with(
+            word,
+            false,
+            /* engine_gate = */ false,
+            None,
+            Closed::Enabled,
+            StemCheck::Signature,
+        ),
+        NormalizedOutcome::Unknown
+    )
 }
 
 /// [`check_normal_fast`] with the caller's already-exhausted stem maps.
@@ -585,6 +631,7 @@ pub(crate) fn check_normal_fast_with_probe(
         /* engine_gate = */ false,
         Some(probe),
         Closed::Enabled,
+        StemCheck::Verify,
     )
 }
 
@@ -598,7 +645,7 @@ pub fn check_normal_with_policy(
     engine_gate: bool,
     closed: Closed,
 ) -> NormalizedOutcome {
-    check_normal_with(word, false, engine_gate, None, closed)
+    check_normal_with(word, false, engine_gate, None, closed, StemCheck::Verify)
 }
 
 /// Every base the engine can prove for `word`, ranked like `lookup`.
@@ -762,6 +809,7 @@ fn check_normal_with(
     engine_gate: bool,
     probe: Option<&StemProbe>,
     closed: Closed,
+    stems: StemCheck,
 ) -> NormalizedOutcome {
     if closed.is_nonword(word) {
         return NormalizedOutcome::Unknown;
@@ -896,7 +944,8 @@ fn check_normal_with(
         // The form set knows the surface but the engine gate is off on
         // the typing path. The noun stem map can still name the base
         // (`parhaan` -> `paras`) without walking the lexicon.
-        if let Some(base) = find_base_via_stem_map(word, PartOfSpeech::Noun, verbose) {
+        if let Some(base) = find_base_via_stem_map_mode(word, PartOfSpeech::Noun, verbose, stems)
+        {
             return NormalizedOutcome::Inflected {
                 base,
                 gate: "form set + noun stem",
@@ -968,13 +1017,13 @@ fn check_normal_with(
                 gate: "clitic of verb stem",
             };
         }
-        if let Some(base) = find_base_via_stem_map(&host, PartOfSpeech::Noun, verbose) {
+        if let Some(base) = find_base_via_stem_map_mode(&host, PartOfSpeech::Noun, verbose, stems) {
             return NormalizedOutcome::Inflected {
                 base,
                 gate: "clitic of noun stem",
             };
         }
-        if let Some((base, gate)) = find_through_possessive(&host, verbose) {
+        if let Some((base, gate)) = find_through_possessive(&host, verbose, stems) {
             return NormalizedOutcome::Inflected { base, gate };
         }
         if verbose {
@@ -998,7 +1047,7 @@ fn check_normal_with(
     // base it hands back is the compound head for a compound-looking
     // word, so it cannot be returned directly. Name the base here
     // through the stem maps: `vaimonsa` strips `nsa` to `vaimo`.
-    if let Some((base, gate)) = find_through_possessive(word, verbose) {
+    if let Some((base, gate)) = find_through_possessive(word, verbose, stems) {
         if verbose {
             println!("    gate 3b: {base} via {gate}");
         }
@@ -1033,7 +1082,9 @@ fn check_normal_with(
                 }
                 return NormalizedOutcome::Inflected { base, gate };
             }
-        } else if let Some(base) = find_base_via_stem_map(word, PartOfSpeech::Noun, verbose) {
+        } else if let Some(base) =
+            find_base_via_stem_map_mode(word, PartOfSpeech::Noun, verbose, stems)
+        {
             if verbose {
                 println!("    gate 4: hit -> {base}");
             }
@@ -1081,7 +1132,7 @@ fn check_normal_with(
     if let Some(prefix) = word.strip_suffix("toista")
         && !prefix.is_empty()
     {
-        if let Some(base) = find_base_via_stem_map(prefix, PartOfSpeech::Noun, verbose)
+        if let Some(base) = find_base_via_stem_map_mode(prefix, PartOfSpeech::Noun, verbose, stems)
             .or_else(|| find_base_via_verb_stem_map(prefix, verbose))
         {
             let base = format!("{base}toista");
@@ -1408,6 +1459,51 @@ pub fn collect_bases_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) 
     out
 }
 
+/// [`find_base_via_stem_map`] with an explicit stem-check mode.
+///
+/// `StemCheck::Signature` is the misspell gate's shortcut: the noun
+/// signature is derived from the engine's own forms and records
+/// `stem + ending` only when a generated form is exactly that string, so a
+/// hit proves the surface is real without building the candidate's
+/// paradigm. The returned base is a witness from the bucket; a multi-base
+/// bucket can contain the surface without the first base being the one that
+/// emitted it.
+fn find_base_via_stem_map_mode(
+    word: &str,
+    pos: PartOfSpeech,
+    verbose: bool,
+    stems: StemCheck,
+) -> Option<String> {
+    if stems == StemCheck::Verify {
+        return find_base_via_stem_map(word, pos, verbose);
+    }
+    for ending in std::iter::once("").chain(ENDINGS.iter().copied()) {
+        let Some(stem) = word.strip_suffix(ending) else {
+            continue;
+        };
+        if stem.is_empty() {
+            continue;
+        }
+        let Some(stem_index) = STEM_BUCKETS_NOUN.find_index(stem) else {
+            continue;
+        };
+        match crate::expand::stem_endings::NOUN.allows_known(stem_index, ending) {
+            Some(true) => {}
+            Some(false) => continue,
+            // An empty/stale table must not accept everything; take the
+            // verified path instead.
+            None => return find_base_via_stem_map(word, pos, verbose),
+        }
+        if let Some(base) = STEM_BUCKETS_NOUN.bases_at(stem_index).next() {
+            if verbose {
+                println!("      gate 4: signature {stem:?}+{ending:?} -> {base:?}");
+            }
+            return Some(base.to_string());
+        }
+    }
+    None
+}
+
 pub fn find_base_via_stem_map(word: &str, pos: PartOfSpeech, verbose: bool) -> Option<String> {
     collect_bases_via_stem_map(word, pos, verbose)
         .into_iter()
@@ -1558,7 +1654,11 @@ fn find_base_via_possessive_noun(stem: &str, possessive_word: &str) -> Option<St
 /// Strip a possessive suffix from `host` (if any) and resolve the bare
 /// form it leaves behind through the cheap gates. `None` when `host`
 /// carries no possessive or the host is not a known bare form.
-fn find_through_possessive(host: &str, verbose: bool) -> Option<(String, &'static str)> {
+fn find_through_possessive(
+    host: &str,
+    verbose: bool,
+    stems: StemCheck,
+) -> Option<(String, &'static str)> {
     for suffix in POSSESSIVE_SUFFIXES {
         let Some(inner) = host.strip_suffix(suffix) else {
             continue;
@@ -1566,7 +1666,7 @@ fn find_through_possessive(host: &str, verbose: bool) -> Option<(String, &'stati
         if inner.is_empty() {
             continue;
         }
-        if let Some(base) = find_base_via_stem_map(inner, PartOfSpeech::Noun, verbose) {
+        if let Some(base) = find_base_via_stem_map_mode(inner, PartOfSpeech::Noun, verbose, stems) {
             return Some((base, "possessive of noun"));
         }
         // The stripped inner is sometimes a bare *stem* rather than a
@@ -2426,6 +2526,92 @@ mod tests {
                     assert_eq!(got, base, "{word}: wrong base");
                 }
                 other => panic!("{word}: expected Inflected, got {other:?}"),
+            }
+        }
+    }
+
+    /// The accept gate is the same boolean as the naming gate; only the
+    /// noun-stem verification differs.
+    #[test]
+    fn the_accept_gate_matches_the_naming_gate() {
+        for word in [
+            "talo",
+            "talossa",
+            "kissamme",
+            "ollut",
+            "perunkirjoittamista",
+            "tuomioistuimen",
+            "xyzzy",
+            "taloo",
+        ] {
+            let accepted = check_normal_fast_accept(word);
+            let named = !matches!(check_normal_fast(word, false), NormalizedOutcome::Unknown);
+            assert_eq!(accepted, named, "{word}");
+        }
+    }
+
+    /// The noun signature is exact for every stem row: a recorded ending
+    /// means `stem + ending` is a generated form, and a missing ending means
+    /// it is not. The accept gate relies on this to skip `emits_form`.
+    ///
+    /// Release-only: it builds every base's paradigm once.
+    #[cfg(not(debug_assertions))]
+    #[test]
+    fn the_noun_signature_is_exact_for_every_stem_row() {
+        use std::collections::{HashMap, HashSet};
+
+        let csv = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("data/stem_to_base_map.csv"),
+        )
+        .expect("read data/stem_to_base_map.csv");
+        let cat = crate::spec::Catalogues::embedded();
+        let lexicon = crate::kotus::lemmas();
+        let index = crate::expand::LexiconIndex::new(lexicon);
+        let mut stem_bases: HashMap<String, Vec<String>> = HashMap::new();
+        for line in csv.lines() {
+            let mut parts = line.split('\t');
+            let Some(stem) = parts.next() else { continue };
+            let Some(base) = parts.next() else { continue };
+            stem_bases
+                .entry(stem.to_string())
+                .or_default()
+                .push(base.to_string());
+        }
+        let mut base_forms: HashMap<String, HashSet<String>> = HashMap::new();
+        for base in stem_bases.values().flatten() {
+            if base_forms.contains_key(base) {
+                continue;
+            }
+            let mut forms = HashSet::new();
+            for row in crate::kotus::sanalista().by_word(base) {
+                let inflections: Vec<_> = row.inflections().collect();
+                let pos = crate::tags::PartOfSpeech::parse_all(row.part_of_speech())
+                    .first()
+                    .copied()
+                    .unwrap_or(crate::tags::PartOfSpeech::Noun);
+                for form in
+                    crate::expand::inflect_all(base, &inflections, cat, Some(&index), pos, false)
+                {
+                    forms.insert(form.word);
+                }
+            }
+            base_forms.insert(base.clone(), forms);
+        }
+        for (stem, bases) in &stem_bases {
+            let Some(stem_index) = STEM_BUCKETS_NOUN.find_index(stem) else {
+                panic!("stem {stem:?} is not in the embedded noun stem map");
+            };
+            let mut union: HashSet<&str> = HashSet::new();
+            for base in bases {
+                for form in &base_forms[base] {
+                    union.insert(form.as_str());
+                }
+            }
+            for ending in std::iter::once("").chain(ENDINGS.iter().copied()) {
+                let surface = format!("{stem}{ending}");
+                let allowed = crate::expand::stem_endings::NOUN.allows(stem_index, ending);
+                let real = union.contains(surface.as_str());
+                assert_eq!(allowed, real, "{stem:?}+{ending:?} = {surface:?}");
             }
         }
     }

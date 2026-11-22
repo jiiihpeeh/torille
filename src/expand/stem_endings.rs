@@ -79,18 +79,29 @@ impl StemEndings {
     /// table all answer `true`: the caller then runs the normal verifier.
     /// Only a known stem and a known ending can answer `false`.
     pub fn allows(&self, key_index: usize, ending: &str) -> bool {
+        self.allows_known(key_index, ending).unwrap_or(true)
+    }
+
+    /// [`allows`] with the “table has no answer” case made explicit.
+    ///
+    /// `Some(true)` means the signature records the ending, `Some(false)`
+    /// means it does not, and `None` means the table cannot answer (empty,
+    /// a key outside the table, or an ending outside the dictionary). A
+    /// caller that wants to skip the verifier must fall back to it on
+    /// `None`; an empty table must never turn into “every form is allowed”.
+    pub fn allows_known(&self, key_index: usize, ending: &str) -> Option<bool> {
         let table = self.table();
         if table.key_count == 0 || key_index >= table.key_count {
-            return true;
+            return None;
         }
-        let Some(&ending_id) = table.ending_to_id.get(ending) else {
-            return true;
-        };
+        let &ending_id = table.ending_to_id.get(ending)?;
         let pattern_id = read_u16(self.blob, table.ids_off + key_index * 2) as usize;
-        table
-            .patterns
-            .get(pattern_id)
-            .is_some_and(|pattern| pattern.binary_search(&ending_id).is_ok())
+        Some(
+            table
+                .patterns
+                .get(pattern_id)
+                .is_some_and(|pattern| pattern.binary_search(&ending_id).is_ok()),
+        )
     }
 
     fn table(&self) -> &Table {
@@ -169,5 +180,7 @@ mod tests {
         assert_eq!(empty.key_count(), 0);
         assert!(empty.allows(0, "ssa"));
         assert!(empty.allows(999_999, ""));
+        assert_eq!(empty.allows_known(0, "ssa"), None);
+        assert_eq!(empty.allows_known(999_999, ""), None);
     }
 }
