@@ -64,6 +64,8 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
 - `misc_md/PLAN_UNKNOWN_FAST.md` — the misspell first-pass plan: the measured
   known/unknown split, single-base noun signature accepts, full-remainder verb
   signatures and the compound-probe cleanup.
+- `misc_md/PLAN_COMPOUND_HINTS.md` — the proposed precomputed lexical-compound
+  split table: CSV schema, generator, runtime hint and the hit-rate gates.
 - `docs/hyphenation.md` — line-break hyphenation: patterns, compound adapter,
   policy, offsets and exceptions. The plan is `misc_md/PLAN_HYPHENATION.md`.
 - `misc_md/TODO.md` — known gaps ordered by user-facing impact.
