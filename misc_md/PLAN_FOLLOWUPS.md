@@ -1,7 +1,8 @@
 # PLAN_FOLLOWUPS — the next four slices
 
-Status: **proposed.** Baseline `ccad6f4` (2026-11-21); the sentence-cache rows
-were re-verified on 2026-11-22. The semicolon plan (0–5) is closed, and the
+Status: **slice 1 landed 2026-11-22; slices 2–4 proposed.** Baseline
+`ccad6f4` (2026-11-21); the sentence-cache rows were re-verified on
+2026-11-22. The semicolon plan (0–5) is closed, and the
 probe-performance plan is measured through Phase 6 (5–6 recorded as no
 action), so these are the first items from the standing trackers rather than
 an open phase. Each slice is independent, lands as its own commit, and carries
@@ -19,7 +20,8 @@ Order of work:
 ## 1. Why these four
 
 - **`TODO_GRAMMAR_STYLE.md` P2** — the sentence-cache path and the
-  whole-document pass disagree on `page-2000` by 3 diagnostics.
+  whole-document pass disagreed on `page-2000` by 3 diagnostics (slice 1,
+  fixed).
 - **`TODO.md` high priority** — oblique possessives (A), then one spelling per
   slot (B); the recorded gap is 14,026 / 4,359 missing forms.
 - **`PLAN_SEMICOLON.md` Phase 4 note** — typography is implemented but not
@@ -137,25 +139,38 @@ units (max 9 fragments) and reproduces the whole-pass diagnostics exactly, so
 the parity gate is reachable with this shape rather than with paragraph-sized
 units.
 
-### 2.4 Steps
+### 2.4 Landed
 
-- [ ] Add `grammar_units` with merging, the previous-word slice and the
+Landed 2026-11-22 as `grammar_units` + `GrammarUnit` in
+`src/syntax_check/sentence_cache.rs`. On `page-2000` the 309 spans become
+**130 units** (max 9 fragments); the cache returns the same 3 diagnostics as
+the whole-document pass, the all-hit pass is **0.80 ms** and a one-sentence
+edit **0.93 ms** (`perf_grammar_style --words 0 --repeat 5
+--single-thread --json`). The three old findings are still reproducible on
+the bare line fragments, which pins the mechanism. Tests:
+`tests/sentence_cache.rs` (line-wrap fixture + page parity),
+`tests/fixtures/perf/line-wrap.txt`, and the extended unit list in
+`the_sentence_cache_matches_the_whole_text_pass`.
+
+### 2.5 Steps
+
+- [x] Add `grammar_units` with merging, the previous-word slice and the
       slice-start quote depth.
-- [ ] Switch `SentenceCache::check_with_decisions` to the units, the
+- [x] Switch `SentenceCache::check_with_decisions` to the units, the
       `core` filter and the `slice.start` shift; keep `sentence::spans`
       untouched.
-- [ ] Add `tests/fixtures/perf/line-wrap.txt` with the three contexts (two
+- [x] Add `tests/fixtures/perf/line-wrap.txt` with the three contexts (two
       preceding/following sentences each) and compare the cache path with the
       whole pass.
-- [ ] Pin each row both ways: the bare slice still fires, and the unit with
+- [x] Pin each row both ways: the bare slice still fires, and the unit with
       the previous word / continuation is quiet.
-- [ ] Add the three strings to the existing
+- [x] Add the three strings to the existing
       `the_sentence_cache_matches_the_whole_text_pass` list.
-- [ ] Add a normal `page-2000` parity test in a new `tests/sentence_cache.rs`;
+- [x] Add a normal `page-2000` parity test in `tests/sentence_cache.rs`;
       the suite already runs the page in `disambiguation_noop`, so the cost is
       precedented.
 
-### 2.5 Gate
+### 2.6 Gate
 
 - Cache and whole pass are byte-identical on `line-wrap.txt` and `page-2000`.
 - `page-2000` stays at 3 diagnostics, prose and exact fixtures unchanged.
@@ -166,18 +181,22 @@ units.
   cache still hits unchanged units; a moved newline inside a unit is a miss).
 - `cargo test --release --workspace`, clippy and the perf harness are green.
 
-### 2.6 Stop condition
+**Met on 2026-11-22:** `page-2000` cache == whole pass (3 diagnostics), the
+line-wrap fixture is quiet, `sentence_cache_warm_ms` 0.81 and the edit pass
+1.04 ms (`--words 0 --repeat 5 --single-thread`).
+
+### 2.7 Stop condition
 
 If merging changes a rule's output on the clean corpus, the merged unit is
 wrong for that rule: keep the previous-word slice but do not merge, and record
 the rows that still diverge (the 236 row is the known one).
 
-### 2.7 Files
+### 2.8 Files
 
 `src/syntax_check/sentence_cache.rs`, `src/sentence.rs` (read-only),
-`tests/fixtures/perf/line-wrap.txt` (new), `tests/sentence_cache.rs` (new;
-the parity test can also join `tests/syntax_prose.rs`), and
-`docs/syntax_checker.md` (update the known-limitations note).
+`tests/fixtures/perf/line-wrap.txt` (new), `tests/sentence_cache.rs` (new),
+`tools/src/bin/perf_grammar_style.rs` (labels/comments) and
+`docs/syntax_checker.md`.
 
 ## 3. Slice 2 — possessive coverage
 

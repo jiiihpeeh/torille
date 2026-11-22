@@ -10,8 +10,9 @@
 //! shape. Cold means a fresh morphology cache; the process-level engine
 //! caches (the paradigm cache inside `emits_form`) are warm after the first
 //! pass, which is the same shape a worker has after its first document. The
-//! sentence-cache section measures a whole pass, an all-hit pass and a
-//! one-sentence edit through `syntax_check::SentenceCache`.
+//! unit-cache section measures a whole pass, an all-hit pass and a one-unit
+//! edit through `syntax_check::SentenceCache`. A unit is a grammar sentence
+//! (wrapped lines joined), not a typography line.
 
 use std::time::Instant;
 
@@ -160,8 +161,8 @@ fn style_keys(
 
 /// Change one sentence by inserting a letter at its first word.
 ///
-/// The edit is deliberately tiny: the sentence cache should miss exactly one
-/// sentence and reuse every other hash.
+/// The edit is deliberately tiny: the unit cache should miss exactly the unit
+/// containing it and reuse every other hash.
 fn edit_one_sentence(text: &str, sentences: &[torille::sentence::SentenceSpan]) -> String {
     let Some(span) = sentences.get(sentences.len() / 2) else {
         return text.to_string();
@@ -344,8 +345,8 @@ fn main() {
         warm_all.push(ms(t.elapsed()));
     }
 
-    // Sentence-cache shape: one whole pass, an all-hit pass, then one
-    // edited sentence. Morphology stays warm, as it does in the textarea.
+    // Unit-cache shape: one whole pass, an all-hit pass, then one edited
+    // sentence. Morphology stays warm, as it does in the textarea.
     let mut sentence_cache = SentenceCache::new();
     let mut sentence_words = MorphologyCache::new();
     let sentence_morphology = analyze_morphology(&tokens, &mut sentence_words);

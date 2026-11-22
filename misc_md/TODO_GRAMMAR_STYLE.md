@@ -822,22 +822,26 @@ Adjacent repetition is not always accidental:
   `expand/verbs/utility.rs::paradigm` restated as data. Performance remains a
   separate engineering objective, not a rule-correctness gate.
 
-- [ ] **Sentence-cache path finds four more diagnostics than the whole-document
-  pass on `page-2000`.** Found while measuring the wasm pool: the shipping
-  `check_grammar_style_with_state` (sentence cache) returns **9** grammar
-  diagnostics where `check_syntax` and `syntax_check::check` return **5**. The
-  four extras are at offsets 236 (`existential_subject_case`), 711
-  (`comma_missing`), 9357 and 9882 (`question_mark_missing`); they are the
-  same on a second call, so it is not stale state. The parity test
-  `the_sentence_cache_matches_the_whole_text_pass` passes only on ten short
-  texts, so the divergence is specific to sentence boundaries in a long
-  document — most likely the neighbour context a sentence is checked with.
-  Either the extra four are real (and the whole-document pass is missing
-  them) or the sentence path is over-firing; adjudicate before changing
-  either, and add the found rows to the corpus once decided.
+- [x] **Sentence-cache path finds more diagnostics than the whole-document
+  pass on `page-2000`.** *Fixed 2026-11-22.* The shipping
+  `check_grammar_style_with_state` (sentence cache) returned 6 grammar
+  diagnostics where `check_syntax` and `syntax_check::check` returned 3: the
+  two agreement rows and the document-end quote were shared, plus
+  `existential_subject_case` at 236, `comma_missing` at 711 and
+  `question_mark_missing` at 9357. All three were sentence-path artefacts:
+  `sentence::spans` ends a sentence at every newline, so the cache analysed a
+  wrapped clause without its continuation and without the previous word that
+  `previous_word`/`preceded_by_comma` need. The cache now builds **grammar
+  units**: line fragments are joined unless the trailing separator carries a
+  terminal mark, colon or closing quote, and the unit is analysed with the
+  previous word as left context. Units own their diagnostics exclusively, and
+  the quote depth is keyed at the slice start. On `page-2000` the 309 spans
+  become 130 units (max 9 fragments), the cache returns the same 3
+  diagnostics as the whole pass, and the all-hit pass is ~0.8 ms
+  (`tests/sentence_cache.rs`, `tests/fixtures/perf/line-wrap.txt`).
 
-The sentence-cache divergence above is slice 1 of
-[`PLAN_FOLLOWUPS.md`](PLAN_FOLLOWUPS.md); the typography surface is slice 3.
+The typography surface is slice 3 of
+[`PLAN_FOLLOWUPS.md`](PLAN_FOLLOWUPS.md).
 
 ## P3 — future syntax roadmap
 

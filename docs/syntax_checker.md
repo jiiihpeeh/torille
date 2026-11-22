@@ -215,10 +215,14 @@ dominated by the first morphology pass over a text, not by the rules.
 per-textarea `morphology::MorphologyCache`; each `WordInfo` caches the readings
 plus the agreed case/number, part of speech, clitic and possessive, and the
 style layer reads the same pass. The wasm combined export runs the grammar
-rules through `sentence_cache::SentenceCache`: an unchanged sentence is a hash
-probe, and one edited sentence re-checks in ~2.6–3.7 ms on the 1,959-word
-fixture. On a long text the demo and the Firefox extension resolve morphology
-in a 4-worker pool, collect the encoded rows in the owning state, and run
+rules through `sentence_cache::SentenceCache`: an unchanged **grammar unit** is
+a hash probe, and one edited unit re-checks in ~1–3 ms on the 1,959-word
+fixture. A unit is a whole sentence, not a typography line: wrapped lines are
+joined and the unit is analysed with the previous word as left context, so the
+cache path returns the same diagnostics as the whole-document pass
+(`tests/sentence_cache.rs` pins the `page-2000` parity). On a long text, the
+demo and the Firefox extension resolve morphology in a 4-worker pool, collect
+the encoded rows in the owning state, and run
 syntax/style once over the full document; the full page drops from ~3.0 s to
 ~1.4 s. Chromium's MV3 service worker cannot create nested workers, so it
 keeps the sentence-batch path. The measured baseline, the cold-path pruning
