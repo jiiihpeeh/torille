@@ -300,7 +300,7 @@ pub(crate) fn parse_rows(text: &str) -> Vec<Row<'_>> {
         let pos = f.next().unwrap_or("").trim();
         // Mirrors `kotus::parse_sanalista`: a row may have its class
         // expression corrected in `sanalista_overrides`.
-        let inflections = match crate::sanalista_overrides::class_for(word) {
+        let inflections = match crate::sanalista_overrides::class_for(word, homonymy) {
             Some(class) => parse_inflections(class),
             None => parse_inflections(f.next().unwrap_or("").trim()),
         };

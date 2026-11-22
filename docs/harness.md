@@ -350,6 +350,22 @@ oracle's expected spelling, not a form the engine lost. Ranking the classes by
 `illegal` count would be useless here (the largest classes are simply large),
 so the class table below is ranked by *rate*.
 
+**2026-11-22 — the live path and multi-class lemmas.** The live
+`Harness.audit` now inflects every class of a multi-class lemma, as the
+lexicon path (`_audit_lexicon`) already did. Before that, `havas`
+(`41*E, 39`) reported the forms of its 39-class reading as missing. With the
+fresh binding the n=5 live sweep is **80,277 confirmed, 0 missing, 0 not
+plain, 0 illegal** (3,049 unsupported). Two Wiktionary-confirmed readings are
+not in Voikko: `havas (41-E)` and the dialectal `live (48-E)` noun. The engine
+keeps both; the per-word live check reports them as a coverage gap, not an
+engine defect.
+
+The harness uses the Python binding when it is importable, and a stale
+binding measures the old engine. `report_by_class.py` now refuses a binding
+older than the engine sources (`(cd bindings && env -u CONDA_PREFIX maturin
+develop --release)`), and `test_binding_agrees_with_binary.py` carries the
+`havas`/`live`/`tarjoilu` canaries.
+
 **Every example was checked against Voikko by hand before it was written down**,
 and two candidates that looked real in the report were not and are absent here:
 `jakajaa` is the correct partitive singular of `jakaja` and the engine gets it

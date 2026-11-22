@@ -275,7 +275,7 @@ pub fn parse_sanalista(text: &str) -> Vec<Lemma<'_>> {
         // A few rows need a corrected class expression; see
         // `sanalista_overrides`. The override replaces the source expression
         // for that word.
-        let inflections = match crate::sanalista_overrides::class_for(word) {
+        let inflections = match crate::sanalista_overrides::class_for(word, homonymy) {
             Some(class) => parse_inflections(class),
             None => parse_inflections(f.next().unwrap_or("").trim()),
         };

@@ -1828,3 +1828,59 @@ fn parse_wiktionary_paradigms() -> Vec<(u16, &'static str, Vec<&'static str>)> {
     );
     out
 }
+
+/// `live` has two Finnish nouns and an adjective; the sanalista row is the
+/// dialectal 48-E noun, and the common class-8 loanword is added by
+/// `sanalista_overrides`. Both paradigms, and only those two, are generated;
+/// the adjective homonym stays indeclinable.
+#[test]
+fn the_live_homonyms_keep_their_own_readings() {
+    use torille::tags::PartOfSpeech;
+
+    let rows: Vec<_> = torille::kotus::sanalista().by_word("live").collect();
+    let noun = rows
+        .iter()
+        .find(|row| row.part_of_speech() == "substantiivi")
+        .expect("live noun");
+    let adjective = rows
+        .iter()
+        .find(|row| row.part_of_speech() == "adjektiivi")
+        .expect("live adjective");
+
+    let classes: Vec<u16> = noun.inflections().map(|inflection| inflection.class).collect();
+    assert_eq!(classes, vec![48, 8], "the noun has both readings");
+    let adjective_classes: Vec<u16> = adjective
+        .inflections()
+        .map(|inflection| inflection.class)
+        .collect();
+    assert_eq!(adjective_classes, vec![99], "the adjective stays indeclinable");
+
+    let cat = Catalogues::embedded();
+    let mut words = std::collections::BTreeSet::new();
+    for inflection in noun.inflections() {
+        for form in torille::expand::inflect("live", inflection, cat, PartOfSpeech::Noun, true) {
+            words.insert(form.word);
+        }
+    }
+    for word in ["lipeen", "livettä", "liven", "liveä", "livet", "livenne"] {
+        assert!(words.contains(word), "{word} missing from the live paradigm");
+    }
+
+    // The cheap recognition path may name the competing verb `livetä` for
+    // `livenne`; the spelling answer is what matters here, and the engine's
+    // reverse lookup must still carry the noun base.
+    for word in ["lipeen", "livenne"] {
+        assert!(
+            torille::suggest::check(word).is_known(),
+            "{word} is not recognised"
+        );
+    }
+    let lemmas = torille::kotus::sanalista().to_lemmas();
+    let report = torille::expand::find_bases_with(&lemmas, cat, "livenne");
+    assert!(
+        report.bases.iter().any(|lemma| lemma.word == "live")
+            || report.direct.iter().any(|lemma| lemma.word() == "live"),
+        "the engine does not list live as a base of livenne: {:?}",
+        report.bases.iter().map(|l| l.word).collect::<Vec<_>>()
+    );
+}

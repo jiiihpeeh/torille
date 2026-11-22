@@ -249,12 +249,13 @@ There is **no A or B row** at either size. The recorded examples now hold:
   (`check_word_against_omorfi.py` and the 20-lemma sample);
 - `tarjoilu` offers `tarjoiluitteni`, `tarjoiluideni` and `tarjoilujeni`.
 
-The `41*E havas` rows were a **stale Python binding**, not an engine defect:
-after `maturin develop --release`, `havas` emits `havaksen`, `havaksetta`,
-`havaksitta` and `havaksien`. The surviving `48*E live` row is a missing
-homonym reading (the class-8 loanword is not in the sanalista alongside the
-dialectal 48-E noun); it has its own plan,
-[`PLAN_CLASS_RESIDUE.md`](PLAN_CLASS_RESIDUE.md). The `14,026`/`4,359`
+The `41*E havas` rows were the live audit reading **one class at a time**
+(`havas` is `41*E, 39`; the 39 reading owns `havaksen`/`havaksetta`). The live
+`Harness.audit` now unions the lemma's classes like `_audit_lexicon`, and the
+n=5 live sweep is 0 missing / 0 not-plain / 0 illegal. `48*E live` was a
+missing class-8 homonym, now added with a homonym-aware override. A stale
+Python binding was a **separate** trap and is guarded by a preflight canary.
+Details: [`PLAN_CLASS_RESIDUE.md`](PLAN_CLASS_RESIDUE.md). The `14,026`/`4,359`
 figures in `docs/harness.md` predate the possessive rounds.
 
 ### 3.3 Design
@@ -527,7 +528,7 @@ Plus:
 - The grouped form-table download budget and the class-level `accepts` test
   (`TODO_GRAMMAR_STYLE.md`, cold-page target).
 - Neural reading disambiguation M0 (`docs/neural_disambiguation.md`).
-- The `live` 48-E/8 homonym split and the binding-freshness gate; see
-  [`PLAN_CLASS_RESIDUE.md`](PLAN_CLASS_RESIDUE.md). The `41*E` rows were a
-  stale-binding artefact, not an engine gap.
+- The `havas` 41-E/39 and `live` 48-E/8 Wiktionary readings that Voikko does
+  not cover, plus the binding-freshness gate; see
+  [`PLAN_CLASS_RESIDUE.md`](PLAN_CLASS_RESIDUE.md).
 - Any new suffix-stripper entry in `is_known_word`.

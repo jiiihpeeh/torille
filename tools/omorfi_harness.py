@@ -372,6 +372,54 @@ class Verdict:
         return f"{self.lemma}: {tail}"
 
 
+#: Lemmas whose recent engine fixes a stale binding must not hide. The
+#: `havas` rows were reported as engine defects by a binding built before the
+#: fix; the runtime test `test_binding_agrees_with_binary.py` and this list
+#: keep that from recurring.
+CANARY_LEMMAS = ("havas", "live", "tarjoilu", "suurkaani", "enempi")
+
+#: Source trees whose modification invalidates a built extension module.
+_BINDING_SOURCES = (
+    "src", "build", "rules", "bindings/src",
+)
+
+
+def binding_is_stale() -> str | None:
+    """The reason the installed `torille` extension predates the engine.
+
+    The harness prefers the Python extension and silently falls back to the
+    `inflect` binary only when it is absent. A stale extension therefore
+    measures the old engine and reports already-fixed forms as defects. This
+    is the cheap mtime half of the guard; `test_binding_agrees_with_binary.py`
+    is the runtime half and covers fields, not only mtimes.
+    """
+    if os.environ.get("TORILLE_NO_EXTENSION") == "1":
+        return None
+    try:
+        import torille
+    except ImportError:
+        return None
+    package = Path(torille.__file__).resolve().parent
+    libraries = list(package.glob("*.so")) + list(package.glob("*.pyd"))
+    if not libraries:
+        return None
+    built = max(libraries, key=lambda path: path.stat().st_mtime)
+    built_at = built.stat().st_mtime
+    newest: tuple[float, Path] | None = None
+    for relative in _BINDING_SOURCES:
+        root = REPO / relative
+        paths = [root] if root.is_file() else root.rglob("*")
+        for path in paths:
+            if not path.is_file() or path.suffix not in (".rs", ".toml", ".csv", ".json"):
+                continue
+            mtime = path.stat().st_mtime
+            if newest is None or mtime > newest[0]:
+                newest = (mtime, path)
+    if newest is not None and newest[0] > built_at + 0.5:
+        return f"{newest[1]} is newer than {built}"
+    return None
+
+
 def _load_engine():
     """The `torille` extension module's `Engine`, or `None` if it is not built.
 
@@ -1117,10 +1165,33 @@ class Harness:
             return self._audit_lexicon(lemma, cells, klass, strict)
         if not self.has_class(lemma):
             return []
-        try:
-            forms = self.torille_forms(lemma, klass)
-        except (ValueError, subprocess.CalledProcessError):
-            return []
+        # A lemma can be several classes in one field (`havas` is
+        # `41*E, 39`) or across homonym rows. The audited bucket must read the
+        # union of its classes, or a form the other class produces looks
+        # missing here. `strict` keeps the single-class view for debugging.
+        # This mirrors `_audit_lexicon`.
+        part_of_speech = {
+            "adjective": "adjektiivi",
+            "pronoun": "pronomini",
+            "numeral": "numeraali",
+        }.get(self.pos, "substantiivi")
+        tokens = self.class_tokens(lemma, part_of_speech=part_of_speech)
+        if strict:
+            tokens = [klass] if klass else tokens
+        forms: list[TorilleForm] = []
+        if tokens:
+            for token in tokens:
+                try:
+                    forms.extend(self.torille_forms(lemma, token))
+                except (ValueError, subprocess.CalledProcessError):
+                    continue
+            if not forms:
+                return []
+        else:
+            try:
+                forms = self.torille_forms(lemma)
+            except (ValueError, subprocess.CalledProcessError):
+                return []
         by_word: dict[str, list[TorilleForm]] = {}
         for form in forms:
             by_word.setdefault(form.word, []).append(form)

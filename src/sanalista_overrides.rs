@@ -40,11 +40,33 @@ pub(crate) const CLASS: &[(&str, &str)] = &[
     ("vikunja", "12"),
 ];
 
+/// Corrections that apply to one homonym of a lemma.
+///
+/// The source row for `live` is the dialectal 48-E noun (`lipeä`) and the
+/// adjective is a separate homonym. The common English loanword is class 8
+/// (`livelähetys`): Wiktionary gives `liven`, `liveä`, `livejä`, `liveen`
+/// and `livenne`, and the oracle confirms `livenne`. The 48-E reading stays;
+/// the class-8 reading joins it. The adjective (`live 2`, class 99) is not
+/// touched.
+pub(crate) const CLASS_BY_HOMONYM: &[(&str, &str, &str)] = &[
+    ("live", "1", "48*E, 8"),
+];
+
 /// The class expression to use instead of the source expression, when one
 /// is known.
-pub(crate) fn class_for(lemma: &str) -> Option<&'static str> {
-    CLASS
+///
+/// A homonym-specific correction wins over the lemma-level table; the two
+/// tables stay separate because a lemma-level `CLASS` entry applies to every
+/// homonym by design.
+pub(crate) fn class_for(lemma: &str, homonymy: &str) -> Option<&'static str> {
+    CLASS_BY_HOMONYM
         .iter()
-        .find(|(word, _)| *word == lemma)
-        .map(|(_, class)| *class)
+        .find(|(word, homonym, _)| *word == lemma && *homonym == homonymy)
+        .map(|(_, _, class)| *class)
+        .or_else(|| {
+            CLASS
+                .iter()
+                .find(|(word, _)| *word == lemma)
+                .map(|(_, class)| *class)
+        })
 }

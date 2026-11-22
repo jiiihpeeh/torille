@@ -81,6 +81,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from omorfi_harness import (  # noqa: E402
+    binding_is_stale,
     ALL_CASES,
     BOUNDARY_MARKER,
     Finding,
@@ -370,6 +371,15 @@ def main(argv: list[str]) -> int:
     if args.raw_illegal and (args.verify_illegal or args.strict_illegal):
         eprint("--raw-illegal cannot be combined with --verify-illegal "
                "or --strict-illegal")
+        return 2
+    stale = binding_is_stale()
+    if stale is not None:
+        print(
+            f"stale Python binding: {stale}\n"
+            "Rebuild it: (cd bindings && env -u CONDA_PREFIX maturin develop --release)\n"
+            "or run with TORILLE_NO_EXTENSION=1 to use the inflect binary.",
+            file=sys.stderr,
+        )
         return 2
     harness = Harness(pos=args.pos, lexicon=args.lexicon)
     verifier = None

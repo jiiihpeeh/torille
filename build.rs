@@ -59,6 +59,8 @@ fn main() {
     let manifest = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR");
     let data = Path::new(&manifest).join("data/nykysuomensanalista.csv");
     println!("cargo:rerun-if-changed={}", data.display());
+    println!("cargo:rerun-if-changed=src/sanalista_overrides.rs");
+    println!("cargo:rerun-if-changed=src/rejected.rs");
 
     // Hyphenation patterns are vendored TeX. Parse them at build time into
     // a static trie; the binary has no pattern parser at run time.

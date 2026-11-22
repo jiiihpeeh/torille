@@ -138,9 +138,10 @@ still open.
 - [x] **An oblique form that is not `Plain` gets no possessive**
   *Closed 2026-11-22.* The fresh live sweep has no A rows: `lovi`, `ovi` and
   `joki` are plain, and the 20-lemma sample has 0 missing/not-plain/illegal.
-  The `41*E havas` rows were a stale Python binding; after
-  `maturin develop --release` they resolve. The remaining `48*E live` row is
-  a missing class-8 reading, planned in
+  The `41*E havas` rows were the live audit reading a single class; `havas`
+  is `41*E, 39` and the 39 reading owns the missing forms. The live audit now
+  unions the lemma's classes. `48*E live` was a missing class-8 homonym, now
+  added. Both readings and the Voikko coverage caveat are in
   [`PLAN_CLASS_RESIDUE.md`](PLAN_CLASS_RESIDUE.md).
   The `demote_contested` gating is now bypassed for the unmarked member of a
   two-stem class: class 7 `ovi`/`lovi` take the shallow `ove` stem and offer

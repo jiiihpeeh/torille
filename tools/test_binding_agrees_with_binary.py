@@ -22,6 +22,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from omorfi_harness import (
+    CANARY_LEMMAS,
     CONFIDENCES,
     Harness,
     TorilleForm,
@@ -41,6 +42,9 @@ WORDS = [
     # declines like its final component, and both paths have to reach the
     # head's paradigm rather than refuse the word.
     "pikkuaivot", "aamuhartaus",
+    # The class-sweep canaries: a stale binding must not be able to hide the
+    # recent form fixes behind a green sweep.
+    *CANARY_LEMMAS,
 ]
 
 
