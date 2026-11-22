@@ -74,7 +74,7 @@ Every generated form carries a **confidence** (`src/tags.rs`):
 | | |
 |---|---|
 | `Plain` | a plain attachment, no repair. These are the only forms a correction may be drawn from. |
-| `Repaired` | built by repairing the lemma (gradation, epenthesis, an alternation read off the genitive). A real word often enough to accept, never to suggest. |
+| `Repaired` | built by repairing the lemma (gradation, epenthesis, a genitive alternation). Often real enough to accept, never to suggest. |
 | `Guessed` | a type-rule guess with no catalogue form behind it. Accepted, never suggested. |
 
 A form also carries one or more `Tags` readings (POS, case, number, tense,
@@ -190,8 +190,9 @@ torille/
   extensions/           Firefox and Chromium extensions
   tests/                catalogue, candidate generation, hyphenation,
                         syntax/style, Wiktionary
+  bench/                corpora manifest and the recorded reference report
   docs/                 harness, lexicon, syntax/style checkers,
-                        hyphenation, morfologia
+                        hyphenation, morfologia, benchmarking
 ```
 
 The root package is the library and the workspace root. `tools`,
@@ -324,6 +325,56 @@ python3 tools/summarize_class_report.py reports/noun-classes.json
 Rank classes by `illegal / confirmed`, not by raw count — the largest classes
 simply have the most forms. `reports/` is gitignored and regenerable.
 
+## Benchmarks
+
+`tools/bench.py` is the reproducible suite. It does not measure anything
+itself: it runs the release `perf_*` drivers, normalises their JSON into one
+versioned report, fingerprints the corpora and the correctness output, and
+compares two reports from the same machine. The measurement primitives remain
+the Criterion bench (`benches/torille.rs`) and the `perf_*` tools in
+`tools/src/bin/`.
+
+```bash
+python3 tools/bench.py corpora --check       # verify or generate the corpora
+python3 tools/bench.py run --profile quick   # ~1 minute, one run per point
+python3 tools/bench.py run --profile full    # 7 fresh processes per point
+python3 tools/bench.py compare bench/baselines/reference.json reports/bench-full.json
+python3 tools/bench.py selftest              # check the comparator
+```
+
+One report, `schema: 1`, carries the machine fingerprint, the corpus SHA-256
+and word/byte counts, every metric as `min/median/max/runs`, and a
+**correctness fingerprint**: the diagnostics counts and hash per corpus plus
+the full paradigm hash of eight canary lemmas (`kissa`, `talo`, `havas`,
+`live`, `juosta`, `pieni`, `ahkeraliisa`, `pikkuaivot`). A faster wrong answer
+fails the comparison, so a morphology regression that the syntax diagnostics
+cannot see is still caught. `compare` is same-machine only (the fingerprint
+covers CPU, OS, rustc and build profile), uses a 10 % default tolerance on
+median timings, and requires the correctness block to match exactly.
+
+`quick` covers `page-2000` and `homonyms`; `full` covers all five corpora
+(including the deterministic 8 % typo and all-unknown variants), both the
+single-thread and 4-worker shapes, and the reverse-index build. The native
+release reference (`bench/baselines/reference.json`, fingerprint
+`f762dae2d048b2a6`, 544 metrics) medians:
+
+| metric | median |
+|---|---:|
+| `page-2000` cold morphology, single-thread | 673.7 ms |
+| `page-2000` cold morphology, 4 workers | 201.9 ms |
+| `page-2000` warm morphology | 0.46 ms |
+| `page-2000` warm grammar + style | 19.29 ms |
+| `page-2000` warm sentence cache | 0.73 ms |
+| 8 % typo corpus, cold morphology | 729.3 ms |
+| all-unknown corpus, cold morphology | 769.5 ms |
+| `check` / `suggest` p50 / p95 | 3 µs / 506 µs |
+| reverse-index build / size | 23.0 s / 1.23 GB |
+
+These are native release numbers; the wasm-shape table above is the browser
+shape and is slower. The commands, the full schema, the corpus manifest and
+the methodology are in [`docs/benchmarking.md`](docs/benchmarking.md); the
+staged design is [`misc_md/PLAN_BENCHMARK_SUITE.md`](misc_md/PLAN_BENCHMARK_SUITE.md).
+
 ## The Python binding
 
 `bindings/` builds a PyO3 module called `torille` with one class, `Engine`:
@@ -372,8 +423,8 @@ to Python. Soft hyphens are preserved and returned as explicit
 ## License
 
 The engine and the shipping surfaces — `src/`, `tests/`, `benches/`,
-`bindings/`, `wrapper/`, the wasm crates, the demo server and the browser
-extensions — are dual-licensed under **MIT OR Apache-2.0**. Pick either; the
+`bench/`, `bindings/`, `wrapper/`, the wasm crates, the demo server and the
+browser extensions — are dual-licensed under **MIT OR Apache-2.0**. Pick either; the
 texts are in [LICENSE-MIT](LICENSE-MIT) and [LICENSE-APACHE](LICENSE-APACHE).
 
 The tooling in `tools/` is also **MIT OR Apache-2.0**, except the files tied to
@@ -394,6 +445,10 @@ terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
   diagnostic.
 - [`docs/style_checker.md`](docs/style_checker.md) — the opt-in style layer:
   curated tables, repetition and long-sentence rules, UI and baseline.
+- [`docs/benchmarking.md`](docs/benchmarking.md) — the benchmark suite's
+  commands, report schema, corpora, methodology and reference baseline.
+- [`misc_md/PLAN_BENCHMARK_SUITE.md`](misc_md/PLAN_BENCHMARK_SUITE.md) — the
+  suite's staged design and the recorded reference.
 - [`misc_md/PLAN_SYNTAX_REFACTOR.md`](misc_md/PLAN_SYNTAX_REFACTOR.md) — a phased
   modularisation plan for the syntax layer, checker and extension content.
 - [`misc_md/PLAN_STYLE.md`](misc_md/PLAN_STYLE.md) — the design for a separate opt-in style

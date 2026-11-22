@@ -11,19 +11,24 @@ Both remotes must hold the same commit on the **normal branch** and on the
 **`maps` orphan branch**. They are updated separately because `maps` is a
 single-commit branch that is force-pushed, not merged.
 
+`master` is the normal branch. `form-table` holds the rejected exact-table
+experiment and is not merged; the `backup/*` and `wip/*` branches are local
+pre-rewrite copies that are never pushed; deleted branches are kept as
+`archive/*` tags.
+
 ## Normal branch
 
-Push the branch you are working on to both remotes:
+Push `master` to both remotes:
 
 ```bash
-git push origin syntax
-git push github syntax
+git push origin master
+git push github master
 ```
 
 A one-liner for the common case:
 
 ```bash
-git push origin syntax && git push github syntax
+git push origin master && git push github master
 ```
 
 Do not use `git push --all github`: it would treat `maps` as an ordinary branch
@@ -47,12 +52,12 @@ new commit intentionally replaces the old one.
 ## Verify both remotes
 
 ```bash
-git ls-remote --heads origin syntax maps
-git ls-remote --heads github syntax maps
+git ls-remote --heads origin master maps
+git ls-remote --heads github master maps
 ```
 
-The four commit IDs should form two equal pairs: `origin/syntax` ==
-`github/syntax`, and `origin/maps` == `github/maps`.
+The four commit IDs should form two equal pairs: `origin/master` ==
+`github/master`, and `origin/maps` == `github/maps`.
 
 ## After a release or a large engine change
 
