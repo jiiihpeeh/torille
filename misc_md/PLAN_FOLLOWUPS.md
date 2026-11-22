@@ -243,18 +243,19 @@ No code change was needed. A fresh live sweep (`report_by_class.py -n 5
 | n=5, 514 lemmas | 79,830 | 140 / 6 / 0 |
 | n=20, 1,505 lemmas | 228,245 | 140 / 6 / 0 |
 
-Every missing/not-plain row is the same two class-stem cells: `41*E havas`
-(139 missing + 6 not-plain) and `48*E live` (1 missing). There is **no A or B
-row** at either size. The recorded examples now hold:
+There is **no A or B row** at either size. The recorded examples now hold:
 
 - `lovi`/`ovi`/`joki` all have their confirmed forms `Plain`
   (`check_word_against_omorfi.py` and the 20-lemma sample);
 - `tarjoilu` offers `tarjoiluitteni`, `tarjoiluideni` and `tarjoilujeni`.
 
-The remaining `41*E`/`48*E` residue is a class-stem defect (the abessive and
-the oblique stem), not the possessive mechanism; it is recorded under
-§8 instead of widening this slice. The `14,026`/`4,359` figures in
-`docs/harness.md` predate the possessive rounds.
+The `41*E havas` rows were a **stale Python binding**, not an engine defect:
+after `maturin develop --release`, `havas` emits `havaksen`, `havaksetta`,
+`havaksitta` and `havaksien`. The surviving `48*E live` row is a missing
+homonym reading (the class-8 loanword is not in the sanalista alongside the
+dialectal 48-E noun); it has its own plan,
+[`PLAN_CLASS_RESIDUE.md`](PLAN_CLASS_RESIDUE.md). The `14,026`/`4,359`
+figures in `docs/harness.md` predate the possessive rounds.
 
 ### 3.3 Design
 
@@ -526,7 +527,7 @@ Plus:
 - The grouped form-table download budget and the class-level `accepts` test
   (`TODO_GRAMMAR_STYLE.md`, cold-page target).
 - Neural reading disambiguation M0 (`docs/neural_disambiguation.md`).
-- The `41*E havas` (139 missing + 6 not-plain) and `48*E live` (1 missing)
-  class-stem residue found by the slice-2 sweep; it is a class engine defect,
-  not the possessive mechanism.
+- The `live` 48-E/8 homonym split and the binding-freshness gate; see
+  [`PLAN_CLASS_RESIDUE.md`](PLAN_CLASS_RESIDUE.md). The `41*E` rows were a
+  stale-binding artefact, not an engine gap.
 - Any new suffix-stripper entry in `is_known_word`.

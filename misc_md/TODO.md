@@ -138,9 +138,10 @@ still open.
 - [x] **An oblique form that is not `Plain` gets no possessive**
   *Closed 2026-11-22.* The fresh live sweep has no A rows: `lovi`, `ovi` and
   `joki` are plain, and the 20-lemma sample has 0 missing/not-plain/illegal.
-  The only missing/not-plain residue is the class-stem pair `41*E havas`
-  (139 + 6) and `48*E live` (1), which is not the possessive mechanism; keep
-  those on the class-stem tracker.
+  The `41*E havas` rows were a stale Python binding; after
+  `maturin develop --release` they resolve. The remaining `48*E live` row is
+  a missing class-8 reading, planned in
+  [`PLAN_CLASS_RESIDUE.md`](PLAN_CLASS_RESIDUE.md).
   The `demote_contested` gating is now bypassed for the unmarked member of a
   two-stem class: class 7 `ovi`/`lovi` take the shallow `ove` stem and offer
   `ovessa` and `ovella` as `Plain`; `joki` keeps the deeper `joe` only with its

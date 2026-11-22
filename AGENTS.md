@@ -85,6 +85,8 @@ Deeper docs (read these when the topic comes up, do not duplicate them):
 - `misc_md/PLAN_FOLLOWUPS.md` — the next four independent slices:
   sentence-cache parity, possessive coverage, typography surfaces and the
   closed-spelling audit.
+- `misc_md/PLAN_CLASS_RESIDUE.md` — the stale Python binding trap, the
+  `live` 48-E/8 homonym reading and the class-sweep canary.
 
 ## Repository map
 
