@@ -48,6 +48,35 @@ pub fn is_nonword(word: &str) -> bool {
     ) || word.starts_with("kehoit")
 }
 
+/// Whether the closed-spelling table participates in a lookup.
+///
+/// Production always uses [`Closed::Enabled`]. Tests and the audit pass
+/// [`Closed::Disabled`] to prove that the engine derives a surface without
+/// the table; a row that still resolves is a stale exception.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Closed {
+    Enabled,
+    Disabled,
+}
+
+impl Closed {
+    /// The closed base for `word`, or `None` when the table is disabled.
+    pub fn base(self, word: &str) -> Option<&'static str> {
+        match self {
+            Closed::Enabled => base(word),
+            Closed::Disabled => None,
+        }
+    }
+
+    /// Whether `word` is a fused non-word, when the table is enabled.
+    pub fn is_nonword(self, word: &str) -> bool {
+        match self {
+            Closed::Enabled => is_nonword(word),
+            Closed::Disabled => false,
+        }
+    }
+}
+
 /// The accepted surface's base/head, if it is one of the closed spellings.
 pub fn base(word: &str) -> Option<&'static str> {
     CLOSED

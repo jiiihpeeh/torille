@@ -1,6 +1,7 @@
 //! Compound recognition: heads/tails, the DP segmenter and the
 //! hyphenated-lexeme guard.
 
+use crate::expand::closed_spellings::Closed;
 use crate::tags::PartOfSpeech;
 
 use super::derived::bound_suffix_compound_base;
@@ -233,7 +234,7 @@ fn is_known_compound_with(word: &str, engine_fallback: bool) -> Option<String> {
         return None;
     }
     let part_known = |part: &str| {
-        is_known_word_with_compound(part, false).is_some() || crate::expand::modifier_is_known(part)
+        is_known_word_with_compound(part, false, Closed::Enabled).is_some() || crate::expand::modifier_is_known(part)
     };
     // A closed spelling of a lexically hyphenated compound is a
     // misspelling (`linjaauto` for `linja-auto`). The probe has to name a
@@ -249,7 +250,7 @@ fn is_known_compound_with(word: &str, engine_fallback: bool) -> Option<String> {
     // inflected form, not a compound: `kissaa` is the partitive of `kissa`,
     // and `salaperäisempi` is a degree of `salaperäinen`, even though
     // `kis` + `saa` and `salaperäis` + `empi` also look like splits.
-    if is_known_word_with_compound(&lower, false).is_some() {
+    if is_known_word_with_compound(&lower, false, Closed::Enabled).is_some() {
         return None;
     }
     // A possessive suffix belongs to the whole compound, not to its head:
@@ -347,7 +348,7 @@ pub(crate) fn hyphenated_lexeme(word: &str) -> Option<String> {
 pub(super) fn hyphenated_base(word: &str) -> Option<String> {
     let parts = crate::compound::split_hyphenated(word)?;
     let closed: String = parts.concat().to_lowercase();
-    let closed_known = is_known_word_with_compound(&closed, false).is_some();
+    let closed_known = is_known_word_with_compound(&closed, false, Closed::Enabled).is_some();
     let rule = crate::compound::hyphen_rule(word, &parts, closed_known)?;
     let first_is_special = matches!(
         rule,
@@ -362,7 +363,7 @@ pub(super) fn hyphenated_base(word: &str) -> Option<String> {
             continue;
         }
         let lower = part.to_lowercase();
-        let resolved = is_known_word_with_compound(&lower, false).is_some()
+        let resolved = is_known_word_with_compound(&lower, false, Closed::Enabled).is_some()
             || crate::expand::modifier_is_known(&lower)
             || (i == head_index && crate::compound::is_proper_name_part(part));
         if !resolved && !(i == head_index && rule == crate::compound::HyphenRule::Number) {
@@ -372,7 +373,7 @@ pub(super) fn hyphenated_base(word: &str) -> Option<String> {
 
     let head = parts.last()?;
     let head_lower = head.to_lowercase();
-    let head_base = is_known_word_with_compound(&head_lower, false)
+    let head_base = is_known_word_with_compound(&head_lower, false, Closed::Enabled)
         .or_else(|| crate::compound::is_proper_name_part(head).then_some(head_lower.clone()));
     match head_base {
         Some(base) => {
@@ -509,7 +510,7 @@ fn detect_compound_pass(
         {
             continue;
         }
-        let mut head_lemma = match is_known_word_with_compound(right, false) {
+        let mut head_lemma = match is_known_word_with_compound(right, false, Closed::Enabled) {
             Some(base) => base,
             None => {
                 // The stem maps are built from an earlier engine snapshot.
@@ -525,7 +526,7 @@ fn detect_compound_pass(
                 if depth != 0
                     || right.chars().count() < 6
                     || right.chars().count() > MAX_COMPOUND_ENGINE_HEAD
-                    || is_known_word_with_compound(left, false).is_none()
+                    || is_known_word_with_compound(left, false, Closed::Enabled).is_none()
                     || (!engine_fallback && !class6_plural_head(right))
                 {
                     continue;
@@ -591,7 +592,7 @@ fn detect_compound_pass(
         }
         // The left may itself be a compound (`henkivartio` in
         // `henkivartioväki`); try one more level before falling back.
-        let left_word = is_known_word_with_compound(left, false);
+        let left_word = is_known_word_with_compound(left, false, Closed::Enabled);
         // First pass: accept only a modifier that resolves as a word of its
         // own. A compound or a bound modifier is deferred to the second pass.
         if direct_left_only {

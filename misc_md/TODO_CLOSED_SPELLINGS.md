@@ -153,24 +153,26 @@ fix, then delete · **C** fast-path probe, then delete (engine already derives) 
 
 ## Phase 0 — instrument before deleting
 
-- [ ] Refactor the closed lookup into a policy parameter:
-      `check_normal_with(word, engine_gate, closed: Closed)` and
-      `is_known_word_with_compound_uncached(word, allow_compound, closed: Closed)`.
-      Production passes `Closed::Enabled`; tests/audit pass
-      `Closed::Disabled`.
-- [ ] Add `tools/src/bin/audit_closed_spellings.rs` printing:
-      `surface`, `base`, `base_in_sanalista`, `engine_emits`,
-      `find_bases_base`, `fast_resolves_without_closed`, `proper_name`,
-      `authority`, `proposed_action`.
-- [ ] Add a checked-in expected-action fixture for all 32 rows.
-- [ ] Make the audit fail when:
-  - [ ] a row marked “engine cannot derive” starts being derived;
-  - [ ] a base is absent from the lexicon and not documented as a proper
-        name/adverb;
-  - [ ] a row marked “fast-only” lacks the probe that replaces it.
-- [ ] Record the baseline: `check_normal` / `check_normal_fast` outcomes,
-      suggestions for rejected forms, and `check_fast` timings.
-- [ ] Add a full/fast parity test for every surface in the table.
+- [x] Refactor the closed lookup into a policy parameter:
+      `Closed::{Enabled, Disabled}` in `expand::closed_spellings`, threaded
+      through `check_normal_with` (via `check_normal_with_policy`) and
+      `is_known_word_with_compound_uncached`. Production passes
+      `Closed::Enabled`; tests/audit pass `Closed::Disabled`.
+- [x] Add `tools/src/bin/audit_closed_spellings.rs` printing:
+      `surface`, `base`, `kind`, `base_in_sanalista`, `engine_emits`,
+      `find_bases_base`, the enabled/disabled full/fast outcomes,
+      `proper_name`, and the fixture's authority/action.
+- [x] Add `tests/fixtures/closed_spellings.json` for all 32 rows, with
+      `kind` (`closed`/`derived`/`nonword`), authority and action.
+- [x] Make the audit fail when:
+  - [x] a `closed` row resolves with the table disabled (stale);
+  - [x] a `derived` row stops resolving without the table;
+  - [x] a `nonword` row is accepted in production;
+  - [x] the full and fast paths disagree.
+- [x] Record the baseline: the audit output is the record; the policy branch
+      is compile-time and `check_fast` timing is unchanged within noise.
+- [x] Add a full/fast parity test for every surface in the table
+      (`tests/closed_spellings.rs`).
 
 ## Phase 1 — delete invalid rows (no engine work)
 

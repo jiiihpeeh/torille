@@ -1,6 +1,7 @@
 # PLAN_FOLLOWUPS — the next four slices
 
-Status: **slice 1 landed 2026-11-22; slices 2–4 proposed.** Baseline
+Status: **slices 1 and 4 landed 2026-11-22; slice 2 measured (A/B already
+closed); slice 3 proposed.** Baseline
 `ccad6f4` (2026-11-21); the sentence-cache rows were re-verified on
 2026-11-22. The semicolon plan (0–5) is closed, and the
 probe-performance plan is measured through Phase 6 (5–6 recorded as no
@@ -396,16 +397,28 @@ harness the tracker's Phase 0 describes.
   removals; record the `kuulten` decision (lexical, per the module doc) as
   closed.
 
-### 5.3 Steps
+### 5.3 Landed
+
+Landed 2026-11-22 as `Closed::{Enabled, Disabled}` in
+`src/expand/closed_spellings.rs`, threaded through `check_normal_with` (public
+`check_normal_with_policy`) and the `is_known_word` stack. The audit tool
+`tools/src/bin/audit_closed_spellings.rs` prints one row per historical
+surface; `tests/fixtures/closed_spellings.json` carries the 32 rows with
+`kind`/authority/action, and `tests/closed_spellings.rs` enforces the
+invariants (full/fast parity, closed rows lexical, derived rows deriving,
+nonword rows rejected). Current audit: 32 rows, all invariants hold; the six
+`kuulten` rows are the only live `CLOSED` entries.
+
+### 5.4 Steps
 
 - [x] Fix the tracker status and the Progress arithmetic.
-- [ ] Add the `Closed` policy parameter and the audit binary.
-- [ ] Add the checked-in fixture and the failure rules.
-- [ ] Add the full/fast parity test over every fixture surface.
-- [ ] Benchmark `check_normal_fast`; the parameter must not move the keystroke
-      path.
+- [x] Add the `Closed` policy parameter and the audit binary.
+- [x] Add the checked-in fixture and the failure rules.
+- [x] Add the full/fast parity test over every fixture surface.
+- [x] Benchmark `check_normal_fast`; the parameter does not move the keystroke
+      path (production passes a constant `Enabled`).
 
-### 5.4 Gate
+### 5.5 Gate
 
 - The audit is deterministic, fails when a closed row is re-added or becomes
   derivable, and passes on the six live rows.
@@ -413,7 +426,7 @@ harness the tracker's Phase 0 describes.
 - `check_fast` timing is unchanged within noise.
 - No new `CLOSED` row and no new `is_nonword` entry without a source.
 
-### 5.5 Files
+### 5.6 Files
 
 `src/expand/closed_spellings.rs`, `src/expand/check_normal.rs`,
 `src/suggest/known/mod.rs` (`is_known_word_with_compound_uncached`),

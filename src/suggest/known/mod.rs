@@ -9,6 +9,7 @@ use std::collections::HashSet;
 use crate::fast_hash::FxHashMap;
 use std::sync::OnceLock;
 
+use crate::expand::closed_spellings::Closed;
 use crate::kotus::Lemma;
 use crate::spec::Catalogues;
 use crate::tags::PartOfSpeech;
@@ -128,7 +129,12 @@ pub fn is_lemma(word: &str) -> bool {
 /// [`crate::expand::check_normal::check_normal`]:
 ///     ../expand/check_normal.rs
 pub fn is_known_word(word: &str) -> Option<String> {
-    is_known_word_with_compound(word, true)
+    is_known_word_with_compound(word, true, Closed::Enabled)
+}
+
+/// [`is_known_word`] with the closed-spelling policy made explicit.
+pub(crate) fn is_known_word_with_closed(word: &str, closed: Closed) -> Option<String> {
+    is_known_word_with_compound(word, true, closed)
 }
 
 /// [`is_known_word`] without compound detection: the lemma, the negation
@@ -140,7 +146,17 @@ pub fn is_known_word(word: &str) -> Option<String> {
 /// `is_known_word` returns the head `ilta`, which would be wrong to
 /// report as the base.
 pub fn is_known_word_no_compound(word: &str) -> Option<String> {
-    is_known_word_with_compound(word, false)
+    is_known_word_with_compound(word, false, Closed::Enabled)
+}
+
+/// [`is_known_word_no_compound`] with the closed-spelling policy made
+/// explicit. The audit passes [`Closed::Disabled`] to prove the engine
+/// derives a surface without the table.
+pub(crate) fn is_known_word_no_compound_with_closed(
+    word: &str,
+    closed: Closed,
+) -> Option<String> {
+    is_known_word_with_compound(word, false, closed)
 }
 
 /// The bounded recognition probe: the non-compound gates plus the
@@ -166,9 +182,18 @@ thread_local! {
 /// reuses most probes (`kaksikymmenvuotiaalla` and
 /// `kaksikymmenvuotiaana` share their modifier). Bounded at 20 000 words;
 /// the memo is a speed-up, not state, so dropping it is safe.
-fn is_known_word_with_compound(word: &str, allow_compound: bool) -> Option<String> {
+fn is_known_word_with_compound(
+    word: &str,
+    allow_compound: bool,
+    closed: Closed,
+) -> Option<String> {
     const CAP: usize = 20_000;
     let slot = usize::from(allow_compound);
+    // The memo is keyed by word alone; a disabled table is an audit-only
+    // view, so it must not read or fill it.
+    if closed == Closed::Disabled {
+        return is_known_word_with_compound_uncached(word, allow_compound, closed);
+    }
     if let Some(out) = KW_MEMO.with_borrow(|memo| {
         memo.get(word)
             .and_then(|entry| entry[slot].as_ref())
@@ -176,7 +201,7 @@ fn is_known_word_with_compound(word: &str, allow_compound: bool) -> Option<Strin
     }) {
         return out;
     }
-    let out = is_known_word_with_compound_uncached(word, allow_compound);
+    let out = is_known_word_with_compound_uncached(word, allow_compound, closed);
     KW_MEMO.with_borrow_mut(|memo| {
         if memo.len() >= CAP && !memo.contains_key(word) {
             // A large paste has tens of thousands of distinct tokens; the
@@ -188,10 +213,14 @@ fn is_known_word_with_compound(word: &str, allow_compound: bool) -> Option<Strin
     out
 }
 
-fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Option<String> {
+fn is_known_word_with_compound_uncached(
+    word: &str,
+    allow_compound: bool,
+    closed: Closed,
+) -> Option<String> {
     use crate::expand::check_normal::STEM_BUCKETS_NOUN;
     let lower = word.to_lowercase();
-    if crate::expand::closed_spellings::is_nonword(&lower) {
+    if closed.is_nonword(&lower) {
         return None;
     }
     let lex = lemma_set();
@@ -232,7 +261,7 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
         return Some(base.to_string());
     }
 
-    if let Some(base) = crate::expand::closed_spellings::base(&lower) {
+    if let Some(base) = closed.base(&lower) {
         return Some(base.to_string());
     }
 
@@ -365,7 +394,7 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
         // stripping the possessive is `ruumiisee`. Put the `n` back,
         // resolve the illative, and verify the possessive form.
         let illative = format!("{host}n");
-        if let Some(base) = is_known_word_with_compound(&illative, false)
+        if let Some(base) = is_known_word_with_compound(&illative, false, closed)
             && let Some(b) = find_base_via_stem_map_static_possessive(&lower, &base)
         {
             return Some(b);
@@ -382,7 +411,7 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
         // (e.g. `tuttavuutta` from `tuttavuuttanne` -- the
         // stem lives one step further in, at `tuttavuu`).
         // Recurse so the noun case stripper gets a turn.
-        if let Some(b) = is_known_word_with_compound(host, false) {
+        if let Some(b) = is_known_word_with_compound(host, false, closed) {
             return Some(b);
         }
     }
@@ -409,7 +438,7 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
         if base.is_empty() {
             continue;
         }
-        if let Some(b) = is_known_word_with_compound(base, false) {
+        if let Some(b) = is_known_word_with_compound(base, false, closed) {
             return Some(b);
         }
         // The bare translative stem can be the *weak* grade of a graded
@@ -609,7 +638,7 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
             if guard > 5 {
                 break;
             }
-            if let Some(b) = is_known_word_with_compound(&host, false) {
+            if let Some(b) = is_known_word_with_compound(&host, false, closed) {
                 return Some(b);
             }
             host_opt = strip_clitic(&host);
@@ -738,7 +767,7 @@ fn is_known_word_with_compound_uncached(word: &str, allow_compound: bool) -> Opt
         if host.is_empty() {
             continue;
         }
-        if let Some(b) = is_known_word_with_compound(host, false) {
+        if let Some(b) = is_known_word_with_compound(host, false, closed) {
             return Some(b);
         }
     }

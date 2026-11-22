@@ -67,7 +67,7 @@ use crate::expand::{
 use crate::fast_hash::FxHashMap;
 use crate::kotus::{Inflection, Lemma, Sanalista};
 use crate::spec::Catalogues;
-use crate::suggest::is_known_word;
+use crate::expand::closed_spellings::Closed;
 use crate::tags::PartOfSpeech;
 
 // ---------------------------------------------------------------------------
@@ -514,7 +514,7 @@ pub(crate) struct StemProbe {
 /// (and what it tried) to stdout -- useful for debugging but
 /// not for the wasm's per-keystroke path.
 pub fn check_normal(word: &str, verbose: bool) -> NormalizedOutcome {
-    check_normal_with(word, verbose, /* engine_gate = */ true, None)
+    check_normal_with(word, verbose, /* engine_gate = */ true, None, Closed::Enabled)
 }
 
 /// The same pipeline with the slow engine gate removed.
@@ -540,12 +540,24 @@ pub fn check_normal_fast(word: &str, verbose: bool) -> NormalizedOutcome {
     // wasm cache covers only one panel, so a thread-local memo pays for
     // itself even on the first render.
     if verbose {
-        return check_normal_with(word, true, /* engine_gate = */ false, None);
+        return check_normal_with(
+            word,
+            true,
+            /* engine_gate = */ false,
+            None,
+            Closed::Enabled,
+        );
     }
     if let Some(hit) = FAST_CACHE.with_borrow(|cache| cache.get(word).cloned()) {
         return hit;
     }
-    let outcome = check_normal_with(word, false, /* engine_gate = */ false, None);
+    let outcome = check_normal_with(
+        word,
+        false,
+        /* engine_gate = */ false,
+        None,
+        Closed::Enabled,
+    );
     FAST_CACHE.with_borrow_mut(|cache| {
         if cache.len() >= FAST_CACHE_LIMIT {
             // A large paste can hold tens of thousands of distinct tokens.
@@ -567,7 +579,26 @@ pub(crate) fn check_normal_fast_with_probe(
     word: &str,
     probe: &StemProbe,
 ) -> NormalizedOutcome {
-    check_normal_with(word, false, /* engine_gate = */ false, Some(probe))
+    check_normal_with(
+        word,
+        false,
+        /* engine_gate = */ false,
+        Some(probe),
+        Closed::Enabled,
+    )
+}
+
+/// Run the six-gate pipeline with an explicit closed-spelling policy.
+///
+/// Production passes [`Closed::Enabled`]. Tests and the audit pass
+/// [`Closed::Disabled`] to prove that the engine derives a surface without the
+/// closed table; a surface that still resolves is a stale exception.
+pub fn check_normal_with_policy(
+    word: &str,
+    engine_gate: bool,
+    closed: Closed,
+) -> NormalizedOutcome {
+    check_normal_with(word, false, engine_gate, None, closed)
 }
 
 /// Every base the engine can prove for `word`, ranked like `lookup`.
@@ -629,7 +660,7 @@ const FAST_CACHE_LIMIT: usize = 16_384;
 /// its noun/verb stem loops. Productive `-inen`/`-kas`/`-lainen` adjectives,
 /// derived verbs and agent nouns, the lexical supplement and the closed
 /// pronoun class.
-fn cheap_derived_base(word: &str) -> Option<String> {
+fn cheap_derived_base(word: &str, closed: Closed) -> Option<String> {
     let lower = word.to_lowercase();
     if let Some(base) = crate::expand::check_normal::adverb_base(&lower) {
         return Some(base.to_string());
@@ -637,7 +668,7 @@ fn cheap_derived_base(word: &str) -> Option<String> {
     if let Some(base) = crate::expand::derived::base(&lower) {
         return Some(base.to_string());
     }
-    if let Some(base) = crate::expand::closed_spellings::base(&lower) {
+    if let Some(base) = closed.base(&lower) {
         return Some(base.to_string());
     }
     if let Some(base) = crate::expand::check_normal::pronoun_base(&lower) {
@@ -730,8 +761,9 @@ fn check_normal_with(
     verbose: bool,
     engine_gate: bool,
     probe: Option<&StemProbe>,
+    closed: Closed,
 ) -> NormalizedOutcome {
-    if crate::expand::closed_spellings::is_nonword(word) {
+    if closed.is_nonword(word) {
         return NormalizedOutcome::Unknown;
     }
 
@@ -763,14 +795,14 @@ fn check_normal_with(
         return NormalizedOutcome::Lemma;
     }
     if verbose {
-        if crate::suggest::is_known_word_no_compound(word).is_some() {
+        if crate::suggest::is_known_word_no_compound_with_closed(word, closed).is_some() {
             println!("    gate 1: productive form, not a lemma");
         } else {
             println!("    gate 1: miss");
         }
     }
 
-    if let Some(base) = crate::expand::closed_spellings::base(&word.to_lowercase()) {
+    if let Some(base) = closed.base(&word.to_lowercase()) {
         return NormalizedOutcome::Inflected {
             base: base.to_string(),
             gate: "closed spelling",
@@ -916,9 +948,9 @@ fn check_normal_with(
         // seconds there. Use the same fast compound probe as gate 4c and
         // leave the deep engine answer to the suggestion pool.
         let host_base = if engine_gate {
-            is_known_word(&host)
+            crate::suggest::is_known_word_with_closed(&host, closed)
         } else {
-            crate::suggest::is_known_word_no_compound(&host)
+            crate::suggest::is_known_word_no_compound_with_closed(&host, closed)
                 .or_else(|| crate::suggest::is_known_compound_fast(&host))
         };
         if let Some(base) = host_base {
@@ -1123,7 +1155,7 @@ fn check_normal_with(
         // A productive derivation is a single word, not a compound: name it
         // before the segmenter gets a chance to split it
         // (`aikaansaamiseksi`, `kolmitahkoisella`).
-        if let Some(base) = cheap_derived_base(word) {
+        if let Some(base) = cheap_derived_base(word, closed) {
             if verbose {
                 println!("    gate 4c0: derived -> {base}");
             }
@@ -1142,7 +1174,7 @@ fn check_normal_with(
                 gate: "compound",
             };
         }
-        let direct_base = crate::suggest::is_known_word_no_compound(word);
+        let direct_base = crate::suggest::is_known_word_no_compound_with_closed(word, closed);
         let short_compound = if direct_base.is_none() {
             crate::suggest::is_known_short_compound(word)
         } else {
@@ -1181,7 +1213,7 @@ fn check_normal_with(
     }
     // Gate 4c (full path): the engine does not split compounds, so a
     // compound falls here.
-    if let Some(base) = is_known_word(word) {
+    if let Some(base) = crate::suggest::is_known_word_with_closed(word, closed) {
         if verbose {
             println!("    gate 4c: compound -> {base}");
         }
@@ -1190,7 +1222,7 @@ fn check_normal_with(
             gate: "compound",
         };
     }
-    let direct_base = crate::suggest::is_known_word_no_compound(word);
+    let direct_base = crate::suggest::is_known_word_no_compound_with_closed(word, closed);
     if let Some(base) = direct_base {
         if verbose {
             println!("    gate 5: miss -> known word {base}");

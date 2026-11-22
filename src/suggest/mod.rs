@@ -62,6 +62,7 @@ pub use detail::{Suggestion, SuggestionSource};
 pub(crate) use known::{
     derived_action_us_base, derived_comparative_base, derived_sti_base, is_content_head,
     is_known_compound_dp, is_known_compound_fast, is_known_short_compound,
+    is_known_word_no_compound_with_closed, is_known_word_with_closed,
 };
 pub use known::{
     is_known_word, is_known_word_fast, is_known_word_no_compound, is_lemma, suggest_over_lemmas,

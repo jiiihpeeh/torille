@@ -1,5 +1,6 @@
 //! Ad-hoc derived-form probes that the compound/known-word gates use.
 
+use crate::expand::closed_spellings::Closed;
 use crate::tags::PartOfSpeech;
 
 use super::{catalogue, is_known_word_with_compound};
@@ -18,7 +19,7 @@ pub(crate) fn derived_sti_base(word: &str) -> Option<String> {
         stripped.to_string()
     };
     let host = host.as_str();
-    let Some(base) = is_known_word_with_compound(host, false) else {
+    let Some(base) = is_known_word_with_compound(host, false, Closed::Enabled) else {
         // A compound adjective has no row of its own (`suonenvedontapainen`
         // = `suonenveto` + `tapainen`). Its head shape and a known modifier
         // are the evidence that the `-sti` host is an adjective rather than
@@ -375,11 +376,11 @@ pub(crate) fn derived_comparative_base(word: &str) -> Option<String> {
     let (positive, nominal_stem) = if let Some(stem) = comparative.strip_suffix("nee") {
         let positive = [format!("{stem}nyt"), format!("{stem}nut")]
             .into_iter()
-            .find(|candidate| is_known_word_with_compound(candidate, false).is_some())?;
+            .find(|candidate| is_known_word_with_compound(candidate, false, Closed::Enabled).is_some())?;
         (positive, format!("{stem}nee"))
     } else {
         let positive = comparative.to_string();
-        is_known_word_with_compound(&positive, false)?;
+        is_known_word_with_compound(&positive, false, Closed::Enabled)?;
         (positive.clone(), positive)
     };
     let nominal = format!("{nominal_stem}mpi");
@@ -410,7 +411,7 @@ pub(super) fn derived_superlative_base(word: &str) -> Option<String> {
     use crate::expand::inflect_all;
     use crate::kotus::Inflection;
     for nominative in superlative_candidates(word) {
-        if is_known_word_with_compound(&nominative, false).is_none() {
+        if is_known_word_with_compound(&nominative, false, Closed::Enabled).is_none() {
             continue;
         }
         let forms = inflect_all(
