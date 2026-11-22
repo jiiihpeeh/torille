@@ -24,6 +24,13 @@ the cold-start tool and below the ≥10 % gate. The top tail
 (`lempiviikkomme`, `perunkirjoittamista`) is novel, not lexical, and is not
 covered. The reader-shaped 7,000 book gets almost no hits.
 
+A separate check over **1,963 sampled list lemmas** generated **99,951
+forms**; **94.3 %** of those forms hit the hint. The misses are degree and
+possessive forms (`aamu` + `kylmemmikseen`) and ambiguous-head rows
+(`aaltoviivain` names `viivain`, not `viiva`); they are generator precision,
+not a state-machine miss. So the split is handled for words that are in the
+list; the page's 24 % is a coverage limit, not a plumbing bug.
+
 The go gate required ≥30 % of compound-DP calls and a win on both books; it
 failed, so the runtime hook, generator, CSV and build table were reverted.
 This file is the measured record. A future attempt needs a richer source
