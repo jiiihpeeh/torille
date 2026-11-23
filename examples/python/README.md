@@ -75,6 +75,10 @@ Cell.ILL_SG       # Cell.GEN_PL, Cell.PRES_1SG, ...
 Cell.parse("ill_sg")
 ```
 
+The class expression is a Python string, so it must be quoted: `Luokka("9*B")`.
+Unquoted `9*B` is a multiplication expression -- Python evaluates it before the
+call -- and is not a class. (`Luokka(9)` is the integer shorthand.)
+
 `Cell` is a real enum: `Cell.ILL_SG` is the `ill_sg` question, and
 `next_question` comes back as a `Cell` (or `None`), so a typo in a cell name
 is a `TypeError` rather than a silently skipped question. The string forms
