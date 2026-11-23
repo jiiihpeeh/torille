@@ -122,6 +122,33 @@ impl<'a> std::fmt::Debug for BasesReport<'a> {
 /// catalogue; a convenience wrapper that loads them for the caller is in
 /// [`crate::suggest::check`].
 ///
+/// The phase switches for one base search.
+///
+/// One struct rather than seven positional booleans: every call site used to
+/// spell `/* recognition_only */ true, /* cheap_recognition */ false, ...`,
+/// where a transposed pair was invisible. The mutable accumulators stay as
+/// parameters -- they are outputs, not switches.
+#[derive(Clone, Copy, Default)]
+struct WalkOptions<'f> {
+    /// Strip one trailing clitic and retry the host (phase 5). Off for the
+    /// recursive call, so a stack of clitics peels one layer at a time.
+    clitic: bool,
+    /// Keep a generated form only when this returns true; `None` keeps every
+    /// form (a recognition-only call never builds them anyway).
+    keep_form: Option<&'f (dyn Fn(&str) -> bool + Sync)>,
+    /// Fill the neighbour list the ranker uses.
+    neighbours: bool,
+    /// Bases and direct lemmas only: no generated-form payload.
+    recognition: bool,
+    /// Verify a candidate with the paradigm probe instead of materialising
+    /// its whole form list.
+    cheap: bool,
+    /// Run phases 2-4 even after phase 1 hits.
+    all_phases: bool,
+    /// Keep walking after a direct lemma (`lasta` is a lemma and a form).
+    keep_walking_after_direct: bool,
+}
+
 /// Phase 5 is the clitic phase: when none of the four prefix walks find a
 /// base, try stripping a single clitic (`-ko`/`-kö`, `-kin`, `-kaan`/`-kään`,
 /// `-han`/`-hän`, `-pa`/`-pä`) and re-running the lookup on the host. A
@@ -136,10 +163,14 @@ pub fn find_bases_with<'a>(
     word: &str,
 ) -> BasesReport<'a> {
     find_bases_with_inner(
-        lexicon, cat, word, /* with_clitic_phase */ true, /* keep_form */ None,
-        /* collect_neighbours */ true, /* recognition_only */ false,
-        /* cheap_recognition */ false, /* all_phases */ false,
-        /* keep_walking_with_direct */ false,
+        lexicon,
+        cat,
+        word,
+        WalkOptions {
+            clitic: true,
+            neighbours: true,
+            ..WalkOptions::default()
+        },
     )
 }
 
@@ -163,13 +194,12 @@ where
         lexicon,
         cat,
         word,
-        /* with_clitic_phase */ true,
-        Some(&keep_form),
-        /* collect_neighbours */ true,
-        /* recognition_only */ false,
-        /* cheap_recognition */ false,
-        /* all_phases */ false,
-        /* keep_walking_with_direct */ false,
+        WalkOptions {
+            clitic: true,
+            keep_form: Some(&keep_form),
+            neighbours: true,
+            ..WalkOptions::default()
+        },
     )
 }
 
@@ -189,13 +219,12 @@ pub fn find_all_bases_with<'a>(
         lexicon,
         cat,
         word,
-        /* with_clitic_phase */ true,
-        Some(&|_| false),
-        /* collect_neighbours */ false,
-        /* recognition_only */ false,
-        /* cheap_recognition */ false,
-        /* all_phases */ true,
-        /* keep_walking_with_direct */ false,
+        WalkOptions {
+            clitic: true,
+            keep_form: Some(&|_| false),
+            all_phases: true,
+            ..WalkOptions::default()
+        },
     )
 }
 
@@ -210,13 +239,12 @@ pub(crate) fn find_bases_for_check<'a>(
         lexicon,
         cat,
         word,
-        /* with_clitic_phase */ true,
-        Some(&|_| false),
-        /* collect_neighbours */ false,
-        /* recognition_only */ true,
-        /* cheap_recognition */ false,
-        /* all_phases */ false,
-        /* keep_walking_with_direct */ false,
+        WalkOptions {
+            clitic: true,
+            keep_form: Some(&|_| false),
+            recognition: true,
+            ..WalkOptions::default()
+        },
     )
 }
 
@@ -247,13 +275,14 @@ pub(crate) fn find_bases_for_analysis<'a>(
         lexicon,
         cat,
         word,
-        /* with_clitic_phase */ true,
-        Some(&|_| false),
-        /* collect_neighbours */ false,
-        /* recognition_only */ true,
-        /* cheap_recognition */ true,
-        /* all_phases */ false,
-        /* keep_walking_with_direct */ has_direct,
+        WalkOptions {
+            clitic: true,
+            keep_form: Some(&|_| false),
+            recognition: true,
+            cheap: true,
+            keep_walking_after_direct: has_direct,
+            ..WalkOptions::default()
+        },
     )
 }
 
@@ -825,23 +854,24 @@ fn prefix_candidates<'a>(lexicon: &'a [Lemma<'a>], prefix: &str) -> Vec<&'a Lemm
     out
 }
 
-/// Engine-level search without the clitic phase. Used by the clitic phase
-/// itself (so a stacked-clitic word like `siellähänkin` peels one layer at
-/// a time and terminates) and exposed for callers that want the raw
-/// prefix-walk result without the clitic fallback.
-#[allow(clippy::too_many_arguments)] // the flags are the phase switches
+/// The walk driver. `options` selects the phases; the clitic phase re-enters
+/// it with `clitic` off, so a stacked-clitic word like `siellähänkin` peels
+/// one layer at a time.
 fn find_bases_with_inner<'a>(
     lexicon: &'a [Lemma<'a>],
     cat: &Catalogues,
     word: &str,
-    with_clitic_phase: bool,
-    keep_form: Option<&(dyn Fn(&str) -> bool + Sync)>,
-    collect_neighbours: bool,
-    recognition_only: bool,
-    cheap_recognition: bool,
-    all_phases: bool,
-    keep_walking_with_direct: bool,
+    options: WalkOptions<'_>,
 ) -> BasesReport<'a> {
+    let WalkOptions {
+        clitic: with_clitic_phase,
+        keep_form,
+        neighbours: collect_neighbours,
+        recognition: recognition_only,
+        cheap: cheap_recognition,
+        all_phases,
+        keep_walking_after_direct: keep_walking_with_direct,
+    } = options;
     let index = LexiconIndex::new(lexicon);
     let pos = PartOfSpeech::Noun;
     let possessives = true;
@@ -999,18 +1029,7 @@ fn find_bases_with_inner<'a>(
                 }
             }
         }
-        let walked = walk_head1(
-            &head1,
-            &index,
-            cat,
-            word,
-            keep_form,
-            collect_neighbours,
-            recognition_only,
-            cheap_recognition,
-            pos,
-            possessives,
-        );
+        let walked = walk_head1(&head1, &index, cat, word, options, pos, possessives);
         bases.extend(walked.bases);
         neighbours.extend(walked.neighbours);
         forms.extend(walked.forms);
@@ -1038,10 +1057,7 @@ fn find_bases_with_inner<'a>(
             &mut bases,
             &mut neighbours,
             &mut forms,
-            keep_form,
-            collect_neighbours,
-            recognition_only,
-            cheap_recognition,
+            options,
             3,
         );
     }
@@ -1059,10 +1075,7 @@ fn find_bases_with_inner<'a>(
             &mut bases,
             &mut neighbours,
             &mut forms,
-            keep_form,
-            collect_neighbours,
-            recognition_only,
-            cheap_recognition,
+            options,
             2,
         );
     }
@@ -1130,13 +1143,10 @@ fn find_bases_with_inner<'a>(
             lexicon,
             cat,
             &host,
-            /* with_clitic_phase */ false,
-            keep_form,
-            collect_neighbours,
-            recognition_only,
-            cheap_recognition,
-            all_phases,
-            keep_walking_with_direct,
+            WalkOptions {
+                clitic: false,
+                ..options
+            },
         );
         if !inner.bases.is_empty() || !inner.direct.is_empty() {
             // The host is a known form. The original is too, with
@@ -1228,34 +1238,19 @@ struct WalkChunk<'a> {
 /// bases, neighbours, and forms keep the exact order the sequential loop
 /// produced. The wasm has one thread, and the small-input path stays
 /// sequential to avoid spawn overhead.
-#[allow(clippy::too_many_arguments)]
 fn walk_head1<'a>(
     head1: &[&'a Lemma<'a>],
     index: &LexiconIndex<'a>,
     cat: &Catalogues,
     word: &str,
-    keep_form: Option<&(dyn Fn(&str) -> bool + Sync)>,
-    collect_neighbours: bool,
-    recognition_only: bool,
-    cheap_recognition: bool,
+    options: WalkOptions<'_>,
     pos: PartOfSpeech,
     possessives: bool,
 ) -> WalkChunk<'a> {
     const PARALLEL_MIN: usize = 64;
     let workers = worker_count();
     if workers <= 1 || head1.len() < PARALLEL_MIN {
-        return walk_head1_chunk(
-            head1,
-            index,
-            cat,
-            word,
-            keep_form,
-            collect_neighbours,
-            recognition_only,
-            cheap_recognition,
-            pos,
-            possessives,
-        );
+        return walk_head1_chunk(head1, index, cat, word, options, pos, possessives);
     }
     let chunk_size = head1.len().div_ceil(workers);
     let parts: Vec<WalkChunk<'a>> = std::thread::scope(|scope| {
@@ -1263,18 +1258,7 @@ fn walk_head1<'a>(
             .chunks(chunk_size)
             .map(|chunk| {
                 scope.spawn(move || {
-                    walk_head1_chunk(
-                        chunk,
-                        index,
-                        cat,
-                        word,
-                        keep_form,
-                        collect_neighbours,
-                        recognition_only,
-                        cheap_recognition,
-                        pos,
-                        possessives,
-                    )
+                    walk_head1_chunk(chunk, index, cat, word, options, pos, possessives)
                 })
             })
             .collect();
@@ -1296,19 +1280,22 @@ fn walk_head1<'a>(
     out
 }
 
-#[allow(clippy::too_many_arguments)]
 fn walk_head1_chunk<'a>(
     head1: &[&'a Lemma<'a>],
     index: &LexiconIndex<'a>,
     cat: &Catalogues,
     word: &str,
-    keep_form: Option<&(dyn Fn(&str) -> bool + Sync)>,
-    collect_neighbours: bool,
-    recognition_only: bool,
-    cheap_recognition: bool,
+    options: WalkOptions<'_>,
     pos: PartOfSpeech,
     possessives: bool,
 ) -> WalkChunk<'a> {
+    let WalkOptions {
+        keep_form,
+        neighbours: collect_neighbours,
+        recognition: recognition_only,
+        cheap: cheap_recognition,
+        ..
+    } = options;
     let mut out = WalkChunk {
         bases: Vec::new(),
         neighbours: Vec::new(),
@@ -1361,8 +1348,8 @@ fn walk_head1_chunk<'a>(
 /// This is the `heads_of` walk the lexicon index would do if `PREFIX` were
 /// `prefix_len` instead of 4.
 //
-// The argument list mirrors the other phase walkers; grouping it into a
-// struct would only move the same list one level out.
+// The phase switches are the shared [`WalkOptions`]; the remaining arguments
+// are the accumulators this walk appends to.
 #[allow(clippy::too_many_arguments)]
 fn run_prefix_walk<'a>(
     lexicon: &'a [Lemma<'a>],
@@ -1375,12 +1362,16 @@ fn run_prefix_walk<'a>(
     bases: &mut Vec<&'a Lemma<'a>>,
     neighbours: &mut Vec<&'a Lemma<'a>>,
     forms: &mut Vec<SourcedForm<'a>>,
-    keep_form: Option<&(dyn Fn(&str) -> bool + Sync)>,
-    collect_neighbours: bool,
-    recognition_only: bool,
-    cheap_recognition: bool,
+    options: WalkOptions<'_>,
     prefix_len: usize,
 ) {
+    let WalkOptions {
+        keep_form,
+        neighbours: collect_neighbours,
+        recognition: recognition_only,
+        cheap: cheap_recognition,
+        ..
+    } = options;
     let Some(prefix) = take_chars(form, prefix_len) else {
         return;
     };
