@@ -313,9 +313,13 @@ policy is in `AGENTS.md` and `src/expand/derived_forms/agent.rs`.
 - `morphology::WordInfo` — resolved token; `Depth` records `Direct`,
   `StemMap`, `HeadsTails`, `Prefix`, `Clitic`, `Possessive`, `Compound`,
   `ProperName`, `Unknown`.
-- `expand::inflect(lemma)` / `inflect_all` — one/all generated forms with
-  `Tags` and `Confidence`.
-- `expand::form_of` / `forms_of` — ask for a specific shape.
+- `expand::inflect(lemma)` / `inflect_all` / `inflect_all_in` — one/all
+  generated forms with `Tags` and `Confidence`. `inflect_all` supplies the
+  embedded lexicon; `inflect_all_in` takes the caller's. A class-50/51
+  compound paradigm needs it, so `None` means "cannot answer", never "use the
+  catalogue model".
+- `expand::form_of` / `form_of_in` / `forms_of` / `forms_of_in` — ask for a
+  specific shape, with the same lexicon rule.
 - `expand::head_inflections` — class a compound head declines as.
 - `compound::analyze` / `explain` — split a compound and explain each part.
 - `derivation` — productive reverse-derivation lookup.

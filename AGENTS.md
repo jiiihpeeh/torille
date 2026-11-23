@@ -311,7 +311,11 @@ classifies. `report_by_class.py --classless` buckets the rows under
 
 Public wrappers: `inflect`, `inflect_all` (preserves first-occurrence order and
 drops only fully-identical copies), `form_of`/`form_of_in` (filter by `Tags`
-with `None` as a wildcard), `forms_of`.
+with `None` as a wildcard), `forms_of`/`forms_of_in`. The non-`_in` wrappers
+supply the embedded `LexiconIndex`; the `_in` ones take the caller's. A
+class-50/51 compound paradigm needs an index (the parts have to be found in
+the lexicon), so `None` there means "cannot answer" and emits nothing rather
+than falling through to the catalogue model.
 
 ### Confidence and readings
 
@@ -612,7 +616,7 @@ is gitignored and generated.
 | plural-only lemmas / combining stems | `misc_md/PLAN_PLURAL_ONLY.md`, `src/kotus.rs`, `src/expand/build.rs`, `src/tags.rs`, `build/csv_builders/sanalista.rs` |
 | the reverse index / class prior | `src/expand/build.rs` |
 | compile-time blob writers | `build.rs`, `build/csv_builders/`, `build/map_builders/`; blobs live in `maps/` |
-| fetch/publish the `maps` branch | `tools/maps-sync/` (`cargo run -p torille-maps -- status\|fetch\|publish`) |
+| fetch/publish the `maps` branch | `tools/maps-sync/` (`cargo run -p torille-maps -- status`, then `fetch` or `publish`) |
 | a new verb/noun class engine | `src/expand/verbs/`, `src/expand/nominals*/`, then `dispatch` + `AUTHORITATIVE_CLASSES` |
 | feminine derivations (`-tar`, `-nna`, `-ska`, `-kko`) | `src/expand/derived_forms/agent.rs` for productive `-tar`; lexical `-nna`/`-ska`/`-kko` as data, not a suffix stripper |
 | the grammar reading model | `src/tags.rs` |

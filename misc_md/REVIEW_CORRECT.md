@@ -1,6 +1,6 @@
 # REVIEW_CORRECT — public-boundary correctness and robustness
 
-Status: **Phase 1 landed 2026-11-23; Phases 2–5 open.** Baseline `0c06175`
+Status: **Phase 1 landed 2026-11-23; Phase 2 in progress.** Baseline `0c06175`
 (2026-11-22). The review method was: read the engine, run the workspace gates,
 then probe the public entry points with deterministic adversarial inputs. The
 gates are clean (`cargo clippy --workspace --all-targets -- -D warnings`,
@@ -8,6 +8,41 @@ gates are clean (`cargo clippy --workspace --all-targets -- -D warnings`,
 gates do not currently exercise.
 
 ## Progress
+
+### 2026-11-23 — Phase 2 (C4) implemented
+
+- **C4.1** — `inflect_all` / `form_of` / `forms_of` now take no lexicon and
+  supply the embedded `LexiconIndex`; the caller-index variants are
+  `inflect_all_in` / `form_of_in` / `forms_of_in`. Every production `None`
+  site was classified: the suggestion, morphology, `check_normal` map and
+  stem/prefix index sites moved to the embedded index, the derivation rules
+  keep `_in(None)` because their class is never the 50/51 marker, and the
+  `expand/mod.rs` tests keep `_in` to pin the new fail-closed behaviour.
+- **C4.2** — `lemma_emit` takes the walk's `&LexiconIndex` and passes
+  `Some(index)` to `emits_standalone_form`, so the cheap recognition path and
+  the full walk agree. `try_compound_marker` now fails closed for class 51 and
+  for class 50 without an index; the one row with an index, no split and no
+  head class (`suorakulmain`) still uses the catalogue model, because that is
+  the only evidence the dictionary leaves for it.
+- **C4.3** — `tests/class_50_51_parity.rs`: no class-50/51 paradigm without a
+  lexicon may add a form the indexed one lacks (all 696 lemmas, ~127k forms);
+  the fabricated E4 spellings are unknown at all five entry points; the four
+  full entry points agree on a stride sample of compound forms; and the
+  indexed form counts for `kylmätila` (155) and `nuori-isäntä` (176) are
+  pinned. The parity sweep found a real hyphen gap: `is_known_word` returned
+  a miss for an inflected lexicalised compound (`tuore-elintarviketta`), so
+  its hyphen branch now falls through to `find_any_base_with` when
+  `allow_compound` is set (the recursion guard keeps it finite).
+- **C4.4** — the runtime reads the blob, not the source text: `prefix_index`
+  (both the lazy build and the per-call lookup) and `stem_index` used
+  `parse_sanalista(crate::SANALISTA)`, i.e. a full 2.8 MB text parse per
+  process and, for `inflection_candidate_for`, per word. Both now use
+  `kotus::lemmas()` (the blob-derived rows, proven row-identical). The
+  remaining text tables (`plural_only.tsv`, `class_examples.tsv`,
+  `feminine_nouns.csv`) are small, lazy and not on the per-word path.
+
+Verified: clippy clean, `cargo test --release --workspace` green, and the
+C4-specific gates below.
 
 ### 2026-11-23 — Phase 1 (C1–C3) implemented
 
@@ -259,26 +294,26 @@ wizard still answers `näyttelijä`/`kissa` as before.
 
 ### C4.1 — make the lexicon index implicit
 
-- [ ] Add a convenience `inflect_all(lemma, inflections, cat, pos, possessives)`
+- [x] Add a convenience `inflect_all(lemma, inflections, cat, pos, possessives)`
   that uses `LexiconIndex::new(crate::kotus::lemmas())`, and rename the current
   `Option` form to `inflect_all_in` (or `inflect_all_with_lexicon`). Follow the
   same shape for `form_of`/`forms_of` if it keeps the two families consistent.
-- [ ] Keep the `_in` variant for the genuinely custom-lexicon callers (the
+- [x] Keep the `_in` variant for the genuinely custom-lexicon callers (the
   binding and the tools already hold their own `LexiconIndex`).
-- [ ] Document the invariant: a class-50/51 paradigm is only meaningful with a
+- [x] Document the invariant: a class-50/51 paradigm is only meaningful with a
   lexicon index; `None` is not "use the catalogue model", it is "cannot
   answer".
-- [ ] Update the public docs and the README's Rust API section, since this is a
+- [x] Update the public docs and the README's Rust API section, since this is a
   pre-1.0 breaking change.
 
 ### C4.2 — pass the index through the cheap recognition path
 
-- [ ] Give `lemma_emit` a `&LexiconIndex` parameter and pass
+- [x] Give `lemma_emit` a `&LexiconIndex` parameter and pass
   `Some(index)` to `emits_standalone_form`.
-- [ ] Update `find_any_base_with`, `find_best_base_with`, and the
+- [x] Update `find_any_base_with`, `find_best_base_with`, and the
   `cheap_recognition` branch of `find_bases_with_inner`. All three already
   construct the index at the top of the walk.
-- [ ] Audit the remaining `inflect_all(..., None)` call sites and classify
+- [x] Audit the remaining `inflect_all(..., None)` call sites and classify
   each one. Production sites: `suggest/known/lemmas.rs:21`,
   `morphology/mod.rs:1102,1134`, `expand/check_normal.rs:313`,
   `expand/prefix_index.rs:117`, `expand/stem_index.rs:206`; test-only sites
@@ -287,14 +322,33 @@ wizard still answers `näyttelijä`/`kissa` as before.
 
 ### C4.3 — the parity test
 
-- [ ] Add a test that walks every class-50/51 lemma, inflects it with the
+- [x] Add a test that walks every class-50/51 lemma, inflects it with the
   embedded index, and asserts that `check`, `check_fast`, `check_normal`,
   and `is_known_word` agree on every generated form.
-- [ ] Add the four-row E4 table as a direct regression test, with the expected
+- [x] Add the four-row E4 table as a direct regression test, with the expected
   answer (`Unknown` for `kylmädilillä`) pinned.
-- [ ] Assert the form counts for `kylmätila` and `nuori-isäntä` with and
+- [x] Assert the form counts for `kylmätila` and `nuori-isäntä` with and
   without the index (or, after the API change, that the public function has no
   `None` variant).
+
+### C4.4 — the runtime reads the blob, not the source text
+
+- [x] Replace the runtime `parse_sanalista(crate::SANALISTA)` sites with
+  `kotus::lemmas()`. `prefix_index::prefix_index` and
+  `prefix_index::inflection_candidate_for` parsed the 2.8 MB CSV per process
+  and, in the lookup, per word; `stem_index::stem_index` parsed it once per
+  process. All three now read the blob-derived rows, which
+  `the_embedded_lexicon_is_the_parsed_lexicon` proves identical.
+- [x] Audit the other `include_str!` tables. `plural_only.tsv`,
+  `class_examples.tsv` and `feminine_nouns.csv` are small, parsed lazily and
+  off the per-word path; the rest of the runtime data is already binary blobs
+  read in place (`map_reader`, `static_table`).
+- [ ] Follow-up (API decision, not done here): `crate::SANALISTA` is still
+  `include_str!`'d for the public `parse_sanalista` / `read_sanalista` API and
+  the tool-only `derived::compute`, so the 2.9 MB source text stays in the
+  binary beside the blob. Gating it behind a non-wasm feature would cut the
+  browser payload, but it changes a documented `pub const` and the example
+  `parse_sanalista(SANALISTA)`.
 
 Acceptance: the E4 table is all `Unknown`; the parity test is green; the form
 counts do not change when the caller supplies the same index. Run
@@ -302,6 +356,10 @@ counts do not change when the caller supplies the same index. Run
 correctness fingerprint; the change affects only the paths that were passing
 `None`, so the expected diff is "fabricated forms disappear", not a new form
 set.
+
+Result: all four class-50/51 forms in the E4 table are `Unknown` at
+every entry point; the parity file is green; and `compare_engine_outputs.py
+--strict` still reports no lost forms.
 
 ## Phase 3 — case handling
 
