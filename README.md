@@ -207,8 +207,9 @@ torille/
 The root package is the library and the workspace root. `tools`,
 `tools/maps-sync` (the `torille-maps` maps-branch helper), `bindings`,
 `wrapper`, the wasm crates and the demo server are members, so
-`cargo build --workspace` covers the Rust side. The library has no third-party dependencies: the lexicon
-and the maps are embedded with `include_str!` / `include_bytes!`, so a consumer
+`cargo build --workspace` covers the Rust side. The library has no third-party
+dependencies: the lexicon and the maps are embedded as `include_bytes!` blobs
+(the committed CSV is also embedded for the public text parser), so a consumer
 needs no data file at runtime.
 
 ## Data and regeneration
@@ -225,14 +226,17 @@ cargo run --release -p torille-tools --bin gen_all_forms
 cargo run --release -p torille-tools --bin gen_adj_degrees
 cargo run --release -p torille-tools --bin gen_stem_map_noun
 cargo run --release -p torille-tools --bin gen_stem_map_verb
+cargo run --release -p torille-tools --bin gen_stem_endings
+cargo run --release -p torille-tools --bin gen_lemma_stem_shapes
 cargo run --release -p torille-tools --bin gen_derived
 cargo build -p torille
 ```
 
 `tools/build/compare_engine_outputs.py --strict` checks the committed tables
-against a fresh engine run (0 lost / 0 new is the current baseline). The
-paradigm catalogue is bootstrapped rather than regenerated from the oracle every
-time: seed `data/catalogue.csv` once with
+against a fresh engine run. The gate requires 0 lost forms; the current run has
+0 lost, with one extra all-forms row and four swapped verb-pair keys as the
+recorded residue. The paradigm catalogue is bootstrapped rather than regenerated
+from the oracle every time: seed `data/catalogue.csv` once with
 `python3 tools/oracle/build_catalogue_csv.py`, then rewrite it from the engine's
 own output until the CSV stops changing:
 
@@ -324,9 +328,9 @@ python3 tools/bench.py selftest
 
 `cargo test` at the repository root tests only `torille` and silently skips
 the other targets; always pass `--workspace`. `cargo fmt --check` is **not** a
-gate: `src/expand/mod.rs` and `src/expand/build.rs` are hand-formatted, and
-the generated nominal modules are not rustfmt-clean. Check the files you
-touched instead.
+gate: `src/expand/mod.rs` and `src/expand/build.rs` are hand-formatted, and the
+per-class nominal modules are hand-formatted rather than rustfmt-clean. Check
+the files you touched instead.
 
 For a class-level defect, the report tools turn findings into a change:
 
