@@ -30,7 +30,7 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 
 use crate::expand::inflect_all;
-use crate::kotus::{parse_sanalista, Lemma};
+use crate::kotus::Lemma;
 use crate::spec::Catalogues;
 use crate::tags::PartOfSpeech;
 
@@ -84,8 +84,11 @@ static PREFIX_INDEX: OnceLock<PrefixIndex> = OnceLock::new();
 /// lemmas, then runs `inflect_all` per candidate.
 pub fn prefix_index() -> &'static PrefixIndex {
     PREFIX_INDEX.get_or_init(|| {
-        let lexicon = parse_sanalista(crate::SANALISTA);
-        PrefixIndex::build(&lexicon)
+        // The blob-derived rows, not a parse of the 2.8 MB source text: the
+        // two are row-identical (`the_embedded_lexicon_is_the_parsed_lexicon`)
+        // and a spell checker must not re-read its dictionary to build a
+        // lookup table.
+        PrefixIndex::build(crate::kotus::lemmas())
     })
 }
 
@@ -111,10 +114,10 @@ pub fn inflection_candidate_for(
         return None;
     }
     let cat = Catalogues::embedded().clone();
-    let lexicon = parse_sanalista(crate::SANALISTA);
+    let lexicon = crate::kotus::lemmas();
     for &row in candidates {
         let lemma = &lexicon[row as usize];
-        for form in inflect_all(lemma.word, &lemma.inflections, &cat, None, pos, possessives) {
+        for form in inflect_all(lemma.word, &lemma.inflections, &cat, pos, possessives) {
             if form.word == word {
                 return Some(lemma.word.to_string());
             }

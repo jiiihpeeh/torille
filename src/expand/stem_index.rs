@@ -49,7 +49,6 @@ use std::collections::{HashMap, HashSet};
 use std::sync::OnceLock;
 
 use crate::expand::inflect_all;
-use crate::kotus::parse_sanalista;
 use crate::spec::Catalogues;
 use crate::tags::{Confidence, PartOfSpeech};
 
@@ -108,7 +107,6 @@ impl StemIndex {
                 lemma.word,
                 &lemma.inflections,
                 &cat,
-                None,
                 PartOfSpeech::Noun,
                 /* possessives */ false,
             ) {
@@ -165,8 +163,9 @@ static STEM_INDEX: OnceLock<StemIndex> = OnceLock::new();
 /// output) and shared thereafter.
 pub fn stem_index() -> &'static StemIndex {
     STEM_INDEX.get_or_init(|| {
-        let lexicon = parse_sanalista(crate::SANALISTA);
-        StemIndex::build(&lexicon)
+        // The blob-derived rows, not a parse of the source CSV; see
+        // `prefix_index::prefix_index`.
+        StemIndex::build(crate::kotus::lemmas())
     })
 }
 
@@ -207,7 +206,6 @@ pub fn find_base_via_stem_index(
                 lemma.word,
                 &lemma.inflections,
                 cat,
-                None,
                 PartOfSpeech::Noun,
                 false,
             );
