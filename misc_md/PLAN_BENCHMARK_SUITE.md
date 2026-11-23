@@ -221,25 +221,26 @@ correctness-only (CI is engine-only and noisy).
 - **Correctness first** — every report includes the diagnostics counts and an
   engine-output hash; the suite never compares two different outputs.
 
-## 7. Reference baseline (2026-11-22, this machine)
+## 7. Reference baseline (2026-11-23, this machine)
 
-The first full suite run, recorded as `bench/baselines/reference.json`
+The latest full suite run, re-recorded after the lowercase-fold optimisation
+and checked in as `bench/baselines/reference.json`
 (fingerprint `f762dae2d048b2a6`). These are the numbers the suite pins; they
 are not budgets.
 
 ```text
-page-2000 cold morphology      673.7 ms median (single), 201.9 ms (4 workers)
-page-2000 warm morphology        0.46 ms
-page-2000 grammar+style warm    19.29 ms
-page-2000 sentence-cache warm    0.73 ms
-8 % typo corpus cold           729.3 ms
-all-unknown corpus cold        769.5 ms
-check_suggest p50 / p95          3 us / 506 us
-reverse-index build / size      23.0 s / 1.23 GB
+page-2000 cold morphology      575.9 ms median (single), 168.1 ms (4 workers)
+page-2000 warm morphology        0.50 ms
+page-2000 grammar+style warm    18.95 ms
+page-2000 sentence-cache warm    0.76 ms
+8 % typo corpus cold           621.9 ms
+all-unknown corpus cold        551.9 ms
+check_suggest p50 / p95          3 us / 473 us
+reverse-index build / size      23.3 s / 1.23 GB
 correctness                     3 / 6 / 1 diagnostics; 8 form canaries
 ```
 
-The full report has 544 metrics over five corpora, both thread shapes and the
+The full report has 594 metrics over five corpora, both thread shapes and the
 index build. A different machine records its own baseline; `compare` refuses a
 fingerprint mismatch.
 

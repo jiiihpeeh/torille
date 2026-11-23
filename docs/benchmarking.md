@@ -99,28 +99,30 @@ tool output.
 
 ## Reference
 
-The current reference is the first `full` run recorded on the development
-machine (AMD Ryzen 5 4600H, Linux, rustc 1.99.0, release,
-fingerprint `f762dae2d048b2a6`). Reproduce it with
-`bench.py run --profile full`; a different machine records its own baseline.
-The full report is `bench/baselines/reference.json`.
+The current reference is the latest deliberate `full` run on the development
+machine (AMD Ryzen 5 4600H, Linux, rustc 1.99.0, release, fingerprint
+`f762dae2d048b2a6`), re-recorded after the lowercase-fold optimisation.
+Reproduce it with `bench.py run --profile full` and
+`bench.py record reports/bench-full.json --name reference --force`; a different
+machine records its own baseline. The full report is
+`bench/baselines/reference.json`.
 
 | metric | median |
 |---|---|
-| `page-2000` cold morphology, single | 673.7 ms |
-| `page-2000` 4-worker morphology | 201.9 ms |
-| `page-2000` warm morphology | 0.46 ms |
-| `page-2000` grammar+style warm | 19.29 ms |
-| `page-2000` sentence-cache warm | 0.73 ms |
-| 8 % typo corpus, cold morphology | 729.3 ms |
-| all-unknown corpus, cold morphology | 769.5 ms |
-| `check_suggest` p50 / p95 | 3 µs / 506 µs |
-| reverse-index build / size | 23.0 s / 1.23 GB |
+| `page-2000` cold morphology, single | 575.9 ms |
+| `page-2000` 4-worker morphology | 168.1 ms |
+| `page-2000` warm morphology | 0.50 ms |
+| `page-2000` grammar+style warm | 18.95 ms |
+| `page-2000` sentence-cache warm | 0.76 ms |
+| 8 % typo corpus, cold morphology | 621.9 ms |
+| all-unknown corpus, cold morphology | 551.9 ms |
+| `check_suggest` p50 / p95 | 3 µs / 473 µs |
+| reverse-index build / size | 23.3 s / 1.23 GB |
 
 `check_suggest.<corpus>.first_pass` is the deduplicated cold first pass (one
 call per unique surface, which is the shape the misspell gate pays on a fresh
-page). It was added after the recorded reference, so the numbers appear in a
-fresh full run but not in the reference table above.
+page). The reference now carries those metrics; the first recording predated
+them, which is why the report has 594 metrics rather than 544.
 
 Correctness in the same report: 3 diagnostics on `page-2000`, 6 on the 8 %
 corpus, 1 on the all-unknown corpus, and the eight form-canary hashes.

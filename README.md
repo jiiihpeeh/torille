@@ -142,14 +142,14 @@ Measured on the committed 1,959-word fixture
 
 | workload | time |
 |---|---:|
-| cold morphology, native single-thread | 674 ms |
-| cold morphology, native 4-worker | 202 ms |
-| warm morphology | 0.46 ms |
-| warm syntax analysis | 5.41 ms |
-| warm grammar rules | 12.34 ms |
-| warm style | 2.50 ms |
-| warm grammar + style (full pass) | 19.29 ms |
-| one edited sentence (native) | 3.22 ms |
+| cold morphology, native single-thread | 576 ms |
+| cold morphology, native 4-worker | 168 ms |
+| warm morphology | 0.50 ms |
+| warm syntax analysis | 5.17 ms |
+| warm grammar rules | 12.54 ms |
+| warm style | 2.57 ms |
+| warm grammar + style (full pass) | 18.95 ms |
+| one edited sentence (native) | 3.04 ms |
 | cold page, release wasm, 4 workers alive | 364–395 ms |
 | first check of a browser session (worker start-up) | ~950 ms |
 
@@ -374,19 +374,19 @@ median timings, and requires the correctness block to match exactly.
 (including the deterministic 8 % typo and all-unknown variants), both the
 single-thread and 4-worker shapes, and the reverse-index build. The native
 release reference (`bench/baselines/reference.json`, fingerprint
-`f762dae2d048b2a6`, 544 metrics) medians:
+`f762dae2d048b2a6`, 594 metrics) medians:
 
 | metric | median |
 |---|---:|
-| `page-2000` cold morphology, single-thread | 673.7 ms |
-| `page-2000` cold morphology, 4 workers | 201.9 ms |
-| `page-2000` warm morphology | 0.46 ms |
-| `page-2000` warm grammar + style | 19.29 ms |
-| `page-2000` warm sentence cache | 0.73 ms |
-| 8 % typo corpus, cold morphology | 729.3 ms |
-| all-unknown corpus, cold morphology | 769.5 ms |
-| `check` / `suggest` p50 / p95 | 3 µs / 506 µs |
-| reverse-index build / size | 23.0 s / 1.23 GB |
+| `page-2000` cold morphology, single-thread | 575.9 ms |
+| `page-2000` cold morphology, 4 workers | 168.1 ms |
+| `page-2000` warm morphology | 0.50 ms |
+| `page-2000` warm grammar + style | 18.95 ms |
+| `page-2000` warm sentence cache | 0.76 ms |
+| 8 % typo corpus, cold morphology | 621.9 ms |
+| all-unknown corpus, cold morphology | 551.9 ms |
+| `check` / `suggest` p50 / p95 | 3 µs / 473 µs |
+| reverse-index build / size | 23.3 s / 1.23 GB |
 
 These are native release numbers; the browser (wasm) shape is measured
 separately and is not part of this report. The commands, the full schema, the
