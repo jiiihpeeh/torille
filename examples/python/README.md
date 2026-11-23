@@ -67,10 +67,11 @@ engine.hyphenate("tietokoneohjelmointi")           # [PyHyphenationPoint, ...]
 The fixed arguments have value types:
 
 ```python
-Luokka(9)         # the plain class 9
-Luokka(9, "B")    # class and gradation separately, 9*B
-Luokka("9*B")     # the dictionary expression, the same value
-Luokka("9B")      # the compact spelling, normalised to 9*B
+Luokka(9)              # the plain class 9
+Luokka(9, Gradation.B) # class and gradation separately, 9*B
+Luokka(9, "B")         # the same, with the letter as a string
+Luokka("9*B")          # the dictionary expression, the same value
+Luokka("9B")           # the compact spelling, normalised to 9*B
 Luokka("10*H")
 Pos.NOUN          # Pos.VERB, Pos.ADJECTIVE, ...
 Cell.ILL_SG       # Cell.GEN_PL, Cell.PRES_1SG, ...
@@ -80,8 +81,9 @@ Cell.parse("ill_sg")
 The class expression has to be a Python string (`Luokka("9*B")` or
 `Luokka("9B")`) because unquoted `9*B` is a multiplication expression and
 unquoted `9B` is not a valid literal (`SyntaxError: invalid decimal literal`).
-`Luokka(9, "B")` is the way to write the pair without a string; it is the same
-value as `Luokka("9*B")`.
+`Luokka(9, Gradation.B)` is the way to write the pair without a string; it is
+the same value as `Luokka(9, "B")` and `Luokka("9*B")`. A bare `B` is just a
+Python name, so `Luokka(9, B)` raises `NameError` unless the caller defined it.
 
 `Cell` is a real enum: `Cell.ILL_SG` is the `ill_sg` question, and
 `next_question` comes back as a `Cell` (or `None`), so a typo in a cell name

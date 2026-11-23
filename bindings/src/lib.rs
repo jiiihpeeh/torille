@@ -546,6 +546,104 @@ fn resolve_pos(obj: &Bound<'_, PyAny>) -> PyResult<PartOfSpeech> {
     ))
 }
 
+/// A consonant-gradation code, the letter after the `*` in `9*B`.
+///
+/// Only A..M have a strong/weak pair in the engine; the sanalista uses no
+/// letter outside that range. `Gradation.B` is the typed spelling of `"B"`.
+#[pyclass(eq, eq_int, name = "Gradation", module = "torille")]
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum PyGradation {
+    #[pyo3(name = "A")]
+    A,
+    #[pyo3(name = "B")]
+    B,
+    #[pyo3(name = "C")]
+    C,
+    #[pyo3(name = "D")]
+    D,
+    #[pyo3(name = "E")]
+    E,
+    #[pyo3(name = "F")]
+    F,
+    #[pyo3(name = "G")]
+    G,
+    #[pyo3(name = "H")]
+    H,
+    #[pyo3(name = "I")]
+    I,
+    #[pyo3(name = "J")]
+    J,
+    #[pyo3(name = "K")]
+    K,
+    #[pyo3(name = "L")]
+    L,
+    #[pyo3(name = "M")]
+    M,
+}
+
+impl PyGradation {
+    fn as_letter(self) -> char {
+        match self {
+            PyGradation::A => 'A',
+            PyGradation::B => 'B',
+            PyGradation::C => 'C',
+            PyGradation::D => 'D',
+            PyGradation::E => 'E',
+            PyGradation::F => 'F',
+            PyGradation::G => 'G',
+            PyGradation::H => 'H',
+            PyGradation::I => 'I',
+            PyGradation::J => 'J',
+            PyGradation::K => 'K',
+            PyGradation::L => 'L',
+            PyGradation::M => 'M',
+        }
+    }
+
+    fn from_letter(letter: char) -> Option<Self> {
+        Some(match letter.to_ascii_uppercase() {
+            'A' => PyGradation::A,
+            'B' => PyGradation::B,
+            'C' => PyGradation::C,
+            'D' => PyGradation::D,
+            'E' => PyGradation::E,
+            'F' => PyGradation::F,
+            'G' => PyGradation::G,
+            'H' => PyGradation::H,
+            'I' => PyGradation::I,
+            'J' => PyGradation::J,
+            'K' => PyGradation::K,
+            'L' => PyGradation::L,
+            'M' => PyGradation::M,
+            _ => return None,
+        })
+    }
+}
+
+#[pymethods]
+impl PyGradation {
+    /// The letter, e.g. `"B"`.
+    #[getter]
+    fn letter(&self) -> char {
+        self.as_letter()
+    }
+
+    /// Parse one letter, A..M; `None` for anything else.
+    #[staticmethod]
+    fn parse(letter: &str) -> Option<Self> {
+        let mut chars = letter.trim().chars();
+        let first = chars.next()?;
+        if chars.next().is_some() {
+            return None;
+        }
+        PyGradation::from_letter(first)
+    }
+
+    fn __str__(&self) -> char {
+        self.as_letter()
+    }
+}
+
 /// A Kotus inflection class: the class number and its optional gradation.
 ///
 /// `Luokka(9)` is the plain class 9; `Luokka(9, "B")` takes the gradation as a
@@ -600,12 +698,16 @@ fn parse_class_expression(text: &str) -> Option<(u16, Option<char>)> {
 
 #[pymethods]
 impl PyLuokka {
-    /// `Luokka(9)`, `Luokka(9, "B")`, or `Luokka("9*B")` / `Luokka("9B")`.
+    /// `Luokka(9)`, `Luokka(9, Gradation.B)` / `Luokka(9, "B")`, or the
+    /// expression `Luokka("9*B")` / `Luokka("9B")`.
     #[new]
     #[pyo3(signature = (luokka, gradation=None))]
-    fn new(luokka: &Bound<'_, PyAny>, gradation: Option<char>) -> PyResult<Self> {
+    fn new(luokka: &Bound<'_, PyAny>, gradation: Option<&Bound<'_, PyAny>>) -> PyResult<Self> {
         let (class, gradation) = if let Ok(class) = luokka.extract::<u16>() {
-            (class, gradation.map(normalise_gradation).transpose()?)
+            (
+                class,
+                gradation.map(resolve_gradation).transpose()?,
+            )
         } else if let Ok(text) = luokka.extract::<String>() {
             if gradation.is_some() {
                 return Err(PyValueError::new_err(
@@ -669,15 +771,32 @@ impl PyLuokka {
     }
 }
 
-/// Validate and uppercase a gradation letter given as its own argument.
-fn normalise_gradation(letter: char) -> PyResult<char> {
-    let letter = letter.to_ascii_uppercase();
-    if !letter.is_ascii_uppercase() {
-        return Err(PyValueError::new_err(format!(
-            "{letter:?}: a gradation is one letter A..Z"
-        )));
+/// Resolve a `gradation` argument: a [`PyGradation`] member or one letter.
+fn resolve_gradation(obj: &Bound<'_, PyAny>) -> PyResult<char> {
+    if let Ok(gradation) = obj.extract::<PyGradation>() {
+        return Ok(gradation.as_letter());
     }
-    Ok(letter)
+    if let Ok(text) = obj.extract::<String>() {
+        let mut chars = text.trim().chars();
+        let Some(first) = chars.next() else {
+            return Err(PyValueError::new_err(
+                "gradation is empty; use Gradation.B or \"B\"",
+            ));
+        };
+        if chars.next().is_some() {
+            return Err(PyValueError::new_err(format!(
+                "{text:?}: a gradation is one letter A..M"
+            )));
+        }
+        return PyGradation::from_letter(first)
+            .map(PyGradation::as_letter)
+            .ok_or_else(|| {
+                PyValueError::new_err(format!("{text:?}: a gradation is A..M"))
+            });
+    }
+    Err(pyo3::exceptions::PyTypeError::new_err(
+        "gradation must be a Gradation member or a one-letter string",
+    ))
 }
 
 /// Resolve a `luokka` argument: a [`PyLuokka`] or a class expression string.
@@ -1663,6 +1782,7 @@ fn torille_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyCell>()?;
     m.add_class::<PyPos>()?;
     m.add_class::<PyLuokka>()?;
+    m.add_class::<PyGradation>()?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }

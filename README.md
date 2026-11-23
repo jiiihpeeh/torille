@@ -400,11 +400,12 @@ corpus manifest and the methodology are in
 `bindings/` builds a PyO3 module called `torille` with one class, `Engine`:
 
 ```python
-from torille import Engine, Luokka, Pos
+from torille import Engine, Gradation, Luokka, Pos
 
 e = Engine()
 e.inflect("kissa")                              # every form, with named fields
 e.inflect("kissa", luokka=Luokka(9), pos=Pos.NOUN)
+e.inflect("kissa", luokka=Luokka(9, Gradation.B), pos=Pos.NOUN)  # 9*B
 e.lookup("kauppa")                              # [('9*B', 'substantiivi')]
 e.words(Pos.NOUN)                               # every classed lemma of that POS with its first class
 e.hyphenate("tietokoneohjelmointi")             # points with byte/char offsets + source
@@ -412,8 +413,9 @@ e.hyphenate("tietokoneohjelmointi")             # points with byte/char offsets 
 
 The class argument is `luokka` -- Finnish for class -- because Python does not
 accept a reserved word as a keyword argument. `Luokka(9)` and
-`Luokka(9, "B")` are the typed spellings, and the dictionary form
-`Luokka("9*B")` (compact `Luokka("9B")`) is equivalent. The plain string
+`Luokka(9, Gradation.B)` (or the string `Luokka(9, "B")`) are the typed
+spellings, and the dictionary form `Luokka("9*B")` (compact `Luokka("9B")`) is
+equivalent. The plain string
 (`luokka="9*B"`, `pos="substantiivi"`) is still accepted for tools that
 already speak it. A `luokka` is enough to inflect
 a word the sanalista has never seen; without one, an unknown word is refused

@@ -9,7 +9,7 @@ words, so the counts below are the contract a suggestion layer relies on.
 
 from collections import Counter, defaultdict
 
-from torille import Engine, Luokka, Pos
+from torille import Engine, Gradation, Luokka, Pos
 
 
 def main() -> None:
@@ -50,9 +50,12 @@ def main() -> None:
 
     print("\nThe class is a value; the pair and the expression agree:")
     print(f"  Luokka(9) -> {Luokka(9)}")
-    print(f"  Luokka(9, 'B') -> {Luokka(9, 'B')}")
+    print(f"  Luokka(9, Gradation.B) -> {Luokka(9, Gradation.B)}")
     print(f"  Luokka('9*B') -> {Luokka('9*B')}")
-    print(f"  Luokka(9, 'B') == Luokka('9*B') -> {Luokka(9, 'B') == Luokka('9*B')}")
+    print(
+        f"  Luokka(9, Gradation.B) == Luokka('9*B') -> "
+        f"{Luokka(9, Gradation.B) == Luokka('9*B')}"
+    )
     print(f"  Pos.NOUN.finnish -> {Pos.NOUN.finnish!r}")
     print(f"  Pos.parse('substantiivi') -> {Pos.parse('substantiivi')!r}")
 
