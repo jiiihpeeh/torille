@@ -4,7 +4,7 @@ use crate::kotus::Inflection;
 use crate::spec::Catalogues;
 use crate::tags::PartOfSpeech;
 
-use crate::expand::inflect_all;
+use crate::expand::inflect_all_in;
 use crate::expand::lexicon_index::LexiconIndex;
 
 /// The derived `-kas`/`-käs` adjective (and its degrees) a surface belongs to.
@@ -41,7 +41,7 @@ pub fn derived_kas_base(
         if !stem_is_noun {
             continue;
         }
-        let forms = inflect_all(
+        let forms = inflect_all_in(
             &candidate,
             &[Inflection {
                 class: 41,

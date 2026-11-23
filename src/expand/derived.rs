@@ -35,7 +35,7 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::OnceLock;
 
-use crate::expand::inflect_all;
+use crate::expand::inflect_all_in;
 use crate::kotus::{Gradation, Inflection};
 use crate::spec::Catalogues;
 use crate::tags::PartOfSpeech;
@@ -1299,7 +1299,9 @@ fn build_rows(rows: &[Row], cat: &Catalogues) -> Computed {
                 {
                     modifiers.insert(format!("{stem}mis"));
                 }
-                let generated = inflect_all(
+                // `class` is the derivation rule's, so it is never the 50/51
+                // compound marker: no lexicon is needed to read this paradigm.
+                let generated = inflect_all_in(
                     lemma,
                     &[Inflection { class, gradation }],
                     cat,

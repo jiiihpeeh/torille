@@ -234,7 +234,7 @@ mod tests {
             if lemma.inflections.is_empty() {
                 continue;
             }
-            for form in crate::expand::inflect_all(
+            for form in crate::expand::inflect_all_in(
                 lemma.word,
                 &lemma.inflections,
                 cat,
@@ -280,7 +280,6 @@ mod tests {
                 word,
                 &lemma.inflections,
                 cat,
-                None,
                 crate::tags::PartOfSpeech::Noun,
                 true,
             ) {

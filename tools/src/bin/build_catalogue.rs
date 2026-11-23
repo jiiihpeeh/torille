@@ -35,7 +35,7 @@ use std::fmt::Write as _;
 use std::fs;
 use std::path::PathBuf;
 
-use torille::expand::{LexiconIndex, inflect_all};
+use torille::expand::{LexiconIndex, inflect_all_in};
 use torille::grammar::cases_by_slot;
 use torille::kotus::{Gradation, Inflection, lemmas, sanalista, slot_nominal};
 use torille::spec::Catalogues;
@@ -202,7 +202,7 @@ fn template_for(
         };
         // What the consistency test passes: the lexicon, a noun reading and
         // possessives on.
-        let generated = inflect_all(
+        let generated = inflect_all_in(
             model,
             &[inflection],
             cat,

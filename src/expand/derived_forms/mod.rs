@@ -12,7 +12,7 @@ use crate::tags::{Case, Confidence, Degree, Number, PartOfSpeech, Tags};
 
 use super::degrees;
 use super::lexicon_index::LexiconIndex;
-use super::{Generated, forms_of, inflect_all, inflect_in};
+use super::{Generated, forms_of_in, inflect_all_in, inflect_in};
 
 mod agent;
 mod inen;
@@ -88,7 +88,7 @@ pub(super) fn compound_head_forms(
         // `tumman` + `punaisempi` -- so only the nominal case drops the
         // derived layers.
         let head_forms = if pos == PartOfSpeech::Adjective {
-            inflect_all(head.word, &head.inflections, cat, lexicon, pos, possessives)
+            inflect_all_in(head.word, &head.inflections, cat, lexicon, pos, possessives)
         } else {
             super::inflect_paradigms(head.word, &head.inflections, cat, lexicon, pos, possessives)
         };
@@ -720,7 +720,7 @@ pub(super) fn numeral_forms(
         .copied()
         .unwrap_or(PartOfSpeech::Noun);
     let mut out: Vec<Generated> = Vec::new();
-    for form in inflect_all(prefix, &inflections, cat, lexicon, pos, false) {
+    for form in inflect_all_in(prefix, &inflections, cat, lexicon, pos, false) {
         out.push(
             Generated::new(format!("{}toista", form.word), form.union()).with(Confidence::Repaired),
         );
@@ -762,7 +762,7 @@ fn hundreds_forms(
             number: Some(Number::Singular),
             ..Tags::UNKNOWN
         };
-        let heads = forms_of(
+        let heads = forms_of_in(
             "sata",
             &sata_inflections,
             cat,
@@ -787,7 +787,7 @@ fn hundreds_forms(
                 number: Some(Number::Singular),
                 ..Tags::UNKNOWN
             };
-            forms_of(
+            forms_of_in(
                 prefix,
                 &prefix_inflections,
                 cat,
@@ -799,7 +799,7 @@ fn hundreds_forms(
         } else {
             // A classless numeral prefix (`kahdeksantoista`): its forms come
             // from the numeral layer, not a catalogue.
-            inflect_all(prefix, &[], cat, lexicon, PartOfSpeech::Numeral, false)
+            inflect_all_in(prefix, &[], cat, lexicon, PartOfSpeech::Numeral, false)
                 .into_iter()
                 .filter(|f| {
                     let t = f.union();
@@ -859,7 +859,7 @@ fn tens_forms(
             number: Some(Number::Singular),
             ..Tags::UNKNOWN
         };
-        let heads = forms_of(
+        let heads = forms_of_in(
             "kymmen",
             &kymmen_inflections,
             cat,
@@ -883,7 +883,7 @@ fn tens_forms(
                 },
             )]
         } else {
-            forms_of(
+            forms_of_in(
                 prefix,
                 &prefix_inflections,
                 cat,

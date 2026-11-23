@@ -4,7 +4,7 @@ use crate::kotus::Inflection;
 use crate::spec::Catalogues;
 use crate::tags::PartOfSpeech;
 
-use crate::expand::inflect_all;
+use crate::expand::inflect_all_in;
 use crate::expand::lexicon_index::LexiconIndex;
 
 /// The derived `-uus`/`-yys` abstract noun a surface form belongs to, if
@@ -43,7 +43,7 @@ pub fn derived_uus_base(
             {
                 continue;
             }
-            let forms = inflect_all(
+            let forms = inflect_all_in(
                 &candidate,
                 &[Inflection {
                     class: 40,

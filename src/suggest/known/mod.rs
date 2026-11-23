@@ -251,7 +251,27 @@ fn is_known_word_with_compound_uncached(
     //     the closed spelling `kirjahylly` is already the word. Do this before
     //     the stem maps, which cannot see the hyphen.
     if word.contains('-') {
-        return hyphenated_base(word);
+        if let Some(base) = hyphenated_base(word) {
+            return Some(base);
+        }
+        // Not every hyphenated word is a writing rule. A lexically hyphenated
+        // compound whose modifier does not inflect (`tuore-elintarvike`, class
+        // 50) declines as a whole, so its inflected forms cannot be resolved
+        // part by part: `tuore-elintarviketta` is the head's case form joined
+        // to an inflected modifier. Only the engine walk sees that row, and
+        // returning a miss here made `is_known_word` disagree with `check`
+        // and `check_normal` on every such form. The probe sits behind the
+        // hyphen test and behind `allow_compound`: the recursive calls from
+        // `modifier_is_known` pass `allow_compound = false`, and letting them
+        // back into the walk would loop forever.
+        if allow_compound
+            && let Some(base) =
+                crate::expand::find_any_base_with(crate::kotus::lemmas(), catalogue(), &lower)
+                    .first()
+        {
+            return Some(base.word.to_string());
+        }
+        return None;
     }
 
     // 1a. Productive derived verbs that Kotus does not list as lemmas

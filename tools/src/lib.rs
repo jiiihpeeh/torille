@@ -78,7 +78,7 @@ pub fn inflect_lemma(
             .map(|row| PartOfSpeech::inflecting_reading(row.part_of_speech()))
             .unwrap_or(PartOfSpeech::Unknown)
     };
-    torille::expand::inflect_all(word, &inflections, catalogue, Some(index), pos, noun_capable)
+    torille::expand::inflect_all_in(word, &inflections, catalogue, Some(index), pos, noun_capable)
 }
 
 /// Short-circuit version of [`find_bases`] for the inflect check.

@@ -65,7 +65,7 @@ fn cached_forms(
     if let Some(forms) = CACHE.with_borrow(|cache| cache.get(&key).cloned()) {
         return forms;
     }
-    let forms = Rc::new(forms_of(lemma, inflections, cat, None, want, pos, false));
+    let forms = Rc::new(forms_of(lemma, inflections, cat, want, pos, false));
     CACHE.with_borrow_mut(|cache| {
         if FORMS.with(Cell::get) + forms.len() > FORM_CACHE_CAP {
             cache.clear();

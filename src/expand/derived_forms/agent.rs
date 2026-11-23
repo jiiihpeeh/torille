@@ -4,7 +4,7 @@ use crate::kotus::Inflection;
 use crate::spec::Catalogues;
 use crate::tags::PartOfSpeech;
 
-use crate::expand::inflect_all;
+use crate::expand::inflect_all_in;
 use crate::expand::lexicon_index::LexiconIndex;
 
 /// The derived `-ja`/`-jä` agent noun a surface form belongs to, if any.
@@ -86,7 +86,7 @@ pub fn derived_tar_base(
             class: 32,
             gradation: Some(crate::kotus::Gradation(3)),
         };
-        let forms = inflect_all(
+        let forms = inflect_all_in(
             &candidate,
             &[inflection],
             cat,
@@ -177,7 +177,7 @@ pub fn derived_agent_base(
                     class,
                     gradation: None,
                 };
-                let forms = inflect_all(
+                let forms = inflect_all_in(
                     &candidate,
                     &[inflection],
                     cat,

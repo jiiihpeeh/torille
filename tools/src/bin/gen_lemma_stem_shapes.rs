@@ -20,7 +20,7 @@
 use std::path::Path;
 
 use torille::expand::stem_shape::{prefix_bits, suffix_bits};
-use torille::expand::{emits_form, inflect_all, LexiconIndex};
+use torille::expand::{emits_form, inflect_all_in, LexiconIndex};
 use torille::kotus::lemmas;
 use torille::spec::Catalogues;
 use torille::tags::PartOfSpeech;
@@ -52,10 +52,12 @@ fn main() {
             *slot |= bit;
         }
         mask[4] |= suffix_bits(lemma.word);
-        // The callers do not all pass the lexicon index: the stem-map gates
-        // use `Some(&index)` for compound heads, while the spell path uses
-        // `None`. Generate both sets so the mask is a superset of either.
-        let forms_without = inflect_all(
+        // The public `inflect_all` supplies the embedded index, and the
+        // internal callers that hold their own pass `Some(&index)`; the
+        // spell path's quick probe now does the same, so the `None` set is
+        // only the "cannot answer" view. Generate both anyway: the mask is
+        // the union, and a superset can never reject a real form.
+        let forms_without = inflect_all_in(
             lemma.word,
             &lemma.inflections,
             catalogue,
@@ -63,7 +65,7 @@ fn main() {
             PartOfSpeech::Noun,
             true,
         );
-        let forms_with = inflect_all(
+        let forms_with = inflect_all_in(
             lemma.word,
             &lemma.inflections,
             catalogue,

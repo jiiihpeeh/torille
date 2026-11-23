@@ -18,7 +18,7 @@ pub(crate) fn gradation_plural_alternate(word: &str) -> Option<(String, String)>
         .copied()
         .unwrap_or(PartOfSpeech::Noun);
     let inflections: Vec<_> = lemma.inflections().collect();
-    let forms = crate::expand::inflect_all(&base, &inflections, catalogue(), None, pos, false);
+    let forms = crate::expand::inflect_all(&base, &inflections, catalogue(), pos, false);
     forms
         .into_iter()
         .find(|f| f.word.ends_with("iden") || f.word.ends_with("itten"))

@@ -4,7 +4,7 @@ use crate::kotus::Inflection;
 use crate::spec::Catalogues;
 use crate::tags::PartOfSpeech;
 
-use crate::expand::inflect_all;
+use crate::expand::inflect_all_in;
 use crate::expand::lexicon_index::LexiconIndex;
 
 use super::inen::inen_candidates;
@@ -36,7 +36,7 @@ pub fn derived_llinen_base(
         if !base_known {
             continue;
         }
-        let forms = inflect_all(
+        let forms = inflect_all_in(
             &candidate,
             &[Inflection {
                 class: 38,

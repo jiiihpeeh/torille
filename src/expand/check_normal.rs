@@ -310,7 +310,7 @@ pub fn compute_pronoun_forms() -> HashMap<String, &'static str> {
             .first()
             .copied()
             .unwrap_or(PartOfSpeech::Noun);
-        for form in inflect_all(lemma.word, &lemma.inflections, cat(), None, pos, false) {
+        for form in inflect_all(lemma.word, &lemma.inflections, cat(), pos, false) {
             map.entry(form.word).or_insert(lemma.word);
         }
     }
@@ -360,7 +360,6 @@ pub fn compute_adverb_possessive_forms() -> HashMap<String, &'static str> {
             lemma.word,
             &lemma.inflections,
             cat(),
-            None,
             PartOfSpeech::Adverb,
             false,
         ) {
@@ -421,7 +420,6 @@ pub fn compute_feminine_noun_forms() -> HashMap<String, String> {
                 gradation: None,
             }],
             cat(),
-            None,
             PartOfSpeech::Noun,
             true,
         );
@@ -2674,7 +2672,7 @@ mod tests {
                     .copied()
                     .unwrap_or(crate::tags::PartOfSpeech::Noun);
                 for form in
-                    crate::expand::inflect_all(base, &inflections, cat, Some(&index), pos, false)
+                    crate::expand::inflect_all_in(base, &inflections, cat, Some(&index), pos, false)
                 {
                     forms.insert(form.word);
                 }
@@ -2740,7 +2738,7 @@ mod tests {
                     .copied()
                     .unwrap_or(crate::tags::PartOfSpeech::Verb);
                 for form in
-                    crate::expand::inflect_all(base, &inflections, cat, Some(&index), pos, false)
+                    crate::expand::inflect_all_in(base, &inflections, cat, Some(&index), pos, false)
                 {
                     forms.push(form.word);
                 }

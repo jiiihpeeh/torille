@@ -111,7 +111,7 @@ fn main() -> ExitCode {
     let lexicon = torille::kotus::sanalista().to_lemmas();
     let index = torille::expand::LexiconIndex::new(&lexicon);
     let forms =
-        torille::expand::inflect_all(&word, &inflections, &cat, Some(&index), pos, possessives);
+        torille::expand::inflect_all_in(&word, &inflections, &cat, Some(&index), pos, possessives);
     let forms = match clitic {
         Some(c) => torille::expand::cliticize_all(&forms, c),
         None => forms,

@@ -711,7 +711,7 @@ impl Engine {
         // `inflect_all`, not a loop over `inflect_in`: two of a lemma's classes
         // can spell a form identically, and the same word with the same reading
         // twice is one row of output the caller has to notice and throw away.
-        torille::expand::inflect_all(
+        torille::expand::inflect_all_in(
             lemma,
             &plan.inflections,
             &self.data.catalogue,

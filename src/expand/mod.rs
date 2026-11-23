@@ -166,7 +166,7 @@ pub fn compute_degree_forms() -> std::collections::HashMap<String, &'static str>
                 .first()
                 .copied()
                 .unwrap_or(PartOfSpeech::Adjective);
-            for form in inflect_all(
+            for form in inflect_all_in(
                 lemma.word,
                 &lemma.inflections,
                 cat,
@@ -266,8 +266,9 @@ fn try_irregular(
 // A class 50/51 compound is inflected part by part -- the head's bare
 // case form joined to the tail's whole cell -- which reaches every
 // case and puts the owner suffix on the right word. It is
-// authoritative when a split is found; a word with no split falls
-// through to the class model.
+// authoritative when a split is found. A word with no split cannot use
+// the catalogue model, which lands gradation inside the compound, unless
+// there is nothing else (see the `suorakulmain` case below).
 //
 // The class-50-no-split fallback is documented where it lives below:
 // running the word under its head class (named beside the marker in
@@ -325,11 +326,21 @@ fn try_compound_marker(
     // not its head's paradigm. With no split there is nothing correct to
     // build; falling through to the catalogue model aligns the compound
     // against the model word and fabricates forms (`nuori-idenkuun`,
-    // `mudtaraaakuita`). Treat the class as handled with no output instead.
-    if inflection.class == 51 {
+    // `mudtaraaakuita`). The same is true of class 50 once there is no
+    // lexicon to resolve its head class with: `kylmätila` against the
+    // `isoisä` model gives `kylmädilillä`. "No index" therefore means "cannot
+    // answer", never "use the catalogue model". Every production caller goes
+    // through `inflect_all`, which supplies the embedded index, so this only
+    // fires for an explicit `_in(None)`.
+    if inflection.class == 51 || lexicon.is_none() {
         dedup(out);
         return true;
     }
+    // Class 50 with the index in hand, no split and no head class. That is one
+    // sanalista row (`suorakulmain`, whose right half is not a free nominal),
+    // and the catalogue model is the only evidence left for it; the committed
+    // stem map was built from it. Let the model run rather than decide a
+    // paradigm is impossible for a word the dictionary lists.
     false
 }
 
@@ -730,7 +741,33 @@ fn walk_generated(
 }
 
 /// The forms of `lemma`, deduplicated.
+///
+/// This supplies the embedded lexicon, which is what a class-50/51 (or
+/// classless compound) lemma needs in order to be split into its parts. A
+/// paradigm of one of those classes is **only** meaningful with a lexicon:
+/// without it the splitter has nothing to work from, so `None` in
+/// [`inflect_all_in`] means "cannot answer", not "use the catalogue model".
+/// Use [`inflect_all_in`] only when the caller already holds its own
+/// [`LexiconIndex`].
 pub fn inflect_all(
+    lemma: &str,
+    inflections: &[Inflection],
+    cat: &Catalogues,
+    pos: PartOfSpeech,
+    possessives: bool,
+) -> Vec<Generated> {
+    let lexicon = crate::kotus::lemmas();
+    let index = LexiconIndex::new(lexicon);
+    inflect_all_in(lemma, inflections, cat, Some(&index), pos, possessives)
+}
+
+/// [`inflect_all`] with the caller's own [`LexiconIndex`].
+///
+/// `lexicon` is required to split a class-50/51 or classless compound lemma;
+/// passing `None` makes those classes emit no forms rather than fall through
+/// to the catalogue model, which would land gradation inside the compound
+/// (`kylmädilillä` for `kylmätila`).
+pub fn inflect_all_in(
     lemma: &str,
     inflections: &[Inflection],
     cat: &Catalogues,
@@ -1248,12 +1285,15 @@ pub fn form_of(
     pos: PartOfSpeech,
     possessives: bool,
 ) -> Vec<Generated> {
-    form_of_in(lemma, inflection, cat, None, want, pos, possessives)
+    let lexicon = crate::kotus::lemmas();
+    let index = LexiconIndex::new(lexicon);
+    form_of_in(lemma, inflection, cat, Some(&index), want, pos, possessives)
 }
 
 /// The [`form_of`] variant that takes a [`LexiconIndex`] for compound
-/// heads. Useful when a lemma of class 50/51 might be in play, otherwise
-/// [`form_of`] is enough.
+/// heads. `None` cannot split a class-50/51 or classless compound lemma,
+/// so it emits no forms for one rather than fabricating them; prefer
+/// [`form_of`] unless the caller already holds an index.
 pub fn form_of_in(
     lemma: &str,
     inflection: Inflection,
@@ -1272,9 +1312,28 @@ pub fn form_of_in(
 }
 
 /// Generates every form of `lemma` whose readings fit `want`, across all
-/// of `inflections`. The loop here does what [`form_of_in`] does for
+/// of `inflections`. The loop here does what [`form_of`] does for
 /// one inflection, then keeps the first occurrence of each word.
+///
+/// This supplies the embedded lexicon; see [`inflect_all`] for why a
+/// class-50/51 compound needs it.
 pub fn forms_of(
+    lemma: &str,
+    inflections: &[Inflection],
+    cat: &Catalogues,
+    want: &Tags,
+    pos: PartOfSpeech,
+    possessives: bool,
+) -> Vec<Generated> {
+    let lexicon = crate::kotus::lemmas();
+    let index = LexiconIndex::new(lexicon);
+    forms_of_in(lemma, inflections, cat, Some(&index), want, pos, possessives)
+}
+
+/// [`forms_of`] with the caller's own [`LexiconIndex`]. `None` cannot
+/// split a class-50/51 or classless compound lemma and emits no forms for
+/// one; see [`inflect_all_in`].
+pub fn forms_of_in(
     lemma: &str,
     inflections: &[Inflection],
     cat: &Catalogues,
@@ -1366,7 +1425,7 @@ mod tests {
                 class,
                 gradation: gradation.map(Gradation),
             }];
-            let paradigm = inflect_all(lemma, &inflections, &cat, None, pos, false);
+            let paradigm = inflect_all_in(lemma, &inflections, &cat, None, pos, false);
             // A copy, so the probe is what answers: `form_readings` must not
             // walk a second time to agree with `inflect_all`'s own list.
             for form in &paradigm {
@@ -1825,7 +1884,7 @@ mod tests {
             .next()
             .expect("suuri is in the sanalista");
         let inflections: Vec<Inflection> = lemma.inflections().collect();
-        let got = inflect_all(
+        let got = inflect_all_in(
             lemma.word(),
             &inflections,
             cat,
@@ -1853,7 +1912,7 @@ mod tests {
             .next()
             .expect("edistynyt is in the sanalista");
         let inflections: Vec<Inflection> = lemma.inflections().collect();
-        let got = inflect_all(
+        let got = inflect_all_in(
             lemma.word(),
             &inflections,
             cat,
@@ -1879,7 +1938,7 @@ mod tests {
             .next()
             .expect("uupunut is in the sanalista");
         let inflections: Vec<Inflection> = lemma.inflections().collect();
-        let got = inflect_all(
+        let got = inflect_all_in(
             lemma.word(),
             &inflections,
             cat,
@@ -1911,7 +1970,7 @@ mod tests {
             .next()
             .expect("siunattu is in the sanalista");
         let inflections: Vec<Inflection> = lemma.inflections().collect();
-        let got = inflect_all(
+        let got = inflect_all_in(
             lemma.word(),
             &inflections,
             cat,
@@ -1938,7 +1997,7 @@ mod tests {
             .next()
             .expect("usea is in the sanalista");
         let inflections: Vec<Inflection> = lemma.inflections().collect();
-        let got = inflect_all(
+        let got = inflect_all_in(
             lemma.word(),
             &inflections,
             cat,
@@ -1964,7 +2023,7 @@ mod tests {
             .next()
             .expect("kuusitoista is in the sanalista");
         let inflections: Vec<Inflection> = lemma.inflections().collect();
-        let got = inflect_all(
+        let got = inflect_all_in(
             lemma.word(),
             &inflections,
             cat,
@@ -2677,7 +2736,7 @@ mod tests {
         let lexicon = crate::kotus::sanalista().to_lemmas();
         let index = LexiconIndex::new(&lexicon);
         let words = |word: &str, pos: PartOfSpeech| -> Vec<String> {
-            inflect_all(word, &[], &cat, Some(&index), pos, pos == PartOfSpeech::Noun)
+            inflect_all_in(word, &[], &cat, Some(&index), pos, pos == PartOfSpeech::Noun)
                 .into_iter()
                 .map(|g| g.word)
                 .collect()
@@ -2923,7 +2982,7 @@ mod tests {
                     gradation: grad.and_then(Gradation::from_letter),
                 })
                 .collect();
-            inflect_all(
+            inflect_all_in(
                 word,
                 &inflections,
                 &cat,
@@ -3274,7 +3333,6 @@ mod tests {
             "talo",
             &inflections,
             &cat,
-            None,
             &want,
             PartOfSpeech::Noun,
             true,
@@ -3416,7 +3474,7 @@ mod tests {
         // inflected form), `compound_head_forms` produced nothing and
         // every oblique of `esimerkki` was missed.
         let cat = cat();
-        let forms = inflect_all("esimerkki", &[], &cat, None, PartOfSpeech::Noun, true);
+        let forms = inflect_all_in("esimerkki", &[], &cat, None, PartOfSpeech::Noun, true);
         let words: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
         for want in ["esimerkin", "esimerkkiä", "esimerkkiään"] {
             assert!(
@@ -3432,7 +3490,7 @@ mod tests {
         // an ASCII leading hyphen, unlike the U+2011 rows; the head lookup must
         // try both spellings or the whole paradigm is missing.
         let cat = cat();
-        let forms = inflect_all("epäsuhta", &[], &cat, None, PartOfSpeech::Noun, true);
+        let forms = inflect_all_in("epäsuhta", &[], &cat, None, PartOfSpeech::Noun, true);
         let words: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
         for want in ["epäsuhdan", "epäsuhtaa"] {
             assert!(
@@ -3448,7 +3506,7 @@ mod tests {
     #[test]
     fn a_numeral_hundred_inflects_both_members() {
         let cat = cat();
-        let forms = inflect_all("kaksisataa", &[], &cat, None, PartOfSpeech::Numeral, false);
+        let forms = inflect_all_in("kaksisataa", &[], &cat, None, PartOfSpeech::Numeral, false);
         for want in ["kaksisataa", "kahdensadan", "kahtasataa"] {
             assert!(
                 forms.iter().any(|f| f.word == want),
@@ -3469,7 +3527,7 @@ mod tests {
             .expect("nahka is in the lexicon")
             .inflections()
             .collect();
-        let forms = inflect_all("nahka", &inflections, &cat, None, PartOfSpeech::Noun, true);
+        let forms = inflect_all_in("nahka", &inflections, &cat, None, PartOfSpeech::Noun, true);
         assert!(
             forms.iter().any(|f| f.word == "nahan"),
             "nahka does not inflect to nahan"
@@ -3497,7 +3555,7 @@ mod tests {
                 .unwrap_or_else(|| panic!("{word} missing from the lexicon"))
                 .inflections()
                 .collect();
-            let forms = inflect_all(word, &inflections, &cat, None, PartOfSpeech::Verb, false);
+            let forms = inflect_all_in(word, &inflections, &cat, None, PartOfSpeech::Verb, false);
             assert!(
                 forms.iter().any(|f| f.word == want),
                 "{word} does not inflect to {want}"
@@ -3533,7 +3591,7 @@ mod tests {
             // A `-kko` noun derived from the `-kas` adjective `kuivakas`.
             ("kuivakkokasvi", "kuivakkokasvin"),
         ] {
-            let forms = inflect_all(word, &[], &cat, None, PartOfSpeech::Noun, true);
+            let forms = inflect_all_in(word, &[], &cat, None, PartOfSpeech::Noun, true);
             assert!(
                 forms.iter().any(|f| f.word == want),
                 "{word} does not inflect to {want}"
@@ -3547,7 +3605,7 @@ mod tests {
         // (`luonnon-` of `luonto`), which the compile-time form set
         // carries. `luonnonkaasu` = `luonnon` + `kaasu` (class 1).
         let cat = cat();
-        let forms = inflect_all("luonnonkaasu", &[], &cat, None, PartOfSpeech::Noun, true);
+        let forms = inflect_all_in("luonnonkaasu", &[], &cat, None, PartOfSpeech::Noun, true);
         let words: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
         assert!(
             words.contains(&"luonnonkaasun"),
@@ -3562,7 +3620,7 @@ mod tests {
     /// does not hold `false`, including the degree forms (`pahempi`) and the
     /// verb forms.
     #[test]
-    fn emits_form_agrees_with_inflect_all() {
+    fn emits_form_agrees_with_inflect_all_in() {
         let cat = cat();
         let lexicon = crate::kotus::sanalista().to_lemmas();
         let index = LexiconIndex::new(&lexicon);
@@ -3580,7 +3638,7 @@ mod tests {
                 .unwrap_or_else(|| panic!("{lemma_word} is not in the lexicon"));
             let pos = PartOfSpeech::inflecting_reading(lemma.part_of_speech);
             for &word in words {
-                let listed = inflect_all(
+                let listed = inflect_all_in(
                     lemma.word,
                     &lemma.inflections,
                     &cat,
@@ -3684,7 +3742,7 @@ mod tests {
     /// the same surface, across a noun, an adjective degree, a verb, a
     /// possessive and a classless compound.
     #[test]
-    fn form_readings_agrees_with_inflect_all() {
+    fn form_readings_agrees_with_inflect_all_in() {
         let cat = cat();
         let lexicon = crate::kotus::sanalista().to_lemmas();
         let index = LexiconIndex::new(&lexicon);
@@ -3702,7 +3760,7 @@ mod tests {
                 .unwrap_or_else(|| panic!("{lemma_word} is not in the lexicon"));
             let pos = PartOfSpeech::inflecting_reading(lemma.part_of_speech);
             let mut expected: Vec<Tags> = Vec::new();
-            for form in inflect_all(
+            for form in inflect_all_in(
                 lemma.word,
                 &lemma.inflections,
                 &cat,
@@ -3747,7 +3805,7 @@ mod tests {
                 continue;
             };
             for possessives in [false, true] {
-                let forms = inflect_all(
+                let forms = inflect_all_in(
                     lemma.word,
                     &lemma.inflections,
                     &cat,
@@ -3784,7 +3842,7 @@ mod tests {
             ));
             // A probe-only miss must not hide a later surface, and the full
             // walk must still build the cache when another caller asks.
-            let forms = inflect_all(
+            let forms = inflect_all_in(
                 lemma.word,
                 &lemma.inflections,
                 &cat,
@@ -3830,7 +3888,7 @@ mod tests {
                 .find(|lemma| lemma.word == lemma_word)
                 .unwrap_or_else(|| panic!("{lemma_word} is not in the lexicon"));
             let pos = PartOfSpeech::inflecting_reading(lemma.part_of_speech);
-            let with = inflect_all(
+            let with = inflect_all_in(
                 lemma.word,
                 &lemma.inflections,
                 &cat,
@@ -3838,7 +3896,7 @@ mod tests {
                 pos,
                 false,
             );
-            let without = inflect_all(lemma.word, &lemma.inflections, &cat, None, pos, false);
+            let without = inflect_all_in(lemma.word, &lemma.inflections, &cat, None, pos, false);
             let shape = |forms: &[Generated]| {
                 forms
                     .iter()
@@ -3876,7 +3934,7 @@ mod tests {
             }
             let pos = PartOfSpeech::inflecting_reading(lemma.part_of_speech);
             let forms_of = |inflection| {
-                inflect_all(lemma.word, &[inflection], &cat, Some(&index), pos, false)
+                inflect_all_in(lemma.word, &[inflection], &cat, Some(&index), pos, false)
                     .into_iter()
                     .map(|form| form.word)
                     .collect::<HashSet<_>>()
@@ -3966,7 +4024,7 @@ mod tests {
         for row in crate::kotus::sanalista().by_word("lymfa") {
             inflections.extend(row.inflections());
         }
-        let got = inflect_all(
+        let got = inflect_all_in(
             "lymfa",
             &inflections,
             &cat,
@@ -3992,7 +4050,7 @@ mod tests {
                 inflections.extend(row.inflections());
             }
             assert!(!inflections.is_empty(), "{lemma} is not in the sanalista");
-            let got = inflect_all(
+            let got = inflect_all_in(
                 lemma,
                 &inflections,
                 &cat,
@@ -4015,7 +4073,7 @@ mod tests {
         // verb head, so classless verbs have their own path; the negative is
         // two words and the modifier belongs on the main verb.
         let cat = cat();
-        let forms = inflect_all("aliarvioida", &[], &cat, None, PartOfSpeech::Verb, false);
+        let forms = inflect_all_in("aliarvioida", &[], &cat, None, PartOfSpeech::Verb, false);
         let words: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
         for want in ["aliarvioin", "aliarvioi", "aliarvioidaan", "ei aliarvioi"] {
             assert!(
@@ -4031,7 +4089,7 @@ mod tests {
         // The modifier can be a case form the compile-time subset does not
         // hold: `aikaan` is the illative of `aika`, and `aikaansaada` is
         // `aikaan` + `saada`.
-        let forms = inflect_all("aikaansaada", &[], &cat, None, PartOfSpeech::Verb, false);
+        let forms = inflect_all_in("aikaansaada", &[], &cat, None, PartOfSpeech::Verb, false);
         let words: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
         for want in ["aikaansaan", "aikaansaa", "ei aikaansaa"] {
             assert!(
@@ -4049,7 +4107,7 @@ mod tests {
             ("puhtaaksikirjoittaa", "puhtaaksikirjoitan"),
             ("riippuliitää", "riippuliidän"),
         ] {
-            let forms = inflect_all(lemma, &[], &cat, Some(&index), PartOfSpeech::Verb, false);
+            let forms = inflect_all_in(lemma, &[], &cat, Some(&index), PartOfSpeech::Verb, false);
             let words: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
             assert!(words.contains(&want), "{lemma} does not inflect to {want}");
         }
@@ -4062,7 +4120,7 @@ mod tests {
         // not hold `kotimaan`; the modifier is resolved by inflecting the
         // classless base (`koti` + `maa`) and matching the surface.
         let cat = cat();
-        let forms = inflect_all("kotimaanmatka", &[], &cat, None, PartOfSpeech::Noun, true);
+        let forms = inflect_all_in("kotimaanmatka", &[], &cat, None, PartOfSpeech::Noun, true);
         let words: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
         for want in ["kotimaanmatkan", "kotimaanmatkassa", "kotimaanmatkoja"] {
             assert!(
@@ -4112,7 +4170,7 @@ mod tests {
                 ][..],
             ),
         ] {
-            let forms = inflect_all(lemma, &[], &cat, None, PartOfSpeech::Numeral, false);
+            let forms = inflect_all_in(lemma, &[], &cat, None, PartOfSpeech::Numeral, false);
             let words: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
             for want in wants {
                 assert!(
@@ -4164,7 +4222,7 @@ mod tests {
                 "viisikymmenvuotispäivänä",
             ),
         ] {
-            let forms = inflect_all(lemma, &[], &cat, None, pos, false);
+            let forms = inflect_all_in(lemma, &[], &cat, None, pos, false);
             assert!(
                 forms.iter().any(|f| f.word == want),
                 "{lemma} does not emit {want}"
@@ -4185,7 +4243,7 @@ mod tests {
             ("yksinkertainen", "yksinkertaisia"),
             ("yksinkertainen", "yksinkertaiset"),
         ] {
-            let forms = inflect_all(lemma, &[], &cat, None, PartOfSpeech::Adjective, true);
+            let forms = inflect_all_in(lemma, &[], &cat, None, PartOfSpeech::Adjective, true);
             let words: Vec<&str> = forms.iter().map(|f| f.word.as_str()).collect();
             assert!(words.contains(&want), "{lemma} does not inflect to {want}");
         }
@@ -4198,7 +4256,7 @@ mod tests {
         // Inflecting the whole word would take back harmony from the `a`
         // in `vasten` and emit `vastenmielisia`.
         let cat = cat();
-        let forms = inflect_all(
+        let forms = inflect_all_in(
             "vastenmielinen",
             &[],
             &cat,

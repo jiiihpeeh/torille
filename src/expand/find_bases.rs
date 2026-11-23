@@ -32,7 +32,7 @@ use std::sync::OnceLock;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::expand::clitic::strip_clitic;
-use crate::expand::{ClassPrior, LexiconIndex, inflect_all};
+use crate::expand::{ClassPrior, LexiconIndex, inflect_all_in};
 use crate::kotus::{EmbeddedLemma, Lemma, sanalista};
 use crate::spec::Catalogues;
 use crate::tags::{Form, PartOfSpeech};
@@ -524,7 +524,8 @@ pub fn find_best_base_with<'a>(
     let mut candidates: Vec<&Lemma<'a>> = Vec::new();
     let mut seen: BTreeSet<*const Lemma<'a>> = BTreeSet::new();
     for lemma in index.heads_of(word).into_iter().chain(index.tails_of(word)) {
-        if seen.insert(lemma as *const _) && lemma_emit(cat, lemma, word, PartOfSpeech::Noun, true)
+        if seen.insert(lemma as *const _)
+            && lemma_emit(cat, &index, lemma, word, PartOfSpeech::Noun, true)
         {
             candidates.push(lemma);
         }
@@ -569,12 +570,12 @@ pub fn find_any_base_with<'a>(
     let possessives = true;
     // Phase 1: heads + tails.
     for lemma in index.heads_of(word) {
-        if lemma_emit(cat, lemma, word, pos, possessives) {
+        if lemma_emit(cat, &index, lemma, word, pos, possessives) {
             return vec![lemma];
         }
     }
     for lemma in index.tails_of(word) {
-        if lemma_emit(cat, lemma, word, pos, possessives) {
+        if lemma_emit(cat, &index, lemma, word, pos, possessives) {
             return vec![lemma];
         }
     }
@@ -606,7 +607,7 @@ pub fn find_any_base_with<'a>(
             if !shares_first_two(l.word, word) {
                 continue;
             }
-            if lemma_emit(cat, l, word, pos, possessives) {
+            if lemma_emit(cat, &index, l, word, pos, possessives) {
                 return vec![l];
             }
             walked += 1;
@@ -627,9 +628,9 @@ pub fn find_any_base_with<'a>(
                 .into_iter()
                 .filter(|l| l.word.chars().count() <= f_len)
                 .collect();
-            if let Some(lemma) =
-                par_first_some(&candidates, |l| lemma_emit(cat, l, word, pos, possessives))
-            {
+            if let Some(lemma) = par_first_some(&candidates, |l| {
+                lemma_emit(cat, &index, l, word, pos, possessives)
+            }) {
                 return vec![lemma];
             }
         }
@@ -640,7 +641,7 @@ pub fn find_any_base_with<'a>(
     for lemma in lexicon.iter() {
         if lemma.word.chars().count() <= 3
             && shares_first_two(lemma.word, word)
-            && lemma_emit(cat, lemma, word, pos, possessives)
+            && lemma_emit(cat, &index, lemma, word, pos, possessives)
         {
             return vec![lemma];
         }
@@ -678,12 +679,12 @@ fn find_any_base_with_no_clitic<'a>(
     let pos = PartOfSpeech::Noun;
     let possessives = true;
     for lemma in index.heads_of(word) {
-        if lemma_emit(cat, lemma, word, pos, possessives) {
+        if lemma_emit(cat, &index, lemma, word, pos, possessives) {
             return vec![lemma];
         }
     }
     for lemma in index.tails_of(word) {
-        if lemma_emit(cat, lemma, word, pos, possessives) {
+        if lemma_emit(cat, &index, lemma, word, pos, possessives) {
             return vec![lemma];
         }
     }
@@ -698,7 +699,7 @@ fn find_any_base_with_no_clitic<'a>(
             if l.word.is_empty() || !l.word.starts_with(c) {
                 break;
             }
-            if lemma_emit(cat, l, word, pos, possessives) {
+            if lemma_emit(cat, &index, l, word, pos, possessives) {
                 return vec![l];
             }
             walked += 1;
@@ -714,14 +715,16 @@ fn find_any_base_with_no_clitic<'a>(
                 if lemma.word.chars().count() > f_len {
                     continue;
                 }
-                if lemma_emit(cat, lemma, word, pos, possessives) {
+                if lemma_emit(cat, &index, lemma, word, pos, possessives) {
                     return vec![lemma];
                 }
             }
         }
     }
     for lemma in lexicon.iter() {
-        if lemma.word.chars().count() <= 3 && lemma_emit(cat, lemma, word, pos, possessives) {
+        if lemma.word.chars().count() <= 3
+            && lemma_emit(cat, &index, lemma, word, pos, possessives)
+        {
             return vec![lemma];
         }
     }
@@ -754,8 +757,15 @@ fn lemma_index(lexicon: &[Lemma<'_>], target: &str) -> Option<usize> {
 /// Helper: does `lemma` inflect to `word` under the given pos?
 /// Mirrors the per-candidate inner loop in
 /// `find_bases_with_inner`.
+///
+/// `index` is the walk's own [`LexiconIndex`]. It is handed to the probe so a
+/// class-50/51 candidate is split into its parts instead of falling through to
+/// the catalogue model, which fabricates forms such as `kylmädilillä` for
+/// `kylmätila`. The cheap path used to pass `None` here while the full walk
+/// passed `Some(&index)`, so `check_fast` and `check_normal` disagreed.
 fn lemma_emit(
     cat: &Catalogues,
+    index: &LexiconIndex<'_>,
     lemma: &Lemma<'_>,
     word: &str,
     pos: PartOfSpeech,
@@ -770,7 +780,7 @@ fn lemma_emit(
         lemma.word,
         &lemma.inflections,
         cat,
-        None,
+        Some(index),
         pos,
         possessives,
         word,
@@ -887,12 +897,12 @@ fn find_bases_with_inner<'a>(
     let mut forms: Vec<SourcedForm<'a>> = Vec::new();
     for lemma in &candidates {
         if recognition_only && cheap_recognition {
-            if lemma_emit(cat, lemma, word, pos, possessives) {
+            if lemma_emit(cat, &index, lemma, word, pos, possessives) {
                 bases.push(lemma);
             }
             continue;
         }
-        let generated = inflect_all(
+        let generated = inflect_all_in(
             lemma.word,
             &lemma.inflections,
             cat,
@@ -1052,12 +1062,12 @@ fn find_bases_with_inner<'a>(
             }
             if seen.insert(lemma as *const _) {
                 if recognition_only && cheap_recognition {
-                    if lemma_emit(cat, lemma, word, pos, possessives) {
+                    if lemma_emit(cat, &index, lemma, word, pos, possessives) {
                         bases.push(lemma);
                     }
                     continue;
                 }
-                let generated = inflect_all(
+                let generated = inflect_all_in(
                     lemma.word,
                     &lemma.inflections,
                     cat,
@@ -1293,12 +1303,12 @@ fn walk_head1_chunk<'a>(
     };
     for &lemma in head1 {
         if recognition_only && cheap_recognition {
-            if lemma_emit(cat, lemma, word, pos, possessives) {
+            if lemma_emit(cat, index, lemma, word, pos, possessives) {
                 out.bases.push(lemma);
             }
             continue;
         }
-        let generated = inflect_all(
+        let generated = inflect_all_in(
             lemma.word,
             &lemma.inflections,
             cat,
@@ -1377,12 +1387,12 @@ fn run_prefix_walk<'a>(
             continue;
         }
         if recognition_only && cheap_recognition {
-            if lemma_emit(cat, l, form, pos, possessives) {
+            if lemma_emit(cat, index, l, form, pos, possessives) {
                 bases.push(l);
             }
             continue;
         }
-        let generated = inflect_all(l.word, &l.inflections, cat, Some(index), pos, possessives);
+        let generated = inflect_all_in(l.word, &l.inflections, cat, Some(index), pos, possessives);
         let owns_form = generated.iter().any(|f| f.word == form);
         for f in generated {
             if keep_form.is_none_or(|keep| keep(&f.word)) {
@@ -1442,7 +1452,7 @@ mod tests {
         ] {
             let r = find_bases_with(&lexicon, &cat, word);
             for lemma in &r.bases {
-                let forms = inflect_all(
+                let forms = inflect_all_in(
                     lemma.word,
                     &lemma.inflections,
                     &cat,

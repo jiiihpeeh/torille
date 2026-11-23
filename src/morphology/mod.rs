@@ -1099,7 +1099,7 @@ fn resolve_compound_surface(surface: &str, base: &str, cat: &Catalogues) -> Opti
         .unwrap_or(PartOfSpeech::Noun);
     let inflections: Vec<_> = row.inflections().collect();
     let mut best: Option<(String, Vec<Tags>)> = None;
-    for form in crate::expand::inflect_all(base, &inflections, cat, None, pos, true) {
+    for form in crate::expand::inflect_all(base, &inflections, cat, pos, true) {
         if form.word.contains(' ') || form.word.len() >= surface.len() {
             continue;
         }
@@ -1131,7 +1131,7 @@ fn resolve_compound_surface(surface: &str, base: &str, cat: &Catalogues) -> Opti
     // in. When the head cannot classify the whole, keep the head readings.
     let readings = crate::expand::head_inflections(&whole, cat, None)
         .and_then(|inflections| {
-            crate::expand::inflect_all(&whole, &inflections, cat, None, pos, true)
+            crate::expand::inflect_all(&whole, &inflections, cat, pos, true)
                 .into_iter()
                 .find(|form| form.word == surface)
                 .map(|form| {

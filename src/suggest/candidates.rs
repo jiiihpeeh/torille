@@ -128,7 +128,6 @@ fn archaic_genitive_plural_possessive(word: &str) -> Option<(String, String)> {
         &base,
         &inflections,
         catalogue(),
-        None,
         pos,
         /* possessives */ true,
     );

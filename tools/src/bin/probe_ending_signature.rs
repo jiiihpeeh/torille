@@ -349,7 +349,7 @@ fn base_forms(
                 Map::Noun => PartOfSpeech::Noun,
                 Map::Verb => PartOfSpeech::Verb,
             });
-        for form in torille::expand::inflect_all(
+        for form in torille::expand::inflect_all_in(
             base,
             &inflections,
             cat,

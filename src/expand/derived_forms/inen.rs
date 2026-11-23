@@ -5,7 +5,7 @@ use crate::spec::Catalogues;
 use crate::tags::{Confidence, PartOfSpeech};
 
 use crate::expand::lexicon_index::LexiconIndex;
-use crate::expand::{Generated, inflect_all};
+use crate::expand::{Generated, inflect_all_in};
 
 use super::modifier_is_known;
 
@@ -87,7 +87,7 @@ pub(crate) fn derived_inen_forms(
         gradation: None,
     }];
     if let Some((modifier, head)) = inen_compound_split(lemma) {
-        let head_forms = inflect_all(head, &inflections, cat, lexicon, pos, possessives);
+        let head_forms = inflect_all_in(head, &inflections, cat, lexicon, pos, possessives);
         if !head_forms.is_empty() {
             return head_forms
                 .into_iter()
@@ -99,7 +99,7 @@ pub(crate) fn derived_inen_forms(
         }
     }
     // No compound split: the whole word as class 38.
-    inflect_all(lemma, &inflections, cat, lexicon, pos, possessives)
+    inflect_all_in(lemma, &inflections, cat, lexicon, pos, possessives)
         .into_iter()
         .map(|f| Generated::new(f.word.clone(), f.union()).with(Confidence::Repaired))
         .collect()
@@ -209,7 +209,7 @@ pub fn derived_lainen_base(
             let known = crate::expand::proper_names::contains(base)
                 || crate::kotus::sanalista().by_word(base).next().is_some();
             if known && ends_in_consonant(base) {
-                let forms = inflect_all(
+                let forms = inflect_all_in(
                     &candidate,
                     &[Inflection {
                         class: 38,
@@ -236,7 +236,7 @@ fn lainen_candidate_matches(
     cat: &Catalogues,
     lexicon: Option<&LexiconIndex>,
 ) -> bool {
-    inflect_all(
+    inflect_all_in(
         candidate,
         &[Inflection {
             class: 38,

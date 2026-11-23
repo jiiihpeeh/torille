@@ -106,7 +106,6 @@ pub(super) fn bound_suffix_compound_base(word: &str) -> Option<String> {
                 suffix.base,
                 &suffix.inflections,
                 catalogue(),
-                None,
                 suffix.pos,
                 true,
             );
@@ -186,7 +185,6 @@ pub(crate) fn derived_action_us_base(word: &str) -> Option<String> {
                 gradation: None,
             }],
             catalogue(),
-            None,
             PartOfSpeech::Noun,
             true,
         );
@@ -241,7 +239,6 @@ pub(super) fn derived_hko_base(word: &str) -> Option<String> {
                 gradation: None,
             }],
             catalogue(),
-            None,
             PartOfSpeech::Adjective,
             true,
         );
@@ -307,7 +304,6 @@ pub(super) fn derived_inen_degree_base(word: &str) -> Option<String> {
             &candidate,
             &inflections,
             catalogue(),
-            None,
             PartOfSpeech::Adjective,
             false,
         );
@@ -391,7 +387,6 @@ pub(crate) fn derived_comparative_base(word: &str) -> Option<String> {
             gradation: Gradation::from_letter('H'),
         }],
         catalogue(),
-        None,
         PartOfSpeech::Adjective,
         false,
     );
@@ -421,7 +416,6 @@ pub(super) fn derived_superlative_base(word: &str) -> Option<String> {
                 gradation: None,
             }],
             catalogue(),
-            None,
             PartOfSpeech::Adjective,
             false,
         );

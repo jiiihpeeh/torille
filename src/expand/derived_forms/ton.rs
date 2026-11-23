@@ -4,7 +4,7 @@ use crate::kotus::Inflection;
 use crate::spec::Catalogues;
 use crate::tags::PartOfSpeech;
 
-use crate::expand::inflect_all;
+use crate::expand::inflect_all_in;
 use crate::expand::lexicon_index::LexiconIndex;
 
 /// The derived privative `-ton`/`-tön` adjective a surface form belongs
@@ -54,7 +54,7 @@ pub fn derived_ton_base(
                 gradation: Some(crate::kotus::Gradation(3)),
             },
         ] {
-            let forms = inflect_all(
+            let forms = inflect_all_in(
                 &candidate,
                 &[inflection],
                 cat,
@@ -80,7 +80,7 @@ pub fn derived_ton_base(
                 ),
                 (superlative, 36u16, None),
             ] {
-                let forms = inflect_all(
+                let forms = inflect_all_in(
                     &nominal,
                     &[Inflection { class, gradation }],
                     cat,
