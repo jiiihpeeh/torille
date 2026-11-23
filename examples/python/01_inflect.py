@@ -48,10 +48,11 @@ def main() -> None:
     for form in engine.inflect("mököke", luokka=Luokka(1), pos=Pos.NOUN)[:6]:
         print(f"  {form.word:<14} {form.confidence:<9} {form.tags}")
 
-    print("\nThe class is a value, and the string form still parses:")
+    print("\nThe class is a value; the pair and the expression agree:")
     print(f"  Luokka(9) -> {Luokka(9)}")
+    print(f"  Luokka(9, 'B') -> {Luokka(9, 'B')}")
     print(f"  Luokka('9*B') -> {Luokka('9*B')}")
-    print(f"  Luokka('10*H') -> {Luokka('10*H')!r}")
+    print(f"  Luokka(9, 'B') == Luokka('9*B') -> {Luokka(9, 'B') == Luokka('9*B')}")
     print(f"  Pos.NOUN.finnish -> {Pos.NOUN.finnish!r}")
     print(f"  Pos.parse('substantiivi') -> {Pos.parse('substantiivi')!r}")
 

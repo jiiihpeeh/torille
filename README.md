@@ -411,9 +411,11 @@ e.hyphenate("tietokoneohjelmointi")             # points with byte/char offsets 
 ```
 
 The class argument is `luokka` -- Finnish for class -- because Python does not
-accept a reserved word as a keyword argument. `Luokka(9)` and `Luokka("9*B")`
-are the typed spellings; the string form (`luokka="9*B"`, `pos="substantiivi"`)
-is still accepted for tools that already speak it. A `luokka` is enough to inflect
+accept a reserved word as a keyword argument. `Luokka(9)` and
+`Luokka(9, "B")` are the typed spellings, and the dictionary form
+`Luokka("9*B")` (compact `Luokka("9B")`) is equivalent. The plain string
+(`luokka="9*B"`, `pos="substantiivi"`) is still accepted for tools that
+already speak it. A `luokka` is enough to inflect
 a word the sanalista has never seen; without one, an unknown word is refused
 because there is nothing to fall back on. `inflect` returns objects with named
 fields (`pos`, `case`, `number`, ...) rather than the binary's printed tag

@@ -546,15 +546,17 @@ fn resolve_pos(obj: &Bound<'_, PyAny>) -> PyResult<PartOfSpeech> {
     ))
 }
 
-/// A Kotus inflection class, written as the expression the sanalista uses.
+/// A Kotus inflection class: the class number and its optional gradation.
 ///
-/// `Luokka(9)` is the plain class 9 and `Luokka("9*B")` the gradated subtype,
-/// so each expression is its own value. The engine models the pair (class,
+/// `Luokka(9)` is the plain class 9; `Luokka(9, "B")` takes the gradation as a
+/// second argument, and `Luokka("9*B")` (or the compact `Luokka("9B")`) takes
+/// the whole expression the dictionary spells. All three describe the same
+/// value and normalise to `9*B`. The engine models the pair (class,
 /// gradation) internally, but the catalogue is keyed by the class number only
 /// and the sanalista uses 276 distinct pairs; an enum of those would be a
-/// generated, fragile surface, while the canonical spelling is already the
-/// string every other interface uses (`lookup` returns `9*B`).
-#[pyclass(frozen, name = "Luokka", module = "torille")]
+/// generated, fragile surface, while the expression is already the canonical
+/// key every other interface uses (`lookup` returns `9*B`).
+#[pyclass(frozen, eq, name = "Luokka", module = "torille")]
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct PyLuokka {
     class: u16,
@@ -572,9 +574,10 @@ impl PyLuokka {
     }
 }
 
-/// Parse one canonical class expression: digits, then optionally `*` and one
-/// letter. Unlike the engine's lenient parser, this rejects chains such as
-/// `9*B*A` rather than silently taking the last letter.
+/// Parse one class expression: digits, then optionally `*`, then exactly one
+/// letter. Both `9*B` (the canonical spelling) and `9B` (the compact one) are
+/// accepted; unlike the engine's lenient parser, a chain such as `9*B*A` is
+/// rejected rather than silently taking the last letter.
 fn parse_class_expression(text: &str) -> Option<(u16, Option<char>)> {
     let text = text.trim();
     let digits: String = text.chars().take_while(char::is_ascii_digit).collect();
@@ -586,10 +589,8 @@ fn parse_class_expression(text: &str) -> Option<(u16, Option<char>)> {
     if rest.is_empty() {
         return Some((class, None));
     }
-    let mut chars = rest.chars();
-    if chars.next() != Some('*') {
-        return None;
-    }
+    let letters = rest.strip_prefix('*').unwrap_or(rest);
+    let mut chars = letters.chars();
     let letter = chars.next()?.to_ascii_uppercase();
     if !letter.is_ascii_uppercase() || chars.next().is_some() {
         return None;
@@ -599,20 +600,26 @@ fn parse_class_expression(text: &str) -> Option<(u16, Option<char>)> {
 
 #[pymethods]
 impl PyLuokka {
-    /// `Luokka(9)` for a bare class, `Luokka("9*B")` for a gradated one.
+    /// `Luokka(9)`, `Luokka(9, "B")`, or `Luokka("9*B")` / `Luokka("9B")`.
     #[new]
-    fn new(value: &Bound<'_, PyAny>) -> PyResult<Self> {
-        let (class, gradation) = if let Ok(class) = value.extract::<u16>() {
-            (class, None)
-        } else if let Ok(text) = value.extract::<String>() {
+    #[pyo3(signature = (luokka, gradation=None))]
+    fn new(luokka: &Bound<'_, PyAny>, gradation: Option<char>) -> PyResult<Self> {
+        let (class, gradation) = if let Ok(class) = luokka.extract::<u16>() {
+            (class, gradation.map(normalise_gradation).transpose()?)
+        } else if let Ok(text) = luokka.extract::<String>() {
+            if gradation.is_some() {
+                return Err(PyValueError::new_err(
+                    "give the gradation in the expression or as the second argument, not both",
+                ));
+            }
             parse_class_expression(&text).ok_or_else(|| {
                 PyValueError::new_err(format!(
-                    "{text:?}: expected a class such as `9` or `9*B`"
+                    "{text:?}: expected a class such as `9`, `9*B` or `9B`"
                 ))
             })?
         } else {
             return Err(pyo3::exceptions::PyTypeError::new_err(
-                "Luokka takes an int class or a class expression string",
+                "Luokka takes a class number (optionally with a gradation) or an expression string",
             ));
         };
         if !(1..=101).contains(&class) {
@@ -660,6 +667,17 @@ impl PyLuokka {
             None => format!("Luokka({})", self.class),
         }
     }
+}
+
+/// Validate and uppercase a gradation letter given as its own argument.
+fn normalise_gradation(letter: char) -> PyResult<char> {
+    let letter = letter.to_ascii_uppercase();
+    if !letter.is_ascii_uppercase() {
+        return Err(PyValueError::new_err(format!(
+            "{letter:?}: a gradation is one letter A..Z"
+        )));
+    }
+    Ok(letter)
 }
 
 /// Resolve a `luokka` argument: a [`PyLuokka`] or a class expression string.
