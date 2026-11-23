@@ -130,63 +130,10 @@ pub fn parse_inflection(s: &str) -> Option<Inflection> {
 /// The classes a lemma should be inflected in, given every row the sanalista
 /// has for it.
 ///
-/// This is the counterpart of the Python binding's `plan`, and it exists
-/// because two callers resolving the same sanalista row differently is how the
-/// `pieni` and `ori` disagreements happened in the first place. The binding
-/// inflects the *union* of the rows' classes; taking the first row's first
-/// class instead silently drops a whole paradigm, which for `ori` (`48,5`) is
-/// 178 forms.
-///
-/// Three reductions, each for a stated reason:
-///
-/// - A class listed both bare and graded (`hepo` is `1*E` and `1`) keeps only
-///   the graded one. Both confirm the same paradigm, so the bare entry
-///   contributes ungradated forms no holder of the class confirms.
-/// - A word listed as `99` (the indeclinable marker) beside a real class keeps
-///   the real class. `99`'s own i-loan paradigm would be fabricated forms.
-/// - A compound marker (50, 51) replaces the head class beside it. `nuoripari`
-///   is `5, 51` and the 51 reading is the compound; running 5 over the whole
-///   word gives `nuoripareiden`.
-///
-/// Distinct classes otherwise all run: `vihanta` is `10*J` *and* `9*J` and
-/// really is two declensions. Order is the sanalista's, because it decides the
-/// order forms are emitted in.
-pub fn resolve_inflections(lemma: &str) -> Vec<Inflection> {
-    // Collected inside the closure chain: `EmbeddedLemma::inflections` borrows the
-    // row, so the flat_map cannot return through it.
-    let mut all: Vec<Inflection> = Vec::new();
-    for row in lookup(lemma) {
-        all.extend(row.inflections());
-    }
-    if all.is_empty() {
-        return all;
-    }
-    let graded: Vec<u16> = all
-        .iter()
-        .filter(|i| i.gradation.is_some())
-        .map(|i| i.class)
-        .collect();
-    all.retain(|i| i.gradation.is_some() || !graded.contains(&i.class));
-    if all.iter().any(|i| i.class != 99) {
-        all.retain(|i| i.class != 99);
-    }
-    let markers: Vec<Inflection> = all.iter().copied().filter(is_marker).collect();
-    if !markers.is_empty() {
-        // A compound's class list names its head's class beside the marker
-        // (`nuoripari` is `5, 51`), so the head class is dropped. Both markers
-        // are kept when the row names both: `isoviha` and `isopurje` are
-        // `51, 50`, and the 50 reading is the one that keeps the initial part
-        // fixed (`isovihalta`, `isovihalle`), which the user-facing paradigm
-        // needs beside the class-51 reading (`isonvihalta`).
-        all = markers;
-    }
-    all
-}
-
-/// Whether an inflection is one of the compound type markers.
-fn is_marker(inf: &Inflection) -> bool {
-    inf.class == 50 || inf.class == 51
-}
+/// The policy lives in the engine ([`torille::expand::inflections_for`]) so
+/// the generators, the Python binding and the CLI cannot drift; this alias
+/// keeps the long-standing tools path working.
+pub use torille::expand::inflections_for as resolve_inflections;
 
 /// Parses a part-of-speech name into a [`PartOfSpeech`], accepting the Finnish
 /// name the sanalista uses, the English name, or nothing (defaulting to the

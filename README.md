@@ -58,6 +58,55 @@ Load the built extension from `extensions/firefox/dist/manifest.json` (or the
 XPI) in `about:debugging`, and from `extensions/chromium/dist/` as an unpacked
 extension.
 
+## Using it as a Rust library
+
+The root crate is the library; the CLI tools, the Python extension and the
+wasm all call the same functions. Add it to another crate from a checkout:
+
+```toml
+[dependencies]
+torille = { path = "../torille" }
+```
+
+or from the public repository:
+
+```toml
+[dependencies]
+torille = { git = "https://github.com/jiiihpeeh/torille" }
+```
+
+The git form needs no manual maps step. Cargo's checkout has no `maps` branch,
+so the first build fetches the required blobs from the `repository` URL in
+`Cargo.toml` — the same automatic fetch a clone does. `MAPS_REMOTE`,
+`TORILLE_NO_FETCH`, `CARGO_NET_OFFLINE` and `DOCS_RS` keep their usual meaning
+(see [`maps/README.md`](maps/README.md#automatic-fetch-on-first-build)).
+
+The usual entry points are `check`, `suggest` and `expand::inflect_word`:
+
+```rust
+use torille::CheckOutcome;
+use torille::expand::inflect_word;
+
+match torille::check("talossa") {
+    CheckOutcome::Lemma => { /* the dictionary headword */ }
+    CheckOutcome::Inflected(bases) => { /* e.g. ["talo"] */ }
+    CheckOutcome::Unknown => { /* misspelt or outside the lexicon */ }
+}
+
+let corrections = torille::suggest("koirra", 3, 2);   // max 3, distance 2
+let forms = inflect_word("talo");                     // 162 forms, tagged
+```
+
+`inflect_word` applies the same reading policy as the CLI and the binding: it
+unions the classes of every sanalista row, reads a noun as a noun, and offers
+possessive suffixes only then. The result includes `repaired` and `guessed`
+forms, which are accepted as words but must not be offered as corrections; check
+`Form::confidence` first. For a word the lexicon does not know, pass an
+explicit `Inflection` to `torille::expand::inflect_all_in`.
+
+The runnable tour is `cargo run --example rust_quickstart`. The crate is not
+published on crates.io yet; the path and git forms are the supported ones.
+
 ## How it works
 
 The pipeline is:

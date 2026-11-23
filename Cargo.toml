@@ -14,6 +14,11 @@ name = "torille"
 version = "0.7.0"
 edition = "2024"
 license.workspace = true
+description = "A dictionary-driven Finnish spell checker, morphology engine and grammar/style checker"
+repository = "https://github.com/jiiihpeeh/torille"
+readme = "README.md"
+keywords = ["finnish", "spellcheck", "morphology", "nlp", "hyphenation"]
+categories = ["text-processing", "internationalization"]
 
 [features]
 # The per-class noun engines in src/expand/nominals/. These are hand-written;

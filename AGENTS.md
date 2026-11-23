@@ -415,10 +415,12 @@ for `päin` or `äkki-`.
 
 ## Public API (crate root)
 
-`check`, `is_known_word`, `suggest`, `suggest_detailed`, `levenshtein_with_ops`, `EditOp`;
+`check`/`CheckOutcome`, `is_known_word`, `suggest`, `suggest_detailed`,
+`levenshtein_with_ops`, `EditOp`;
 `compound::{analyze, explain, Analysis, Compound, Component, CompoundKind,
 ComponentInflection, Explanation, Action}`;
-`inflect`/`inflect_all`/`form_of`/`forms_of` under `expand`; `sanalista`,
+`inflect`/`inflect_all`/`inflect_word`/`inflections_for`/`form_of`/`forms_of`
+under `expand`; `sanalista`,
 `parse_sanalista`, `read_sanalista`, `Sanalista`, `Lemma`, `Inflection`;
 `Tags`, `Form`, `Confidence`; `sentence::{analyze, spans, Analyzer, TokenContext,
 SentenceSpan}`; `morphology::{analyze_morphology, MorphologyAnalysis,

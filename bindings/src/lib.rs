@@ -924,39 +924,6 @@ fn parse_inflection(s: &str) -> Option<Inflection> {
     Some(Inflection { class, gradation })
 }
 
-/// Keep only the gradated member of a class/gradation pair.
-///
-/// The sanalista lists a graded subtype and its plain base as separate homonym
-/// rows (`hepo` as `1*E` and `1`); both confirm the same gradated paradigm, so
-/// unioning them would also offer the plain base's ungradated forms. When the
-/// same base `class` appears both with a gradation and without, the graded one
-/// is the whole declension and the plain entry is dropped. A genuinely
-/// multi-class word (palvi in 5 and 7) keeps both classes, because those base
-/// classes differ.
-fn dedup_graded(inflections: &mut Vec<Inflection>) {
-    // Which base classes have a graded member already present.
-    let graded: Vec<u16> = inflections
-        .iter()
-        .filter(|i| i.gradation.is_some())
-        .map(|i| i.class)
-        .collect();
-    inflections.retain(|i| i.gradation.is_some() || !graded.contains(&i.class));
-}
-
-/// Drop the indeclinable marker (class 99) when the word has a real class.
-///
-/// The sanalista flags some words as `99` (the indeclinable marker) beside a
-/// real class (`kuti` in 5 and 99, `aika` in 10 and 99). The `99` entry is
-/// meant to supply only the bare nominative -- the real class already does --
-/// so unioning class 99's own i-loan paradigm in would fabricate forms no
-/// holder of the real class confirms. When any non-99 class was kept, the
-/// marker is dropped.
-fn drop_marker(inflections: &mut Vec<Inflection>) {
-    if inflections.iter().any(|i| i.class != 99) {
-        inflections.retain(|i| i.class != 99);
-    }
-}
-
 fn parse_vowel_breaks(s: &str) -> Result<VowelBreaks, String> {
     match s.trim().to_lowercase().as_str() {
         "compound-only" | "compound" => Ok(VowelBreaks::CompoundOnly),
@@ -1691,40 +1658,7 @@ impl Engine {
             // ungradated `hepo*` forms beside the confirmed `hevo*`. Where the
             // same base class appears with and without a gradation, keep only
             // the graded entry.
-            None => {
-                let mut all: Vec<Inflection> = found
-                    .iter()
-                    .flat_map(|l| l.inflections.iter().copied())
-                    .collect();
-                dedup_graded(&mut all);
-                // Two rows can claim the same class, and claiming a class twice
-                // builds the identical grid twice: `aarnio` has two sanalista
-                // rows both in class 32, and came back with all 165 of its
-                // forms doubled -- 372 lemmas emit 266 151 forms of which
-                // 136 111 are exact repeats. Distinct classes are kept, since
-                // `vihanta` in `10*J` and `9*J` really is two different grids;
-                // only exact repeats go, and first occurrence order is
-                // preserved because it decides the order forms are emitted in.
-                let mut claimed = std::collections::HashSet::new();
-                all.retain(|i| claimed.insert(*i));
-                drop_marker(&mut all);
-                // A compound's class list names its head's class beside the
-                // compound marker (`nuoripari` is `5, 51`) and can name a
-                // second compound type. Drop the head class and keep both
-                // markers when the row names both: `isoviha` and `isopurje` are
-                // `51, 50`, and the 50 reading keeps the initial part fixed
-                // (`isovihalta`, `isovihalle`) beside the class-51 reading
-                // (`isonvihalta`).
-                let markers: Vec<Inflection> = all
-                    .iter()
-                    .filter(|i| i.class == 50 || i.class == 51)
-                    .copied()
-                    .collect();
-                if !markers.is_empty() {
-                    all = markers;
-                }
-                all
-            }
+            None => torille::expand::inflections_for(lemma),
         };
         // A lemma with no class used to be an error, but the engine still
         // derives from such a word: `inflect_all` adds an adjective's degree

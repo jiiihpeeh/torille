@@ -25,11 +25,16 @@ them. The root `build.rs` therefore fetches them on the first build:
 - `build.rs` checks the blobs in `REQUIRED` — the ones the build cannot
   regenerate itself. If any is missing it calls `fetch`.
 - `fetch` uses the clone's **`origin`** remote by default; `MAPS_REMOTE`
-  overrides the name. It runs `git fetch --force <remote> maps:<ref>` (where
-  `<ref>` is `refs/remotes/<remote>/maps`), retries that network step up to
-  three times (750 ms apart) for flaky links, then writes **every**
-  `maps/*.bin.gz` on the branch into the working tree — not just the five
-  required ones.
+  overrides it with a remote name or a URL. It runs
+  `git fetch --force <source> maps:refs/torille-maps/fetched` (a fixed local
+  ref, so a URL is a legal source), retries that network step up to three
+  times (750 ms apart) for flaky links, then writes **every** `maps/*.bin.gz`
+  on the branch into the working tree — not just the five required ones.
+- If `origin` has no `maps` branch, `build.rs` retries against the package's
+  `repository` URL from `Cargo.toml`. A Cargo **git dependency** is checked
+  out without the branch, and its `origin` is Cargo's local cache, so this
+  fallback is what lets `torille = { git = "…" }` build without a manual
+  fetch.
 - A failed fetch leaves already-present blobs untouched: files are written
   only after the fetch and listing succeed.
 

@@ -53,17 +53,28 @@ pub fn missing(root: &Path) -> Vec<&'static str> {
         .collect()
 }
 
+/// The local ref [`fetch`] writes the fetched branch to.
+///
+/// Fixed rather than `refs/remotes/<source>/maps`, because `<source>` can be a
+/// URL (a cargo git dependency is checked out without the `maps` branch, so
+/// the build falls back to the package's repository URL). A URL contains `:`
+/// and `//` and is not a legal ref component.
+const FETCHED_REF: &str = "refs/torille-maps/fetched";
+
 /// Fetch the `maps` branch and unpack its `.bin.gz` files into `maps/`.
+///
+/// `source` is a remote name (`origin`) or a URL; see [`FETCHED_REF`] for why
+/// the two share a fetch path.
 ///
 /// Returns the number of blobs written. Existing files are replaced only
 /// after the fetch succeeds, so a failed fetch leaves the working maps intact.
-pub fn fetch(root: &Path, remote: &str) -> Result<usize, String> {
-    let refname = format!("refs/remotes/{remote}/maps");
+pub fn fetch(root: &Path, source: &str) -> Result<usize, String> {
+    let refname = FETCHED_REF;
     // A build run over a flaky link should not fail on one reset; retry the
     // network step a couple of times before giving up.
     let mut last = None;
     for attempt in 0..3 {
-        match git(root, &["fetch", "--force", remote, &format!("maps:{refname}")]) {
+        match git(root, &["fetch", "--force", source, &format!("maps:{refname}")]) {
             Ok(_) => {
                 last = None;
                 break;
@@ -80,7 +91,7 @@ pub fn fetch(root: &Path, remote: &str) -> Result<usize, String> {
         return Err(err);
     }
 
-    let listing = git(root, &["ls-tree", "-r", "--name-only", &refname])?;
+    let listing = git(root, &["ls-tree", "-r", "--name-only", refname])?;
     let mut blobs: Vec<(String, String)> = Vec::new();
     for line in listing.lines() {
         let Some(name) = line.strip_prefix("maps/") else {
@@ -225,4 +236,62 @@ fn git_bytes(root: &Path, args: &[&str]) -> Result<Vec<u8>, String> {
         ));
     }
     Ok(output.stdout)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn git_in(dir: &Path, args: &[&str]) -> String {
+        let output = Command::new("git")
+            .arg("-c")
+            .arg("user.name=Torille Test")
+            .arg("-c")
+            .arg("user.email=torille@example.invalid")
+            .arg("-C")
+            .arg(dir)
+            .args(args)
+            .output()
+            .expect("run git");
+        assert!(
+            output.status.success(),
+            "git {args:?} failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        String::from_utf8_lossy(&output.stdout).into_owned()
+    }
+
+    /// A source may be a URL, not only a named remote.
+    ///
+    /// Cargo checks a git dependency out into a repository whose `origin` is
+    /// cargo's local cache, so the build passes the package's repository URL to
+    /// `fetch`. That only works while the fetched ref does not embed the URL;
+    /// a ref such as `refs/remotes/https://…/maps` is not a legal ref name.
+    #[test]
+    fn fetch_accepts_a_url_source() {
+        let base = std::env::temp_dir().join(format!(
+            "torille-maps-fetch-test-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&base);
+        let source = base.join("source");
+        let dest = base.join("dest");
+        std::fs::create_dir_all(source.join("maps")).unwrap();
+        std::fs::create_dir_all(&dest).unwrap();
+
+        git_in(&source, &["init", "-q"]);
+        std::fs::write(source.join("maps/fake.bin.gz"), b"fake maps").unwrap();
+        git_in(&source, &["add", "-A"]);
+        git_in(&source, &["commit", "-q", "-m", "maps"]);
+        git_in(&source, &["branch", "maps"]);
+        git_in(&dest, &["init", "-q"]);
+
+        let count = fetch(&dest, source.to_str().unwrap()).expect("fetch from a URL");
+        assert_eq!(count, 1);
+        assert_eq!(
+            std::fs::read(dest.join("maps/fake.bin.gz")).unwrap(),
+            b"fake maps"
+        );
+        let _ = std::fs::remove_dir_all(&base);
+    }
 }

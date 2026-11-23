@@ -807,6 +807,122 @@ pub fn inflect_all_in(
     out
 }
 
+/// The classes a lemma should be inflected in, given every row the
+/// sanalista has for it.
+///
+/// This is the one place the "which paradigms does this word have" policy
+/// lives, so the CLI tools, the Python binding and a library caller cannot
+/// disagree about it. The reductions, each for a stated reason:
+///
+/// - A class listed both bare and graded (`hepo` is `1*E` and `1`) keeps only
+///   the graded one. Both confirm the same paradigm, so the bare entry
+///   contributes ungradated forms no holder of the class confirms.
+/// - A word listed as `99` (the indeclinable marker) beside a real class keeps
+///   the real class. `99`'s own i-loan paradigm would be fabricated forms.
+/// - A compound marker (50, 51) replaces the head class beside it.
+///   `nuoripari` is `5, 51` and the 51 reading is the compound; running 5 over
+///   the whole word gives `nuoripareiden`.
+/// - Exact repeats are dropped. Two rows can claim the same class (`aarnio`
+///   has two rows in one class), and claiming a class twice builds the
+///   identical grid twice.
+///
+/// Distinct classes otherwise all run: `vihanta` is `10*J` *and* `9*J` and
+/// really is two declensions. Order is the sanalista's, because it decides the
+/// order forms are emitted in.
+pub fn inflections_for(lemma: &str) -> Vec<Inflection> {
+    let rows: Vec<_> = crate::kotus::sanalista().by_word(lemma).collect();
+    inflections_from_rows(&rows)
+}
+
+/// [`inflections_for`] over rows a caller has already looked up.
+fn inflections_from_rows(rows: &[crate::kotus::EmbeddedLemma]) -> Vec<Inflection> {
+    // Collected one row at a time: `EmbeddedLemma::inflections` borrows the
+    // row, so the iterator cannot outlive it through a `flat_map` chain.
+    let mut all: Vec<Inflection> = Vec::new();
+    for row in rows {
+        all.extend(row.inflections());
+    }
+    if all.is_empty() {
+        return all;
+    }
+    let graded: Vec<u16> = all
+        .iter()
+        .filter(|inflection| inflection.gradation.is_some())
+        .map(|inflection| inflection.class)
+        .collect();
+    all.retain(|inflection| {
+        inflection.gradation.is_some() || !graded.contains(&inflection.class)
+    });
+    if all.iter().any(|inflection| inflection.class != 99) {
+        all.retain(|inflection| inflection.class != 99);
+    }
+    let markers: Vec<Inflection> = all
+        .iter()
+        .copied()
+        .filter(|inflection| inflection.class == 50 || inflection.class == 51)
+        .collect();
+    if !markers.is_empty() {
+        // Both markers are kept when the row names both: `isoviha` and
+        // `isopurje` are `51, 50`, and the 50 reading keeps the initial part
+        // fixed (`isovihalta`, `isovihalle`) beside the class-51 reading
+        // (`isonvihalta`).
+        all = markers;
+    }
+    let mut claimed = HashSet::new();
+    all.retain(|inflection| claimed.insert(*inflection));
+    all
+}
+
+/// Every form of a sanalista lemma, read the way the CLI and the Python
+/// binding read it.
+///
+/// This is the one-call wrapper for a known word: it takes the classes from
+/// [`inflections_for`], reads a word that can be a noun as a noun, and offers
+/// possessive suffixes only then. It uses the embedded catalogue and lexicon,
+/// so a library caller needs no data files.
+///
+/// The result includes repaired and guessed forms, which are accepted as words
+/// but must never be offered as corrections; check
+/// [`Form::confidence`](crate::tags::Form::confidence) before using one as a
+/// suggestion. A word that is not in the sanalista returns no forms: to
+/// inflect an unknown word, pass an explicit class to [`inflect_all_in`].
+///
+/// ```
+/// let forms = torille::expand::inflect_word("talo");
+/// assert!(forms.iter().any(|form| form.word == "talossa"));
+/// assert!(torille::expand::inflect_word("ei-sanalistassa").is_empty());
+/// ```
+pub fn inflect_word(lemma: &str) -> Vec<Generated> {
+    let rows: Vec<_> = crate::kotus::sanalista().by_word(lemma).collect();
+    if rows.is_empty() {
+        return Vec::new();
+    }
+    // The same reading rule the binding's `plan` uses: a word takes possessive
+    // suffixes only when it can be a noun (`mieto` is an adjective, `marto` is
+    // both), and the part of speech has to agree with that decision.
+    let noun_capable = rows
+        .iter()
+        .any(|row| PartOfSpeech::is_substantival(row.part_of_speech()));
+    let pos = if noun_capable {
+        PartOfSpeech::Noun
+    } else {
+        rows.first()
+            .map(|row| PartOfSpeech::inflecting_reading(row.part_of_speech()))
+            .unwrap_or(PartOfSpeech::Unknown)
+    };
+    let inflections = inflections_from_rows(&rows);
+    let lexicon = crate::kotus::lemmas();
+    let index = LexiconIndex::new(lexicon);
+    inflect_all_in(
+        lemma,
+        &inflections,
+        Catalogues::embedded(),
+        Some(&index),
+        pos,
+        noun_capable,
+    )
+}
+
 /// The readings of the one form of `lemma` that spells `surface`.
 ///
 /// This is the reading-extraction counterpart to [`emits_form`]: the caller
@@ -3097,6 +3213,59 @@ mod tests {
             "kungfuiden is repaired under class 1 and plain under class 21, and a \
          correction candidate is not a duplicate of the form it corrects"
         );
+    }
+
+    /// The class reduction is one policy, not one per consumer.
+    ///
+    /// The CLI tools and the Python binding used to keep their own copies of
+    /// this; a test here is the one that can fail when the policy drifts.
+    #[test]
+    fn inflections_for_reduces_the_sanalista_rows_the_same_way_everywhere() {
+        let classes = |word: &str| -> Vec<u16> {
+            inflections_for(word)
+                .into_iter()
+                .map(|inflection| inflection.class)
+                .collect()
+        };
+        assert_eq!(classes("talo"), vec![1]);
+        // Two real declensions, and both grids are kept.
+        assert_eq!(classes("ori"), vec![48, 5]);
+        assert_eq!(classes("vihanta").len(), 2);
+        // A bare class beside its graded subtype is one paradigm.
+        assert_eq!(classes("hepo"), vec![1]);
+        // The indeclinable marker loses to a real class.
+        assert_eq!(classes("aika"), vec![9]);
+        // A compound marker replaces the head class beside it.
+        assert_eq!(classes("nuoripari"), vec![51]);
+        // Both compound readings survive when the row names both.
+        assert_eq!(classes("isoviha"), vec![51, 50]);
+        // A homonym claiming one class on two rows still claims it once.
+        assert_eq!(classes("aarnio").len(), 1);
+        assert!(inflections_for("zzzznotaword").is_empty());
+    }
+
+    /// The one-call wrapper inflects a known word and reads it correctly.
+    #[test]
+    fn inflect_word_is_the_library_entry_point() {
+        let talo = inflect_word("talo");
+        assert!(
+            talo.iter()
+                .any(|form| form.word == "talossa" && form.confidence == Confidence::Plain),
+            "talo should have the plain inessive talossa"
+        );
+        // A noun takes the possessive column.
+        assert!(talo.iter().any(|form| form.word == "talossani"));
+        // An adjective does not get the plain possessive column: `mieto` is
+        // not noun-capable, so the only possessive readings it has are the
+        // repaired ones the over-complete paradigm already admitted.
+        let mieto = inflect_word("mieto");
+        assert!(!mieto.is_empty());
+        assert!(
+            mieto.iter().all(|form| form.confidence != Confidence::Plain
+                || form.union().possessive.is_none()),
+            "mieto is an adjective and must not receive plain possessive forms"
+        );
+        assert!(inflect_word("zzzznotaword").is_empty());
     }
 
     /// A word that does not take possessive suffixes gets no possessive column.

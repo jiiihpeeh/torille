@@ -11,6 +11,11 @@ Both remotes must hold the same commit on the **normal branch** and on the
 **`maps` orphan branch**. They are updated separately because `maps` is a
 single-commit branch that is force-pushed, not merged.
 
+`build.rs` follows `MAPS_REMOTE` (the `origin` remote by default), and falls
+back to the package's `repository` URL — the public GitHub mirror — when
+`origin` has no `maps` branch. That is the case for a Cargo git dependency,
+whose checkout is a cache without the branch.
+
 `master` is the normal branch. `form-table` holds the rejected exact-table
 experiment and is not merged; the `backup/*` and `wip/*` branches are local
 pre-rewrite copies that are never pushed; deleted branches are kept as

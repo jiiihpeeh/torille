@@ -113,7 +113,25 @@ fn main() {
                 Ok(count) => {
                     eprintln!("build.rs: fetched {count} blobs from {remote}/maps")
                 }
-                Err(err) => eprintln!("build.rs: maps fetch failed: {err}"),
+                Err(err) => eprintln!("build.rs: maps fetch from {remote} failed: {err}"),
+            }
+            if !maps::missing(root).is_empty() {
+                // A cargo git dependency is a checkout without the `maps`
+                // branch, and its `origin` is cargo's local cache, which holds
+                // only the ref cargo fetched. The package names its own
+                // repository in `Cargo.toml`, and that repository does have
+                // the branch, so a git dependency can still build itself.
+                let repository = std::env::var("CARGO_PKG_REPOSITORY").unwrap_or_default();
+                if !repository.is_empty() && repository != remote {
+                    match maps::fetch(root, &repository) {
+                        Ok(count) => {
+                            eprintln!("build.rs: fetched {count} blobs from {repository}")
+                        }
+                        Err(err) => {
+                            eprintln!("build.rs: maps fetch from {repository} failed: {err}")
+                        }
+                    }
+                }
             }
         }
     }
