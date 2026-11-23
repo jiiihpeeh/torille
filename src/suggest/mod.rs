@@ -733,6 +733,28 @@ mod tests {
         );
     }
 
+    /// The edit-script path must not index past its stack buffers. Inputs
+    /// above the 256-char stack size take the heap path; a multibyte input
+    /// has fewer chars than bytes but still crosses the limit.
+    #[test]
+    fn levenshtein_with_ops_handles_long_inputs() {
+        let ascii = "a".repeat(300);
+        let (d, ops) = levenshtein_with_ops(&ascii, "b");
+        assert_eq!(d, 300);
+        assert_eq!(ops.len(), 300);
+
+        let multibyte = "ä".repeat(300);
+        let (d, ops) = levenshtein_with_ops(&multibyte, "b");
+        assert_eq!(d, 300);
+        assert_eq!(ops.len(), 300);
+
+        let at_limit = "a".repeat(256);
+        assert_eq!(levenshtein_with_ops(&at_limit, "b").0, 256);
+        let (d, ops) = levenshtein_with_ops(&at_limit, &at_limit);
+        assert_eq!(d, 0);
+        assert!(ops.iter().all(|op| matches!(op, EditOp::Match)));
+    }
+
     /// `is_keyboard_adjacent` resolves neighbours per the QWERTY layout
     /// table. Two letters on adjacent keys are adjacent; a vowel and a
     /// consonant on different rows are not.

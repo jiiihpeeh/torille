@@ -157,7 +157,9 @@ fn levenshtein_dp<'a>(
 /// Decode `s` into `dst` (one `u32` per char -- we use `u32` instead of
 /// `char` so the buffer is `Copy`, which makes it easier to thread into
 /// the heap-allocated path without an extra copy). Returns the number of
-/// chars written. `s.len()` must be `<= dst.len()`.
+/// chars written. The character count of `s` must be `<= dst.len()`;
+/// callers that guard on `s.len()` are conservative, because a UTF-8
+/// byte length is never smaller than its char count.
 #[inline]
 fn decode_into(s: &str, dst: &mut [u32]) -> usize {
     let mut i = 0;
@@ -191,11 +193,21 @@ pub enum EditOp {
 /// This allocates a full `(n+1) x (m+1)` matrix, so it is slower than
 /// [`levenshtein`]. Reserve it for offline data work.
 pub fn levenshtein_with_ops(a: &str, b: &str) -> (usize, Vec<EditOp>) {
-    let mut a_buf = [0u32; 256];
-    let mut b_buf = [0u32; 256];
-    let n = decode_into(a, &mut a_buf);
-    let m = decode_into(b, &mut b_buf);
-    levenshtein_with_ops_u32(&a_buf[..n], &b_buf[..m])
+    // A UTF-8 byte length is an upper bound on the char count, so this test
+    // is conservative and the fixed buffers below cannot overflow.
+    const STACK_CHARS: usize = 256;
+    if a.len() <= STACK_CHARS && b.len() <= STACK_CHARS {
+        let mut a_buf = [0u32; STACK_CHARS];
+        let mut b_buf = [0u32; STACK_CHARS];
+        let n = decode_into(a, &mut a_buf);
+        let m = decode_into(b, &mut b_buf);
+        return levenshtein_with_ops_u32(&a_buf[..n], &b_buf[..m]);
+    }
+    // Long inputs fall back to the heap. The matrix below is still
+    // O(n * m), so the caller pays for the edit script it asked for.
+    let a_chars: Vec<u32> = a.chars().map(|c| c as u32).collect();
+    let b_chars: Vec<u32> = b.chars().map(|c| c as u32).collect();
+    levenshtein_with_ops_u32(&a_chars, &b_chars)
 }
 
 fn levenshtein_with_ops_u32(a: &[u32], b: &[u32]) -> (usize, Vec<EditOp>) {
