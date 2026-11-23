@@ -25,7 +25,7 @@
 //! `apply_typography`), the wizard (`class_candidates`) and the lexicon
 //! (`lookup`, `words`). `examples/python/` has a runnable tour of each.
 //!
-//! The fixed arguments have value types: `Luokka(9)` / `Luokka(9, "B")` for the
+//! The fixed arguments have value types: `Luokka(9)` / `Luokka("9*B")` for the
 //! Kotus class, `Pos.NOUN` for a part of speech, and `Cell.ILL_SG` for a
 //! wizard cell. The string forms (`luokka="9*B"`, `pos="substantiivi"`) still
 //! work where a tool already speaks them.
@@ -546,12 +546,14 @@ fn resolve_pos(obj: &Bound<'_, PyAny>) -> PyResult<PartOfSpeech> {
     ))
 }
 
-/// A Kotus inflection class: a class number and an optional gradation.
+/// A Kotus inflection class, written as the expression the sanalista uses.
 ///
-/// `Luokka(9)` is the plain class 9, `Luokka(9, "B")` the `9*B` subtype. The
-/// string form is still accepted by [`Engine::inflect`], but the value type
-/// validates the pair at construction instead of letting a typo reach the
-/// parser.
+/// `Luokka(9)` is the plain class 9 and `Luokka("9*B")` the gradated subtype,
+/// so each expression is its own value. The engine models the pair (class,
+/// gradation) internally, but the catalogue is keyed by the class number only
+/// and the sanalista uses 276 distinct pairs; an enum of those would be a
+/// generated, fragile surface, while the canonical spelling is already the
+/// string every other interface uses (`lookup` returns `9*B`).
 #[pyclass(frozen, name = "Luokka", module = "torille")]
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct PyLuokka {
@@ -562,7 +564,7 @@ struct PyLuokka {
 
 impl PyLuokka {
     /// The Kotus class expression, e.g. `9` or `9*B`.
-    fn expression(self) -> String {
+    fn as_expression(self) -> String {
         match self.gradation {
             Some(gradation) => format!("{}*{}", self.class, gradation),
             None => self.class.to_string(),
@@ -570,34 +572,60 @@ impl PyLuokka {
     }
 }
 
+/// Parse one canonical class expression: digits, then optionally `*` and one
+/// letter. Unlike the engine's lenient parser, this rejects chains such as
+/// `9*B*A` rather than silently taking the last letter.
+fn parse_class_expression(text: &str) -> Option<(u16, Option<char>)> {
+    let text = text.trim();
+    let digits: String = text.chars().take_while(char::is_ascii_digit).collect();
+    if digits.is_empty() {
+        return None;
+    }
+    let class: u16 = digits.parse().ok()?;
+    let rest = &text[digits.len()..];
+    if rest.is_empty() {
+        return Some((class, None));
+    }
+    let mut chars = rest.chars();
+    if chars.next() != Some('*') {
+        return None;
+    }
+    let letter = chars.next()?.to_ascii_uppercase();
+    if !letter.is_ascii_uppercase() || chars.next().is_some() {
+        return None;
+    }
+    Some((class, Some(letter)))
+}
+
 #[pymethods]
 impl PyLuokka {
+    /// `Luokka(9)` for a bare class, `Luokka("9*B")` for a gradated one.
     #[new]
-    #[pyo3(signature = (class, gradation=None))]
-    fn new(class: u16, gradation: Option<char>) -> PyResult<Self> {
+    fn new(value: &Bound<'_, PyAny>) -> PyResult<Self> {
+        let (class, gradation) = if let Ok(class) = value.extract::<u16>() {
+            (class, None)
+        } else if let Ok(text) = value.extract::<String>() {
+            parse_class_expression(&text).ok_or_else(|| {
+                PyValueError::new_err(format!(
+                    "{text:?}: expected a class such as `9` or `9*B`"
+                ))
+            })?
+        } else {
+            return Err(pyo3::exceptions::PyTypeError::new_err(
+                "Luokka takes an int class or a class expression string",
+            ));
+        };
         if !(1..=101).contains(&class) {
             return Err(PyValueError::new_err(format!(
                 "{class}: a Kotus class is 1..=101"
             )));
         }
-        let gradation = match gradation {
-            Some(letter) => {
-                let letter = letter.to_ascii_uppercase();
-                if torille::kotus::Gradation::from_letter(letter).is_none() {
-                    return Err(PyValueError::new_err(format!(
-                        "{letter:?}: a gradation is A..Z"
-                    )));
-                }
-                Some(letter)
-            }
-            None => None,
-        };
         Ok(PyLuokka { class, gradation })
     }
 
-    /// The class number.
+    /// The class number (the `9` in `9*B`).
     #[getter]
-    fn class(&self) -> u16 {
+    fn number(&self) -> u16 {
         self.class
     }
 
@@ -607,25 +635,28 @@ impl PyLuokka {
         self.gradation
     }
 
+    /// The canonical expression, e.g. `9` or `9*B`.
+    #[getter]
+    fn expression(&self) -> String {
+        self.as_expression()
+    }
+
     /// Parse a class expression such as `9`, `9*B` or `10*H`.
     #[staticmethod]
     fn parse(text: &str) -> Option<Self> {
-        let inflection = parse_inflection(text)?;
-        Some(PyLuokka {
-            class: inflection.class,
-            gradation: inflection
-                .gradation
-                .map(|gradation| (b'A' + gradation.0 - 1) as char),
-        })
+        let (class, gradation) = parse_class_expression(text)?;
+        (1..=101)
+            .contains(&class)
+            .then_some(PyLuokka { class, gradation })
     }
 
     fn __str__(&self) -> String {
-        self.expression()
+        self.as_expression()
     }
 
     fn __repr__(&self) -> String {
         match self.gradation {
-            Some(gradation) => format!("Luokka({}, {gradation:?})", self.class),
+            Some(gradation) => format!("Luokka({:?})", format!("{}*{}", self.class, gradation)),
             None => format!("Luokka({})", self.class),
         }
     }
@@ -634,7 +665,7 @@ impl PyLuokka {
 /// Resolve a `luokka` argument: a [`PyLuokka`] or a class expression string.
 fn resolve_luokka(obj: &Bound<'_, PyAny>) -> PyResult<String> {
     if let Ok(luokka) = obj.extract::<PyLuokka>() {
-        return Ok(luokka.expression());
+        return Ok(luokka.as_expression());
     }
     if let Ok(text) = obj.extract::<String>() {
         return Ok(text);

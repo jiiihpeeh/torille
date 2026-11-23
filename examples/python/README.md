@@ -68,8 +68,8 @@ The fixed arguments have value types:
 
 ```python
 Luokka(9)         # the plain class 9
-Luokka(9, "B")    # 9*B
-Luokka.parse("10*H")
+Luokka("9*B")     # the gradated subtype
+Luokka("10*H")
 Pos.NOUN          # Pos.VERB, Pos.ADJECTIVE, ...
 Cell.ILL_SG       # Cell.GEN_PL, Cell.PRES_1SG, ...
 Cell.parse("ill_sg")

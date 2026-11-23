@@ -50,8 +50,8 @@ def main() -> None:
 
     print("\nThe class is a value, and the string form still parses:")
     print(f"  Luokka(9) -> {Luokka(9)}")
-    print(f"  Luokka(9, 'B') -> {Luokka(9, 'B')}")
-    print(f"  Luokka.parse('10*H') -> {Luokka.parse('10*H')!r}")
+    print(f"  Luokka('9*B') -> {Luokka('9*B')}")
+    print(f"  Luokka('10*H') -> {Luokka('10*H')!r}")
     print(f"  Pos.NOUN.finnish -> {Pos.NOUN.finnish!r}")
     print(f"  Pos.parse('substantiivi') -> {Pos.parse('substantiivi')!r}")
 

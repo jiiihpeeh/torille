@@ -65,7 +65,7 @@ def main() -> None:
         "pöllykkä", "noun", UNKNOWN_STEPS[-1], use_recorded=False
     )
     inferred = candidates[0][0]
-    forms = engine.inflect("pöllykkä", luokka=Luokka.parse(inferred))
+    forms = engine.inflect("pöllykkä", luokka=Luokka(inferred))
     print(f"\nInferred class {inferred}; the paradigm starts:")
     for form in forms[:6]:
         print(f"  {form.word:<14} {form.confidence:<9} {form.tags}")

@@ -411,7 +411,7 @@ e.hyphenate("tietokoneohjelmointi")             # points with byte/char offsets 
 ```
 
 The class argument is `luokka` -- Finnish for class -- because Python does not
-accept a reserved word as a keyword argument. `Luokka(9)` and `Luokka(9, "B")`
+accept a reserved word as a keyword argument. `Luokka(9)` and `Luokka("9*B")`
 are the typed spellings; the string form (`luokka="9*B"`, `pos="substantiivi"`)
 is still accepted for tools that already speak it. A `luokka` is enough to inflect
 a word the sanalista has never seen; without one, an unknown word is refused
