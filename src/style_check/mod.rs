@@ -31,14 +31,14 @@ impl StyleAnalysis {
     /// Drop diagnostics whose stable rule id the caller has ignored.
     pub fn without_rules(mut self, ignored: &[crate::diagnostic::RuleId]) -> Self {
         self.diagnostics
-            .retain(|diagnostic| !ignored.contains(&diagnostic.rule_id));
+            .retain(|diagnostic| !ignored.contains(&diagnostic.rule_id()));
         self
     }
 
     /// In-place form of [`without_rules`](Self::without_rules).
     pub fn ignore_rules(&mut self, ignored: &[crate::diagnostic::RuleId]) {
         self.diagnostics
-            .retain(|diagnostic| !ignored.contains(&diagnostic.rule_id));
+            .retain(|diagnostic| !ignored.contains(&diagnostic.rule_id()));
     }
 }
 

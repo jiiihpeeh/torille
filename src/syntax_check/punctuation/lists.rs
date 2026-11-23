@@ -457,7 +457,7 @@ mod tests {
         let analysis = crate::syntax::analyze(&tokens);
         list_diagnostics(&tokens, &analysis)
             .into_iter()
-            .find(|diagnostic| diagnostic.rule_id.as_str() == "semicolon_simple_list")
+            .find(|diagnostic| diagnostic.rule_id().as_str() == "semicolon_simple_list")
     }
 
     #[test]

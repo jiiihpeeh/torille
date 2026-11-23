@@ -130,7 +130,7 @@ fn diagnostics_are_deterministic() {
             .map(|diagnostic| {
                 (
                     diagnostic.kind,
-                    diagnostic.rule_id.as_str().to_string(),
+                    diagnostic.rule_id().as_str().to_string(),
                     diagnostic.severity,
                     diagnostic.confidence,
                     diagnostic.span.clone(),
@@ -197,7 +197,7 @@ fn every_fixture_diagnostic_has_a_contract_entry() {
         for diagnostic in syntax_check::check(text).diagnostics {
             let pair = (
                 diagnostic.kind.name().to_string(),
-                diagnostic.rule_id.as_str().to_string(),
+                diagnostic.rule_id().as_str().to_string(),
             );
             assert!(
                 CONTRACT.contains(&(pair.0.as_str(), pair.1.as_str())),

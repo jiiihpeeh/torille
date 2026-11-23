@@ -69,7 +69,7 @@ fn diagnostic_row(
     set_checked: WriteSignal<bool>,
 ) -> impl IntoView {
     let kind = diagnostic.kind;
-    let rule_id = diagnostic.rule_id;
+    let rule_id = diagnostic.rule_id();
     let relation = diagnostic.explanation.map(|explanation| explanation.relation);
     let expected = diagnostic.expected.clone();
     let corrections = diagnostic.corrections.clone();
@@ -176,6 +176,9 @@ fn kind_label(kind: StyleKind) -> &'static str {
         StyleKind::Filler => "täytesana",
         StyleKind::Wordy => "monisanainen ilmaus",
         StyleKind::Colloquial => "arkikielinen ilmaus",
+        // `StyleKind` is `#[non_exhaustive]`; keep the panel working for a
+        // kind added after this build.
+        _ => "tyylihuomio",
     }
 }
 

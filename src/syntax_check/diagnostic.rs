@@ -20,7 +20,11 @@ pub use crate::diagnostic::{
 
 /// Stable diagnostic categories. Add a new variant rather than reusing one
 /// for a different rule; consumers switch on these names.
+///
+/// `#[non_exhaustive]`: the set grows with the grammar rules, so a downstream
+/// match must have a fallback rather than fail to build on every new kind.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[non_exhaustive]
 pub enum DiagnosticKind {
     SubjectPredicateAgreement,
     Connegative,
@@ -124,8 +128,6 @@ impl DiagnosticKind {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SyntaxDiagnostic {
     pub kind: DiagnosticKind,
-    /// Stable rule identifier for ignore/dismiss lists.
-    pub rule_id: RuleId,
     pub severity: Severity,
     pub confidence: Confidence,
     /// The smallest source span the UI should underline.
@@ -149,7 +151,6 @@ impl SyntaxDiagnostic {
     ) -> Self {
         Self {
             kind,
-            rule_id: RuleId::new(message),
             severity,
             confidence,
             span,
@@ -159,11 +160,20 @@ impl SyntaxDiagnostic {
             corrections: Vec::new(),
         }
     }
+
+    /// The stable rule identifier for ignore/dismiss lists.
+    ///
+    /// Derived from [`Self::message`], which is the rule's key, so the two
+    /// cannot disagree. This was a public field; a caller could set it to a
+    /// different string than the message it was built from.
+    pub fn rule_id(&self) -> RuleId {
+        RuleId::new(self.message)
+    }
 }
 
 impl Finding for SyntaxDiagnostic {
     fn rule_id(&self) -> RuleId {
-        self.rule_id
+        self.rule_id()
     }
 
     fn severity(&self) -> Severity {
@@ -204,7 +214,7 @@ mod tests {
             0..3,
             "adposition_case",
         );
-        assert_eq!(diagnostic.rule_id.as_str(), "adposition_case");
+        assert_eq!(diagnostic.rule_id().as_str(), "adposition_case");
         let explanation = diagnostic.explanation.expect("an explanation is set");
         assert_eq!(explanation.relation, Relation::AdpositionComplement);
         assert_eq!(explanation.key, "adposition_case");

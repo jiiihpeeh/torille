@@ -52,7 +52,7 @@ fn covered_semicolon_cases_match_the_checker() {
                 !check
                     .diagnostics
                     .iter()
-                    .any(|diagnostic| diagnostic.rule_id.as_str() == absent),
+                    .any(|diagnostic| diagnostic.rule_id().as_str() == absent),
                 "case {id:?} ({text:?}) must not emit {absent:?}: {:#?}",
                 check.diagnostics
             );
@@ -89,6 +89,6 @@ fn start_of(rule: &str, text: &str) -> Option<usize> {
     syntax_check::check(text)
         .diagnostics
         .into_iter()
-        .find(|diagnostic| diagnostic.rule_id.as_str() == rule)
+        .find(|diagnostic| diagnostic.rule_id().as_str() == rule)
         .map(|diagnostic| diagnostic.span.start)
 }

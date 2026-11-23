@@ -982,7 +982,7 @@ fn diagnostics_array(diagnostics: &[torille::syntax_check::SyntaxDiagnostic]) ->
         array.push(&diagnostic_object(
             DiagnosticFields {
                 kind: diagnostic.kind.name(),
-                rule_id: diagnostic.rule_id.as_str(),
+                rule_id: diagnostic.rule_id().as_str(),
                 severity: diagnostic.severity.name(),
                 confidence: diagnostic.confidence.name(),
                 start: diagnostic.span.start,
@@ -1007,7 +1007,7 @@ fn style_diagnostics_array(diagnostics: &[torille::style_check::StyleDiagnostic]
         array.push(&diagnostic_object(
             DiagnosticFields {
                 kind: diagnostic.kind.name(),
-                rule_id: diagnostic.rule_id.as_str(),
+                rule_id: diagnostic.rule_id().as_str(),
                 severity: diagnostic.severity.name(),
                 confidence: diagnostic.confidence.name(),
                 start: diagnostic.span.start,

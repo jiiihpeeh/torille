@@ -75,7 +75,7 @@ fn main() -> ExitCode {
             *counts.entry(diagnostic.kind.name()).or_default() += 1;
             for byte in format!(
                 "{}|{}|{}|",
-                diagnostic.rule_id.as_str(),
+                diagnostic.rule_id().as_str(),
                 diagnostic.span.start,
                 diagnostic.span.end
             )
@@ -85,7 +85,7 @@ fn main() -> ExitCode {
                 hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
             }
             diagnostics.push(json!({
-                "rule_id": diagnostic.rule_id.as_str(),
+                "rule_id": diagnostic.rule_id().as_str(),
                 "kind": diagnostic.kind.name(),
                 "severity": diagnostic.severity.name(),
                 "start": diagnostic.span.start,
@@ -124,7 +124,7 @@ fn main() -> ExitCode {
         let expected = diagnostic.expected.as_deref().unwrap_or("-");
         println!(
             "{} {} {}..{} {:?} -> {} [{}]",
-            diagnostic.rule_id.as_str(),
+            diagnostic.rule_id().as_str(),
             diagnostic.kind.name(),
             start,
             end,

@@ -53,14 +53,14 @@ impl SyntaxCheck {
     /// the analysis are untouched.
     pub fn without_rules(mut self, ignored: &[RuleId]) -> Self {
         self.diagnostics
-            .retain(|diagnostic| !ignored.contains(&diagnostic.rule_id));
+            .retain(|diagnostic| !ignored.contains(&diagnostic.rule_id()));
         self
     }
 
     /// In-place form of [`without_rules`](Self::without_rules).
     pub fn ignore_rules(&mut self, ignored: &[RuleId]) {
         self.diagnostics
-            .retain(|diagnostic| !ignored.contains(&diagnostic.rule_id));
+            .retain(|diagnostic| !ignored.contains(&diagnostic.rule_id()));
     }
 }
 

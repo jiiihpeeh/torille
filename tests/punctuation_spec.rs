@@ -38,7 +38,7 @@ fn covered_spec_cases_match_the_checker() {
                 let found = check
                     .diagnostics
                     .iter()
-                    .find(|diagnostic| diagnostic.rule_id.as_str() == rule)
+                    .find(|diagnostic| diagnostic.rule_id().as_str() == rule)
                     .unwrap_or_else(|| {
                         panic!(
                             "case {id:?} ({text:?}) did not emit {rule:?}: {:#?}",

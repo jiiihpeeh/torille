@@ -174,7 +174,7 @@ fn diagnostic_row(
     set_checked: WriteSignal<bool>,
 ) -> impl IntoView {
     let kind = diagnostic.kind;
-    let rule_id = diagnostic.rule_id;
+    let rule_id = diagnostic.rule_id();
     let relation = diagnostic.explanation.map(|explanation| explanation.relation);
     let severity = diagnostic.severity;
     let expected = diagnostic.expected.clone();
@@ -322,6 +322,9 @@ fn kind_label(kind: DiagnosticKind) -> &'static str {
         DiagnosticKind::ListIntroducerComma => "pilkku kaksoispisteen jälkeen",
         DiagnosticKind::SemicolonMisuse => "puolipisteen käyttö",
         DiagnosticKind::SemicolonMissing => "puuttuva puolipiste",
+        // `DiagnosticKind` grows with the grammar rules; a new kind gets the
+        // generic label until it earns its own.
+        _ => "kielioppihuomio",
     }
 }
 

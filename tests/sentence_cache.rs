@@ -36,11 +36,11 @@ fn a_wrapped_clause_is_quiet_in_both_paths() {
             .iter()
             .filter(|diagnostic| {
                 matches!(
-                    diagnostic.rule_id.as_str(),
+                    diagnostic.rule_id().as_str(),
                     "existential_subject_case" | "comma_missing" | "question_mark_missing"
                 )
             })
-            .map(|diagnostic| diagnostic.rule_id.as_str())
+            .map(|diagnostic| diagnostic.rule_id().as_str())
             .collect();
         assert!(divergent.is_empty(), "{divergent:?}: {path:#?}");
     }
@@ -67,7 +67,7 @@ fn the_bare_line_fragments_still_show_the_old_findings() {
             diagnostics
                 .diagnostics
                 .iter()
-                .any(|diagnostic| diagnostic.rule_id.as_str() == rule),
+                .any(|diagnostic| diagnostic.rule_id().as_str() == rule),
             "{text:?} should still reproduce {rule}: {diagnostics:#?}"
         );
     }
