@@ -198,6 +198,7 @@ torille/
   extensions/           Firefox and Chromium extensions
   tests/                catalogue, candidate generation, hyphenation,
                         syntax/style, Wiktionary
+  examples/python/      runnable tours of the Python extension
   bench/                corpora manifest and the recorded reference report
   benches/              the Criterion hot-path benchmarks
   docs/                 harness, lexicon, syntax/style checkers,
@@ -414,6 +415,11 @@ reserved word as a keyword argument. A `klass` is enough to inflect a word the
 sanalista has never seen; without one, an unknown word is refused because
 there is nothing to fall back on. `inflect` returns objects with named fields
 (`pos`, `case`, `number`, ...) rather than the binary's printed tag words.
+
+The extension also exposes the check/suggest pair, the morphology and syntax
+layers, the grammar/style pass, typography and the class wizard. Runnable tours
+of each live in [`examples/python/`](examples/python/README.md); start with
+`python3 examples/python/00_showcase.py`.
 
 Build it with:
 
