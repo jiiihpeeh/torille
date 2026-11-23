@@ -581,6 +581,12 @@ is gitignored and generated.
 
 - **`cargo test` at the repo root tests only `torille`** and silently skips the
   integration tests and the other crates. Always pass `--workspace`.
+- **Case-fold with `crate::text::lowercase`, not `to_ascii_lowercase`.** The
+  sanalista is lower case and Finnish capitalises `ä`, `ö` and `å`; an ASCII
+  fold leaves them alone and splits a capitalised surface from its own lexicon
+  entry (`Äitj` suggested nothing where `äitj` suggested `äiti`, and
+  `Ääkeihinsä` was unknown). The only `to_ascii_lowercase` left in the engine
+  is the keyboard-adjacency table, which documents why it uses it.
 - **`cargo fmt` is not clean workspace-wide.** `src/expand/mod.rs` and
   `src/expand/build.rs` are hand-formatted around a few calls. Check the files
   you touched; do not let the formatter rewrite those two.

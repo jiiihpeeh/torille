@@ -1,6 +1,6 @@
 # REVIEW_CORRECT — public-boundary correctness and robustness
 
-Status: **Phase 1 landed 2026-11-23; Phase 2 in progress.** Baseline `0c06175`
+Status: **Phases 1-3 landed 2026-11-23; Phases 4-5 open.** Baseline `0c06175`
 (2026-11-22). The review method was: read the engine, run the workspace gates,
 then probe the public entry points with deterministic adversarial inputs. The
 gates are clean (`cargo clippy --workspace --all-targets -- -D warnings`,
@@ -43,6 +43,30 @@ gates do not currently exercise.
 
 Verified: clippy clean, `cargo test --release --workspace` green, and the
 C4-specific gates below.
+
+### 2026-11-23 — Phase 3 (C5–C6) implemented
+
+- **C5** — `crate::text::lowercase` is the one fold: `Cow`-borrowing, Unicode
+  (`to_lowercase`, so `Ä`/`Ö`/`Å` fold), and shared by `morphology` (which had
+  its own copy), `suggest_detailed`, `suggest_with_state`,
+  `find_bases_with_inner`, `find_best_base_with`, `find_any_base_with` and
+  `find_bases_for_analysis`. The only `to_ascii_lowercase` left is the
+  keyboard-adjacency table, whose doc says the Finnish vowels are looked up
+  directly.
+- **C5** (beyond the plan) — `check_normal_with` folded its surface at entry,
+  so gates 1-4 (the lemma probe, the form set, the clitic strip and the stem
+  maps) no longer miss a capitalised word. The raw surface is kept for the
+  proper-name gate only. Two parity bugs closed with it: `Autonkuljettaja`
+  was `Inflected` where `autonkuljettaja` was `Lemma`, and `Talossa` named the
+  surname `Talo` where the policy is the common word first.
+- **C6** — `tests/casing_parity.rs` pins the E5 table (the capitalised
+  suggestion list equals the lower-case one with the input's case restored)
+  and the E6 table (`check`, `check_fast`, `check_normal` and `is_known_word`
+  answer a capitalised form as they answer its lower-case spelling; `check`
+  keeps the common bases first and appends name readings).
+- Found but not fixed: `is_known_word("ääkeihinsä")` is `None` *and* so is the
+  lower-case spelling. That is a stem-map coverage gap for the `ääk` class, not
+  a case bug, and belongs with the harness defects.
 
 ### 2026-11-23 — Phase 1 (C1–C3) implemented
 
@@ -365,33 +389,36 @@ every entry point; the parity file is green; and `compare_engine_outputs.py
 
 ### C5 — one Unicode lowercase helper
 
-- [ ] Promote the `morphology::lowercase` `Cow` helper
+- [x] Promote the `morphology::lowercase` `Cow` helper
   (`src/morphology/mod.rs:378`) to a shared crate-private utility, or expose it
   as `pub(crate)` from a small `text` module.
-- [ ] Replace the ASCII-only calls in `suggest/candidates.rs:216`,
+- [x] Replace the ASCII-only calls in `suggest/candidates.rs:216`,
   `suggest/state.rs:138`, and `expand/find_bases.rs:242,420-421,833`. Keep
   `to_ascii_lowercase` only where the input is guaranteed ASCII (for example a
   lemma that is documented as lowercase ASCII), and say why.
-- [ ] Use the same helper in `find_bases_for_analysis` and `shares_first_two`,
+- [x] Use the same helper in `find_bases_for_analysis` and `shares_first_two`,
   or pass an already-lowercased word so the helpers never see case.
-- [ ] Pass `&lower` to `find_bases_for_check` in `check_common`
+- [x] Pass `&lower` to `find_bases_for_check` in `check_common`
   (`src/suggest/mod.rs:149`).
 
 ### C6 — the regression table
 
-- [ ] Add the E5 table: `suggest_detailed("Äitj", 5, 2)` equals the
+- [x] Add the E5 table: `suggest_detailed("Äitj", 5, 2)` equals the
   case-restored `suggest_detailed("äitj", 5, 2)` result, and likewise for
   `Öljy`, `Äidiss`, and `Åbo`.
-- [ ] Add the E6 table: `check("Ääkeihinsä")` equals
+- [x] Add the E6 table: `check("Ääkeihinsä")` equals
   `check("ääkeihinsä")` and `check_fast`; the same for one noun and one
   adjective.
-- [ ] Verify the suggestion ranking tests and the candidate-generation golden
+- [x] Verify the suggestion ranking tests and the candidate-generation golden
   list still pass. The case fix changes the candidate pool for capitalized
   words, so a golden list that includes a capitalized query may move; update
   it intentionally, not by rerunning blindly.
 
 Acceptance: the E5 and E6 tables are green; no ASCII-only lowercasing remains
 in the Finnish surface paths.
+
+Result: the E5 and E6 tables are green, and the only ASCII-only fold left
+in the engine is the documented keyboard-adjacency table.
 
 ## Phase 4 — API and documentation hygiene (separate commits)
 
