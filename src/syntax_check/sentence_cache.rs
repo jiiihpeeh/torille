@@ -1,10 +1,12 @@
 //! Per-unit reuse for the grammar rule pass.
 //!
 //! A warm re-check of a page is dominated by the rules over every sentence,
-//! even when the user changed one sentence. The cache keys each grammar unit
-//! by a hash of its exact text (and length) and keeps the diagnostics with
-//! spans relative to the unit. An unchanged unit is a hash probe plus a shift;
-//! a changed one re-runs the rules for that slice only.
+//! even when the user changed one sentence. The cache finds each grammar unit
+//! through a hash of its exact text and keeps the diagnostics with spans
+//! relative to the unit. A hash is a lookup key, not an identity: a hit still
+//! compares the unit text, so two different sentences that collide do not
+//! share diagnostics. An unchanged unit is a hash probe, a string compare and
+//! a shift; a changed one re-runs the rules for that slice only.
 //!
 //! A unit is a grammar sentence, not a typography line. `sentence::spans`
 //! splits at every newline for the case/spelling layers, which truncates a
@@ -83,8 +85,13 @@ impl GrammarUnit {
 
 #[derive(Debug, Clone)]
 struct CachedUnit {
-    /// Byte length, so a hash collision cannot reuse a different slice.
-    len: usize,
+    /// The exact slice this entry was built from.
+    ///
+    /// The map key is a 64-bit hash, and two different texts of the same
+    /// length can collide; reusing the entry's diagnostics would then report
+    /// the wrong sentence. The text is kept (bounded by
+    /// [`SENTENCE_CACHE_LIMIT`] entries) and compared after a hash hit.
+    text: Box<str>,
     /// Core range relative to the slice, so identical slice texts with a
     /// different ownership do not share diagnostics.
     core: Range<usize>,
@@ -103,6 +110,16 @@ pub struct SentenceCache {
     entries: HashMap<u64, CachedUnit>,
     hits: u64,
     misses: u64,
+}
+
+impl CachedUnit {
+    /// Whether this entry is the cache unit `slice`.
+    fn matches(&self, slice: &str, core: &Range<usize>, quote_depth: u16, disambiguation: u64) -> bool {
+        self.text.as_ref() == slice
+            && self.core == *core
+            && self.quote_depth == quote_depth
+            && self.disambiguation == disambiguation
+    }
 }
 
 impl SentenceCache {
@@ -184,17 +201,12 @@ impl SentenceCache {
             let cached = self
                 .entries
                 .get(&hash)
-                .filter(|entry| {
-                    entry.len == slice.len()
-                        && entry.core == core
-                        && entry.quote_depth == quote_depth
-                        && entry.disambiguation == decision_key
-                })
-                .cloned();
+                .filter(|entry| entry.matches(slice, &core, quote_depth, decision_key))
+                .map(|entry| entry.diagnostics.clone());
             let relative = match cached {
-                Some(entry) => {
+                Some(diagnostics) => {
                     self.hits += 1;
-                    entry.diagnostics
+                    diagnostics
                 }
                 None => {
                     self.misses += 1;
@@ -227,7 +239,7 @@ impl SentenceCache {
                     self.entries.insert(
                         hash,
                         CachedUnit {
-                            len: slice.len(),
+                            text: slice.into(),
                             core,
                             quote_depth,
                             disambiguation: decision_key,
@@ -503,5 +515,41 @@ mod tests {
         sentences.clear();
         assert!(sentences.is_empty());
         assert_eq!(sentences.stats(), SentenceCacheStats::default());
+    }
+
+    /// The key is a 64-bit hash, so a hit must still compare the unit text.
+    /// Before the text was stored, an entry whose hash collided with a
+    /// different same-length sentence reused its diagnostics.
+    #[test]
+    fn a_hash_collision_recomputes_instead_of_reusing_diagnostics() {
+        let text = "Koira nukkuvat.";
+        let tokens = tokenise(text);
+        let mut morphology_cache = MorphologyCache::new();
+        let morphology = crate::morphology::analyze_morphology(&tokens, &mut morphology_cache);
+        let mut sentences = SentenceCache::new();
+
+        let contexts = crate::sentence::analyze(&tokens);
+        let spans = crate::sentence::spans(&tokens);
+        let unit = &grammar_units(&tokens, &spans, &contexts)[0];
+        let core = (unit.core.start - unit.slice.start)..(unit.core.end - unit.slice.start);
+        // A fabricated entry under the hash of the real unit, with different
+        // text of the same length and the same ownership metadata.
+        let slice = &text[unit.slice.clone()];
+        let hash = unit_hash(slice, unit.quote_depth, 0);
+        sentences.entries.insert(
+            hash,
+            CachedUnit {
+                text: "x".repeat(slice.len()).into(),
+                core,
+                quote_depth: unit.quote_depth,
+                disambiguation: 0,
+                diagnostics: Vec::new(),
+            },
+        );
+
+        let got = sentences.check(text, &tokens, &morphology, &mut morphology_cache);
+        assert_eq!(got, whole_check(text));
+        assert_eq!(sentences.stats().misses, 1, "the colliding entry is not a hit");
+        assert_eq!(sentences.stats().hits, 0);
     }
 }
