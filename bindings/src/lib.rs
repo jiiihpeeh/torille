@@ -18,6 +18,12 @@
 //!
 //! `tags` is the same list of words the `inflect` binary prints after the
 //! confidence, so anything written against that output keeps working.
+//!
+//! Beyond inflection the class exposes the word-level questions (`check`,
+//! `suggest`, `check_normal`), the layers over a text (`morphology`, `syntax`,
+//! `grammar`, `style`, `grammar_and_style`, `typography`,
+//! `apply_typography`), the wizard (`class_candidates`) and the lexicon
+//! (`lookup`, `words`). `examples/python/` has a runnable tour of each.
 
 // PyO3's `#[pymethods]` expands the return expression through a `PyResult`
 // conversion that clippy sees as a no-op on the already-converted type.
@@ -29,13 +35,18 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 
+use torille::expand::check_normal::{NormalizedOutcome, check_normal};
 use torille::hyphenation::{
     BreakSource, CompoundAnalyzer, Exceptions, HyphenationOptions, LexicalCompoundAnalyzer,
     NoCompoundAnalyzer, VowelBreaks, positions_with,
 };
 use torille::kotus::{Inflection, Lemma, normalize_apostrophe};
+use torille::morphology::{Depth, MorphologyCache, analyze_morphology};
 use torille::spec::Catalogues;
+use torille::suggest::{CheckOutcome, SuggestionSource, check as check_word, suggest_detailed};
 use torille::tags::{Confidence, PartOfSpeech};
+use torille::tokenise::tokenise;
+use torille::typography;
 
 /// The parsed Kotus data, shared by every `Engine` in the process.
 ///
@@ -163,6 +174,151 @@ fn clitic_name(c: torille::tags::Clitic) -> &'static str {
     }
 }
 
+/// The answer to [`Engine::check`]: what kind of word it is, and which lemmas
+/// it inflects to.
+#[pyclass(frozen, get_all)]
+struct PyCheck {
+    /// `lemma`, `inflected` or `unknown`.
+    kind: &'static str,
+    /// The lemmas the surface is a form of; empty for a lemma and for an
+    /// unknown word.
+    bases: Vec<String>,
+}
+
+/// One ranked correction from [`Engine::suggest`].
+#[pyclass(frozen, get_all)]
+struct PySuggestion {
+    word: String,
+    edit_distance: usize,
+    lemma: Option<String>,
+    /// `direct`, `neighbour`, or `generated:<lemma>`.
+    source: String,
+    /// `plain`, `repaired` or `guessed`.
+    confidence: &'static str,
+    /// Position in the deterministic candidate ranking, 0-based.
+    original_rank: usize,
+    /// `1 / (1 + edit_distance)` plus the documented tie-breaks.
+    existing_score: f32,
+}
+
+/// One token's morphology from [`Engine::morphology`].
+#[pyclass(frozen, get_all)]
+struct PyWord {
+    /// The surface as it appears in the text.
+    surface: String,
+    /// The chosen lemma, or `None` for an unresolved word.
+    lemma: Option<String>,
+    pos: Option<&'static str>,
+    case: Option<&'static str>,
+    number: Option<&'static str>,
+    clitic: Option<&'static str>,
+    possessive: Option<&'static str>,
+    /// `direct`, `stem-map`, `heads-tails`, `prefix`, `clitic`, `possessive`,
+    /// `compound`, `proper-name` or `unknown`.
+    depth: &'static str,
+    /// The agreed reading, as the `inflect` binary prints it.
+    tags: Vec<String>,
+    /// Every reading, one tag list per reading.
+    readings: Vec<Vec<String>>,
+    /// A productive derivation for an otherwise unknown surface:
+    /// `(rule, source stem)`.
+    derivation: Option<(String, String)>,
+}
+
+/// One token's role from [`Engine::syntax`].
+#[pyclass(frozen, get_all)]
+struct PySyntaxToken {
+    surface: String,
+    lemma: Option<String>,
+    /// Every lemma whose inflection produced this surface, in resolution order.
+    lemmas: Vec<String>,
+    /// `predicate`, `auxiliary`, `subject`, `object`, `adverbial`,
+    /// `complement`, `modifier` or `unknown`.
+    role: &'static str,
+    /// `likely` or `weak`.
+    confidence: &'static str,
+    /// Index into the clause list.
+    clause: usize,
+    /// Governor token index, where the resolver found one.
+    head: Option<usize>,
+}
+
+/// One clause from [`Engine::syntax`].
+#[pyclass(frozen, get_all)]
+struct PyClause {
+    /// Byte span in the source text.
+    start: usize,
+    end: usize,
+    predicate: Option<usize>,
+    subject: Option<usize>,
+    object: Option<usize>,
+    complement: Option<usize>,
+    negative: bool,
+    existential: bool,
+    passive: bool,
+    /// The word-order features, as `(name, value)` pairs.
+    features: Vec<(String, String)>,
+    /// The clause this one is nested in, for a relative clause.
+    parent: Option<usize>,
+    /// Relative clauses nested inside this one, in source order.
+    children: Vec<usize>,
+    /// The nominal a relative clause modifies, as a token index.
+    antecedent: Option<usize>,
+}
+
+/// `(edits, score, note, license, confidence)` for one correction.
+type CorrectionRow = (
+    Vec<(usize, usize, String)>,
+    f32,
+    String,
+    &'static str,
+    &'static str,
+);
+
+/// One grammar or style finding.
+#[pyclass(frozen, get_all)]
+struct PyDiagnostic {
+    /// The rule kind (`subject_predicate_agreement`, `style_repetition`, ...).
+    kind: String,
+    /// The stable rule id used by ignore lists; normally equal to `kind`.
+    rule_id: String,
+    /// `error`, `warning` or `suggestion`.
+    severity: &'static str,
+    /// `certain`, `likely` or `ambiguous`.
+    confidence: &'static str,
+    /// Byte span in the source text.
+    start: usize,
+    end: usize,
+    /// The stable message key; the caller localises it.
+    message: String,
+    /// The matched phrase or lemma, where the rule records one.
+    expected: Option<String>,
+    /// Each correction as `(edits, score, note, license, confidence)`, where
+    /// `edits` is a list of `(start, end, replacement)`.
+    corrections: Vec<CorrectionRow>,
+}
+
+/// One mechanical typography edit.
+#[pyclass(frozen, get_all)]
+struct PyTypography {
+    rule: &'static str,
+    start: usize,
+    end: usize,
+    replacement: String,
+    message: String,
+}
+
+/// The answer to [`Engine::check_normal`].
+#[pyclass(frozen, get_all)]
+struct PyNormal {
+    /// `lemma`, `inflected` or `unknown`.
+    kind: &'static str,
+    /// The lemma the surface resolves to, where the gate names one.
+    base: Option<String>,
+    /// The pipeline gate that fired (`noun stem`, `engine`, ...).
+    gate: Option<String>,
+}
+
 /// The reading as the words the `inflect` binary prints, in its order.
 ///
 /// Kept in step with `torille_tools::format_form` so the printed form cannot
@@ -200,6 +356,59 @@ fn tag_words(t: &torille::tags::Tags) -> Vec<String> {
         parts.push("negative".to_string());
     }
     parts
+}
+
+/// The stable name of a morphology resolution depth.
+fn depth_name(depth: Depth) -> &'static str {
+    match depth {
+        Depth::Direct => "direct",
+        Depth::StemMap => "stem-map",
+        Depth::HeadsTails => "heads-tails",
+        Depth::Prefix => "prefix",
+        Depth::Clitic => "clitic",
+        Depth::Possessive => "possessive",
+        Depth::Compound => "compound",
+        Depth::ProperName => "proper-name",
+        Depth::Unknown => "unknown",
+    }
+}
+
+/// The stable name of a role confidence.
+fn role_confidence_name(confidence: torille::syntax::RoleConfidence) -> &'static str {
+    match confidence {
+        torille::syntax::RoleConfidence::Likely => "likely",
+        torille::syntax::RoleConfidence::Weak => "weak",
+    }
+}
+
+/// How a suggestion was produced, with the source lemma where there is one.
+fn suggestion_source(source: &SuggestionSource) -> String {
+    match source {
+        SuggestionSource::DirectLemma => "direct".to_string(),
+        SuggestionSource::NeighbourLemma => "neighbour".to_string(),
+        SuggestionSource::GeneratedForm { lemma } => format!("generated:{lemma}"),
+    }
+}
+
+/// Corrections flattened into rows that a `#[pyclass]` getter can convert:
+/// `(edits, score, note, license, confidence)`.
+fn correction_rows(corrections: &[torille::diagnostic::Correction]) -> Vec<CorrectionRow> {
+    corrections
+        .iter()
+        .map(|correction| {
+            (
+                correction
+                    .edits
+                    .iter()
+                    .map(|edit| (edit.start, edit.end, edit.replacement.clone()))
+                    .collect(),
+                correction.score,
+                correction.note.to_string(),
+                correction.license.name(),
+                correction.confidence.name(),
+            )
+        })
+        .collect()
 }
 
 /// Parses a Kotus class expression such as `73`, `7*D` or `9*B*A*A`.
@@ -579,6 +788,314 @@ impl Engine {
         }
         Ok(list.unbind())
     }
+
+    /// Whether `word` is known, and which lemmas it inflects to.
+    ///
+    /// This is the engine's first public question, and the fast answer:
+    /// `kind` is `lemma`, `inflected` or `unknown`, and `bases` names the
+    /// lemmas the surface is a form of. A compound is `inflected` when its
+    /// head resolves (`kahvikekkereitä` -> `kekkerit`), even though the full
+    /// component analysis is the slow path.
+    #[pyo3(signature = (word))]
+    fn check(&self, py: Python<'_>, word: &str) -> PyResult<Py<PyCheck>> {
+        let outcome = py.allow_threads(|| check_word(word));
+        let (kind, bases) = match outcome {
+            CheckOutcome::Lemma => ("lemma", Vec::new()),
+            CheckOutcome::Inflected(bases) => (
+                "inflected",
+                bases.iter().map(|base| base.to_string()).collect(),
+            ),
+            CheckOutcome::Unknown => ("unknown", Vec::new()),
+        };
+        Py::new(py, PyCheck { kind, bases })
+    }
+
+    /// Ranked corrections for a possibly misspelled word.
+    ///
+    /// The list is deterministic: edit distance, then the engine's
+    /// `existing_score` (which includes the keyboard-adjacency tie-break),
+    /// then the word. The input's case is restored on the way out.
+    #[pyo3(signature = (word, max_n=5, max_distance=2))]
+    fn suggest(
+        &self,
+        py: Python<'_>,
+        word: &str,
+        max_n: usize,
+        max_distance: usize,
+    ) -> PyResult<Py<PyList>> {
+        let suggestions = py.allow_threads(|| suggest_detailed(word, max_n, max_distance));
+        let list = PyList::empty_bound(py);
+        for (rank, suggestion) in suggestions.into_iter().enumerate() {
+            list.append(Py::new(
+                py,
+                PySuggestion {
+                    word: suggestion.word,
+                    edit_distance: suggestion.edit_distance,
+                    lemma: suggestion.lemma,
+                    source: suggestion_source(&suggestion.source),
+                    confidence: confidence_name(suggestion.confidence),
+                    original_rank: rank,
+                    existing_score: suggestion.existing_score,
+                },
+            )?)?;
+        }
+        Ok(list.unbind())
+    }
+
+    /// The shipping per-keystroke gate, with the base and the gate that fired.
+    #[pyo3(signature = (word))]
+    fn check_normal(&self, py: Python<'_>, word: &str) -> PyResult<Py<PyNormal>> {
+        let outcome = py.allow_threads(|| check_normal(word, false));
+        let (kind, base, gate) = match outcome {
+            NormalizedOutcome::Lemma => ("lemma", None, None),
+            NormalizedOutcome::Inflected { base, gate } => ("inflected", Some(base), Some(gate.to_string())),
+            NormalizedOutcome::Unknown => ("unknown", None, None),
+        };
+        Py::new(
+            py,
+            PyNormal {
+                kind,
+                base,
+                gate,
+            },
+        )
+    }
+
+    /// One morphology row per word token in `text`.
+    ///
+    /// The rows carry every reading and the agreed one, the resolution depth,
+    /// a clitic and possessive where the surface has them, and a productive
+    /// derivation for an otherwise unknown word. Separators are skipped.
+    #[pyo3(signature = (text))]
+    fn morphology(&self, py: Python<'_>, text: &str) -> PyResult<Py<PyList>> {
+        let rows: Vec<PyWord> = py.allow_threads(|| {
+            let tokens = tokenise(text);
+            let mut cache = MorphologyCache::new();
+            let analysis = analyze_morphology(&tokens, &mut cache);
+            tokens
+                .iter()
+                .zip(analysis.tokens.iter())
+                .filter_map(|(token, info)| {
+                    let info = info.as_ref()?;
+                    let agreed = torille::tags::agreed(info.readings());
+                    Some(PyWord {
+                        surface: token.text.clone(),
+                        lemma: info.lemma().map(str::to_string),
+                        pos: info.part_of_speech().map(|p| p.name()),
+                        case: info.case().map(|c| c.name()),
+                        number: info.number().map(|n| n.name()),
+                        clitic: info.clitic().map(clitic_name),
+                        possessive: info.possessive().map(possessive_name),
+                        depth: depth_name(info.depth()),
+                        tags: tag_words(&agreed),
+                        readings: info
+                            .readings()
+                            .iter()
+                            .map(tag_words)
+                            .collect(),
+                        derivation: info
+                            .derivation()
+                            .map(|d| (d.rule.to_string(), d.source.clone())),
+                    })
+                })
+                .collect()
+        });
+        let list = PyList::empty_bound(py);
+        for row in rows {
+            list.append(Py::new(py, row)?)?;
+        }
+        Ok(list.unbind())
+    }
+
+    /// Clause structure and per-token roles for `text`.
+    ///
+    /// Returns `(tokens, clauses)`: one `PySyntaxToken` per input token
+    /// (separators included, with an empty surface) and one `PyClause` per
+    /// clause, with the predicate/subject/object/complement indices and the
+    /// word-order features.
+    #[pyo3(signature = (text))]
+    fn syntax(&self, py: Python<'_>, text: &str) -> PyResult<(Py<PyList>, Py<PyList>)> {
+        let (tokens, clauses) = py.allow_threads(|| {
+            let input = tokenise(text);
+            let analysis = torille::syntax::analyze(&input);
+            let tokens: Vec<PySyntaxToken> = analysis
+                .tokens
+                .iter()
+                .enumerate()
+                .map(|(index, syntax)| PySyntaxToken {
+                    surface: input.get(index).map(|t| t.text.clone()).unwrap_or_default(),
+                    lemma: syntax.lemma.clone(),
+                    lemmas: syntax.lemmas.clone(),
+                    role: syntax.role.name(),
+                    confidence: role_confidence_name(syntax.confidence),
+                    clause: syntax.clause,
+                    head: syntax.head,
+                })
+                .collect();
+            let clauses: Vec<PyClause> = analysis
+                .clauses
+                .iter()
+                .map(|clause| PyClause {
+                    start: clause.start,
+                    end: clause.end,
+                    predicate: clause.predicate,
+                    subject: clause.subject,
+                    object: clause.object,
+                    complement: clause.complement,
+                    negative: clause.negative,
+                    existential: clause.existential,
+                    passive: clause.passive,
+                    features: torille::syntax::ClauseFeatures::NAMES
+                        .iter()
+                        .filter_map(|name| {
+                            clause
+                                .features
+                                .value(name)
+                                .map(|value| ((*name).to_string(), value.to_string()))
+                        })
+                        .collect(),
+                    parent: clause.parent,
+                    children: clause.children.clone(),
+                    antecedent: clause.antecedent,
+                })
+                .collect();
+            (tokens, clauses)
+        });
+
+        let token_list = PyList::empty_bound(py);
+        for token in tokens {
+            token_list.append(Py::new(py, token)?)?;
+        }
+        let clause_list = PyList::empty_bound(py);
+        for clause in clauses {
+            clause_list.append(Py::new(py, clause)?)?;
+        }
+        Ok((token_list.unbind(), clause_list.unbind()))
+    }
+
+    /// Grammar and punctuation diagnostics (no style).
+    #[pyo3(signature = (text))]
+    fn grammar(&self, py: Python<'_>, text: &str) -> PyResult<Py<PyList>> {
+        let diagnostics = py.allow_threads(|| torille::syntax_check::check(text)).diagnostics;
+        let list = PyList::empty_bound(py);
+        for diagnostic in diagnostics {
+            list.append(Py::new(
+                py,
+                PyDiagnostic {
+                    kind: diagnostic.kind.name().to_string(),
+                    rule_id: diagnostic.rule_id().as_str().to_string(),
+                    severity: diagnostic.severity.name(),
+                    confidence: diagnostic.confidence.name(),
+                    start: diagnostic.span.start,
+                    end: diagnostic.span.end,
+                    message: diagnostic.message.to_string(),
+                    expected: diagnostic.expected,
+                    corrections: correction_rows(&diagnostic.corrections),
+                },
+            )?)?;
+        }
+        Ok(list.unbind())
+    }
+
+    /// Suggestion-only style observations (no grammar, never an error).
+    #[pyo3(signature = (text))]
+    fn style(&self, py: Python<'_>, text: &str) -> PyResult<Py<PyList>> {
+        let diagnostics = py.allow_threads(|| torille::style_check::check(text)).diagnostics;
+        let list = PyList::empty_bound(py);
+        for diagnostic in diagnostics {
+            list.append(Py::new(
+                py,
+                PyDiagnostic {
+                    kind: diagnostic.kind.name().to_string(),
+                    rule_id: diagnostic.rule_id().as_str().to_string(),
+                    severity: diagnostic.severity.name(),
+                    confidence: diagnostic.confidence.name(),
+                    start: diagnostic.span.start,
+                    end: diagnostic.span.end,
+                    message: diagnostic.message.to_string(),
+                    expected: diagnostic.expected,
+                    corrections: correction_rows(&diagnostic.corrections),
+                },
+            )?)?;
+        }
+        Ok(list.unbind())
+    }
+
+    /// Grammar and style over **one** morphology pass.
+    ///
+    /// Returns `(grammar, style)`. This is the facade [`torille::check_all`]
+    /// exposes; the two single-layer methods above are for callers that want
+    /// only one stream.
+    #[pyo3(signature = (text))]
+    fn grammar_and_style(
+        &self,
+        py: Python<'_>,
+        text: &str,
+    ) -> PyResult<(Py<PyList>, Py<PyList>)> {
+        let all = py.allow_threads(|| torille::check_all(text));
+        let grammar = PyList::empty_bound(py);
+        for diagnostic in all.syntax.diagnostics {
+            grammar.append(Py::new(
+                py,
+                PyDiagnostic {
+                    kind: diagnostic.kind.name().to_string(),
+                    rule_id: diagnostic.rule_id().as_str().to_string(),
+                    severity: diagnostic.severity.name(),
+                    confidence: diagnostic.confidence.name(),
+                    start: diagnostic.span.start,
+                    end: diagnostic.span.end,
+                    message: diagnostic.message.to_string(),
+                    expected: diagnostic.expected,
+                    corrections: correction_rows(&diagnostic.corrections),
+                },
+            )?)?;
+        }
+        let style = PyList::empty_bound(py);
+        for diagnostic in all.style.diagnostics {
+            style.append(Py::new(
+                py,
+                PyDiagnostic {
+                    kind: diagnostic.kind.name().to_string(),
+                    rule_id: diagnostic.rule_id().as_str().to_string(),
+                    severity: diagnostic.severity.name(),
+                    confidence: diagnostic.confidence.name(),
+                    start: diagnostic.span.start,
+                    end: diagnostic.span.end,
+                    message: diagnostic.message.to_string(),
+                    expected: diagnostic.expected,
+                    corrections: correction_rows(&diagnostic.corrections),
+                },
+            )?)?;
+        }
+        Ok((grammar.unbind(), style.unbind()))
+    }
+
+    /// Mechanical typography findings (semicolon spacing and duplicates).
+    #[pyo3(signature = (text))]
+    fn typography(&self, py: Python<'_>, text: &str) -> PyResult<Py<PyList>> {
+        let diagnostics = py.allow_threads(|| typography::check(text));
+        let list = PyList::empty_bound(py);
+        for diagnostic in diagnostics {
+            list.append(Py::new(
+                py,
+                PyTypography {
+                    rule: diagnostic.rule.name(),
+                    start: diagnostic.span.start,
+                    end: diagnostic.span.end,
+                    replacement: diagnostic.replacement,
+                    message: diagnostic.message.to_string(),
+                },
+            )?)?;
+        }
+        Ok(list.unbind())
+    }
+
+    /// `text` with every typography finding applied.
+    #[pyo3(signature = (text))]
+    fn apply_typography(&self, text: &str) -> String {
+        let diagnostics = typography::check(text);
+        typography::apply(text, &diagnostics)
+    }
 }
 /// The decision half of [`Engine::inflect`], kept out of `#[pymethods]`
 /// so it stays ordinary Rust that a test can call.
@@ -732,6 +1249,14 @@ fn torille_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Engine>()?;
     m.add_class::<PyForm>()?;
     m.add_class::<PyHyphenationPoint>()?;
+    m.add_class::<PyCheck>()?;
+    m.add_class::<PySuggestion>()?;
+    m.add_class::<PyWord>()?;
+    m.add_class::<PySyntaxToken>()?;
+    m.add_class::<PyClause>()?;
+    m.add_class::<PyDiagnostic>()?;
+    m.add_class::<PyTypography>()?;
+    m.add_class::<PyNormal>()?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }
