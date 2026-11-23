@@ -212,17 +212,21 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     // spelling out, but a distance of 3 is now enough to
     // surface it -- one less thing the user has to know
     // about their input case.
-    let word = word.to_ascii_lowercase();
+    //
+    // The fold must be the Unicode one: an ASCII-only fold left `Ä`/`Ö`/`Å`
+    // alone, so `Äitj` never reached the `äiti` neighbourhood at all.
+    let word = crate::text::lowercase(word);
+    let word = word.as_ref();
     // A reported correction is a human-approved answer. Return it before the
     // head/tail/prefix walks: `silmäränpäyksen` has a two-edit transposition
     // but the bounded walk spent seconds reaching its neighbours.
-    if let Some((right, lemma)) = reported_correction(&word) {
+    if let Some((right, lemma)) = reported_correction(word) {
         // This candidate is licensed by the table rather than by the caller's
         // distance budget, so it is returned even when `max_distance` is small.
         // Its distance is still the true one: a consumer reading
         // `Suggestion::edit_distance` must not be told that a four-edit repair
         // is an exact match.
-        let edit_distance = levenshtein(&word, &right, usize::MAX);
+        let edit_distance = levenshtein(word, &right, usize::MAX);
         return apply_input_case(
             original,
             vec![Suggestion {
@@ -248,17 +252,17 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     // rejects a closed spelling of a lexically hyphenated compound, so
     // `linjaauto` still reaches the engine and gets its `linja-auto`
     // suggestion.
-    if is_known_compound_fast(&word).is_some() {
+    if is_known_compound_fast(word).is_some() {
         return Vec::new();
     }
     // A compound whose head is inflected with `-jen` (`vapaakomppaniojen`)
     // is not a lemma, so the head/tail walk has no candidate to repair:
     // the whole surface is missing from the forms the walk generates.
     // Rewrite the plural genitive to `-iden` and accept only a known form.
-    if is_known_word_fast(&word).is_none()
-        && let Some(right) = repaired_plural_genitive(&word)
+    if is_known_word_fast(word).is_none()
+        && let Some(right) = repaired_plural_genitive(word)
     {
-        let edit_distance = levenshtein(&word, &right, usize::MAX);
+        let edit_distance = levenshtein(word, &right, usize::MAX);
         if edit_distance <= max_distance {
             return apply_input_case(
                 original,
@@ -279,10 +283,10 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     // behind unrelated one-edit fixes in the normal ranker
     // (`palvelijainsa` -> `palvelijoidensa` sits around rank 50). The
     // morphological repair is exact and cheap, so answer it directly.
-    if is_known_word_fast(&word).is_none()
-        && let Some((right, lemma)) = archaic_genitive_plural_possessive(&word)
+    if is_known_word_fast(word).is_none()
+        && let Some((right, lemma)) = archaic_genitive_plural_possessive(word)
     {
-        let edit_distance = levenshtein(&word, &right, usize::MAX);
+        let edit_distance = levenshtein(word, &right, usize::MAX);
         if edit_distance <= max_distance {
             return apply_input_case(
                 original,
@@ -306,7 +310,7 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     // on the host, and put the same suffix back. Only do this when the full
     // word is unknown (a known `kokin` is a form of `kokki`, not `ko`+`kin`).
     let mut clitic_candidates: Vec<Suggestion> = Vec::new();
-    if let Some((host, _clitic)) = crate::expand::clitic::strip_clitic(&word)
+    if let Some((host, _clitic)) = crate::expand::clitic::strip_clitic(word)
         && host.chars().count() >= 3
     {
         let suffix = &word[host.len()..];
@@ -334,8 +338,8 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     // head-1 walk produces every form of up to 3000 lemmas; only the ones
     // inside the caller's edit budget can ever become suggestions, and
     // cloning the rest costs more than the distance check.
-    let report = find_bases_with_form_filter(lexicon, cat, &word, |surface| {
-        levenshtein(&word, surface, max_distance) <= max_distance
+    let report = find_bases_with_form_filter(lexicon, cat, word, |surface| {
+        levenshtein(word, surface, max_distance) <= max_distance
     });
 
     // The candidate pool: every lemma that could plausibly be a one-typo
@@ -475,7 +479,7 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     //    `ymmärrätkö`). It is an inflected form, not a lemma, so the
     //    walks above will not always produce it; the checker flags the
     //    `-s` word and this is the correction the caller wants.
-    if let Some(host) = s_less_host(&word) {
+    if let Some(host) = s_less_host(word) {
         let base = is_known_word_fast(&host);
         candidates.push(Suggestion {
             word: host,
@@ -495,9 +499,9 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     //     the standard `-iden`/`-itten` alternate (`lammasten` ->
     //     `lampaiden`). This is a morphological variant, not a one-edit
     //     typo, so only keep it when the caller's distance budget allows it.
-    let gradation_alt = gradation_plural_alternate(&word);
+    let gradation_alt = gradation_plural_alternate(word);
     if let Some((alt, base)) = &gradation_alt {
-        let d = levenshtein(&word, alt, max_distance);
+        let d = levenshtein(word, alt, max_distance);
         if d <= max_distance {
             candidates.push(Suggestion {
                 word: alt.clone(),
@@ -517,14 +521,14 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     // A hyphen is part of the spelling, not a typo, so the ordinary
     // candidate walk does not always produce the other spelling. Add the
     // closed/hyphenated twin when the engine confirms it.
-    push_hyphen_candidates(original, &word, max_distance, &mut candidates);
+    push_hyphen_candidates(original, word, max_distance, &mut candidates);
 
     // Older Finnish prints `w` where modern orthography has `v`
     // (`wesi`, `wähän`, `AJANWIETE`). The initial-letter change moves the
     // word out of the `v` prefix walk, so the ordinary candidate pool
     // cannot reach it. Add the all-`w`-to-`v` spelling when it is a known
     // word; the final distance filter still bounds the edit budget.
-    if let Some(candidate) = w_to_v(&word)
+    if let Some(candidate) = w_to_v(word)
         && let Some(base) = is_known_word_fast(&candidate)
     {
         candidates.push(Suggestion {
@@ -543,13 +547,13 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     // distance 3 (`ahertelin` -> `ahersin`). Add it explicitly; it is licensed
     // by the table rather than the caller's distance budget, so it survives the
     // `retain` below even when that budget is smaller than its true distance.
-    let correction = reported_correction(&word).map(|(right, _)| right);
-    if let Some((right, lemma)) = reported_correction(&word)
+    let correction = reported_correction(word).map(|(right, _)| right);
+    if let Some((right, lemma)) = reported_correction(word)
         && !candidates.iter().any(|c| c.word == right)
     {
         candidates.push(Suggestion {
             word: right.clone(),
-            edit_distance: levenshtein(&word, &right, usize::MAX),
+            edit_distance: levenshtein(word, &right, usize::MAX),
             lemma: Some(lemma.clone()),
             source: SuggestionSource::GeneratedForm {
                 lemma: lemma.clone(),
@@ -577,9 +581,9 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
         // `edit_distance` is still the real distance.
         let curated = correction.as_deref() == Some(c.word.as_str());
         let d = if curated {
-            levenshtein(&word, &c.word, usize::MAX)
+            levenshtein(word, &c.word, usize::MAX)
         } else {
-            levenshtein(&word, &c.word, max_distance)
+            levenshtein(word, &c.word, max_distance)
         };
         c.edit_distance = d;
         // Score combines the distance-driven base with a small
@@ -589,11 +593,11 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
         // to break the alphabetical tie-break between them.
         let mut score = 1.0 / (1.0 + d as f32);
         if d > 0 {
-            score += keyboard_bonus(&word, &c.word);
-            if is_doubling_repair(&word, &c.word) {
+            score += keyboard_bonus(word, &c.word);
+            if is_doubling_repair(word, &c.word) {
                 score += DOUBLED_LETTER_BONUS;
             }
-            if w_to_v(&word).as_deref() == Some(c.word.as_str()) {
+            if w_to_v(word).as_deref() == Some(c.word.as_str()) {
                 score += W_TO_V_BONUS;
             }
         }
@@ -616,12 +620,12 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     // Restrict it to words with an adjacent repeat: a doubled letter is
     // the common accidental-key-repeat typo, and the guard keeps the
     // extra probes off ordinary unknown words.
-    if candidates.is_empty() && max_distance > 0 && has_adjacent_repeat(&word) {
-        for candidate in deletion_corrections(&word) {
+    if candidates.is_empty() && max_distance > 0 && has_adjacent_repeat(word) {
+        for candidate in deletion_corrections(word) {
             if is_known_word_fast(&candidate).is_none() {
                 continue;
             }
-            let d = levenshtein(&word, &candidate, max_distance);
+            let d = levenshtein(word, &candidate, max_distance);
             if d > max_distance {
                 continue;
             }

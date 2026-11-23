@@ -809,6 +809,17 @@ fn check_normal_with(
     closed: Closed,
     stems: StemCheck,
 ) -> NormalizedOutcome {
+    // Every gate below compares against lower-case lexicon data, and Finnish
+    // capitalises the first word of a sentence. Fold once here -- with the
+    // Unicode fold, so `Ä`/`Ö`/`Å` fold too -- and keep the raw surface only
+    // for the proper-name gate, which is about capitalisation itself.
+    // Without this, a capitalised surface missed gates 1-4 and reached the
+    // engine (or a name) instead: `Kirjassa` named the base through
+    // `gate: "engine"` while `kirjassa` named it from the noun stem map, and
+    // `Autonkuljettaja` was not `Lemma` although `autonkuljettaja` was.
+    let surface = word;
+    let folded = crate::text::lowercase(word);
+    let word = folded.as_ref();
     if closed.is_nonword(word) {
         return NormalizedOutcome::Unknown;
     }
@@ -1163,12 +1174,12 @@ fn check_normal_with(
     // cases. This is a *fallback*: a surname such as `Talo` puts `talossa`
     // in the name set, and returning it before gate 4 would name the
     // surface instead of `talo`. Names are accepted, never suggested.
-    if crate::expand::proper_names::contains_capitalised(word) {
+    if crate::expand::proper_names::contains_capitalised(surface) {
         if verbose {
             println!("    gate 4b2: proper name");
         }
         return NormalizedOutcome::Inflected {
-            base: crate::expand::proper_names::lemma(word)
+            base: crate::expand::proper_names::lemma(surface)
                 .map(str::to_string)
                 .unwrap_or_else(|| word.to_lowercase()),
             gate: "proper name",

@@ -146,7 +146,10 @@ fn check_common(word: &str) -> CheckOutcome {
     // Recognition doesn't need the generated-form payload or the neighbour
     // list; asking the engine for those is what makes the suggestion path
     // expensive.
-    let report = find_bases_for_check(lexicon, cat, word);
+    // `lower`, not `word`: the walk folds its query once, but the raw surface
+    // here is the apostrophe-normalised original. Handing it the folded
+    // spelling keeps the engine and the cheap gates on one input.
+    let report = find_bases_for_check(lexicon, cat, &lower);
     if report.direct.is_empty() && report.bases.is_empty() {
         // `find_bases` searches single-lexeme paradigms; compounds and
         // productive derivations are a spelling/word-formation rule the

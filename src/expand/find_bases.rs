@@ -238,8 +238,9 @@ pub(crate) fn find_bases_for_analysis<'a>(
     // lemma (`lasta` is a lemma and the partitive of `lapsi`). A word with
     // no direct lemma has nothing to hide behind, so it can stop as soon as
     // phase 1 finds its base.
+    let lower = crate::text::lowercase(word);
     let has_direct = crate::kotus::sanalista()
-        .by_word(&word.to_ascii_lowercase())
+        .by_word(lower.as_ref())
         .next()
         .is_some();
     find_bases_with_inner(
@@ -417,17 +418,26 @@ where
 /// map and the short-lemma scan rather than this walk. The suggestion walks
 /// keep their first-character match, because there a near miss is the point.
 fn shares_first_two(lemma: &str, word: &str) -> bool {
-    let mut l = lemma.chars().map(|c| c.to_ascii_lowercase());
-    let mut w = word.chars().map(|c| c.to_ascii_lowercase());
+    let mut l = lemma.chars();
+    let mut w = word.chars();
     match (l.next(), w.next()) {
-        (Some(a), Some(b)) if a == b => {}
+        (Some(a), Some(b)) if same_letter(a, b) => {}
         _ => return false,
     }
     match (l.next(), w.next()) {
-        (Some(a), Some(b)) => a == b,
+        (Some(a), Some(b)) => same_letter(a, b),
         // A one-character lemma has only one character to share.
         _ => true,
     }
+}
+
+/// Whether two letters are the same letter ignoring case.
+///
+/// `to_ascii_lowercase` left `Ä` beside `ä` and so rejected the neighbourhood
+/// of every capitalised Finnish word. `char::to_lowercase` is the Unicode fold
+/// and yields an iterator, so this compares without allocating.
+fn same_letter(a: char, b: char) -> bool {
+    a == b || a.to_lowercase().eq(b.to_lowercase())
 }
 
 /// The lexicon row for `word`, if the lexicon contains it.
@@ -505,6 +515,11 @@ pub fn find_best_base_with<'a>(
     word: &str,
     prior: &ClassPrior,
 ) -> Vec<&'a Lemma<'a>> {
+    // Every lemma is lower case; fold the query once so a capitalised surface
+    // is not compared against lower-case lemma text. `check_normal`'s engine
+    // gate reached here with the raw word and so missed `Ääkeihinsä`.
+    let word = crate::text::lowercase(word);
+    let word = word.as_ref();
     // The cheap exact answers, mirroring `find_any_base_with`.
     if let Some(idx) = lemma_index(lexicon, word) {
         return vec![&lexicon[idx]];
@@ -544,6 +559,8 @@ pub fn find_any_base_with<'a>(
     cat: &Catalogues,
     word: &str,
 ) -> Vec<&'a Lemma<'a>> {
+    let word = crate::text::lowercase(word);
+    let word = word.as_ref();
     // Cheap pre-check: is the word a lemma in the sanalista? If
     // so, that IS the base. The sanalista is sorted by word; a
     // binary search via `partition_point` is `O(log n)`.
@@ -829,19 +846,15 @@ fn find_bases_with_inner<'a>(
     let pos = PartOfSpeech::Noun;
     let possessives = true;
 
-    // The bounded walks (head-1, prefix-3, prefix-2, short-lemma
-    // scan) are all case-sensitive: they look up lemmas whose
-    // first two or three characters match the input's first
-    // two or three. Every lemma in the sanalista is
-    // already lowercase, so the user typing `Baromeetteri`
-    // (sentence-initial) lands the prefix walks on `Bar` /
-    // `Ba`, never reaching the lowercase `barometri`. The
-    // head/tail walks use suffix strings and don't have this
-    // problem, but they too would benefit from a consistent
-    // lowercase input. Lowercase once at the top so the
-    // bounded walks can find the modern-spelling lemma.
-    let word_lc = word.to_ascii_lowercase();
-    let direct: Vec<EmbeddedLemma> = crate::kotus::sanalista().by_word(&word_lc).collect();
+    // Every lemma in the sanalista is lower case, so fold the query once here
+    // and use that spelling for every phase: the direct probe, the head/tail
+    // ranges, the bounded walks and the form comparison in `lemma_emit` all
+    // compare against lower-case lemma text. An ASCII-only fold left the
+    // Finnish capitals untouched, so a sentence-initial `Ääkeihinsä` never
+    // matched `ääki` even though `ääkeihinsä` did.
+    let word = crate::text::lowercase(word);
+    let word = word.as_ref();
+    let direct: Vec<EmbeddedLemma> = crate::kotus::sanalista().by_word(word).collect();
 
     let mut seen: BTreeSet<*const Lemma<'a>> = BTreeSet::new();
     let mut bases: Vec<&'a Lemma<'a>> = Vec::new();
@@ -864,14 +877,14 @@ fn find_bases_with_inner<'a>(
     // accepted outright and the base lemma is the table's. Inserting it
     // first makes the walk phases below short-circuit, which is right --
     // none of these forms has another base.
-    if let Some(base) = crate::expand::negation::negation_base(&word_lc)
+    if let Some(base) = crate::expand::negation::negation_base(word)
         && let Some(idx) = lemma_index(lexicon, base)
     {
         bases.push(&lexicon[idx]);
     }
     // The bare verb connegative (`syöne`, `ajatelko`) is a word in its own
     // right in running text; the derived table names its lemma.
-    if let Some(base) = crate::expand::connegative::base(&word_lc)
+    if let Some(base) = crate::expand::connegative::base(word)
         && let Some(idx) = lemma_index(lexicon, base)
     {
         bases.push(&lexicon[idx]);
@@ -954,11 +967,11 @@ fn find_bases_with_inner<'a>(
     // lemmas (entries like "-suhta"); we binary-search for the head
     // rather than scanning the whole list, then walk forward while the
     // first character matches. The first char comes from the
-    // lowercase input (`word_lc`) because every lemma is already
+    // lowercase input (`word`) because every lemma is already
     // lowercase -- a sentence-initial `Baromeetteri` would
     // otherwise land on `B` and miss every `b`-lemma.
     const HEAD1_CAP: usize = 3000;
-    if let Some(c) = word_lc.chars().next() {
+    if let Some(c) = word.chars().next() {
         let head_start: usize = sanalista().word_order().partition_point(|&row| {
             let fc = lexicon[row as usize].word.chars().next();
             fc.is_none_or(|c0| c0 < c)
@@ -974,8 +987,8 @@ fn find_bases_with_inner<'a>(
             // character cannot make the word (the `olla` suppletives are
             // handled by the stem map and the short-lemma scan).
             if recognition_only
-                && (!shares_first_two(l.word, &word_lc)
-                    || l.word.chars().count() > word_lc.chars().count() + 2)
+                && (!shares_first_two(l.word, word)
+                    || l.word.chars().count() > word.chars().count() + 2)
             {
                 continue;
             }
@@ -990,7 +1003,7 @@ fn find_bases_with_inner<'a>(
             &head1,
             &index,
             cat,
-            &word_lc,
+            word,
             keep_form,
             collect_neighbours,
             recognition_only,
@@ -1016,7 +1029,7 @@ fn find_bases_with_inner<'a>(
     if all_phases || bases.is_empty() {
         run_prefix_walk(
             lexicon,
-            &word_lc,
+            word,
             cat,
             &index,
             pos,
@@ -1037,7 +1050,7 @@ fn find_bases_with_inner<'a>(
     if all_phases || bases.is_empty() {
         run_prefix_walk(
             lexicon,
-            &word_lc,
+            word,
             cat,
             &index,
             pos,
@@ -1057,7 +1070,7 @@ fn find_bases_with_inner<'a>(
     // Phase 4: short-lemma scan.
     if all_phases || bases.is_empty() {
         for lemma in short_lemma_run(lexicon) {
-            if !shares_first_two(lemma.word, &word_lc) {
+            if !shares_first_two(lemma.word, word) {
                 continue;
             }
             if seen.insert(lemma as *const _) {

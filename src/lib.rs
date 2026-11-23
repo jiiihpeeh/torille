@@ -38,6 +38,7 @@ pub mod syntax;
 pub mod syntax_check;
 pub mod syntax_list;
 pub mod tags;
+pub(crate) mod text;
 pub mod tokenise;
 pub mod typography;
 pub(crate) mod wordset;

@@ -15,7 +15,6 @@
 //! this layer: a grammar rule needs the case a reading licenses, not just the
 //! fact that the word is in the dictionary.
 
-use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -30,6 +29,7 @@ use crate::sentence::SentenceSpan;
 use crate::spec::Catalogues;
 use crate::syntax::{is_finite_predicate, is_nominal_pos, is_verb_reading};
 use crate::tags::{Case, Clitic, Number, PartOfSpeech, Polarity, Possessive, Tags, add_reading};
+use crate::text::lowercase;
 use crate::tokenise::Token;
 
 /// How hard the resolver had to work for one surface.
@@ -374,17 +374,6 @@ impl MorphologyAnalysis {
     }
 }
 
-/// The lowercased surface, borrowing when the token is already lowercase.
-///
-/// Finnish text is mostly lowercase; allocating a new `String` for every
-/// token only to look it up in the cache is wasted work on the hit path.
-fn lowercase(surface: &str) -> Cow<'_, str> {
-    if surface.chars().any(char::is_uppercase) {
-        Cow::Owned(surface.to_lowercase())
-    } else {
-        Cow::Borrowed(surface)
-    }
-}
 
 /// Resolve every word token and compute the sentence spans.
 ///

@@ -135,7 +135,9 @@ pub fn suggest_with_state(
     if proper_nouns.is_empty() {
         return suggest(word, max_n, max_distance);
     }
-    let lower = word.to_ascii_lowercase();
+    // Unicode fold: the learned-name distance and the lemma candidates are
+    // compared against lower-case text, and `Ä`/`Ö`/`Å` must fold too.
+    let lower = crate::text::lowercase(word);
     // Lemma-based candidates from the lib. May include
     // Finnish words that happen to be at low edit distance
     // from the input but are not what the user meant (e.g.
