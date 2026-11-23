@@ -1,6 +1,6 @@
 # REVIEW_CORRECT — public-boundary correctness and robustness
 
-Status: **Phases 1-3 landed 2026-11-23; Phases 4-5 open.** Baseline `0c06175`
+Status: **Phases 1-4 landed 2026-11-23; Phase 5 open.** Baseline `0c06175`
 (2026-11-22). The review method was: read the engine, run the workspace gates,
 then probe the public entry points with deterministic adversarial inputs. The
 gates are clean (`cargo clippy --workspace --all-targets -- -D warnings`,
@@ -43,6 +43,41 @@ gates do not currently exercise.
 
 Verified: clippy clean, `cargo test --release --workspace` green, and the
 C4-specific gates below.
+
+### 2026-11-23 — Phase 4 (C7) implemented
+
+- **C7.1** — `check`, `suggest_detailed` and `is_known_word` are now re-exported
+  from the crate root, which is what the AGENTS.md API list already claimed
+  and what the README's first example expects.
+- **C7.2** — `expand::Generated` stays as the name the expansion API uses, but
+  its doc now says it is `tags::Form` and a doctest proves one can be passed
+  where the other is expected.
+- **C7.3** — the redundant `rule_id` field is gone from both diagnostics: the
+  accessor derives it from `message`, so the two cannot disagree, and all
+  field reads became `rule_id()` calls. `DiagnosticKind` and `StyleKind` are
+  `#[non_exhaustive]` (the kind sets grow; the leptos label functions gained a
+  generic fallback). `Severity`, `Confidence` and `CheckOutcome` are left
+  exhaustive on purpose: they are closed scales/results, and a new variant
+  should force every serializer to make a decision.
+- **C7.4** — `CheckOutcome` derives `Clone`, `PartialEq` and `Eq`; the
+  `is_known` and module docs now say that `check` recognises a compound through
+  the `is_known_word` fallback and names its head, and that only the full
+  component analysis is still the slow path. `Vec<Cow<'static, str>>` for the
+  base list is not done: nothing in the workspace needs to hand a learned
+  proper name through it, and it is a wider break than the finding warrants.
+- **C7.5** —
+  - the `Finding` contract paragraph moved to `findings()` in `src/check.rs`;
+  - `expand/prefix_index.rs` and `expand/stem_index.rs` are removed. Neither had
+    a caller outside its own tests, and the stem-endings signature tables
+    (`stem_endings::NOUN/VERB`, `STEM_BUCKETS_*`) superseded `stem_index`;
+  - the workspace license comment now matches `tools/Cargo.toml` (every crate
+    is MIT/Apache; the GPL is per harness file, not per crate) and the
+    resolver is `3`, matching edition 2024;
+  - the generated-vs-hand-written conflict is resolved: `expand/nominals/` is
+    hand-written, the generator writes `target/class-rules` for comparison,
+    and `AGENTS.md`, `src/expand/nominals/mod.rs` and the `Cargo.toml` feature
+    comment now say the same thing;
+  - the `torille-firefox-*-source.zip` build artifact is gitignored.
 
 ### 2026-11-23 — Phase 3 (C5–C6) implemented
 
@@ -424,60 +459,60 @@ in the engine is the documented keyboard-adjacency table.
 
 ### C7.1 — root exports
 
-- [ ] Re-export `check`, `suggest_detailed`, and `is_known_word` from
+- [x] Re-export `check`, `suggest_detailed`, and `is_known_word` from
   `src/lib.rs`, or correct `AGENTS.md:414`, which lists `check` and
   `suggest_detailed` as crate-root today. The former is the better fix: `check`
   is the first thing the README advertises.
 
 ### C7.2 — `Generated` vs `Form`
 
-- [ ] `src/expand/mod.rs:73` publicly aliases `tags::Form` as `Generated`;
+- [x] `src/expand/mod.rs:73` publicly aliases `tags::Form` as `Generated`;
   public signatures use both names. Pick one for the public surface, document
   the alias as deprecated, or keep it and add a doc-test that shows the two are
   the same type. Do not add a second copy.
 
 ### C7.3 — diagnostic identity
 
-- [ ] `SyntaxDiagnostic` and `StyleDiagnostic` store both `rule_id` and
+- [x] `SyntaxDiagnostic` and `StyleDiagnostic` store both `rule_id` and
   `message` and construct the first from the second
   (`src/syntax_check/diagnostic.rs:126-152`,
   `src/style_check/diagnostic.rs:68-93`). Both fields are public, so a caller
   can make them disagree. Derive `rule_id()` from `message`, or make the fields
   private and expose one accessor.
-- [ ] While there, decide whether the diagnostic enums should be
+- [x] While there, decide whether the diagnostic enums should be
   `#[non_exhaustive]` before 1.0. `Severity`, `Confidence`, `CheckOutcome`,
   `DiagnosticKind`, and `StyleKind` all lack it.
 
 ### C7.4 — `CheckOutcome` ergonomics
 
-- [ ] Derive `Clone` and `PartialEq`; consider `Vec<Cow<'static, str>>` for the
+- [x] Derive `Clone` and `PartialEq`; consider `Vec<Cow<'static, str>>` for the
   base list so a learned proper name can join the engine's static lemmas.
-- [ ] The doc comment on `is_known` says compounds route as `Unknown`; the
+- [x] The doc comment on `is_known` says compounds route as `Unknown`; the
   code's `is_known_word` fallback recognises compounds
   (`kahvikekkereitä` -> `Inflected(["kekkerit"])`). Correct the comment and the
   module doc in `src/suggest/mod.rs` at the same time.
 
 ### C7.5 — small code hygiene
 
-- [ ] `src/check.rs:24-31`: the `Finding` contract paragraph belongs to
+- [x] `src/check.rs:24-31`: the `Finding` contract paragraph belongs to
   `findings()`, not `without_rules()`. Move it and give `findings()` its own
   doc.
-- [ ] `src/expand/prefix_index.rs` has no callers outside its own tests and
+- [x] `src/expand/prefix_index.rs` has no callers outside its own tests and
   re-parses the full sanalista on every `inflection_candidate_for` call;
   `src/expand/stem_index.rs` is superseded by `stem_endings` and
   `STEM_BUCKETS_NOUN`. Remove both, or mark them `#[deprecated]` with a
   migration note. They are still `pub mod` at `src/expand/mod.rs:1315,1318`.
-- [ ] The root `Cargo.toml:6-7` says the whole `tools` crate is
+- [x] The root `Cargo.toml:6-7` says the whole `tools` crate is
   GPL-3.0-or-later; `tools/Cargo.toml` uses `license.workspace = true` and
   `LICENSE`/`tools/README.md` say tools are MIT/Apache except the
   Omorfi/Voikko files. Fix the comment. Also use `resolver = "3"` (or omit it)
   with edition 2024.
-- [ ] Reconcile `AGENTS.md:534` ("Do not hand-edit generated files.
+- [x] Reconcile `AGENTS.md:534` ("Do not hand-edit generated files.
   `expand/nominals/` is produced by `extract_class_rules.py --rust`") with the
   per-file "written by hand as a logical engine" headers and the generator's
   `target/class-rules` default. This blocks a safe C3 fix until it is clear
   which files are generated.
-- [ ] Add `torille-firefox-0.5.0-source.zip` to `.gitignore` (or delete it);
+- [x] Add `torille-firefox-0.5.0-source.zip` to `.gitignore` (or delete it);
   it is an untracked build artifact in the repository root.
 
 ## Phase 5 — maintainability and performance follow-ups
