@@ -1,6 +1,7 @@
 # REVIEW_CORRECT — public-boundary correctness and robustness
 
-Status: **Phases 1-4 landed 2026-11-23; Phase 5 open.** Baseline `0c06175`
+Status: **Phases 1-5 landed 2026-11-23; C8.1 and C9.2 deferred to
+`misc_md/TODO.md`.** Baseline `0c06175`
 (2026-11-22). The review method was: read the engine, run the workspace gates,
 then probe the public entry points with deterministic adversarial inputs. The
 gates are clean (`cargo clippy --workspace --all-targets -- -D warnings`,
@@ -43,6 +44,44 @@ gates do not currently exercise.
 
 Verified: clippy clean, `cargo test --release --workspace` green, and the
 C4-specific gates below.
+
+### 2026-11-23 — Phase 5 (C8-C9) implemented, two items deferred
+
+- **C8.1 — deferred.** The extension dedupe is a build-system change across
+  two browser packages; it is recorded in `misc_md/TODO.md` rather than done
+  blind in this pass.
+- **C8.2** — `find_bases_with_inner` and the phase walkers take one
+  `WalkOptions` struct (named fields, `Default`) instead of seven positional
+  booleans. Three of the four `too_many_arguments` allows are gone; the
+  remaining one is `run_prefix_walk`, whose other arguments are the output
+  accumulators.
+- **C8.3** — the six correction builders share `lemma_pos` /
+  `lemma_inflections`, and the forms cache is keyed by `(lemma, want, pos)`:
+  the class list is a function of the lemma and was only lengthening every key.
+- **C9.1** — the punctuation, syntax and style rules use
+  `crate::text::lowercase` instead of `to_lowercase`, which allocated for every
+  token including the already-lowercase majority. Measured on page-2000
+  (`perf_grammar_style --single-thread --repeat 5`, five runs): `syntax_ms`
+  median 5.58 -> 5.16, `style_ms` median 2.42 -> 2.31. Owned outputs (a
+  diagnostic's `expected`, a `WordInfo` lemma) still allocate.
+- **C9.2 — deferred.** All three caches still clear at their cap; the
+  two-generation design needs its own hit-rate measurement on a long document,
+  which the current corpora (page-2000 stops at ~130 units) cannot show. It is
+  in `misc_md/TODO.md`.
+- **C9.3** — `SentenceCache` entries own the unit text and a hash hit compares
+  it, so two different sentences of the same length can no longer share
+  diagnostics. The cap bounds the extra memory; the fabricated-collision test
+  proves the recompute.
+- **C9.4** — a candidate one deletion from a *tripled* run (`Kisssa` ->
+  `Kissa`) gets the repeated-letter tie-break, so it outranks the
+  keyboard-adjacent `Kissaa`. A merely doubled letter is ordinary Finnish and
+  gets no bonus; the candidate golden list is unchanged and the new test pins
+  both directions.
+
+Correctness fingerprint: the quick bench's `page-2000`, `homonyms` and `forms`
+entries match the reference; `correctness: CHANGED` in the compare output is
+only the reference's extra full-profile corpora (`line-wrap`,
+`page-errors-8pct`, `page-errors-x`) being absent from a quick run.
 
 ### 2026-11-23 — Phase 4 (C7) implemented
 

@@ -13,6 +13,26 @@ The next four independent slices, with their ordering, gates and stop
 conditions, are in [`PLAN_FOLLOWUPS.md`](PLAN_FOLLOWUPS.md). The possessives
 below are slice 2 there.
 
+## Deferred from the correctness review (2026-11-23)
+
+Two Phase 5 items in
+[`REVIEW_CORRECT.md`](REVIEW_CORRECT.md) are deliberately deferred; they need
+their own measurement or build tooling.
+
+- **C8.1 — the browser extensions duplicate their source.**
+  `extensions/firefox/src` and `extensions/chromium/src` are identical except
+  for `background/background.ts` (two adapter lines), about 4,000 duplicated
+  lines plus tests. Move the common source into one package and copy or link
+  it at build time, keeping only the manifest, the background adapter and the
+  packaging per browser. Stop condition: both extensions build and the
+  Firefox smoke test still passes.
+- **C9.2 — the caches clear at their cap.**
+  `MorphologyCache`, `SentenceCache` and `TextAreaState` drop the whole map on
+  reaching the limit, so a long document re-resolves words it just saw. A
+  two-generation map (current + previous) or an LRU keeps the working set.
+  Needs a long-document corpus: page-2000 has ~130 grammar units, far below
+  the 2,000 cap, so the existing benchmark cannot show the difference.
+
 ## High priority
 
 Ordered by user-facing impact, which is not the same as gap size: an engine that
