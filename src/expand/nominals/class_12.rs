@@ -30,11 +30,11 @@ pub const CLASS: &str = "12";
 
 fn o_stem(stem: &str) -> String {
     let mut s = stem.to_string();
-    let last = s.pop().unwrap();
-    match last {
-        'a' => s.push('o'),
-        'ä' => s.push('ö'),
-        _ => s.push(last),
+    match s.pop() {
+        Some('a') => s.push('o'),
+        Some('ä') => s.push('ö'),
+        Some(last) => s.push(last),
+        None => {}
     }
     s
 }

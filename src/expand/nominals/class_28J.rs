@@ -46,27 +46,33 @@ pub struct Stems {
     pub e: String,
 }
 
-fn stems(lemma: &str) -> Stems {
+/// The stems of a well-formed class-28*J lemma, or `None` when the surface
+/// is too short to carry the `ns -> nn` alternation (`nä` is not a member;
+/// a real one is at least `kansi`).
+fn stems(lemma: &str) -> Option<Stems> {
     let mut base = lemma.to_string();
     base.pop(); // kansi -> kans
-    let prev = base.chars().rev().nth(1).unwrap(); // the consonant before `s` (n)
+    let prev = base.chars().rev().nth(1)?; // the consonant before `s` (n)
     // The strong already carries that consonant, so the `s` is replaced with a
     // single copy of it: kans -> kann.
     let mut weak = rep_last_s(&base, &prev.to_string());
     weak.push('e'); // kanne
     let ptp = rep_last_s(&base, "t"); // kant
     let e = format!("{ptp}e"); // kante
-    Stems {
+    Some(Stems {
         strong: lemma.to_string(),
         weak,
         ptp,
         e,
-    }
+    })
 }
 
 /// Inflect a class-28 noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
-    inflect_base(lemma, possessives, &stems(lemma), None)
+    let Some(st) = stems(lemma) else {
+        return Vec::new();
+    };
+    inflect_base(lemma, possessives, &st, None)
 }
 
 /// The shared 28* gradation engine, given the four stems. `front` overrides
@@ -166,7 +172,7 @@ mod tests {
     /// käsi tables mark the `-ten` spelling rare (`tosien`/`totten rare`).
     #[test]
     fn the_ten_genitive_plural_is_plain_for_the_family() {
-        let s = stems("kansi");
+        let s = stems("kansi").expect("kansi has class-28*J stems");
         let forms = inflect_base("kansi", true, &s, None);
         let plain: Vec<&str> = forms
             .iter()

@@ -95,10 +95,10 @@ fn add_oi_plural(b: &mut Builder, stem: &str) {
 /// The plural stem: the final `a`/`ä` written `i` (`koira -> koiri`).
 fn i_stem(stem: &str) -> String {
     let mut s = stem.to_string();
-    let last = s.pop().unwrap();
-    match last {
-        'a' | 'ä' => s.push('i'),
-        _ => s.push(last),
+    match s.pop() {
+        Some('a' | 'ä') => s.push('i'),
+        Some(last) => s.push(last),
+        None => {}
     }
     s
 }

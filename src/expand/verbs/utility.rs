@@ -249,16 +249,16 @@ impl PassiveCons {
     /// consonant has none of its own to add: the ending gives the theme's own
     /// back. That is why `theme` is a parameter -- the letter is read off it
     /// (`tul` + `l` is `tullaan`, `pan` + `n` is `pannaan`).
-    pub fn present(&self, theme: &str) -> String {
+    ///
+    /// `None` for a `ThemeEnd` theme that has no final character: that is not
+    /// a member of the class, and the paradigm builder turns it into an empty
+    /// paradigm rather than a panic.
+    pub fn present(&self, theme: &str) -> Option<String> {
         match self {
-            Self::Geminated | Self::SingleT => "t".to_string(),
-            Self::Deranked => "d".to_string(),
-            Self::ThemeEnd => theme
-                .chars()
-                .next_back()
-                .expect("a ThemeEnd passive theme is consonant-final")
-                .to_string(),
-            Self::ThemeOwn => String::new(),
+            Self::Geminated | Self::SingleT => Some("t".to_string()),
+            Self::Deranked => Some("d".to_string()),
+            Self::ThemeEnd => theme.chars().next_back().map(|c| c.to_string()),
+            Self::ThemeOwn => Some(String::new()),
         }
     }
 
@@ -1171,9 +1171,12 @@ impl Stems {
     }
 
     /// The passive present base, before `-aan`/`-ään`: `sanot`, `aakkostet`,
-    /// `void`.
-    pub fn passive_present(&self) -> String {
-        format!("{}{}", self.p_theme, self.p_cons.present(&self.p_theme))
+    /// `void`. `None` when the type's theme cannot carry a passive (a
+    /// `ThemeEnd` theme with no final consonant); the paradigm builder then
+    /// emits no forms.
+    pub fn passive_present(&self) -> Option<String> {
+        let cons = self.p_cons.present(&self.p_theme)?;
+        Some(format!("{}{}", self.p_theme, cons))
     }
 
     /// The passive past base, before `-iin`: `sanott`, `aakkostett`, `voit`.
@@ -1290,7 +1293,9 @@ pub fn paradigm(s: &Stems) -> Vec<Form> {
     let a = if front { 'ä' } else { 'a' };
     let o = if front { 'ö' } else { 'o' };
     let e_h = b.h("ssa", "ssä");
-    let p_present = s.passive_present();
+    let Some(p_present) = s.passive_present() else {
+        return Vec::new();
+    };
     let p_past = s.passive_past();
     let p_mood = s.passive_mood(front);
 

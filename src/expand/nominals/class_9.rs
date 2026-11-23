@@ -34,11 +34,13 @@ pub const CLASS: &str = "9";
 /// The plural stem: the final `a`/`ä` written `o`/`ö` (`aatra -> aatro`).
 fn o_stem(stem: &str) -> String {
     let mut s = stem.to_string();
-    let last = s.pop().unwrap();
-    match last {
-        'a' => s.push('o'),
-        'ä' => s.push('ö'),
-        _ => s.push(last),
+    match s.pop() {
+        Some('a') => s.push('o'),
+        Some('ä') => s.push('ö'),
+        Some(last) => s.push(last),
+        // The wizard tries every class, so a one-character surface can
+        // reach here. An empty stem has no final vowel to rewrite.
+        None => {}
     }
     s
 }
@@ -137,6 +139,11 @@ pub fn inflect_graded(lemma: &str, possessives: bool, grad: Gradation) -> Vec<Fo
         && !base.is_empty()
     {
         let strong = grad.strongen(base);
+        // `tt` is a shape, not a plural-only lemma: strong-grading the `t`
+        // gives `tt` back, and recursing on it would never terminate.
+        if strong == lemma {
+            return Vec::new();
+        }
         return plural_only(inflect_graded(&strong, possessives, grad));
     }
     let weak = grad.apply(lemma, Grade::Weak);
@@ -154,6 +161,11 @@ pub fn inflect_graded_both(lemma: &str, possessives: bool, grad: Gradation) -> V
         && !base.is_empty()
     {
         let strong = grad.strongen(base);
+        // See [`inflect_graded`]: strong-grading `t` gives `tt` back, so a
+        // two-letter surface would recurse forever.
+        if strong == lemma {
+            return Vec::new();
+        }
         return plural_only(inflect_graded_both(&strong, possessives, grad));
     }
     let weak = grad.apply(lemma, Grade::Weak);
@@ -427,5 +439,32 @@ mod tests {
         let short = &forms[short];
         assert_eq!(short.confidence, Confidence::Repaired);
         assert!(short.readings.iter().all(|t| t.possessive.is_none()));
+    }
+
+    /// A `-t` surface whose strong grade is itself (`tt`) is not a
+    /// plural-only lemma. The old rewrite recursed on the same spelling
+    /// forever; it must fail closed instead.
+    #[test]
+    fn a_t_shaped_surface_does_not_recurse() {
+        // Code 3 (`C`) is the `tt <-> t` gradation: strong-grading the
+        // dropped `t` gives `tt` back, which is exactly the cycle the guard
+        // closes. A one-letter surface has no dropped base to rewrite and
+        // must simply terminate.
+        assert!(
+            inflect_graded("tt", true, Gradation(3)).is_empty(),
+            "tt"
+        );
+        assert!(
+            inflect_graded_both("tt", true, Gradation(3)).is_empty(),
+            "tt"
+        );
+        let _ = inflect_graded("t", true, Gradation(3));
+        let _ = inflect_graded_both("t", true, Gradation(3));
+        // The real plural-only lemmas still take the rewrite once.
+        let menkat: Vec<String> = inflect_graded("menkat", true, Gradation(1))
+            .into_iter()
+            .map(|f| f.word)
+            .collect();
+        assert!(menkat.contains(&"menkkojen".to_string()));
     }
 }

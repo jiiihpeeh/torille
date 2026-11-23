@@ -36,7 +36,10 @@ pub fn e_grad(lemma: &str, from: &str, to: &str) -> String {
 
 /// The shared long-`-ee` engine given the short `e`-stem.
 pub fn e_stem_inflect(lemma: &str, possessives: bool, short: &str) -> Vec<Form> {
-    let long = format!("{short}{}", short.chars().last().unwrap());
+    let Some(last) = short.chars().last() else {
+        return Vec::new();
+    };
+    let long = format!("{short}{last}");
     let front = loanword_harmony(lemma)
         // The compound `-e` heads (ajanviete, toimenpide, joulukiire) set front.
         || ["viete", "pide", "kiire", "viive"]

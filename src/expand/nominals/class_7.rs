@@ -60,6 +60,12 @@ pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
         } else {
             stem.to_string()
         };
+        // `t` and `tt` are the shapes, not the words: the recursive call
+        // would receive an empty lemma and the stem pair has no last
+        // character to read.
+        if singular.is_empty() {
+            return Vec::new();
+        }
         let mut forms = inflect(&singular, possessives);
         forms.retain(|form| {
             form.readings

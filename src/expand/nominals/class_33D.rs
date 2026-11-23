@@ -6,22 +6,24 @@
 #![allow(dead_code)]
 use crate::tags::Form;
 pub const CLASS: &str = "33*D";
-fn estem(lemma: &str) -> String {
+fn estem(lemma: &str) -> Option<String> {
     let mut base = lemma.to_string();
     base.pop(); // drop the final n
     let chars: Vec<char> = base.chars().collect();
-    let mut li = 0usize;
-    for (i, c) in chars.iter().enumerate() {
-        if "aeiouyäö".contains(*c) { li = i; }
-    }
+    // The stem grows from the last vowel (`puin -> pukime`). A surface with
+    // no vowel before the final `n` is not a member of the class.
+    let li = chars.iter().rposition(|c| "aeiouyäö".contains(*c))?;
     let mut out: String = chars[..li].iter().collect();
     out.push('k');
     out.push(chars[li]);
     out.push('m');
     out.push('e');
-    out
+    Some(out)
 }
 /// Inflect a class 33*D noun.
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
-    super::class_33::inflect_graded(lemma, possessives, &estem(lemma))
+    let Some(estem) = estem(lemma) else {
+        return Vec::new();
+    };
+    super::class_33::inflect_graded(lemma, possessives, &estem)
 }

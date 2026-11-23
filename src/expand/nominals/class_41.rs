@@ -134,8 +134,10 @@ pub fn a_stem_inflect(
 pub fn grad_stem(lemma: &str, from: &str, to: &str) -> String {
     let mut base = lemma.to_string();
     base.pop(); // drop the final s
-    let last = base.chars().last().unwrap();
-    let body = &base[..base.len() - base.chars().last().unwrap().len_utf8()];
+    let Some(last) = base.chars().last() else {
+        return String::new();
+    };
+    let body = &base[..base.len() - last.len_utf8()];
     let short = if body.ends_with(from) {
         format!("{}{}", &body[..body.len() - from.len()], to)
     } else {

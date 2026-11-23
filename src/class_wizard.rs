@@ -135,6 +135,10 @@ impl std::error::Error for ParseError {}
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WizardError {
     EmptyWord,
+    /// The surface is not a word shape the wizard can ask about: a single
+    /// character, or a symbol/emoji rather than letters (a hyphen or an
+    /// apostrophe is allowed, because compound lemmas and names carry them).
+    NotAWord,
     UnsupportedPartOfSpeech(PartOfSpeech),
 }
 
@@ -142,6 +146,7 @@ impl fmt::Display for WizardError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             WizardError::EmptyWord => write!(f, "the word is empty"),
+            WizardError::NotAWord => write!(f, "the input is not a word"),
             WizardError::UnsupportedPartOfSpeech(pos) => {
                 write!(f, "{} is not a supported part of speech", pos.name())
             }
@@ -150,6 +155,19 @@ impl fmt::Display for WizardError {
 }
 
 impl std::error::Error for WizardError {}
+
+/// Whether `surface` is a word shape the wizard can ask about.
+///
+/// The class engines are total now, but a single letter or an emoji has no
+/// paradigm to infer and spending every class's candidate walk on it is
+/// pointless. A hyphen is part of a compound lemma (`nuori-isäntä`) and an
+/// apostrophe occurs in names and loanwords, so both stay.
+fn is_word_surface(surface: &str) -> bool {
+    surface.chars().count() >= 2
+        && surface
+            .chars()
+            .all(|c| c.is_alphabetic() || matches!(c, '-' | '\'' | '’'))
+}
 
 /// A nominal grammatical cell: the dimensions a user's answer can name.
 ///
@@ -1018,6 +1036,9 @@ pub fn indeclinable(lemma: &str, pos: PartOfSpeech) -> Result<Report, WizardErro
     if surface.is_empty() {
         return Err(WizardError::EmptyWord);
     }
+    if !is_word_surface(surface) {
+        return Err(WizardError::NotAWord);
+    }
     if !is_supported(pos) {
         return Err(WizardError::UnsupportedPartOfSpeech(pos));
     }
@@ -1083,6 +1104,9 @@ pub fn infer_with_number(
     let surface = lemma.trim();
     if surface.is_empty() {
         return Err(WizardError::EmptyWord);
+    }
+    if !is_word_surface(surface) {
+        return Err(WizardError::NotAWord);
     }
     if !is_supported(pos) {
         return Err(WizardError::UnsupportedPartOfSpeech(pos));
@@ -1479,6 +1503,36 @@ mod tests {
         Gradation::from_letter(letter)
     }
 
+    /// The wizard is user-facing: a symbol, a single character or an emoji
+    /// must come back as an error, not a panic or a report full of invented
+    /// candidates. Short alphabetic words still reach the engine.
+    #[test]
+    fn a_surface_that_is_not_a_word_is_rejected() {
+        let cat = catalogue();
+        for word in ["n", "🙂", "ẞ", "-", "3"] {
+            assert_eq!(
+                infer(word, PartOfSpeech::Noun, &Answers::new(), cat).unwrap_err(),
+                WizardError::NotAWord,
+                "{word:?}"
+            );
+            assert_eq!(
+                indeclinable(word, PartOfSpeech::Noun).unwrap_err(),
+                WizardError::NotAWord,
+                "{word:?}"
+            );
+        }
+        assert_eq!(
+            infer("", PartOfSpeech::Noun, &Answers::new(), cat).unwrap_err(),
+            WizardError::EmptyWord
+        );
+        for word in ["nä", "tt", "a-b"] {
+            assert!(
+                infer(word, PartOfSpeech::Noun, &Answers::new(), cat).is_ok(),
+                "{word:?} should reach the engine without panicking"
+            );
+        }
+    }
+
     #[test]
     fn the_sheet_is_current() {
         let mismatches = check_sheet(catalogue()).expect("the committed sheet parses");
@@ -1863,45 +1917,44 @@ mod tests {
     }
 
     #[test]
-    fn every_nominal_class_inflects_an_odd_word_without_panicking() {
+    fn every_class_survives_an_ill_shaped_surface() {
         // The wizard tries every class against every word, including shapes
         // the class was never meant for. A byte-sliced stem there is a panic
         // in the wasm, not a wrong form, so this is a hard robustness gate.
+        // The class list comes from the lexicon's own inflections, which
+        // covers the lettered subtypes (`9*D`, `33*D`, ...) that the
+        // catalogue-only list misses.
         let cat = catalogue();
         let lexicon = kotus::lemmas();
         let index = LexiconIndex::new(lexicon);
+        let mut classes: Vec<Inflection> = Vec::new();
+        for lemma in lexicon.iter() {
+            for inflection in &lemma.inflections {
+                if !classes.contains(inflection) {
+                    classes.push(*inflection);
+                }
+            }
+        }
         for word in [
-            "pöräkkö",
-            "mökki",
             "ä",
             "ö",
-            "talo",
+            "a",
+            "nä",
+            "tt",
+            "t",
+            "ẞ",
+            "🙂",
             "xyzzy",
-            "kissa",
-            "aave",
             "kärpänen",
-            "mies",
-            "olut",
-            "tuhannes",
-            "auer",
-            "vakaus",
         ] {
-            for (class, _) in cat.iter() {
-                if *class == 50 || *class == 51 || is_verb_class(*class) {
-                    continue;
-                }
-                println!("{word} {class}");
-                let _ = inflect_in(
-                    word,
-                    Inflection {
-                        class: *class,
-                        gradation: None,
-                    },
-                    cat,
-                    Some(&index),
+            for inflection in &classes {
+                for pos in [
                     PartOfSpeech::Noun,
-                    false,
-                );
+                    PartOfSpeech::Verb,
+                    PartOfSpeech::Adjective,
+                ] {
+                    let _ = inflect_in(word, *inflection, cat, Some(&index), pos, true);
+                }
             }
         }
     }

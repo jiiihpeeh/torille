@@ -290,7 +290,13 @@ fn strip_any(word: &str, alternatives: &str) -> String {
 fn consonant_stem(infinitive: &str) -> Option<String> {
     for end in ["stä", "sta", "lä", "la", "nä", "na", "rä", "ra"] {
         if infinitive.ends_with(end) {
-            let cut = infinitive.chars().count() - 2;
+            let cut = infinitive.chars().count().saturating_sub(2);
+            // `nä` is a shape, not a verb: a consonant stem needs at least
+            // one character before the ending, or every caller that reads
+            // its final consonant would panic.
+            if cut == 0 {
+                continue;
+            }
             return Some(infinitive.chars().take(cut).collect());
         }
     }

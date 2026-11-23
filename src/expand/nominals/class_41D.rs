@@ -6,8 +6,10 @@ use crate::tags::Form;
 pub fn inflect(lemma: &str, possessives: bool) -> Vec<Form> {
     let mut base = lemma.to_string();
     base.pop();
-    let last = base.chars().last().unwrap();
-    let body = &base[..base.len() - base.chars().last().unwrap().len_utf8()];
+    let Some(last) = base.chars().last() else {
+        return Vec::new();
+    };
+    let body = &base[..base.len() - last.len_utf8()];
     let short = format!("{}k{last}", body);
     let long = super::class_41::long_stem(&short);
     let mut forms = super::class_41::a_stem_inflect(lemma, possessives, &long, &short, true, Some(Gradation(4)));
