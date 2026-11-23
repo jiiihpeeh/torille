@@ -81,7 +81,15 @@ pub struct LexicalCompoundAnalyzer;
 impl CompoundAnalyzer for LexicalCompoundAnalyzer {
     fn analyze(&self, word: &str) -> Option<CompoundAnalysis> {
         let lower = word.to_lowercase();
-        if lower.chars().count() != word.chars().count() || lower.chars().count() < 4 {
+        // The segmenter indexes `lower` by byte and the returned parts are
+        // then used to slice `word` with those same offsets, so the two
+        // strings must agree on both the character count and the byte
+        // length. A case fold can change either: `İ` lowercases to `i` plus
+        // a combining dot (more chars), and `ẞ` lowercases to `ß` (three
+        // bytes to two). Either mismatch makes the offset arithmetic
+        // meaningless, so decline the word.
+        let count = word.chars().count();
+        if count < 4 || lower.chars().count() != count || lower.len() != word.len() {
             return None;
         }
         if listed_as_inflecting(&lower) || looks_like_inflected_form(&lower) {

@@ -97,6 +97,71 @@ fn the_pattern_fallback_still_reassembles() {
     assert_eq!(split(word, &points).concat(), word);
 }
 
+/// Lowercasing can change the byte length without changing the character
+/// count (`ẞ` is three bytes, `ß` is two). The compound analyzer must
+/// decline such a word rather than index the lowercased string with an
+/// offset from the original.
+#[test]
+fn a_case_fold_that_changes_byte_length_never_panics() {
+    for word in ["ẞabc", "STRAẞE", "aẞbcdä", "ẞ"] {
+        let points = positions(word);
+        for point in &points {
+            assert!(word.is_char_boundary(point.byte_offset), "{word}");
+            assert!(point.byte_offset > 0, "{word}: break at start");
+            assert!(point.byte_offset < word.len(), "{word}: break at end");
+        }
+        assert_eq!(split(word, &points).concat(), word, "{word}");
+    }
+}
+
+/// A deterministic fuzz for the boundary path: no short UTF-8 word may
+/// panic, every offset must be a character boundary, and the split must
+/// reassemble the source.
+#[test]
+fn the_boundary_path_is_total_over_short_utf8() {
+    struct Lcg(u64);
+    impl Lcg {
+        fn next(&mut self) -> u64 {
+            self.0 = self
+                .0
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            self.0 >> 33
+        }
+    }
+
+    // Includes the folds that move bytes (`ẞ`), expand into two chars
+    // (`İ`), and the separators the pattern pass handles.
+    const ALPHABET: &[&str] = &[
+        "a", "ä", "ö", "å", "ẞ", "ß", "İ", "i", "-", "\u{00AD}", "🙂", "\u{0301}", " ", ".",
+    ];
+    let mut rng = Lcg(0x5eed_1234);
+    for _ in 0..1000 {
+        let len = 1 + (rng.next() as usize) % 12;
+        let mut word = String::new();
+        for _ in 0..len {
+            word.push_str(ALPHABET[(rng.next() as usize) % ALPHABET.len()]);
+        }
+        let points = positions(&word);
+        let mut previous = 0usize;
+        for point in &points {
+            assert!(word.is_char_boundary(point.byte_offset), "{word:?}");
+            assert!(
+                point.byte_offset > previous,
+                "{word:?}: offsets are not strictly increasing"
+            );
+            assert!(point.byte_offset < word.len(), "{word:?}: break at end");
+            assert_eq!(
+                point.char_offset,
+                word[..point.byte_offset].chars().count(),
+                "{word:?}: char offset disagrees with the byte offset"
+            );
+            previous = point.byte_offset;
+        }
+        assert_eq!(split(&word, &points).concat(), word, "{word:?}");
+    }
+}
+
 #[test]
 fn a_sampled_lexicon_word_never_loses_or_duplicates_a_character() {
     let options = HyphenationOptions::default();
