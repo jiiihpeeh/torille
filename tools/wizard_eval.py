@@ -139,7 +139,7 @@ def run_adaptive(engine, word: str, forms: dict[str, str], budget: int):
         )
         if question is None:
             break
-        answers.append((question, forms.get(question, "")))
+        answers.append((question, forms.get(question.key, "")))
     candidates, question, tie, recorded = engine.class_candidates(
         word, "noun", answers, use_recorded=False
     )
@@ -147,7 +147,11 @@ def run_adaptive(engine, word: str, forms: dict[str, str], budget: int):
 
 
 def run_fixed(engine, word: str, forms: dict[str, str], budget: int):
-    answers = [(cell, forms[cell]) for cell in CELLS[:budget] if cell in forms]
+    from torille import Cell
+
+    answers = [
+        (Cell.parse(cell), forms[cell]) for cell in CELLS[:budget] if cell in forms
+    ]
     candidates, question, tie, recorded = engine.class_candidates(
         word, "noun", answers, use_recorded=False
     )

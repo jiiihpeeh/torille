@@ -319,6 +319,107 @@ struct PyNormal {
     gate: Option<String>,
 }
 
+/// A wizard question cell: one grammatical shape whose example form the
+/// wizard asks for.
+///
+/// The cell names are the sheet's own keys (`gen_sg`, `ill_sg`, ...). They
+/// used to be free-form strings, which made a misspelling a silent "skipped
+/// question"; the enum is checked by the binding and typed by the caller.
+#[pyclass(eq, eq_int, name = "Cell", module = "torille")]
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum PyCell {
+    #[pyo3(name = "NOM_SG")]
+    NomSg,
+    #[pyo3(name = "GEN_SG")]
+    GenSg,
+    #[pyo3(name = "PAR_SG")]
+    ParSg,
+    #[pyo3(name = "ILL_SG")]
+    IllSg,
+    #[pyo3(name = "NOM_PL")]
+    NomPl,
+    #[pyo3(name = "GEN_PL")]
+    GenPl,
+    #[pyo3(name = "PAR_PL")]
+    ParPl,
+    #[pyo3(name = "ILL_PL")]
+    IllPl,
+    #[pyo3(name = "PRES_1SG")]
+    Pres1sg,
+    #[pyo3(name = "PRES_3SG")]
+    Pres3sg,
+    #[pyo3(name = "PAST_3SG")]
+    Past3sg,
+    #[pyo3(name = "COND_3SG")]
+    Cond3sg,
+    #[pyo3(name = "IMP_2SG")]
+    Imp2sg,
+    #[pyo3(name = "PRES_1PL")]
+    Pres1pl,
+}
+
+impl PyCell {
+    /// The sheet key this cell is stored under.
+    fn as_key(self) -> &'static str {
+        match self {
+            PyCell::NomSg => "nom_sg",
+            PyCell::GenSg => "gen_sg",
+            PyCell::ParSg => "par_sg",
+            PyCell::IllSg => "ill_sg",
+            PyCell::NomPl => "nom_pl",
+            PyCell::GenPl => "gen_pl",
+            PyCell::ParPl => "par_pl",
+            PyCell::IllPl => "ill_pl",
+            PyCell::Pres1sg => "pres_1sg",
+            PyCell::Pres3sg => "pres_3sg",
+            PyCell::Past3sg => "past_3sg",
+            PyCell::Cond3sg => "cond_3sg",
+            PyCell::Imp2sg => "imp_2sg",
+            PyCell::Pres1pl => "pres_1pl",
+        }
+    }
+
+    /// The cell for a sheet key, or `None` when the key is not a cell.
+    fn from_key(key: &str) -> Option<Self> {
+        Some(match key {
+            "nom_sg" => PyCell::NomSg,
+            "gen_sg" => PyCell::GenSg,
+            "par_sg" => PyCell::ParSg,
+            "ill_sg" => PyCell::IllSg,
+            "nom_pl" => PyCell::NomPl,
+            "gen_pl" => PyCell::GenPl,
+            "par_pl" => PyCell::ParPl,
+            "ill_pl" => PyCell::IllPl,
+            "pres_1sg" => PyCell::Pres1sg,
+            "pres_3sg" => PyCell::Pres3sg,
+            "past_3sg" => PyCell::Past3sg,
+            "cond_3sg" => PyCell::Cond3sg,
+            "imp_2sg" => PyCell::Imp2sg,
+            "pres_1pl" => PyCell::Pres1pl,
+            _ => return None,
+        })
+    }
+}
+
+#[pymethods]
+impl PyCell {
+    /// The sheet key, e.g. `ill_sg`.
+    #[getter]
+    fn key(&self) -> &'static str {
+        PyCell::as_key(*self)
+    }
+
+    /// Parse a sheet key such as `ill_sg`; `None` when it is not a cell.
+    #[staticmethod]
+    fn parse(key: &str) -> Option<Self> {
+        PyCell::from_key(key)
+    }
+
+    fn __str__(&self) -> &'static str {
+        PyCell::as_key(*self)
+    }
+}
+
 /// The reading as the words the `inflect` binary prints, in its order.
 ///
 /// Kept in step with `torille_tools::format_form` so the printed form cannot
@@ -614,12 +715,13 @@ impl Engine {
 
     /// Ranked class candidates from sparse example forms.
     ///
-    /// `answers` is `[(cell, form), ...]`; an empty form is a skipped
+    /// `answers` is `[(Cell, form), ...]`; an empty form is a skipped
     /// question. `use_recorded=False` hides the sanalista's own class from the
     /// tie-break, which the evaluation needs because it samples known words.
     /// Returns `(candidates, next_question, tie, recorded)`, where each
     /// candidate is `(class, hits, misses, unknown, recorded, tail_prior,
-    /// prior)`. Only the top ten are returned.
+    /// prior)` and `next_question` is a [`PyCell`] or `None`. Only the top ten
+    /// are returned.
     #[allow(clippy::type_complexity)]
     #[pyo3(signature = (word, pos="noun", answers=None, use_recorded=true))]
     fn class_candidates(
@@ -627,11 +729,11 @@ impl Engine {
         py: Python<'_>,
         word: &str,
         pos: &str,
-        answers: Option<Vec<(String, String)>>,
+        answers: Option<Vec<(PyCell, String)>>,
         use_recorded: bool,
     ) -> PyResult<(
         Vec<(String, u32, u32, u32, bool, u32, u32)>,
-        Option<String>,
+        Option<PyCell>,
         bool,
         Vec<String>,
     )> {
@@ -640,8 +742,11 @@ impl Engine {
                 "{pos:?} is not a part of speech"
             )));
         };
-        let answers: std::collections::HashMap<String, String> =
-            answers.unwrap_or_default().into_iter().collect();
+        let answers: std::collections::HashMap<String, String> = answers
+            .unwrap_or_default()
+            .into_iter()
+            .map(|(cell, form)| (cell.as_key().to_string(), form))
+            .collect();
         let cat = &self.data.catalogue;
         let report = py
             .allow_threads(|| {
@@ -666,7 +771,9 @@ impl Engine {
             .collect();
         Ok((
             ranked,
-            report.question_key(),
+            report
+                .question_key()
+                .and_then(|key| PyCell::from_key(&key)),
             report.tie,
             report.recorded.iter().map(ToString::to_string).collect(),
         ))
@@ -1257,6 +1364,7 @@ fn torille_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyDiagnostic>()?;
     m.add_class::<PyTypography>()?;
     m.add_class::<PyNormal>()?;
+    m.add_class::<PyCell>()?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }

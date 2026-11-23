@@ -48,7 +48,7 @@ from torille import Engine
 
 engine = Engine()
 engine.inflect("talo", klass=None, pos=None)      # [PyForm, ...]
-engine.class_candidates("mökki", "noun", answers)  # (candidates, next, tie, recorded)
+engine.class_candidates("mökki", "noun", [(Cell.GEN_SG, "mökin")])
 engine.lookup("kuusi")                             # [(class, pos), ...]
 engine.words("substantiivi", include_classless=False)
 engine.check("talossa")                            # PyCheck(kind, bases)
@@ -63,6 +63,10 @@ engine.typography(text)                            # [PyTypography, ...]
 engine.apply_typography(text)                      # str
 engine.hyphenate("tietokoneohjelmointi")           # [PyHyphenationPoint, ...]
 ```
+
+`Cell` is a real enum: `Cell.ILL_SG` is the `ill_sg` question, `Cell.parse("ill_sg")`
+round-trips, and `next_question` comes back as a `Cell` (or `None`), so a typo
+in a cell name is a `TypeError` rather than a silently skipped question.
 
 Two details that shape the examples:
 

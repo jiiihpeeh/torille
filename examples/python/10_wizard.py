@@ -8,19 +8,23 @@ Add answers one at a time and watch the ranking tighten; `use_recorded=False`
 hides the sanalista's own class, which is how the published curve was measured.
 """
 
-from torille import Engine
+from torille import Cell, Engine
 
 STEPS = [
     [],
-    [("gen_sg", "mökin")],
-    [("gen_sg", "mökin"), ("par_sg", "mökkiä")],
-    [("gen_sg", "mökin"), ("par_sg", "mökkiä"), ("ill_sg", "mökkiin")],
+    [(Cell.GEN_SG, "mökin")],
+    [(Cell.GEN_SG, "mökin"), (Cell.PAR_SG, "mökkiä")],
+    [(Cell.GEN_SG, "mökin"), (Cell.PAR_SG, "mökkiä"), (Cell.ILL_SG, "mökkiin")],
 ]
 
 UNKNOWN_STEPS = [
-    [("gen_sg", "pöllykän")],
-    [("gen_sg", "pöllykän"), ("par_sg", "pöllykkää")],
-    [("gen_sg", "pöllykän"), ("par_sg", "pöllykkää"), ("ill_sg", "pöllykkään")],
+    [(Cell.GEN_SG, "pöllykän")],
+    [(Cell.GEN_SG, "pöllykän"), (Cell.PAR_SG, "pöllykkää")],
+    [
+        (Cell.GEN_SG, "pöllykän"),
+        (Cell.PAR_SG, "pöllykkää"),
+        (Cell.ILL_SG, "pöllykkään"),
+    ],
 ]
 
 
@@ -29,7 +33,8 @@ def show(engine: Engine, word: str, answers, use_recorded: bool) -> None:
         word, "noun", answers, use_recorded
     )
     top = ", ".join(f"{klass}({hits}/{misses})" for klass, hits, misses, *_ in candidates[:3])
-    print(f"  answers={len(answers)} next={next_question!r} tie={tie} top: {top}")
+    next_key = next_question.key if next_question is not None else None
+    print(f"  answers={len(answers)} next={next_key!r} tie={tie} top: {top}")
     if recorded:
         print(f"    sanalista says: {recorded}")
 
@@ -48,6 +53,11 @@ def main() -> None:
     print("\nA word the lexicon does not have:")
     for answers in UNKNOWN_STEPS:
         show(engine, "pöllykkä", answers, use_recorded=False)
+
+    print("\nThe cells are a real enum, not free-form strings:")
+    print(f"  Cell.ILL_SG -> {Cell.ILL_SG.key!r} ({Cell.ILL_SG})")
+    print(f"  Cell.parse('ill_sg') -> {Cell.parse('ill_sg')}")
+    print(f"  Cell.parse('ill-sg') -> {Cell.parse('ill-sg')}")
 
     candidates, _, _, _ = engine.class_candidates(
         "pöllykkä", "noun", UNKNOWN_STEPS[-1], use_recorded=False
