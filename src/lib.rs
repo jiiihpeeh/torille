@@ -86,9 +86,14 @@ pub fn is_vowel(c: char) -> bool {
     )
 }
 
-/// The noun lexicon, embedded as its source text so the crate needs no data
-/// file at runtime.
+/// The noun lexicon as its committed source text.
 ///
-/// [`kotus::sanalista`] parses this once and caches the result; use that rather
-/// than reading the text, unless you want the raw rows.
+/// The runtime does not parse this. [`kotus::sanalista`] and
+/// [`kotus::lemmas`] read the packed blob `build.rs` emits; use
+/// [`kotus::lemmas`] when you need the rows. This const exists for the public
+/// text parser ([`kotus::parse_sanalista`]) and for tooling that needs the raw
+/// text. It is a `const`, so its bytes are emitted only where a reachable use
+/// remains: a release binary or wasm that never parses the text does not
+/// carry it (measured on the shipped wasm and the CLI; see
+/// `misc_md/REVIEW_CORRECT.md` C4.4).
 pub const SANALISTA: &str = include_str!("../data/nykysuomensanalista.csv");

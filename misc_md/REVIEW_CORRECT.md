@@ -8,6 +8,11 @@ gates are clean (`cargo clippy --workspace --all-targets -- -D warnings`,
 `cargo test --release --workspace`); every finding below is about behaviour the
 gates do not currently exercise.
 
+Every checklist item is closed. The C4.4 `SANALISTA` follow-up is resolved by
+measurement (the source text is dead-stripped from the shipping artifacts; see
+the C4.4 note), and the only remaining open question is the `maps` branch's
+provenance, which this plan scoped out and `misc_md/TODO.md` now tracks.
+
 ## Progress
 
 ### 2026-11-23 — Phase 2 (C4) implemented
@@ -372,13 +377,10 @@ input is part of the contract in practice. Treat it as total.
   `verbs/utility.rs:259` (`next_back`). Then sweep the
   `chars().last().unwrap()` family in `expand/nominals/` and
   `expand/verbs/` and return no forms when the stem cannot exist.
-- [ ] Reconcile the generated-vs-hand-written claim before editing. The
-  `src/expand/nominals/mod.rs` header and `AGENTS.md:534` say the tree is
-  produced by `tools/oracle/extract_class_rules.py --rust`, but the class
-  files themselves say "written by hand as a logical engine", and the
-  generator's own default output is `target/class-rules`. If the checked-in
-  files are hand-maintained, `AGENTS.md` must say so; if a generated subset
-  exists, the fix belongs in the generator template and not in the output.
+- [x] Reconcile the generated-vs-hand-written claim before editing. Resolved
+  in C7.5: the checked-in tree is hand-written, the generator writes
+  `target/class-rules`, and `AGENTS.md`, the `nominals/mod.rs` header and the
+  `Cargo.toml` feature comment now say so.
 - [x] Add a class-matrix robustness gate over every lexicon class (including
   the lettered subtypes), ill-shaped words and all three parts of speech. The
   matrix covers every class the random-seeded variant would reach, so no
@@ -441,12 +443,15 @@ wizard still answers `näyttelijä`/`kissa` as before.
   `class_examples.tsv` and `feminine_nouns.csv` are small, parsed lazily and
   off the per-word path; the rest of the runtime data is already binary blobs
   read in place (`map_reader`, `static_table`).
-- [ ] Follow-up (API decision, not done here): `crate::SANALISTA` is still
-  `include_str!`'d for the public `parse_sanalista` / `read_sanalista` API and
-  the tool-only `derived::compute`, so the 2.9 MB source text stays in the
-  binary beside the blob. Gating it behind a non-wasm feature would cut the
-  browser payload, but it changes a documented `pub const` and the example
-  `parse_sanalista(SANALISTA)`.
+- [x] Follow-up resolved by measurement, not by a feature gate.
+  `crate::SANALISTA` is still `include_str!`'d, but a `const` emits its bytes
+  only where a reachable use survives, and the linker drops
+  `derived::compute` (the only non-test use) when a binary does not call it.
+  `grep -c Hakusana` is **0** in `target/release/perf_grammar_style` and in
+  `extensions/firefox/dist/spell-worker/torille_wasm_bg.wasm`, and **2** in
+  the test binary that does parse the text -- the probe finds it where it
+  exists. The shipping payload therefore does not carry the 2.9 MB source, so
+  no feature gate is needed; the const's doc now says this.
 
 Acceptance: the E4 table is all `Unknown`; the parity test is green; the form
 counts do not change when the caller supplies the same index. Run
@@ -656,19 +661,19 @@ Notes:
 
 ## Open questions
 
-1. **Is `inflect_all(..., None)` part of anyone's public contract?** The
-   pre-1.0 version allows a breaking rename, but the Python binding and the
-   tools are in-repo and can be updated. Decide before C4.1.
-2. **Which layer owns totality?** If the class engines promise total input, C3
-   is an engine fix. If they promise a well-formed stem, the wizard must
-   validate and so must the binding. The safest answer is both: validate at
-   the user-facing entry point and make the generated stems fail closed.
-3. **Which nominals files are generated?** The headers and `AGENTS.md`
-   disagree, and C3 must edit the right side of that boundary.
-4. **Where do the maps' provenance hashes belong?** The build fetches a
-   force-pushed orphan branch at compile time. This review did not open that
-   box, but a published crate would benefit from a pinned commit or a content
-   hash in `REQUIRED`. It is out of scope here.
+1. ~~Is `inflect_all(..., None)` part of anyone's public contract?~~ Answered
+   in C4.1: no. The public `inflect_all` supplies the embedded index, and
+   `None` in the `_in` variant means "cannot answer", never "use the catalogue
+   model".
+2. ~~Which layer owns totality?~~ Answered in C3: both. The wizard rejects a
+   non-word surface, and the class engines fail closed when a stem cannot
+   exist.
+3. ~~Which nominals files are generated?~~ Answered in C7.5: none of the
+   checked-in ones; the generator writes `target/class-rules` for comparison.
+4. **Where do the maps' provenance hashes belong?** Still open and out of
+   scope: the build fetches a force-pushed orphan branch at compile time, and a
+   published crate would benefit from a pinned commit or a content hash in
+   `REQUIRED`. Tracked in `misc_md/TODO.md`.
 
 ## Done when
 

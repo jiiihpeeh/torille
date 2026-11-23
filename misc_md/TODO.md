@@ -32,6 +32,12 @@ their own measurement or build tooling.
   two-generation map (current + previous) or an LRU keeps the working set.
   Needs a long-document corpus: page-2000 has ~130 grammar units, far below
   the 2,000 cap, so the existing benchmark cannot show the difference.
+- **Maps provenance (the review's only open question).**
+  The first build fetches the `maps` orphan branch from `origin` and
+  force-pushes replace it; there is no pinned commit or content hash in
+  `REQUIRED`. A published crate would want one. Out of scope for the
+  correctness review; needs a decision on where the hash lives (the branch,
+  the build script, or a checked-in manifest).
 
 ## High priority
 
