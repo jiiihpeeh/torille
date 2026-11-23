@@ -132,3 +132,21 @@ fn empty_and_unfindable_inputs_stay_empty() {
     assert!(suggest("xyzzy", 5, 0).is_empty());
     assert!(suggest_detailed("xyzzy", 5, 0).is_empty());
 }
+
+/// An accidentally tripled letter is a key repeat: the lemma the deletion
+/// gives must outrank the same-distance substitution, even when that
+/// substitution is keyboard-adjacent (`Kisssa` -> `Kissa`, not `Kissaa`).
+///
+/// Only a *tripled* run earns the bonus; a doubled letter is ordinary Finnish
+/// and the valid word must keep its own rank.
+#[test]
+fn a_tripled_letter_ranks_its_deletion_first() {
+    for (query, want) in [("Kisssa", "Kissa"), ("kisssa", "kissa")] {
+        let got = suggest_detailed(query, 5, 2);
+        assert_eq!(got[0].word, want, "{query}: tripled-letter repair first");
+        assert_eq!(got[0].edit_distance, 1, "{query}: one deletion");
+    }
+    // The doubled form is a real word and stays first.
+    assert_eq!(suggest("kissaa", 5, 2)[0], "kissaa");
+    assert_eq!(suggest("Kissaa", 5, 2)[0], "Kissaa");
+}

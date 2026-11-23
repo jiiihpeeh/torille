@@ -26,6 +26,13 @@ fn apply_input_case(input: &str, mut suggestions: Vec<Suggestion>) -> Vec<Sugges
 /// specific typo than a same-distance substitution, so it wins the tie.
 const DOUBLED_LETTER_BONUS: f32 = 0.1;
 
+/// An accidentally repeated letter (`Kisssa` for `Kissa`) is a specific typo:
+/// the correction deletes the third copy. Finnish never writes three
+/// identical letters in a row, so the run is a key repeat, and it wins the
+/// tie against a same-distance substitution (the keyboard-adjacent `s -> a`
+/// that would otherwise offer the inflected `Kissaa` first).
+const REPEATED_LETTER_BONUS: f32 = 0.1;
+
 /// A `w` -> `v` modernisation is a writing-system correction, not a random
 /// one-letter typo, so it wins the tie against an unrelated equal-distance
 /// deletion (`waimo` -> `vaimo`, not `aimo`).
@@ -597,6 +604,9 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
             if is_doubling_repair(word, &c.word) {
                 score += DOUBLED_LETTER_BONUS;
             }
+            if is_tripled_letter_repair(word, &c.word) {
+                score += REPEATED_LETTER_BONUS;
+            }
             if w_to_v(word).as_deref() == Some(c.word.as_str()) {
                 score += W_TO_V_BONUS;
             }
@@ -794,6 +804,30 @@ fn is_doubling_repair(query: &str, candidate: &str) -> bool {
             let mut without = c.clone();
             without.remove(at);
             if without == q {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Whether `candidate` is `query` with one letter of a tripled run removed
+/// (`Kisssa` -> `Kissa`).
+///
+/// Only a tripled run qualifies. A doubled letter is ordinary Finnish
+/// (`koiraa`, `juoksee`, `kissa`) and boosting its deletion would reorder the
+/// candidate list of half the language.
+fn is_tripled_letter_repair(query: &str, candidate: &str) -> bool {
+    let q: Vec<char> = query.chars().collect();
+    let c: Vec<char> = candidate.chars().collect();
+    if c.len() + 1 != q.len() {
+        return false;
+    }
+    for at in 2..q.len() {
+        if q[at] == q[at - 1] && q[at] == q[at - 2] {
+            let mut without = q.clone();
+            without.remove(at);
+            if without == c {
                 return true;
             }
         }
