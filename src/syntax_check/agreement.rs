@@ -1053,7 +1053,7 @@ fn selected_readings(token: &TokenSyntax) -> impl Iterator<Item = &Tags> {
 }
 
 pub(super) fn pronoun_person_number(word: &str) -> Option<(Person, Number)> {
-    Some(match word.to_lowercase().as_str() {
+    Some(match crate::text::lowercase(word).as_ref() {
         "minä" => (Person::First, Number::Singular),
         "sinä" => (Person::Second, Number::Singular),
         "hän" => (Person::Third, Number::Singular),

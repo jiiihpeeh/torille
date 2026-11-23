@@ -109,7 +109,7 @@ pub(super) fn segment_clause_words(
             starts.push(position);
             continue;
         }
-        let lower = tokens[words[position]].text.to_lowercase();
+        let lower = crate::text::lowercase(&tokens[words[position]].text);
         if lower == "sillä" && starts_silla_clause(words, position, tokens, out) {
             starts.push(position);
             continue;
@@ -273,7 +273,7 @@ fn starts_silla_clause(
     let Some(&next) = words.get(position + 1) else {
         return false;
     };
-    let next_lower = tokens[next].text.to_lowercase();
+    let next_lower = crate::text::lowercase(&tokens[next].text);
     if is_subordinator(&next_lower) {
         return false;
     }
@@ -281,7 +281,7 @@ fn starts_silla_clause(
         return true;
     }
     if matches!(
-        next_lower.as_str(),
+        next_lower.as_ref(),
         "minä" | "sinä" | "hän" | "me" | "te" | "he"
     ) {
         return true;
@@ -296,7 +296,7 @@ fn starts_silla_clause(
 /// negative-auxiliary surface (`ethän`, `eivät`, `emme`, ...) disagrees with
 /// `sillä` in person or number and can only be the conjunction's clause.
 fn negative_auxiliary_opens_clause(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
-    is_negative_auxiliary(index, out) && tokens[index].text.to_lowercase() != "ei"
+    is_negative_auxiliary(index, out) && crate::text::lowercase(&tokens[index].text) != "ei"
 }
 
 /// Link each relative clause to the host segment it interrupts.
@@ -406,7 +406,7 @@ fn token_number(syntax: &TokenSyntax) -> Option<crate::tags::Number> {
 /// the `että` must not open a clause.
 fn is_seka_etta(words: &[usize], position: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
     for &index in words[..position].iter().rev() {
-        let lower = tokens[index].text.to_lowercase();
+        let lower = crate::text::lowercase(&tokens[index].text);
         if lower == "sekä" {
             return true;
         }

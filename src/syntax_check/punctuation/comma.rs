@@ -210,8 +210,8 @@ fn reporting_predicate(clause: &Clause, analysis: &SyntaxAnalysis) -> bool {
 
 /// The wh-word or `-ko` verb that opens an indirect question.
 fn is_indirect_opener(index: usize, tokens: &[Token], analysis: &SyntaxAnalysis) -> bool {
-    let lower = tokens[index].text.to_lowercase();
-    if crate::syntax::INTERROGATIVE_SURFACES.contains(&lower.as_str()) {
+    let lower = crate::text::lowercase(&tokens[index].text);
+    if crate::syntax::INTERROGATIVE_SURFACES.contains(&lower.as_ref()) {
         return true;
     }
     if has_ko_clitic(index, analysis) && is_finite(&analysis.tokens[index]) {
@@ -307,7 +307,7 @@ fn subordinate_comma(
     // is the prose pattern `..., jos ...`, `--kun ...`, and `Ja kun ...`.
     if let Some(first) = first_word(clause, tokens) {
         let concord =
-            |index: usize| matches!(tokens[index].text.to_lowercase().as_str(), "kun" | "jos");
+            |index: usize| matches!(crate::text::lowercase(&tokens[index].text).as_ref(), "kun" | "jos");
         let marked = |index: usize| {
             previous_word(tokens, index).is_some_and(|previous| {
                 boundary_between(tokens, previous, index)
@@ -533,7 +533,7 @@ fn coordinated_between(tokens: &[Token], left: usize, right: usize) -> bool {
         .filter(|token| token.is_word())
         .any(|token| {
             matches!(
-                token.text.to_lowercase().as_str(),
+                crate::text::lowercase(&token.text).as_ref(),
                 "ja" | "sekä"
                     | "tai"
                     | "vai"
@@ -582,8 +582,8 @@ fn terminal_between(left: &Clause, right: &Clause, tokens: &[Token]) -> bool {
 /// A fixed multiword pair whose halves take no comma (`niin että`,
 /// `sen kun`).
 fn is_no_comma_pair(tokens: &[Token], left: usize, right: usize) -> bool {
-    let left = tokens[left].text.to_lowercase();
-    let right = tokens[right].text.to_lowercase();
+    let left = crate::text::lowercase(&tokens[left].text);
+    let right = crate::text::lowercase(&tokens[right].text);
     NO_COMMA_PAIRS
         .iter()
         .any(|&(first, second)| left == first && right == second)

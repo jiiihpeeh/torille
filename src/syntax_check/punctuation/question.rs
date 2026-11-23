@@ -60,8 +60,8 @@ pub(super) fn question_diagnostics(tokens: &[Token], analysis: &SyntaxAnalysis) 
         if sentence_first != first || preceded_by_comma(tokens, first) {
             continue;
         }
-        let lower = tokens[first].text.to_lowercase();
-        let interrogative = INTERROGATIVE_SURFACES.contains(&lower.as_str());
+        let lower = crate::text::lowercase(&tokens[first].text);
+        let interrogative = INTERROGATIVE_SURFACES.contains(&lower.as_ref());
         let clitic = has_ko_clitic(first, analysis)
             || clause
                 .predicate
@@ -112,9 +112,9 @@ fn is_correlative_relative(clauses: &[&Clause], tokens: &[Token]) -> bool {
     let Some(first) = first_word(clauses[0], tokens) else {
         return false;
     };
-    let lower = tokens[first].text.to_lowercase();
+    let lower = crate::text::lowercase(&tokens[first].text);
     if !matches!(
-        lower.as_str(),
+        lower.as_ref(),
         "minkä" | "mikä" | "joka" | "jonka" | "jotka" | "mitä" | "jossa" | "josta"
     ) {
         return false;
@@ -122,7 +122,7 @@ fn is_correlative_relative(clauses: &[&Clause], tokens: &[Token]) -> bool {
     clauses.iter().skip(1).any(|clause| {
         clause.subject.is_some_and(|subject| {
             matches!(
-                tokens[subject].text.to_lowercase().as_str(),
+                crate::text::lowercase(&tokens[subject].text).as_ref(),
                 "se" | "ne" | "tämä" | "nuo" | "hän" | "he"
             )
         })
@@ -158,7 +158,7 @@ fn is_indefinite(tokens: &[Token], first: usize) -> bool {
         .iter()
         .skip(first + 1)
         .find(|token| token.is_word())
-        .map(|token| token.text.to_lowercase());
+        .map(|token| crate::text::lowercase(&token.text));
     matches!(
         next.as_deref(),
         Some("tahansa" | "hyvänsä" | "vain" | "ikin")

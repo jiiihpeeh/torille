@@ -183,7 +183,7 @@ fn affirmative_reading(token: &crate::syntax::TokenSyntax) -> Option<&Tags> {
 }
 
 fn is_imperative_auxiliary(token: &Token) -> bool {
-    crate::expand::negation::negation_base(&token.text.to_lowercase()) == Some("älä")
+    crate::expand::negation::negation_base(&crate::text::lowercase(&token.text)) == Some("älä")
 }
 
 #[cfg(test)]

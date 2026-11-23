@@ -291,7 +291,7 @@ fn chunk_is_nominal(chunk: &[usize], analysis: &SyntaxAnalysis) -> bool {
 }
 
 fn is_coordinator(index: usize, tokens: &[Token]) -> bool {
-    crate::syntax::is_coordinating(&tokens[index].text.to_lowercase())
+    crate::syntax::is_coordinating(&crate::text::lowercase(&tokens[index].text))
 }
 
 /// The nominal readings' cases, without the verb homonym's case.

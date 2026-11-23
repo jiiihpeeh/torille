@@ -255,7 +255,7 @@ pub(super) fn looks_like_address(
     const PERSONAL_PRONOUNS: &[&str] = &["minä", "sinä", "hän", "me", "te", "he"];
 
     let syntax = &analysis.tokens[index];
-    if is_finite(syntax) || PERSONAL_PRONOUNS.contains(&tokens[index].text.to_lowercase().as_str())
+    if is_finite(syntax) || PERSONAL_PRONOUNS.contains(&crate::text::lowercase(&tokens[index].text).as_ref())
     {
         return false;
     }

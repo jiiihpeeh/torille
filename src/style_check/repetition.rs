@@ -127,17 +127,17 @@ pub(super) fn duplicate_words(
             continue;
         }
         if let Some(first) = previous {
-            let surface = token.text.to_lowercase();
+            let surface = crate::text::lowercase(&token.text);
             let in_phrase = covered.iter().any(|span| {
                 (span.start <= tokens[first].start && tokens[first].end <= span.end)
                     || (span.start <= token.start && token.end <= span.end)
             });
-            if tokens[first].text.to_lowercase() == surface
+            if crate::text::lowercase(&tokens[first].text) == surface
                 && tokens[first + 1..index]
                     .iter()
                     .all(|between| !between.is_word() && between.text.trim().is_empty())
                 && !in_phrase
-                && !RHETORICAL_REDUPLICATION.contains(&surface.as_str())
+                && !RHETORICAL_REDUPLICATION.contains(&surface.as_ref())
             {
                 let mut diagnostic = StyleDiagnostic::new(
                     StyleKind::DuplicateWord,
@@ -145,7 +145,7 @@ pub(super) fn duplicate_words(
                     token.start..token.end,
                     StyleKind::DuplicateWord.name(),
                 );
-                diagnostic.expected = Some(surface);
+                diagnostic.expected = Some(surface.into_owned());
                 // Remove the separator whitespace with the repeated word so
                 // the result does not leave a double space behind.
                 diagnostic.corrections = vec![Correction::new(
@@ -173,7 +173,7 @@ fn content_lemma(token: &Token, info: Option<&WordInfo>, sentence_start: bool) -
     // A sentence-initial capital is not a name signal, and `Asia` is both a
     // name and the common noun, so a lowercased sanalista row wins.
     if token.is_capitalised() && !sentence_start {
-        let lower = token.text.to_lowercase();
+        let lower = crate::text::lowercase(&token.text);
         let common = crate::kotus::sanalista().by_word(&lower).next().is_some();
         if !common && crate::expand::proper_names::lemma(&token.text).is_some() {
             return None;

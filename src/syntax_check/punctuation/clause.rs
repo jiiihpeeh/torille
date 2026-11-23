@@ -19,7 +19,7 @@ pub(super) fn clause_kind(clause: &Clause, tokens: &[Token], analysis: &SyntaxAn
     let Some(first) = first_word(clause, tokens) else {
         return ClauseKind::Main;
     };
-    let lower = tokens[first].text.to_lowercase();
+    let lower = crate::text::lowercase(&tokens[first].text);
     if crate::syntax::is_subordinator(&lower) {
         return ClauseKind::Subordinate;
     }

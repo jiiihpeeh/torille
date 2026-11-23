@@ -67,7 +67,7 @@ fn greeting_comma(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiag
             let (Some(&second), Some(&address)) = (words.get(1), words.get(2)) else {
                 continue;
             };
-            if GOOD_DAY_WORDS.contains(&tokens[second].text.to_lowercase().as_str())
+            if GOOD_DAY_WORDS.contains(&crate::text::lowercase(&tokens[second].text).as_ref())
                 && is_greeting_address(address, tokens, analysis)
                 && plain_space_between(tokens, second, address)
             {
@@ -76,7 +76,7 @@ fn greeting_comma(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<SyntaxDiag
             continue;
         }
 
-        if !GREETINGS.contains(&tokens[first].text.to_lowercase().as_str()) {
+        if !GREETINGS.contains(&crate::text::lowercase(&tokens[first].text).as_ref()) {
             continue;
         }
         let Some(&next) = words.get(1) else {
@@ -100,7 +100,7 @@ fn leading_address_comma(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<Syn
             continue;
         };
         if !is_imperative_predicate(predicate, analysis)
-            || NEGATIVE_IMPERATIVES.contains(&tokens[predicate].text.to_lowercase().as_str())
+            || NEGATIVE_IMPERATIVES.contains(&crate::text::lowercase(&tokens[predicate].text).as_ref())
         {
             continue;
         }
@@ -139,7 +139,7 @@ fn trailing_address_comma(tokens: &[Token], analysis: &SyntaxAnalysis) -> Vec<Sy
             continue;
         };
         if !is_imperative_predicate(predicate, analysis)
-            || NEGATIVE_IMPERATIVES.contains(&tokens[predicate].text.to_lowercase().as_str())
+            || NEGATIVE_IMPERATIVES.contains(&crate::text::lowercase(&tokens[predicate].text).as_ref())
         {
             continue;
         }
@@ -245,7 +245,7 @@ fn is_address(index: usize, tokens: &[Token], analysis: &SyntaxAnalysis) -> bool
 /// argument-position guard deliberately rejects.
 fn is_greeting_address(index: usize, tokens: &[Token], analysis: &SyntaxAnalysis) -> bool {
     is_address(index, tokens, analysis)
-        || PERSONAL_PRONOUNS.contains(&tokens[index].text.to_lowercase().as_str())
+        || PERSONAL_PRONOUNS.contains(&crate::text::lowercase(&tokens[index].text).as_ref())
 }
 
 /// A trailing address must be a name or a non-personal pronoun. A possessive
@@ -277,8 +277,8 @@ fn is_conjunction(index: usize, analysis: &SyntaxAnalysis) -> bool {
 /// personal pronoun is excluded: `Te menkää!` and `Me menkäämme!` have a
 /// subject, not an address.
 fn is_leading_address(index: usize, tokens: &[Token], analysis: &SyntaxAnalysis) -> bool {
-    let key = tokens[index].text.to_lowercase();
-    if PERSONAL_PRONOUNS.contains(&key.as_str()) || is_finite(&analysis.tokens[index]) {
+    let key = crate::text::lowercase(&tokens[index].text);
+    if PERSONAL_PRONOUNS.contains(&key.as_ref()) || is_finite(&analysis.tokens[index]) {
         return false;
     }
     let syntax = &analysis.tokens[index];

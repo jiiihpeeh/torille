@@ -180,11 +180,11 @@ fn is_nominal_word(index: usize, analysis: &SyntaxAnalysis) -> bool {
 }
 
 fn is_coordinator(index: usize, tokens: &[Token]) -> bool {
-    crate::syntax::is_coordinating(&tokens[index].text.to_lowercase())
+    crate::syntax::is_coordinating(&crate::text::lowercase(&tokens[index].text))
 }
 
 fn is_personal_pronoun(index: usize, tokens: &[Token]) -> bool {
-    PERSONAL_PRONOUNS.contains(&tokens[index].text.to_lowercase().as_str())
+    PERSONAL_PRONOUNS.contains(&crate::text::lowercase(&tokens[index].text).as_ref())
 }
 
 /// `Hän lähti kotiin;` — a semicolon with no word left in its sentence.

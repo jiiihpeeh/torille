@@ -25,8 +25,8 @@ pub(super) fn parenthetical_diagnostics(
     for clause in &analysis.clauses {
         let words = clause_words(clause, tokens);
         for (position, &index) in words.iter().enumerate() {
-            let lower = tokens[index].text.to_lowercase();
-            let example = EXAMPLE_CUES.contains(&lower.as_str());
+            let lower = crate::text::lowercase(&tokens[index].text);
+            let example = EXAMPLE_CUES.contains(&lower.as_ref());
             let kuten = lower == "kuten";
             if !example && !kuten {
                 continue;

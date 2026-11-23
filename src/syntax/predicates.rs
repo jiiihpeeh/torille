@@ -249,14 +249,14 @@ const RELATIVE_SURFACES: &[&str] = &[
 
 /// Whether this token is a relative pronoun, in any of its cases.
 pub(crate) fn is_relative_word(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
-    let lower = tokens[index].text.to_lowercase();
-    if RELATIVE_SURFACES.contains(&lower.as_str()) {
+    let lower = crate::text::lowercase(&tokens[index].text);
+    if RELATIVE_SURFACES.contains(&lower.as_ref()) {
         return true;
     }
     // A personal pronoun is never a relative pronoun, even when the homonym
     // resolver gives it a relative lemma (`minä` is also an essive of `mikä`).
     if matches!(
-        lower.as_str(),
+        lower.as_ref(),
         "minä" | "sinä" | "hän" | "me" | "te" | "he"
     ) {
         return false;
@@ -274,8 +274,8 @@ pub(crate) fn is_relative_word(index: usize, tokens: &[Token], out: &[TokenSynta
 /// noun after the pronoun, so it stays relative and the punctuation rule can
 /// suggest the comma.
 fn is_determiner_joka(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
-    let lower = tokens[index].text.to_lowercase();
-    if !matches!(lower.as_str(), "joka" | "jokainen") {
+    let lower = crate::text::lowercase(&tokens[index].text);
+    if !matches!(lower.as_ref(), "joka" | "jokainen") {
         return false;
     }
     let Some(next) = (index + 1..tokens.len()).find(|&candidate| tokens[candidate].is_word())
@@ -320,7 +320,7 @@ pub(super) fn comma_between(tokens: &[Token], left: usize, right: usize) -> bool
 /// A function word that must not be mistaken for a subject or object merely
 /// because the lexicon also gives it a noun reading (`ja`, `kun`).
 pub(super) fn is_clause_marker(index: usize, tokens: &[Token], out: &[TokenSyntax]) -> bool {
-    let lower = tokens[index].text.to_lowercase();
+    let lower = crate::text::lowercase(&tokens[index].text);
     is_coordinating(&lower)
         || is_subordinator(&lower)
         || is_relative_word(index, tokens, out)

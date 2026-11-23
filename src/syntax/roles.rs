@@ -939,7 +939,7 @@ fn mark_invariant_determiners(words: &[usize], out: &mut [TokenSyntax]) {
             continue;
         };
         if out[index].role != SyntacticRole::Unknown
-            || !INVARIANT_DETERMINERS.contains(&lemma.to_lowercase().as_str())
+            || !INVARIANT_DETERMINERS.contains(&crate::text::lowercase(lemma).as_ref())
         {
             continue;
         }
@@ -986,7 +986,7 @@ fn mark_temporal_essives(words: &[usize], tokens: &[Token], out: &mut [TokenSynt
         let Some(lemma) = out[index].lemma.as_deref() else {
             continue;
         };
-        if !TEMPORAL_ESSIVE_NOUNS.contains(&lemma.to_lowercase().as_str()) {
+        if !TEMPORAL_ESSIVE_NOUNS.contains(&crate::text::lowercase(lemma).as_ref()) {
             continue;
         }
         out[index].role = SyntacticRole::Adverbial;
@@ -1079,8 +1079,8 @@ fn mark_frequency_determiners(words: &[usize], tokens: &[Token], out: &mut [Toke
         return;
     }
     for (position, &index) in words.iter().enumerate() {
-        let lower = tokens[index].text.to_lowercase();
-        if !matches!(lower.as_str(), "joka" | "jokainen") {
+        let lower = crate::text::lowercase(&tokens[index].text);
+        if !matches!(lower.as_ref(), "joka" | "jokainen") {
             continue;
         }
         let Some(&noun) = words.get(position + 1) else {
@@ -1095,7 +1095,7 @@ fn mark_frequency_determiners(words: &[usize], tokens: &[Token], out: &mut [Toke
         let Some(lemma) = out[noun].lemma.as_deref() else {
             continue;
         };
-        if !FREQUENCY_NOUNS.contains(&lemma.to_lowercase().as_str()) {
+        if !FREQUENCY_NOUNS.contains(&crate::text::lowercase(lemma).as_ref()) {
             continue;
         }
         out[index].role = SyntacticRole::Modifier;
@@ -1504,7 +1504,7 @@ fn has_coordinator_between(tokens: &[Token], left: usize, right: usize) -> bool 
         .take(right.saturating_sub(left + 1))
         .filter(|token| token.is_word())
         .any(|token| {
-            let lower = token.text.to_lowercase();
+            let lower = crate::text::lowercase(&token.text);
             // The second half of `sekä ... että` coordinates the same slots
             // as `ja`; the clause splitter already leaves that `että` alone.
             is_coordinating(&lower) || lower == "että"
@@ -1639,7 +1639,7 @@ pub(super) fn share_clause_roles(
         }
         let starts_with_coordinator = tokens
             .get(clauses[index].tokens.start)
-            .is_some_and(|token| is_coordinating(&token.text.to_lowercase()));
+            .is_some_and(|token| is_coordinating(&crate::text::lowercase(&token.text)));
         let predicate_is_non_finite = clauses[index].predicate.is_some_and(|predicate| {
             out[predicate]
                 .readings
@@ -1719,7 +1719,7 @@ fn is_locative_adverbial(index: usize, tokens: &[Token], out: &[TokenSyntax]) ->
                 .readings
                 .iter()
                 .any(|reading| reading.part_of_speech == Some(PartOfSpeech::Postposition))
-            || LOCAL_ADVERBS.contains(&tokens[index].text.to_lowercase().as_str()))
+            || LOCAL_ADVERBS.contains(&crate::text::lowercase(&tokens[index].text).as_ref()))
 }
 
 const ABLATIVE_COMPLEMENT: &[Case] = &[Case::Ablative];
