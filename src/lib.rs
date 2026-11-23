@@ -51,7 +51,10 @@ pub use kotus::parse_sanalista;
 pub use kotus::read_sanalista;
 pub use kotus::sanalista;
 pub use check::{CheckAll, check_all, check_all_with_cache};
-pub use suggest::{EditOp, Suggestion, SuggestionSource, levenshtein_with_ops, suggest};
+pub use suggest::{
+    EditOp, Suggestion, SuggestionSource, check, is_known_word, levenshtein_with_ops, suggest,
+    suggest_detailed,
+};
 
 /// Whether a character is one of the Finnish vowels.
 ///

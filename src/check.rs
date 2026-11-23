@@ -20,10 +20,6 @@ pub struct CheckAll {
 }
 
 impl CheckAll {
-    /// Both streams through the shared [`Finding`] contract.
-    ///
-    /// A panel or an ignore list can treat grammar and style alike without
-    /// matching on the concrete diagnostic type.
     /// Drop ignored rules from both streams.
     pub fn without_rules(self, ignored: &[crate::diagnostic::RuleId]) -> Self {
         Self {
@@ -32,6 +28,10 @@ impl CheckAll {
         }
     }
 
+    /// Both streams through the shared [`Finding`] contract.
+    ///
+    /// A panel or an ignore list can treat grammar and style alike without
+    /// matching on the concrete diagnostic type.
     pub fn findings(&self) -> Vec<&dyn Finding> {
         self.syntax
             .diagnostics

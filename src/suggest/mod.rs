@@ -22,16 +22,14 @@
 //!
 //! ## What this does *not* do
 //!
-//! - **Compound analysis.** A compound is a valid word even when no single
-//!   lemma inflects to it -- `nuori-isäntä` is two lemmas glued together --
-//!   and the engine's [`crate::compound::analyze`] knows how to find them,
-//!   but it leans on [`FormBuilder`](crate::expand::FormBuilder), which is
-//!   the slow path. Adding compound support to the fast `check` is a
-//!   separate piece of work; for now a compound is reported as
-//!   [`CheckOutcome::Inflected`] only when one of its parts inflects to the
-//!   whole, and as [`CheckOutcome::Unknown`] otherwise. The full
-//!   `check.rs` still uses the slow path and handles the compound case
-//!   correctly.
+//! - **Full compound analysis.** A compound is a valid word even when no
+//!   single lemma inflects to it -- `nuori-isäntä` is two lemmas glued
+//!   together -- and [`check`] recognises one through its `is_known_word`
+//!   fallback, which names the compound's head (`kahvikekkereitä` is
+//!   [`CheckOutcome::Inflected`] of `kekkerit`). What it does not do is name
+//!   every component: [`crate::compound::analyze`] does that, but it leans
+//!   on [`FormBuilder`](crate::expand::FormBuilder), the slow path. The
+//!   `check.rs` tool still offers the full component explanation.
 //! - **Weighted edit distance.** `suggest` uses plain Levenshtein in the
 //!   DP, but a small [`KEYBOARD_ADJACENT`] table is consulted in the score:
 //!   a distance-1 single-substitution between QWERTY neighbours adds a
@@ -78,7 +76,7 @@ use known::{catalogue, hyphenated_lexeme, lexicon};
 /// Carries the lemma in [`Self::Inflected`] rather than just a boolean so a
 /// caller that wants to *suggest* a correction knows which lemma to find
 /// neighbours of.
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CheckOutcome {
     /// The query is exactly a lemma in the sanalista.
     Lemma,
@@ -92,8 +90,11 @@ pub enum CheckOutcome {
 
 impl CheckOutcome {
     /// `true` for [`Self::Lemma`] and [`Self::Inflected`]; `false` for
-    /// [`Self::Unknown`]. Compounds currently route here as `Unknown`; see
-    /// the module doc.
+    /// [`Self::Unknown`].
+    ///
+    /// A compound is `Inflected` when its head resolves through the
+    /// `is_known_word` fallback (`kahvikekkereitä` is `Inflected(["kekkerit"])`),
+    /// even though [`check`] does not run the full component analysis.
     pub fn is_known(&self) -> bool {
         !matches!(self, CheckOutcome::Unknown)
     }

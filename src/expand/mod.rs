@@ -70,6 +70,15 @@ mod nominals;
 )]
 mod verbs;
 
+/// A generated form. This is [`crate::tags::Form`] under the name the
+/// expansion API has always used -- one type, not two copies, so a caller can
+/// pass one wherever the other is expected.
+///
+/// ```
+/// let form: torille::tags::Form =
+///     torille::expand::Generated::new("talo".to_string(), torille::tags::Tags::UNKNOWN);
+/// assert_eq!(form.word, "talo");
+/// ```
 pub use crate::tags::Form as Generated;
 
 mod degrees {
@@ -1371,10 +1380,8 @@ mod blob;
 pub mod check_normal;
 pub mod closed_spellings;
 mod huffman_set;
-pub mod prefix_index;
 pub mod proper_names;
 pub(crate) mod static_table;
-pub mod stem_index;
 pub mod adposition_cases;
 pub mod verb_arguments;
 pub mod verb_rection;
