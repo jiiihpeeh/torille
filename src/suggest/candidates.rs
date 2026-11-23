@@ -580,6 +580,9 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
     candidates.dedup_by(|a, b| a.word == b.word);
 
     // Levenshtein: filter by `max_distance`, score `existing_score`.
+    // The repeated-letter repairs are a property of the query, so build
+    // them once rather than scanning the query per candidate.
+    let repeated_letter_repairs = tripled_letter_repairs(word);
     for c in &mut candidates {
         // A curated correction is not a spelling edit: `liektisevä` is four
         // edits from `liekehtivä` but the intended reading is the
@@ -604,7 +607,10 @@ pub fn suggest_detailed(word: &str, max_n: usize, max_distance: usize) -> Vec<Su
             if is_doubling_repair(word, &c.word) {
                 score += DOUBLED_LETTER_BONUS;
             }
-            if is_tripled_letter_repair(word, &c.word) {
+            if repeated_letter_repairs
+                .iter()
+                .any(|repair| repair == c.word.as_str())
+            {
                 score += REPEATED_LETTER_BONUS;
             }
             if w_to_v(word).as_deref() == Some(c.word.as_str()) {
@@ -811,28 +817,29 @@ fn is_doubling_repair(query: &str, candidate: &str) -> bool {
     false
 }
 
-/// Whether `candidate` is `query` with one letter of a tripled run removed
-/// (`Kisssa` -> `Kissa`).
+/// Every spelling one deletion from a tripled run gives (`Kisssa` ->
+/// `Kissa`). Empty for an ordinary word.
 ///
 /// Only a tripled run qualifies. A doubled letter is ordinary Finnish
 /// (`koiraa`, `juoksee`, `kissa`) and boosting its deletion would reorder the
-/// candidate list of half the language.
-fn is_tripled_letter_repair(query: &str, candidate: &str) -> bool {
-    let q: Vec<char> = query.chars().collect();
-    let c: Vec<char> = candidate.chars().collect();
-    if c.len() + 1 != q.len() {
-        return false;
-    }
-    for at in 2..q.len() {
-        if q[at] == q[at - 1] && q[at] == q[at - 2] {
-            let mut without = q.clone();
-            without.remove(at);
-            if without == c {
-                return true;
+/// candidate list of half the language. The list is built once per query:
+/// scanning the query per candidate allocated two `Vec<char>` in the scoring
+/// loop, which showed up on the dense homonyms corpus.
+fn tripled_letter_repairs(query: &str) -> Vec<String> {
+    let chars: Vec<char> = query.chars().collect();
+    let mut out: Vec<String> = Vec::new();
+    for at in 2..chars.len() {
+        if chars[at] == chars[at - 1] && chars[at] == chars[at - 2] {
+            let repair: String = chars[..at]
+                .iter()
+                .chain(chars[at + 1..].iter())
+                .collect();
+            if !out.contains(&repair) {
+                out.push(repair);
             }
         }
     }
-    false
+    out
 }
 
 fn has_adjacent_repeat(word: &str) -> bool {
