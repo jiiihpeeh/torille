@@ -24,6 +24,11 @@
 //! `grammar`, `style`, `grammar_and_style`, `typography`,
 //! `apply_typography`), the wizard (`class_candidates`) and the lexicon
 //! (`lookup`, `words`). `examples/python/` has a runnable tour of each.
+//!
+//! The fixed arguments have value types: `Luokka(9)` / `Luokka(9, "B")` for the
+//! Kotus class, `Pos.NOUN` for a part of speech, and `Cell.ILL_SG` for a
+//! wizard cell. The string forms (`luokka="9*B"`, `pos="substantiivi"`) still
+//! work where a tool already speaks them.
 
 // PyO3's `#[pymethods]` expands the return expression through a `PyResult`
 // conversion that clippy sees as a no-op on the already-converted type.
@@ -420,6 +425,225 @@ impl PyCell {
     }
 }
 
+/// A part of speech, as the engine and the wizard use it.
+///
+/// `inflect` and `class_candidates` accept either this enum or one of the
+/// names it parses ([`PyPos::parse`]): the engine's `noun`, the sanalista's
+/// `substantiivi`, and the aliases the wizard already took.
+#[pyclass(eq, eq_int, name = "Pos", module = "torille")]
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum PyPos {
+    #[pyo3(name = "NOUN")]
+    Noun,
+    #[pyo3(name = "ADJECTIVE")]
+    Adjective,
+    #[pyo3(name = "PRONOUN")]
+    Pronoun,
+    #[pyo3(name = "NUMERAL")]
+    Numeral,
+    #[pyo3(name = "ORDINAL")]
+    Ordinal,
+    #[pyo3(name = "VERB")]
+    Verb,
+    #[pyo3(name = "NEGATIVE_VERB")]
+    NegativeVerb,
+    #[pyo3(name = "ADVERB")]
+    Adverb,
+    #[pyo3(name = "CONJUNCTION")]
+    Conjunction,
+    #[pyo3(name = "INTERJECTION")]
+    Interjection,
+    #[pyo3(name = "PREPOSITION")]
+    Preposition,
+    #[pyo3(name = "POSTPOSITION")]
+    Postposition,
+    #[pyo3(name = "OTHER")]
+    Other,
+    #[pyo3(name = "UNKNOWN")]
+    Unknown,
+}
+
+impl PyPos {
+    fn as_pos(self) -> PartOfSpeech {
+        match self {
+            PyPos::Noun => PartOfSpeech::Noun,
+            PyPos::Adjective => PartOfSpeech::Adjective,
+            PyPos::Pronoun => PartOfSpeech::Pronoun,
+            PyPos::Numeral => PartOfSpeech::Numeral,
+            PyPos::Ordinal => PartOfSpeech::Ordinal,
+            PyPos::Verb => PartOfSpeech::Verb,
+            PyPos::NegativeVerb => PartOfSpeech::NegativeVerb,
+            PyPos::Adverb => PartOfSpeech::Adverb,
+            PyPos::Conjunction => PartOfSpeech::Conjunction,
+            PyPos::Interjection => PartOfSpeech::Interjection,
+            PyPos::Preposition => PartOfSpeech::Preposition,
+            PyPos::Postposition => PartOfSpeech::Postposition,
+            PyPos::Other => PartOfSpeech::Other,
+            PyPos::Unknown => PartOfSpeech::Unknown,
+        }
+    }
+
+    fn from_pos(pos: PartOfSpeech) -> Self {
+        match pos {
+            PartOfSpeech::Noun => PyPos::Noun,
+            PartOfSpeech::Adjective => PyPos::Adjective,
+            PartOfSpeech::Pronoun => PyPos::Pronoun,
+            PartOfSpeech::Numeral => PyPos::Numeral,
+            PartOfSpeech::Ordinal => PyPos::Ordinal,
+            PartOfSpeech::Verb => PyPos::Verb,
+            PartOfSpeech::NegativeVerb => PyPos::NegativeVerb,
+            PartOfSpeech::Adverb => PyPos::Adverb,
+            PartOfSpeech::Conjunction => PyPos::Conjunction,
+            PartOfSpeech::Interjection => PyPos::Interjection,
+            PartOfSpeech::Preposition => PyPos::Preposition,
+            PartOfSpeech::Postposition => PyPos::Postposition,
+            PartOfSpeech::Other => PyPos::Other,
+            PartOfSpeech::Unknown => PyPos::Unknown,
+        }
+    }
+}
+
+#[pymethods]
+impl PyPos {
+    /// The engine's English name: `noun`, `verb`, ...
+    #[getter]
+    fn name(&self) -> &'static str {
+        self.as_pos().name()
+    }
+
+    /// The sanalista's Finnish name: `substantiivi`, `verbi`, ...
+    #[getter]
+    fn finnish(&self) -> &'static str {
+        self.as_pos().finnish()
+    }
+
+    /// Parse a name (`noun`, `substantiivi`, ...) back into a member.
+    #[staticmethod]
+    fn parse(name: &str) -> Option<Self> {
+        torille::class_wizard::pos_from_name(name).map(PyPos::from_pos)
+    }
+
+    fn __str__(&self) -> &'static str {
+        self.as_pos().name()
+    }
+}
+
+/// Resolve a `pos` argument: a [`PyPos`] member or a name the engine accepts.
+fn resolve_pos(obj: &Bound<'_, PyAny>) -> PyResult<PartOfSpeech> {
+    if let Ok(pos) = obj.extract::<PyPos>() {
+        return Ok(pos.as_pos());
+    }
+    if let Ok(name) = obj.extract::<String>() {
+        if let Some(pos) = torille::class_wizard::pos_from_name(&name) {
+            return Ok(pos);
+        }
+        return Err(PyValueError::new_err(format!(
+            "{name:?}: not a part of speech (use Pos.NOUN or e.g. `substantiivi`)"
+        )));
+    }
+    Err(pyo3::exceptions::PyTypeError::new_err(
+        "pos must be a Pos member or a part-of-speech name",
+    ))
+}
+
+/// A Kotus inflection class: a class number and an optional gradation.
+///
+/// `Luokka(9)` is the plain class 9, `Luokka(9, "B")` the `9*B` subtype. The
+/// string form is still accepted by [`Engine::inflect`], but the value type
+/// validates the pair at construction instead of letting a typo reach the
+/// parser.
+#[pyclass(frozen, name = "Luokka", module = "torille")]
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct PyLuokka {
+    class: u16,
+    /// `None` or an uppercase `A`..`Z`.
+    gradation: Option<char>,
+}
+
+impl PyLuokka {
+    /// The Kotus class expression, e.g. `9` or `9*B`.
+    fn expression(self) -> String {
+        match self.gradation {
+            Some(gradation) => format!("{}*{}", self.class, gradation),
+            None => self.class.to_string(),
+        }
+    }
+}
+
+#[pymethods]
+impl PyLuokka {
+    #[new]
+    #[pyo3(signature = (class, gradation=None))]
+    fn new(class: u16, gradation: Option<char>) -> PyResult<Self> {
+        if !(1..=101).contains(&class) {
+            return Err(PyValueError::new_err(format!(
+                "{class}: a Kotus class is 1..=101"
+            )));
+        }
+        let gradation = match gradation {
+            Some(letter) => {
+                let letter = letter.to_ascii_uppercase();
+                if torille::kotus::Gradation::from_letter(letter).is_none() {
+                    return Err(PyValueError::new_err(format!(
+                        "{letter:?}: a gradation is A..Z"
+                    )));
+                }
+                Some(letter)
+            }
+            None => None,
+        };
+        Ok(PyLuokka { class, gradation })
+    }
+
+    /// The class number.
+    #[getter]
+    fn class(&self) -> u16 {
+        self.class
+    }
+
+    /// The gradation letter, or `None`.
+    #[getter]
+    fn gradation(&self) -> Option<char> {
+        self.gradation
+    }
+
+    /// Parse a class expression such as `9`, `9*B` or `10*H`.
+    #[staticmethod]
+    fn parse(text: &str) -> Option<Self> {
+        let inflection = parse_inflection(text)?;
+        Some(PyLuokka {
+            class: inflection.class,
+            gradation: inflection
+                .gradation
+                .map(|gradation| (b'A' + gradation.0 - 1) as char),
+        })
+    }
+
+    fn __str__(&self) -> String {
+        self.expression()
+    }
+
+    fn __repr__(&self) -> String {
+        match self.gradation {
+            Some(gradation) => format!("Luokka({}, {gradation:?})", self.class),
+            None => format!("Luokka({})", self.class),
+        }
+    }
+}
+
+/// Resolve a `luokka` argument: a [`PyLuokka`] or a class expression string.
+fn resolve_luokka(obj: &Bound<'_, PyAny>) -> PyResult<String> {
+    if let Ok(luokka) = obj.extract::<PyLuokka>() {
+        return Ok(luokka.expression());
+    }
+    if let Ok(text) = obj.extract::<String>() {
+        return Ok(text);
+    }
+    Err(pyo3::exceptions::PyTypeError::new_err(
+        "luokka must be a Luokka or a class expression such as `9` or `9*B`",
+    ))
+}
+
 /// The reading as the words the `inflect` binary prints, in its order.
 ///
 /// Kept in step with `torille_tools::format_form` so the printed form cannot
@@ -565,14 +789,6 @@ fn drop_marker(inflections: &mut Vec<Inflection>) {
     }
 }
 
-fn parse_pos(s: &str) -> Option<PartOfSpeech> {
-    let s = s.trim().to_lowercase();
-    if s.is_empty() {
-        return None;
-    }
-    PartOfSpeech::parse_all(&s).into_iter().next()
-}
-
 fn parse_vowel_breaks(s: &str) -> Result<VowelBreaks, String> {
     match s.trim().to_lowercase().as_str() {
         "compound-only" | "compound" => Ok(VowelBreaks::CompoundOnly),
@@ -658,25 +874,35 @@ impl Engine {
     /// Inflects `lemma` and returns every generated form with its confidence and
     /// reading.
     ///
-    /// `klass` is a Kotus class expression and `pos` a part of speech; when
-    /// either is omitted the lemma's own from the sanalista is used. Raises
-    /// `ValueError` if the lemma is unknown and no `klass` is given, which is
+    /// `luokka` is a [`PyLuokka`] (or a class expression such as `9*B`) and
+    /// `pos` a [`PyPos`] (or a name such as `substantiivi`); when either is
+    /// omitted the lemma's own from the sanalista is used. Raises
+    /// `ValueError` if the lemma is unknown and no `luokka` is given, which is
     /// the one case with no sensible default.
     ///
-    /// The class argument is called `klass`, not `class`, because Python will not
-    /// accept a reserved word as a keyword argument: `inflect(w, class="9")` is
-    /// a `SyntaxError` at parse time, before this function is ever reached. The
-    /// name that reads best in Rust is a name no caller could have used.
-    #[pyo3(signature = (lemma, klass=None, pos=None))]
+    /// The class argument is `luokka` -- Finnish for class -- because `class`
+    /// is a Python keyword. It used to be `klass`, an abbreviation that only
+    /// existed to dodge the keyword.
+    #[pyo3(signature = (lemma, luokka=None, pos=None))]
     fn inflect(
         &self,
         py: Python<'_>,
         lemma: &str,
-        klass: Option<&str>,
-        pos: Option<&str>,
+        luokka: Option<&Bound<'_, PyAny>>,
+        pos: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Py<PyList>> {
+        // Both `Luokka(9)` and `"9"` reach the one parser; the value form is
+        // validated here, the string form by `plan`.
+        let luokka = match luokka {
+            Some(obj) => Some(resolve_luokka(obj)?),
+            None => None,
+        };
+        let pos = match pos {
+            Some(obj) => Some(resolve_pos(obj)?),
+            None => None,
+        };
         let plan = self
-            .plan(lemma, klass, pos)
+            .plan(lemma, luokka.as_deref(), pos)
             .map_err(PlanError::into_pyerr)?;
         let forms = py.allow_threads(|| self.generate(lemma, &plan));
 
@@ -723,12 +949,12 @@ impl Engine {
     /// prior)` and `next_question` is a [`PyCell`] or `None`. Only the top ten
     /// are returned.
     #[allow(clippy::type_complexity)]
-    #[pyo3(signature = (word, pos="noun", answers=None, use_recorded=true))]
+    #[pyo3(signature = (word, pos=None, answers=None, use_recorded=true))]
     fn class_candidates(
         &self,
         py: Python<'_>,
         word: &str,
-        pos: &str,
+        pos: Option<&Bound<'_, PyAny>>,
         answers: Option<Vec<(PyCell, String)>>,
         use_recorded: bool,
     ) -> PyResult<(
@@ -737,10 +963,9 @@ impl Engine {
         bool,
         Vec<String>,
     )> {
-        let Some(pos) = torille::class_wizard::pos_from_name(pos) else {
-            return Err(PyValueError::new_err(format!(
-                "{pos:?} is not a part of speech"
-            )));
+        let pos = match pos {
+            Some(obj) => resolve_pos(obj)?,
+            None => PartOfSpeech::Noun,
         };
         let answers: std::collections::HashMap<String, String> = answers
             .unwrap_or_default()
@@ -815,9 +1040,26 @@ impl Engine {
     /// lemma, which the splitter's POS filter requires. A row with no classed
     /// head keeps the bare `(none)`.
     #[pyo3(signature = (part_of_speech, include_classless=false))]
-    fn words(&self, part_of_speech: &str, include_classless: bool) -> Vec<(String, String)> {
-        let wanted = part_of_speech.trim();
-        self.data
+    fn words(
+        &self,
+        part_of_speech: &Bound<'_, PyAny>,
+        include_classless: bool,
+    ) -> PyResult<Vec<(String, String)>> {
+        let wanted = if let Ok(pos) = part_of_speech.extract::<PyPos>() {
+            pos.as_pos().finnish().to_string()
+        } else if let Ok(name) = part_of_speech.extract::<String>() {
+            name
+        } else {
+            return Err(pyo3::exceptions::PyTypeError::new_err(
+                "part_of_speech must be a Pos member or a sanalista name",
+            ));
+        };
+        if wanted.trim().is_empty() {
+            return Err(PyValueError::new_err(
+                "part_of_speech is empty; use Pos.NOUN or e.g. `substantiivi`",
+            ));
+        }
+        Ok(self.data
             .lexicon
             .iter()
             .filter(|l| l.part_of_speech.split(", ").any(|p| p.trim() == wanted))
@@ -839,7 +1081,7 @@ impl Engine {
                 }
                 None => None,
             })
-            .collect()
+            .collect())
     }
 
     /// Permitted Finnish line breaks in `word`.
@@ -1215,7 +1457,12 @@ impl Engine {
     /// defect this now guards lived here, and being able to assert on the plan
     /// is what turned "372 lemmas emit half their forms twice" from a
     /// measurement into a test.
-    fn plan(&self, lemma: &str, class: Option<&str>, pos: Option<&str>) -> Result<Plan, PlanError> {
+    fn plan(
+        &self,
+        lemma: &str,
+        class: Option<&str>,
+        pos: Option<PartOfSpeech>,
+    ) -> Result<Plan, PlanError> {
         // A class given outright is the escape hatch this error message has been
         // recommending all along: the sanalista is consulted for the part of
         // speech and the possessive capability, not for permission to inflect.
@@ -1241,7 +1488,7 @@ impl Engine {
         // An explicit `pos` overrides the lexicon, since that is the caller
         // stating the reading directly.
         let noun_capable = match pos {
-            Some(name) => parse_pos(name) == Some(PartOfSpeech::Noun),
+            Some(pos) => pos == PartOfSpeech::Noun,
             None => found
                 .iter()
                 .any(|l| PartOfSpeech::is_substantival(l.part_of_speech)),
@@ -1256,7 +1503,7 @@ impl Engine {
         // it is not a noun, which is the same defect as `ehtooheni` being tagged
         // a bare singular illative. One rule now decides both, so they cannot.
         let part_of_speech = match pos {
-            Some(name) => parse_pos(name).unwrap_or(PartOfSpeech::Unknown),
+            Some(pos) => pos,
             None if noun_capable => PartOfSpeech::Noun,
             None => found
                 .first()
@@ -1365,6 +1612,8 @@ fn torille_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyTypography>()?;
     m.add_class::<PyNormal>()?;
     m.add_class::<PyCell>()?;
+    m.add_class::<PyPos>()?;
+    m.add_class::<PyLuokka>()?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }
@@ -1550,9 +1799,9 @@ mod tests {
         // though its first row is the adverb.
         assert!(owned("aika") > 100, "aika is a noun in class 9*D");
         // An explicit `pos` overrides the lexicon, in both directions.
-        let mieto_as_noun = e.plan("mieto", None, Some("substantiivi")).unwrap();
+        let mieto_as_noun = e.plan("mieto", None, Some(PartOfSpeech::Noun)).unwrap();
         assert!(mieto_as_noun.possessives, "an explicit noun reading wins");
-        let talo_as_adj = e.plan("talo", None, Some("adjektiivi")).unwrap();
+        let talo_as_adj = e.plan("talo", None, Some(PartOfSpeech::Adjective)).unwrap();
         assert!(
             !talo_as_adj.possessives,
             "an explicit adjective reading wins"
@@ -1666,7 +1915,7 @@ mod tests {
         // as for a word the sanalista does have.
         assert!(!plan.possessives);
         assert!(
-            e.plan("kokeilusanana", Some("1"), Some("substantiivi"))
+            e.plan("kokeilusanana", Some("1"), Some(PartOfSpeech::Noun))
                 .unwrap()
                 .possessives
         );
@@ -1691,7 +1940,7 @@ mod tests {
             g.into_iter().map(|f| f.word).collect()
         };
         let as_adjective = e
-            .plan("kokeilusanana", Some("1"), Some("adjektiivi"))
+            .plan("kokeilusanana", Some("1"), Some(PartOfSpeech::Adjective))
             .unwrap();
         let bare = words(e.generate("talo", &as_adjective));
         assert!(

@@ -66,7 +66,7 @@ def main(path, only_class=None):
             # a zero denominator would inflate every rate below.
             continue
         forms = (
-            engine.inflect(word, klass=only_class)
+            engine.inflect(word, luokka=only_class)
             if only_class
             else engine.inflect(word)
         )

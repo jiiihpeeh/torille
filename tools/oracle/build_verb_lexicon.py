@@ -930,7 +930,7 @@ def enrich_missing_verbs(
     bases = inserted = processed = 0
     for word, class_str in lemmas:
         try:
-            forms = engine.inflect(word, klass=class_str, pos="verbi")
+            forms = engine.inflect(word, luokka=class_str, pos="verbi")
         except ValueError:
             continue
         processed += 1

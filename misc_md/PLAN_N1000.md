@@ -171,7 +171,7 @@ Changes:
 2. Replace `multi_class = len(set(classes_of(lemma))) > 1` with a real
    per-lemma class list, and compare at the **lemma level**:
    - engine forms: for each token in `class_tokens(lemma)`, call
-     `inflect(lemma, klass=token)` and merge the results. `inflect(lemma)` with
+     `inflect(lemma, luokka=token)` and merge the results. `inflect(lemma)` with
      no class chooses one row, so it is not enough (`veto` would lose either
      `vedoitta` or `vetoitta`). A classless lemma still calls `inflect(lemma)`;
    - expected forms: the union of the `ok='both'` rows for all homonyms;

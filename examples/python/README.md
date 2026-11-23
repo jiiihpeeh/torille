@@ -47,10 +47,10 @@ there is no file to find). Construct it once and reuse it.
 from torille import Engine
 
 engine = Engine()
-engine.inflect("talo", klass=None, pos=None)      # [PyForm, ...]
-engine.class_candidates("mökki", "noun", [(Cell.GEN_SG, "mökin")])
+engine.inflect("talo", luokka=None, pos=None)      # [PyForm, ...]
+engine.class_candidates("mökki", Pos.NOUN, [(Cell.GEN_SG, "mökin")])
 engine.lookup("kuusi")                             # [(class, pos), ...]
-engine.words("substantiivi", include_classless=False)
+engine.words(Pos.NOUN, include_classless=False)
 engine.check("talossa")                            # PyCheck(kind, bases)
 engine.suggest("Äitj", max_n=5, max_distance=2)    # [PySuggestion, ...]
 engine.check_normal("paloi")                       # PyNormal(kind, base, gate)
@@ -64,9 +64,22 @@ engine.apply_typography(text)                      # str
 engine.hyphenate("tietokoneohjelmointi")           # [PyHyphenationPoint, ...]
 ```
 
-`Cell` is a real enum: `Cell.ILL_SG` is the `ill_sg` question, `Cell.parse("ill_sg")`
-round-trips, and `next_question` comes back as a `Cell` (or `None`), so a typo
-in a cell name is a `TypeError` rather than a silently skipped question.
+The fixed arguments have value types:
+
+```python
+Luokka(9)         # the plain class 9
+Luokka(9, "B")    # 9*B
+Luokka.parse("10*H")
+Pos.NOUN          # Pos.VERB, Pos.ADJECTIVE, ...
+Cell.ILL_SG       # Cell.GEN_PL, Cell.PRES_1SG, ...
+Cell.parse("ill_sg")
+```
+
+`Cell` is a real enum: `Cell.ILL_SG` is the `ill_sg` question, and
+`next_question` comes back as a `Cell` (or `None`), so a typo in a cell name
+is a `TypeError` rather than a silently skipped question. The string forms
+(`luokka="9*B"`, `pos="substantiivi"`, `"noun"`) are still accepted, so a tool
+that already speaks them keeps working.
 
 Two details that shape the examples:
 
@@ -75,8 +88,9 @@ Two details that shape the examples:
   bytes, so slice with `text.encode("utf-8")[start:end].decode("utf-8")` (the
   scripts define a small `span_text` helper). Hyphenation points provide both
   `byte_offset` and `char_offset`; slice with the latter.
-- **`klass`, not `class`.** `class` is a Python keyword, so the inflection
-  class argument is spelled `klass`.
+- **`luokka`, not `class`.** `class` is a Python keyword, so the inflection
+  class argument is the Finnish word `luokka` -- not an abbreviation of the
+  English one.
 
 The binding's implementation and doc comments are in
 [`bindings/src/lib.rs`](../../bindings/src/lib.rs); the Rust engine is described

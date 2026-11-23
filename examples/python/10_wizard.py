@@ -8,7 +8,7 @@ Add answers one at a time and watch the ranking tighten; `use_recorded=False`
 hides the sanalista's own class, which is how the published curve was measured.
 """
 
-from torille import Cell, Engine
+from torille import Cell, Engine, Luokka
 
 STEPS = [
     [],
@@ -32,7 +32,9 @@ def show(engine: Engine, word: str, answers, use_recorded: bool) -> None:
     candidates, next_question, tie, recorded = engine.class_candidates(
         word, "noun", answers, use_recorded
     )
-    top = ", ".join(f"{klass}({hits}/{misses})" for klass, hits, misses, *_ in candidates[:3])
+    top = ", ".join(
+        f"{luokka}({hits}/{misses})" for luokka, hits, misses, *_ in candidates[:3]
+    )
     next_key = next_question.key if next_question is not None else None
     print(f"  answers={len(answers)} next={next_key!r} tie={tie} top: {top}")
     if recorded:
@@ -63,7 +65,7 @@ def main() -> None:
         "pöllykkä", "noun", UNKNOWN_STEPS[-1], use_recorded=False
     )
     inferred = candidates[0][0]
-    forms = engine.inflect("pöllykkä", klass=inferred)
+    forms = engine.inflect("pöllykkä", luokka=Luokka.parse(inferred))
     print(f"\nInferred class {inferred}; the paradigm starts:")
     for form in forms[:6]:
         print(f"  {form.word:<14} {form.confidence:<9} {form.tags}")

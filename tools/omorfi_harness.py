@@ -884,7 +884,7 @@ class Harness:
                 )
                 for f in self.engine.inflect(
                     lemma,
-                    klass=klass,
+                    luokka=klass,
                     pos={
                         "adjective": "adjektiivi",
                         "pronoun": "pronomini",

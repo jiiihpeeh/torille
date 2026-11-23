@@ -135,7 +135,7 @@ def main() -> int:
                 lemma_owner[lemma] = (base, flag)
 
             try:
-                forms = engine.inflect(lemma, klass=out_class, pos=out_pos)
+                forms = engine.inflect(lemma, luokka=out_class, pos=out_pos)
             except Exception as exc:  # noqa: BLE001
                 errors.append(f"{base} {flag}: {lemma} class {out_class}: {exc}")
                 continue

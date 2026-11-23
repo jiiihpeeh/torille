@@ -678,7 +678,7 @@ def inflect(lemma: str, klass: str, pos: str) -> list[str]:
         return [line.split()[0] for line in proc.stdout.splitlines() if line.strip()]
     if _ENGINE is None:
         _ENGINE = torille.Engine()
-    return [form.word for form in _ENGINE.inflect(lemma, klass=klass, pos=pos)]
+    return [form.word for form in _ENGINE.inflect(lemma, luokka=klass, pos=pos)]
 
 
 def validate(rows: list[list[str]], quiet: bool = False) -> int:

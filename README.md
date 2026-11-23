@@ -400,21 +400,24 @@ corpus manifest and the methodology are in
 `bindings/` builds a PyO3 module called `torille` with one class, `Engine`:
 
 ```python
-from torille import Engine
+from torille import Engine, Luokka, Pos
 
 e = Engine()
-e.inflect("kissa")                   # every form, with named fields
-e.inflect("kissa", klass="9", pos="substantiivi")
-e.lookup("kauppa")                   # [('9*B', 'substantiivi')]
-e.words("substantiivi")              # every classed lemma of that POS with its first class
-e.hyphenate("tietokoneohjelmointi")  # points with byte/char offsets + source
+e.inflect("kissa")                              # every form, with named fields
+e.inflect("kissa", luokka=Luokka(9), pos=Pos.NOUN)
+e.lookup("kauppa")                              # [('9*B', 'substantiivi')]
+e.words(Pos.NOUN)                               # every classed lemma of that POS with its first class
+e.hyphenate("tietokoneohjelmointi")             # points with byte/char offsets + source
 ```
 
-The class argument is `klass`, not `class`, because Python does not accept a
-reserved word as a keyword argument. A `klass` is enough to inflect a word the
-sanalista has never seen; without one, an unknown word is refused because
-there is nothing to fall back on. `inflect` returns objects with named fields
-(`pos`, `case`, `number`, ...) rather than the binary's printed tag words.
+The class argument is `luokka` -- Finnish for class -- because Python does not
+accept a reserved word as a keyword argument. `Luokka(9)` and `Luokka(9, "B")`
+are the typed spellings; the string form (`luokka="9*B"`, `pos="substantiivi"`)
+is still accepted for tools that already speak it. A `luokka` is enough to inflect
+a word the sanalista has never seen; without one, an unknown word is refused
+because there is nothing to fall back on. `inflect` returns objects with named
+fields (`pos`, `case`, `number`, ...) rather than the binary's printed tag
+words.
 
 The extension also exposes the check/suggest pair, the morphology and syntax
 layers, the grammar/style pass, typography and the class wizard. Runnable tours

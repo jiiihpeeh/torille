@@ -9,7 +9,7 @@ words, so the counts below are the contract a suggestion layer relies on.
 
 from collections import Counter, defaultdict
 
-from torille import Engine
+from torille import Engine, Luokka, Pos
 
 
 def main() -> None:
@@ -45,8 +45,15 @@ def main() -> None:
     print(f"  {form.word}: {form.tags}")
 
     print("\nA word the sanalista has never seen, given a class:")
-    for form in engine.inflect("mököke", klass="1", pos="substantiivi")[:6]:
+    for form in engine.inflect("mököke", luokka=Luokka(1), pos=Pos.NOUN)[:6]:
         print(f"  {form.word:<14} {form.confidence:<9} {form.tags}")
+
+    print("\nThe class is a value, and the string form still parses:")
+    print(f"  Luokka(9) -> {Luokka(9)}")
+    print(f"  Luokka(9, 'B') -> {Luokka(9, 'B')}")
+    print(f"  Luokka.parse('10*H') -> {Luokka.parse('10*H')!r}")
+    print(f"  Pos.NOUN.finnish -> {Pos.NOUN.finnish!r}")
+    print(f"  Pos.parse('substantiivi') -> {Pos.parse('substantiivi')!r}")
 
     print("\nWithout a class there is nothing to inflect from:")
     try:

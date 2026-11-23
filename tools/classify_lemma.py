@@ -170,7 +170,7 @@ def cells_of_forms(forms) -> dict[tuple, set[str]]:
 
 
 def engine_cells(engine, base: str, klass: str, pos: str) -> dict[tuple, set[str]]:
-    return cells_of_forms(engine.inflect(base, klass=klass, pos=pos))
+    return cells_of_forms(engine.inflect(base, luokka=klass, pos=pos))
 
 
 def binary_cells(binary: str, base: str, klass: str, pos: str) -> dict[tuple, set[str]]:

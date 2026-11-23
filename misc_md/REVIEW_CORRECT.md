@@ -365,7 +365,7 @@ Acceptance: the E2 table has no panics; the public API has a documented bound.
 
 The policy question is whether `expand::inflect(word, class, …)` promises a
 total function or only a well-formed stem. The Python binding documents that a
-`klass` is enough to inflect a word the sanalista has never seen, so arbitrary
+a class expression is enough to inflect a word the sanalista has never seen, so arbitrary
 input is part of the contract in practice. Treat it as total.
 
 - [x] Guard `class_wizard::infer`: trim, return a `WizardError` for an empty
