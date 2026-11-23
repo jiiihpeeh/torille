@@ -1,10 +1,12 @@
 [workspace]
 members = ["tools", "tools/maps-sync", "bindings", "wrapper", "torille-wasm", "torille-wasm-leptos", "demo-server"]
-resolver = "2"
+resolver = "3"
 
 [workspace.package]
-# Everything except tools/ is dual-licensed. The tools crate overrides this
-# with GPL-3.0-or-later; see LICENSE, tools/LICENSE, and tools/README.md.
+# Every crate in the workspace -- the engine, the bindings, the wrapper, the
+# wasm crates and `tools` -- is dual-licensed MIT OR Apache-2.0. The GPL
+# applies to individual Python harness files tied to Omorfi/Voikko, not to a
+# crate; `tools/LICENSE-GPL-3.0` and `tools/README.md` list them.
 license = "MIT OR Apache-2.0"
 
 [package]

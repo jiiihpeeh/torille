@@ -67,6 +67,8 @@ data/nykysuomensanalista_derivates.csv
 /extensions/chromium/torille-chromium.zip
 /extensions/firefox/torille-firefox.xpi
 extensions/chromium/torille_wasm_bg.wasm
+# A web-ext source bundle built in the repository root.
+/torille-firefox-*-source.zip
 
 # Large generated artifacts (local only)
 data/all_forms.csv

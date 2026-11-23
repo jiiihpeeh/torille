@@ -1,7 +1,11 @@
-//! Generated per-class inflection rules.
+//! Hand-written per-class inflection engines.
 //!
-//! Produced by tools/oracle/extract_class_rules.py --rust from the noun
-//! lexicon. do not edit by hand; regenerate.
+//! Each `class_*` module states its class's stems and endings directly, in the
+//! `Decl`/`Builder` shape shared with `expand/verbs/`. They are maintained by
+//! hand: the rule generator (`tools/oracle/extract_class_rules.py --rust`)
+//! writes its own output to `target/class-rules` for comparison and is not the
+//! source of these files (the checked-in tree became hand-written in 3199fad;
+//! `Cargo.toml`'s `generated-nominals` feature comment says the same).
 #![allow(dead_code)]
 
 use crate::tags::Form;

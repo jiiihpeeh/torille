@@ -169,7 +169,7 @@ src/
     lexicon_index.rs  compile-time sorted head/tail index over the lexicon
     split.rs          first-occurrence `dedup`
     verbs/            hand-written per-class VERB engines (class_52..78)
-    nominals/         generated per-class NOUN engines (class_1..101)
+    nominals/         hand-written per-class NOUN engines (class_1..101)
 build.rs              compile-time codegen driver; `build/` holds the writers
 data/                 committed Kotus sources + generated SQLite oracles
 data/hyphenation/     vendored MIT school patterns + exception table
@@ -259,7 +259,7 @@ The two are merged in `expand::inflect_in` by a per-class switch:
 
 ### The nominal class engines
 
-`expand/nominals/` is the single generated per-class tree, ported onto the
+`expand/nominals/` is the single hand-written per-class tree, ported onto the
 verb-side shape (`Decl` + `decline` + a builder). The old parallel
 `nominals-refactored/` tree and the `#[path]` swap machinery were retired on
 2026-10-24: every class now uses the ported implementation, and the old
@@ -415,7 +415,7 @@ for `päin` or `äkki-`.
 
 ## Public API (crate root)
 
-`check`, `suggest`, `suggest_detailed`, `levenshtein_with_ops`, `EditOp`;
+`check`, `is_known_word`, `suggest`, `suggest_detailed`, `levenshtein_with_ops`, `EditOp`;
 `compound::{analyze, explain, Analysis, Compound, Component, CompoundKind,
 ComponentInflection, Explanation, Action}`;
 `inflect`/`inflect_all`/`form_of`/`forms_of` under `expand`; `sanalista`,
@@ -535,11 +535,16 @@ is gitignored and generated.
   is separate and stays under its own terms (`data/LICENSE`). A tool's output
   is not relicensed by the tool, but do not copy the GPL oracle-harness code
   into the engine or a binding.
-- **Do not hand-edit generated files.** `expand/nominals/` is produced by
-  `tools/oracle/extract_class_rules.py --rust`; `src/expand/nominals/mod.rs` says so at
-  the top. Regenerate, or fix `grammar/` / `expand/inflect.rs`. Generated-module
-  lint noise is scoped with one `#[allow(...)]` on `mod nominals;` in
-  `expand/mod.rs`; hand-written code is warning-free.
+- **`expand/nominals/` is hand-written, not generated.** The rule generator
+  (`tools/oracle/extract_class_rules.py --rust`) writes its own output to
+  `target/class-rules`; the checked-in class modules are maintained by hand
+  (see `src/expand/nominals/mod.rs`, the `generated-nominals` feature comment
+  in `Cargo.toml`, and commit 3199fad). Fix a class in its own module. Do not
+  hand-edit the genuinely generated artefacts: the `build/` blob writers, the
+  `maps/` blobs and the committed oracle tables under `data/`. The class
+  engines' shared helpers are scoped with one `#[allow(...)]` on
+  `mod nominals;` in `expand/mod.rs`; hand-written code elsewhere is
+  warning-free.
 - **Rejected dictionary rows.** `build.rs`'s `REJECTED_LEMMAS` is the one place
   a sanalista row can be removed outright. It is filtered from the lexicon blob,
   the fast form set, and the stem maps, so the row and its paradigm disappear
@@ -560,8 +565,9 @@ is gitignored and generated.
   switches,** not trivia: promoting a class to authoritative, or porting a file
   with `#[path]`, changes which engine owns that class. Adjust the fixtures in
   the same commit.
-- **Features:** `generated-nominals` and `generated-verbs` are both default. The
-  generated per-class engines are behind them.
+- **Features:** `generated-nominals` and `generated-verbs` are both default.
+  The per-class engines (`expand/nominals/`, `expand/verbs/`) are behind them;
+  the feature names are historical, the modules are hand-written.
 - **No shortcuts in the inflection detection.** The right place for a
   missing-form bug is the inflection engine (`src/expand/`,
   `src/expand/verbs/`, `src/expand/find_bases.rs`, `src/grammar/`), never
@@ -613,7 +619,7 @@ is gitignored and generated.
 |---|---|
 | a case/stem/gradation rule for a class | `src/grammar/noun.rs`, `src/grammar/verb.rs`, `src/grammar/stem.rs` |
 | a class whose model can't stand in | `src/grammar/irregular.rs` |
-| the per-class generated engines | regenerate via `tools/oracle/extract_class_rules.py`; edit `src/expand/nominals/` |
+| a per-class noun engine | edit `src/expand/nominals/`; `tools/oracle/extract_class_rules.py --rust` writes `target/class-rules` for comparison only |
 | slot/stem arithmetic, spellings | `src/expand/inflect.rs`, `src/expand/align.rs`, `src/expand/slot.rs` |
 | suggestion ranking | `src/suggest/candidates.rs` |
 | edit distance / keyboard tie-break | `src/suggest/levenshtein.rs` |
