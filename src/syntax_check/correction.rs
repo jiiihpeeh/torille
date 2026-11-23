@@ -15,25 +15,47 @@ use crate::tokenise::Token;
 
 use super::diagnostic::{Confidence as DiagnosticConfidence, Correction, CorrectionLicense, Edit};
 
-/// A cached [`forms_of`] result for one (lemma, inflections, wanted tags, POS).
+/// A cached [`forms_of`] result for one (lemma, wanted tags, POS).
 ///
-/// A correction pass inflects the whole paradigm of every lemma it offers a
+/// The lemma's class list is not part of the key: it is a function of the
+/// lemma, so two calls can only differ by the wanted tags or the POS. A
+/// correction pass inflects the whole paradigm of every lemma it offers a
 /// replacement for, and a warm re-check of the same text asks for exactly the
 /// same paradigms again. The cache is thread-local and bounded by the number
 /// of cached forms, so a long document cannot grow it without bound.
 #[derive(PartialEq, Eq, Hash)]
 struct FormsKey {
     lemma: String,
-    inflections: Vec<(u16, u8)>,
     want: Tags,
     pos: PartOfSpeech,
 }
 
 const FORM_CACHE_CAP: usize = 20_000;
 
+/// The class list the sanalista gives `lemma`, or `None` when it is not a
+/// lemma at all.
+fn lemma_inflections(lemma: &str) -> Option<Vec<crate::kotus::Inflection>> {
+    let row = sanalista().by_word(lemma).next()?;
+    Some(row.inflections().collect())
+}
+
+/// The part of speech a lemma's correction paradigm is inflected as.
+///
+/// The sanalista's first reading decides; `fallback` covers a row that names
+/// none (the verb corrections pass `Verb`). The nominal corrections already
+/// know the POS from the reading and do not call this.
+fn lemma_pos(lemma: &str, fallback: PartOfSpeech) -> Option<PartOfSpeech> {
+    let row = sanalista().by_word(lemma).next()?;
+    Some(
+        PartOfSpeech::parse_all(row.part_of_speech())
+            .first()
+            .copied()
+            .unwrap_or(fallback),
+    )
+}
+
 fn cached_forms(
     lemma: &str,
-    inflections: &[crate::kotus::Inflection],
     cat: &Catalogues,
     want: &Tags,
     pos: PartOfSpeech,
@@ -50,22 +72,16 @@ fn cached_forms(
 
     let key = FormsKey {
         lemma: lemma.to_string(),
-        inflections: inflections
-            .iter()
-            .map(|inflection| {
-                (
-                    inflection.class,
-                    inflection.gradation.map_or(0, |gradation| gradation.0),
-                )
-            })
-            .collect(),
         want: *want,
         pos,
     };
     if let Some(forms) = CACHE.with_borrow(|cache| cache.get(&key).cloned()) {
         return forms;
     }
-    let forms = Rc::new(forms_of(lemma, inflections, cat, want, pos, false));
+    let Some(inflections) = lemma_inflections(lemma) else {
+        return Rc::new(Vec::new());
+    };
+    let forms = Rc::new(forms_of(lemma, &inflections, cat, want, pos, false));
     CACHE.with_borrow_mut(|cache| {
         if FORMS.with(Cell::get) + forms.len() > FORM_CACHE_CAP {
             cache.clear();
@@ -90,14 +106,9 @@ pub fn verb_agreement_corrections(
     reading: &Tags,
     cat: &Catalogues,
 ) -> Vec<Correction> {
-    let Some(row) = sanalista().by_word(lemma).next() else {
+    let Some(pos) = lemma_pos(lemma, PartOfSpeech::Verb) else {
         return Vec::new();
     };
-    let inflections: Vec<_> = row.inflections().collect();
-    let pos = PartOfSpeech::parse_all(row.part_of_speech())
-        .first()
-        .copied()
-        .unwrap_or(PartOfSpeech::Verb);
     let mut want = Tags::UNKNOWN;
     want.part_of_speech = Some(PartOfSpeech::Verb);
     want.person = Some(person);
@@ -108,7 +119,7 @@ pub fn verb_agreement_corrections(
     want.polarity = Polarity::Affirmative;
 
     let mut corrections: Vec<Correction> = Vec::new();
-    let forms = cached_forms(lemma, &inflections, cat, &want, pos);
+    let forms = cached_forms(lemma, cat, &want, pos);
     for form in forms.iter() {
         if form.confidence != Confidence::Plain || form.word == token.text {
             continue;
@@ -163,14 +174,9 @@ pub fn participle_agreement_corrections(
     reading: &Tags,
     cat: &Catalogues,
 ) -> Vec<Correction> {
-    let Some(row) = sanalista().by_word(lemma).next() else {
+    let Some(pos) = lemma_pos(lemma, PartOfSpeech::Verb) else {
         return Vec::new();
     };
-    let inflections: Vec<_> = row.inflections().collect();
-    let pos = PartOfSpeech::parse_all(row.part_of_speech())
-        .first()
-        .copied()
-        .unwrap_or(PartOfSpeech::Verb);
     let mut want = Tags::UNKNOWN;
     want.part_of_speech = Some(PartOfSpeech::Verb);
     want.number = Some(number);
@@ -181,7 +187,7 @@ pub fn participle_agreement_corrections(
     want.polarity = Polarity::Affirmative;
 
     let mut corrections: Vec<Correction> = Vec::new();
-    for form in cached_forms(lemma, &inflections, cat, &want, pos).iter() {
+    for form in cached_forms(lemma, cat, &want, pos).iter() {
         if form.confidence != Confidence::Plain || form.word == token.text {
             continue;
         }
@@ -237,14 +243,9 @@ pub fn connegative_corrections(
     reading: &Tags,
     cat: &Catalogues,
 ) -> Vec<Correction> {
-    let Some(row) = sanalista().by_word(lemma).next() else {
+    let Some(pos) = lemma_pos(lemma, PartOfSpeech::Verb) else {
         return Vec::new();
     };
-    let inflections: Vec<_> = row.inflections().collect();
-    let pos = PartOfSpeech::parse_all(row.part_of_speech())
-        .first()
-        .copied()
-        .unwrap_or(PartOfSpeech::Verb);
     let mut want = Tags::UNKNOWN;
     want.part_of_speech = Some(PartOfSpeech::Verb);
     want.voice = Some(Voice::Active);
@@ -259,7 +260,7 @@ pub fn connegative_corrections(
     }
 
     let mut corrections: Vec<Correction> = Vec::new();
-    for form in cached_forms(lemma, &inflections, cat, &want, pos).iter() {
+    for form in cached_forms(lemma, cat, &want, pos).iter() {
         if form.confidence != Confidence::Plain
             || form.word == token.text
             || form.word.split_whitespace().count() != 1
@@ -318,14 +319,9 @@ pub fn imperative_connegative_corrections(
     else {
         return Vec::new();
     };
-    let Some(row) = sanalista().by_word(lemma).next() else {
+    let Some(pos) = lemma_pos(lemma, PartOfSpeech::Verb) else {
         return Vec::new();
     };
-    let inflections: Vec<_> = row.inflections().collect();
-    let pos = PartOfSpeech::parse_all(row.part_of_speech())
-        .first()
-        .copied()
-        .unwrap_or(PartOfSpeech::Verb);
     let mut want = Tags::UNKNOWN;
     want.part_of_speech = Some(PartOfSpeech::Verb);
     want.voice = Some(Voice::Active);
@@ -336,7 +332,7 @@ pub fn imperative_connegative_corrections(
     want.polarity = Polarity::Affirmative;
 
     let mut corrections: Vec<Correction> = Vec::new();
-    for form in cached_forms(lemma, &inflections, cat, &want, pos).iter() {
+    for form in cached_forms(lemma, cat, &want, pos).iter() {
         if form.confidence != Confidence::Plain
             || form.word == token.text
             || form.word.split_whitespace().count() != 1
@@ -411,10 +407,6 @@ pub fn attribute_agreement_corrections(
     } else {
         lemma
     };
-    let Some(row) = sanalista().by_word(lemma).next() else {
-        return Vec::new();
-    };
-    let inflections: Vec<_> = row.inflections().collect();
     let mut want = Tags::UNKNOWN;
     want.part_of_speech = Some(pos);
     want.case = Some(case);
@@ -422,7 +414,7 @@ pub fn attribute_agreement_corrections(
     want.degree = degree;
 
     let mut corrections: Vec<Correction> = Vec::new();
-    let forms = cached_forms(lemma, &inflections, cat, &want, pos);
+    let forms = cached_forms(lemma, cat, &want, pos);
     for form in forms.iter() {
         if form.confidence != Confidence::Plain || form.word == token.text {
             continue;
@@ -471,17 +463,13 @@ pub fn case_corrections(
     pos: PartOfSpeech,
     cat: &Catalogues,
 ) -> Vec<Correction> {
-    let Some(row) = sanalista().by_word(lemma).next() else {
-        return Vec::new();
-    };
-    let inflections: Vec<_> = row.inflections().collect();
     let mut want = Tags::UNKNOWN;
     want.part_of_speech = Some(pos);
     want.case = Some(case);
     want.number = number;
 
     let mut corrections: Vec<Correction> = Vec::new();
-    let forms = cached_forms(lemma, &inflections, cat, &want, pos);
+    let forms = cached_forms(lemma, cat, &want, pos);
     for form in forms.iter() {
         if form.confidence != Confidence::Plain || form.word == token.text {
             continue;
