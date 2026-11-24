@@ -2201,7 +2201,6 @@ dependencies = [
  "criterion",
  "flate2",
  "serde_json",
- "torille-maps",
 ]
 
 [[package]]

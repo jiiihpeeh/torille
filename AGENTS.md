@@ -109,7 +109,7 @@ Cargo workspace, root package `torille`, members declared in `Cargo.toml`:
 |---|---|---|
 | `/` (`src/`) | `torille` | the engine — the only crate with the real logic |
 | `tools/` | `torille-tools` | CLI drivers + `tools/*.py` verification harness |
-| `tools/maps-sync/` | `torille-maps` | fetch/publish the orphan `maps` branch; also the root `build.rs` build-dependency |
+| `tools/maps-sync/` | `torille-maps` | fetch/publish the orphan `maps` branch; a thin wrapper over `build/maps_sync.rs` |
 | `bindings/` | `torille-py` | PyO3 extension `torille` (used by the harness) |
 | `wrapper/` | `wrapper` | hunspell-shaped C ABI over `torille::suggest` |
 | `torille-wasm/` | `torille-wasm` | wasm-bindgen bindings + per-textarea state |
@@ -450,12 +450,14 @@ the repository keeps them on a single-commit orphan branch literally named
 normal history never accumulates them.
 
 The first `cargo build` fetches them automatically when they are missing.
-`tools/maps-sync/` (`torille-maps`) is a build-dependency of the root crate
-and has no `torille` dependency, so it compiles on a clone where the engine
-cannot. `build.rs` checks the five non-regenerable blobs (`REQUIRED` in
-`tools/maps-sync/src/lib.rs`); if any is absent it fetches the branch from
-`origin` (`MAPS_REMOTE` overrides), retrying the network step up to three
-times, and writes every `maps/*.bin.gz` on it. A failed fetch leaves existing
+`build/maps_sync.rs` is shared by the root `build.rs` (compiled in with
+`#[path]`) and the `torille-maps` CLI (`tools/maps-sync/`, a thin wrapper), so
+the engine needs no path-only build-dependency; the CLI has no `torille`
+dependency, so it compiles on a clone where the engine cannot. `build.rs`
+checks the non-regenerable blobs (`REQUIRED` in `build/maps_sync.rs`); if any
+is absent it fetches the branch from `origin` (`MAPS_REMOTE` overrides),
+retrying the network step up to three times, and writes every
+`maps/*.bin.gz` on it. A failed fetch leaves existing
 blobs intact, and the build then stops with a message naming the explicit
 command. It runs with the root package's build script (`cargo build`,
 `cargo check`, `cargo test`, normally with `--workspace` or `-p torille`), not

@@ -19,9 +19,10 @@ cargo run -p torille-maps -- publish   # after regenerating
 A fresh clone has no `maps/*.bin.gz`, and `torille` cannot compile without
 them. The root `build.rs` therefore fetches them on the first build:
 
-- `tools/maps-sync/` (`torille-maps`) is a **build-dependency**, so it
-  compiles before `torille` and works even though the engine cannot. The same
-  crate provides the `status`/`fetch`/`publish` CLI above.
+- `build/maps_sync.rs` holds the fetch/publish implementation. The root
+  `build.rs` compiles it with `#[path]`, and the `torille-maps` CLI
+  (`tools/maps-sync/`) wraps the same file. The engine therefore has no
+  path-only build-dependency, and a published package is self-contained.
 - `build.rs` checks the blobs in `REQUIRED` — the ones the build cannot
   regenerate itself. If any is missing it calls `fetch`.
 - `fetch` uses the clone's **`origin`** remote by default; `MAPS_REMOTE`
@@ -66,7 +67,10 @@ separately; see [`docs/remotes.md`](../docs/remotes.md) for the exact
 force-push and the check that both remotes hold the same `maps` commit.
 
 `build.rs` decompresses the fetched copies into `OUT_DIR`; the compiler
-embeds the plain bytes. The maps are the only generated artefacts treated
+embeds the plain bytes. It writes generated blobs back into `maps/` only when
+the package root has a `.git` entry (a source checkout); a packaged crate,
+which has none, writes only to `OUT_DIR`, because Cargo rejects a build script
+that modifies the package directory. The maps are the only generated artefacts treated
 this way — `data/*.csv` and `data/*.sqlite` have their own rules below.
 
 

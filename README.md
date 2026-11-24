@@ -31,7 +31,8 @@ cargo run --release -p torille-tools --bin check_style -- "Tällä hetkellä til
 ```
 
 The first build fetches `maps/*.bin.gz` from the orphan `maps` branch through
-the `torille-maps` build-dependency; see
+the `maps_sync` module compiled into `build.rs` (the `torille-maps` CLI wraps
+the same module); see
 [`maps/README.md`](https://github.com/jiiihpeeh/torille/blob/master/maps/README.md#automatic-fetch-on-first-build) for the
 remote, the offline switches, and what happens when the fetch fails.
 
@@ -106,8 +107,8 @@ forms, which are accepted as words but must not be offered as corrections; check
 `Form::confidence` first. For a word the lexicon does not know, pass an
 explicit `Inflection` to `torille::expand::inflect_all_in`.
 
-The runnable tour is `cargo run --example rust_quickstart`. The crate is not
-published on crates.io yet; the path and git forms are the supported ones.
+The runnable tour is `cargo run --example rust_quickstart`. The crate is not published on crates.io yet; the path and git forms are the
+supported ones.
 
 ## How it works
 

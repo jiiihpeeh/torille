@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2024"
 description = "Fetch/publish the orphan maps branch for torille"
 license.workspace = true
+# The engine's build script compiles `build/maps_sync.rs` directly; this crate
+# is the CLI wrapper and is not part of the published engine.
+publish = false
 
 [lints]
 workspace = true

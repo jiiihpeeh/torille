@@ -20,10 +20,64 @@ documentation = "https://docs.rs/torille"
 readme = "README.md"
 keywords = ["finnish", "spellcheck", "morphology", "nlp", "hyphenation"]
 categories = ["text-processing", "internationalization"]
-# `rules/` holds generator inputs, not build inputs, and some filenames contain
-# `*`; cargo cannot put those in a package. The engine build never reads them.
-exclude = ["rules/**"]
-
+# The published package is the engine, not the repository. `include` is a
+# whitelist: the source and build script, the committed build inputs they read,
+# the blobs the build cannot regenerate, and the licence/readme files. Tests,
+# plans, the browser extensions, the bindings and `rules/` stay in the
+# repository. `build/maps_sync.rs` is compiled into `build.rs` with `#[path]`;
+# the `tools/maps-sync` CLI wraps the same file, so a path-only build-dependency
+# does not have to be published.
+include = [
+    "/Cargo.toml",
+    "/Cargo.lock",
+    "/build.rs",
+    "/src/**",
+    "/build/**",
+    "/models/**",
+    "/examples/rust_quickstart.rs",
+    "/data/README.md",
+    "/data/LICENSE",
+    "/data/adj_degrees.csv",
+    "/data/adposition_cases.csv",
+    "/data/adverb_degrees.csv",
+    "/data/adverbit.csv",
+    "/data/catalogue.csv",
+    "/data/class_examples.tsv",
+    "/data/feminine_nouns.csv",
+    "/data/hyphenation/exceptions.csv",
+    "/data/hyphenation/hyph-fi-x-school.tex",
+    "/data/lexical_adverbs.csv",
+    "/data/nykysuomensanalista.csv",
+    "/data/plural_only.tsv",
+    "/data/proper_name_forms.csv",
+    "/data/proper_name_forms_extra.csv",
+    "/data/stem_to_base_map.csv",
+    "/data/style_phrases.csv",
+    "/data/style_words.csv",
+    "/data/verb_arguments.csv",
+    "/data/verb_connectives.csv",
+    "/data/verb_connegatives.csv",
+    "/data/verb_rection.csv",
+    "/data/verb_stem_to_base_map.csv",
+    "/maps/README.md",
+    "/maps/all_forms.bin.gz",
+    "/maps/degree_forms.bin.gz",
+    "/maps/derived_by_form.bin.gz",
+    "/maps/derived_modifiers.bin.gz",
+    "/maps/derived_nominal.bin.gz",
+    "/maps/adverb_possessive.bin.gz",
+    "/maps/feminine_nouns.bin.gz",
+    "/maps/lemma_stem_shape.bin.gz",
+    "/maps/oi_plural_lemmas.bin.gz",
+    "/maps/pronoun_forms.bin.gz",
+    "/maps/stem_endings_noun.bin.gz",
+    "/maps/stem_endings_verb.bin.gz",
+    "/README.md",
+    "/LICENSE",
+    "/LICENSE-APACHE",
+    "/LICENSE-MIT",
+    "/NOTICE",
+]
 [features]
 # The per-class noun engines in src/expand/nominals/. These are hand-written;
 # the rule generator that once dumped class__* modules beside them is gone (see
@@ -82,8 +136,6 @@ harness = false
 # needs no phf codegen. `flate2` writes those blobs gzip-compressed at the
 # maximum level.
 flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
-# Fetch the orphan `maps` branch when the build runs without the blobs.
-torille-maps = { path = "tools/maps-sync" }
 
 [profile.release]
 opt-level = 3

@@ -35,8 +35,13 @@ mod hyphenation;
 #[path = "build/gzip.rs"]
 mod gzip;
 
-// The same std-only implementation the `torille-maps` CLI uses.
-use torille_maps as maps;
+// The same std-only implementation the `torille-maps` CLI uses. It is compiled
+// in here rather than taken as a build-dependency: a path-only dependency
+// cannot be packaged for crates.io, and this keeps the published crate
+// self-contained. The `torille-maps` CLI wraps the same file.
+#[path = "build/maps_sync.rs"]
+#[allow(dead_code)]
+mod maps;
 
 use csv_builders::catalogue::emit_catalogue;
 use csv_builders::sanalista::generate;
@@ -90,8 +95,17 @@ fn main() {
     // compressed copies in step with their CSV/engine sources.
     let out_dir = Path::new(&out_dir).to_path_buf();
     let precomputed = Path::new(&manifest).join("maps");
-    std::fs::create_dir_all(&precomputed)
-        .unwrap_or_else(|e| panic!("create_dir_all {}: {e}", precomputed.display()));
+    // A source checkout keeps `maps/*.bin.gz` in step as the CSVs change; a
+    // packaged crate must not write outside OUT_DIR, and cargo rejects a
+    // package whose build script does. The `.git` entry is the signal: a
+    // registry package (and docs.rs) is extracted without one, while a clone
+    // or worktree has it. Package builds reuse the committed blobs and emit
+    // the generated ones into OUT_DIR only.
+    let update_committed = Path::new(&manifest).join(".git").exists();
+    if update_committed {
+        std::fs::create_dir_all(&precomputed)
+            .unwrap_or_else(|e| panic!("create_dir_all {}: {e}", precomputed.display()));
+    }
 
     // These tables are computed with the engine, so a build script cannot
     // regenerate them. They live on the orphan `maps` branch; `master` tracks
@@ -149,7 +163,9 @@ fn main() {
     let sanalista_raw = out_dir.join("sanalista.bin");
     std::fs::write(&sanalista_raw, &blob)
         .unwrap_or_else(|e| panic!("write {}: {e}", sanalista_raw.display()));
-    gzip::write(&precomputed.join("sanalista.bin.gz"), &blob);
+    if update_committed {
+        gzip::write(&precomputed.join("sanalista.bin.gz"), &blob);
+    }
 
     // Compile-time subset of the form set: lemmas (nominative singular)
     // plus the genitive singular of every lemma, both without possessives.
@@ -182,7 +198,9 @@ fn main() {
         );
         emit_empty_set(&forms_raw);
     }
-    gzip::compress_file(&forms_raw, &forms_gz);
+    if update_committed {
+        gzip::compress_file(&forms_raw, &forms_gz);
+    }
 
     // Proper names: Wikidata supplies the lemmas, Omorfi the singular cases.
     // The fast path accepts these forms; they are never suggested.
@@ -190,31 +208,31 @@ fn main() {
     let proper_extra = Path::new(&manifest).join("data/proper_name_forms_extra.csv");
     println!("cargo:rerun-if-changed={}", proper_csv.display());
     println!("cargo:rerun-if-changed={}", proper_extra.display());
-    emit_map(&out_dir, &precomputed, "proper_names.bin", |raw| {
+    emit_map(&out_dir, &precomputed, update_committed, "proper_names.bin", |raw| {
         emit_proper_names(&proper_csv, raw)
     });
-    emit_map(&out_dir, &precomputed, "proper_name_lemmas.bin", |raw| {
+    emit_map(&out_dir, &precomputed, update_committed, "proper_name_lemmas.bin", |raw| {
         emit_proper_name_lemmas(&proper_csv, &proper_extra, raw)
     });
-    emit_map(&out_dir, &precomputed, "proper_name_cases.bin", |raw| {
+    emit_map(&out_dir, &precomputed, update_committed, "proper_name_cases.bin", |raw| {
         emit_proper_name_cases(&proper_csv, &proper_extra, raw)
     });
 
     let rection_csv = Path::new(&manifest).join("data/verb_rection.csv");
     println!("cargo:rerun-if-changed={}", rection_csv.display());
-    emit_map(&out_dir, &precomputed, "verb_rection.bin", |raw| {
+    emit_map(&out_dir, &precomputed, update_committed, "verb_rection.bin", |raw| {
         emit_verb_rection(&rection_csv, raw)
     });
 
     let arguments_csv = Path::new(&manifest).join("data/verb_arguments.csv");
     println!("cargo:rerun-if-changed={}", arguments_csv.display());
-    emit_map(&out_dir, &precomputed, "verb_arguments.bin", |raw| {
+    emit_map(&out_dir, &precomputed, update_committed, "verb_arguments.bin", |raw| {
         emit_verb_arguments(&arguments_csv, raw)
     });
 
     let adposition_csv = Path::new(&manifest).join("data/adposition_cases.csv");
     println!("cargo:rerun-if-changed={}", adposition_csv.display());
-    emit_map(&out_dir, &precomputed, "adposition_cases.bin", |raw| {
+    emit_map(&out_dir, &precomputed, update_committed, "adposition_cases.bin", |raw| {
         emit_adposition_cases(&adposition_csv, raw)
     });
 
@@ -225,10 +243,10 @@ fn main() {
     let style_words_csv = Path::new(&manifest).join("data/style_words.csv");
     println!("cargo:rerun-if-changed={}", style_phrases_csv.display());
     println!("cargo:rerun-if-changed={}", style_words_csv.display());
-    emit_map(&out_dir, &precomputed, "style_phrases.bin", |raw| {
+    emit_map(&out_dir, &precomputed, update_committed, "style_phrases.bin", |raw| {
         emit_style_table(&style_phrases_csv, raw, "style phrases")
     });
-    emit_map(&out_dir, &precomputed, "style_words.bin", |raw| {
+    emit_map(&out_dir, &precomputed, update_committed, "style_words.bin", |raw| {
         emit_style_table(&style_words_csv, raw, "style words")
     });
     write_style_phrase_first(
@@ -251,10 +269,10 @@ fn main() {
     let verb_csv = Path::new(&manifest).join("data/verb_stem_to_base_map.csv");
     println!("cargo:rerun-if-changed={}", noun_csv.display());
     println!("cargo:rerun-if-changed={}", verb_csv.display());
-    emit_map(&out_dir, &precomputed, "stem_map_noun.bin", |raw| {
+    emit_map(&out_dir, &precomputed, update_committed, "stem_map_noun.bin", |raw| {
         emit_stem_map(&noun_csv, raw)
     });
-    emit_map(&out_dir, &precomputed, "stem_map_verb.bin", |raw| {
+    emit_map(&out_dir, &precomputed, update_committed, "stem_map_verb.bin", |raw| {
         emit_stem_map(&verb_csv, raw)
     });
 
@@ -280,7 +298,7 @@ fn main() {
     // blob through `spec::Catalogues::embedded`; nothing parses text.
     let catalogue_csv = Path::new(&manifest).join("data/catalogue.csv");
     println!("cargo:rerun-if-changed={}", catalogue_csv.display());
-    emit_map(&out_dir, &precomputed, "catalogue.bin", |raw| {
+    emit_map(&out_dir, &precomputed, update_committed, "catalogue.bin", |raw| {
         emit_catalogue(&catalogue_csv, raw)
     });
 
@@ -290,7 +308,7 @@ fn main() {
     // `inflect`/`find_bases` and the stem-map verify.
     let degrees_csv = Path::new(&manifest).join("data/adj_degrees.csv");
     println!("cargo:rerun-if-changed={}", degrees_csv.display());
-    emit_map(&out_dir, &precomputed, "adj_degrees.bin", |raw| {
+    emit_map(&out_dir, &precomputed, update_committed, "adj_degrees.bin", |raw| {
         emit_adj_degrees(&degrees_csv, raw)
     });
 
@@ -299,7 +317,7 @@ fn main() {
     // engine cannot derive these from a positive paradigm.
     let adverb_degrees_csv = Path::new(&manifest).join("data/adverb_degrees.csv");
     println!("cargo:rerun-if-changed={}", adverb_degrees_csv.display());
-    emit_map(&out_dir, &precomputed, "adverb_degrees.bin", |raw| {
+    emit_map(&out_dir, &precomputed, update_committed, "adverb_degrees.bin", |raw| {
         emit_adj_degrees(&adverb_degrees_csv, raw)
     });
 
@@ -307,7 +325,7 @@ fn main() {
     // `kylliksenne`), which Omorfi cannot generate. A form -> lemma map.
     let adverbit_csv = Path::new(&manifest).join("data/adverbit.csv");
     println!("cargo:rerun-if-changed={}", adverbit_csv.display());
-    emit_map(&out_dir, &precomputed, "adverbit.bin", |raw| {
+    emit_map(&out_dir, &precomputed, update_committed, "adverbit.bin", |raw| {
         emit_adverbi(&adverbit_csv, raw)
     });
 
@@ -315,7 +333,7 @@ fn main() {
     // `alhaaltapäin`, `ylhäältäpäin`, `äkkipikaa`. A form -> base table.
     let lexical_adverbs_csv = Path::new(&manifest).join("data/lexical_adverbs.csv");
     println!("cargo:rerun-if-changed={}", lexical_adverbs_csv.display());
-    emit_map(&out_dir, &precomputed, "lexical_adverbs.bin", |raw| {
+    emit_map(&out_dir, &precomputed, update_committed, "lexical_adverbs.bin", |raw| {
         emit_lexical_adverbs(&lexical_adverbs_csv, raw)
     });
 
@@ -325,7 +343,7 @@ fn main() {
     // `tools/oracle/build_verb_lexicon.py`.
     let conneg_csv = Path::new(&manifest).join("data/verb_connegatives.csv");
     println!("cargo:rerun-if-changed={}", conneg_csv.display());
-    emit_map(&out_dir, &precomputed, "connegatives.bin", |raw| {
+    emit_map(&out_dir, &precomputed, update_committed, "connegatives.bin", |raw| {
         emit_connegatives(&conneg_csv, raw)
     });
 
@@ -334,7 +352,7 @@ fn main() {
     // data the `connectives` table holds.
     let connectives_csv = Path::new(&manifest).join("data/verb_connectives.csv");
     println!("cargo:rerun-if-changed={}", connectives_csv.display());
-    emit_map(&out_dir, &precomputed, "connectives.bin", |raw| {
+    emit_map(&out_dir, &precomputed, update_committed, "connectives.bin", |raw| {
         emit_connectives(&connectives_csv, raw)
     });
 
@@ -379,15 +397,21 @@ fn main() {
 }
 
 /// Emit one map uncompressed into `OUT_DIR`, then gzip the committed copy.
+///
+/// The gzip copy is only written for a source checkout; a packaged crate
+/// keeps its committed blobs and must not modify the package directory.
 fn emit_map(
     out_dir: &Path,
     precomputed: &Path,
+    update_committed: bool,
     name: &str,
     emit: impl FnOnce(&Path),
 ) {
     let raw = out_dir.join(name);
     emit(&raw);
-    gzip::compress_file(&raw, &precomputed.join(format!("{name}.gz")));
+    if update_committed {
+        gzip::compress_file(&raw, &precomputed.join(format!("{name}.gz")));
+    }
 }
 
 
