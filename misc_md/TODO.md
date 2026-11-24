@@ -15,27 +15,24 @@ below are slice 2 there.
 
 ## crates.io publication
 
-Packaging is ready and verified. `cargo package --allow-dirty` builds the
-tarball from the package directory, the package is ~6.9 MB compressed (under
-the 10 MB limit), and `cargo publish --dry-run --allow-dirty` reaches the
-upload step. The build script compiles `build/maps_sync.rs` with `#[path]` (no
-path-only build-dependency), the package includes the ten `REQUIRED` maps plus
-`all_forms.bin.gz` and `lemma_stem_shape.bin.gz`, and
-`DOCS_RS=1 RUSTDOCFLAGS="-D warnings" cargo doc` works from the packaged
-crate. The README uses absolute URLs and the crate docs are a docs.rs overview
-with zero rustdoc warnings.
+`torille` 0.7.0 is published on crates.io (2026-11-24), from package commit
+`fe9f3e9` and maps branch commit `85eb933`. The pre-release `v0.7.0` tag is
+the earlier browser release; `crates-io-v0.7.0` marks the package commit.
+docs.rs builds the default features from the package, which includes the
+ten `REQUIRED` maps, `all_forms.bin.gz` and `lemma_stem_shape.bin.gz`.
 
-`--allow-dirty` is required on purpose: the 12 included maps are gitignored
-generated artefacts, so Cargo sees them as untracked. They are in the tarball;
-the orphan `maps` branch (currently `85eb933`) is their source of truth. The
-release record should name that commit.
+Notes for the next release:
 
-What remains is the release action, not code:
-
-- Run `cargo publish --allow-dirty` with the crates.io token (package
-  `torille` 0.7.0).
-- After publishing, change the README's "not published yet" line to the plain
-  `cargo add torille` form, and consider a `v0.7.0` tag on both remotes.
+- `cargo package --allow-dirty` and `cargo publish --allow-dirty` are the
+  commands. The tarball is ~6.9 MB compressed (under the 10 MB limit).
+- `--allow-dirty` is required on purpose: the 12 included maps are gitignored
+  generated artefacts, so Cargo sees them as untracked. They are in the
+  tarball; the orphan `maps` branch is their source of truth, so record its
+  commit in the release.
+- The build script compiles `build/maps_sync.rs` with `#[path]` (no path-only
+  build-dependency). It writes generated blobs into `maps/` only when the
+  package root has a `.git` entry, so registry and docs.rs builds touch only
+  OUT_DIR.
 - Do **not** publish `torille-maps`; it is an internal CLI wrapper
   (`publish = false`) and its `#[path]` include is not part of that package.
 
