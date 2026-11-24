@@ -62,21 +62,19 @@ extension.
 ## Using it as a Rust library
 
 The root crate is the library; the CLI tools, the Python extension and the
-wasm all call the same functions. Add it to another crate from a checkout:
+wasm all call the same functions. Add it from crates.io:
 
 ```toml
 [dependencies]
+torille = "0.7"
+```
+
+or from a checkout or the public repository:
+
+```toml
 torille = { path = "../torille" }
+# torille = { git = "https://github.com/jiiihpeeh/torille" }
 ```
-
-or from the public repository:
-
-```toml
-[dependencies]
-torille = { git = "https://github.com/jiiihpeeh/torille" }
-```
-
-Once the crate is on crates.io, the registry form is `torille = "0.7"`.
 
 The git form needs no manual maps step. Cargo's checkout has no `maps` branch,
 so the first build fetches the required blobs from the `repository` URL in
@@ -107,8 +105,7 @@ forms, which are accepted as words but must not be offered as corrections; check
 `Form::confidence` first. For a word the lexicon does not know, pass an
 explicit `Inflection` to `torille::expand::inflect_all_in`.
 
-The runnable tour is `cargo run --example rust_quickstart`. The crate is not published on crates.io yet; the path and git forms are the
-supported ones.
+The runnable tour is `cargo run --example rust_quickstart`.
 
 ## How it works
 
