@@ -13,6 +13,26 @@ The next four independent slices, with their ordering, gates and stop
 conditions, are in [`PLAN_FOLLOWUPS.md`](PLAN_FOLLOWUPS.md). The possessives
 below are slice 2 there.
 
+## crates.io publication
+
+The library is consumable by path and git (see the README), but it is not
+published. The documentation side is ready: the README uses absolute URLs
+(relative links break on crates.io), the crate-level docs are a docs.rs
+overview, and `RUSTDOCFLAGS="-D warnings" cargo doc -p torille` is clean.
+What remains is packaging:
+
+- `torille-maps` is a path-only build-dependency. Publish it, or inline
+  `tools/maps-sync/src/lib.rs` into `build.rs` with `#[path]` and drop the
+  dependency.
+- Include the ten `REQUIRED` maps plus `all_forms.bin.gz`: docs.rs sets
+  `DOCS_RS=1`, so the build cannot fetch the orphan branch. Include the data
+  inputs the build reads as well. A whitelist of `src/`, `build/`, the build
+  inputs and those blobs measures ~6.5 MB compressed, under the 10 MB limit.
+- Add the `include` whitelist, then run `cargo package --verify` and
+  `cargo publish --dry-run`.
+- After publishing, change the README's "not published yet" wording and add
+  the plain `cargo add torille` form.
+
 ## Deferred from the correctness review (2026-11-23)
 
 Two Phase 5 items in

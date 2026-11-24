@@ -468,7 +468,7 @@ fn row_plural_only(row: u32) -> bool {
 ///
 /// The struct carries only a `u32` row index. The three string
 /// fields and the inflection codes are read on demand from the
-/// blob via [`row_field`] / [`row_infl_start`]. The previous
+/// blob via `row_field` / `row_infl_start`. The previous
 /// version held three `&'static str` slices into `SANALISTA`;
 /// moving to the blob is allocation-free (no new
 /// `Box::leak`s, the strings already live in `.rodata`).
@@ -676,7 +676,7 @@ impl Sanalista {
     }
 
     /// Row indices sorted by reversed word. Same shape as
-    /// [`word_order`], used for suffix range queries: every
+    /// `word_order`, used for suffix range queries: every
     /// suffix of a word is a prefix of the word's reversal,
     /// so a suffix query is the same lower-bound-and-scan
     /// against the reversed sort.

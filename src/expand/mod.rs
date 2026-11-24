@@ -145,7 +145,7 @@ mod degree_index_tests {
 /// its positive lemma.
 ///
 /// `gen_derived` writes this as `maps/degree_forms.bin.gz`. The computation
-/// is engine-driven: it reuses [`derived_forms::degree_forms`] for adjectives
+/// is engine-driven: it reuses `degree_forms` for adjectives
 /// (including the productive fallbacks and the curated `loitto` row) and the
 /// curated adverb table for `hiljaa`. Comparative lemmas (`enempi`, class
 /// `16*H`) are not degrees of another positive, so their own paradigms map

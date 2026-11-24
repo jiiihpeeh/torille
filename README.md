@@ -32,12 +32,12 @@ cargo run --release -p torille-tools --bin check_style -- "Tällä hetkellä til
 
 The first build fetches `maps/*.bin.gz` from the orphan `maps` branch through
 the `torille-maps` build-dependency; see
-[`maps/README.md`](maps/README.md#automatic-fetch-on-first-build) for the
+[`maps/README.md`](https://github.com/jiiihpeeh/torille/blob/master/maps/README.md#automatic-fetch-on-first-build) for the
 remote, the offline switches, and what happens when the fetch fails.
 
 Both remotes (GitLab `origin` and the GitHub mirror) and the procedure for
 keeping the normal and `maps` branches in sync are in
-[`docs/remotes.md`](docs/remotes.md).
+[`docs/remotes.md`](https://github.com/jiiihpeeh/torille/blob/master/docs/remotes.md).
 
 The wasm demo and the browser extensions are separate builds:
 
@@ -75,11 +75,13 @@ or from the public repository:
 torille = { git = "https://github.com/jiiihpeeh/torille" }
 ```
 
+Once the crate is on crates.io, the registry form is `torille = "0.7"`.
+
 The git form needs no manual maps step. Cargo's checkout has no `maps` branch,
 so the first build fetches the required blobs from the `repository` URL in
 `Cargo.toml` — the same automatic fetch a clone does. `MAPS_REMOTE`,
 `TORILLE_NO_FETCH`, `CARGO_NET_OFFLINE` and `DOCS_RS` keep their usual meaning
-(see [`maps/README.md`](maps/README.md#automatic-fetch-on-first-build)).
+(see [`maps/README.md`](https://github.com/jiiihpeeh/torille/blob/master/maps/README.md#automatic-fetch-on-first-build)).
 
 The usual entry points are `check`, `suggest` and `expand::inflect_word`:
 
@@ -123,9 +125,9 @@ Every generated form carries a **confidence** (`src/tags.rs`):
 
 | | |
 |---|---|
-| `Plain` | a plain attachment, no repair. These are the only forms a correction may be drawn from. |
-| `Repaired` | built by repairing the lemma (gradation, epenthesis, a genitive alternation). Often real enough to accept, never to suggest. |
-| `Guessed` | a type-rule guess with no catalogue form behind it. Accepted, never suggested. |
+| `Plain` | a plain attachment, no repair; the only forms a correction may use. |
+| `Repaired` | built by repairing the lemma (gradation, epenthesis, ...); accepted, never suggested. |
+| `Guessed` | a type-rule guess with no catalogue form behind it; accepted, never suggested. |
 
 A form also carries one or more `Tags` readings (POS, case, number, tense,
 person, mood, voice, possessive, clitic, polarity). `Form::union` is the
@@ -136,7 +138,7 @@ legitimately case-less.
 extracted edit script), then the deterministic `existing_score`, then the word.
 A small QWERTY-adjacency table breaks distance-1 ties. The known defects —
 recall, and `illegal` forms from wrong stems — are tracked in
-[`docs/harness.md`](docs/harness.md) and [`misc_md/TODO.md`](misc_md/TODO.md).
+[`docs/harness.md`](https://github.com/jiiihpeeh/torille/blob/master/docs/harness.md) and [`misc_md/TODO.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/TODO.md).
 
 ## The word wizard
 
@@ -161,7 +163,7 @@ word is accepted as written and not inflected.
 The committed sheet is `data/class_examples.tsv`; regenerate it with
 `word_wizard --write-sheet data/class_examples.tsv` after a class-engine
 change. The design, the tail-weighted tie-break and the measured curve are in
-[`misc_md/PLAN_WORD_WIZARD.md`](misc_md/PLAN_WORD_WIZARD.md): adaptive top-1 base class 94.2%
+[`misc_md/PLAN_WORD_WIZARD.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_WORD_WIZARD.md): adaptive top-1 base class 94.2%
 at two answers on the recorded 412-noun sample, 99.8% top-3.
 
 ## Grammar and style
@@ -210,9 +212,9 @@ instantiations. The first progress lands at ~110 ms on the full page, so it is
 not frozen while the cold pass runs. A precomputed reverse index for the wasm was
 measured and rejected on size and coverage (86.6% at 2.1 MB; 95% would exceed
 3 MB). See
-[`misc_md/PLAN_GRAMMAR_STYLE_PERF.md`](misc_md/PLAN_GRAMMAR_STYLE_PERF.md),
-[`misc_md/PLAN_COLD_SEARCH.md`](misc_md/PLAN_COLD_SEARCH.md) and
-[`misc_md/PLAN_COLD_READINGS_CACHE.md`](misc_md/PLAN_COLD_READINGS_CACHE.md).
+[`misc_md/PLAN_GRAMMAR_STYLE_PERF.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_GRAMMAR_STYLE_PERF.md),
+[`misc_md/PLAN_COLD_SEARCH.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_COLD_SEARCH.md) and
+[`misc_md/PLAN_COLD_READINGS_CACHE.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_COLD_READINGS_CACHE.md).
 
 ## Workspace
 
@@ -297,18 +299,18 @@ cargo build
 
 The other lexical exceptions the engine does not derive — proper-name cases,
 the `-oi-` plural set, the class-6/15 tables — are frozen reference data; their
-generators live in [`tools/oracle/`](tools/oracle/README.md) and need
+generators live in [`tools/oracle/`](https://github.com/jiiihpeeh/torille/blob/master/tools/oracle/README.md) and need
 Omorfi/Voikko.
 
 A clean clone builds with no local data files; this was verified by cloning
 `HEAD`, building `--workspace --all-targets` and running the test suite after
-the automatic `maps` fetch. See [`data/README.md`](data/README.md) and
-[`misc_md/FIX_GENGAPS.md`](misc_md/FIX_GENGAPS.md).
+the automatic `maps` fetch. See [`data/README.md`](https://github.com/jiiihpeeh/torille/blob/master/data/README.md) and
+[`misc_md/FIX_GENGAPS.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/FIX_GENGAPS.md).
 
 ## Command-line tools
 
 Build all drivers with `cargo build --release -p torille-tools`. The full
-inventory is in [`tools/README.md`](tools/README.md).
+inventory is in [`tools/README.md`](https://github.com/jiiihpeeh/torille/blob/master/tools/README.md).
 
 | binary | purpose |
 |---|---|
@@ -348,8 +350,8 @@ shipping it to the wasm is the route the cold-page work rejected on size and
 coverage.
 
 Generators (`gen_*`) and the verification harness are described in
-[`tools/build/README.md`](tools/build/README.md) and
-[`tools/README.md`](tools/README.md).
+[`tools/build/README.md`](https://github.com/jiiihpeeh/torille/blob/master/tools/build/README.md) and
+[`tools/README.md`](https://github.com/jiiihpeeh/torille/blob/master/tools/README.md).
 
 ## Verification
 
@@ -359,7 +361,7 @@ harness checks both directions — a real form not offered is a recall bug, and
 a `plain` form that is not real is a precision bug — and reports
 `confirmed`, `missing`, `not_plain`, `mistagged`, `illegal` and `unsupported`.
 The full design, baselines and known defects are in
-[`docs/harness.md`](docs/harness.md).
+[`docs/harness.md`](https://github.com/jiiihpeeh/torille/blob/master/docs/harness.md).
 
 Before a change lands:
 
@@ -441,8 +443,8 @@ release reference (`bench/baselines/reference.json`, fingerprint
 These are native release numbers; the browser (wasm) shape is measured
 separately and is not part of this report. The commands, the full schema, the
 corpus manifest and the methodology are in
-[`docs/benchmarking.md`](docs/benchmarking.md); the staged design is
-[`misc_md/PLAN_BENCHMARK_SUITE.md`](misc_md/PLAN_BENCHMARK_SUITE.md).
+[`docs/benchmarking.md`](https://github.com/jiiihpeeh/torille/blob/master/docs/benchmarking.md); the staged design is
+[`misc_md/PLAN_BENCHMARK_SUITE.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_BENCHMARK_SUITE.md).
 
 ## The Python binding
 
@@ -474,7 +476,7 @@ words.
 
 The extension also exposes the check/suggest pair, the morphology and syntax
 layers, the grammar/style pass, typography and the class wizard. Runnable tours
-of each live in [`examples/python/`](examples/python/README.md); start with
+of each live in [`examples/python/`](https://github.com/jiiihpeeh/torille/blob/master/examples/python/README.md); start with
 `python3 examples/python/00_showcase.py`.
 
 Build it with:
@@ -499,105 +501,105 @@ exception). It is a separate layer: `check` and `suggest` do not call it.
 The Rust API is `torille::hyphenation::{positions, positions_with, split}`;
 the wasm export is `hyphenate`, and `Engine.hyphenate` exposes the same points
 to Python. Soft hyphens are preserved and returned as explicit
-`soft-hyphen` breaks. See [`docs/hyphenation.md`](docs/hyphenation.md).
+`soft-hyphen` breaks. See [`docs/hyphenation.md`](https://github.com/jiiihpeeh/torille/blob/master/docs/hyphenation.md).
 
 ## License
 
 The engine and the shipping surfaces — `src/`, `tests/`, `benches/`,
 `bindings/`, `wrapper/`, the wasm crates, the demo server and the browser
 extensions — are dual-licensed under **MIT OR Apache-2.0**. Pick either; the
-texts are in [LICENSE-MIT](LICENSE-MIT) and [LICENSE-APACHE](LICENSE-APACHE).
+texts are in [LICENSE-MIT](https://github.com/jiiihpeeh/torille/blob/master/LICENSE-MIT) and [LICENSE-APACHE](https://github.com/jiiihpeeh/torille/blob/master/LICENSE-APACHE).
 
 The tooling in `tools/` is also **MIT OR Apache-2.0**, except the files tied to
 Omorfi or Voikko. Those oracle-bridge and harness files are
-**GPL-3.0-or-later**; see [tools/LICENSE-GPL-3.0](tools/LICENSE-GPL-3.0) and
-[tools/README.md](tools/README.md) for the exact list. The GPL applies to the
+**GPL-3.0-or-later**; see [tools/LICENSE-GPL-3.0](https://github.com/jiiihpeeh/torille/blob/master/tools/LICENSE-GPL-3.0) and
+[tools/README.md](https://github.com/jiiihpeeh/torille/blob/master/tools/README.md) for the exact list. The GPL applies to the
 oracle bridge, not to the engine or to source generated by the tools.
 
 `data/` is not covered by either source license. The Kotus material has its own
-terms; see [data/LICENSE](data/LICENSE) and [NOTICE](NOTICE).
+terms; see [data/LICENSE](https://github.com/jiiihpeeh/torille/blob/master/data/LICENSE) and [NOTICE](https://github.com/jiiihpeeh/torille/blob/master/NOTICE).
 
 ## Documentation
 
-- [`docs/syntax_checker.md`](docs/syntax_checker.md) — grammar diagnostics,
+- [`docs/syntax_checker.md`](https://github.com/jiiihpeeh/torille/blob/master/docs/syntax_checker.md) — grammar diagnostics,
   severity policy, corrections, evaluation and known limitations.
-- [`docs/grammar_syntax.md`](docs/grammar_syntax.md) — the complete feature
+- [`docs/grammar_syntax.md`](https://github.com/jiiihpeeh/torille/blob/master/docs/grammar_syntax.md) — the complete feature
   reference for the morphology grammar, syntax analysis, AST and every grammar
   diagnostic.
-- [`docs/word_order.md`](docs/word_order.md) — the word-order specification:
+- [`docs/word_order.md`](https://github.com/jiiihpeeh/torille/blob/master/docs/word_order.md) — the word-order specification:
   clause features, the allow-list and the construction tests.
-- [`docs/style_checker.md`](docs/style_checker.md) — the opt-in style layer:
+- [`docs/style_checker.md`](https://github.com/jiiihpeeh/torille/blob/master/docs/style_checker.md) — the opt-in style layer:
   curated tables, repetition and long-sentence rules, UI and baseline.
-- [`docs/benchmarking.md`](docs/benchmarking.md) — the benchmark suite's
+- [`docs/benchmarking.md`](https://github.com/jiiihpeeh/torille/blob/master/docs/benchmarking.md) — the benchmark suite's
   commands, report schema, corpora, methodology and reference baseline.
-- [`misc_md/PLAN_BENCHMARK_SUITE.md`](misc_md/PLAN_BENCHMARK_SUITE.md) — the
+- [`misc_md/PLAN_BENCHMARK_SUITE.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_BENCHMARK_SUITE.md) — the
   suite's staged design and the recorded reference.
-- [`misc_md/PLAN_SYNTAX_REFACTOR.md`](misc_md/PLAN_SYNTAX_REFACTOR.md) — a phased
+- [`misc_md/PLAN_SYNTAX_REFACTOR.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_SYNTAX_REFACTOR.md) — a phased
   modularisation plan for the syntax layer, checker and extension content.
-- [`misc_md/PLAN_STYLE.md`](misc_md/PLAN_STYLE.md) — the implemented opt-in style
+- [`misc_md/PLAN_STYLE.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_STYLE.md) — the implemented opt-in style
   layer: suggestion-only diagnostics, curated tables and a panel UI.
-- [`misc_md/PLAN_GRAMMAR_STYLE_PERF.md`](misc_md/PLAN_GRAMMAR_STYLE_PERF.md) — the grammar and
+- [`misc_md/PLAN_GRAMMAR_STYLE_PERF.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_GRAMMAR_STYLE_PERF.md) — the grammar and
   style performance plan: one morphology pass with cached case information,
   cold-path candidate pruning, sentence-level incremental checks and worker
   chunking.
-- [`misc_md/PLAN_PARALLEL_MORPHOLOGY.md`](misc_md/PLAN_PARALLEL_MORPHOLOGY.md) — the
+- [`misc_md/PLAN_PARALLEL_MORPHOLOGY.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_PARALLEL_MORPHOLOGY.md) — the
   morphology-only worker pool: codec, state merge, demo and extension.
-- [`misc_md/PLAN_COLD_SEARCH.md`](misc_md/PLAN_COLD_SEARCH.md) — the cold morphology search:
+- [`misc_md/PLAN_COLD_SEARCH.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_COLD_SEARCH.md) — the cold morphology search:
   base ladder, stem-shape filter and the deferred phases.
-- [`misc_md/PLAN_COLD_READINGS_CACHE.md`](misc_md/PLAN_COLD_READINGS_CACHE.md) — the negative
+- [`misc_md/PLAN_COLD_READINGS_CACHE.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_COLD_READINGS_CACHE.md) — the negative
   per-lemma form-cache experiment and the stem-map-first reorder.
-- [`misc_md/PLAN_SYNTAX_CHECKER.md`](misc_md/PLAN_SYNTAX_CHECKER.md) — grammar and punctuation
+- [`misc_md/PLAN_SYNTAX_CHECKER.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_SYNTAX_CHECKER.md) — grammar and punctuation
   diagnostics, ranking and evaluation.
-- [`misc_md/PLAN_SYNTAX.md`](misc_md/PLAN_SYNTAX.md) — the advisory syntax analysis layer
+- [`misc_md/PLAN_SYNTAX.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_SYNTAX.md) — the advisory syntax analysis layer
   underneath the checker.
-- [`misc_md/PLAN_SYNTAX_AST.md`](misc_md/PLAN_SYNTAX_AST.md) — the typed surface
+- [`misc_md/PLAN_SYNTAX_AST.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_SYNTAX_AST.md) — the typed surface
   tree over `syntax`: node kinds, the pass pipeline and the invariants.
-- [`misc_md/PLAN_SYNTAX_AST_REST.md`](misc_md/PLAN_SYNTAX_AST_REST.md) — the remaining
+- [`misc_md/PLAN_SYNTAX_AST_REST.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_SYNTAX_AST_REST.md) — the remaining
   surface-tree work: nested lists, coordination, the wasm export and checker
   consumers. Phase 5b (wasm `analyze_ast`) and the 5c.1 parity audit landed.
-- [`misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md`](misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md) — the
+- [`misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_GRAMMAR_SYNTAX_FIXES.md) — the
   grammar/syntax fix record: predicate-less phrases, relative closing commas,
   imperative connegative corrections and constituent views.
-- [`misc_md/REVIEW_PUNCTUATION_SPEC.md`](misc_md/REVIEW_PUNCTUATION_SPEC.md) — the
+- [`misc_md/REVIEW_PUNCTUATION_SPEC.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/REVIEW_PUNCTUATION_SPEC.md) — the
   clause-by-clause gap analysis against the programmatic Finnish punctuation
   specification.
-- [`misc_md/PLAN_PUNCTUATION_SPEC.md`](misc_md/PLAN_PUNCTUATION_SPEC.md) — the staged
+- [`misc_md/PLAN_PUNCTUATION_SPEC.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_PUNCTUATION_SPEC.md) — the staged
   punctuation plan; indirect-question and vocative commas landed, typography,
   main-clause coordination, relative openings and lists remain.
-- [`misc_md/REVIEW_SEMICOLON.md`](misc_md/REVIEW_SEMICOLON.md) — the semicolon
+- [`misc_md/REVIEW_SEMICOLON.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/REVIEW_SEMICOLON.md) — the semicolon
   gap analysis: the `,;` boundary defect, forbidden-semicolon cases, complex
   lists and spacing.
-- [`misc_md/PLAN_SEMICOLON.md`](misc_md/PLAN_SEMICOLON.md) — the semicolon slice:
+- [`misc_md/PLAN_SEMICOLON.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_SEMICOLON.md) — the semicolon slice:
   the boundary fix, suggestion-only misuse, list awareness and the separate
   typography pass.
-- [`misc_md/PLAN_GRAMMAR_SYNTAX_REFERENCE.md`](misc_md/PLAN_GRAMMAR_SYNTAX_REFERENCE.md) —
+- [`misc_md/PLAN_GRAMMAR_SYNTAX_REFERENCE.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_GRAMMAR_SYNTAX_REFERENCE.md) —
   the review-driven hardening plan for the grammar/syntax feature reference.
-- [`misc_md/PLAN_GRAMMAR_SYNTAX_LAYOUT.md`](misc_md/PLAN_GRAMMAR_SYNTAX_LAYOUT.md) —
+- [`misc_md/PLAN_GRAMMAR_SYNTAX_LAYOUT.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_GRAMMAR_SYNTAX_LAYOUT.md) —
   the render-safe layout plan for the same reference.
-- [`misc_md/PLAN_COMPOUND.md`](misc_md/PLAN_COMPOUND.md) — the compound engine's inflection
+- [`misc_md/PLAN_COMPOUND.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_COMPOUND.md) — the compound engine's inflection
   model and remaining work.
-- [`misc_md/PLAN_HYPHENATION.md`](misc_md/PLAN_HYPHENATION.md) — the hyphenation milestones
+- [`misc_md/PLAN_HYPHENATION.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_HYPHENATION.md) — the hyphenation milestones
   and the remaining corpus triage.
-- [`misc_md/PLAN_WORD_WIZARD.md`](misc_md/PLAN_WORD_WIZARD.md) — the text-first word wizard:
+- [`misc_md/PLAN_WORD_WIZARD.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_WORD_WIZARD.md) — the text-first word wizard:
   class sheet, sparse answer maps, nominal and verb inference, the tail prior,
   the browser pages and the measured oracle curve.
-- [`docs/harness.md`](docs/harness.md) — the verification harness, baselines
+- [`docs/harness.md`](https://github.com/jiiihpeeh/torille/blob/master/docs/harness.md) — the verification harness, baselines
   and the table of known defects.
-- [`docs/hyphenation.md`](docs/hyphenation.md) — patterns, compound adapter,
+- [`docs/hyphenation.md`](https://github.com/jiiihpeeh/torille/blob/master/docs/hyphenation.md) — patterns, compound adapter,
   typographic policy and offsets.
-- [`docs/lexicon.md`](docs/lexicon.md) — the materialised noun lexicon oracle.
-- [`docs/remotes.md`](docs/remotes.md) — the two remotes and the branch/`maps`
+- [`docs/lexicon.md`](https://github.com/jiiihpeeh/torille/blob/master/docs/lexicon.md) — the materialised noun lexicon oracle.
+- [`docs/remotes.md`](https://github.com/jiiihpeeh/torille/blob/master/docs/remotes.md) — the two remotes and the branch/`maps`
   sync procedure.
-- [`data/README.md`](data/README.md) — every file in `data/`, its origin and
+- [`data/README.md`](https://github.com/jiiihpeeh/torille/blob/master/data/README.md) — every file in `data/`, its origin and
   what regenerates it.
-- [`maps/README.md`](maps/README.md) — the embedded maps and their formats.
-- [`tools/build/README.md`](tools/build/README.md) — the engine-driven
+- [`maps/README.md`](https://github.com/jiiihpeeh/torille/blob/master/maps/README.md) — the embedded maps and their formats.
+- [`tools/build/README.md`](https://github.com/jiiihpeeh/torille/blob/master/tools/build/README.md) — the engine-driven
   generators and the comparison gate.
-- [`tools/oracle/README.md`](tools/oracle/README.md) — the GPL reference
+- [`tools/oracle/README.md`](https://github.com/jiiihpeeh/torille/blob/master/tools/oracle/README.md) — the GPL reference
   generators.
-- [`misc_md/FIX_GENGAPS.md`](misc_md/FIX_GENGAPS.md) — what still keeps a generator on an
+- [`misc_md/FIX_GENGAPS.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/FIX_GENGAPS.md) — what still keeps a generator on an
   oracle, with measurements and exit criteria.
-- [`misc_md/DATA_CLEANUP_PLAN.md`](misc_md/DATA_CLEANUP_PLAN.md) — the `data/` cleanup record.
-- [`misc_md/PLAN.md`](misc_md/PLAN.md) / [`misc_md/PLAN_REFACTOR.md`](misc_md/PLAN_REFACTOR.md) — the stem
+- [`misc_md/DATA_CLEANUP_PLAN.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/DATA_CLEANUP_PLAN.md) — the `data/` cleanup record.
+- [`misc_md/PLAN.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN.md) / [`misc_md/PLAN_REFACTOR.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/PLAN_REFACTOR.md) — the stem
   refactor and its outcome.
-- [`misc_md/TODO.md`](misc_md/TODO.md) — known gaps, ordered by user-facing impact.
+- [`misc_md/TODO.md`](https://github.com/jiiihpeeh/torille/blob/master/misc_md/TODO.md) — known gaps, ordered by user-facing impact.

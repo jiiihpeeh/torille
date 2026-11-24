@@ -395,7 +395,7 @@ pub const IRREGULAR_WORDS: &[(&str, &[WordForm])] = &[
     ),
 ];
 
-/// Whether `word` has a hand-written paradigm in [`IRREGULAR_WORDS`] or is
+/// Whether `word` has a hand-written paradigm in `IRREGULAR_WORDS` or is
 /// realised by [`word_irregular`].
 ///
 /// The reverse index normally skips class 99, but a hand-written word's forms

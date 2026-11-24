@@ -1,8 +1,63 @@
-//! Finnish spell checker.
+//! Finnish spell checking, morphology and grammar/style analysis.
 //!
-//! A dictionary-driven checker: the Kotus sanalista provides the lemmas, the
-//! Kotus paradigm catalogue turns each lemma into its inflected forms, and
-//! anything still unknown is checked by compound analysis.
+//! The engine is dictionary-driven. The Kotus *sanalista* supplies the lemmas,
+//! a committed paradigm catalogue turns each lemma into its inflected forms,
+//! and words the lexicon does not know fall through to compound analysis. The
+//! data is embedded in the crate, so there is no file to find and no model to
+//! download at run time.
+//!
+//! # Checking and correcting
+//!
+//! ```
+//! use torille::{CheckOutcome, check, suggest};
+//!
+//! assert!(check("talossa").is_known());
+//! match check("talossa") {
+//!     CheckOutcome::Inflected(bases) => assert_eq!(bases, vec!["talo"]),
+//!     other => panic!("expected an inflected form, got {other:?}"),
+//! }
+//!
+//! let corrections = suggest("koirra", 3, 2);
+//! assert!(corrections.iter().any(|word| word.as_str() == "koira"));
+//! ```
+//!
+//! # Morphology
+//!
+//! [`expand::inflect_word`] inflects a lemma the lexicon knows and returns
+//! every generated form with its [`tags::Tags`] reading and
+//! [`tags::Confidence`]:
+//!
+//! ```
+//! use torille::expand::inflect_word;
+//! use torille::tags::Case;
+//!
+//! let forms = inflect_word("talo");
+//! let inessive = forms.iter().find(|form| form.word == "talossa").unwrap();
+//! assert_eq!(inessive.union().case, Some(Case::Inessive));
+//! ```
+//!
+//! For a word outside the lexicon, pass an explicit [`kotus::Inflection`] to
+//! [`expand::inflect_all_in`].
+//!
+//! # Grammar, style and typography
+//!
+//! [`syntax_check`] adds grammar diagnostics over a sentence, [`style_check`]
+//! is a separate opt-in style layer, [`typography`] fixes punctuation
+//! spacing, and [`hyphenation`] finds Finnish line-break points. [`check_all`]
+//! runs the grammar and style layers together.
+//!
+//! # Features
+//!
+//! The default features are the hand-written per-class engines
+//! (`generated-nominals`, `generated-verbs`; the names are historical). The
+//! remaining features are opt-in: `probe-stats` adds cold-morphology counters,
+//! and `neural-m0` / `neural-m0-stack` embed an optional reading reranker
+//! model. Do not enable the two neural features together.
+//!
+//! # Licence
+//!
+//! The engine is `MIT OR Apache-2.0`. The dictionary data has its own terms;
+//! see the `data/LICENSE` file in the repository.
 
 #![forbid(unsafe_code)]
 

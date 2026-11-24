@@ -1942,7 +1942,7 @@ fn verb_core(
 ///
 /// The two catalogue forms are the first person singular present and the third
 /// person singular past, and the two stems they pin down are the present stem
-/// and the past stem that [`verb_core`] is built on.
+/// and the past stem that `verb_core` is built on.
 pub fn verb_with_passive(
     present1: &str,
     past3: &str,
@@ -1958,7 +1958,7 @@ pub fn verb_with_passive(
 /// The forms of a verb, from its infinitive and its class.
 ///
 /// The present stem and the past stem are read off the infinitive by the
-/// class's type and the [`IRREGULAR_PAST_STEMS`] table, rather than from the
+/// class's type and the `IRREGULAR_PAST_STEMS` table, rather than from the
 /// catalogue's two inflected forms, so a verb whose own forms the catalogue
 /// does not carry is still declined from the same declarative rules as the
 /// model verbs.

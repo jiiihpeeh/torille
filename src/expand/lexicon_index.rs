@@ -61,7 +61,7 @@ pub const PREFIX: usize = 4;
 
 /// The lexicon, with its two precomputed orders.
 ///
-/// Holds no tables of its own: [`WORD_ORDER`] and [`TAIL_ORDER`] are emitted by
+/// Holds no tables of its own: `WORD_ORDER` and `TAIL_ORDER` are emitted by
 /// `build.rs` into the binary, and the rows themselves are borrowed from the
 /// caller's lexicon. Constructing this is free, which is why it can be created
 /// once and handed to every thread.
@@ -109,7 +109,7 @@ impl<'a> LexiconIndex<'a> {
     /// that is the order the orders are stored in, and they go back to lexicon
     /// order because that is the order the linear scan produced and the order
     /// the emitted forms depend on. And the same row can be reached twice,
-    /// because a word whose length is under [`PREFIX`] is found by more than
+    /// because a word whose length is under `PREFIX` is found by more than
     /// one prefix -- see [`Self::heads_of`]. The runs are short, so sorting is
     /// not worth avoiding.
     fn rows_sorted_lexicon(&self, mut rows: Vec<u32>) -> Vec<&'a Lemma<'a>> {
@@ -128,8 +128,8 @@ impl<'a> LexiconIndex<'a> {
     /// dozen instead of a list of a hundred thousand.
     ///
     /// Two searches, and the second is only there because of `SHORTEST_HEAD`.
-    /// A head of [`PREFIX`] or more characters shares the compound's leading
-    /// [`PREFIX`] characters, so the sorted-order run under that prefix holds
+    /// A head of `PREFIX` or more characters shares the compound's leading
+    /// `PREFIX` characters, so the sorted-order run under that prefix holds
     /// all of them. A head of exactly `SHORTEST_HEAD` characters is *equal* to
     /// the compound's leading `SHORTEST_HEAD` characters, which is an exact
     /// lookup and not a range -- and it is not inside the run above, because a
@@ -175,7 +175,7 @@ impl<'a> LexiconIndex<'a> {
     /// inflects and the head is "whatever precedes the longest suffix that is a
     /// word of its own". Every suffix of a word is a prefix of its reversal, so
     /// this is the same lower-bound-and-scan as `heads_of` -- but over
-    /// [`crate::kotus::TAIL_ORDER`], and once per length.
+    /// `TAIL_ORDER`, and once per length.
     ///
     /// The "once per length" is the whole difference from `heads_of`, and it is
     /// forced. A reversed suffix of length *L* is a prefix of the reversal of

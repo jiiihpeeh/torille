@@ -84,7 +84,7 @@ pub(super) fn lemma_set() -> &'static HashSet<&'static str> {
 
 /// True if `word` is itself a known lemma (case-insensitive). This
 /// is the O(1) fast path for the per-textbox spell-check; the
-/// expensive [`check`] is reached only for words that are neither
+/// expensive [`check()`](crate::suggest::check) is reached only for words that are neither
 /// lemmas nor in the textarea's proper-noun set.
 pub fn is_lemma(word: &str) -> bool {
     let lower = word.to_lowercase();

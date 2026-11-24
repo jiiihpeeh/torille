@@ -61,7 +61,7 @@ impl NodeId {
 ///
 /// These are structural subtypes only. The clause's sentence type,
 /// construction, question type and information-structure features stay on
-/// [`Clause::features`] and are read through [`Node::clause`].
+/// [`Clause::features`] and are read through `Node::clause`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ClauseKind {
     Main,

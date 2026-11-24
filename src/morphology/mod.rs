@@ -111,7 +111,7 @@ pub struct CacheStats {
     pub misses: u64,
     /// First resolutions of a surface, by the [`Depth`] that named it.
     pub by_depth: [u64; Depth::ALL.len()],
-    /// Surfaces upgraded from a shallow entry by [`MorphologyCache::resolve_deep`].
+    /// Surfaces upgraded from a shallow entry by `MorphologyCache::resolve_deep`.
     pub deep_upgrades: u64,
     /// Capitalized tokens resolved through the proper-name table.
     pub proper_names: u64,

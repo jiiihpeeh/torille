@@ -18,7 +18,7 @@ use super::{CheckOutcome, classify, suggest, suggest_detailed};
 
 /// Spell-check with the lemma fast path. Used by the per-textbox
 /// `analyze_text`: lemma hits and `proper_nouns` hits return
-/// immediately, every other word falls through to [`check`] for the
+/// immediately, every other word falls through to [`check()`](crate::suggest::check) for the
 /// full prefix walk over the lexicon.
 ///
 /// Returns `None` for unknown words (the per-textbox caller treats

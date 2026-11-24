@@ -31,7 +31,7 @@
 //!   on [`FormBuilder`](crate::expand::FormBuilder), the slow path. The
 //!   `check.rs` tool still offers the full component explanation.
 //! - **Weighted edit distance.** `suggest` uses plain Levenshtein in the
-//!   DP, but a small [`KEYBOARD_ADJACENT`] table is consulted in the score:
+//!   DP, but a small `KEYBOARD_ADJACENT` table is consulted in the score:
 //!   a distance-1 single-substitution between QWERTY neighbours adds a
 //!   tie-break bonus to [`Suggestion::existing_score`], so a typo like
 //!   `tallu` (substitute `o` -> adjacent `u`) ranks above a far-apart

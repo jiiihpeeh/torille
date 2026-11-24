@@ -174,7 +174,7 @@ fn repaired_plural_genitive(word: &str) -> Option<String> {
 ///
 /// Up to `max_n` candidates are returned, each within `max_distance`
 /// Levenshtein units of `word`, with one exception: a human-curated
-/// correction from [`REPORTED_CORRECTIONS`] is returned even when it is
+/// correction from `REPORTED_CORRECTIONS` is returned even when it is
 /// farther away, because the table is the licence. Its
 /// [`Suggestion::edit_distance`] still reports the true distance. The
 /// candidate set is `find_bases`'s

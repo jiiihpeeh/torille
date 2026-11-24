@@ -49,8 +49,8 @@ pub struct FormBuilder {
     /// packed index into `base_words` and the set of cases the word was reached
     /// in.
     ///
-    /// The index is the low [`BASE_ID_BITS`] bits; the top two carry the
-    /// [`Confidence`] the form was generated with. Use [`base_id`] to read the
+    /// The index is the low `BASE_ID_BITS` bits; the top two carry the
+    /// [`Confidence`] the form was generated with. Use `base_id` to read the
     /// index; the packed value is an implementation detail of the ranking.
     ///
     /// This is the way back, and it is flat because a word has one base form
@@ -79,7 +79,7 @@ pub struct FormBuilder {
     /// This is a list rather than a second array indexed by word because a
     /// lookup here is a search through it, and a word asked about in a
     /// sentence is asked about once. A caller doing this per keystroke wants
-    /// [`FormBuilder::build`] to hand over something sorted, and that is a
+    /// [`build()`] to hand over something sorted, and that is a
     /// change worth making when someone needs it.
     pub more_bases: Vec<(u32, u32, u16)>,
     /// `(word position, base id)` -> index into [`Self::more_bases`].

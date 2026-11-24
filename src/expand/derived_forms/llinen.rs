@@ -14,7 +14,7 @@ use super::inen::inen_candidates;
 /// `-llinen` derivation (`kiulu` -> `kiulullinen`, not `kiuluinen`).
 ///
 /// The nominative is reconstructed from the `-ise-`/`-is-` oblique spelling
-/// the same way [`derived_inen_base`] does, then the whole adjective is
+/// the same way `derived_inen_base` does, then the whole adjective is
 /// inflected as class 38 and the surface is verified.
 pub fn derived_llinen_base(
     word: &str,

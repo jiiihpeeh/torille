@@ -1,5 +1,5 @@
 //! The compile-time subset of the form set, embedded as a front-coded
-//! [`StaticSet`].
+//! `StaticSet`.
 //!
 //! Build-time codegen: `build.rs` reads `data/all_forms.csv` (a
 //! dump from `gen_all_forms` walking every lemma's

@@ -7,7 +7,7 @@
 //!
 //! The result is a lowercase set: the typing path only needs to know that a
 //! surface form is a name. It is front-coded and Huffman-coded (`HST1`), see
-//! [`crate::expand::huffman_set`]. Names are **accepted, never suggested** --
+//! `huffman_set`. Names are **accepted, never suggested** --
 //! they are not in the lemma set, so the suggestion ranking cannot offer them
 //! as corrections.
 

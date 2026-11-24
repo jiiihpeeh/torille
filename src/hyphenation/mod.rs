@@ -2,9 +2,9 @@
 //!
 //! Three layers, deliberately separate:
 //!
-//! 1. [`patterns`] finds ordinary Knuth–Liang candidates from the
+//! 1. `patterns` finds ordinary Knuth–Liang candidates from the
 //!    MIT-licensed school pattern set in `data/hyphenation/`.
-//! 2. [`compounds`] supplies compound structure from the lexicon.
+//! 2. `compounds` supplies compound structure from the lexicon.
 //! 3. This module applies Finnish typographic policy: minimum fragments,
 //!    the vowel rules, ranking and explicit exceptions.
 //!

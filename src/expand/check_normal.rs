@@ -14,7 +14,7 @@
 //!    `is_known_word` first pass. Cheap: lemma HashSet probe +
 //!    suffix-strip + reprobe.
 //!
-//! 2. **Compile-time form subset** -- a [`StaticSet`] of
+//! 2. **Compile-time form subset** -- a `StaticSet` of
 //!    lemmas and genitive-singular forms (see
 //!    [`crate::expand::all_forms`]). O(1) per probe; zero
 //!    cold-start cost.
@@ -23,7 +23,7 @@
 //!    is `siellä` + `-hän`. Strip a clitic and re-probe the
 //!    form subset. Up to ~6 clitics stacked.
 //!
-//! 4. **Noun stem hashmap** -- a [`StemMap`] keyed on the
+//! 4. **Noun stem hashmap** -- a `StemMap` keyed on the
 //!    stem (`ves` -> `[vesi]`), built from
 //!    `data/stem_to_base_map.csv` via the `gen_stem_map_noun` bin. For each known
 //!    Finnish case ending, strip and look the stem up; verify
@@ -298,7 +298,7 @@ fn lex() -> &'static [Lemma<'static>] {
 ///
 /// The table is precomputed (`gen_derived`) because scanning the 104k lemma
 /// rows to find the 32 class-101 lemmas cost ~20 ms on the first unknown word
-/// of a process -- the wasm paid it on its first keystroke. [`compute`] stays
+/// of a process -- the wasm paid it on its first keystroke. [`compute_pronoun_forms`] stays
 /// for the tool and for the blob test.
 pub fn compute_pronoun_forms() -> HashMap<String, &'static str> {
     let mut map = HashMap::new();
